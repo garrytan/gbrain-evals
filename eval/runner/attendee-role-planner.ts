@@ -59,12 +59,11 @@ export interface RoleRow {
   plan: { kind: string; reason?: string; phrases?: string[]; hops?: number };
   one_relation: { parsed: boolean; kind?: string; link_types?: string[] | null; seeds?: string[]; phrase?: string };
   fired: boolean;
-  relational_slugs: string[];
   recall_off: number; recall_on: number;
-  /** Relational rows naming a person who is not on the meeting's list. */
-  false_attendance: string[];
-  /** Relational rows naming an attendee of another role (the constraint not applied). */
-  other_role_attendees: string[];
+  /** People in the top 10 that the meeting's list does not name, arm off and on (report-only; keyword search can return people named in prose). */
+  unlisted_people: { off: string[]; on: string[] };
+  /** Listed attendees of another role in the top 10, arm off and on (the role constraint not applied). */
+  other_role_attendees: { off: string[]; on: string[] };
   error: string | null;
 }
 
@@ -82,8 +81,8 @@ export function summarizeRoleRows(rows: readonly RoleRow[]) {
     fired: share(r => r.fired),
     recall_at_10_off: mean(r => r.recall_off),
     recall_at_10_on: mean(r => r.recall_on),
-    false_attendance_rows: rows.reduce((s, r) => s + r.false_attendance.length, 0),
-    questions_with_other_role_attendees: share(r => r.other_role_attendees.length > 0),
+    unlisted_people_top10: { off: rows.reduce((s, r) => s + r.unlisted_people.off.length, 0), on: rows.reduce((s, r) => s + r.unlisted_people.on.length, 0) },
+    questions_with_other_role_attendees_top10: { off: share(r => r.other_role_attendees.off.length > 0), on: share(r => r.other_role_attendees.on.length > 0) },
     errors: rows.filter(r => r.error).length,
   };
 }
@@ -109,16 +108,15 @@ export async function runAttendeeRolePlanner(opts: { corpusDir: string; gbrainSp
       const plan = parseRelationalPlan(q.text);
       const one = parseRelationalQuery(q.text) as { kind: string; seeds: string[]; linkTypes: string[] | null; relationPhrase: string } | null;
       const meta = r?.on.relational_meta[0] as { fired?: boolean } | undefined;
-      const relational = [...new Set((r?.on.rows ?? []).filter(x => x.relational).map(x => x.slug))];
-      const people = relational.filter(s => role.has(s));
+      const top = (arm: 'off' | 'on') => (r?.[arm].pages ?? []).slice(0, K).filter(s => role.has(s));
       return {
         id: q.id, text: q.text, meeting: q.meeting, role: q.role, template: q.template,
         plan: { kind: plan.kind, ...(plan.reason ? { reason: plan.reason } : {}), ...(plan.plan ? { phrases: plan.plan.phrases, hops: plan.plan.hops.length } : {}) },
         one_relation: one ? { parsed: true, kind: one.kind, link_types: one.linkTypes, seeds: one.seeds, phrase: one.relationPhrase } : { parsed: false },
-        fired: !!meta?.fired, relational_slugs: relational,
+        fired: !!meta?.fired,
         recall_off: recall(r?.off.pages ?? [], q.gold), recall_on: recall(r?.on.pages ?? [], q.gold),
-        false_attendance: people.filter(s => !q.attendees.includes(s)),
-        other_role_attendees: people.filter(s => q.attendees.includes(s) && role.get(s) !== q.role),
+        unlisted_people: { off: top('off').filter(s => !q.attendees.includes(s)), on: top('on').filter(s => !q.attendees.includes(s)) },
+        other_role_attendees: { off: top('off').filter(s => q.attendees.includes(s) && role.get(s) !== q.role), on: top('on').filter(s => q.attendees.includes(s) && role.get(s) !== q.role) },
         error: r?.off.error?.message ?? r?.on.error?.message ?? (r ? null : 'no row'),
       };
     });
@@ -138,10 +136,11 @@ if (import.meta.main) {
       ...noModelSpend('hermetic: keyword search, provider keys stripped; no model and no paid request'),
       schema_version: RECEIPT_SCHEMA_VERSION, benchmark_version: BENCHMARK_VERSION, category: CATEGORY,
       run_status: r.accounting.run_invalid ? 'error' : 'completed',
+      ...(r.accounting.run_invalid ? {} : { verdict: r.summary.errors === 0 ? 'pass' as const : 'partial' as const }),
       n_total: r.accounting.n_total, n_scored: r.accounting.n_scored, completion_rate: r.accounting.completion_rate, errors: r.accounting.errors, publishable: r.accounting.publishable,
       gbrain_version: r.gut.version, gbrain_pin: gbrainPin(),
       execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(r.gut) },
-      resolved_config: { corpus: corpusDir, phrasing: 'constrained-relational-gen PHRASING_A.q_attended_role (development)', templates: PHRASING_A.q_attended_role, k: K, embed: 'keyword', seed: 1, decide: DECIDE_OFF, gbrain_overlay: overlaySummary(r.gut) },
+      resolved_config: { verdict_meaning: 'harness completeness only (every question scored); the probe is report-only and gates nothing', corpus: corpusDir, phrasing: 'constrained-relational-gen PHRASING_A.q_attended_role (development)', templates: PHRASING_A.q_attended_role, k: K, embed: 'keyword', seed: 1, decide: DECIDE_OFF, gbrain_overlay: overlaySummary(r.gut) },
       hashes: { corpus_sha256: createHash('sha256').update(JSON.stringify(r.pages.map(p => [p.slug, p.compiled_truth]))).digest('hex'), questions_sha256: createHash('sha256').update(JSON.stringify(r.questions)).digest('hex') },
       started_at: started, finished_at: new Date().toISOString(),
       data: { summary: r.summary, by_template: [0, 1].map(t => summarizeRoleRows(r.rows.filter(x => x.template === t))), rows: r.rows, indices: r.indices },

@@ -56,4 +56,14 @@ The report says who writes attendee lists in this form today (the user, or an im
 
 ## Amendments
 
-None yet.
+### 2026-10-06, after the first hermetic and probe runs: the preregistered false-attendance signal is empty at this pin
+
+The first N9 hermetic runs (both corpora) and the attendee-role probe recorded, per run, the person pages the relational arm returned, read from the `relational` annotation on each search result. That annotation is empty on every row at `c5fb0201`, including the 150 template runs on world-v1-attendees where the arm fired: gbrain's relational arm attaches it (`src/core/search/relational-recall.ts`), but the keyword-only fusion path returns the rows without it, and the arm's metadata carries only counts. So "false attendance = 0" in those receipts is vacuous, not a measurement. Fire rates, the funnel and recall are unaffected and stand as measured; the first receipts are kept.
+
+Replacement, written before any edge or page-level false-attendance number was looked at:
+
+- **False attendance (gate metric)** becomes the stored graph the relational arm walks: after each ingestion seed's extraction, every `attended` link in the index is read. A false attendance is an `attended` edge from a person to a meeting whose page list does not name that person, or an `attended` edge whose source is not a person page. Missing edges (a listed person with no edge) are reported beside it. The rule stays 0 false attendance across all seeds.
+- **Retrieval-level check (report-only):** per run, the person pages in the top 5 results that the meeting's list does not name, with the relational arm off and on. Keyword search can return a person named in the prose, so this is reported as a difference between arms, not as attendance.
+- **Attendee-role probe (report-only):** listed attendees of another role, and people not on the list, in the top 10 with the arm off and on.
+
+The N9 runner records the edges in `data.attendance_edges` (per seed); the scorer and probe compute the rest from receipts. Both N9 hermetic runs and the probe are rerun with this instrumentation; nothing else changes.

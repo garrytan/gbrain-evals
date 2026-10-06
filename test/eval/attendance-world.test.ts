@@ -58,9 +58,9 @@ describe('attendee-role questions', () => {
   });
 
   test('the summary counts planned, fired, recall and false attendance', () => {
-    const row = (o: Partial<RoleRow>): RoleRow => ({ id: 'x', text: 't', meeting: 'm', role: 'founder', template: 0, plan: { kind: 'not_applicable' }, one_relation: { parsed: false }, fired: false, relational_slugs: [], recall_off: 0, recall_on: 0, false_attendance: [], other_role_attendees: [], error: null, ...o });
-    const s = summarizeRoleRows([row({ plan: { kind: 'plan' }, fired: true, recall_on: 1, false_attendance: ['people/z'] }), row({ plan: { kind: 'unsupported', reason: 'counting' } })]);
-    expect(s).toMatchObject({ questions: 2, planned: { n: 1, share: 0.5 }, fired: { n: 1 }, recall_at_10_on: 0.5, false_attendance_rows: 1 });
+    const row = (o: Partial<RoleRow>): RoleRow => ({ id: 'x', text: 't', meeting: 'm', role: 'founder', template: 0, plan: { kind: 'not_applicable' }, one_relation: { parsed: false }, fired: false, recall_off: 0, recall_on: 0, unlisted_people: { off: [], on: [] }, other_role_attendees: { off: [], on: [] }, error: null, ...o });
+    const s = summarizeRoleRows([row({ plan: { kind: 'plan' }, fired: true, recall_on: 1, unlisted_people: { off: [], on: ['people/z'] }, other_role_attendees: { off: [], on: ['people/y'] } }), row({ plan: { kind: 'unsupported', reason: 'counting' } })]);
+    expect(s).toMatchObject({ questions: 2, planned: { n: 1, share: 0.5 }, fired: { n: 1 }, recall_at_10_on: 0.5, unlisted_people_top10: { off: 0, on: 1 }, questions_with_other_role_attendees_top10: { on: { n: 1 } } });
     expect(s.plan_outcomes).toEqual({ plan: 1, 'unsupported: counting': 1 });
   });
 });
@@ -71,21 +71,30 @@ describe('attendance scorer', () => {
   const pages = loadWorldCorpus(OUT_DIR);
   const ids = [...attendanceQueryMeetings(pages).entries()];
   const meetingPage = (slug: string) => pages.find(p => p.slug === slug)!;
-  const row = (id: string, split: string, fired: boolean, slugs: string[]) => ({ seed: 1, query_id: split === 'one-hop-paraphrase' ? `${id}-p` : id, split, template: 'attended', fired, seeds_resolved: 1, relational_slugs: slugs, on: { recall_at_5: 1 }, off: { recall_at_5: 0 }, error: null });
+  const row = (id: string, split: string, fired: boolean, onPages: string[]) => ({ seed: 1, query_id: split === 'one-hop-paraphrase' ? `${id}-p` : id, split, template: 'attended', fired, seeds_resolved: 1, off_pages: [] as string[], on_pages: onPages, on: { recall_at_5: 1 }, off: { recall_at_5: 0 }, error: null });
 
   test('maps every attendance question to its meeting', () => {
     expect(ids.length).toBe(50);
   });
 
-  test('returning exactly the page list fires everywhere with no false attendance; a person off the list is false attendance', () => {
-    const honest = ids.flatMap(([id, m]) => ['one-hop-template', 'one-hop-paraphrase'].map(s => row(id, s, true, (meetingPage(m)._facts.attendees ?? []) as string[])));
-    const ok = scoreAttendance({ data: { one_hop: { per_query: honest } } }, pages, gen.ledger.perturbations);
-    expect(ok.gate).toMatchObject({ every_split_meets_fire_floor: true, false_attendance: 0 });
+  test('stored attended edges equal to the page lists score 0 false and 0 missing; an edge for a removed person is false attendance', () => {
+    const exact = pages.filter(p => p.type === 'meeting').flatMap(p => ((p._facts.attendees ?? []) as string[]).map(a => [a, p.slug] as [string, string]));
     const removed = gen.ledger.perturbations.find(p => p.kind === 'removed')!;
-    const leaky = honest.map(r => attendanceQueryMeetings(pages).get(r.query_id.replace(/-p$/, '')) === removed.meeting ? { ...r, relational_slugs: [...r.relational_slugs, removed.person] } : r);
-    const bad = scoreAttendance({ data: { one_hop: { per_query: leaky } } }, pages, gen.ledger.perturbations);
-    expect(bad.gate.false_attendance).toBe(2);
-    expect(bad.perturbed_meetings['one-hop-template']!.find(p => p.meeting === removed.meeting)!.person_returned).toBe(1);
+    const s = scoreAttendance({ data: { one_hop: { per_query: [] }, attendance_edges: [{ seed: 1, edges: exact }, { seed: 2, edges: [...exact, [removed.person, removed.meeting]] }] } }, pages, gen.ledger.perturbations);
+    expect([s.attendance_edges[0]!.false_edges.length, s.attendance_edges[0]!.missing.length]).toEqual([0, 0]);
+    expect(s.attendance_edges[1]!.false_edges).toEqual([{ person: removed.person, meeting: removed.meeting, why: "person not on the meeting's list" }]);
+    expect(s.gate).toMatchObject({ edges_recorded: true, false_attendance: 1, missing_attendance: 0 });
+    const prose = scoreAttendance({ data: { one_hop: { per_query: [] }, attendance_edges: [{ seed: 1, edges: exact.slice(1) }] } }, pages);
+    expect(prose.gate.missing_attendance).toBe(1);
+    expect(scoreAttendance({ data: { one_hop: { per_query: [] } } }, pages).gate.false_attendance).toBeNull();
+  });
+
+  test('top-5 people off the list are counted per arm, and perturbed meetings report where their person landed', () => {
+    const removed = gen.ledger.perturbations.find(p => p.kind === 'removed')!;
+    const rows = ids.map(([id, m]) => ({ ...row(id, 'one-hop-template', true, []), off_pages: m === removed.meeting ? [removed.person] : [], on_pages: [] as string[] }));
+    const s = scoreAttendance({ data: { one_hop: { per_query: rows } } }, pages, gen.ledger.perturbations);
+    expect(s.by_split['one-hop-template'].unlisted_people_top5).toEqual({ off: 1, on: 0 });
+    expect(s.perturbed_meetings['one-hop-template']!.find(p => p.meeting === removed.meeting)).toMatchObject({ top5_off: 1, top5_on: 0 });
   });
 
   test('a split that fires on fewer than 80% of runs fails the floor', () => {

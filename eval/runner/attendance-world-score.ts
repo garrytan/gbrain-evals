@@ -13,7 +13,7 @@ export const FIRE_FLOOR = 0.8;
 export const ATTENDANCE_SPLITS = ['one-hop-template', 'one-hop-paraphrase'] as const;
 export const ATTENDANCE_FAMILIES = ['meeting_investors', 'investor_founder_meetings'] as const;
 
-interface PerQuery { seed: number; query_id: string; split: string; template: string; fired: boolean; seeds_resolved: number; relevant?: string[]; relational_slugs?: string[]; on: { recall_at_5?: number } | null; off: { recall_at_5?: number } | null; error: string | null }
+interface PerQuery { seed: number; query_id: string; split: string; template: string; fired: boolean; seeds_resolved: number; relevant?: string[]; off_pages?: string[]; on_pages?: string[]; on: { recall_at_5?: number } | null; off: { recall_at_5?: number } | null; error: string | null }
 interface Perturbation { meeting: string; kind: 'added' | 'removed'; person: string }
 
 export interface SplitScore {
@@ -21,8 +21,8 @@ export interface SplitScore {
   seed_resolved: number;
   fired: number;
   fire_rate: number;
-  /** (run, person) pairs the relational arm returned for a meeting whose page list does not name the person. */
-  false_attendance: Array<{ seed: number; meeting: string; person: string }>;
+  /** Report-only: (run, person) pairs in the top 5 that the meeting's list does not name, relational arm off and on. */
+  unlisted_people_top5: { off: number; on: number };
   recall_at_5_off: number;
   recall_at_5_on: number;
   errors: number;
@@ -30,7 +30,22 @@ export interface SplitScore {
   meets_fire_floor: boolean;
 }
 
-export interface PerturbedScore { meeting: string; kind: 'added' | 'removed'; person: string; runs: number; fired: number; person_returned: number }
+export interface PerturbedScore { meeting: string; kind: 'added' | 'removed'; person: string; runs: number; fired: number; top5_off: number; top5_on: number }
+
+/** Stored attended edges per seed against the page lists: the graph the relational arm walks (amendment 2026-10-06). */
+export interface EdgeScore { seed: number; edges: number; false_edges: Array<{ person: string; meeting: string; why: string }>; missing: Array<{ person: string; meeting: string }> }
+
+export function scoreAttendanceEdges(seeds: ReadonlyArray<{ seed: number; edges: Array<[string, string]> }>, pages: RichPage[]): EdgeScore[] {
+  const list = new Map(pages.filter(p => p._facts.type === 'meeting').map(p => [p.slug, new Set(p._facts.attendees ?? [])]));
+  const people = new Set(pages.filter(p => p._facts.type === 'person').map(p => p.slug));
+  return seeds.map(({ seed, edges }) => {
+    const have = new Set(edges.map(([f, t]) => `${f}>${t}`));
+    const false_edges = edges.filter(([f, t]) => !people.has(f) || !list.has(t) || !list.get(t)!.has(f))
+      .map(([f, t]) => ({ person: f, meeting: t, why: !people.has(f) ? 'source is not a person page' : !list.has(t) ? 'target is not a meeting page' : 'person not on the meeting\'s list' }));
+    const missing = [...list.entries()].flatMap(([m, ps]) => [...ps].filter(p => !have.has(`${p}>${m}`)).map(p => ({ person: p, meeting: m })));
+    return { seed, edges: edges.length, false_edges, missing };
+  });
+}
 
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
@@ -45,7 +60,7 @@ export function attendanceQueryMeetings(pages: RichPage[]): Map<string, string> 
   return out;
 }
 
-export function scoreAttendance(receipt: { data?: { one_hop?: { per_query?: PerQuery[] } | null; composed?: { by_split_family?: Record<string, Record<string, unknown>> } } }, pages: RichPage[], perturbations: readonly Perturbation[] = []) {
+export function scoreAttendance(receipt: { data?: { one_hop?: { per_query?: PerQuery[] } | null; attendance_edges?: Array<{ seed: number; edges: Array<[string, string]> }>; composed?: { by_split_family?: Record<string, Record<string, unknown>> } } }, pages: RichPage[], perturbations: readonly Perturbation[] = []) {
   const meetings = attendanceQueryMeetings(pages);
   const list = new Map(pages.filter(p => p._facts.type === 'meeting').map(p => [p.slug, new Set(p._facts.attendees ?? [])]));
   const people = new Set(pages.filter(p => p._facts.type === 'person').map(p => p.slug));
@@ -54,23 +69,21 @@ export function scoreAttendance(receipt: { data?: { one_hop?: { per_query?: PerQ
   const bySplit = Object.fromEntries(ATTENDANCE_SPLITS.map(split => {
     const rs = rows.filter(r => r.split === split);
     const fired = rs.filter(r => r.fired).length;
-    const fa: SplitScore['false_attendance'] = [];
-    for (const r of rs) {
+    const unlisted = (arm: 'off_pages' | 'on_pages') => rs.reduce((n, r) => {
       const m = meetingOf(r);
-      if (!m) continue;
-      for (const s of r.relational_slugs ?? []) if (people.has(s) && !list.get(m)!.has(s)) fa.push({ seed: r.seed, meeting: m, person: s });
-    }
+      return m ? n + (r[arm] ?? []).filter(s => people.has(s) && !list.get(m)!.has(s)).length : n;
+    }, 0);
     const score: SplitScore = {
       runs: rs.length, seed_resolved: rs.filter(r => r.seeds_resolved > 0).length, fired, fire_rate: rs.length ? fired / rs.length : 0,
-      false_attendance: fa, recall_at_5_off: mean(rs.map(r => r.off?.recall_at_5 ?? 0)), recall_at_5_on: mean(rs.map(r => r.on?.recall_at_5 ?? 0)),
-      errors: rs.filter(r => r.error).length, missing_fields: rs.filter(r => !r.relational_slugs || !meetingOf(r)).length,
+      unlisted_people_top5: { off: unlisted('off_pages'), on: unlisted('on_pages') }, recall_at_5_off: mean(rs.map(r => r.off?.recall_at_5 ?? 0)), recall_at_5_on: mean(rs.map(r => r.on?.recall_at_5 ?? 0)),
+      errors: rs.filter(r => r.error).length, missing_fields: rs.filter(r => !r.on_pages || !meetingOf(r)).length,
       meets_fire_floor: rs.length > 0 && fired / rs.length >= FIRE_FLOOR,
     };
     return [split, score];
   })) as Record<(typeof ATTENDANCE_SPLITS)[number], SplitScore>;
   const perturbed: Record<string, PerturbedScore[]> = Object.fromEntries(ATTENDANCE_SPLITS.map(split => [split, perturbations.map(p => {
     const rs = rows.filter(r => r.split === split && meetingOf(r) === p.meeting);
-    return { ...p, runs: rs.length, fired: rs.filter(r => r.fired).length, person_returned: rs.filter(r => (r.relational_slugs ?? []).includes(p.person)).length };
+    return { ...p, runs: rs.length, fired: rs.filter(r => r.fired).length, top5_off: rs.filter(r => (r.off_pages ?? []).includes(p.person)).length, top5_on: rs.filter(r => (r.on_pages ?? []).includes(p.person)).length };
   })]));
   const faithful = (split: string) => {
     const pm = new Set(perturbations.map(p => p.meeting));
@@ -78,7 +91,9 @@ export function scoreAttendance(receipt: { data?: { one_hop?: { per_query?: PerQ
     return { runs: rs.length, fired: rs.filter(r => r.fired).length, fire_rate: rs.length ? rs.filter(r => r.fired).length / rs.length : 0 };
   };
   const composed = Object.fromEntries(Object.entries(receipt.data?.composed?.by_split_family ?? {}).map(([split, fams]) => [split, Object.fromEntries(ATTENDANCE_FAMILIES.filter(f => f in fams).map(f => [f, fams[f]]))]));
+  const edges = scoreAttendanceEdges(receipt.data?.attendance_edges ?? [], pages);
   return {
+    attendance_edges: edges,
     by_split: bySplit,
     faithful_meetings: Object.fromEntries(ATTENDANCE_SPLITS.map(s => [s, faithful(s)])),
     perturbed_meetings: perturbed,
@@ -86,7 +101,9 @@ export function scoreAttendance(receipt: { data?: { one_hop?: { per_query?: PerQ
     gate: {
       fire_floor: FIRE_FLOOR,
       every_split_meets_fire_floor: ATTENDANCE_SPLITS.every(s => bySplit[s].meets_fire_floor),
-      false_attendance: ATTENDANCE_SPLITS.reduce((n, s) => n + bySplit[s].false_attendance.length, 0),
+      edges_recorded: edges.length > 0,
+      false_attendance: edges.length ? edges.reduce((n, e) => n + e.false_edges.length, 0) : null,
+      missing_attendance: edges.length ? edges.reduce((n, e) => n + e.missing.length, 0) : null,
     },
   };
 }
@@ -104,7 +121,8 @@ if (import.meta.main) {
   if (argv.includes('--json')) { console.log(JSON.stringify(s, null, 2)); process.exit(0); }
   for (const split of ATTENDANCE_SPLITS) {
     const b = s.by_split[split];
-    console.log(`${split}: fired ${b.fired}/${b.runs} (${(b.fire_rate * 100).toFixed(1)}%), seed resolved ${b.seed_resolved}, false attendance ${b.false_attendance.length}, recall@5 off ${b.recall_at_5_off.toFixed(3)} on ${b.recall_at_5_on.toFixed(3)}`);
+    console.log(`${split}: fired ${b.fired}/${b.runs} (${(b.fire_rate * 100).toFixed(1)}%), seed resolved ${b.seed_resolved}, recall@5 off ${b.recall_at_5_off.toFixed(3)} on ${b.recall_at_5_on.toFixed(3)}, unlisted people in top 5 off ${b.unlisted_people_top5.off} on ${b.unlisted_people_top5.on}`);
   }
-  console.log(`gate: every split fires on at least ${FIRE_FLOOR * 100}% of runs: ${s.gate.every_split_meets_fire_floor}; false attendance: ${s.gate.false_attendance}`);
+  for (const e of s.attendance_edges) console.log(`seed ${e.seed}: ${e.edges} attended edges, ${e.false_edges.length} false, ${e.missing.length} listed attendees without an edge`);
+  console.log(`gate: every split fires on at least ${FIRE_FLOOR * 100}% of runs: ${s.gate.every_split_meets_fire_floor}; false attendance (stored edges): ${s.gate.false_attendance ?? 'not recorded'}`);
 }
