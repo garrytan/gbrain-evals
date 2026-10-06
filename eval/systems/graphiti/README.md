@@ -77,6 +77,44 @@ written for Zep Cloud and translated to the graphiti-core calls it wraps. The fu
   for the 8,000-token budget) instead of Zep's two searches, recorded under `vendor_benchmark_reference`.
 - `search_` takes no query time; the shim ignores `query_time` and says so in `applied_settings`.
 
+## Metered smoke (2026-10-05)
+
+One run of `test_shim.py` per configuration through the shootout's metering proxy
+(`eval/runner/metering-proxy.ts` from branch `capy/shootout-harness` at `a0787f7`, lease mode, one ledger per run).
+Leases were $0.50 for `common` with session episodes, $1.50 for `common` with message episodes and $2.00 for
+`recipe`. The workload is tiny and synthetic: two dated three-turn sessions and a two-turn canary session in a
+second namespace, then 7 retrievals (both policies, the canary probe in each namespace, after the delete, the
+survivor check, after the reset). Every run passed every step, with zero proxy refusals, zero tripwires and no
+request charged at its reservation.
+
+| Run | Requests | Input tokens | Output tokens | Cost | Ingest per session (service_ms) | Retrieve (service_ms, two policies) |
+|---|---|---|---|---|---|---|
+| `common`, session episodes | 88 | 18,929 | 755 | $0.0072 | 11,421 and 5,959 | 1,083 and 1,225 |
+| `common`, message episodes | 168 | 53,025 | 1,531 | $0.0211 | 19,693 and 24,095 | 2,167 and 1,259 |
+| `recipe` (`gpt-5.5`), session episodes | 108 | 22,831 | 985 | $0.0897 | 10,514 and 12,363 | 1,654 and 948 |
+
+By route and model:
+
+| Run | `/v1/responses` (extraction) | `/v1/chat/completions` (`gpt-4.1-nano` cross-encoder) | `/v1/embeddings` |
+|---|---|---|---|
+| `common`, session | 9 calls to `gpt-4.1-mini`, 13,930 in / 707 out, $0.0067 | 48 calls, 4,499 in / 48 out, $0.0005 | 31 calls to `text-embedding-3-large`, $0.0001 |
+| `common`, message | 31 calls to `gpt-4.1-mini`, 44,799 in / 1,445 out, $0.0202 | 86 calls, 7,594 in / 86 out, $0.0008 | 51 calls to `text-embedding-3-large`, $0.0001 |
+| `recipe`, session | 7 calls to `gpt-5.5`, 12,721 in / 834 out, $0.0886; 6 calls to `gpt-4.1-nano`, 4,102 in / 91 out, $0.0004 | 60 calls, 5,454 in / 60 out, $0.0006 | 35 calls to `text-embedding-3-small`, under $0.0001 |
+
+What the numbers mean for the counted runs:
+
+- Message episodes cost about 3 times session episodes here, on three-turn sessions. The ratio grows with turns
+  per session (LoCoMo sessions run about 20 to 30 turns), because each turn becomes its own extraction.
+- The recipe's `gpt-5.5` extraction costs about 13 times `gpt-4.1-mini` per run. Each `gpt-5.5` request reserves
+  up to $0.54 against the lease before forwarding (graphiti-core asks for 16,384 output tokens at $30 per million),
+  so a lease must cover the concurrent reservations, not only the expected spend.
+- Retrieval is not free: the default recipe's cross-encoder makes one `gpt-4.1-nano` call per candidate, about
+  7 to 12 calls per retrieval on this tiny graph, plus one embedding call.
+
+Neo4j logs "property key does not exist" notices when a search runs on a graph with no facts yet (the canary
+namespace); they are warnings, not failures. Raw proxy usage lines and step logs are on the lane machine under
+`~/.capy/work/shootout/` (`usage-smoke-graphiti-*.ndjson`, `smoke-graphiti-*.log`); they are not committed.
+
 ## Provenance and deletion
 
 Facts cite the sessions in their edge's `episodes` list (exact). Entity nodes have no `episodes` field at 0.30.2;
@@ -85,7 +123,23 @@ reports `partial`, or `unavailable` with `settings.node_provenance = "none"`. Ep
 Deletion calls `Graphiti.remove_episode` for each episode of the source and keeps its semantics: an edge goes only
 if the removed episode created it, and a node goes only if no other episode mentions it.
 
+## Phase 2 pilot
+
+[PILOT.md](PILOT.md) records the 2026-10-05 pilots through the memory-qa runner (one LoCoMo conversation, one
+LongMemEval-S haystack, one BEAM-100K conversation): costs per ingested item, reader and judge costs, latency,
+outcomes and the Phase 4 cost extrapolation. Its scores are setup evidence, not results.
+
 ## Changelog
+
+### 2026-10-05: Phase 2 pilot, policy settings
+
+Added PILOT.md. Retrieval policies keep their knobs under `retrieval_policies.<mode>.settings` (PROTOCOL.md), offset-less
+ISO times are read as UTC, and the shim maps a metering-proxy refusal to the `budget` error.
+
+### 2026-10-05: metered smoke
+
+Added the metered smoke results for `common` (session and message episodes) and `recipe`. The shim now maps a
+metering-proxy refusal (HTTP 402, kind `budget`) to the protocol's `budget` error.
 
 ### 2026-10-05: first version
 

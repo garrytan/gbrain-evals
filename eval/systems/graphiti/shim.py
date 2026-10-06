@@ -12,8 +12,10 @@ import json
 import os
 import sys
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
+
+import openai
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "_shim"))
 from shim import Adapter, Item, ShimError, serve  # noqa: E402
@@ -52,8 +54,17 @@ class GraphitiAdapter(Adapter):
         self.ns_locks: dict[str, threading.Lock] = {}
 
     def _run(self, coro: Any) -> Any:
-        """graphiti-core is async and its Neo4j driver is bound to one loop; every call goes through it."""
-        return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
+        """graphiti-core is async and its Neo4j driver is bound to one loop; every call goes through it.
+        A 402 from the metering proxy (over the lease or an unpriced model) becomes the protocol's budget error."""
+        try:
+            return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
+        except Exception as e:
+            cause: BaseException | None = e
+            while cause is not None:
+                if isinstance(cause, openai.APIStatusError) and cause.status_code == 402:
+                    raise ShimError("budget", f"metering proxy refused a provider call: {cause.message}", 402) from e
+                cause = cause.__cause__ or cause.__context__
+            raise
 
     async def _connect(self) -> Graphiti:
         roles = self.record["configs"][CONFIG]["model_roles"]
@@ -94,6 +105,8 @@ class GraphitiAdapter(Adapter):
             event_time = datetime.fromisoformat(session["event_time"].replace("Z", "+00:00"))
         except ValueError as e:
             raise ShimError("invalid_request", f"not an ISO-8601 time: {session['event_time']!r}", 400) from e
+        if event_time.tzinfo is None:
+            event_time = event_time.replace(tzinfo=timezone.utc)
         lines = [f"{t['speaker']}: {t['content']}" for t in turns]
         episodes = [(source_id, "\n".join(lines), event_time)] if GRANULARITY == "session" else [
             (f"{source_id}#{i:04d}", line, event_time + timedelta(milliseconds=i)) for i, line in enumerate(lines)]
@@ -130,11 +143,10 @@ class GraphitiAdapter(Adapter):
         mode = policy.get("mode")
         if mode not in ("vendor-default", "fixed-evidence"):
             raise ShimError("invalid_request", "policy.mode must be vendor-default or fixed-evidence", 400)
-        overrides = policy.get("settings") or {}
-        unknown = set(overrides) - SEARCH_KNOBS
+        settings = {**self.record["retrieval_policies"][mode]["settings"], **(policy.get("settings") or {})}
+        unknown = set(settings) - SEARCH_KNOBS
         if unknown:
             raise ShimError("unsupported", f"graphiti search_ has no knob(s) {sorted(unknown)}; allowed {sorted(SEARCH_KNOBS)}", 400)
-        settings = {**self.record["retrieval_policies"][mode]["search_"], **overrides}
         recipe = getattr(recipes, settings["recipe"], None)
         if recipe is None or not settings["recipe"].isupper():
             raise ShimError("invalid_request", f"unknown search recipe {settings['recipe']!r}", 400)

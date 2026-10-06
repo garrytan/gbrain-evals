@@ -13,7 +13,7 @@ import os
 import sys
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "_shim"))
@@ -35,9 +35,15 @@ def _parse_time(value: str | None) -> datetime | None:
     if value is None:
         return None
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as e:
         raise ShimError("invalid_request", f"not an ISO-8601 time: {value!r}", 400) from e
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def _proxy_refused(message: str | None) -> bool:
+    """The metering proxy answers a refused provider call with HTTP 402 and error kind `budget`."""
+    return bool(message) and ("402" in message or "'budget'" in message or '"budget"' in message)
 
 
 def _fact_text(r: Any) -> str:
@@ -76,7 +82,10 @@ class HindsightAdapter(Adapter):
         except NotFoundException:
             raise
         except ApiException as e:
-            raise ShimError("product_error", f"hindsight HTTP {e.status}: {(e.body or '')[:500]}") from e
+            body = (e.body or "")[:500]
+            if _proxy_refused(body):
+                raise ShimError("budget", f"metering proxy refused a provider call: {body}", 402) from e
+            raise ShimError("product_error", f"hindsight HTTP {e.status}: {body}") from e
 
     def capabilities(self) -> dict[str, Any]:
         return self.record
@@ -118,6 +127,8 @@ class HindsightAdapter(Adapter):
         if not resp.var_async or not resp.operation_id:
             raise ShimError("product_error", f"retain returned no operation id: {resp.to_dict()}")
         status = self._wait_operation(ns, resp.operation_id, INGEST_TIMEOUT_S)
+        if status.status != "completed" and _proxy_refused(status.error_message):
+            raise ShimError("budget", f"metering proxy refused a provider call during retain: {status.error_message}", 402)
         if status.status != "completed":
             return {"items_created": 0, "warnings": [], "completeness": "degraded",
                     "errors": [f"operation {resp.operation_id} {status.status}: {status.error_message}"],
@@ -162,11 +173,10 @@ class HindsightAdapter(Adapter):
         mode = policy.get("mode")
         if mode not in ("vendor-default", "fixed-evidence"):
             raise ShimError("invalid_request", "policy.mode must be vendor-default or fixed-evidence", 400)
-        overrides = policy.get("settings") or {}
-        unknown = set(overrides) - RECALL_KNOBS
+        settings = {**self.record["retrieval_policies"][mode]["settings"], **(policy.get("settings") or {})}
+        unknown = set(settings) - RECALL_KNOBS
         if unknown:
             raise ShimError("unsupported", f"hindsight recall has no knob(s) {sorted(unknown)}; allowed {sorted(RECALL_KNOBS)}", 400)
-        settings = {**self.record["retrieval_policies"][mode]["recall"], **overrides}
         _parse_time(query_time)
         if query_time:
             settings["query_timestamp"] = query_time

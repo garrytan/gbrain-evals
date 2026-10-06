@@ -31,7 +31,7 @@
     }
   },
   "time": "native",
-  "time_notes": "add_episode(reference_time=session event_time). In message granularity each turn gets reference_time = event_time + turn_index milliseconds so retrieve_episodes (ORDER BY valid_at DESC) sees the conversation order instead of ties. search_ takes no query time, so query_time is ignored and applied_settings says so.",
+  "time_notes": "add_episode(reference_time=session event_time). In message granularity each turn gets reference_time = event_time + turn_index milliseconds so retrieve_episodes (ORDER BY valid_at DESC) sees the conversation order instead of ties. search_ takes no query time, so query_time is ignored and applied_settings says so. An event_time or query_time without a UTC offset is read as UTC.",
   "granularity": "session (default, SHIM_GRANULARITY=session): one EpisodeType.message episode per session whose body is the session's 'speaker: text' lines. message (SHIM_GRANULARITY=message): one episode per turn, as Zep's LoCoMo harness does. The metered smoke measures both; the preregistration fixes one.",
   "provenance": {
     "status": "partial",
@@ -44,26 +44,55 @@
   "parallel_namespaces": true,
   "retrieval_policies": {
     "vendor-default": {
-      "search_": { "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER", "limit": 10, "node_provenance": "mentions" },
+      "settings": {
+        "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
+        "limit": 10,
+        "node_provenance": "mentions"
+      },
       "notes": "Graphiti.search_() with no config argument: COMBINED_HYBRID_SEARCH_CROSS_ENCODER (edges, nodes, episodes and communities; BM25 + cosine + BFS candidates, cross-encoder rerank) at SearchConfig's default limit 10 per class (search_config.py DEFAULT_SEARCH_LIMIT)."
     },
     "fixed-evidence": {
-      "search_": { "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER", "limit": 50, "node_provenance": "mentions" },
+      "settings": {
+        "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
+        "limit": 50,
+        "node_provenance": "mentions"
+      },
       "notes": "The same recipe with 50 results per class, enough to fill the 8,000-token evidence budget (facts run about 25 tokens, node summaries about 100); the harness packer truncates."
     },
-    "allowed_settings_overrides": ["recipe (any upper-case name in graphiti_core.search.search_config_recipes)", "limit", "node_provenance (mentions | none)"],
+    "allowed_settings_overrides": [
+      "recipe (any upper-case name in graphiti_core.search.search_config_recipes)",
+      "limit",
+      "node_provenance (mentions | none)"
+    ],
     "vendor_benchmark_reference": {
       "searches": [
-        { "scope": "nodes", "reranker": "rrf", "limit": 20, "graphiti_recipe": "NODE_HYBRID_SEARCH_RRF" },
-        { "scope": "edges", "reranker": "cross_encoder", "limit": 20, "graphiti_recipe": "EDGE_HYBRID_SEARCH_CROSS_ENCODER" }
+        {
+          "scope": "nodes",
+          "reranker": "rrf",
+          "limit": 20,
+          "graphiti_recipe": "NODE_HYBRID_SEARCH_RRF"
+        },
+        {
+          "scope": "edges",
+          "reranker": "cross_encoder",
+          "limit": 20,
+          "graphiti_recipe": "EDGE_HYBRID_SEARCH_CROSS_ENCODER"
+        }
       ],
       "notes": "Zep's LoCoMo harness (zep_locomo_search.py) runs these two Zep Cloud searches and renders facts as '<fact> (event_time: <valid_at>)' followed by entities as '<name>: <summary>'. Recorded for reference, not a shootout policy."
     },
     "item_mapping": "search_ returns separate ranked lists per class whose reranker scores are not on one scale, so the shim concatenates them in a fixed class order, each in Graphiti's own rank order: edges, then entity nodes, then episodes, then communities (Zep's harness also puts facts before entities). Edge -> type fact, text = fact, valid_from = valid_at, valid_to = invalid_at. Node -> type entity, text = '<name>: <summary>'. Episode -> type episode, text = content, valid_from = valid_at. Community -> type observation, text = '<name>: <summary>'. Raw per-class uuids and reranker scores are returned under raw."
   },
   "streaming": "disabled",
-  "provider_routes": ["POST /v1/responses (structured extraction, responses.parse)", "POST /v1/chat/completions (cross-encoder reranker with logprobs)", "POST /v1/embeddings"],
-  "telemetry_off": ["GRAPHITI_TELEMETRY_ENABLED=false", "NEO4J_dbms_usage__report_enabled=false"],
+  "provider_routes": [
+    "POST /v1/responses (structured extraction, responses.parse)",
+    "POST /v1/chat/completions (cross-encoder reranker with logprobs)",
+    "POST /v1/embeddings"
+  ],
+  "telemetry_off": [
+    "GRAPHITI_TELEMETRY_ENABLED=false",
+    "NEO4J_dbms_usage__report_enabled=false"
+  ],
   "agent_surface": {
     "kind": "vendor-mcp",
     "transport": "http",
