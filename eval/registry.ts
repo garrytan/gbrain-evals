@@ -857,7 +857,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   {
     id: 'system-one-jev', legacy_alias: 'SO-live', name: 'System One (Jev decision support) per-slot matched pairs, run against a gbrain checkout',
     family: 'agent', tier: 'P', script: 'eval/runner/system-one-jev.ts',
-    run: { kind: 'listed', reason: 'needs a gbrain checkout with the --decide eval flags (feat/system-one-v1 or later) and a TypeSafe Jev key; most arms also need OpenAI, Voyage and Anthropic keys', command: 'bun eval/runner/system-one-jev.ts run --gbrain <checkout>@<ref> --eval <evaluation id or slot> --yes' },
+    run: { kind: 'listed', reason: 'reproduces a measured gbrain commit passed with --gbrain (the pinned dependency has had the --decide eval flags since v0.60.26.0) and needs a TypeSafe Jev key; most arms also need OpenAI, Voyage and Anthropic keys', command: 'bun eval/runner/system-one-jev.ts run --gbrain <checkout>@<ref> --eval <evaluation id or slot> --yes' },
     cost_estimate: { usd: 24.95, basis: 'measured: the 2026-09-30 run of every slot, including dataset building, spent $24.95 (docs/benchmarks/2026-09-30-system-one-jev ledgers)' },
     receipt_path: 'eval/reports/system-one-jev/<evaluation id>/run.json, summary.json and analyze-*.json',
     headline: { metric: 'per slot, the slot\'s own metric off vs on: S7 synthesis-worthy transcripts passed and routine rejected, S9 supersedes found and wrong proposals, S1-S3 strict recall_all@5 and R@1, S6 know-to-ask failures and false fires, S8 quarantine precision and unsupported caught', denominator: 'eval half of each frozen split: 109 transcripts (S7), 395 fact pairs (S9), 248 LongMemEval-S questions with 233 answerable (S1-S3), 343 turns (S6), 496 claim units (S8), 424 routing queries (S2)' },
