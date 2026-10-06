@@ -74,8 +74,10 @@ export const CAPTURE_PATH = join(STATE_DIR, 'w10a-capture/captures.ndjson');
 
 /** W10a captured reader text by question id: the last capture per question text and date, joined through the harness rows. */
 function captures(): Map<string, { system: string; user: string; max_tokens: number; model: string }> {
-  const rows = readNdjson(join(STATE_DIR, 'w10a-capture/rows.ndjson')).filter(r => typeof r.question_id === 'string');
-  const caps = readNdjson(CAPTURE_PATH);
+  const committed = join(ROOT, 'docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin/capture');
+  const local = existsSync(CAPTURE_PATH);
+  const rows = readNdjson(local ? join(STATE_DIR, 'w10a-capture/rows.ndjson') : join(committed, 'harness-rows.ndjson.gz')).filter(r => typeof r.question_id === 'string');
+  const caps = readNdjson(local ? CAPTURE_PATH : join(committed, 'captures.ndjson.gz'));
   const byKey = new Map(caps.map(c => [`${c.question}\u0000${c.question_date}`, c]));
   const ds = dataset();
   const out = new Map<string, { system: string; user: string; max_tokens: number; model: string }>();
