@@ -1,9 +1,9 @@
 # Preregistration: open-source memory shootout, memory QA and PrecisionMemBench (2026-10-06)
 
-**Status: draft.** Three values are open: `lme_s_limit` (the LongMemEval-S slice), `graphiti_beam_recipe` (whether
-Graphiti's `gpt-5.5` recipe runs on BEAM) and `gbrain_master_sha` (gbrain master, resolved from `garrytan/gbrain`
-`origin/master` at the freezing commit). The freezing commit fills all three, records the campaign hash they produce,
-and changes this line to "Frozen". No lease can be reserved while a parameter still reads `fill-at-freeze`. Nothing below changes after the first counted cell runs; a later change gets a new
+**Status: Frozen on 2026-10-06**, before any counted cell was reserved. The three open values are filled:
+`lme_s_limit` = 100 (the LongMemEval-S slice), `graphiti_beam_recipe` = false (Graphiti's `gpt-5.5` recipe does not run
+on BEAM) and `gbrain_master_sha` = `c5fb0201d1960a0a5a81c35d77718311b03154b7` (`garrytan/gbrain` master at the freeze,
+v0.60.95.0, resolved with `git ls-remote`). The campaign cap is $1,450 (Garry chose option B on 2026-10-06). Nothing below changes after the first counted cell runs; a later change gets a new
 dated amendment at the end of this file, before any cell it affects.
 
 Plan: [docs/plans/2026-10-05-oss-memory-shootout/PLAN.md](../plans/2026-10-05-oss-memory-shootout/PLAN.md) (approved
@@ -31,13 +31,13 @@ configuration hash.
 
 | System | Pinned version | Capability record sha256 | Lock sha256 | Provenance | Time | Parallel namespaces |
 |---|---|---|---|---|---|---|
-| Basic Memory | `basic-memory==0.23.2` | `412ba2f9fff3b4facba6fa40b41a51a5e5f54027627a93c837cb4762b19407d0` | `e1a14a19…ab16807` | exact | in text | no |
-| Mem0 (OSS) | `mem0ai[nlp]==2.2.1`, Qdrant 1.19.2 | `26c2047a386234458795e4ef6ead421afccb3abfaa3e4906e7565f75993f4ae7` | `9777b7a8…25680` | partial | in text | yes |
-| Graphiti (OSS) | `graphiti-core==0.30.2`, Neo4j 5.26.2 | `7a19ff2c3c9087c4aaf1c6ddfe4bd50e100de61b0b77c03cac7106e35faa5001` | `4ce9b216…bddd1d13` | partial | native | yes |
-| Hindsight | server and client 0.10.2, image `ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062…ab70` | `6e20e737429cbe028c9db396682f3d7b6435ab0b73120973179383ed1a29899c` | `f54d89df…d6d8` | exact | native | yes |
-| Cognee | `cognee==1.6.2` | `d047df533ad059d4144fb849bfd8b43ff6df0b5e8e62ea227d22c8770c225d9a` | `59af44d5…5a0d7` | partial | in text | no |
-| Letta (P4 only) | Letta Code 0.34.4, image `letta/letta:0.34.4@sha256:8ee7fb69…a5c` | `621897ff642845caa8f03e71a95795aa2a480dcd59d00f55b8aa9291c2edd22b` | none | unavailable | none | no |
-| gbrain, frozen master | `garrytan/gbrain` master at `gbrain_master_sha`, built as a `--gbrain` overlay (`git archive` of the commit, `bun install --frozen-lockfile`, tree verified) | in process | the commit's `bun.lock` | exact | native (shootout recipe) | no |
+| Basic Memory | `basic-memory==0.23.2` | `9bee4c555c01574ab93a9dfcebf9a3560b970286ed1bacf94e5ff661de62df90` | `e1a14a19…ab16807` | exact | in text | no |
+| Mem0 (OSS) | `mem0ai[nlp]==2.2.1`, Qdrant 1.19.2 | `6f52b7a4ac246d554359c99b6ade6245b77cb7bcf1a3d305b4ea7d0f6c3f96c8` | `9777b7a8…25680` | partial | in text | yes |
+| Graphiti (OSS) | `graphiti-core==0.30.2`, Neo4j 5.26.2 | `d972b84d6d7ea0e137d04e4954e4390d7d34d823c4830ac49b908236b470f5ab` | `4ce9b216…bddd1d13` | partial | native | yes |
+| Hindsight | server and client 0.10.2, image `ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062…ab70` | `fe5b7c118722bbabd732c9ce7b0507b646ec6b48a84bcb409e8a564dc262b2f9` | `f54d89df…d6d8` | exact | native | yes |
+| Cognee | `cognee==1.6.2` | `bccc141c3cdc6b95078743ae1c45c7179adaac1267fb60dee00475fadd70b8be` | `59af44d5…5a0d7` | partial | in text | no |
+| Letta (P4 only) | Letta Code 0.34.4, image `letta/letta:0.34.4@sha256:8ee7fb69…a5c` | `f856cfe1e101df172998f4fc7f888afa328f1cbf5efdd7e0682c97dfac3845a5` | none | unavailable | none | no |
+| gbrain, frozen master | `garrytan/gbrain` master at `c5fb0201` (v0.60.95.0), built as a `--gbrain` overlay (`git archive` of the commit, `bun install --frozen-lockfile`, tree verified) | in process | the commit's `bun.lock` | exact | native (shootout recipe) | no |
 | gbrain, repository pin | `739e5cc` (v0.60.46.0), `package.json` | in process | `bun.lock` | exact | native (shootout recipe) | no |
 
 Two configurations per system, named for what they control:
@@ -61,9 +61,9 @@ chunk items from gbrain's own search defaults, limits `vendor-default` = the sea
 two builds (amendment A2): gbrain master frozen at `gbrain_master_sha`, which the primary contrast uses because the
 comparison is between each system's latest release, and the repository pin `739e5cc`, the secondary link to the
 starting line and to the pilots. gbrain-legacy runs at the pin only. A keyless fixture check ran both adapters on the
-master overlay build at `b51ad15f` (v0.60.84.0, the master head on 2026-10-06): both completed, and the legacy path
-retrieved the same sessions as the pin's golden on every fixture question (`GBRAIN_OVERLAY_SPEC=<checkout>@<sha> bun
-test test/eval/memory-qa-golden.test.ts`); the freezing commit repeats it at the frozen SHA.
+frozen master as an overlay build (`GBRAIN_OVERLAY_SPEC=<checkout>@c5fb0201d1960a0a5a81c35d77718311b03154b7 bun test
+test/eval/memory-qa-golden.test.ts`, at the freeze): both completed with every row scored, the overlay's tree matched
+the commit, and the legacy path retrieved the same sessions as the pin's golden on every fixture question.
 
 The D1 controls (`eval/runner/systems/baselines.ts`) run behind the same interface: **full-context** (the whole history,
 most recent sessions kept first under a budget), **no-memory** (the question alone) and **plain-hybrid** (Postgres
@@ -72,13 +72,12 @@ full-text plus pgvector over `text-embedding-3-large`, reciprocal-rank fusion, n
 ### Cells and the manifest
 
 The cells are in [2026-10-06-oss-memory-shootout/manifests/](2026-10-06-oss-memory-shootout/manifests/): one campaign
-file with a $1,200 cap and one ledger, one cell file per system and configuration, and the arms files the cells run.
+file with a $1,450 cap and one ledger, one cell file per system and configuration, and the arms files the cells run.
 `bun eval/runner/shootout-cell.ts hash --campaign <campaign.json>` hashes the campaign file, every cell file and every
 arms file a cell names.
 
-- Campaign hash at freeze: **(filled by the freezing commit)**.
-- Draft hash with the default values (`lme_s_limit` 100, `graphiti_beam_recipe` true, `gbrain_master_sha`
-  unfilled): `5b908b258bab234dfa72634e3f3208f3388c3674f26b3489ac2e36ab6f28b8bc` (65 cells).
+- Campaign hash at freeze: **`14f684f8145c0ed48d7afed6d259709ff9937af577b98c3021b55e7807ca41f0`** (64 cells,
+  leases $1,140).
 
 A cell ingests each namespace once, retrieves once per question and policy, and derives every arm from that state
 (`memory-qa --arms`). LoCoMo dev is ingested a second time per configuration (`--ingest-replicate 2`, retrieval only)
@@ -267,15 +266,20 @@ report states as results, and that this run does not tune away:
 
 ## Budget and stop rules
 
-- **Cap.** $1,200 for P1 and P3 together, held in the campaign ledger (`.budget/oss-memory-shootout.sqlite`) as
+- **Cap.** $1,450 for P1 and P3 together (raised from $1,200 when Garry chose option B on 2026-10-06), held in the campaign ledger
+  (`.budget/oss-memory-shootout.sqlite`) as
   durable leases: each cell reserves its lease before its VM starts, the VM's metering proxy can spend only that lease,
   and the lease settles to the proxy's recorded spend. A lease is used once; a cell whose VM never reports back keeps
   its full lease until abandoned. Leases are 1.5 times the pilot measurement (the gbrain, D1 and D2 lines are estimates).
   Pilot-based totals: Graphiti about $343 (LongMemEval-S ingest $154; the BEAM recipe about $91 if run), Cognee about $94,
-  Mem0 $91, Hindsight $73, Basic Memory $43. With the default parameters the 65 cells' estimates sum to about $831 and
-  their leases to $1,277: leases are reserved one cell at a time and settle when the cell ends, so the cap bounds what
-  is committed at once, and a reservation that would pass it is refused rather than run.
+  Mem0 $91, Hindsight $73, Basic Memory $43; Graphiti's BEAM recipe (about $91) does not run. The 64 frozen cells'
+  estimates sum to about $740 and their leases to $1,140. Leases are reserved one cell at a time and settle when the
+  cell ends; a reservation that would pass the cap is refused rather than run.
+- **Phase 4 stops.** If the settled total for Phase 4 heads past $1,000, or any system's measured spend passes 1.5 times
+  its pilot estimate, the run stops and is reported before more cells start.
 - **Phase stop.** If any phase's measured spend passes its estimate by more than 50%, the phase stops for approval.
+- **Harness failures.** A cell that fails for harness reasons is fixed and rerun under a new lease; the failed attempt
+  stays in the record.
 - **Cell stops.** A cell that ends `invalid` (a sanitizer or proxy tripwire, foreign ids in the manifest) stops that
   system's remaining cells until the cause is found and recorded. A lease that runs out leaves its cell `partial`; the
   rest of the cell runs only on a new lease, and the partial rows stay in the record.
@@ -299,6 +303,13 @@ labeled with its commit. Recorded on 2026-10-06 at the campaign owner's decision
 ran the pin only and was replaced before freezing.
 
 ## Changelog
+
+### 2026-10-06: frozen
+
+Filled `lme_s_limit` = 100, `graphiti_beam_recipe` = false and `gbrain_master_sha` = `c5fb0201`; cap $1,200 to $1,450
+(Garry's option B); capability-record hashes updated to the vendor lanes' final commits (policy knobs under
+`settings`, Mem0's queued ingest, Cognee's null event time); overlay fixture check repeated at the frozen SHA; campaign
+hash recorded; Phase 4 stop rules added.
 
 ### 2026-10-06: draft
 

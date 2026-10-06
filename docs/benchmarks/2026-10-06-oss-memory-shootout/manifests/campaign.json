@@ -2,12 +2,12 @@
   "kind": "oss-shootout-campaign",
   "schema_version": 1,
   "campaign_id": "oss-memory-shootout-p1",
-  "cap_usd": 1200,
+  "cap_usd": 1450,
   "ledger": ".budget/oss-memory-shootout.sqlite",
   "parameters": {
     "lme_s_limit": 100,
-    "graphiti_beam_recipe": true,
-    "gbrain_master_sha": "fill-at-freeze"
+    "graphiti_beam_recipe": false,
+    "gbrain_master_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
   },
   "cells_from": [
     "cells/basic-memory-recipe.json",

@@ -200,6 +200,9 @@ success, cost and finance capability. The finding says where gbrain loses. Ties 
 - **D5, gbrain's own default row (access).** `gbrain init`'s documented embedder is Voyage (`voyage:voyage-4`).
   Without `VOYAGE_API_KEY` that one row is blocked and gbrain runs only the common-models row.
 - **Cap.** $1,200 covers the base plan plus D1 and D2-A; adding D3 needs $1,300.
+- **Phase 4 budget (2026-10-06).** Garry chose B on 2026-10-06: the cap rises to $1,450, LongMemEval-S stays at 100
+  questions, and only Graphiti's recipe arm on BEAM is skipped. Frozen in
+  [the preregistration](../../benchmarks/2026-10-06-oss-memory-shootout-preregistration.md).
 
 ## Review record
 

@@ -1,13 +1,15 @@
-# Phase 4 cell manifests (draft)
+# Phase 4 cell manifests (frozen 2026-10-06)
 
-Draft cell manifests for the [open-source memory shootout](../../../plans/2026-10-05-oss-memory-shootout/PLAN.md), Phase 4
-(memory QA on LoCoMo dev, BEAM-100K dev and a LongMemEval-S slice). Nothing here has run. Lease sizes come from the
+Cell manifests for the [open-source memory shootout](../../../plans/2026-10-05-oss-memory-shootout/PLAN.md), Phase 4
+(memory QA on LoCoMo dev, BEAM-100K dev and a LongMemEval-S slice), frozen with the
+[preregistration](../../2026-10-06-oss-memory-shootout-preregistration.md). Lease sizes come from the
 Phase 2 pilots (`eval/systems/<name>/PILOT.md` on the vendor lane branches) times 1.5 headroom; a lease settles to the
 spend its metering proxy recorded, so unused headroom returns to the campaign.
 
 ## Layout
 
-- `campaign.json`: the campaign (one ledger, a $1,200 cap) and its open parameters:
+- `campaign.json`: the campaign (one ledger, a $1,450 cap) and its parameters, frozen as `lme_s_limit` 100,
+  `graphiti_beam_recipe` false and `gbrain_master_sha` `c5fb0201d1960a0a5a81c35d77718311b03154b7`:
   - `lme_s_limit` (default 100): the LongMemEval-S stratified slice; LongMemEval-S leases scale with it.
   - `graphiti_beam_recipe` (default true): whether Graphiti's `gpt-5.5` recipe runs on BEAM (lease about $137,
     scaled from LoCoMo, not measured).
