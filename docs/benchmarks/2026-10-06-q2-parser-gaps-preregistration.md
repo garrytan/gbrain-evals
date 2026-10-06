@@ -326,7 +326,41 @@ Appended before any cell runs: the frozen gbrain build SHA and baseline master S
 U4 are joint; the harness commit; custody file hashes; judge prompt and rubric hashes; arm-B guidance hash; the final
 model list; any power-simulation raise.
 
-(empty)
+### Custody material (recorded 2026-10-06, before the freeze; no cell has run)
+
+Minted by the second custodian for $23.09; the owner copy on Garry's Mac matches.
+
+| File | SHA-256 |
+|---|---|
+| `custody-hashes.txt` (all 5,070 material files) | `aef53279070e37666bf927d4b8de47f5be8fbc606637e7e998683432c7de2f1c` |
+| `n/n-manifest.json` | `d69787ff3aea3a8072d53f4eabf234af9f541ad4330807bc53f2f3b1cfa4a964` |
+| `k/k-pages.jsonl` | `b53550175563bf63748778c0b65a447eaf9120014008204f84debd0dc795e1e2` |
+| `w1/w1-manifest.json` | `c3b644d55716fd13e824108f9d6130b84abecb33595b2a925716f5275022779d` |
+| `w2/w2-manifest.json` | `656ac7a9a9c9062254b27a97001ac762f1004a89ba14df30b98f62e97d073bb8` |
+| `q/q-questions.json` | `08984d33574b0a130aea31e90e24eb916fa29d9d1175f1c6841cada1ecb4f2cc` |
+| `q/career-corpus/career-manifest.json` | `95128151446679bc3eeba2444870b79e5f052c8632c10330a309a0d212bfb5ea` |
+| `i/phrasing-i1a.json` | `08c2c0c2d57ab0434a4b1a346fcaf98adf6d859b1cdfa935e72050e0089a81b0` |
+| `i/phrasing-i1b.json` | `dd5e755a59da70e7e9df560d66c22fcf8f2b677b0119e333e3fe35cf270fa1b6` |
+| `i/phrasing-i1c.json` | `66e21867b2b104ae7143c01c694682503b3d023b4eda46a24157b0d88d2fcff3` |
+| `i/phrasing-i2a.json` | `219888d54f691678ae9170bbc36eef3befdd771c749e1c2264c9496342bfc434` |
+| `i/phrasing-i2b.json` | `1ba7cf8b0761d9cd510cfe82c29951bfeaef94f323401b870a0209cb17413c59` |
+| `i/phrasing-i2c.json` | `a0f2165fde6f2e06feffbc67b96835ab3ae919559978d5975cc91d907709af7f` |
+
+Aggregates:
+
+- N: about 681,000 list lines. That is 21 BEAM-1M sealed conversations (642,826 lines; pins match; `1m-1`, `1m-6` and `1m-26` excluded), 3 vault repositories (2 CC0, 1 Unlicense; 26,300 lines), 3 MIT template repositories (6,928 lines), and a stress stratum of 139 documents (4,810 lines, about 3,575 of them template- or label-shaped).
+- K: 355 pages, 511 relation and 418 fact candidates, and 47–52 candidates per decoy or near-miss class.
+- I1 and I2: seeds 167, 173 and 179 (I1) and 181, 191 and 193 (I2); every file passes `validatePhrasing`, and the files share no word 3-grams.
+- W1 and W2: 149 and 150 pages, with 389 and 372 gold edges, each confirmed by both judges.
+- Q: 100 amara-life-v1 pairs and 100 career pairs (400 questions, 24 of them unanswerable), and 129 career documents.
+- Overlap rule as applied: a document is dropped when it shares 3 or more word 8-grams, or a masked line skeleton, with excluded material. The rule dropped 27 documents and 3 amara pairs.
+- Gold support: 56 K labels removed and 2 career pairs replaced. 10 of the amara pairs come from meeting pages and the calendar.
+
+**Deviation.** The overlap check against sealed-confirmation-v1 was not run. That material sits in owner custody outside the repository, and the custodian does not hold it. The risk is low: v1 is personal life-arc chats and general-help filler, while Q2's material is people, companies, templates and public notes. sealed-confirmation-v2 was excluded by design.
+
+### Builds, runners and models
+
+(appended at the freeze)
 
 ## Changelog
 
