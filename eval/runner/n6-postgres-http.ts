@@ -24,6 +24,7 @@
  *
  * Usage:
  *   bun eval/runner/n6-postgres-http.ts [--pg-url <admin url>] [--output <dir>] [--attest <prereg.md>] [--concurrency 8] [--only op1,op2] [--gbrain <checkout>[@ref]]
+ *   bun eval/runner/n6-postgres-http.ts --control-remote-private-pages --only get_page,search   # negative control: must fail
  *   bun eval/runner/n6-postgres-http.ts rescore <receipt.json>     # keyless, recomputes the verdict from the stored cells
  */
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -265,7 +266,7 @@ async function callInSession(port: number, token: string, op: string, args: Reco
 
 // ─── Run ───────────────────────────────────────────────────────────────
 
-export interface PgHttpOptions { pgAdminUrl: string; outputDir: string; concurrency: number; only?: string[]; gbrainSpec: string | null; attestation: Attestation | null; log: (s: string) => void }
+export interface PgHttpOptions { /** Negative control: start the server with gbrain's operator escape hatch GBRAIN_REMOTE_PRIVATE_PAGES=1, so private pages must be caught as leaks. */ controlRemotePrivatePages?: boolean; pgAdminUrl: string; outputDir: string; concurrency: number; only?: string[]; gbrainSpec: string | null; attestation: Attestation | null; log: (s: string) => void }
 
 interface Task { principal: Principal; op: Operation; unit: { id: string; protected: N6Target | null; cls?: N6ClassSpec }; variantId: string; scope: string; prot: Record<string, unknown>; ghost?: Record<string, unknown>; twin?: Record<string, unknown>; replayKey: string }
 
@@ -339,7 +340,7 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
     }
 
     const port = await freePort(56400);
-    server = spawn('bun', [join(gut.root, 'src/cli.ts'), 'serve', '--http', '--bind', '127.0.0.1', '--port', String(port)], { env, cwd: home });
+    server = spawn('bun', [join(gut.root, 'src/cli.ts'), 'serve', '--http', '--bind', '127.0.0.1', '--port', String(port)], { env: opts.controlRemotePrivatePages ? { ...env, GBRAIN_REMOTE_PRIVATE_PAGES: '1' } : env, cwd: home });
     server.stderr?.setEncoding('utf8'); server.stdout?.setEncoding('utf8');
     const keep = (c: string) => { serverLog.push(...c.split('\n').filter(Boolean).map(l => l.replace(/gbrain_[a-z]{2}_[0-9a-f]+/g, '<redacted>'))); if (serverLog.length > 400) serverLog.splice(0, serverLog.length - 400); };
     server.stderr?.on('data', keep); server.stdout?.on('data', keep);
@@ -570,6 +571,7 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
       resolved_config: {
         engine: 'postgres', postgres_version: pgVersion, postgres_image: imageDigest || 'pgvector/pgvector:pg16', bind: '127.0.0.1',
         transport: `gbrain serve --http --bind 127.0.0.1 (separate process), GBRAIN_POOL_SIZE=8, rate limits raised (GBRAIN_HTTP_RATE_LIMIT_IP and _TOKEN = 100000000) so the probe load is not throttled`,
+        negative_control: opts.controlRemotePrivatePages ? 'server started with GBRAIN_REMOTE_PRIVATE_PAGES=1 (operator escape hatch): remote callers see private pages, so the run must fail' : null,
         decide: DECIDE_OFF, seed: N6_DEFAULT_SEED, generator_version: N6_GENERATOR_VERSION, concurrency: opts.concurrency, only: opts.only ?? null,
         principals: {
           none: 'no Authorization header', 'invalid-token': 'a well-formed bearer token the server never issued', 'expired-token': `client_credentials token from a client with --token-ttl 60, used after expires_in (${expiring.expires_in}s) plus 5 s`,
@@ -643,6 +645,7 @@ if (import.meta.main) {
   runPgHttp({
     pgAdminUrl: flag('--pg-url') ?? process.env.LIFECYCLE_PG_URL ?? 'postgres://postgres@127.0.0.1:55442/postgres',
     outputDir, concurrency: Number(flag('--concurrency') ?? 8), only: only ? only.split(',') : undefined,
+    controlRemotePrivatePages: argv.includes('--control-remote-private-pages'),
     gbrainSpec: gbrainSpecFrom(argv), attestation: attest ? attestPreregistration(attest) : null, log: s => console.log(s),
   }).then(r => process.exit(r.verdict.pass ? 0 : 1)).catch(e => { console.error(e); process.exit(3); });
 }
