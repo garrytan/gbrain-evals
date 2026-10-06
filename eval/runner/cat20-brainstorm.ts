@@ -54,6 +54,7 @@
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
+import { createHash } from 'crypto';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import type Anthropic from '@anthropic-ai/sdk';
@@ -662,6 +663,7 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
       idea_judges: ideaJudges,
       ...(ideaJudges.length ? { idea_judge_prompt_version: IDEA_JUDGE_PROMPT_VERSION, idea_judge_max_tokens: IDEA_JUDGE_MAX_TOKENS } : {}),
       corpus_shuffle_seed: options.shuffleSeed ?? null,
+      corpus_sha256: createHash('sha256').update(JSON.stringify(pages.map(p => [p.slug, p.body]))).digest('hex'),
       corpus: options.shuffleSeed === undefined ? 'synthetic-v1' : `synthetic-v1, sentences shuffled across pages (seed ${options.shuffleSeed})`,
       corpus_pages: pages.length,
       min_grounding: minGrounding,

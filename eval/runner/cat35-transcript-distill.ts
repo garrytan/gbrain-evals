@@ -86,6 +86,8 @@ import {
   type Receipt,
 } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
+import { attestPreregistration } from './prereg.ts';
+import { judgeTransport } from './openai-judge-shim.ts';
 import {
   assertCat35CoverageInput, assertCat35LeakInput, assertCat35SutSource, assertCat35UsabilityInput, CAT35_BOUNDARIES,
 } from './evaluator/judge-inputs.ts';
@@ -145,6 +147,34 @@ interface Opts {
   judgeCalibration: boolean;
   /** Optional explicit annotation file after --judge-calibration. */
   judgeCalibrationPath: string | null;
+  /** Distill / dream model override (`provider:model`); default unchanged (Haiku in BPRE, Sonnet 4.6 in full). */
+  model: string | null;
+  /** Judge model override; an OpenAI id runs through the Responses shim. Default: CAT35_JUDGE_MODEL or Haiku. */
+  judgeModel: string | null;
+  /** W8 control arms for the dream lane: `unrelated` reads another scenario's transcript, `half` the first half of its own. */
+  transcriptMode: TranscriptMode;
+  preregistration: string | null;
+}
+
+export type TranscriptMode = 'real' | 'unrelated' | 'half';
+
+/** The donor for each fixture in the unrelated arm: the next selected fixture (cyclic) from a different scenario. */
+export function unrelatedDonors(ids: Array<{ id: string; scenario: string }>): Map<string, string> {
+  const out = new Map<string, string>();
+  ids.forEach((f, i) => {
+    for (let k = 1; k < ids.length; k++) {
+      const d = ids[(i + k) % ids.length]!;
+      if (d.scenario !== f.scenario) { out.set(f.id, d.id); return; }
+    }
+    throw new Error(`no donor from another scenario for ${f.id}`);
+  });
+  return out;
+}
+
+/** First half of a transcript by characters, cut back to the last line break so no turn is split mid-line. */
+export function firstHalf(text: string): string {
+  const cut = text.lastIndexOf('\n', Math.floor(text.length / 2));
+  return text.slice(0, cut > 0 ? cut + 1 : Math.floor(text.length / 2));
 }
 
 function parseOpts(): Opts {
@@ -174,6 +204,14 @@ function parseOpts(): Opts {
       get('--judge-calibration') && !get('--judge-calibration')!.startsWith('--')
         ? (get('--judge-calibration') ?? null)
         : null,
+    model: get('--model') ?? null,
+    judgeModel: get('--judge-model') ?? null,
+    transcriptMode: (() => {
+      const m = get('--transcript-mode') ?? 'real';
+      if (m !== 'real' && m !== 'unrelated' && m !== 'half') { process.stderr.write(`[cat35] --transcript-mode must be real, unrelated or half\n`); process.exit(2); }
+      return m as TranscriptMode;
+    })(),
+    preregistration: get('--preregistration') ?? null,
   };
 }
 
@@ -240,6 +278,8 @@ interface Fixture {
   gold: GoldFile;
   jsonlPath: string;
   txtPath: string;
+  /** Negative-control arms only: the file the dream lane reads instead of txtPath; gold and grounding stay on the original. */
+  dreamInput?: string;
   transcriptText: string; // the .txt rendering — the grounding reference
 }
 
@@ -499,9 +539,10 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   }
 
   const judgeModel =
-    process.env.CAT35_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
-  const dreamModel = opts.full ? SONNET : HAIKU;
-  const factsModel = opts.full ? SONNET : HAIKU;
+    opts.judgeModel ?? process.env.CAT35_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
+  const dreamModel = opts.model ?? (opts.full ? SONNET : HAIKU);
+  const factsModel = opts.model ?? (opts.full ? SONNET : HAIKU);
+  const triageModel = opts.model ?? HAIKU;
   const maxTurns = opts.full ? 16 : 8;
 
   configureGateway({
@@ -555,6 +596,22 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   if (fixtures.length === 0) {
     return setupError('no fixtures selected');
   }
+  const controlInputs: Record<string, { donor?: string; chars: number; of_chars: number; sha256: string }> = {};
+  if (opts.transcriptMode !== 'real') {
+    if (opts.lanes.some((l) => l !== 'dream')) return setupError(`--transcript-mode ${opts.transcriptMode} applies to the dream lane only; pass --lanes dream`);
+    const donors = unrelatedDonors(fixtures.map((f) => ({ id: f.gold.transcript_id, scenario: f.gold.scenario })));
+    const byId = new Map(fixtures.map((f) => [f.gold.transcript_id, f]));
+    for (const f of fixtures) {
+      const path = join(runTmp, `control-${opts.transcriptMode}-${f.gold.transcript_id}.txt`);
+      const text = opts.transcriptMode === 'half' ? firstHalf(f.transcriptText) : byId.get(donors.get(f.gold.transcript_id)!)!.transcriptText;
+      writeFileSync(path, text);
+      f.dreamInput = path;
+      controlInputs[f.gold.transcript_id] = {
+        ...(opts.transcriptMode === 'unrelated' ? { donor: donors.get(f.gold.transcript_id)! } : {}),
+        chars: text.length, of_chars: f.transcriptText.length, sha256: sha256(text),
+      };
+    }
+  }
   // Input allowlist (evaluator/judge-inputs.ts): no gold item, distractor or
   // hazard id may reach the system under test through a transcript or the
   // brain scaffold.
@@ -604,6 +661,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   err(`pre-flight: projected worst-case $${projected.toFixed(2)} (cap $${HARD_STOP_USD})`);
   // Every provider request from here on (judges, fact extraction, dream
   // synthesis and its subagents) is reserved in the budget ledger first.
+  const attestation = opts.preregistration ? attestPreregistration(opts.preregistration) : null;
   try {
     paidRun = startPaidRun('cat35-transcript-distill', { ...budgetOptionsFrom(process.argv.slice(2)), estimateUsd: projected, log: err });
   } catch (error) {
@@ -740,7 +798,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
           try {
             engine = await makeEngine(scaffold);
             await engine.setConfig('models.dream.synthesize', dreamModel);
-            await engine.setConfig('models.dream.triage', HAIKU);
+            await engine.setConfig('models.dream.triage', triageModel);
             await engine.setConfig('dream.synthesize.max_turns', String(maxTurns));
             await engine.setConfig('dream.synthesize.subagent_timeout_ms', '600000');
             await engine.setConfig('dream.synthesize.cooldown_hours', '0');
@@ -750,7 +808,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
             const res = await runPhaseSynthesize(engine, {
               brainDir,
               dryRun: false,
-              inputFile: f.txtPath,
+              inputFile: f.dreamInput ?? f.txtPath,
               sourceId: SOURCE_ID,
             });
             const details = res.details as Record<string, unknown>;
@@ -1402,8 +1460,11 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     judge_prompt_version: CAT35_JUDGE_PROMPT_VERSION,
     judge_temperature: JUDGE_TEMPERATURE,
     config_snapshot: {
+      transcript_mode: opts.transcriptMode,
+      control_inputs: controlInputs,
+      judge_transport: judgeTransport(judgeModel),
       dream_model: dreamModel,
-      triage_model: HAIKU,
+      triage_model: triageModel,
       facts_model: factsModel,
       max_turns: maxTurns,
       triage_threshold: 0.5,
@@ -1500,6 +1561,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     const spend = paidRun.run.close();
     paidRun = null;
     completed.cost = receiptCost(spend);
+    if (attestation) completed.preregistration_attestation = attestation;
     completed.delivered_tokens = { tokens: spend.input_tokens, basis: 'provider-reported input tokens of every paid request (judges, fact extraction, dream synthesis and subagents), from the budget ledger' };
   }
   writeReceipt(WS0_RECEIPT_PATH, completed);

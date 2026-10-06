@@ -121,7 +121,7 @@ describe('keyless decision script', () => {
   const q = (n: number, passingScore: number, rejectedScore: number) => ({
     question: 'Q',
     ideas: Array.from({ length: n }, (_, i) => ({ id: String(i), text: 't', close_slug: `c${i % 4}`, far_slug: 'f', passes: i % 2 === 0 })),
-    idea_judgments: ['a', 'b', 'c', 'd'].flatMap(judge => Array.from({ length: n }, (_, i) => ({ judge, idea_id: String(i), overall: i % 2 === 0 ? passingScore : rejectedScore, error: null }))),
+    idea_judgments: ['a', 'b', 'c', 'd'].flatMap(judge => Array.from({ length: n }, (_, i) => ({ judge, idea_id: String(i), overall: i % 2 === 0 ? passingScore : rejectedScore, error: null as string | null }))),
   });
 
   test('passes at a median of judge means of at least 2.5 on passing ideas', () => {
@@ -139,7 +139,7 @@ describe('keyless decision script', () => {
 
   test('judge errors are excluded from means, not counted as zero', () => {
     const data = q(24, 3, 1);
-    data.idea_judgments[0] = { ...data.idea_judgments[0]!, overall: null as never, error: 'unparseable reply' };
+    data.idea_judgments[0] = { ...data.idea_judgments[0]!, overall: null as never, error: 'unparseable reply' as string | null };
     const s = summarize([data]);
     expect(s.judges[0]!.errors).toBe(1);
     expect(s.judges[0]!.mean_passing).toBe(3);
