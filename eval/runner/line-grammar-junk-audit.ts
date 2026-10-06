@@ -245,7 +245,12 @@ async function mintDocs(gut: GbrainUnderTest, docs: readonly AuditDoc[], config:
             for (const f of parsed.facts) mint(f.line, 'fact', `fact category ${f.category}`);
             const snap = await brain.engine.readPageSnapshot(doc.slug, { sourceId: 'default' });
             await brain.op('delete_page', { slug: doc.slug, ...(snap ? { expected_revision: snap.revision } : {}) });
-          } catch (e) { record.error = (e as Error).message; }
+          } catch (e) {
+            record.error = (e as Error).message;
+            // A write left pending (preparation past its deadline) keeps the in-memory writer busy, and every later write
+            // on that brain is refused; the page is recorded as failed and the next page gets a fresh brain.
+            if (/still pending|capacity exhausted/i.test(record.error)) { await brain.close(); brain = await openP5Brain(gut, config); }
+          }
         }
         checkpoint.append(record);
         if (++n % 500 === 0) log(`minting pass: ${n} pages written`);
