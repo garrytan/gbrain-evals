@@ -137,10 +137,15 @@ is shown, without changing gbrain, for A/B tests of that text.
 
 ## Models
 
-Two ladders, three rungs each, chosen so the axis is model generation rather
-than vendor: `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-sonnet-5-5`;
-`gpt-5.4-mini`, `gpt-5.4`, `gpt-6.1-sol`. Provider default settings. Two repeats
-per cell.
+New runs use the newest frontier model of each family: `claude-sonnet-5-5`,
+`gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1`, provider default
+settings, two repeats per cell. An older model joins only as the single link to
+an earlier result, named in the run's preregistration.
+
+The published 2026-10-02 to 2026-10-04 runs used two ladders of three rungs,
+chosen so the axis was model generation rather than vendor:
+`claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-sonnet-5-5`; `gpt-5.4-mini`,
+`gpt-5.4`, `gpt-6.1-sol`.
 
 ## Measurements
 
@@ -154,8 +159,9 @@ per cell.
   received.
 - **Missed evidence**: deciding documents the agent did not cite.
 - **Unsupported claims**: claims in the answer that no document supports or that
-  a governing document contradicts, counted by a fixed judge (`gpt-5.4-mini`,
-  prompt `cat40-claims-v1`). It counts; it does not decide success.
+  a governing document contradicts, counted by a fixed judge (`gpt-6.1-sol` for
+  new runs; the published runs used `gpt-5.4-mini`), prompt `cat40-claims-v1`.
+  It counts; it does not decide success.
 - **Latency and cost**: wall time per task, and every provider dollar, gbrain's
   internal calls included.
 
@@ -183,8 +189,8 @@ evidence, not a precise estimate. "Inconclusive" is a permitted result, and so i
 A build-versus-build comparison runs the control build in the same window as
 the candidate, with identical models, tasks, repeats and flags, because the
 same build's scores move between runs hours apart. The agent-first operator
-check (F1/F10) on the `gbrain` arm uses `gpt-5.4-mini`, `gpt-5.4` and
-`claude-sonnet-4-6`, all 50 tasks and two repeats, and passes when pooled
+check (F1/F10) on the `gbrain` arm uses `claude-sonnet-5-5`, `gpt-6.1-sol`,
+`claude-opus-5-5` and `claude-fable-5-1`, all 50 tasks and two repeats, and passes when pooled
 success is no more than 3 points below the same-window control with no rise in
 leaks ([Cat 41 protocol](2026-10-03-agent-operator-protocol.md#the-f1f10-agent-loop-check)).
 
@@ -210,7 +216,7 @@ bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle \
 # gbrain arm: build the slots once per commit, then run the cells
 bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-repo <gbrain checkout> --gbrain-ref <sha> \
   --slots 5 --slot-build-allowance-usd 2 --budget-usd 10 --out eval/reports/cat40/slots-<sha>
-bun eval/runner/cat40-model-ladder.ts --models gpt-5.4-mini,gpt-5.4,claude-sonnet-4-6 --arms gbrain \
+bun eval/runner/cat40-model-ladder.ts --models claude-sonnet-5-5,gpt-6.1-sol,claude-opus-5-5,claude-fable-5-1 --arms gbrain \
   --gbrain-repo <gbrain checkout> --gbrain-ref <sha> --gbrain-label <label> --slots 5 --repeat 2 \
   --transcripts --judge none --budget-usd 45 --out eval/reports/cat40/<label>
 ```
@@ -219,3 +225,9 @@ Paid runs reserve every request in the budget ledger
 ([guide](../budget-ledger.md)) under its program cap. The file and Postgres arms
 cost about $0.05 per cell; a `gbrain` cell costs $0.02 to $0.30 depending on the
 model.
+
+## Changelog
+
+### 2026-10-06: new runs use the newest frontier models
+
+Amended before any new cell, under the eval model rules: new runs and the F1/F10 build check use `claude-sonnet-5-5`, `gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1` (previously the two three-rung ladders and, for F1/F10, `gpt-5.4-mini`, `gpt-5.4` and `claude-sonnet-4-6`), and the unsupported-claims judge moves from `gpt-5.4-mini` to `gpt-6.1-sol`. Published results keep their models. Workstream W1 of the [2026-10 follow-up round](../plans/2026-10-06-followups-round/PLAN.md).
