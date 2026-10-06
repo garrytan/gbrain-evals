@@ -67,7 +67,7 @@ any cell), they form one joint unit `U34` with U4's primary metric, and the fami
 
 | Stratum | Source |
 |---|---|
-| beam | BEAM-1M **sealed** conversations (24 per `eval/decisions/splits/beam-1m.json`), rendered as pages by the runner's BEAM loader. About 680,000 list lines projected. This spends the last unopened BEAM sealed set. |
+| beam | BEAM-1M **sealed** conversations (24 per `eval/decisions/splits/beam-1m.json`, less the three amendment 1 excludes: 21), rendered as pages by the runner's BEAM loader. About 590,000 list lines projected. |
 | vault | Permissively licensed public markdown notes vaults never used by this program, pinned to a commit with per-file blob hashes |
 | templates | A permissively licensed public collection of markdown templates (meeting, schedule, form and journal templates), pinned the same way |
 | stress | Custodian-generated assistant chats and notes in the shapes behind H3's failures and their neighbors: schedules and itineraries with unfilled slots, glossaries, dictionary and usage-label entries, checklists, forms, changelogs, wiki exports. At least 2,000 template- or label-shaped list lines |
@@ -306,6 +306,20 @@ A campaign manifest in the runbook enforces this order: a step refuses to start 
 
 Exceeding the alert needs the owner's decision and never changes a bar. If G1–G5 fail, the answer phase is not run.
 
+## Amendments (before the freeze; no cell has run)
+
+1. **2026-10-06, N's beam stratum.** The beam stratum excludes BEAM-1M sealed conversations `1m-1`, `1m-6` and
+   `1m-26`. GBRA-52's proof wave ran them end to end, and its per-question receipts are public on gbrain-evals branch
+   `capy/mpw-harness`, so they are no longer unopened material. The stratum keeps the other 21 BEAM-1M sealed
+   conversations, about 590,000 list lines projected, so N's 500,000-line floor still holds before the other strata
+   are counted.
+2. **2026-10-06, concurrent opening.** GBRA-52's QA-only proof wave may open the remaining BEAM-1M sealed conversations
+   while Q2 runs. N's freshness is unaffected: those QA cells never parse list lines or produce line labels, and
+   GBRA-52 keeps every BEAM-1M per-question row and conversation id in custody and publishes only pooled aggregates
+   until Q2's decision is recorded. If GBRA-52 publishes per-conversation material for any of the 21 before Q2's G1
+   cell opens, the custodian drops that conversation from the beam stratum, records the drop here, and checks that the
+   500,000-line floor still holds.
+
 ## Freeze record
 
 Appended before any cell runs: the frozen gbrain build SHA and baseline master SHA; unit commit SHAs and whether U3 and
@@ -316,4 +330,5 @@ model list; any power-simulation raise.
 
 ## Changelog
 
+- 2026-10-06: amendments 1 and 2 (beam stratum excludes three conversations GBRA-52 opened; concurrent QA-only opening), before the freeze.
 - 2026-10-06: first version, before any material was minted.
