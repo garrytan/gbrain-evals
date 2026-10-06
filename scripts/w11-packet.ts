@@ -91,7 +91,7 @@ export function cat35Data(root = process.cwd()) {
   const calText = readFileSync(join(root, CAT35_CALIBRATION), 'utf8');
   const cal = JSON.parse(calText) as { entries: Array<{ slot: string; item_id_or_ref: string; transcript_id: string; lane_hint: string; judge_verdict: string | null }> };
   const txtFiles = new Map<string, string>();
-  for (const f of readdirSync(join(root, CAT35_TRANSCRIPTS)).filter(f => f.endsWith('.txt'))) {
+  for (const f of readdirSync(join(root, CAT35_TRANSCRIPTS)).filter(f => f.endsWith('.txt')).sort()) {
     txtFiles.set(f.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.txt$/, ''), readFileSync(join(root, CAT35_TRANSCRIPTS, f), 'utf8'));
   }
   const rows = cal.entries.filter(e => e.slot === 'coverage').map(e => {
