@@ -1,9 +1,9 @@
 {
   "decision_id": "query-facts-arm",
   "stage": "dev",
-  "decided_at": "2026-10-06T00:30:00Z",
+  "decided_at": "2026-10-06T02:10:00Z",
   "measured_build": "garrytan/gbrain@16288b95c",
-  "overall": "off_gate_1_failed",
+  "overall": "on_gates_1b_and_2_passed",
   "gate_1": {
     "status": "fail",
     "rule_result": {
@@ -233,7 +233,173 @@
   "gate_3": {
     "status": "not_run"
   },
-  "decision": "search.query_facts_arm stays off by default",
+  "decision": "search.query_facts_arm is on by default (gate 1 failed at 16288b95c; gates 1b and revised 2 passed at 947536f4c)",
   "metered_spend_usd": 26.05,
-  "spend_note": "gate 1 runs 25.56, two 6-probe smokes 0.14, and 0.35 for a duplicate run stopped after 30 probes and not used"
+  "spend_note": "gate 1 runs 25.56, two 6-probe smokes 0.14, and 0.35 for a duplicate run stopped after 30 probes and not used",
+  "gate_1b": {
+    "status": "pass",
+    "measured_build": "garrytan/gbrain@947536f4c",
+    "rule_result": {
+      "after_1_write": {
+        "on_correct": 100,
+        "off_correct": 92,
+        "higher": true,
+        "on_stale": 0,
+        "off_stale": 8,
+        "stale_not_higher": true
+      },
+      "after_5_writes": {
+        "on_correct": 100,
+        "off_correct": 92,
+        "higher": true,
+        "on_stale": 0,
+        "off_stale": 8,
+        "stale_not_higher": true
+      }
+    },
+    "forget_remember": {
+      "off": {
+        "checkpoints": {
+          "0": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          },
+          "1": {
+            "correct": 92,
+            "stale": 8,
+            "n": 100
+          },
+          "5": {
+            "correct": 92,
+            "stale": 8,
+            "n": 100
+          }
+        },
+        "metered_spend_usd": 3.4989
+      },
+      "on": {
+        "checkpoints": {
+          "0": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          },
+          "1": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          },
+          "5": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          }
+        },
+        "fact_row_in_context": "200 of 200 post-correction answers",
+        "metered_spend_usd": 3.3858
+      }
+    },
+    "no_loss_checks": {
+      "status": "pass",
+      "edit_sync": {
+        "off": {
+          "1": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          },
+          "5": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          }
+        },
+        "on": {
+          "1": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          },
+          "5": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          }
+        }
+      },
+      "append": {
+        "off": {
+          "1": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          },
+          "5": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          }
+        },
+        "on": {
+          "1": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          },
+          "5": {
+            "correct": 100,
+            "stale": 0,
+            "n": 100
+          }
+        }
+      },
+      "arm_fired": "0 of 600 answers in each arm: they save no facts",
+      "ceiling": "both arms are at 100% with the key off and on, so these checks rule out a loss and cannot show a gain",
+      "metered_spend_usd": {
+        "off": 5.5835,
+        "on": 5.585
+      }
+    },
+    "context_tokens_mean": {
+      "forget_remember_off": 3127,
+      "forget_remember_on": 3139
+    },
+    "metered_spend_usd": 18.0532,
+    "unmetered_note": "a first attempt that ran out of disk is not in the total; its records were lost; about two minutes of one run, under $0.50 by the observed rate"
+  },
+  "gate_2_revised": {
+    "status": "pass",
+    "measured_build": "garrytan/gbrain@947536f4c",
+    "mode": "hermetic, keyword-only",
+    "sets": {
+      "namedthing": {
+        "questions": 12,
+        "fired": 0,
+        "recall10_lower": 0
+      },
+      "relational": {
+        "questions": 38,
+        "fired": 0,
+        "recall10_lower": 0
+      },
+      "longmemeval-nightly": {
+        "questions": 10,
+        "fired": 0,
+        "recall10_lower": 0
+      },
+      "namedthing+facts": {
+        "questions": 12,
+        "fired": 11,
+        "recall10_lower": 0
+      },
+      "relational+facts": {
+        "questions": 38,
+        "fired": 38,
+        "recall10_lower": 0,
+        "recall10_lower_at_16288b95c": 2
+      }
+    }
+  },
+  "metered_spend_usd_total": 44.1
 }
