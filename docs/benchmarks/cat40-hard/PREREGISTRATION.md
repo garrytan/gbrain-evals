@@ -83,14 +83,12 @@ Claims stay within unrestricted information: Hard has no permissions family, so 
 ## Analysis commands
 
 ```bash
-# comparator (step 8)
-python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/simple-4k/attempts.jsonl --hard-comparator fs,pg,memory
-# primary endpoint, simultaneous intervals, per-model and per-family tables, weakest-family rule
-python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/simple-4k/attempts.jsonl eval/reports/cat40/hard/gbrain-4k/attempts.jsonl --hard-headline gbrain-hard,<comparator> --simple fs,pg,memory
-# 50k
+# amendment A2: the held-out run is 50k only. Primary endpoint, gbrain minus fs, with per-model and per-family tables and the weakest-family rule
 python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/cells-50k/attempts.jsonl --hard-headline gbrain-hard,fs --simple fs
-# tables, costs, stops, latency
-bun eval/runner/cat40/analyze.ts eval/reports/cat40/hard/simple-4k/attempts.jsonl eval/reports/cat40/hard/gbrain-4k/attempts.jsonl --subject gbrain-hard --comparator <comparator> --budget-ledger .budget/cat40-hard.sqlite
+# when the pg batch ran on every model: simultaneous intervals against fs and pg
+python3 docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py eval/reports/cat40/hard/cells-50k/attempts.jsonl eval/reports/cat40/hard/pg-50k/attempts.jsonl --hard-headline gbrain-hard,fs --simple fs,pg
+# tables, costs, stops, latency (add the oracle, pg and memory batches that ran)
+bun eval/runner/cat40/analyze.ts eval/reports/cat40/hard/cells-50k/attempts.jsonl eval/reports/cat40/hard/oracle-50k/attempts.jsonl --subject gbrain-hard --comparator fs --budget-ledger .budget/cat40-hard.sqlite
 ```
 
 The runner argv for every step is in [RUNBOOK.md](RUNBOOK.md) and `scripts/cat40-hard.sh` (print it with `PRINT_ONLY=1 scripts/cat40-hard.sh step <step>`).

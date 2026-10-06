@@ -12,8 +12,9 @@
  *   then nickname   adding a third grep for the nickname (from the account sheet); the records left use the
  *                   manager form, which no fixed string finds
  * The asked name is the account string in the question or the H5 session messages (H3: the ambiguous first word
- * or code prefix); H1 questions name no account, so each member or near miss is asked by its canonical name, one
- * grep per account.
+ * or code prefix of the item about that account); H1 questions name no account, so each member or near miss is
+ * asked by its canonical name, one grep per account. Two size columns: oracle documents per task, and accounts the
+ * answer needs (H1: the members or the count; H2 to H5: the accounts the question's items are about, amendment A2).
  *
  *   bun eval/runner/cat40/hard-proxy.ts --knobs <knobs.json> [--knobs <knobs.json> ...] [--seed N] [--scale large]
  */
@@ -21,7 +22,7 @@ import { renderDoc } from '../../generators/model-ladder-gen.ts';
 import { HARD_FAMILIES, HARD_SEEDS, REF_FORMS, type HardFamily } from '../../generators/hard/schema.ts';
 import { aliasesOf, buildHardLedger, loadKnobs, type HardAccount, type HardBuild } from '../../generators/model-ladder-hard.ts';
 
-export interface ProxyRow { family: HardFamily; tasks: number; records: number; names_it: number; one_grep: number; name_or_code: number; with_nickname: number }
+export interface ProxyRow { family: HardFamily; tasks: number; records: number; docs_per_task: number; accounts_per_task: number; names_it: number; one_grep: number; name_or_code: number; with_nickname: number }
 export interface ProxyReport { rows: ProxyRow[]; forms: Record<string, number>; oracle_forms: Record<string, number> }
 
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
@@ -40,12 +41,15 @@ export function referenceProxy(b: HardBuild): ProxyReport {
   const nicknames = (e: HardAccount) => [e.nickname, ...e.mergedIn.map(m => m.nickname)].filter((n): n is string => !!n);
   const rows = HARD_FAMILIES.map(family => {
     const tasks = b.tasks.filter(t => t.family === family);
-    const shares: Record<'names_it' | 'one_grep' | 'name_or_code' | 'with_nickname', number[]> = { names_it: [], one_grep: [], name_or_code: [], with_nickname: [] };
+    const shares: Record<'names_it' | 'one_grep' | 'name_or_code' | 'with_nickname' | 'docs' | 'accounts', number[]> = { names_it: [], one_grep: [], name_or_code: [], with_nickname: [], docs: [], accounts: [] };
     let records = 0;
     for (const t of tasks) {
       const said = [t.question, ...(t.sessions ?? [])].join('\n');
-      const h3 = /the (\S+) account whose|code starts with (\S+) and/.exec(t.question);
-      const asked = (e: HardAccount) => (h3 ? h3[1] ?? h3[2] : [e.name, ...aliasesOf(e)].filter(n => said.includes(n)).sort((x, y) => y.length - x.length)[0] ?? e.name);
+      const h3 = [...t.question.matchAll(/the (\S+) account whose|code starts with (\S+) and/g)].map(m => m[1] ?? m[2]);
+      const h3For = (e: HardAccount) => h3.find(x => [e.name, ...aliasesOf(e)].some(n => n.startsWith(`${x} `) || (n === n.toUpperCase() && n.startsWith(x)))) ?? h3[0];
+      const asked = (e: HardAccount) => (h3.length ? h3For(e) : [e.name, ...aliasesOf(e)].filter(n => said.includes(n)).sort((x, y) => y.length - x.length)[0] ?? e.name);
+      shares.docs.push(t.relevant.length);
+      shares.accounts.push(t.family === 'H1' ? t.gold.members?.length ?? t.gold.count ?? 0 : t.gold.items?.length ?? 1);
       const evidence = t.relevant.map(id => docs.get(id)!).filter(d => d.refs.length);
       if (!evidence.length) continue;
       records += evidence.length;
@@ -57,7 +61,7 @@ export function referenceProxy(b: HardBuild): ProxyReport {
       shares.name_or_code.push(reach(codes));
       shares.with_nickname.push(reach(e => [...codes(e), ...nicknames(e)]));
     }
-    return { family, tasks: tasks.length, records, names_it: mean(shares.names_it), one_grep: mean(shares.one_grep), name_or_code: mean(shares.name_or_code), with_nickname: mean(shares.with_nickname) };
+    return { family, tasks: tasks.length, records, docs_per_task: mean(shares.docs), accounts_per_task: mean(shares.accounts), names_it: mean(shares.names_it), one_grep: mean(shares.one_grep), name_or_code: mean(shares.name_or_code), with_nickname: mean(shares.with_nickname) };
   });
   return { rows, forms, oracle_forms: oracleForms };
 }
@@ -68,10 +72,10 @@ export function proxyMarkdown(label: string, r: ProxyReport): string {
   const share = (o: Record<string, number>) => [...REF_FORMS, 'v1'].filter(f => o[f]).map(f => `${f} ${pc(o[f] / total(o))}`).join(', ');
   return [
     `### ${label}`, '',
-    '| Family | tasks | event records in oracle docs | name verbatim | one name grep | name, then code grep | name, code, then nickname grep |',
-    '|---|---|---|---|---|---|---|',
-    ...r.rows.map(x => `| ${x.family} | ${x.tasks} | ${x.records} | ${pc(x.names_it)} | ${pc(x.one_grep)} | ${pc(x.name_or_code)} | ${pc(x.with_nickname)} |`),
-    `| all | ${r.rows.reduce((a, x) => a + x.tasks, 0)} | ${r.rows.reduce((a, x) => a + x.records, 0)} | ${(['names_it', 'one_grep', 'name_or_code', 'with_nickname'] as const).map(k => pc(mean(r.rows.map(x => x[k])))).join(' | ')} |`, '',
+    '| Family | tasks | oracle docs per task | accounts per answer | event records in oracle docs | name verbatim | one name grep | name, then code grep | name, code, then nickname grep |',
+    '|---|---|---|---|---|---|---|---|---|',
+    ...r.rows.map(x => `| ${x.family} | ${x.tasks} | ${x.docs_per_task.toFixed(1)} | ${x.accounts_per_task.toFixed(1)} | ${x.records} | ${pc(x.names_it)} | ${pc(x.one_grep)} | ${pc(x.name_or_code)} | ${pc(x.with_nickname)} |`),
+    `| all | ${r.rows.reduce((a, x) => a + x.tasks, 0)} | ${mean(r.rows.map(x => x.docs_per_task)).toFixed(1)} | ${mean(r.rows.map(x => x.accounts_per_task)).toFixed(1)} | ${r.rows.reduce((a, x) => a + x.records, 0)} | ${(['names_it', 'one_grep', 'name_or_code', 'with_nickname'] as const).map(k => pc(mean(r.rows.map(x => x[k])))).join(' | ')} |`, '',
     `Reference forms over every event record: ${share(r.forms)}. In oracle documents: ${share(r.oracle_forms)}.`, '',
   ].join('\n');
 }

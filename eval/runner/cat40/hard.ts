@@ -49,6 +49,7 @@ export const HARD_STOP_CODES = {
   HARD_FREEZE_RULE_FAILED: 'the calibration round fails the freeze rule',
   HARD_SMOKE_FAILED: 'the gbrain smoke had harness errors',
   HARD_PREREG_MISSING: 'the preregistration lacks a field this step needs',
+  HARD_STEP_RETIRED: 'amendment A2 retired the 4k held-out steps; the held-out run is 50k only',
 } as const;
 export type HardStopCode = keyof typeof HARD_STOP_CODES;
 
@@ -195,8 +196,9 @@ export function oracleOversize(world: HardWorld, tasks: HardTask[], models: stri
  */
 export function scriptedHardAgent(task: HardTask, armName: string, session: number, total: number): ScriptedModel {
   const recording = session < total - 1;
-  const gold = task.answer_kind === 'set' ? JSON.stringify((task.gold.members ?? []).map(m => m.names[0])) : task.answer_kind === 'count' ? String(task.gold.count) : task.gold.answer![0];
-  const blank = task.answer_kind === 'set' ? '[]' : task.answer_kind === 'count' ? '0' : 'UNKNOWN';
+  const gold = task.answer_kind === 'set' ? JSON.stringify((task.gold.members ?? []).map(m => m.names[0])) : task.answer_kind === 'count' ? String(task.gold.count)
+    : task.answer_kind === 'values' ? JSON.stringify(task.gold.items!.map(it => it.answer[0])) : task.gold.answer![0];
+  const blank = task.answer_kind === 'set' || task.answer_kind === 'values' ? '[]' : task.answer_kind === 'count' ? '0' : 'UNKNOWN';
   return history => {
     if (armName === 'oracle') return { name: 'submit_answer', args: { answer: gold, sources: task.gold.evidence } };
     if (history.length === 0) {
@@ -229,7 +231,7 @@ export function writeDiagnostic(task: HardTask, sessions: Array<{ tools: AgentRu
     const saved = (written[f.session - 1] ?? '').includes(f.value);
     if (!saved) return { ...f, outcome: 'lost' };
     if (f.superseded_by === undefined) return { ...f, outcome: 'saved' };
-    const next = task.session_facts!.find(x => x.session === f.superseded_by)!;
+    const next = task.session_facts!.find(x => x.session === f.superseded_by && x.key === f.key)!;
     return { ...f, outcome: savedIn(next.value, f.superseded_by - 1) ? 'updated' : 'saved_then_kept_stale' };
   });
 }

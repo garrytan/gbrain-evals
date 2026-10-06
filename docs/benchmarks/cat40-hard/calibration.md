@@ -10,7 +10,8 @@ Calibration uses seed 20261005, 10 tasks per family from a world generated at th
 |---|---|---|---|
 | 1 | [knobs.round-1.json](knobs.round-1.json) (knobs.default.json) | starting values: 16 turns, 10 to 40 H1 members, 3 to 6 H2 changes, 1 to 3 H3 look-alikes, 3 to 5 H4 sources, one look-alike fact in each H5 chain | stopped at 189 of 300 cells on its $38 budget run; H2 and H3 at 100% on fs and pg; two H1 answer-key defects (below) |
 | 2 | [knobs.round-2.json](knobs.round-2.json) | 2026-10-05: H2 and H3 far too easy (fs 20/20 each); record counts, history length and distractors for those two families raised; background accounts lowered to hold world size; H1, H4, H5, noise and the turn cap unchanged (details below) | pooled fs 95%, pg 97%, oracle 99%; H2 to H5 at 95 to 100% on fs; knobs at their useful range |
-| 3 | [knobs.round-3.json](knobs.round-3.json) (generator v2, 50k) | 2026-10-05, amendment A1: round-2 knobs plus the reference forms (15% of references by name, the rest split about evenly between code, nickname and account manager); records stop naming their account; calibration moves to the 50k world (details below) | pending |
+| 3 | [knobs.round-3.json](knobs.round-3.json) (generator v2, 50k) | 2026-10-05, amendment A1: round-2 knobs plus the reference forms (15% of references by name, the rest split about evenly between code, nickname and account manager); records stop naming their account; calibration moves to the 50k world (details below) | pooled fs 76%, pg 83%, oracle 96%; H1 at 15-20%, mostly turn-cap stops; H2 to H5 at 85-100% |
+| 4 | [knobs.round-4.json](knobs.round-4.json) (generator v2, 50k) | 2026-10-06, amendment A2: H2 to H5 questions ask about 2 to 3 accounts each; H1 sets of 6 to 12 members; manager weight raised to hold the manager share; 2,400 appended accounts to hold the 50k size (details below) | pending |
 
 ## Round 1 (2026-10-05)
 
@@ -105,6 +106,35 @@ World: seed 20261005, 50k (`--scale large`), knobs.round-3.json, generator v2 at
 | oracle | 16/20 | 20/20 | 20/20 | 20/20 | 20/20 | 96% |
 
 Reference forms moved H1 (aggregation over 10 to 40 accounts) from 80% to 15-20%, mostly through turn-cap stops: resolving each member takes several searches. They did not move H2 to H5. In those families the question is about one account, and transcripts show the agent reading that account's sheet, then searching for every alias and the manager phrase in one pattern and reading the hits in about 10 calls. One-account questions stay within reach of a frontier agent with grep however the references are spread; the lever that changed difficulty is the number of accounts a question needs.
+
+## Round 4 knobs (2026-10-06)
+
+Target: H2 to H5 well below round 3's 85-100% on fs and pg, and H1 decided by finding members rather than by the turn cap, with pooled fs and pg within 40-70% on the 50k world. Amendment A2 records why: round 3 showed that one-account questions stay within reach of a frontier agent with grep however references are spread (the agent reads one account sheet, greps every alias and the manager phrase in one pattern and answers in about 10 calls), and that the number of accounts a question needs is what moves difficulty. The generator is still `model-ladder-hard-v2`; the multi-account rules are in [WORLD_SCHEMA.md](WORLD_SCHEMA.md#multi-account-questions-amendment-a2). Changes:
+
+| Knob | Round 3 | Round 4 | Group | Reason |
+|---|---|---|---|---|
+| `multi_account_min` / `max` | (1, v2) | 2 / 3 | record counts (new) | each H2 to H5 question asks about 2 or 3 accounts that share no descriptor, first word, code prefix or account manager, so each needs its own sheet, alias search and reading; at 50k the questions ask about 2.4 to 2.7 accounts on average (below) |
+| `h1_min_members` / `h1_max_members` | 10 / 40 | 6 / 12 | record counts | round 3's H1 ended fs 3/20 and pg 4/20, and each arm had 12 turn-cap stops pooled over all families, mostly H1: at about 15 members (round 3's mean on this seed) resolving every member did not fit in 16 turns. The suggested 6 to 20 would not shrink H1 here: the multi-account accounts double the 4k population (261 to 547 accounts), plain owner sets grow, and 6 to 20 gives a mean of 16.3 members. 6 to 12 gives a mean of 9.2. The generator narrows a question to one region (or, for the region template, one segment) when its plain predicate cannot land in range after half its attempts, so every template stays usable with the larger population |
+| `manager_ref_weight` | 0.5 | 1.0 | reference forms | with twice the 4k accounts per manager, more manager draws would fit two accounts and fall back; on the 4k base, 0.5 would have dropped the realized manager share from round 3's 26% to 17%; at 1.0 it is 23% there and 30% of all references at 50k (25% in oracle documents; round 3: 24% and 22%), so the reference-form difficulty holds while the account count moves |
+| `large_extra_accounts` | 2,800 | 2,400 | noise (size) | the extra task accounts add about 5,000 documents to the 4k base; 400 fewer appended accounts keep the 50k world at 54,999 documents (round 3: 53,631) and away from the 62,500 limit on the held-out seed |
+
+Unchanged: every other round-3 knob, including the reference-form mix by name (15%) and the 16-turn cap. The 4k base world of a multi-account knob set has 10,038 documents, above the 4k band; under A2 it runs no cells and is only the 50k world's base, so the generator holds only the 50k world to its size band (CEO-F5). Multi-account worlds draw people from 76 surnames instead of 36 (the 4k world needs about twice the people); v1 and v2 worlds are unchanged.
+
+**Answers.** A multi-account question lists its items as numbered single-account questions (the wording v2 uses) and asks for a JSON array of the answers in order. The Hard scorer grades it as `values` (new in `cat40-hard-score-v2`): each element is graded like a one-account value answer against its own accepted and wrong values, and success needs every element right. Earlier answer kinds score as before.
+
+**Free difficulty proxy**, seed 20261005, 50k, no model call (`bun eval/runner/cat40/hard-proxy.ts --scale large --knobs knobs.round-3.json --knobs knobs.round-4.json`):
+
+| Family | round 3: oracle docs per task | accounts per answer | name, code, then nickname grep | round 4: oracle docs per task | accounts per answer | name, code, then nickname grep |
+|---|---|---|---|---|---|---|
+| H1 | 212.5 | 15.1 | 85.3% | 229.5 | 9.2 | 82.5% |
+| H2 | 16.2 | 1.0 | 73.6% | 43.0 | 2.7 | 70.0% |
+| H3 | 15.8 | 1.0 | 71.3% | 39.1 | 2.4 | 68.0% |
+| H4 | 7.0 | 1.0 | 74.2% | 17.1 | 2.6 | 74.1% |
+| H5 | 5.2 | 1.0 | 76.3% | 13.3 | 2.5 | 71.2% |
+
+In round 4, 15% of the oracle's event records name the asked account (round 3: 14%), and H2 to H5 oracle evidence grows two to three times. H1 oracle evidence stays near 230 documents because near misses (capped at 40 accounts) dominate it. The largest oracle prompt is about 49,000 tokens (H1-10). The 50k world has 54,999 documents, digest `20d1c8b9…341d5d`.
+
+**Cost.** Without measured cells, `hard-ops.ts project --step calibrate --scale large --world <round-4 world>` gives $87.48 ($100.60 with the margin), from round-1 rates times the 50k factor. Round 3 cost $99.35 for the same grid; H2 to H5 cells now ask about two to three accounts, so expect them to cost about that many times round 3's, and H1 cells less. On the ledger machine the script projects from round 3's measured 50k cells, which are one-account cells and so understate H2 to H5.
 
 ## Notes after the freeze
 

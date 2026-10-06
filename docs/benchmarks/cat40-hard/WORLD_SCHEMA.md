@@ -71,6 +71,34 @@ When a drawn manager form fails any test, the reference falls back to the code o
 
 **World fields.** `entities[].refs` holds `codes` (own, former and merged codes), `nicknames` (own and merged), `descriptor` and `managers` (each `{ name, effective, recorded, doc }`). `references` lists `{ doc, entity, form, text }` for every reference in an event record; resolution documents are exactly the documents with no entry.
 
+## Multi-account questions (amendment A2)
+
+Knobs `multi_account_min` and `multi_account_max` (knob schema 3; both or neither, and only with the reference-form knobs) set how many accounts each H2 to H5 question asks about. Each task draws its count k from that range; with a maximum of 1 the generator writes the v2 world exactly (only `knob_schema`, `knobs` and `knob_digest` differ). The world `version` stays `model-ladder-hard-v2`.
+
+**Items.** A question with k = 1 is the v2 single-account task. For k of 2 or more, the task is k independent single-account instances of its family, called items, each with its own accounts, variant, attribute, documents, key and evidence, exactly as v2 builds one task. Item j of task i in the main generator takes variant and attribute from index i + j * (tasks_per_family + 1) and draws from random streams named `<i>:<j>` (item 0 keeps v2's names), so items of one question differ in variant or attribute; a sealed generator may choose differently but must keep each item a complete instance of its family:
+
+- H2: one account's attribute as of the item's own date (each item keeps its own date).
+- H3: one look-alike cluster with its own ambiguous first word or code prefix and its own disambiguating fact; the item's account is the account the disambiguation resolves to (the holder for a merged pair).
+- H4: one account's authoritative current value.
+- H5: one statement chain (four facts, one per recording session, with the superseded fact, the required facts and the look-alike or noise fact, as in v2). The item's account is the account the item's question names (routing: the account; merge: the account folded into another).
+
+**Unlinked accounts.** No two accounts created for different items of one question share a descriptor, the first word of a name, the first three characters of an account code, or any account manager in their timelines, so no single search or manager phrase covers two items. The main generator redraws an item's account (stream `<key>:<attempt>`) until it holds, and excludes the other items' managers when it adds a later handoff. Look-alikes of an item are not checked against other items (they share their own target's first word or prefix by design).
+
+**Wording.** The question is the items' v2 single-account questions, numbered, in this exact shape:
+
+```
+Answer each of these <k> questions:
+1. <item 1's single-account question>
+2. <item 2's single-account question>
+Answer with a JSON array of the <k> answers in the order asked, as one string in `answer`, for example ["first answer","second answer"].
+```
+
+**H5 sessions.** Each recording session carries one statement from every item's chain: session n's message is the chains' n-th statements in item order, joined by a space, then the recording instruction. `session_facts` lists, for each session in order, one fact per chain in item order; a fact's `superseded_by` names the later session holding the fact with the same key. The oracle note is `Recorded from team updates (sessions 1 to 4):` followed by every chain's lines.
+
+**Task fields.** `answer_kind` is `values`; `accounts` is every item's accounts (H5: each chain's account and, for a merge chain, the account folded into it), without repeats; `variant` is the items' variants joined by `|`; `gold.items` as above; `gold.evidence` and `relevant` are the union of the items' (each item's records carry their resolution documents, so the oracle can tie every item's records to its account).
+
+**People and size.** A multi-account knob set needs about twice the 4k accounts, so the main generator draws surnames from `LAST` plus `LAST_MORE`. Its 4k world is only the 50k world's base (A2: no 4k cells), so only the 50k world is held to its size band.
+
 ## Tasks
 
 Each task (`HardTask`) has an id `H1-01` to `H5-NN`, a `family`, a `variant` for breakdowns and an `answer_kind`:
@@ -78,6 +106,7 @@ Each task (`HardTask`) has an id `H1-01` to `H5-NN`, a `family`, a `variant` for
 - **`value`** (H2 to H5): one value in `answer`. `gold.answer` lists accepted values; `gold.wrong` lists values that fail the answer when named anywhere in it (superseded values, a look-alike's value, lower-authority values, superseded user statements). Every H2 to H5 task fills `gold.wrong`.
 - **`set`** (H1): a JSON array of account names, sent as one JSON-encoded string in `answer`. `gold.members` lists each member's entity id and every accepted name, canonical first.
 - **`count`** (H1): the integer at the start of `answer`; `gold.count` is the key.
+- **`values`** (H2 to H5 multi-account questions, amendment A2): a JSON array with one answer per numbered item, in order, sent as one JSON-encoded string in `answer`. `gold.items` lists, per item in question order, the entity id it asks about (`account`), its accepted values (`answer`) and the values that fail that item (`wrong`). There is no task-level `gold.answer` or `gold.wrong`.
 
 Other fields:
 
@@ -93,7 +122,7 @@ Other fields:
 
 ### What each family must contain
 
-- **H1, many records.** A set or count over 10 to 40 accounts, from a predicate over owners, open escalated tickets, renewal dates, segments and regions, as of a date. The key is `evaluatePredicate` over the generator's ledger. Oracle evidence holds every member's deciding records and the near misses' records, capped in seeded order, plus the rename or merger notice of any of them whose records use more than one name. No predicate turns on a boundary a reader could take either way (an event on the as-of date, a renewal on a window edge).
+- **H1, many records.** A set or count over `h1_min_members` to `h1_max_members` accounts (round 4: 6 to 12), from a predicate over owners, open escalated tickets, renewal dates, segments and regions, as of a date. The key is `evaluatePredicate` over the generator's ledger. Oracle evidence holds every member's deciding records and the near misses' records, capped in seeded order, plus the rename or merger notice of any of them whose records use more than one name. No predicate turns on a boundary a reader could take either way (an event on the as-of date, a renewal on a window edge). When a template's plain predicate cannot land in the member range after half its attempts (2,500 of 5,000), the main generator adds one clause: a region (the owner, segment-and-escalated and escalated-and-renewal templates, worded "<region> accounts") or, for the region-and-renewal template, a segment. v1 and v2 knob sets never reach that point.
 - **H2, long histories.** One attribute that changes 3 to 6 times with reversals, backdated corrections and effective dates that differ from signing dates, asked as of a date. Oracle evidence holds the attribute's full dated history.
 - **H3, look-alikes.** Accounts sharing a first word or a code prefix, a renamed account or a merged account. The question names only the ambiguous name and one fact that has to be looked up. Oracle evidence holds the disambiguating record and the look-alikes' records.
 - **H4, authority.** 3 to 5 documents that disagree: executed contract and amendments, draft amendment, email summary and agent note. Some deciding documents are long, with the deciding line mid-document.
@@ -120,8 +149,8 @@ The runner refuses a world (stop code `HARD_WORLD_INVALID`) unless:
 - `mode` is `hard`, `knob_digest` matches `knobs`, and `max_turns` is a positive integer;
 - document ids are unique and every `relevant` and `gold.evidence` id exists;
 - task ids look like `H1-01`, H5 tasks have four recording sessions and other tasks have none;
-- set tasks have members that are entities, count tasks have a non-negative integer, value tasks have accepted answers;
-- accepted and wrong values are pairwise distinct and never substrings of each other after `normalizeValue`;
+- set tasks have members that are entities, count tasks have a non-negative integer, value tasks have accepted answers; a `values` task has two or more items about different entities, each with accepted answers and (H2 to H5) wrong values, and no two items' entities share a descriptor, first word, first three code characters or account manager;
+- accepted and wrong values are pairwise distinct and never substrings of each other after `normalizeValue` (per item in a `values` task);
 - the name namespace is injective;
 - v2 (`referenceProblems`): every reference's text is in its document; a `name` reference uses a name of its entity, a `code` or `nickname` reference one of its codes or nicknames; a reference not by name contains no name of its entity, and a nickname or manager reference no code either; a manager reference names the manager known on its date and fits no other account with the same descriptor; every code, nickname and descriptor a reference uses appears with a name of the entity in a resolution document dated on or before it; and in every task's `relevant`, each reference reaches the entity's canonical name within two hops through other oracle documents, with the manager timeline present for manager references.
 
@@ -136,6 +165,7 @@ Problems name only the family, the task index and counts, so a held-out world is
 3. **Sets.** The answer must parse as a JSON array of strings, directly or inside surrounding text. Each element maps to an entity by exact normalized equality with one of its names, never by substring; elements naming the same entity count once. Success is exact set equality. Precision, recall and Jaccard are reported and never count as success. An answer that is not a JSON array is `unparseable_set`.
 4. **Counts.** The integer at the very start of the answer must equal the key. "12" and "12 accounts" pass; "As of 2026-07-01, 12" does not.
 5. **H5.** Only the final session is scored; whether each recording session submitted `RECORDED` is reported.
+6. **Multi-account values.** The answer must parse as a JSON array of strings or numbers (numbers read as strings), directly or inside surrounding text, with exactly one element per item. Element n is scored by rule 2 against item n's accepted and wrong values. Success needs every element right; items answered right are reported. An answer that is not such an array is `unparseable_set`. Scorer version `cat40-hard-score-v2`; rules 1 to 5 are unchanged from v1.
 
 ## Adding a generator
 

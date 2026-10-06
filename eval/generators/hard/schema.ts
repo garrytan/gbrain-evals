@@ -18,9 +18,10 @@ import type { LadderDoc } from '../model-ladder-gen.ts';
 export const HARD_GENERATOR_VERSION = 'model-ladder-hard-v1';
 /** Version string of worlds written by the main Hard generator from a knob file with the reference-form knobs (amendment A1). */
 export const HARD_GENERATOR_VERSION_V2 = 'model-ladder-hard-v2';
-/** Version of the knob schema below: 1 for the v1 keys, 2 when the reference-form keys are present. A change to the key set or a key's meaning bumps it. */
+/** Version of the knob schema below: 1 for the v1 keys, 2 with the reference-form keys, 3 with the multi-account keys too. A change to the key set or a key's meaning bumps it. */
 export const HARD_KNOB_SCHEMA_VERSION = 1;
 export const HARD_KNOB_SCHEMA_VERSION_V2 = 2;
+export const HARD_KNOB_SCHEMA_VERSION_V3 = 3;
 
 export type HardFamily = 'H1' | 'H2' | 'H3' | 'H4' | 'H5';
 export const HARD_FAMILIES: readonly HardFamily[] = ['H1', 'H2', 'H3', 'H4', 'H5'];
@@ -98,6 +99,9 @@ export interface HardKnobs {
   code_ref_weight?: number;
   nickname_ref_weight?: number;
   manager_ref_weight?: number;
+  /** Accounts per H2 to H5 question (knob schema 3, amendment A2), drawn per task from this range. 1 writes the v2 world. */
+  multi_account_min?: number;
+  multi_account_max?: number;
 }
 
 export const HARD_KNOB_KEYS = [
@@ -110,6 +114,8 @@ export const HARD_KNOB_KEYS = [
 
 /** Reference-form keys (knob schema 2): a knob file has all of them or none. */
 export const HARD_V2_KNOB_KEYS = ['direct_name_share', 'code_ref_weight', 'nickname_ref_weight', 'manager_ref_weight'] as const satisfies ReadonlyArray<keyof HardKnobs>;
+/** Multi-account keys (knob schema 3): both or neither, and only with the reference-form keys. */
+export const HARD_MULTI_KNOB_KEYS = ['multi_account_min', 'multi_account_max'] as const satisfies ReadonlyArray<keyof HardKnobs>;
 
 /** Knob groups in the calibration priority order (CEO-F5): content first, the turn cap last. */
 export const KNOB_PRIORITY: ReadonlyArray<{ group: string; keys: ReadonlyArray<keyof HardKnobs> }> = [
@@ -144,12 +150,13 @@ export function validateKnobs(raw: unknown, source = 'knobs'): HardKnobs {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error(`${source}: a knob file is one JSON object with the keys ${HARD_KNOB_KEYS.join(', ')}`);
   const obj = raw as Record<string, unknown>;
   const problems: string[] = [];
-  const v2 = HARD_V2_KNOB_KEYS.some(k => k in obj);
-  const keys: ReadonlyArray<keyof HardKnobs> = v2 ? [...HARD_KNOB_KEYS, ...HARD_V2_KNOB_KEYS] : HARD_KNOB_KEYS;
+  const multi = HARD_MULTI_KNOB_KEYS.some(k => k in obj);
+  const v2 = multi || HARD_V2_KNOB_KEYS.some(k => k in obj);
+  const keys: ReadonlyArray<keyof HardKnobs> = [...HARD_KNOB_KEYS, ...(v2 ? HARD_V2_KNOB_KEYS : []), ...(multi ? HARD_MULTI_KNOB_KEYS : [])];
   const unknown = Object.keys(obj).filter(k => !(keys as readonly string[]).includes(k));
   const missing = keys.filter(k => !(k in obj));
   if (unknown.length) problems.push(`unknown keys: ${unknown.join(', ')}`);
-  if (missing.length) problems.push(`missing keys: ${missing.join(', ')}${v2 ? ' (the reference-form keys go together)' : ''}`);
+  if (missing.length) problems.push(`missing keys: ${missing.join(', ')}${multi ? ' (the multi-account keys need each other and the reference-form keys)' : v2 ? ' (the reference-form keys go together)' : ''}`);
   for (const k of keys) {
     if (!(k in obj)) continue;
     const v = obj[k];
@@ -158,7 +165,7 @@ export function validateKnobs(raw: unknown, source = 'knobs'): HardKnobs {
     else if (!Number.isInteger(v) || v < 0) problems.push(`${k} must be a non-negative integer (got ${v})`);
   }
   const n = obj as unknown as HardKnobs;
-  const order: Array<[keyof HardKnobs, keyof HardKnobs]> = [['transcript_lines_min', 'transcript_lines_max'], ['h1_min_members', 'h1_max_members'], ['h2_changes_min', 'h2_changes_max'], ['h3_lookalikes_min', 'h3_lookalikes_max'], ['h4_sources_min', 'h4_sources_max']];
+  const order: Array<[keyof HardKnobs, keyof HardKnobs]> = [['transcript_lines_min', 'transcript_lines_max'], ['h1_min_members', 'h1_max_members'], ['h2_changes_min', 'h2_changes_max'], ['h3_lookalikes_min', 'h3_lookalikes_max'], ['h4_sources_min', 'h4_sources_max'], ['multi_account_min', 'multi_account_max']];
   for (const [lo, hi] of order) if (typeof n[lo] === 'number' && typeof n[hi] === 'number' && n[lo] > n[hi]) problems.push(`${lo} (${n[lo]}) is above ${hi} (${n[hi]})`);
   if (typeof n.h4_sources_min === 'number' && n.h4_sources_min < 3) problems.push('h4_sources_min is at least 3 (a conflict needs three documents)');
   if (typeof n.h2_changes_min === 'number' && n.h2_changes_min < 2) problems.push('h2_changes_min is at least 2');
@@ -166,8 +173,9 @@ export function validateKnobs(raw: unknown, source = 'knobs'): HardKnobs {
   if (typeof n.max_turns === 'number' && n.max_turns < 1) problems.push('max_turns is at least 1');
   if (typeof n.tasks_per_family === 'number' && (n.tasks_per_family < 1 || n.tasks_per_family > 99)) problems.push('tasks_per_family is between 1 and 99');
   if (typeof n.h5_noise_sessions === 'number' && n.h5_noise_sessions > 1) problems.push('h5_noise_sessions is 0 or 1 (four recording sessions hold three required or superseded facts)');
+  if (multi && typeof n.multi_account_min === 'number' && (n.multi_account_min < 1 || (n.multi_account_max ?? 0) > 9)) problems.push('multi_account_min is at least 1 and multi_account_max at most 9');
   if (v2 && typeof n.direct_name_share === 'number' && n.direct_name_share < 1 && !((n.code_ref_weight ?? 0) + (n.nickname_ref_weight ?? 0) + (n.manager_ref_weight ?? 0) > 0)) problems.push('code_ref_weight, nickname_ref_weight and manager_ref_weight sum above 0 when direct_name_share is below 1');
-  if (problems.length) throw new Error(`${source}: ${problems.join('; ')}. Valid keys: ${HARD_KNOB_KEYS.join(', ')}, optionally with ${HARD_V2_KNOB_KEYS.join(', ')}. Fix the file, or start from docs/benchmarks/cat40-hard/knobs.default.json.`);
+  if (problems.length) throw new Error(`${source}: ${problems.join('; ')}. Valid keys: ${HARD_KNOB_KEYS.join(', ')}, optionally with ${HARD_V2_KNOB_KEYS.join(', ')}, and then optionally ${HARD_MULTI_KNOB_KEYS.join(', ')}. Fix the file, or start from docs/benchmarks/cat40-hard/knobs.default.json.`);
   return Object.fromEntries(keys.map(k => [k, obj[k]])) as unknown as HardKnobs;
 }
 
@@ -178,7 +186,7 @@ export function knobDigest(knobs: HardKnobs | Record<string, number>): string {
 }
 
 export function knobSchemaOf(knobs: HardKnobs | Record<string, number>): number {
-  return hasReferenceKnobs(knobs) ? HARD_KNOB_SCHEMA_VERSION_V2 : HARD_KNOB_SCHEMA_VERSION;
+  return 'multi_account_min' in knobs ? HARD_KNOB_SCHEMA_VERSION_V3 : hasReferenceKnobs(knobs) ? HARD_KNOB_SCHEMA_VERSION_V2 : HARD_KNOB_SCHEMA_VERSION;
 }
 
 /** The generator version a knob set selects: v2 with the reference-form keys, v1 without. */
@@ -259,8 +267,9 @@ export interface HardTask {
    * `value`: one value in `answer` (H2 to H5).
    * `set`: a JSON array of entity names, sent as a JSON-encoded string in `answer` (a native array is accepted).
    * `count`: the integer at the start of `answer`.
+   * `values`: a multi-account question (H2 to H5, amendment A2): a JSON array with one value per numbered item, in order.
    */
-  answer_kind: 'value' | 'set' | 'count';
+  answer_kind: 'value' | 'set' | 'count' | 'values';
   /** Entity ids the task is about (H1: none; the members are in gold). */
   accounts: string[];
   /** H5 only: the user message of each recording session, in order (sessions 1 to 4). The question is the final session. */
@@ -276,6 +285,8 @@ export interface HardTask {
     count?: number;
     /** `value`: values that fail the answer when named anywhere in it (superseded, look-alike, lower-authority). */
     wrong?: string[];
+    /** `values`: one entry per numbered item, in question order: the account it asks about, its accepted values and the values that fail that item. */
+    items?: Array<{ account: string; answer: string[]; wrong: string[] }>;
     /** Document ids that decide the answer. */
     evidence: string[];
   };
@@ -350,6 +361,11 @@ export function isHardWorld(w: unknown): w is HardWorld {
  *    An answer with no leading integer is `unparseable_set`.
  * 5. H5 recording sessions must submit RECORDED; only the final session is
  *    scored. A failed recording session is reported, not scored.
+ * 6. `values` tasks: the answer must parse as a JSON array (strings or
+ *    numbers, directly or inside surrounding text) with exactly one element
+ *    per item. Element n is scored like a `value` answer against item n's
+ *    accepted and wrong values. Success needs every item right. An answer
+ *    that is not such an array is `unparseable_set`.
  */
 export interface HardScore {
   success: boolean;
@@ -362,6 +378,8 @@ export interface HardScore {
   set?: { precision: number; recall: number; jaccard: number; got: number; expected: number; unmatched: number };
   /** `count`: the integer read, or null. */
   count_read?: number | null;
+  /** `values`: items answered right, of the items asked. */
+  items?: { correct: number; expected: number };
   evidence_cited: string[];
   missed_evidence: string[];
   wrote: boolean;

@@ -28,6 +28,7 @@ export function hardWorldProblems(w: HardWorld): string[] {
   }
   if (clashes) problems.push(`${clashes} names refer to more than one entity (the name namespace must be injective)`);
   const entityIds = new Set(w.entities.map(e => e.id));
+  const byEntity = new Map(w.entities.map(e => [e.id, e]));
   const taskIds = new Set<string>();
   const index = new Map<string, number>();
   for (const t of w.tasks) {
@@ -46,16 +47,28 @@ export function hardWorldProblems(w: HardWorld): string[] {
     } else if (t.answer_kind === 'count') {
       if (!Number.isInteger(t.gold.count) || t.gold.count! < 0) problems.push(`${where}: a count task needs a non-negative integer count`);
     } else {
-      const acc = (t.gold.answer ?? []).map(normalizeValue), wrong = (t.gold.wrong ?? []).map(normalizeValue);
-      if (!acc.length || acc.some(a => !a)) problems.push(`${where}: a value task needs accepted answers`);
-      const all = [...acc, ...wrong];
-      let overlaps = 0;
-      for (let a = 0; a < all.length; a++) for (let b = 0; b < all.length; b++) if (a !== b && (all[a] === all[b] || all[a].includes(all[b])) && !(a < acc.length && b < acc.length)) overlaps++;
-      if (overlaps) problems.push(`${where}: ${overlaps} accepted/wrong value pairs are equal or substrings of each other after normalization`);
-      if (t.family !== 'H1' && !wrong.length) problems.push(`${where}: H2 to H5 tasks fill gold.wrong`);
+      const items = t.answer_kind === 'values' ? t.gold.items ?? [] : [{ account: '', answer: t.gold.answer ?? [], wrong: t.gold.wrong ?? [] }];
+      if (t.answer_kind === 'values' && (items.length < 2 || items.some(it => !entityIds.has(it.account)) || new Set(items.map(it => it.account)).size !== items.length)) problems.push(`${where}: a values task needs two or more items, each about a different entity`);
+      if (t.answer_kind === 'values' && linkedItems(items.map(it => byEntity.get(it.account)).filter((e): e is HardEntity => !!e?.refs))) problems.push(`${where}: two items' accounts share a descriptor, first word, code prefix or account manager`);
+      for (const it of items) {
+        const acc = it.answer.map(normalizeValue), wrong = it.wrong.map(normalizeValue);
+        if (!acc.length || acc.some(a => !a)) problems.push(`${where}: a value task needs accepted answers`);
+        const all = [...acc, ...wrong];
+        let overlaps = 0;
+        for (let a = 0; a < all.length; a++) for (let b = 0; b < all.length; b++) if (a !== b && (all[a] === all[b] || all[a].includes(all[b])) && !(a < acc.length && b < acc.length)) overlaps++;
+        if (overlaps) problems.push(`${where}: ${overlaps} accepted/wrong value pairs are equal or substrings of each other after normalization`);
+        if (t.family !== 'H1' && !wrong.length) problems.push(`${where}: H2 to H5 tasks fill gold.wrong`);
+      }
     }
   }
   return [...problems, ...referenceProblems(w)];
+}
+
+/** Multi-account questions (amendment A2): no two accounts share a descriptor, first word, code prefix or account manager, so no single search covers two. */
+function linkedItems(es: HardEntity[]): boolean {
+  const managers = (e: HardEntity) => new Set(e.refs!.managers.map(m => m.name));
+  return es.some((a, i) => es.slice(i + 1).some(b => a.refs!.descriptor === b.refs!.descriptor || a.name.split(' ')[0] === b.name.split(' ')[0]
+    || a.refs!.codes[0].slice(0, 3) === b.refs!.codes[0].slice(0, 3) || [...managers(a)].some(m => managers(b).has(m))));
 }
 
 const managerEvents = (e: HardEntity): ValueEvent[] => (e.refs?.managers ?? []).map(m => ({ value: m.name, effective: m.effective, recorded: m.recorded, doc: m.doc, kind: 'change' }));

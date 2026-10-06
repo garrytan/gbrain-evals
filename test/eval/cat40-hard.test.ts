@@ -499,12 +499,13 @@ describe('operator tools (T1, T3, T5, T11: DX-F1, DX-F4, DX-F7, DX-F13, CEO-F4, 
     for (const code of Object.keys(HARD_STOP_CODES)) expect(runbook).toContain(code);
     const script = readFileSync(join(ROOT, 'scripts/cat40-hard.sh'), 'utf8');
     for (const m of script.matchAll(/stop (HARD_[A-Z_]+)/g)) expect(Object.keys(HARD_STOP_CODES)).toContain(m[1]);
-    for (const s of ['calibrate', 'freeze-check', 'freeze', 'smoke', 'heldout-world', 'slots-4k', 'simple-4k', 'comparator', 'gbrain-4k', 'slots-50k', 'cells-50k', 'report']) {
+    for (const s of ['calibrate', 'freeze-check', 'freeze', 'smoke', 'heldout-world', 'slots-50k', 'cells-50k', 'oracle-50k', 'pg-50k', 'memory-50k', 'report']) {
       const r = sh('bash', ['scripts/cat40-hard.sh', 'step', s], { PRINT_ONLY: '1', ROUND: '1', GBRAIN_REF: 'abc' });
       expect(r.code).toBe(0);
-      if (!['freeze', 'heldout-world', 'comparator', 'report'].includes(s)) expect(r.out).toContain('--budget-usd');
-      if (/4k|50k|calibrate|freeze-check|smoke/.test(s) && !s.startsWith('slots') && s !== 'heldout-world') expect(r.out).toContain('--judge gpt-6.1-sol');
+      if (!['freeze', 'heldout-world', 'report'].includes(s)) expect(r.out).toContain('--budget-usd');
+      if (/50k|calibrate|freeze-check|smoke/.test(s) && !s.startsWith('slots')) expect(r.out).toContain('--judge gpt-6.1-sol');
     }
+    for (const s of ['slots-4k', 'simple-4k', 'comparator', 'gbrain-4k']) expect(sh('bash', ['scripts/cat40-hard.sh', 'step', s], { PRINT_ONLY: '1', GBRAIN_REF: 'abc' })).toMatchObject({ code: 3, out: expect.stringContaining('HARD_STEP_RETIRED') });
     expect(sh('bash', ['scripts/cat40-hard.sh', 'step', 'nope']).code).toBe(3);
   });
   test('projections: per model, arm and family, from v1 cost x the measured Hard factor plus the measured judge; measured cells replace them; done cells are not projected; 50k scales 4k measurements', () => {
@@ -514,7 +515,7 @@ describe('operator tools (T1, T3, T5, T11: DX-F1, DX-F4, DX-F7, DX-F13, CEO-F4, 
     const fam = ['H1', 'H2', 'H3', 'H4', 'H5'];
     const expected = ['claude-sonnet-5-5', 'gpt-6-astra'].flatMap(m => ['oracle', 'fs', 'pg'].flatMap(a => fam.map(f => 10 * (basis.v1_per_cell_usd[m][a] * basis.hard_factor_by_arm_family[a][f] + basis.judge_per_cell_usd_by_family[f]))));
     expect(p1.total_usd).toBeCloseTo(expected.reduce((x, y) => x + y, 0), 6);
-    expect(project({ ...stepPlan('simple-4k'), models: ['claude-sonnet-5-5'], arms: ['memory'] }, { basis }).agent_usd).toBeCloseTo(20 * fam.reduce((t, f) => t + basis.v1_per_cell_usd['claude-sonnet-5-5'].memory * basis.hard_factor_by_arm_family.fs[f], 0), 6);
+    expect(project({ ...stepPlan('calibrate'), models: ['claude-sonnet-5-5'], arms: ['memory'], tasksPerFamily: 20 }, { basis }).agent_usd).toBeCloseTo(20 * fam.reduce((t, f) => t + basis.v1_per_cell_usd['claude-sonnet-5-5'].memory * basis.hard_factor_by_arm_family.fs[f], 0), 6);
     const cell = (task: string, family: string, total: number, judge: number) => ({ key: `claude-sonnet-5-5|fs|${task}|0`, model: 'claude-sonnet-5-5', arm: 'fs', family, total_usd: total, judge_usd: judge, harness_clean: true });
     const measured = [cell('H1-01', 'H1', 0.5, 0.1)] as never;
     const sonnetFs = (p: ReturnType<typeof project>) => p.rows.find(r => r.model === 'claude-sonnet-5-5' && r.arm === 'fs')!;

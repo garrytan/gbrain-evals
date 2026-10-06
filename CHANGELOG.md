@@ -4,6 +4,32 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [0.10.29] - 2026-10-05
 
+### Cat 40 Hard round 4: questions about several accounts; the held-out run is 50k only
+
+Round 3 (50k, generator v2) left the better simple arm at 83%: H1 fell to 15-20%, but H2 to H5, which each asked about
+one account, stayed at 85 to 100%. Under amendment A2, H2 to H5 questions now ask about several accounts at once and H1
+sets shrink. No paid call ran; round 4 is ready to calibrate.
+
+- **Multi-account questions.** Knobs `multi_account_min` and `multi_account_max` set how many accounts each H2 to H5
+  question asks about; [knobs.round-4.json](docs/benchmarks/cat40-hard/knobs.round-4.json) uses 2 to 3. A question
+  lists its items as numbered one-account questions, each a complete instance of its family with its own records, and
+  asks for a JSON array of the answers in order. No two accounts in a question share a descriptor, first word, code
+  prefix or account manager, so each needs its own search. With a maximum of 1 the generator writes the v2 world, and
+  the round-3 world is unchanged.
+- **Scoring.** The Hard scorer grades the array as a new `values` answer kind (`cat40-hard-score-v2`): each element is
+  graded like a one-account answer, and success needs every element right. Earlier answer kinds score as before. The
+  validator checks every item's accounts and the unlinked rule, and the H5 write diagnostic matches each superseded
+  fact to its own chain.
+- **Smaller H1.** Round 4 asks for 6 to 12 members (round 3: 10 to 40). When a predicate cannot land in range, the
+  generator narrows it to one region or segment.
+- **Held-out path.** The held-out run is 50k only: freeze check, freeze, smoke, the 50k world, slots, then four batches
+  that each run after the one before (gbrain and fs, the oracle, pg, memory on two models), each with its own
+  projection and ledger gate. `slots-4k`, `simple-4k`, `comparator` and `gbrain-4k` stop with `HARD_STEP_RETIRED`.
+  The primary endpoint is `holdout_stats.py --hard-headline gbrain-hard,fs --simple fs`, adding pg when it ran.
+- **Proxy.** `hard-proxy.ts` also reports oracle documents and accounts per answer. On the 50k calibration world,
+  H2 to H5 answers now need 2.4 to 2.7 accounts and two to three times the oracle documents
+  ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)).
+
 ### Cat 40 Hard generator v2: records stop naming their account
 
 Calibration round 2 left plain files at 95%: agents searched for the account name in the question and read every

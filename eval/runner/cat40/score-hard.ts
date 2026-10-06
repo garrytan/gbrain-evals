@@ -14,7 +14,7 @@ import { normalizeDocRef } from './arms.ts';
 import { RECORDED, type HardScore, type HardTask, type HardWorld } from '../../generators/hard/schema.ts';
 
 /** Version of the Hard scoring rules; recorded with every run and part of the freeze. */
-export const HARD_SCORER_VERSION = 'cat40-hard-score-v1';
+export const HARD_SCORER_VERSION = 'cat40-hard-score-v2';
 
 /** Coercion rule 1: arrays become their JSON string, other non-strings `String(x)`, null or missing ''. */
 export function coerceAnswer(answer: unknown): string {
@@ -34,12 +34,12 @@ export function mentions(answer: string, value: string): boolean {
   return new RegExp(`(^|[^a-z0-9.])${escapeRe(n)}($|[^a-z0-9]|\\.(?!\\d))`).test(normalizeValue(answer));
 }
 
-/** Parse a set answer: a JSON array of strings, directly or inside surrounding text. Null when unreadable. */
-export function parseSet(answer: string): string[] | null {
+/** Parse a set answer: a JSON array of strings, directly or inside surrounding text. Null when unreadable. `numbers` also accepts numbers (as strings), for `values` answers. */
+export function parseSet(answer: string, numbers = false): string[] | null {
   const tryParse = (s: string): string[] | null => {
     try {
       const v = JSON.parse(s);
-      if (Array.isArray(v) && v.every(x => typeof x === 'string')) return v as string[];
+      if (Array.isArray(v) && v.every(x => typeof x === 'string' || (numbers && typeof x === 'number'))) return v.map(String);
       if (typeof v === 'string' && v.trim().startsWith('[')) return tryParse(v.trim());
     } catch { /* not JSON */ }
     return null;
@@ -116,8 +116,19 @@ export function scoreHardTask(world: Pick<HardWorld, 'entities'>, task: HardTask
     const n = parseCount(answer);
     return { ...base, success: n !== null && n === task.gold.count, said_wrong: false, unparseable_set: n === null, count_read: n };
   }
-  const wrong = task.gold.wrong ?? [];
+  if (task.answer_kind === 'values') {
+    const items = task.gold.items ?? [];
+    const parsed = parseSet(answer, true);
+    const verdicts = parsed && parsed.length === items.length ? items.map((it, n) => valueItem(parsed[n], it.answer, it.wrong)) : [];
+    return { ...base, success: verdicts.length === items.length && verdicts.every(v => v.correct), said_wrong: verdicts.some(v => v.said_wrong), unparseable_set: !parsed, items: { correct: verdicts.filter(v => v.correct).length, expected: items.length } };
+  }
+  const v = valueItem(answer, task.gold.answer ?? [], task.gold.wrong ?? []);
+  return { ...base, success: v.correct, said_wrong: v.said_wrong, unparseable_set: false };
+}
+
+/** Value rule: the head names an accepted value and the whole answer names no wrong value. */
+function valueItem(answer: string, accepted: string[], wrong: string[]): { correct: boolean; said_wrong: boolean } {
   const said_wrong = wrong.some(w => mentions(answer, w));
-  const head = valueVerdict(answer, task.gold.answer ?? [], wrong);
-  return { ...base, success: head.correct && !said_wrong, said_wrong: said_wrong || head.said_wrong, unparseable_set: false };
+  const head = valueVerdict(answer, accepted, wrong);
+  return { correct: head.correct && !said_wrong, said_wrong: said_wrong || head.said_wrong };
 }
