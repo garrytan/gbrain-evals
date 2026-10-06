@@ -1,0 +1,154 @@
+{
+  "kind": "w4-takes-bootstrap-frontier",
+  "smoke_max_cases": null,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier-preregistration.md",
+    "preregistration_commit": "17f36a1e134a394820f2686c56146e0416113aa2",
+    "runner_commit": "17f36a1e134a394820f2686c56146e0416113aa2",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-06T18:13:11.072Z"
+  },
+  "gbrain_pin": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "gbrain_dir": "node_modules/gbrain",
+  "gbrain_tree_verified": {
+    "ref": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "files": 2435,
+    "mismatched": [],
+    "missing": []
+  },
+  "overlay": {
+    "path": "eval/runner/takes-bootstrap/harness-overlay.mjs",
+    "upstream": "evals/takes-bootstrap/harness.mjs",
+    "diff": "eval/runner/takes-bootstrap/harness-overlay.diff"
+  },
+  "arms": [
+    {
+      "model": "anthropic:claude-sonnet-5-5",
+      "max_usd": 0.8,
+      "exit_code": 1,
+      "wall_ms": 203542,
+      "settled_usd": 0.22458400000000003,
+      "settled_from": "harness BudgetTracker totalSpent",
+      "files": {
+        "predictions": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/predictions-claude-sonnet-5-5.jsonl",
+        "summary": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/summary-claude-sonnet-5-5.json",
+        "report": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/report-claude-sonnet-5-5.json",
+        "log": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/stderr-claude-sonnet-5-5.log",
+        "requests": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/requests-claude-sonnet-5-5.jsonl"
+      },
+      "request_stats": {
+        "requests": 123,
+        "non_ok": 0,
+        "output_limit_finishes": 0,
+        "cases_with_retries": 0
+      },
+      "verdict": {
+        "model": "anthropic:claude-sonnet-5-5",
+        "cases": 123,
+        "malformed": 0,
+        "forbid_violations": 0,
+        "pass": true
+      },
+      "graduated": false
+    },
+    {
+      "model": "openai:gpt-6.1-sol",
+      "max_usd": 0.8,
+      "exit_code": 1,
+      "wall_ms": 415768,
+      "settled_usd": 0.17439399999999997,
+      "settled_from": "harness BudgetTracker totalSpent",
+      "files": {
+        "predictions": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/predictions-gpt-6.1-sol.jsonl",
+        "summary": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/summary-gpt-6.1-sol.json",
+        "report": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/report-gpt-6.1-sol.json",
+        "log": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/stderr-gpt-6.1-sol.log",
+        "requests": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/requests-gpt-6.1-sol.jsonl"
+      },
+      "request_stats": {
+        "requests": 123,
+        "non_ok": 0,
+        "output_limit_finishes": 0,
+        "cases_with_retries": 0
+      },
+      "verdict": {
+        "model": "openai:gpt-6.1-sol",
+        "cases": 123,
+        "malformed": 0,
+        "forbid_violations": 0,
+        "pass": true
+      },
+      "graduated": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "max_usd": 1.4,
+      "exit_code": 1,
+      "wall_ms": 322579,
+      "settled_usd": 0.582768,
+      "settled_from": "harness BudgetTracker totalSpent",
+      "files": {
+        "predictions": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/predictions-claude-opus-5-5.jsonl",
+        "summary": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/summary-claude-opus-5-5.json",
+        "report": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/report-claude-opus-5-5.json",
+        "log": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/stderr-claude-opus-5-5.log",
+        "requests": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/requests-claude-opus-5-5.jsonl"
+      },
+      "request_stats": {
+        "requests": 123,
+        "non_ok": 0,
+        "output_limit_finishes": 0,
+        "cases_with_retries": 0
+      },
+      "verdict": {
+        "model": "anthropic:claude-opus-5-5",
+        "cases": 123,
+        "malformed": 0,
+        "forbid_violations": 0,
+        "pass": true
+      },
+      "graduated": false
+    },
+    {
+      "model": "anthropic:claude-fable-5-1",
+      "max_usd": 5.01,
+      "exit_code": 1,
+      "wall_ms": 636462,
+      "settled_usd": 1.5383700000000002,
+      "settled_from": "harness BudgetTracker totalSpent",
+      "files": {
+        "predictions": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/predictions-claude-fable-5-1.jsonl",
+        "summary": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/summary-claude-fable-5-1.json",
+        "report": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/report-claude-fable-5-1.json",
+        "log": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/stderr-claude-fable-5-1.log",
+        "requests": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier/requests-claude-fable-5-1.jsonl"
+      },
+      "request_stats": {
+        "requests": 123,
+        "non_ok": 0,
+        "output_limit_finishes": 0,
+        "cases_with_retries": 0
+      },
+      "verdict": {
+        "model": "anthropic:claude-fable-5-1",
+        "cases": 123,
+        "malformed": 0,
+        "forbid_violations": 0,
+        "pass": true
+      },
+      "graduated": false
+    }
+  ],
+  "cost": {
+    "usd": 2.520116,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "budget ledger w4-takes-bootstrap-frontier-2026-10-06T18-13-11-439Z-314f842e: 4 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": null,
+    "event_loop_lag_unavailable": "no lag monitor: the run was not started through startPaidRun"
+  }
+}
