@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "decision_id": "beam-1m-dates-2026-10-06",
+  "plan": "P0",
+  "title": "BEAM-1M dev on the fixed date loader: starting-line build 6622a119e and pin c5fb0201",
+  "verdict_type": "quality",
+  "stage": "dev",
+  "candidate": {
+    "gbrain": "/home/user/gbrain@c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "config": {}
+  },
+  "baseline": {
+    "gbrain": "/home/user/gbrain@6622a119e40ea09a7719233046aca24741863ed2",
+    "config": {}
+  },
+  "sources": [
+    {
+      "id": "beam-1m",
+      "kind": "memory-qa",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "embed": "real",
+      "limit": null,
+      "search_pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.autocut": "false"
+      },
+      "top_k": 10,
+      "id_field": "id",
+      "exclude_when": [
+        "abstention=true"
+      ],
+      "min_clusters": 10,
+      "comparisons": [
+        {
+          "id": "recall-all-5",
+          "metric": "recall_all_at_5",
+          "gate": "superiority",
+          "direction": "higher",
+          "min_effect": 0,
+          "cluster_by": "conversation",
+          "description": "every gold session in the top five distinct sessions (strict)"
+        },
+        {
+          "id": "recall-any-5",
+          "metric": "recall_any_at_5",
+          "gate": "noninferiority",
+          "direction": "higher",
+          "tolerance": 0.01,
+          "cluster_by": "conversation",
+          "description": "at least one gold session in the top five"
+        },
+        {
+          "id": "ndcg-10",
+          "metric": "ndcg_at_10",
+          "gate": "exploratory",
+          "direction": "higher",
+          "cluster_by": "conversation"
+        },
+        {
+          "id": "latency",
+          "metric": "latency_ms",
+          "gate": "exploratory",
+          "direction": "lower",
+          "cluster_by": "conversation"
+        }
+      ],
+      "estimate_usd": 4
+    }
+  ],
+  "alpha": 0.05,
+  "seed": 42,
+  "draws": 10000,
+  "budget_usd": 5,
+  "created_at": "2026-10-06T19:07:43.838Z",
+  "notes": "W13 of the 2026-10 follow-up round (docs/benchmarks/2026-10-06-beam-1m-dates-preregistration.md): BEAM-1M dev, retrieval only, settings of the 2026-10-05 starting line (balanced, reranker off, autocut off, top_k 10, seed 42, openai:text-embedding-3-large at 1536 dims), on the date loader fixed in gbrain-evals v0.10.32. Baseline is the starting line's build 6622a119e (the correction); candidate is the round's pin c5fb0201."
+}
