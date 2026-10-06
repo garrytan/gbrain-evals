@@ -35,6 +35,8 @@ export const GBRAIN_EMBED_MODEL = 'openai:text-embedding-3-large';
 export const STAGED_SOURCE_ADD_DOCS = 6000;
 export const STAGED_SYNC_BATCH = 5000;
 export const SERVE_BOOT_TIMEOUT_SECONDS = 0;
+/** How long the build's one warm server start may take to answer initialize. */
+export const WARM_BOOT_TIMEOUT_MS = 1_800_000;
 const CORPUS_TAG = 'cat40-corpus';
 const execFileAsync = promisify(execFile);
 
@@ -177,7 +179,7 @@ export class McpClient {
       });
     });
   }
-  async start() {
+  async start(initTimeoutMs = 180_000) {
     const proc = spawn('bun', [join(this.run.buildDir, 'src/cli.ts'), 'serve', ...this.args], { env: this.run.env, cwd: this.run.env.GBRAIN_HOME });
     this.proc = proc;
     this.exited = null;
@@ -205,7 +207,7 @@ export class McpClient {
     // 'close' fires after stderr is drained, so the failure carries the server's last stderr lines.
     proc.on('exit', (code, signal) => { this.exited = `exit ${code ?? signal}`; });
     proc.on('close', (code, signal) => { this.exited ??= `exit ${code ?? signal}`; this.failAll(new HarnessError(`MCP server exited (${this.exited})${this.stderrTail()}`)); });
-    const init = await this.request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'gbrain-evals-cat40', version: '1' } }, 180_000);
+    const init = await this.request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'gbrain-evals-cat40', version: '1' } }, initTimeoutMs);
     if (init.error) throw new HarnessError(`MCP initialize failed: ${JSON.stringify(init.error).slice(0, 500)}`);
     const r = (init.result ?? {}) as Record<string, unknown>;
     this.instructions = String(r.instructions ?? '');
@@ -402,6 +404,13 @@ export class GbrainSlot {
     if (analyze) operatorAnalyze('operator-analyze');
     proxy.unbind(this.id);
     const meter = await proxy.finalize(meterKey);
+    // The first server start on a freshly imported large brain does one-time work before it answers (225 s at
+    // 55,000 pages; 25 s on every later start). Snapshotting after one clean start and stop keeps that work out
+    // of every restore, the way an installed brain has already been opened once.
+    const warmStart = Date.now();
+    const warm = new McpClient(this.run, ['--surface', this.surface]);
+    try { await warm.start(WARM_BOOT_TIMEOUT_MS); } finally { await warm.close(); }
+    steps.push({ step: 'warm-boot', code: 0, ms: Date.now() - warmStart, tail: 'one server start and stop before the snapshot' });
     execFileSync('tar', ['-C', this.dir, '-cf', this.snapshot, 'home']);
     const coverage = await this.probeCoverage();
     writeFileSync(this.coverageFile, JSON.stringify(coverage, null, 2) + '\n');
