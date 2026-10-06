@@ -1,0 +1,57 @@
+{
+ "decision_id": "p5-delta2-heldout-2026-10-05",
+ "preregistration": "gbrain docs/eval/decisions/p5-delta-2026-10-05/preregistration.md, amendment 2 (05aeed2a5)",
+ "build": "970c3088b6a97c4b5c9bcd4a752fe25579415bc7",
+ "frozen": "21befeb5b",
+ "harness": "gbrain-evals f03bc96",
+ "H7": {
+  "verdict": "pass",
+  "asof_range_pages": {
+   "off": 0.228,
+   "on": 1.0,
+   "ci95": [
+    0.695,
+    0.846
+   ]
+  },
+  "live_recall": {
+   "off": 1.0,
+   "on": 1.0
+  },
+  "prose_transitions_identical": "123/123",
+  "now_precision_ni": "pass"
+ },
+ "H9": {
+  "verdict": "pass",
+  "anyTypeMatch": {
+   "frozen": 0.506,
+   "delta": 0.506,
+   "delta_ci95": [
+    0,
+    0
+   ]
+  },
+  "correctly_typed_reported": {
+   "frozen": 0.449,
+   "delta": 0.455
+  },
+  "live_recall": {
+   "frozen": 0.555,
+   "delta": 0.56,
+   "ci95": [
+    0,
+    0.014
+   ]
+  }
+ },
+ "H8": {
+  "verdict": "blocked",
+  "local_withheld_recall": 1.0,
+  "reason": "http arms: gbrain sweep --once links/timeline pass fails with writer_coordinator_required"
+ },
+ "N4": {
+  "verdict": "pass",
+  "wrong_merges": 0
+ },
+ "supersedes": "p5-delta-heldout-2026-10-05 results at 011bd0b6a and H8 at 62f428817 (now dev/report-only)"
+}

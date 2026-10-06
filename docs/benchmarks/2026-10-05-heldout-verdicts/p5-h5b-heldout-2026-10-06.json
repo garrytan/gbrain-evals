@@ -1,0 +1,60 @@
+{
+ "decision_id": "p5-heldout-2026-10-05",
+ "hypothesis": "H5b save-notes dedup (put_page.similar_pages), first sealed run",
+ "build": "21befeb5b",
+ "harness": "gbrain-evals f03bc96",
+ "models": [
+  "claude-sonnet-5-5",
+  "gpt-6.1-sol"
+ ],
+ "tasks_per_model": 60,
+ "verdict": "fail (wrong-merge bar)",
+ "duplicate_rate": {
+  "off": 0.0306,
+  "on": 0.0222,
+  "relative_change": -0.273,
+  "ci95_delta": [
+   -0.0278,
+   0.0111
+  ]
+ },
+ "wrong_merge_rate": {
+  "off": 0.025,
+  "on": 0.0375,
+  "delta_pts": 1.25,
+  "ci95_delta": [
+   -0.0125,
+   0.0375
+  ]
+ },
+ "per_model": {
+  "claude-sonnet-5-5": {
+   "duplicate": [
+    0.0333,
+    0.0333
+   ],
+   "wrong_merge": [
+    0,
+    0
+   ]
+  },
+  "gpt-6.1-sol": {
+   "duplicate": [
+    0.0278,
+    0.0111
+   ],
+   "wrong_merge": [
+    0.05,
+    0.075
+   ]
+  }
+ },
+ "hints_shown_per_cell": {
+  "off": 0,
+  "on": 1.475
+ },
+ "agent_usd": {
+  "off": 20.6,
+  "on": 21.71
+ }
+}
