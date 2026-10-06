@@ -1,6 +1,6 @@
 # Cat 40 Hard preregistration
 
-Status: template, 2026-10-05. Fields marked **TBD (step N)** are filled and committed at that step, before the step's cells run. Plan: [docs/plans/2026-10-05-cat40-hard/PLAN.md](../../plans/2026-10-05-cat40-hard/PLAN.md). Operator guide: [RUNBOOK.md](RUNBOOK.md).
+Status: filled through step 4 on 2026-10-06 (world hashes at step 5); template written 2026-10-05. Fields marked **TBD (step N)** are filled and committed at that step, before the step's cells run. Plan: [docs/plans/2026-10-05-cat40-hard/PLAN.md](../../plans/2026-10-05-cat40-hard/PLAN.md). Operator guide: [RUNBOOK.md](RUNBOOK.md).
 
 This run is the Hard baseline. Each later measurement of a gbrain change on Hard uses a fresh preregistered seed with the frozen generator, because this run's tasks and transcripts are published.
 
@@ -53,20 +53,20 @@ Claims stay within unrestricted information: Hard has no permissions family, so 
 
 ## Planning minimum detectable difference
 
-**TBD (step 5).** Computed from the freeze check's pooled fs success `p` with `holdout_stats.py <freeze-check results> --hard-mdd fs --mdd-tasks 100`: MDD = (z0.975 + z0.80) x sqrt(psi / n), stated discordance psi = 2p(1-p), worst case psi = 2 min(p, 1-p), n = 100 tasks. The step-8 comparator commit reports the same figure for the chosen comparator.
+Computed at step 5 from the freeze check's pooled fs success `p` with `holdout_stats.py <freeze-check results> --hard-mdd fs --mdd-tasks 100`: MDD = (z0.975 + z0.80) x sqrt(psi / n), stated discordance psi = 2p(1-p), worst case psi = 2 min(p, 1-p), n = 100 tasks. The step-8 comparator commit reports the same figure for the chosen comparator.
 
 | Quantity | Value |
 |---|---|
-| freeze-check pooled fs success | TBD (step 5) |
-| planning MDD, stated discordance | TBD (step 5) |
-| planning MDD, worst case | TBD (step 5) |
+| freeze-check pooled fs success | 59.4% (57 of 96 fs cells; Opus 5.5, GPT-6.1 Sol, Fable 5.1; the freeze check stopped at 288 of 450 cells, A5) |
+| planning MDD, stated discordance | 19.5 points (psi 0.482, n = 100 tasks) |
+| planning MDD, worst case | 25.3 points (psi 0.813, n = 100 tasks) |
 
 ## gbrain under test
 
 | Field | Value |
 |---|---|
-| gbrain commit (current master) | TBD (step 4; the smoke and every held-out step use the same commit) |
-| `--gbrain-config` | TBD (step 4; none unless named here) |
+| gbrain commit (current master) | `c5fb0201d1960a0a5a81c35d77718311b03154b7` (v0.60.95.0); the smoke passed on it 2026-10-06 (5 cells, write probe clean) |
+| `--gbrain-config` | none |
 | surface | `starter` |
 | slot statistics | operator ANALYZE on (runner default) |
 
@@ -74,8 +74,8 @@ Claims stay within unrestricted information: Hard has no permissions family, so 
 
 | Field | Value |
 |---|---|
-| knob digest (knobs.frozen.json) | TBD (step 3) |
-| settings digest (freeze.json) | TBD (step 3) |
+| knob digest (knobs.frozen.json) | `37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434` |
+| settings digest (freeze.json) | `9aeccdddad8e4721e6123f1e846f28914c05acbcadfe5c4e1eb839d7345b3210` |
 | frozen code hashes | `freeze.json` (step 3) |
 | 4k held-out world SHA-256 | TBD (step 5) |
 | 50k held-out world SHA-256 | TBD (step 5) |
