@@ -32,7 +32,7 @@ const read = (p: string) => (existsSync(p) ? JSON.parse(readFileSync(p, 'utf8'))
 
 function cat14(dir: string) {
   const arm = (m: string) => read(join(dir, `cat14-${m}`, 'receipt.json'));
-  const dumps = (m: string) => existsSync(join(dir, `cat14-${m}`)) ? readdirSync(join(dir, `cat14-${m}`)).filter(f => /^cat14-.*\.json$/.test(f)).map(f => read(join(dir, `cat14-${m}`, f))) : [];
+  const dumps = (m: string) => existsSync(join(dir, `cat14-${m}`)) ? readdirSync(join(dir, `cat14-${m}`)).filter(f => /^cat14-.*\.json$/.test(f)).sort().map(f => read(join(dir, `cat14-${m}`, f))) : [];
   const win = (r: { data: { summary: { win_rate_calibrated: number; win_eligible_n: number } } } | null) => r ? r.data.summary.win_rate_calibrated : null;
   const real = arm('real'), none = arm('none'), swap = arm('swap30');
   const wins = real ? Math.round(real.data.summary.win_rate_calibrated * real.data.summary.win_eligible_n) : 0;
@@ -55,7 +55,7 @@ function cat29(dir: string) {
 
 function cat35Detailed(sub: string) {
   if (!existsSync(sub)) return null;
-  const f = readdirSync(sub).find(x => /-cat35.*\.json$/.test(x) && x !== 'receipt.json');
+  const f = readdirSync(sub).sort().find(x => /-cat35.*\.json$/.test(x) && x !== 'receipt.json');
   return f ? read(join(sub, f)) : null;
 }
 
