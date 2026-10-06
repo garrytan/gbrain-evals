@@ -93,6 +93,15 @@ describe('cells and the verdict', () => {
     expect(verdictFor(noPool, calls).mandatory_covered).toBe(31 * 3);
   });
 
+  test('a leak in a notice warm-up call fails like any other leak, and warm-up rows give no signal', () => {
+    const base = honest(MANDATORY_OPS);
+    const warm = { ...row('scoped', 'think', 'notice-warmup', 'leak'), control: false };
+    const cells = summarizeCells(MANDATORY_OPS, [...base.rows, warm], base.refusals, { poolConditionMet: true, mandatory });
+    expect(verdictFor(cells, calls).pass).toBe(false);
+    const quiet = summarizeCells(MANDATORY_OPS, [...base.rows.filter(r => !(r.principal === 'owner' && r.op === 'delta')), { ...row('owner', 'delta', 'notice-warmup'), control: false }], base.refusals, { poolConditionMet: true, mandatory });
+    expect(verdictFor(quiet, calls).missing_mandatory).toEqual(['owner:delta']);
+  });
+
   test('optional cells never fail the gate unless they leak', () => {
     const ops = [...MANDATORY_OPS, 'schema_stats'];
     const { rows, refusals } = honest(MANDATORY_OPS);

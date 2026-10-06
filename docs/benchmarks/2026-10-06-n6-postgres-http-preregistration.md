@@ -73,4 +73,8 @@ None: no paid request, no provider key in any process. No ledger run is opened. 
 
 ## Amendments
 
-None yet.
+### 2026-10-06, after the first publication run: once-per-client notices made `think` look like an oracle
+
+The first attested run (gbrain-evals `ca01549`, receipt `2026-10-06-n6-postgres-http/receipt-run1-notice-order.json`) covered all 155 mandatory cells with 0 leaks and 0 accepted unauthenticated requests, but reported 2 existence-oracle probes, both on `think`: one in the owner's warm-up phase, one in the scoped principal's interleaved phase. In each, the protected response carried one extra block, the `[gbrain notice synthesis_keyless kind=info]` notice, and was otherwise identical to the ghost. Two diagnostic reruns of `think` alone put the extra notice on a different target each time (derived atom, private Fact, private ontology value, held Take), always on the principal's first `think` call. Cause: gbrain's HTTP notice ledger shows `info` and the first two `coaching` notices once per client, keyed by principal because the HTTP transport passes no session id (`src/core/notice-ledger.ts`; 24-hour TTL). The server is stateless (it issues no `mcp-session-id`), so the preregistered "fresh session per probe" cannot isolate calls on this transport. On PGLite, N6 gives every call its own session id, which is why it never saw this.
+
+Harness fix, in its own commit before the rerun: before the probe phases, each probing principal makes one neutral call per op (the public hub target, or no target for listing ops), so once-per-client notices are consumed before any protected and ghost pair. The warm-up responses are scanned for canaries and a leak there counts like any other; they carry no signal. No rule, op list, principal or threshold changes. The rerun's receipt is the one that counts; the first is kept.

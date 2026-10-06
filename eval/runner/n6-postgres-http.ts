@@ -69,7 +69,7 @@ export type Principal = 'none' | 'invalid-token' | 'expired-token' | 'scoped' | 
 export const REFUSED: readonly Principal[] = ['none', 'invalid-token', 'expired-token'];
 export const PROBING: readonly Principal[] = ['scoped', 'owner'];
 export const PRINCIPALS: readonly Principal[] = [...REFUSED, ...PROBING];
-export type Phase = 'warm-owner' | 'interleaved' | 'scoped-again';
+export type Phase = 'notice-warmup' | 'warm-owner' | 'interleaved' | 'scoped-again';
 
 // ─── Gold per principal ────────────────────────────────────────────────
 
@@ -461,6 +461,21 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
       rows.push({ ...base, status, control, ...(evidence ? { evidence: evidence.slice(0, 600) } : {}) });
     };
 
+    // gbrain's HTTP notice ledger shows once-per-client notices (and the first two coaching notices) only on a
+    // client's first matching call, keyed by principal because the HTTP transport passes no session id
+    // (src/core/notice-ledger.ts). One neutral call per op and principal consumes them first, so a protected
+    // probe and its ghost see the same notices whatever their order. The warm-up responses are scanned too.
+    const warmup = async (principal: Principal, op: Operation) => {
+      const target = isTargeted(op.params) ? hubTarget : null;
+      const args = synthesizeParams(op.params, target, { title: target ? targetTitle(ledger, target) : undefined }).params;
+      const r = await http(principal, op.name, args);
+      if (!r || !r.exposed) return;
+      const hit = scanFor(r, forbiddenFor(ledger, principal), Object.values(args ?? {}).filter((x): x is string => typeof x === 'string'));
+      const evidence = hit.content ?? hit.existence ?? undefined;
+      rows.push({ phase: 'notice-warmup', principal, op: op.name, target: target ? 'hub' : 'listing', variant: 'base', status: r.timed_out ? 'harness_error' : evidence ? 'leak' : 'clean', control: false, ...(evidence ? { evidence: evidence.slice(0, 600) } : {}), ...(r.timed_out ? { error: `${r.error_code}: ${r.raw.slice(0, 160)}` } : {}) });
+    };
+    for (const principal of PROBING) for (const op of ops) await warmup(principal, op);
+
     const owners = tasks.filter(t => t.principal === 'owner');
     const scoped = tasks.filter(t => t.principal === 'scoped');
     const phaseTimes: Record<string, number> = {};
@@ -561,7 +576,7 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
           scoped: 'OAuth client_credentials, scope read, source alpha', owner: 'OAuth client_credentials, scopes read write admin, source alpha, federated read alpha,beta',
         },
         trusted_control: 'dispatchToolCall in process (remote: false, source alpha) on the same Postgres database, run before the probe phases',
-        phases: ['warm-owner', 'interleaved', 'scoped-again'], operator, mcp_session_modes: [...sessionModes],
+        phases: ['notice-warmup', 'warm-owner', 'interleaved', 'scoped-again'], operator, mcp_session_modes: [...sessionModes],
         gbrain_overlay: overlaySummary(gut),
       },
       hashes: { ledger_sha256: ledgerFingerprint(ledger) },
