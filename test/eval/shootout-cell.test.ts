@@ -72,6 +72,23 @@ describe('campaign leases', () => {
     expect(c.status().committed_usd).toBe(8);
   });
 
+  test('a launch that died before the cell command closes at $0 only with a log that proves it', async () => {
+    const { manifestPath, state } = campaign();
+    const c = new Campaign(manifestPath, state);
+    c.init();
+    const l = c.reserve('cell-1');
+    expect(() => c.abandon(l.lease_id, 'x', { log: '/dev/null' })).toThrow(/never launched/);
+    await c.launch('cell-1', async () => 1);
+    const ran = join(state, 'ran.log'), unstarted = join(state, 'sync.log');
+    writeFileSync(ran, 'ubi-runner: ready: vm\nubi-runner: running on vm: bun eval/runner/shootout-cell.ts remote\n');
+    writeFileSync(unstarted, 'ubi-runner: ready: vm\ntar: .git/objects: file changed as we read it\nubi-runner: destroyed vm\n');
+    expect(() => c.abandon(l.lease_id, 'sync failed', { log: ran })).toThrow(/reached the cell command/);
+    const closed = c.abandon(l.lease_id, 'sync failed', { log: unstarted });
+    expect([closed.status, closed.actual_usd]).toEqual(['abandoned', 0]);
+    expect(c.status().committed_usd).toBe(0);
+    expect(readFileSync(join(state, 'evidence', `${l.lease_id}.log`), 'utf8')).toContain('file changed');
+  });
+
   test('leases cannot pass the campaign cap, and a restarted host cannot replay one', () => {
     const { manifestPath, state } = campaign({}, [4, 4, 4]);
     const c = new Campaign(manifestPath, state);

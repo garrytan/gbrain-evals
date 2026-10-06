@@ -20,7 +20,7 @@
  *   bun eval/runner/shootout-cell.ts reserve --campaign <manifest.json> --state <dir> --cell <id>
  *   bun eval/runner/shootout-cell.ts launch  --campaign <manifest.json> --state <dir> --cell <id> [--dry-run]
  *   bun eval/runner/shootout-cell.ts settle  --campaign <manifest.json> --state <dir> --lease <id>
- *   bun eval/runner/shootout-cell.ts abandon --campaign <manifest.json> --state <dir> --lease <id> --reason <text>
+ *   bun eval/runner/shootout-cell.ts abandon --campaign <manifest.json> --state <dir> --lease <id> --reason <text> [--unstarted --log <launch log>]
  *   bun eval/runner/shootout-cell.ts status  --campaign <manifest.json> --state <dir>
  *   bun eval/runner/shootout-cell.ts hash    --campaign <manifest.json>   (the hash a preregistration records)
  *   bun eval/runner/shootout-cell.ts remote  --cell-b64 <base64 json>        (on the VM: proxy + cell command + lease summary)
@@ -146,7 +146,7 @@ export type LeaseEvent =
   | { event: 'launched'; lease_id: string; at: string; argv: string[] }
   | { event: 'finished'; lease_id: string; at: string; exit_code: number | null }
   | { event: 'settled'; lease_id: string; at: string; actual_usd: number; requests: number; max_output_tokens: number | null }
-  | { event: 'abandoned'; lease_id: string; at: string; reason: string };
+  | { event: 'abandoned'; lease_id: string; at: string; reason: string; unstarted?: { evidence: string } };
 
 export interface LeaseState { lease_id: string; cell: string; attempt: number; usd: number; entry_id: string; max_output_tokens: number | null; status: 'reserved' | 'launched' | 'finished' | 'settled' | 'abandoned'; actual_usd?: number; exit_code?: number | null }
 
@@ -196,7 +196,7 @@ export class Campaign {
       if (e.event === 'launched') l.status = 'launched';
       else if (e.event === 'finished') { l.status = 'finished'; l.exit_code = e.exit_code; }
       else if (e.event === 'settled') { l.status = 'settled'; l.actual_usd = e.actual_usd; }
-      else if (e.event === 'abandoned') l.status = 'abandoned';
+      else if (e.event === 'abandoned') { l.status = 'abandoned'; if (e.unstarted) l.actual_usd = 0; }
     }
     return [...out.values()];
   }
@@ -280,13 +280,32 @@ export class Campaign {
     return this.lease(leaseId);
   }
 
-  /** Close a lease whose VM never reported back: charged at its full reservation. */
-  abandon(leaseId: string, reason: string): LeaseState {
+  /**
+   * Close a lease whose VM never reported back: charged at its full reservation.
+   * With `unstarted`, the lease settles at $0 instead, but only when its launch
+   * log shows ubi-runner never reached the cell command (the only process that
+   * starts the metering proxy, which alone holds the keys) and no VM ledger
+   * was pulled. The log is copied into the state directory as evidence.
+   */
+  abandon(leaseId: string, reason: string, unstarted?: { log: string }): LeaseState {
     const l = this.lease(leaseId);
     if (l.status === 'settled' || l.status === 'abandoned') throw new Error(`lease ${leaseId} is already ${l.status}`);
     if (!reason.trim()) throw new Error('abandon needs --reason');
-    this.run().settle(l.entry_id, null);
-    this.append({ event: 'abandoned', lease_id: leaseId, at: new Date().toISOString(), reason });
+    if (!unstarted) {
+      this.run().settle(l.entry_id, null);
+      this.append({ event: 'abandoned', lease_id: leaseId, at: new Date().toISOString(), reason });
+      return this.lease(leaseId);
+    }
+    if (l.status === 'reserved') throw new Error(`lease ${leaseId} was never launched; --unstarted is for a launch that died before the cell command`);
+    const dir = this.resultsDir(l);
+    if (existsSync(join(dir, 'lease.sqlite')) || existsSync(join(dir, 'lease-summary.json'))) throw new Error(`a VM ledger was pulled into ${dir}; settle the lease instead`);
+    const log = readFileSync(unstarted.log, 'utf8');
+    if (/ubi-runner: running on /.test(log)) throw new Error(`${unstarted.log} shows ubi-runner reached the cell command; the lease cannot be closed at $0`);
+    mkdirSync(join(this.stateDir, 'evidence'), { recursive: true });
+    const evidence = join(this.stateDir, 'evidence', `${leaseId}.log`);
+    writeFileSync(evidence, log);
+    this.run().settle(l.entry_id, { usd: 0 });
+    this.append({ event: 'abandoned', lease_id: leaseId, at: new Date().toISOString(), reason, unstarted: { evidence } });
     return this.lease(leaseId);
   }
 
@@ -359,7 +378,7 @@ if (import.meta.main) {
       print({ lease: l.lease_id, argv: c.launchArgv(l) });
     } else if (cmd === 'launch') print(await c.launch(one('--cell') ?? '', ubiRunner));
     else if (cmd === 'settle') print(c.settle(one('--lease') ?? ''));
-    else if (cmd === 'abandon') print(c.abandon(one('--lease') ?? '', one('--reason') ?? ''));
+    else if (cmd === 'abandon') print(c.abandon(one('--lease') ?? '', one('--reason') ?? '', argv.includes('--unstarted') ? { log: one('--log') ?? '' } : undefined));
     else if (cmd === 'status') print(c.status());
     else throw new Error(`unknown command ${cmd}`);
   } catch (e) {

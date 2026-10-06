@@ -8,6 +8,8 @@ One directory per cell and lease (`<cell>/<lease>/`), copied from the cell VM af
 - `arms/<arm>/rows.ndjson.gz` and `retrievals/rows.ndjson.gz`: one row per question with ids, category, outcome,
   strict recall, retrieved session ids, tokens, latency and cost. Reader answers, retrieved item text and the packed
   contexts are left out: they carry dataset text. They are kept outside the repository with the pulled run.
+- Receipts are byte-for-byte as the VM wrote them, except that the VM home directory `/home/ubi/` in the gbrain overlay
+  path (`overlay.requested`) is written as `~/`, the rewrite the receipt writer applies to every other path.
 
 The manifests and campaign hash are in [manifests/](../manifests/) and the rules in the
 [preregistration](../../2026-10-06-oss-memory-shootout-preregistration.md).

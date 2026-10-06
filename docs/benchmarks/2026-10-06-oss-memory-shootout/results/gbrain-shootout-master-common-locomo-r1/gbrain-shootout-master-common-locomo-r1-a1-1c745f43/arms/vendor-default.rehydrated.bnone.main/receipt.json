@@ -14,7 +14,7 @@
     "loaded_git_head": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
   },
   "overlay": {
-    "requested": "/home/ubi/gbrain-master@c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "requested": "~/gbrain-master@c5fb0201d1960a0a5a81c35d77718311b03154b7",
     "ref": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
     "commit": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
     "tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
