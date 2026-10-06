@@ -8,12 +8,13 @@ The generator lives in [`eval/generators/hard-sealed/`](../../../eval/generators
 
 | Field | Value |
 |---|---|
-| Sealed world digest (4k) | `<to be recorded after the knob freeze>` |
-| Knob file | `<the frozen knob file>` (knob digest `<to be recorded>`) |
-| Generator commit | `<to be recorded>` |
-| Recorded on | `<to be recorded>` |
+| Sealed world digest (4k) | `d5c64980898dd239720e93e5955921a0461524f5063298d5272431e2c62b3c87` (12,765 documents, 100 tasks) |
+| Sealed world digest (50k, `--scale large`) | `61870796c34d922daeb2909a5c30e44e1121504054f83319ef8a6307ca570a00` (55,128 documents, 100 tasks) |
+| Knob file | `docs/benchmarks/cat40-hard/knobs.frozen.json` (identical to `knobs.round-5.json`; knob digest `37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434`) |
+| Generator commit | `9ca2956` (`hard-sealed-v2`) |
+| Recorded on | 2026-10-06, on the seed owner's machine, with `--digest-only` (no document was written or read) |
 
-The digest is recorded only after the main generator's knobs are frozen, with the frozen knob file, because any knob change changes the sealed world. Until then nobody generates the sealed world at all. The digest is the SHA-256 of the world JSON (`sealedWorldDigest` in `generate.ts`). It changes if the seed, the knobs, or any code that shapes the world changes: the sealed generator itself, `eval/generators/hard/schema.ts` and `eval/generators/hard/semantics.ts`. A changed digest means the revealed world is not the world that was sealed. Record a new digest, with its date and reason, before relying on it.
+The digests were recorded after the main generator's knobs froze (amendments A4 and A5), with the frozen knob file, because any knob change changes the sealed world. Nobody has generated the sealed world's documents. The digest is the SHA-256 of the world JSON (`sealedWorldDigest` in `generate.ts`). It changes if the seed, the knobs, or any code that shapes the world changes: the sealed generator itself, `eval/generators/hard/schema.ts` and `eval/generators/hard/semantics.ts`. A changed digest means the revealed world is not the world that was sealed. Record a new digest, with its date and reason, before relying on it.
 
 ## What makes it independent
 
