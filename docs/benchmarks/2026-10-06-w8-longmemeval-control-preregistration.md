@@ -51,4 +51,6 @@ Ledger `/workspace/gbrain-evals/.budget/followups-2026-10.sqlite`, budget run `w
 
 ## Amendments
 
-None yet.
+### 2026-10-06, after the degraded arm was judged: a report-only secondary-judge diagnostic
+
+The degraded arm scored 19 of 100 under the official judge. Reading the 19 rows shows the reader answered "the information is not available" in every one of them, and `gpt-4o-2024-08-06` still replied "Yes" (the provider's batch output file confirms the replies; no mapping error). To size that judge behavior, the round's secondary judge (`gpt-6.1-sol`, low effort, the same verbatim prompt) also grades the degraded and partial-fault arms. It is report-only: the control's decision stays the preregistered official-judge ratio rule, which this diagnostic cannot change. Cost: under $0.30 inside the $5 share.
