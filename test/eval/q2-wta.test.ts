@@ -9,7 +9,7 @@ import { fitPilot, powerTable, shiftFor, simulate } from '../../eval/runner/q2/p
 import { loadCareerCorpus, validateQuestions } from '../../eval/runner/q2/q-set.ts';
 import { inAudit, parseWtaVerdict, wtaJudgePrompt } from '../../eval/runner/q2/wta-judge.ts';
 import { CAREER_DEV_SEEDS, generateCareerDevWorld } from '../../eval/generators/career-chronicle-dev-gen.ts';
-import { adoptionRecall, immediateQuestions } from '../../eval/runner/write-then-answer.ts';
+import { adoptionRecall, immediateQuestions, snapshotOrRefuse } from '../../eval/runner/write-then-answer.ts';
 
 const scratch = () => mkdtempSync(join(tmpdir(), 'q2-wta-'));
 
@@ -53,6 +53,16 @@ describe('answer and judge checkpoints', () => {
     expect(r).toContain('12 answers, 30 judgments');
     expect(r).toContain('$41.50');
     expect(r).toContain('continues the same opening (q/career, opening op-1)');
+  });
+});
+
+describe('missing snapshots', () => {
+  test('a checkpointed batch whose snapshot is gone refuses before anything runs and says how to recover', () => {
+    const w = scratch();
+    const tar = join(w, 'brain.b02.tar');
+    expect(() => snapshotOrRefuse({ key: 'career|m|B|ingest0|b2', tar, batch: 2 }, join(w, 'ingest.jsonl'))).toThrow(/missing, so that brain cannot be restored\. Nothing was run\..*re-ingest from batch 3 \(paid\)/);
+    writeFileSync(tar, 'x');
+    expect(snapshotOrRefuse({ key: 'k', tar, batch: 2 }, 'ingest.jsonl')).toBe(tar);
   });
 });
 

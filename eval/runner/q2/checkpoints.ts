@@ -87,8 +87,8 @@ export async function withAttempts<R>(fn: () => Promise<R>, o: { maxAttempts: nu
 export interface OpeningRecord { opening_id: string; identity_sha256: string; started_at: string; set: string }
 
 /** Start or continue the one opening of a sealed set for this experiment identity. */
-export function openOrContinue(workRoot: string, set: string, identity: unknown): OpeningRecord & { continues: boolean } {
-  const path = join(workRoot, 'opening.json');
+export function openOrContinue(workRoot: string, set: string, identity: unknown, file = 'opening.json'): OpeningRecord & { continues: boolean } {
+  const path = join(workRoot, file);
   const identitySha = createHash('sha256').update(JSON.stringify(identity)).digest('hex');
   if (existsSync(path)) {
     const prev = JSON.parse(readFileSync(path, 'utf8')) as OpeningRecord;

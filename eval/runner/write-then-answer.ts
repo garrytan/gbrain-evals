@@ -188,6 +188,15 @@ interface IngestRecord {
 }
 export interface AnswerResult { answer: string; agent_usd: number; stop: string; turns: number }
 
+/**
+ * The snapshot a checkpointed batch names, or a refusal that says what to do: a missing snapshot means the brain cannot
+ * be restored, and re-ingesting is paid work the custodian must choose.
+ */
+export function snapshotOrRefuse(rec: { key: string; tar: string; batch: number }, ingestLog: string): string {
+  if (existsSync(rec.tar)) return rec.tar;
+  throw new Error(`ingest checkpoint ${rec.key} names snapshot ${rec.tar}, which is missing, so that brain cannot be restored. Nothing was run. Restore the file from the work root's backup and rerun; or, to re-ingest from batch ${rec.batch + 1} (paid), remove that brain's lines from batch ${rec.batch + 1} on in ${ingestLog} and rerun the same command.`);
+}
+
 const strip = (r: AgentRun) => { const { tools, ...rest } = r; return { ...rest, tool_calls: tools.map(t => ({ name: t.name, ms: t.ms, chars: t.chars, ...(t.error ? { error: t.error } : {}) })) }; };
 
 function scriptedIngest(batch: Array<{ path: string; content: string }>): ScriptedModel {
@@ -293,7 +302,7 @@ async function runArm(o: RunOptions): Promise<void> {
     const done = o.batches.map((_, b) => ingest.done.get(ikey(model, n, b)));
     const last = done.reduce((k, r, i) => (r ? i : k), -1);
     if (done.slice(0, last + 1).some(r => !r)) throw new Error(`${model} ingest ${n}: ingest checkpoints are not a prefix of the batch plan`);
-    if (last >= 0) await brain.restoreFrom(done[last]!.tar);
+    if (last >= 0) await brain.restoreFrom(snapshotOrRefuse(done[last]!, ingest.path));
     else await brain.create(o.config);
     for (let b = last + 1; b < o.batches.length; b++) {
       if (exhausted()) throw new Error('budget exhausted');
@@ -361,7 +370,7 @@ async function runArm(o: RunOptions): Promise<void> {
         }
         if (phases.includes('answer')) {
           if (!complete()) throw new Error(`${model} ingest ${n}: ingest is not complete (${o.batches.filter((_, b) => ingest.has(ikey(model, n, b))).length}/${o.batches.length} batches); run --phase ingest first`);
-          if (!brain) { brain = new AgentBrain(o.gut.root, brainDir(o, model, n, commit)); await brain.restoreFrom(ingest.done.get(ikey(model, n, o.batches.length - 1))!.tar); }
+          if (!brain) { brain = new AgentBrain(o.gut.root, brainDir(o, model, n, commit)); await brain.restoreFrom(snapshotOrRefuse(ingest.done.get(ikey(model, n, o.batches.length - 1))!, ingest.path)); }
           await doAnswers(brain, model, n, o.questions);
         }
       }
@@ -387,7 +396,7 @@ async function runArm(o: RunOptions): Promise<void> {
       const last = ingest.done.get(ikey(model, 0, o.batches.length - 1));
       if (!last) throw new Error(`the HTTP-writer journey replays ${model} ingest 0; run --phase ingest first`);
       const brain = new AgentBrain(o.gut.root, brainDir(o, model, 0, commit));
-      await brain.restoreFrom(last.tar);
+      await brain.restoreFrom(snapshotOrRefuse(last, ingest.path));
       const pages = brain.readPages();
       const http = await openP5HttpBrain(o.gut, o.config);
       try {

@@ -35,7 +35,7 @@ import { receiptCost, type RunSummary } from '../budget-ledger.ts';
 import { writeReceipt, type GateOutcome } from '../receipt.ts';
 import { assertCustodyRoots, openCustodyFile } from '../sealed-confirmation-lib.ts';
 import { campaignGuard } from './campaign.ts';
-import { AttemptCheckpoint } from './checkpoints.ts';
+import { AttemptCheckpoint, interruptionReport, openOrContinue, resumeCommand } from './checkpoints.ts';
 import { stratifiedByModel, type GrammarLine } from './grammar-lines.ts';
 import { Q2_JUDGE_PROMPT_SHA256, Q2_JUDGE_PROMPT_VERSION, Q2_LINE_JUDGES, labelLines, lineOutcome, type LineToLabel, type LineVerdict } from './judge.ts';
 import { q2ItemClass, q2ListLines, Q2_ZERO_TOLERANCE_CLASSES } from './junk-classes.ts';
@@ -128,6 +128,10 @@ async function cmdMint(argv: string[], log: (s: string) => void): Promise<void> 
   if (limit !== null) docs = docs.slice(0, limit);
   const other = readMint(work, set, arm === 'baseline' ? 'candidate' : 'baseline');
   if (other && other.meta.set_sha256 !== setSha) throw new Error(`the ${other.meta.arm} arm in ${work} minted a different ${set} (sha256 ${other.meta.set_sha256.slice(0, 12)}, now ${setSha.slice(0, 12)}); both arms must read the same set`);
+  if (sealed) {
+    const op = openOrContinue(work, `${DECISION_ID}/${set}`, { set, set_sha256: setSha }, `opening-${set}.json`);
+    log(op.continues ? `continuing opening ${op.opening_id} of ${set}` : `opening ${op.opening_id} of ${set}`);
+  }
   log(`mint ${set} ${arm}: gbrain ${gut.version}${gut.overlay ? ` ${gut.overlay.build.commit.slice(0, 12)}` : ''}, ${docs.length} pages (${sealed ? 'custody' : 'development'})`);
   const ckpt = new Checkpoint<DocRecord>(docsPath(work, set, arm));
   let harnessError: string | null = null;
@@ -224,7 +228,9 @@ async function cmdLabel(argv: string[], log: (s: string) => void): Promise<void>
   writeFileSync(join(output, 'label-summary.json'), JSON.stringify({ ...report, ...(summary ? { cost: receiptCost(summary) } : {}) }, null, 2) + '\n');
   campaign?.finish(join(output, 'label-summary.json'), summary ? receiptCost(summary).usd : 0);
   if (err || counts.retryable || counts.not_started) {
-    log(`label incomplete: ${counts.retryable + counts.not_started} (line, judge) pairs left${err ? ` (${err})` : ''}; cumulative label spend $${ckpt.spendUsd().toFixed(2)}. Resume with the same command.`);
+    const openings = ['N', 'K'].filter(x => existsSync(join(work, `opening-${x}.json`))).map(x => JSON.parse(readFileSync(join(work, `opening-${x}.json`), 'utf8')) as { opening_id: string; set: string });
+    process.stderr.write('\n' + interruptionReport({ command: resumeCommand('eval/runner/q2/junk-audit.ts', ['label', ...argv]), remaining: { '(line, judge) labels': counts.retryable + counts.not_started }, spentUsd: ckpt.spendUsd(),
+      opening: openings.length ? { id: openings.map(x => x.opening_id).join(' + '), set: openings.map(x => x.set).join(' + ') } : null, reason: err ?? 'some labels failed and stay retryable' }) + '\n');
     process.exitCode = 3;
   }
 }
