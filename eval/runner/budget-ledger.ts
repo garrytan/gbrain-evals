@@ -1044,7 +1044,7 @@ const chatPrice = (id: string) => {
   return CHAT_PRICE_OVERRIDES[id] ?? CHAT_PRICE_OVERRIDES[undated] ?? canonicalLookup(id) ?? canonicalLookup(undated);
 };
 
-interface RequestPrice {
+export interface RequestPrice {
   provider: string;
   model: string;
   kind: 'chat' | 'embedding' | 'rerank';
@@ -1151,6 +1151,44 @@ export function usageCost(price: RequestPrice, responseBody: unknown): { usd: nu
   return { usd, input_tokens: inputTokens, output_tokens: outputTokens };
 }
 
+/**
+ * Provider batch endpoints (OpenAI Batch, Anthropic Message Batches) and free
+ * token-count endpoints. Control calls (polls, listings, results, file
+ * content, cancels, token counts) cost nothing. A submission (a batch create
+ * or a batch input-file upload) carries many paid requests whose worst case
+ * only the batch lane (`eval/runner/batch/`) can price, so the guard sends it
+ * only inside `runInBatchLane`, after the lane reserved it, and refuses it
+ * anywhere else.
+ */
+export function batchRequestKind(url: string, method: string): 'free' | 'submission' | null {
+  const { hostname, pathname } = new URL(url);
+  const m = method.toUpperCase();
+  const path = pathname.replace(/\/+$/, '');
+  if (hostname === 'api.openai.com') {
+    if (path === '/v1/responses/input_tokens') return 'free';
+    if (path === '/v1/batches' || path === '/v1/files') return m === 'POST' ? 'submission' : 'free';
+    if (/^\/v1\/batches\/[^/]+(\/cancel)?$/.test(path)) return 'free';
+    if (/^\/v1\/files\/[^/]+(\/content)?$/.test(path)) return 'free';
+    return null;
+  }
+  if (hostname === 'api.anthropic.com') {
+    if (path === '/v1/messages/count_tokens') return 'free';
+    if (path === '/v1/messages/batches') return m === 'POST' ? 'submission' : 'free';
+    if (/^\/v1\/messages\/batches\/[^/]+(\/results|\/cancel)?$/.test(path)) return 'free';
+    return null;
+  }
+  return null;
+}
+
+/** Set while the batch lane sends a submission it has already reserved in the ledger. */
+const batchLaneScope = new AsyncLocalStorage<{ reservation: string }>();
+
+/** Run `fn` as the batch lane: submissions inside it pass the guard because `reservation` already covers them. */
+export function runInBatchLane<T>(reservation: string, fn: () => Promise<T>): Promise<T> {
+  if (!reservation) throw new BudgetExceededError('the batch lane must reserve before it submits');
+  return batchLaneScope.run({ reservation }, fn);
+}
+
 async function requestBody(input: RequestInfo | URL, init?: RequestInit): Promise<unknown> {
   const raw = init?.body ?? (input instanceof Request ? await input.clone().text() : undefined);
   if (typeof raw !== 'string') return raw === undefined ? undefined : null;
@@ -1209,6 +1247,13 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
   };
   const handle = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const url = input instanceof Request ? input.url : String(input);
+    const batchKind = batchRequestKind(url, init?.method ?? (input instanceof Request ? input.method : 'GET'));
+    if (batchKind === 'free') return send(input, init);
+    if (batchKind === 'submission') {
+      if (batchLaneScope.getStore()) return send(input, init);
+      state.exhausted = true;
+      throw new BudgetExceededError(`batch submission to ${url} did not come through the batch lane; submit batches with eval/runner/batch/ so the ledger reserves their worst case first`);
+    }
     const body = await requestBody(input, init);
     let price: RequestPrice | null;
     let id: string;
