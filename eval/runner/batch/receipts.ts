@@ -137,22 +137,25 @@ export function pairByIds<T extends { question_id: string }>(a: T[], b: T[], exp
 }
 
 /**
- * Rows for one cross-arm family evaluation with `compare.ts --family`: A holds
- * the comparator's correctness copied into one field per arm, B each arm's
- * correctness in that field, so a single family evaluation applies Holm
- * across every arm (compare.ts adjusts only within one evaluation).
+ * Rows for one cross-arm family evaluation with `compare.ts --family`: for
+ * each arm field, A holds that arm's comparator correctness and B the arm's,
+ * so a single family evaluation applies Holm across every arm (compare.ts
+ * adjusts only within one evaluation). A subset arm (Fable's 200) leaves its
+ * field out of the rows it does not cover, so those pairs are ineligible for
+ * that comparison only.
  */
-export function crossArmRows(comparator: Map<string, 0 | 1>, arms: { field: string; rows: Map<string, 0 | 1> }[], ids: string[]): { a: Record<string, unknown>[]; b: Record<string, unknown>[] } {
+export function crossArmRows(arms: { field: string; rows: Map<string, 0 | 1>; comparator: Map<string, 0 | 1>; subset?: boolean }[], ids: string[]): { a: Record<string, unknown>[]; b: Record<string, unknown>[] } {
   const a: Record<string, unknown>[] = [];
   const b: Record<string, unknown>[] = [];
   for (const id of [...ids].sort()) {
-    const base = comparator.get(id);
-    if (base === undefined) throw new Error(`comparator has no row for ${id}`);
     const ra: Record<string, unknown> = { question_id: id };
     const rb: Record<string, unknown> = { question_id: id };
     for (const arm of arms) {
       const v = arm.rows.get(id);
+      const base = arm.comparator.get(id);
+      if (v === undefined && arm.subset) continue;
       if (v === undefined) throw new Error(`arm field ${arm.field} has no row for ${id}`);
+      if (base === undefined) throw new Error(`comparator for ${arm.field} has no row for ${id}`);
       ra[arm.field] = base;
       rb[arm.field] = v;
     }

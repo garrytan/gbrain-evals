@@ -66,6 +66,8 @@ export const subsets = {
   fable200: () => seededSample(allIds(), 200, SEED),
   w10c150: () => stratifiedSample(types(), 150, SEED).ids,
   w8100: () => seededSample(allIds().filter(id => !id.endsWith('_abs')), 100, SEED),
+  /** The partial fault runs on a seeded 50 of the 100 so its worst case fits W8's $5 share after the swap arm. */
+  w8partial50: () => seededSample(seededSample(allIds().filter(id => !id.endsWith('_abs')), 100, SEED), 50, SEED + 2),
 };
 
 export const CAPTURE_PATH = join(STATE_DIR, 'w10a-capture/captures.ndjson');
@@ -188,12 +190,12 @@ export const ARMS: Record<string, ArmDef> = Object.fromEntries(([
       const rows = r1();
       const bodies = new Map<string, Record<string, unknown>>();
       const meta: Record<string, unknown> = {};
-      for (const id of subsets.w8100()) {
+      for (const id of subsets.w8partial50()) {
         const gold = topGoldSession(rows.get(id)!);
         meta[id] = gold ?? 'not applicable: no gold session reached the reader';
         if (gold) bodies.set(id, readerBody('claude-sonnet-5-5', { system: rows.get(id)!.system, user: removeSessionBlock(rows.get(id)!.user, gold) }));
       }
-      return { bodies, source: `${R1_SRC}; the top-ranked retrieved gold session removed from the reader text where one was shown (W8 partial fault, report-only)`, protocol: HOUSE_NOTES_PROTOCOL, meta };
+      return { bodies, source: `${R1_SRC}; the top-ranked retrieved gold session removed from the reader text where one was shown (W8 partial fault, report-only), seeded 50 of the control's 100 questions (seed ${SEED + 2})`, protocol: HOUSE_NOTES_PROTOCOL, meta };
     },
   },
 ] as ArmDef[]).map(a => [a.id, a]));

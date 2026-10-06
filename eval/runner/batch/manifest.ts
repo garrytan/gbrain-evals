@@ -50,7 +50,7 @@ export const bodySha = (body: unknown) => sha256(bodyText(body));
 export const MODEL_SETTINGS: Record<string, { provider: Provider; reasoning: boolean; effort: string | null; max_output_tokens: number }> = {
   'claude-sonnet-5-5': { provider: 'anthropic', reasoning: true, effort: 'low', max_output_tokens: 4096 },
   'claude-opus-5-5': { provider: 'anthropic', reasoning: true, effort: 'low', max_output_tokens: 4096 },
-  'claude-fable-5-1': { provider: 'anthropic', reasoning: true, effort: 'low', max_output_tokens: 4096 },
+  'claude-fable-5-1': { provider: 'anthropic', reasoning: true, effort: 'low', max_output_tokens: 2048 },
   'gpt-6.1-sol': { provider: 'openai', reasoning: true, effort: 'medium', max_output_tokens: 12000 },
   'gpt-5.4': { provider: 'openai', reasoning: true, effort: 'medium', max_output_tokens: 12000 },
   'gpt-4o-2024-08-06': { provider: 'openai', reasoning: false, effort: null, max_output_tokens: 10 },

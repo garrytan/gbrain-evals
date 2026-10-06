@@ -16,7 +16,9 @@ describe('W10 arms', () => {
     expect(notes.bodies.size).toBe(500);
     const b = notes.bodies.get('a06e4cfe') as any;
     expect([b.model, b.max_tokens, b.output_config.effort]).toEqual(['claude-sonnet-5-5', 4096, 'low']);
-    expect(ARMS['w10b-fable51-notes'].build().bodies.size).toBe(200);
+    const fable = ARMS['w10b-fable51-notes'].build();
+    expect(fable.bodies.size).toBe(200);
+    expect((fable.bodies.values().next().value as any).max_tokens).toBe(2048);
     expect(ARMS['w10b-sol-notes'].build().bodies.get('a06e4cfe')).toMatchObject({ model: 'gpt-6.1-sol', reasoning_effort: 'medium', max_completion_tokens: 12000 });
     expect(ARMS['w10b-sonnet55-direct'].build().protocol.name).toBe('gbrain-lme-reader-v3-abstention-fullsessions');
     expect(CAPS).toEqual({ W10a: 28, W10b: 107, W10c: 50, 'W8-LME': 5 });
@@ -53,7 +55,8 @@ describe('W8 LongMemEval control injections', () => {
     const built = ARMS['w8-lme-partial'].build();
     const rows = r1();
     let applicable = 0;
-    for (const id of subsets.w8100()) {
+    expect(subsets.w8partial50().every(id => subsets.w8100().includes(id))).toBe(true);
+    for (const id of subsets.w8partial50()) {
       const gold = topGoldSession(rows.get(id)!);
       if (!gold) { expect(built.bodies.has(id)).toBe(false); continue; }
       applicable++;
@@ -62,7 +65,8 @@ describe('W8 LongMemEval control injections', () => {
       expect(parseSessionBlocks(user).map(b => b.id)).toEqual(before.filter(b => b !== gold));
     }
     expect(applicable).toBe(built.bodies.size);
-    expect(applicable).toBeGreaterThan(80);
+    expect(applicable).toBeGreaterThan(40);
+    expect(built.bodies.size).toBeLessThanOrEqual(50);
   });
 });
 

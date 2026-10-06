@@ -1,0 +1,60 @@
+{
+ "schema_version": 1,
+ "family_id": "w10b-reader-replay-secondary-judge",
+ "registered_at": "2026-10-06",
+ "description": "W10b report-only: the same six comparisons under the secondary gpt-6.1-sol judge (same official prompt).",
+ "alpha": 0.05,
+ "seed": 20261006,
+ "draws": 10000,
+ "id_field": "question_id",
+ "comparisons": [
+  {
+   "id": "correct__sonnet55_notes-vs-sonnet46",
+   "metric": "correct__sonnet55_notes",
+   "gate": "exploratory",
+   "direction": "higher",
+   "cluster_by": "question_id",
+   "description": "claude-sonnet-5-5 notes vs Sonnet 4.6 notes (R1)"
+  },
+  {
+   "id": "correct__sonnet55_direct-vs-sonnet46",
+   "metric": "correct__sonnet55_direct",
+   "gate": "exploratory",
+   "direction": "higher",
+   "cluster_by": "question_id",
+   "description": "claude-sonnet-5-5 direct vs Sonnet 4.6 direct (R2)"
+  },
+  {
+   "id": "correct__sol_notes-vs-sonnet46",
+   "metric": "correct__sol_notes",
+   "gate": "exploratory",
+   "direction": "higher",
+   "cluster_by": "question_id",
+   "description": "gpt-6.1-sol notes vs Sonnet 4.6 notes (R1)"
+  },
+  {
+   "id": "correct__gpt54_official-vs-sonnet46",
+   "metric": "correct__gpt54_official",
+   "gate": "exploratory",
+   "direction": "higher",
+   "cluster_by": "question_id",
+   "description": "gpt-5.4 official prompt vs Sonnet 4.6 notes (R1), same sessions"
+  },
+  {
+   "id": "correct__opus55_notes-vs-sonnet46",
+   "metric": "correct__opus55_notes",
+   "gate": "exploratory",
+   "direction": "higher",
+   "cluster_by": "question_id",
+   "description": "claude-opus-5-5 notes vs Sonnet 4.6 notes (R1)"
+  },
+  {
+   "id": "correct__fable51_notes-vs-sonnet46",
+   "metric": "correct__fable51_notes",
+   "gate": "exploratory",
+   "direction": "higher",
+   "cluster_by": "question_id",
+   "description": "claude-fable-5-1 notes vs Sonnet 4.6 notes (R1), seeded 200-question subset"
+  }
+ ]
+}

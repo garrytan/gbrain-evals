@@ -167,13 +167,17 @@ describe('statistics wiring', () => {
 
   test('S1 + S4: one family evaluation holds every arm, Holm covers all of them, and each prints a power note', () => {
     const dir = tmp();
-    const rows = crossArmRows(comparator, [{ field: 'correct__better', rows: better }, { field: 'correct__same', rows: same }], ids);
-    const family = superiorityFamily('w10b-test', '2026-10-06', ['correct__better', 'correct__same'], 'test');
+    const subset = new Map([...better].slice(0, 30));
+    const rows = crossArmRows([{ field: 'correct__better', rows: better, comparator }, { field: 'correct__same', rows: same, comparator }, { field: 'correct__subset', rows: subset, comparator, subset: true }], ids);
+    expect(rows.b.filter(r => 'correct__subset' in r).length).toBe(30);
+    expect(() => crossArmRows([{ field: 'x', rows: subset, comparator }], ids)).toThrow(/no row/);
+    const family = superiorityFamily('w10b-test', '2026-10-06', ['correct__better', 'correct__same', 'correct__subset'], 'test');
     writeFileSync(join(dir, 'a.ndjson'), rows.a.map(r => JSON.stringify(r)).join('\n'));
     writeFileSync(join(dir, 'b.ndjson'), rows.b.map(r => JSON.stringify(r)).join('\n'));
     writeFileSync(join(dir, 'family.json'), JSON.stringify(family));
     const out = runCompare({ a: join(dir, 'a.ndjson'), b: join(dir, 'b.ndjson'), family: join(dir, 'family.json'), metrics: [], excludeWhen: [], where: [], aWhere: [], bWhere: [], seed: 42, draws: 10000, alpha: 0.05, json: true });
-    expect(out.decision.holm_family).toEqual(['correct__better-vs-comparator', 'correct__same-vs-comparator']);
+    expect(out.decision.holm_family).toEqual(['correct__better-vs-comparator', 'correct__same-vs-comparator', 'correct__subset-vs-comparator']);
+    expect(out.decision.comparisons.find(c => c.id === 'correct__subset-vs-comparator')!.n_pairs).toBe(30);
     const byId = new Map(out.decision.comparisons.map(c => [c.id, c]));
     expect(byId.get('correct__better-vs-comparator')!.mcnemar).toMatchObject({ wins: 12, losses: 0 });
     for (const c of out.decision.comparisons) expect(c.power?.note.length).toBeGreaterThan(20);
