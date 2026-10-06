@@ -52,7 +52,7 @@
     ],
     "token_estimate": "ceil(characters / 4) of the delivered payload (JSON pages for volunteer_context, the rendered block for turn_context)",
     "gbrain_overlay": {
-      "requested": "/home/user/gbrain@3a284aea26889b77c633aebb4149c3016d834ee6",
+      "requested": "<gbrain checkout>@3a284aea26889b77c633aebb4149c3016d834ee6",
       "ref": "3a284aea26889b77c633aebb4149c3016d834ee6",
       "commit": "3a284aea26889b77c633aebb4149c3016d834ee6",
       "tree": "ce2f2ecc26e083bf719aa336fd752fc065c9b878",

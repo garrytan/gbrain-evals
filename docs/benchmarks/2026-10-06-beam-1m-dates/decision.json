@@ -6,11 +6,11 @@
   "verdict_type": "quality",
   "stage": "dev",
   "candidate": {
-    "gbrain": "/home/user/gbrain@c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "gbrain": "<gbrain checkout>@c5fb0201d1960a0a5a81c35d77718311b03154b7",
     "config": {}
   },
   "baseline": {
-    "gbrain": "/home/user/gbrain@6622a119e40ea09a7719233046aca24741863ed2",
+    "gbrain": "<gbrain checkout>@6622a119e40ea09a7719233046aca24741863ed2",
     "config": {}
   },
   "sources": [

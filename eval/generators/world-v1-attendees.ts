@@ -109,7 +109,7 @@ if (import.meta.main) {
     const problems: string[] = [];
     for (const [f, c] of pages) if (!existsSync(join(OUT_DIR, f)) || readFileSync(join(OUT_DIR, f), 'utf8') !== c) problems.push(f);
     if (!existsSync(join(OUT_DIR, '_attendees-ledger.json')) || readFileSync(join(OUT_DIR, '_attendees-ledger.json'), 'utf8') !== ledgerText) problems.push('_attendees-ledger.json');
-    const extra = existsSync(OUT_DIR) ? readdirSync(OUT_DIR).filter(f => f !== '_attendees-ledger.json' && !pages.has(f)) : [];
+    const extra = existsSync(OUT_DIR) ? readdirSync(OUT_DIR).sort().filter(f => f !== '_attendees-ledger.json' && !pages.has(f)) : [];
     if (problems.length || extra.length) { console.error(`world-v1-attendees differs from the generator: ${[...problems, ...extra].slice(0, 10).join(', ')}`); process.exit(1); }
     console.log(`world-v1-attendees: ${pages.size} pages match ${WORLD_V1_ATTENDEES_VERSION}; corpus ${corpusFingerprint(ledger)}`);
   } else {
