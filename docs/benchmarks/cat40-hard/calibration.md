@@ -155,6 +155,7 @@ Asking about two or three accounts at once took pg down 12 points on H2 to H5 bu
 |---|---|---|---|
 | `multi_account_min` / `max` | 2 / 3 | 3 / 4 | fs answered H2 to H5 at 85 to 95% with two or three accounts per question; each added account adds its own resolution and reading, the one lever that moved H2 to H5 in round 4 (pg fell 12 points) |
 | `h1_min_members` / `max` | 6 / 12 | 5 / 10 | H1 stayed at 25 to 30%, mostly turn-cap stops; smaller sets move H1 toward the band so its failures are not all truncation |
+| `large_extra_accounts` | 2,400 | 2,100 | the extra task accounts put the round-5 50k world at 60,218 documents, close to the generator's 62,500 limit; 300 fewer appended accounts keep about 54,000 so the held-out seed stays inside it |
 
 Everything else is unchanged, including the 16-turn cap. Projection target: H1 about 40 to 50%, H2 to H5 about 60 to 70% on fs, pooled within 40-70%.
 

@@ -24,7 +24,7 @@
   "h5_noise_sessions": 1,
   "max_turns": 16,
   "tasks_per_family": 20,
-  "large_extra_accounts": 2400,
+  "large_extra_accounts": 2100,
   "large_nondeciding_per_account": 12,
   "direct_name_share": 0.15,
   "code_ref_weight": 0.25,
