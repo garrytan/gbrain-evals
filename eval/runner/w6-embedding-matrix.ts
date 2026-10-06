@@ -14,6 +14,7 @@
  * embedder against voyage-4.
  */
 import { readdirSync, readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { join } from 'node:path';
 import { clusteredPairedDelta, exactMcNemar, holmAdjusted, type PairedItem } from './stats/paired.ts';
 
@@ -91,8 +92,9 @@ export function summarize(cells: Cell[]) {
 if (import.meta.main) {
   const [cmd, dir] = process.argv.slice(2);
   if (cmd !== 'summarize' || !dir) { console.error('usage: bun eval/runner/w6-embedding-matrix.ts summarize <results dir>'); process.exit(2); }
-  const files = readdirSync(dir).filter(f => /^cat13-.*\.receipt\.json$/.test(f)).sort();
-  const parsed = files.map(f => [f, JSON.parse(readFileSync(join(dir, f), 'utf8'))] as const);
+  const load = (f: string) => JSON.parse(f.endsWith('.gz') ? gunzipSync(readFileSync(join(dir, f))).toString('utf8') : readFileSync(join(dir, f), 'utf8'));
+  const files = readdirSync(dir).filter(f => /^cat13-.*\.receipt\.json(\.gz)?$/.test(f)).sort();
+  const parsed = files.map(f => [f.replace(/\.gz$/, ''), load(f)] as const);
   const cells = parsed.filter(([, r]) => r.data?.scorecard?.length).map(([f, r]) => cellFrom(f, r as Cat13Receipt));
   const notScored = parsed.filter(([, r]) => !r.data?.scorecard?.length).map(([f, r]) => ({ file: f, run_status: r.run_status, reason: r.skip_reason ?? r.errors?.[0]?.message ?? null }));
   const cat18b = readdirSync(dir).filter(f => /^cat18b.*\.receipt\.json$/.test(f)).sort().flatMap(f => {
