@@ -7,7 +7,7 @@ import { clusteredPairedDelta, superiorityP } from '../../eval/runner/stats/pair
 import { newSpec, templateSources, validateSpec, type Plan } from '../../eval/runner/decisions/spec.ts';
 import { computeSplit, loadSplit, splitOrder } from '../../eval/runner/decisions/splits.ts';
 import { DecideError, exitCodeFor, renderOperatorMessage } from '../../eval/runner/decisions/errors.ts';
-import { beamManifest, loadFixture, occurrenceId, renderSessionPage, DATASET_ROOT, LOCOMO_FILE, loadLocomo } from '../../eval/runner/memory-qa/corpus.ts';
+import { beamGroupDates, beamManifest, loadFixture, occurrenceId, renderSessionPage, DATASET_ROOT, LOCOMO_FILE, loadLocomo } from '../../eval/runner/memory-qa/corpus.ts';
 import { scoreRetrieval, selectQuestions } from '../../eval/runner/memory-qa/run.ts';
 import { combine, main, planJobs } from '../../eval/runner/decide.ts';
 
@@ -103,6 +103,13 @@ describe('splits', () => {
 });
 
 describe('corpus and scoring', () => {
+  test('every BEAM turn group carries its batch date (BEAM dates a batch once, on its first message)', () => {
+    const batch = { time_anchor: null, turns: [[{ time_anchor: 'March-15-2024' }, {}], [{}, {}], [{}]] };
+    expect(beamGroupDates(batch)).toEqual(['March-15-2024', 'March-15-2024', 'March-15-2024']);
+    expect(beamGroupDates({ time_anchor: 'May-01-2024', turns: [[{}], [{ time_anchor: 'May-02-2024' }]] })).toEqual(['May-01-2024', 'May-02-2024']);
+    expect(beamGroupDates({ turns: [[{}], [{}]] })).toEqual([undefined, undefined]);
+  });
+
   test('rendered pages carry dates and turns but no ids', () => {
     const fx = loadFixture();
     const s = fx.conversations[0].sessions[1];

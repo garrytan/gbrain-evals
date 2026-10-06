@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.31] - 2026-10-06
+
+### BEAM loader dates every session
+
+BEAM dates each batch once, on the first message of its first turn group. The memory-qa loader (`eval/runner/memory-qa/corpus.ts`, used by the decision kit, the starting line and the P4 streaming harness) made one session per turn group, but took a date only from a message inside that group. So on development data only 21 of 486 BEAM-100K, 110 of 4,728 BEAM-500K and 106 of 9,003 BEAM-1M sessions carried a date. Every turn group now takes its batch's date (`beamGroupDates`, unit-tested), which gives 3 to 10 distinct dates per conversation. Paired comparisons saw the same undated sessions in both arms. A reported-only BEAM-100K dev rerun on the starting-line build moves strict R@5 from 45.4% to 47.2% and reader accuracy from 57.1% to 58.0% ([note](docs/benchmarks/2026-10-05-heldout-program.md#the-starting-line-on-master)). $0.76.
+
 ## [0.10.30] - 2026-10-06
 
 ### P8 held-out records: write guard, semantic withdrawal, quote grounding, advertised surface
