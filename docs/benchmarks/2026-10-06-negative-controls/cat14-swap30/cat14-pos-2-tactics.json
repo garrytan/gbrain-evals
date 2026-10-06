@@ -1,0 +1,79 @@
+{
+  "probe_id": "cat14-pos-2-tactics",
+  "category": "calibration-pattern-confidence-boost",
+  "question": "Founder wants to ship a half-baked v1 in 4 weeks vs polish for 4 months. Which call do I make?",
+  "baseline_answer": "## Answer\n\nThe brain's record leans toward the 4-week ship. It does not decide the call for this founder's specific situation.\n\n- Garry's resolved take that \"Founders who ship v1 in <30 days hit PMF faster\" was marked correct (conviction weight 0.8, recorded 2024-02-10) [cat14/cat14-pos-2-tactics/take-1]. A 4-week timeline fits inside that window.\n- Garry's resolved take that \"Polish-mode founders miss windows\" was marked correct (weight 0.75, recorded 2024-05-19) [cat14/cat14-pos-2-tactics/take-2]. This bears on the 4-month polish path, which risks missing a market window.\n- Garry's resolved take that \"Velocity is the leading indicator of breakout\" was marked correct (weight 0.85, recorded 2024-11-04) [cat14/cat14-pos-2-tactics/take-3]. This is the strongest of the three and favors the faster path.\n\nAll three are tactics-domain claims by the same holder, and all point the same way: speed to first release, learning, and momentum over polish. None of them was weighted below 0.5, so none is a hunch.\n\n## Conflicts\n\nNone. The brain holds no opposing takes, but it also holds no takes from other holders or on cases where polish won.",
+  "calibrated_answer": "## Answer\n\nThe brain's evidence points toward the 4-week ship over the 4-month polish. This is a report of what garry's record says, not a directive.\n\n- **Speed to v1.** garry's resolved take \"Founders who ship v1 in <30 days hit PMF faster\" was marked correct (conviction 0.8, recorded 2024-02-10) [cat14/cat14-pos-2-tactics/take-1]. A 4-week build is about 28 days, so it falls inside that threshold. A 4-month polish cycle falls well outside it.\n- **Cost of polishing.** \"Polish-mode founders miss windows\" was marked correct (conviction 0.75, recorded 2024-05-19) [cat14/cat14-pos-2-tactics/take-2]. This matches the 4-month option.\n- **Velocity as a signal.** \"Velocity is the leading indicator of breakout\" was marked correct (conviction 0.85, recorded 2024-11-04) [cat14/cat14-pos-2-tactics/take-3]. This favors the founder who ships fast and iterates.\n\nAll three takes are resolved as correct, and all have weight of at least 0.75, so none needs a low-confidence caveat. They are all garry's own takes in the tactics domain. None of them is specific to this founder, product, or market.\n\n## Calibration\n\n- **Prior (default reasoning):** garry's velocity-based gut favors shipping fast. His calibration profile says 8 of 10 early-stage tactics calls held up across the 2024 cohort, and it advises trusting that gut on shipping speed.\n- **Counter-prior:** The calibration block names no hedged-domain pattern for tactics or shipping speed, so there is no specific counter-prior to quote. The generic counter-case is that a thin v1 can damage trust in some contexts. The brain holds no data on that, so it is not asserted here.\n- **Bias tag:** The active tag is over-confident-geography. Nothing in this question involves geography, so the tag does not clearly apply. It is named for transparency, and it is not used to override the evidence.\n- **Track-record caveat:** The 8-of-10 record comes from the 2024 cohort. The three supporting takes are from 2024 too, and the current date is 2026-10-06. All the evidence therefore predates the present decision by roughly two years.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers favor shipping in four weeks, using formal evidence-report language and unexplained numerical conviction weights rather than a conversational voice. A does not explicitly reference the supplied calibration pattern, while B correctly mentions the user's strong early-stage tactics record and velocity-based gut. However, B also introduces an incorrect geography bias tag absent from the profile; disclaiming its relevance does not make it useful. Neither provides a track-record-based counter-prior, and A is preferable because it avoids B's misleading extra calibration claims. || Both answers connect successful early-stage tactics calls to shipping quickly, and both recommend the same faster path. A additionally introduces an irrelevant geography bias that is not in the supplied profile, whereas B avoids that distraction. Neither provides a track-record counter-prior, and both use formal reporting language and untranslated numerical weights rather than a conversational voice. B is cleaner, though both cite specific historical takes that the supplied profile does not substantiate."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers favor shipping in four weeks, using formal evidence-report language and unexplained numerical conviction weights rather than a conversational voice. A does not explicitly reference the supplied calibration pattern, while B correctly mentions the user's strong early-stage tactics record and velocity-based gut. However, B also introduces an incorrect geography bias tag absent from the profile; disclaiming its relevance does not make it useful. Neither provides a track-record-based counter-prior, and A is preferable because it avoids B's misleading extra calibration claims. || Both answers connect successful early-stage tactics calls to shipping quickly, and both recommend the same faster path. A additionally introduces an irrelevant geography bias that is not in the supplied profile, whereas B avoids that distraction. Neither provides a track-record counter-prior, and both use formal reporting language and untranslated numerical weights rather than a conversational voice. B is cleaner, though both cite specific historical takes that the supplied profile does not substantiate."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers favor shipping in four weeks, using formal evidence-report language and unexplained numerical conviction weights rather than a conversational voice. A does not explicitly reference the supplied calibration pattern, while B correctly mentions the user's strong early-stage tactics record and velocity-based gut. However, B also introduces an incorrect geography bias tag absent from the profile; disclaiming its relevance does not make it useful. Neither provides a track-record-based counter-prior, and A is preferable because it avoids B's misleading extra calibration claims. || Both answers connect successful early-stage tactics calls to shipping quickly, and both recommend the same faster path. A additionally introduces an irrelevant geography bias that is not in the supplied profile, whereas B avoids that distraction. Neither provides a track-record counter-prior, and both use formal reporting language and untranslated numerical weights rather than a conversational voice. B is cleaner, though both cite specific historical takes that the supplied profile does not substantiate."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers favor shipping in four weeks, using formal evidence-report language and unexplained numerical conviction weights rather than a conversational voice. A does not explicitly reference the supplied calibration pattern, while B correctly mentions the user's strong early-stage tactics record and velocity-based gut. However, B also introduces an incorrect geography bias tag absent from the profile; disclaiming its relevance does not make it useful. Neither provides a track-record-based counter-prior, and A is preferable because it avoids B's misleading extra calibration claims. || Both answers connect successful early-stage tactics calls to shipping quickly, and both recommend the same faster path. A additionally introduces an irrelevant geography bias that is not in the supplied profile, whereas B avoids that distraction. Neither provides a track-record counter-prior, and both use formal reporting language and untranslated numerical weights rather than a conversational voice. B is cleaner, though both cite specific historical takes that the supplied profile does not substantiate."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers favor shipping in four weeks, using formal evidence-report language and unexplained numerical conviction weights rather than a conversational voice. A does not explicitly reference the supplied calibration pattern, while B correctly mentions the user's strong early-stage tactics record and velocity-based gut. However, B also introduces an incorrect geography bias tag absent from the profile; disclaiming its relevance does not make it useful. Neither provides a track-record-based counter-prior, and A is preferable because it avoids B's misleading extra calibration claims. || Both answers connect successful early-stage tactics calls to shipping quickly, and both recommend the same faster path. A additionally introduces an irrelevant geography bias that is not in the supplied profile, whereas B avoids that distraction. Neither provides a track-record counter-prior, and both use formal reporting language and untranslated numerical weights rather than a conversational voice. B is cleaner, though both cite specific historical takes that the supplied profile does not substantiate."
+    }
+  ],
+  "win_score": 0,
+  "win_overall": "baseline",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "voice_conversational",
+    "doesnt_force_fit_irrelevant_bias"
+  ]
+}

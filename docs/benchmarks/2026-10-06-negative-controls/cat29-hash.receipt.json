@@ -1,0 +1,269 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat29-think-vs-search",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 5,
+  "n_scored": 5,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "resolved_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.expansion": "false",
+    "search.autocut": "false",
+    "search.cache.enabled": "false",
+    "input_allowlist": [
+      "cat29.sut.question@1",
+      "cat29.judge.pair@1"
+    ],
+    "models.think": "anthropic:claude-sonnet-5-5",
+    "think_model_used": "anthropic:claude-sonnet-5-5",
+    "embed_transport": "stubbed-hash",
+    "embed_mode": "hash",
+    "judge_transport": "OpenAI Responses API through openai-judge-shim: no temperature, reasoning effort low, max_output_tokens at least 8000",
+    "temperature_sent": {
+      "think": false,
+      "judge": false
+    },
+    "think_llm": "live",
+    "think_temperature": 0,
+    "judge_mode": "live",
+    "judge_blind": true,
+    "judge_pairwise": true,
+    "judge_both_orders": true
+  },
+  "judge": {
+    "model": "openai:gpt-6.1-sol",
+    "temperature": 0,
+    "rubric_version": "cat29-v3"
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-06-negative-controls-preregistration.md",
+    "preregistration_commit": "16d787266a30c390983ea7beca542ba77183201c",
+    "runner_commit": "5e9d79974a2b0d701ce3dcf2cb82d449633b6885",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-06T19:12:56.981Z"
+  },
+  "cost": {
+    "usd": 0.18369,
+    "input_tokens": 58120,
+    "output_tokens": 6745,
+    "basis": "budget ledger cat29-think-vs-search-2026-10-06T19-12-57-090Z-8b1d25d1: 15 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 2,
+      "max": 2965
+    }
+  },
+  "started_at": "2026-10-06T19:12:56.980Z",
+  "finished_at": "2026-10-06T19:14:48.579Z",
+  "data": {
+    "corpus": "synthetic-v1",
+    "corpus_pages": 165,
+    "questions": 5,
+    "questions_judged": 5,
+    "search_mean_score_0to5": 0.52,
+    "think_mean_score_0to5": 3.62,
+    "think_wins": 5,
+    "search_wins": 0,
+    "ties": 0,
+    "position_inconsistent": 0,
+    "position_inconsistent_question_ids": [],
+    "judge_cost_usd": 0.033908999999999995,
+    "per_question": [
+      {
+        "question_id": "q1-horizon-people",
+        "question_text": "Who works at the Horizon TECH 6 company? What roles do they hold?",
+        "expected_facts": [
+          "The people pages linking companies/horizon-tech-6 are: people/bob-example-1, people/jack-mock-35, people/kate-example-36, people/tara-example-45, people/xena-demo-23",
+          "Role information comes from those people pages (e.g. CEO / joined dates)"
+        ],
+        "search_answer": "Top retrieved pages:\n1. people/jack-mock-35 — # Jack Mock CEO at [[companies/horizon-tech-6]]. Previously at [[companies/onyx-tech-28]]. Working on eval-frameworks and [[concepts/source-tier-boost]] research.\n2. people/kate-example-36 — # Kate Example VP Eng at [[companies/horizon-tech-6]]. Previously at [[companies/apex-tech-15]]. Working on agent-orchestration and [[concepts/embedding-models]] research.\n3. people/paul-placeholder-15 — # Paul Placeholder Lead Engineer at [[companies/quartz-clou",
+        "think_answer": "## Answer\n\nThree people currently work at Horizon TECH 6, based on the retrieved pages:\n\n- **Jack Mock**: CEO. Previously at Onyx TECH 28. [people/jack-mock-35]\n- **Kate Example**: VP Eng. Previously at Apex TECH 15. [people/kate-example-36]\n- **Tara Example**: ML Researcher. Previously at Forge Cloud 19. [people/tara-example-45]\n\n**Former employees** (they list Horizon TECH 6 as a previous employer, so they don't currently work there):\n- Bob Example is now Operations Lead at Maple Systems 26. [",
+        "search_score": 1.8,
+        "think_score": 4,
+        "think_wins": true,
+        "judge_excluded": false,
+        "sut_errors": [],
+        "judge_preference": "think",
+        "position_consistent": true,
+        "judge_orders": [
+          {
+            "first": "think",
+            "search_score": 1.8,
+            "think_score": 4,
+            "preferred": "think"
+          },
+          {
+            "first": "search",
+            "search_score": 1.8,
+            "think_score": 4,
+            "preferred": "think"
+          }
+        ]
+      },
+      {
+        "question_id": "q2-acme-arr-trajectory",
+        "question_text": "Has the ARR of the Acme CO 0 company grown over time? What were the readings?",
+        "expected_facts": [
+          "ARR is $120K as of 2025-01-15",
+          "ARR is $502K as of 2025-08-20",
+          "ARR is $842K as of 2026-04-10",
+          "ARR grew across the readings, reported in date order"
+        ],
+        "search_answer": "Top retrieved pages:\n1. originals/essay-rag-architectures-2 — # On rag architectures This is a curated long-form essay on rag architectures. The core thesis is that developer-tools drives the next generation of [[concepts/rag-architectures]]. Reference work in\n2. originals/essay-reranker-stacks-4 — # On reranker stacks This is a curated long-form essay on reranker stacks. The core thesis is that embedding-providers drives the next generation of [[concepts/reranker-stacks]]. Reference work incl\n3",
+        "think_answer": "## Answer\n\nYes. Acme CO 0's ARR has grown across all three readings recorded in the brain [companies/acme-co-0]:\n\n| Date | ARR | Exact value (USD) |\n|------|-----|-------------------|\n| 2025-01-15 | $120K | 119,737 |\n| 2025-08-20 | $502K | 502,387 |\n| 2026-04-10 | $842K | 841,657 |\n\nThe rise from the first reading to the last is roughly 7x, or about $722K [companies/acme-co-0]. Growth was steepest between January and August 2025, when ARR rose by about $383K. Between August 2025 and April 2026 i",
+        "search_score": 0,
+        "think_score": 3.9,
+        "think_wins": true,
+        "judge_excluded": false,
+        "sut_errors": [],
+        "judge_preference": "think",
+        "position_consistent": true,
+        "judge_orders": [
+          {
+            "first": "think",
+            "search_score": 0,
+            "think_score": 3.8,
+            "preferred": "think"
+          },
+          {
+            "first": "search",
+            "search_score": 0,
+            "think_score": 4,
+            "preferred": "think"
+          }
+        ]
+      },
+      {
+        "question_id": "q3-top-concepts",
+        "question_text": "Which concept pages do the largest number of company pages link to?",
+        "expected_facts": [
+          "concepts/agent-memory is linked from 4 company pages",
+          "concepts/gap-analysis is linked from 3 company pages",
+          "concepts/pre-fetched-synopsis is linked from 3 company pages"
+        ],
+        "search_answer": "Top retrieved pages:\n1. originals/essay-rag-architectures-2 — # On rag architectures This is a curated long-form essay on rag architectures. The core thesis is that developer-tools drives the next generation of [[concepts/rag-architectures]]. Reference work in\n2. originals/essay-reranker-stacks-4 — # On reranker stacks This is a curated long-form essay on reranker stacks. The core thesis is that embedding-providers drives the next generation of [[concepts/reranker-stacks]]. Reference work incl\n3",
+        "think_answer": "## Answer\n\nThe retrieved pages don't show which concept pages the most company pages link to. Only four company pages appear, so any count would be incomplete.\n\nEach of the four links to a different concept through its \"Focus area\" line, so they tie at one inbound company link each:\n- [[concepts/agent-memory]] is linked from Crater Systems 5 [companies/crater-systems-5].\n- [[concepts/gap-analysis]] is linked from Titan Labs 12 [companies/titan-labs-12].\n- [[concepts/reranker-stacks]] is linked f",
+        "search_score": 0.2,
+        "think_score": 0.6,
+        "think_wins": true,
+        "judge_excluded": false,
+        "sut_errors": [],
+        "judge_preference": "think",
+        "position_consistent": true,
+        "judge_orders": [
+          {
+            "first": "think",
+            "search_score": 0.2,
+            "think_score": 0.6,
+            "preferred": "think"
+          },
+          {
+            "first": "search",
+            "search_score": 0.2,
+            "think_score": 0.6,
+            "preferred": "think"
+          }
+        ]
+      },
+      {
+        "question_id": "q4-autonomous-picking-attendees",
+        "question_text": "Who was at the autonomous-picking meeting? What did they discuss?",
+        "expected_facts": [
+          "Attendees: people/grace-placeholder-6, people/paul-example-41",
+          "They discussed autonomous-picking (see the meeting notes)"
+        ],
+        "search_answer": "Top retrieved pages:\n1. originals/essay-embedding-models-3 — # On embedding models This is a curated long-form essay on embedding models. The core thesis is that autonomous-picking drives the next generation of [[concepts/embedding-models]]. Reference work in\n2. people/paul-placeholder-15 — # Paul Placeholder Lead Engineer at [[companies/quartz-cloud-9]]. Previously at [[companies/onyx-tech-28]]. Working on autonomous-picking and [[concepts/auto-linking]] research.\n3. writing/post-1 — # Notes on",
+        "think_answer": "## Answer\n\n**Attendees:** The autonomous picking sync on 2026-04-28 lists two attendees: [[people/paul-example-41]] and [[people/grace-placeholder-6]] [meetings/2026-04-28-autonomous-picking-19].\n\n**Discussion:**\n- The meeting covered autonomous-picking and [[concepts/cross-source-corroboration]] [meetings/2026-04-28-autonomous-picking-19].\n- paul-example-41 shared progress on embedding-providers [meetings/2026-04-28-autonomous-picking-19].\n- Next steps were to be coordinated via grace-placehold",
+        "search_score": 0,
+        "think_score": 4.6,
+        "think_wins": true,
+        "judge_excluded": false,
+        "sut_errors": [],
+        "judge_preference": "think",
+        "position_consistent": true,
+        "judge_orders": [
+          {
+            "first": "think",
+            "search_score": 0,
+            "think_score": 4.4,
+            "preferred": "think"
+          },
+          {
+            "first": "search",
+            "search_score": 0,
+            "think_score": 4.8,
+            "preferred": "think"
+          }
+        ]
+      },
+      {
+        "question_id": "q5-cobalt-arr-gap",
+        "question_text": "What is the current ARR of the Cobalt Labs 16 company as of May 2026?",
+        "expected_facts": [
+          "The most recent seeded reading is \"ARR is $1458K\" as of 2026-04-10",
+          "A correct answer reports that value AND/OR notes the reading predates May 2026 (data gap)"
+        ],
+        "search_answer": "Top retrieved pages:\n1. companies/cobalt-labs-16 — # Cobalt LABS 16 A eval-frameworks company. Founded 2020. Focus area: [[concepts/hybrid-retrieval]]. Working on developer-tools. ## Facts | since | claim | metric | value | unit | period | |------\n2. companies/titan-labs-12 — # Titan LABS 12 A embedding-providers company. Founded 2022. Focus area: [[concepts/gap-analysis]]. Working on autonomous-picking. ## Facts | since | claim | metric | value | unit | period | |----\n3. companies/nova-labs-27 ",
+        "think_answer": "## Answer\n\nAs of May 2026, the most recent ARR on record for Cobalt Labs 16 is **$1,457,501 (about $1,458K)**, effective 2026-04-10 [companies/cobalt-labs-16]. No later ARR entry appears in the brain, so this figure is the latest one before May 2026.\n\nEarlier data points, for context [companies/cobalt-labs-16]:\n- 2025-01-15: $316,412\n- 2025-08-20: $1,164,605\n- 2026-04-10: $1,457,501\n\nThe ARR facts are recorded as annual USD values. The page has no entry dated in May 2026. The April 10 figure is ",
+        "search_score": 0.6,
+        "think_score": 5,
+        "think_wins": true,
+        "judge_excluded": false,
+        "sut_errors": [],
+        "judge_preference": "think",
+        "position_consistent": true,
+        "judge_orders": [
+          {
+            "first": "search",
+            "search_score": 0.6,
+            "think_score": 5,
+            "preferred": "think"
+          },
+          {
+            "first": "think",
+            "search_score": 0.6,
+            "think_score": 5,
+            "preferred": "think"
+          }
+        ]
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 5,
+    "attempted": 5,
+    "scored": 5,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "3eef1f9a3dd8544008f668411e37903e9b7d9846f4d826caede0c03b4087ad5a",
+      "files": 3647,
+      "git_head": "5e9d79974a2b0d701ce3dcf2cb82d449633b6885",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}

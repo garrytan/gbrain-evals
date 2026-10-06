@@ -11,7 +11,8 @@
  * Expected layout: cat14-{real,none,swap30}/ (runner report dirs with
  * receipt.json and per-probe dumps), cat29-{real,hash}.receipt.json,
  * cat35-{real,unrelated,half}/receipt.json plus the detailed receipt
- * (*-cat35*.json), cat20-real.receipt.json and cat20-degraded.receipt.json.
+ * (*-cat35*.json) and cat20-degraded.receipt.json; the Cat 20 real arm is read
+ * from ../2026-10-06-cat20-judges/receipt.json unless cat20-real.receipt.json exists.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -75,7 +76,8 @@ function cat35(dir: string) {
 }
 
 function cat20(dir: string) {
-  const real = read(join(dir, 'cat20-real.receipt.json')), deg = read(join(dir, 'cat20-degraded.receipt.json'));
+  // The real arm is the W7 run; its receipt stays in W7's folder (it attests W7's preregistration).
+  const real = read(join(dir, 'cat20-real.receipt.json')) ?? read(join(dir, '..', '2026-10-06-cat20-judges', 'receipt.json')), deg = read(join(dir, 'cat20-degraded.receipt.json'));
   const stat = (r: { data: { per_question: never[] } } | null) => (r ? summarizeCat20(r.data.per_question).median_of_judge_means_on_all : null);
   return decide({ category: 'Cat 20 brainstorm', statistic: "median of the four judges' mean score on all generated ideas", real: stat(real), degraded: stat(deg),
     floor: 'real median above 1.0', floor_met: (stat(real) ?? 0) > 1.0,

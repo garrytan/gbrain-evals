@@ -1,0 +1,79 @@
+{
+  "probe_id": "cat14-pos-1-geography",
+  "category": "calibration-pattern-relevant",
+  "question": "Should we lead the seed round for a SaaS startup based in Austin? Founder has strong product instinct but no Bay Area network.",
+  "baseline_answer": "## Answer\n\nThe brain has no direct evidence on whether to lead this round. It has nothing on the Austin startup, its founder, or its terms. The only relevant material is garry's record of past geography-based calls, and all three resolved as incorrect:\n\n- **New York:** the claim \"This New York startup will hit $5M ARR in 12 months\" was recorded at conviction weight 0.85 on 2024-03-01 and resolved incorrect [cat14/cat14-pos-1-geography/take-1].\n- **Miami:** the claim \"This Miami fintech won't scale outside Florida\" was recorded at weight 0.8 on 2024-06-15 and resolved incorrect [cat14/cat14-pos-1-geography/take-2].\n- **Boston:** the claim \"That Boston founder can't build a marketplace from there\" was recorded at weight 0.75 on 2024-09-22 and resolved incorrect [cat14/cat14-pos-1-geography/take-3].\n\n**What this suggests, with limits.** Garry's high-conviction judgments that depended on a company's location were wrong in all three recorded cases. Two of them were skeptical calls about founders outside the Bay Area (Miami, Boston). That is a small sample (n=3) in a single domain. It says nothing about Austin specifically, and nothing about the effect of lacking a Bay Area network (for example on follow-on fundraising or hiring). It also says nothing about the founder's product instinct, which is the other half of your question.\n\nThe brain therefore does not settle whether to lead. It only shows that location-based skepticism has not held up in the recorded cases.",
+  "calibrated_answer": "## Answer\n\nThe brain does not contain enough to say whether to lead this seed round, and it is not designed to instruct. It does hold material on how geography has figured in Garry's past judgments, which bears on the framing of the question.\n\n**Garry's prior (default reasoning):** The question's framing, \"no Bay Area network,\" treats location and network as a possible handicap. Garry's earlier geography calls took that same shape. The brain records no data on this Austin company, its founder, its product, its traction, or its terms.\n\n**Counter-prior (from the hedged geography domain):** Three high-conviction geography calls in 2024 were all resolved as incorrect:\n- \"This New York startup will hit $5M ARR in 12 months\" was incorrect (w=0.85, recorded 2024-03-01) [cat14/cat14-pos-1-geography/take-1].\n- \"This Miami fintech won't scale outside Florida\" was incorrect (w=0.8, recorded 2024-06-15) [cat14/cat14-pos-1-geography/take-2].\n- \"That Boston founder can't build a marketplace from there\" was incorrect (w=0.75, recorded 2024-09-22) [cat14/cat14-pos-1-geography/take-3].\n\nThese calls run in both directions. One was an optimistic call on a New York company, and two were skeptical calls about a company or founder outside the Bay Area. Both directions missed. The skeptical Miami and Boston calls are the closest analogs to doubting an Austin founder for lacking a Bay Area network.\n\n## Calibration\n\n- The calibration profile shows Garry called early-stage tactics well, with 8 of 10 holding up. It also shows geography is a blind spot, with 3 of 3 high-conviction geography calls in 2024 missed.\n- The active bias tag is **over-confident-geography**. Any strong lean from the Austin location or the missing Bay Area network fits this pattern.\n- The founder's \"strong product instinct\" falls closer to the early-stage-tactics domain, where the track record is stronger. That is an inference about domain fit, and the brain holds no resolved takes directly on founder product instinct.\n- Both priors are shown rather than a single debiased answer. The default view weighs the missing network as a risk. The counter-view is that geography-based skepticism has a poor record in this brain's sample.\n- The sample is small (3 calls, all from 2024), so the pattern is suggestive and not conclusive.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers identify the relevant geography blind spot, but neither maintains a conversational voice, and both quote untranslated conviction weights. A provides the track-record caution without clearly naming the user's gut prior; B explicitly contrasts the missing-network concern with the poor record of geography-based skepticism. B's connection between product instinct and early-stage tactics is tentative rather than a clear force-fit. Neither actually recommends leading the round, so their recommendations are substantively equivalent, but B offers a more useful framing of the competing considerations. || Both answers appropriately connect the geography blind spot to concerns about Austin and the missing Bay Area network, without clearly force-fitting an unrelated bias. A explicitly names the implied gut prior and contrasts it with the user's geography track record; B supplies the track record but does not clearly name the user's prior. Neither maintains a friendly conversational voice, and both burden the user with raw conviction weights and technical framing. A is slightly more useful for making the competing considerations explicit, although both ultimately decline to settle the investment decision."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers identify the relevant geography blind spot, but neither maintains a conversational voice, and both quote untranslated conviction weights. A provides the track-record caution without clearly naming the user's gut prior; B explicitly contrasts the missing-network concern with the poor record of geography-based skepticism. B's connection between product instinct and early-stage tactics is tentative rather than a clear force-fit. Neither actually recommends leading the round, so their recommendations are substantively equivalent, but B offers a more useful framing of the competing considerations. || Both answers appropriately connect the geography blind spot to concerns about Austin and the missing Bay Area network, without clearly force-fitting an unrelated bias. A explicitly names the implied gut prior and contrasts it with the user's geography track record; B supplies the track record but does not clearly name the user's prior. Neither maintains a friendly conversational voice, and both burden the user with raw conviction weights and technical framing. A is slightly more useful for making the competing considerations explicit, although both ultimately decline to settle the investment decision."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers identify the relevant geography blind spot, but neither maintains a conversational voice, and both quote untranslated conviction weights. A provides the track-record caution without clearly naming the user's gut prior; B explicitly contrasts the missing-network concern with the poor record of geography-based skepticism. B's connection between product instinct and early-stage tactics is tentative rather than a clear force-fit. Neither actually recommends leading the round, so their recommendations are substantively equivalent, but B offers a more useful framing of the competing considerations. || Both answers appropriately connect the geography blind spot to concerns about Austin and the missing Bay Area network, without clearly force-fitting an unrelated bias. A explicitly names the implied gut prior and contrasts it with the user's geography track record; B supplies the track record but does not clearly name the user's prior. Neither maintains a friendly conversational voice, and both burden the user with raw conviction weights and technical framing. A is slightly more useful for making the competing considerations explicit, although both ultimately decline to settle the investment decision."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers identify the relevant geography blind spot, but neither maintains a conversational voice, and both quote untranslated conviction weights. A provides the track-record caution without clearly naming the user's gut prior; B explicitly contrasts the missing-network concern with the poor record of geography-based skepticism. B's connection between product instinct and early-stage tactics is tentative rather than a clear force-fit. Neither actually recommends leading the round, so their recommendations are substantively equivalent, but B offers a more useful framing of the competing considerations. || Both answers appropriately connect the geography blind spot to concerns about Austin and the missing Bay Area network, without clearly force-fitting an unrelated bias. A explicitly names the implied gut prior and contrasts it with the user's geography track record; B supplies the track record but does not clearly name the user's prior. Neither maintains a friendly conversational voice, and both burden the user with raw conviction weights and technical framing. A is slightly more useful for making the competing considerations explicit, although both ultimately decline to settle the investment decision."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers identify the relevant geography blind spot, but neither maintains a conversational voice, and both quote untranslated conviction weights. A provides the track-record caution without clearly naming the user's gut prior; B explicitly contrasts the missing-network concern with the poor record of geography-based skepticism. B's connection between product instinct and early-stage tactics is tentative rather than a clear force-fit. Neither actually recommends leading the round, so their recommendations are substantively equivalent, but B offers a more useful framing of the competing considerations. || Both answers appropriately connect the geography blind spot to concerns about Austin and the missing Bay Area network, without clearly force-fitting an unrelated bias. A explicitly names the implied gut prior and contrasts it with the user's geography track record; B supplies the track record but does not clearly name the user's prior. Neither maintains a friendly conversational voice, and both burden the user with raw conviction weights and technical framing. A is slightly more useful for making the competing considerations explicit, although both ultimately decline to settle the investment decision."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "changes_recommendation_meaningfully",
+    "voice_conversational"
+  ]
+}
