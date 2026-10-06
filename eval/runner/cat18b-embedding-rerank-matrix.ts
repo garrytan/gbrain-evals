@@ -64,6 +64,8 @@ import { percentile } from './metrics.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions, type BudgetRun } from './budget-ledger.ts';
+import { attestPreregistration, type Attestation } from './prereg.ts';
 import {
   scoreQuery,
   queryEvidence,
@@ -82,6 +84,9 @@ export const CAT18B_CATEGORY = 'cat18b-embedding-rerank-matrix';
 export const PRICING: Record<string, number> = {
   'openai:text-embedding-3-large': 0.13,
   'voyage:voyage-3-large': 0.18,
+  'voyage:voyage-4': 0.06,
+  'voyage:voyage-4-large': 0.12,
+  'ollama:qwen3-embedding:8b': 0,
 };
 
 /**
@@ -104,12 +109,35 @@ export interface ProviderSpec {
   reranker: string | null;
 }
 
+/**
+ * The 2026-10 matrix (W6): gbrain's supported embedders, each with and without
+ * Voyage rerank-2.5. The local cell embeds through Ollama on a machine reached
+ * at OLLAMA_BASE_URL (gbrain's ollama recipe); with the hosted reranker it is
+ * "local embedding, hosted reranking", never "local".
+ */
 export const CELLS: ProviderSpec[] = [
-  { name: 'openai-1536',        embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: null },
-  { name: 'openai-1536+rerank', embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: 'voyage:rerank-2.5' },
-  { name: 'voyage-1024',        embedder: 'voyage:voyage-3-large',         embed_dim: 1024, reranker: null },
+  { name: 'voyage-4',                embedder: 'voyage:voyage-4',               embed_dim: 1024, reranker: null },
+  { name: 'voyage-4+rerank',         embedder: 'voyage:voyage-4',               embed_dim: 1024, reranker: 'voyage:rerank-2.5' },
+  { name: 'voyage-4-large',          embedder: 'voyage:voyage-4-large',         embed_dim: 1024, reranker: null },
+  { name: 'voyage-4-large+rerank',   embedder: 'voyage:voyage-4-large',         embed_dim: 1024, reranker: 'voyage:rerank-2.5' },
+  { name: 'openai-1536',             embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: null },
+  { name: 'openai-1536+rerank',      embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: 'voyage:rerank-2.5' },
+  { name: 'qwen3-local',             embedder: 'ollama:qwen3-embedding:8b',     embed_dim: 4096, reranker: null },
+  { name: 'qwen3-local+rerank',      embedder: 'ollama:qwen3-embedding:8b',     embed_dim: 4096, reranker: 'voyage:rerank-2.5' },
+];
+
+/** The September matrix's `voyage-3-large` cells, kept selectable by name for historical reproduction. */
+export const LEGACY_CELLS: ProviderSpec[] = [
+  { name: 'voyage-1024',        embedder: 'voyage:voyage-3-large', embed_dim: 1024, reranker: null },
   { name: 'voyage-1024+rerank', embedder: 'voyage:voyage-3-large', embed_dim: 1024, reranker: 'voyage:rerank-2.5' },
 ];
+
+/** Where a cell's text goes: the embedder's host and, with a reranker, the reranker's. */
+export function dataEgress(spec: ProviderSpec): string {
+  const local = spec.embedder.startsWith('ollama:');
+  if (!spec.reranker) return local ? 'local embedding: no text leaves the machine' : 'hosted embedding: text goes to the embedding provider';
+  return local ? 'local embedding, hosted reranking: queries and candidate passages go to the reranker' : 'hosted embedding, hosted reranking';
+}
 
 /** The reranker-axis keys — the ONLY config that differs between ± pairs. */
 export function rerankAxisConfig(spec: ProviderSpec): Record<string, string> {
@@ -126,6 +154,9 @@ export function rerankAxisConfig(spec: ProviderSpec): Record<string, string> {
 const EMBEDDER_ENV_KEY: Record<string, string> = {
   'openai:text-embedding-3-large': 'OPENAI_API_KEY',
   'voyage:voyage-3-large': 'VOYAGE_API_KEY',
+  'voyage:voyage-4': 'VOYAGE_API_KEY',
+  'voyage:voyage-4-large': 'VOYAGE_API_KEY',
+  'ollama:qwen3-embedding:8b': 'OLLAMA_BASE_URL',
 };
 
 // ─── Hermetic rerank stub ────────────────────────────────────────────
@@ -191,6 +222,12 @@ export interface MatrixCell {
   ingest_ms: number;
   embed_cost_per_mtok: number;
   est_corpus_cost_usd: number;
+  p95_query_ms?: number | null;
+  data_egress?: string;
+  /** Measured from the budget ledger (live runs): ingest spend, query-phase spend (query embeddings plus reranking) and that per 1,000 queries. */
+  ingest_cost_usd?: number | null;
+  query_cost_usd?: number | null;
+  cost_per_1000_queries_usd?: number | null;
   valid: boolean;
   invalid_reasons: string[];
 }
@@ -205,6 +242,8 @@ const DEGRADED_VECTOR_STAGES = new Set(['embed_unavailable', 'embed_timeout', 'v
 export interface RunMatrixCellOptions {
   k?: number;
   chunkFetch?: number;
+  /** Cumulative ledger spend for this run, read before and after each phase. */
+  spentUsd?: () => number;
 }
 
 export async function runMatrixCell(
@@ -234,8 +273,11 @@ export async function runMatrixCell(
     mrr: null, recall_at_10: null, top1_hit_rate: null,
     mean_query_ms: null, p50_query_ms: null, ingest_ms: 0,
     embed_cost_per_mtok: pricePerMTok, est_corpus_cost_usd: 0,
+    data_egress: dataEgress(spec), ingest_cost_usd: null, query_cost_usd: null, cost_per_1000_queries_usd: null, p95_query_ms: null,
     valid: false, invalid_reasons: [],
   };
+  const spentAtStart = opts.spentUsd?.() ?? null;
+  let spentAfterIngest: number | null = null;
 
   configureGateway({
     embedding_model: spec.embedder,
@@ -275,6 +317,10 @@ export async function runMatrixCell(
       console.error = origErr;
     }
     cell.ingest_ms = Date.now() - tIngest;
+    if (spentAtStart !== null) {
+      spentAfterIngest = opts.spentUsd!();
+      cell.ingest_cost_usd = spentAfterIngest - spentAtStart;
+    }
     cell.est_corpus_cost_usd = (totalChars / 3.5 / 1_000_000) * pricePerMTok;
 
     const cov = await engine.executeRaw(
@@ -393,6 +439,11 @@ export async function runMatrixCell(
     cell.top1_hit_rate = top1s.length > 0 ? top1s.filter(Boolean).length / top1s.length : null;
     cell.mean_query_ms = mean(latencies);
     cell.p50_query_ms = latencies.length > 0 ? percentile(latencies, 50) : null;
+    cell.p95_query_ms = latencies.length > 0 ? percentile(latencies, 95) : null;
+    if (spentAfterIngest !== null) {
+      cell.query_cost_usd = opts.spentUsd!() - spentAfterIngest;
+      cell.cost_per_1000_queries_usd = queries.length > 0 ? cell.query_cost_usd / queries.length * 1000 : null;
+    }
     if (cell.query_errors > 0 && cell.invalid_reasons.length === 0) {
       cell.invalid_reasons.push(
         `${cell.query_errors} query error(s): ${cell.degraded_queries} degraded-to-keyword, ` +
@@ -423,6 +474,10 @@ export interface Cat18bOptions {
   reportsDir?: string;
   limitPages?: number;
   quiet?: boolean;
+  /** Ledger flags; a live run refuses without --budget-usd. */
+  budget?: BudgetOptions;
+  /** Preregistration attested before the first paid request. */
+  preregistration?: string;
 }
 
 export interface Cat18bRunResult {
@@ -433,11 +488,15 @@ export interface Cat18bRunResult {
 }
 
 export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat18bOptions {
-  const filter = process.env.CAT18B_CELLS?.split(',').map(s => s.trim()).filter(Boolean);
-  const unknown = filter?.filter(name => !CELLS.some(cell => cell.name === name));
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const filter = (flag('--cells') ?? process.env.CAT18B_CELLS)?.split(',').map(s => s.trim()).filter(Boolean);
+  const known = [...CELLS, ...LEGACY_CELLS];
+  const unknown = filter?.filter(name => !known.some(cell => cell.name === name));
   if (unknown?.length) throw new Error(`unknown matrix cells: ${unknown.join(', ')}`);
   return {
-    cells: filter ? CELLS.filter(c => filter.includes(c.name)) : undefined,
+    cells: filter ? filter.map(name => known.find(c => c.name === name)!) : undefined,
+    budget: budgetOptionsFrom(argv),
+    preregistration: flag('--preregistration'),
     stub: argv.includes('--stub') || process.env.CAT18B_STUB === '1',
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
     limitPages: process.env.CAT18B_LIMIT_PAGES ? parseInt(process.env.CAT18B_LIMIT_PAGES, 10) : undefined,
@@ -506,6 +565,15 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
     __setRerankTransportForTests(makeOverlapRerankTransport(options.stubRerankRespondWith));
   }
 
+  let attestation: Attestation | null = null;
+  let paid: { run: BudgetRun; guard: { uninstall(): void } } | null = null;
+  if (!options.stub) {
+    if (options.preregistration) attestation = attestPreregistration(options.preregistration);
+    if (!options.budget) throw new Error('cat18b live run makes paid requests; pass --budget-ledger and --budget-usd');
+    paid = startPaidRun(CAT18B_CATEGORY, { ...options.budget, estimateUsd: 0.5 * specs.length });
+  }
+  const spentUsd = paid ? () => paid!.run.summary().actual_usd : undefined;
+
   const acc = new ProbeAccounting(expected);
   const cells: MatrixCell[] = [];
   log(`[cat18b] corpus: ${pages.length} pages, ${totalChars} chars, queries: ${queries.length}, cells: ${specs.map(s => s.name).join(',')}${options.stub ? ' [STUB TRANSPORTS — not a provider comparison]' : ''}\n`);
@@ -514,7 +582,7 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
     for (const spec of specs) {
       log(`[cat18b] cell=${spec.name}...\n`);
       try {
-        const c = await runMatrixCell(spec, pages, queries, acc);
+        const c = await runMatrixCell(spec, pages, queries, acc, { spentUsd });
         cells.push(c);
         log(`[cat18b]   ${spec.name.padEnd(22)} valid=${c.valid} MRR=${c.mrr?.toFixed(3) ?? 'n/a'} R@${K}=${c.recall_at_10 !== null ? (c.recall_at_10 * 100).toFixed(1) + '%' : 'n/a'} rerank_fired=${c.rerank_scored_queries}/${c.queries_total} errors=${c.query_errors}\n`);
       } catch (e: any) {
@@ -530,7 +598,7 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
           degraded_queries: 0, rerank_scored_queries: 0, rerank_failopen_queries: 0,
           mrr: null, recall_at_10: null, top1_hit_rate: null,
           mean_query_ms: null, p50_query_ms: null, ingest_ms: 0,
-          embed_cost_per_mtok: PRICING[spec.embedder] ?? 0, est_corpus_cost_usd: 0,
+          embed_cost_per_mtok: PRICING[spec.embedder] ?? 0, est_corpus_cost_usd: 0, data_egress: dataEgress(spec),
           valid: false, invalid_reasons: [`cell crashed: ${String(e?.message ?? e).slice(0, 300)}`],
         });
         log(`[cat18b]   ${spec.name}: CRASH ${e?.message ?? e}\n`);
@@ -541,7 +609,9 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
       __setEmbedTransportForTests(null);
       __setRerankTransportForTests(null);
     }
+    paid?.guard.uninstall();
   }
+  const cost = paid ? receiptCost(paid.run.close()) : null;
 
   const summary = acc.summary();
   const validCells = cells.filter(c => c.valid);
@@ -618,6 +688,8 @@ export async function runCat18b(options: Cat18bOptions = {}): Promise<Cat18bRunR
     publishable,
     resolved_config: resolvedConfig,
     finished_at: new Date().toISOString(),
+    ...(attestation ? { preregistration_attestation: attestation } : {}),
+    ...(cost ? { cost } : {}),
     data: {
       cells,
       pairs,
