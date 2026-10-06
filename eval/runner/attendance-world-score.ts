@@ -36,8 +36,9 @@ export interface PerturbedScore { meeting: string; kind: 'added' | 'removed'; pe
 export interface EdgeScore { seed: number; edges: number; false_edges: Array<{ person: string; meeting: string; why: string }>; missing: Array<{ person: string; meeting: string }> }
 
 export function scoreAttendanceEdges(seeds: ReadonlyArray<{ seed: number; edges: Array<[string, string]> }>, pages: RichPage[]): EdgeScore[] {
-  const list = new Map(pages.filter(p => p._facts.type === 'meeting').map(p => [p.slug, new Set(p._facts.attendees ?? [])]));
   const people = new Set(pages.filter(p => p._facts.type === 'person').map(p => p.slug));
+  // world-v1's key names some people who have no page; only listed people with a page can carry an edge.
+  const list = new Map(pages.filter(p => p._facts.type === 'meeting').map(p => [p.slug, new Set((p._facts.attendees ?? []).filter(s => people.has(s)))]));
   return seeds.map(({ seed, edges }) => {
     const have = new Set(edges.map(([f, t]) => `${f}>${t}`));
     const false_edges = edges.filter(([f, t]) => !people.has(f) || !list.has(t) || !list.get(t)!.has(f))
