@@ -1,0 +1,639 @@
+{
+ "decision_id": "p2-e1-hub-dampening-heldout",
+ "hypothesis": "P2 E1 search.hub_dampening (H = 32) on sealed hub-world seeds 2 and 3",
+ "computed_by": "second custodian (gbra49), P0 unresponsive; from P0's custody/p2-hub and vmjobs/hubC pull",
+ "builds": {
+  "candidate": "gbrain#6020 af1225d7b (arms off, 32, graph-off)",
+  "rival_remove": "31a792c94 (BACKLINK_BOOST_COEF = 0)",
+  "rival_cap": "4e2bd760e (backlink and graph-signal factors capped at 1.02)"
+ },
+ "bar": [
+  "concept nDCG@5 delta >= +1.0 point with 95% CI above 0",
+  "better than both rivals on concept",
+  "hub-as-answer nDCG@5 delta >= -0.5 point",
+  "one-hop recall@5 delta >= -0.5 point"
+ ],
+ "bootstrap": "paired over probes, 10,000 draws, seed 42; points",
+ "workloads": {
+  "seed2-keyword": {
+   "abs_off": {
+    "concept": 38.0,
+    "hub-answer": 96.3
+   },
+   "H32": {
+    "concept_ndcg5": [
+     3.29,
+     [
+      2.46,
+      4.18
+     ]
+    ],
+    "hub_answer_ndcg5": [
+     -30.62,
+     [
+      -45.0,
+      -16.77
+     ]
+    ],
+    "onehop_recall5": [
+     -5.36,
+     [
+      -9.07,
+      -2.01
+     ]
+    ],
+    "onehop_hit1": [
+     -1.38,
+     [
+      -8.28,
+      5.52
+     ]
+    ]
+   },
+   "graph-off": {
+    "concept_ndcg5": [
+     0.02,
+     [
+      -0.13,
+      0.2
+     ]
+    ],
+    "hub_answer_ndcg5": [
+     1.85,
+     [
+      0.0,
+      5.54
+     ]
+    ],
+    "onehop_recall5": [
+     -3.59,
+     [
+      -6.0,
+      -1.52
+     ]
+    ],
+    "onehop_hit1": [
+     -4.14,
+     [
+      -8.28,
+      0.0
+     ]
+    ]
+   },
+   "remove": {
+    "concept_ndcg5": [
+     6.41,
+     [
+      5.17,
+      7.66
+     ]
+    ],
+    "hub_answer_ndcg5": [
+     -1.31,
+     [
+      -8.15,
+      4.88
+     ]
+    ],
+    "onehop_recall5": [
+     -9.8,
+     [
+      -14.01,
+      -5.85
+     ]
+    ],
+    "onehop_hit1": [
+     -13.1,
+     [
+      -20.69,
+      -5.52
+     ]
+    ]
+   },
+   "cap": {
+    "concept_ndcg5": [
+     5.85,
+     [
+      4.69,
+      7.04
+     ]
+    ],
+    "hub_answer_ndcg5": [
+     0.0,
+     [
+      -5.54,
+      5.54
+     ]
+    ],
+    "onehop_recall5": [
+     -9.63,
+     [
+      -14.03,
+      -5.46
+     ]
+    ],
+    "onehop_hit1": [
+     -10.34,
+     [
+      -17.93,
+      -2.76
+     ]
+    ]
+   },
+   "H32_minus_remove_concept": [
+    -3.12,
+    [
+     -3.98,
+     -2.33
+    ]
+   ],
+   "H32_minus_cap_concept": [
+    -2.56,
+    [
+     -3.32,
+     -1.85
+    ]
+   ],
+   "n_valid_H32": {
+    "concept": 428,
+    "hub-answer": 20,
+    "one-hop": 145
+   },
+   "gate": {
+    "1_primary": true,
+    "2_beats_rivals": false,
+    "3_hub_answer": false,
+    "4_onehop": false
+   }
+  },
+  "seed3-keyword": {
+   "abs_off": {
+    "concept": 38.0,
+    "hub-answer": 98.2
+   },
+   "H32": {
+    "concept_ndcg5": [
+     3.63,
+     [
+      2.77,
+      4.52
+     ]
+    ],
+    "hub_answer_ndcg5": [
+     -36.15,
+     [
+      -52.97,
+      -19.85
+     ]
+    ],
+    "onehop_recall5": [
+     -1.03,
+     [
+      -3.79,
+      1.38
+     ]
+    ],
+    "onehop_hit1": [
+     -2.07,
+     [
+      -8.28,
+      4.83
+     ]
+    ]
+   },
+   "graph-off": {
+    "concept_ndcg5": [
+     -0.04,
+     [
+      -0.18,
+      0.11
+     ]
+    ],
+    "hub_answer_ndcg5": [
+     1.85,
+     [
+      0.0,
+      5.54
+     ]
+    ],
+    "onehop_recall5": [
+     -3.24,
+     [
+      -5.66,
+      -1.17
+     ]
+    ],
+    "onehop_hit1": [
+     -5.52,
+     [
+      -9.66,
+      -1.38
+     ]
+    ]
+   },
+   "remove": {
+    "concept_ndcg5": [
+     6.47,
+     [
+      5.32,
+      7.67
+     ]
+    ],
+    "hub_answer_ndcg5": [
+     -11.73,
+     [
+      -19.76,
+      -3.69
+     ]
+    ],
+    "onehop_recall5": [
+     -7.21,
+     [
+      -10.83,
+      -3.97
+     ]
+    ],
+    "onehop_hit1": [
+     -14.48,
+     [
+      -22.07,
+      -7.59
+     ]
+    ]
+   },
+   "cap": {
+    "concept_ndcg5": [
+     5.9,
+     [
+      4.84,
+      7.01
+     ]
+    ],
+    "hub_answer_ndcg5": [
+     -2.5,
+     [
+      -9.35,
+      3.69
+     ]
+    ],
+    "onehop_recall5": [
+     -6.69,
+     [
+      -10.48,
+      -3.24
+     ]
+    ],
+    "onehop_hit1": [
+     -11.72,
+     [
+      -18.62,
+      -4.83
+     ]
+    ]
+   },
+   "H32_minus_remove_concept": [
+    -2.84,
+    [
+     -3.6,
+     -2.14
+    ]
+   ],
+   "H32_minus_cap_concept": [
+    -2.27,
+    [
+     -2.93,
+     -1.67
+    ]
+   ],
+   "n_valid_H32": {
+    "concept": 428,
+    "hub-answer": 20,
+    "one-hop": 145
+   },
+   "gate": {
+    "1_primary": true,
+    "2_beats_rivals": false,
+    "3_hub_answer": false,
+    "4_onehop": false
+   }
+  },
+  "seed2-hybrid": {
+   "valid_rows_only": {
+    "abs_off": {
+     "concept": 47.9,
+     "hub-answer": 94.5
+    },
+    "H32": {
+     "concept_ndcg5": [
+      0.96,
+      [
+       0.28,
+       1.89
+      ]
+     ],
+     "hub_answer_ndcg5": [
+      -24.46,
+      [
+       -42.62,
+       -8.15
+      ]
+     ],
+     "onehop_recall5": [
+      0.31,
+      [
+       -4.59,
+       5.2
+      ]
+     ],
+     "onehop_hit1": [
+      1.02,
+      [
+       -4.08,
+       6.12
+      ]
+     ]
+    },
+    "graph-off": {
+     "concept_ndcg5": [
+      0.0,
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "hub_answer_ndcg5": [
+      0.0,
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "onehop_recall5": [
+      -1.03,
+      [
+       -2.76,
+       0.0
+      ]
+     ],
+     "onehop_hit1": [
+      -0.69,
+      [
+       -3.45,
+       1.38
+      ]
+     ]
+    },
+    "remove": {
+     "concept_ndcg5": [
+      -0.3,
+      [
+       -1.38,
+       0.64
+      ]
+     ],
+     "hub_answer_ndcg5": [
+      -11.88,
+      [
+       -23.81,
+       -2.62
+      ]
+     ],
+     "onehop_recall5": [
+      -0.14,
+      [
+       -2.9,
+       2.76
+      ]
+     ],
+     "onehop_hit1": [
+      -2.76,
+      [
+       -6.21,
+       0.0
+      ]
+     ]
+    },
+    "cap": {
+     "concept_ndcg5": [
+      0.79,
+      [
+       0.06,
+       1.57
+      ]
+     ],
+     "hub_answer_ndcg5": [
+      -10.72,
+      [
+       -19.88,
+       -3.0
+      ]
+     ],
+     "onehop_recall5": [
+      0.21,
+      [
+       -2.76,
+       3.1
+      ]
+     ],
+     "onehop_hit1": [
+      -2.76,
+      [
+       -6.9,
+       0.69
+      ]
+     ]
+    },
+    "H32_minus_remove_concept": [
+     0.39,
+     [
+      -1.21,
+      2.56
+     ]
+    ],
+    "H32_minus_cap_concept": [
+     -0.86,
+     [
+      -1.59,
+      -0.3
+     ]
+    ],
+    "n_valid_H32": {
+     "concept": 129,
+     "hub-answer": 20,
+     "one-hop": 98
+    },
+    "gate": {
+     "1_primary": false,
+     "2_beats_rivals": false,
+     "3_hub_answer": false,
+     "4_onehop": true
+    }
+   },
+   "telemetry_noop_rows_imputed_as_off": {
+    "abs_off": {
+     "concept": 47.9,
+     "hub-answer": 94.5
+    },
+    "H32": {
+     "concept_ndcg5": [
+      0.29,
+      [
+       0.08,
+       0.57
+      ]
+     ],
+     "hub_answer_ndcg5": [
+      -24.46,
+      [
+       -42.62,
+       -8.15
+      ]
+     ],
+     "onehop_recall5": [
+      0.21,
+      [
+       -3.03,
+       3.52
+      ]
+     ],
+     "onehop_hit1": [
+      0.69,
+      [
+       -2.76,
+       4.14
+      ]
+     ]
+    },
+    "graph-off": {
+     "concept_ndcg5": [
+      0.0,
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "hub_answer_ndcg5": [
+      0.0,
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "onehop_recall5": [
+      -1.03,
+      [
+       -2.76,
+       0.0
+      ]
+     ],
+     "onehop_hit1": [
+      -0.69,
+      [
+       -3.45,
+       1.38
+      ]
+     ]
+    },
+    "remove": {
+     "concept_ndcg5": [
+      -0.3,
+      [
+       -1.38,
+       0.64
+      ]
+     ],
+     "hub_answer_ndcg5": [
+      -11.88,
+      [
+       -23.81,
+       -2.62
+      ]
+     ],
+     "onehop_recall5": [
+      -0.14,
+      [
+       -2.9,
+       2.76
+      ]
+     ],
+     "onehop_hit1": [
+      -2.76,
+      [
+       -6.21,
+       0.0
+      ]
+     ]
+    },
+    "cap": {
+     "concept_ndcg5": [
+      0.79,
+      [
+       0.06,
+       1.57
+      ]
+     ],
+     "hub_answer_ndcg5": [
+      -10.72,
+      [
+       -19.88,
+       -3.0
+      ]
+     ],
+     "onehop_recall5": [
+      0.21,
+      [
+       -2.76,
+       3.1
+      ]
+     ],
+     "onehop_hit1": [
+      -2.76,
+      [
+       -6.9,
+       0.69
+      ]
+     ]
+    },
+    "H32_minus_remove_concept": [
+     0.59,
+     [
+      -0.29,
+      1.63
+     ]
+    ],
+    "H32_minus_cap_concept": [
+     -0.5,
+     [
+      -1.2,
+      0.15
+     ]
+    ],
+    "n_valid_H32": {
+     "concept": 428,
+     "hub-answer": 20,
+     "one-hop": 145
+    },
+    "gate": {
+     "1_primary": false,
+     "2_beats_rivals": false,
+     "3_hub_answer": false,
+     "4_onehop": true
+    }
+   }
+  },
+  "seed3-hybrid": {
+   "missing": [
+    "candidate cell (arms off, 32, graph-off)",
+    "rival_cap cell"
+   ],
+   "present": [
+    "rival_remove cell"
+   ],
+   "where": "P0 machine, Ubicloud VM ubirun-gbra49-1791261782-aeed909c (job hubD), still running at 14:19 UTC 2026-10-06"
+  }
+ },
+ "hybrid_telemetry_note": "In seed2-hybrid, 346 of 625 H = 32 probe rows (299 concept, 47 one-hop) are recorded as errors because search telemetry carried no hub_dampening stamp. On those queries the lexical metadata-boost gate skipped the backlink and graph-signal stages, so dampening had nothing to act on and the ranking equals arm off. Both treatments are reported; neither changes the verdict.",
+ "verdict": "fail",
+ "why": "Both keyword workloads fail conditions 2, 3 and 4: the rivals beat H = 32 on concept by 2.3 to 3.1 points with CIs below 0, and hub-as-answer drops 30.6 and 36.2 points, and one-hop recall@5 drops 5.4 and 1.0 points. Seed-2 hybrid fails conditions 1, 2 and 3 (concept +0.3 imputed / +1.0 valid-only; hub-as-answer -24.5). The missing seed-3 hybrid cells cannot change the outcome: hub-as-answer would need a gain of about +89 points there to bring even a pooled delta to -0.5.",
+ "consequence": "search.hub_dampening stays off and the search-side mechanism is removed (preregistered); the hubWeight helper stays for relational-chain.ts"
+}
