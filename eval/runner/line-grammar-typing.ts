@@ -41,6 +41,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { assertCustodyRoots, openCustodyFile } from './sealed-confirmation-lib.ts';
+import { campaignGuard } from './q2/campaign.ts';
 import { parseEvalConfig } from './eval-config.ts';
 import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { withHermeticEnv } from './hermetic-env.ts';
@@ -173,7 +174,9 @@ export async function runLineGrammarTyping(opts: { gut: GbrainUnderTest; dir: st
 }
 
 async function main(): Promise<void> {
-  const argv = process.argv.slice(2);
+  const rawArgv = process.argv.slice(2);
+  const campaign = campaignGuard(rawArgv);
+  const argv = campaign && !rawArgv.includes('--output') ? [...rawArgv, '--output', campaign.output] : rawArgv;
   const json = argv.includes('--json');
   const log = json ? () => {} : (s: string) => console.log(s);
   const dir = argValue(argv, '--dir') ?? 'eval/data/world-v1';
@@ -208,6 +211,7 @@ async function main(): Promise<void> {
     },
   });
   writeReceipt(outPath, receipt);
+  campaign?.finish(outPath, 0);
   log(`receipt: ${outPath}`);
   if (harnessError) console.error(`harness error: ${harnessError}`);
   if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, summary: r?.summary ?? null }, null, 2) + '\n');

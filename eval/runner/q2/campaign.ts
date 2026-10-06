@@ -33,7 +33,12 @@ export interface CampaignStep {
   commands: string[];
   expected: string;
 }
-export interface CampaignManifest { schema: 'q2-campaign-v1'; decision_id: string; approved_usd: number; alert_usd: number; steps: CampaignStep[] }
+export interface CampaignManifest {
+  schema: 'q2-campaign-v1'; decision_id: string; approved_usd: number; alert_usd: number;
+  /** Typing units in the selection family (U34 replaces U3 and U4 when the freeze record says they are joint). */
+  units: string[];
+  steps: CampaignStep[];
+}
 export interface LedgerEntry { step: string; run: string; receipt: string; receipt_sha256: string; run_status: string; verdict: string | null; spend_usd: number; at: string; note?: string }
 
 export function loadCampaignManifest(path = CAMPAIGN_MANIFEST): CampaignManifest {
@@ -49,6 +54,27 @@ export function readLedger(root: string): LedgerEntry[] {
   return readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l) as LedgerEntry);
 }
 
+/**
+ * A step's run names with placeholders expanded: `{unit}` over baseline and the manifest's units; `{package}` over
+ * baseline and P1..Pk, where k is the length of the order the recorded selection decision (step c-select, run
+ * decision) produced. Null when `{package}` cannot be expanded yet.
+ */
+export function expandRuns(m: CampaignManifest, step: CampaignStep, root: string | null, entries: readonly LedgerEntry[]): string[] | null {
+  const out: string[] = [];
+  for (const r of step.runs) {
+    if (r.includes('{unit}')) { for (const u of ['baseline', ...m.units]) out.push(r.replace('{unit}', u)); continue; }
+    if (r.includes('{package}')) {
+      const sel = latestRuns(entries).get('c-select/decision');
+      if (!sel || !root) return null;
+      const order = (JSON.parse(readFileSync(join(root, sel.receipt), 'utf8')) as { data?: { summary?: { order?: string[] } } }).data?.summary?.order ?? [];
+      for (const pkg of ['baseline', ...order.map((_, j) => `P${j + 1}`)]) out.push(r.replace('{package}', pkg));
+      continue;
+    }
+    out.push(r);
+  }
+  return out;
+}
+
 /** The latest ledger entry per (step, run). */
 export function latestRuns(entries: readonly LedgerEntry[]): Map<string, LedgerEntry> {
   const m = new Map<string, LedgerEntry>();
@@ -59,19 +85,22 @@ export function latestRuns(entries: readonly LedgerEntry[]): Map<string, LedgerE
 export const spentUsd = (entries: readonly LedgerEntry[]) => entries.reduce((a, e) => a + e.spend_usd, 0);
 
 /** Why a step may not start yet; empty when it may. */
-export function stepBlockers(m: CampaignManifest, entries: readonly LedgerEntry[], stepId: string): string[] {
+export function stepBlockers(m: CampaignManifest, entries: readonly LedgerEntry[], stepId: string, root: string | null = null): string[] {
   const step = m.steps.find(s => s.id === stepId);
   if (!step) return [`unknown step ${stepId}; steps are ${m.steps.map(s => s.id).join(', ')}`];
   const latest = latestRuns(entries);
   const out: string[] = [];
   for (const pre of step.after) {
     const p = m.steps.find(s => s.id === pre)!;
-    const missing = p.runs.filter(r => latest.get(`${pre}/${r}`)?.run_status !== 'completed');
+    const runs = expandRuns(m, p, root, entries);
+    if (!runs) { out.push(`step ${pre} needs the recorded selection decision (c-select/decision) to know its packages`); continue; }
+    const missing = runs.filter(r => latest.get(`${pre}/${r}`)?.run_status !== 'completed');
     if (missing.length) out.push(`step ${pre} has no completed receipt for ${missing.join(', ')}`);
   }
   for (const pre of step.requires_pass ?? []) {
     const p = m.steps.find(s => s.id === pre)!;
-    const failed = p.runs.filter(r => latest.get(`${pre}/${r}`)?.verdict !== 'pass');
+    const runs = expandRuns(m, p, root, entries) ?? p.runs;
+    const failed = runs.filter(r => latest.get(`${pre}/${r}`)?.verdict !== 'pass');
     if (failed.length) out.push(`step ${pre} did not pass for ${failed.join(', ')} (the preregistration runs ${stepId} only after it passes)`);
   }
   return out;
@@ -101,9 +130,11 @@ export function campaignGuard(argv: readonly string[], o: { manifest?: CampaignM
   const m = o.manifest ?? loadCampaignManifest();
   const step = m.steps.find(s => s.id === stepId);
   if (!step) throw new Error(`unknown campaign step ${stepId}; steps are ${m.steps.map(s => s.id).join(', ')}`);
-  if (!step.runs.includes(run)) throw new Error(`step ${stepId} records runs ${step.runs.join(', ')}; ${run} is not one of them`);
   const entries = readLedger(root);
-  const blockers = stepBlockers(m, entries, stepId);
+  const runs = expandRuns(m, step, root, entries);
+  if (!runs) throw new Error(`step ${stepId} names packages, which the recorded selection decision (c-select/decision) fixes; record it first`);
+  if (!runs.includes(run)) throw new Error(`step ${stepId} records runs ${runs.join(', ')}; ${run} is not one of them`);
+  const blockers = stepBlockers(m, entries, stepId, root);
   if (blockers.length) throw new Error(`campaign step ${stepId} cannot start: ${blockers.join('; ')}. Run \`bun eval/runner/q2/campaign.ts status --campaign ${rootFlag}\` to see the next step.`);
   const spent = spentUsd(entries);
   const estimate = o.estimateUsd ?? step.estimate_usd;
@@ -129,9 +160,12 @@ export function campaignGuard(argv: readonly string[], o: { manifest?: CampaignM
   };
 }
 
-export function campaignStatus(m: CampaignManifest, entries: readonly LedgerEntry[]): { steps: Array<{ id: string; done: string[]; missing: string[]; blockers: string[] }>; next: string | null; spent_usd: number; approved_usd: number; alert_usd: number } {
+export function campaignStatus(m: CampaignManifest, entries: readonly LedgerEntry[], root: string | null = null): { steps: Array<{ id: string; done: string[]; missing: string[]; blockers: string[] }>; next: string | null; spent_usd: number; approved_usd: number; alert_usd: number } {
   const latest = latestRuns(entries);
-  const steps = m.steps.map(s => ({ id: s.id, done: s.runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status === 'completed'), missing: s.runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status !== 'completed'), blockers: stepBlockers(m, entries, s.id) }));
+  const steps = m.steps.map(s => {
+    const runs = expandRuns(m, s, root, entries) ?? s.runs;
+    return { id: s.id, done: runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status === 'completed'), missing: runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status !== 'completed'), blockers: stepBlockers(m, entries, s.id, root) };
+  });
   return { steps, next: steps.find(s => s.missing.length && !s.blockers.length)?.id ?? null, spent_usd: spentUsd(entries), approved_usd: m.approved_usd, alert_usd: m.alert_usd };
 }
 
@@ -141,7 +175,7 @@ async function main(argv: string[]): Promise<void> {
   if (!root) throw new Error('usage: campaign.ts status|preflight|record --campaign <root outside every git worktree> ...');
   assertOutsideRepository(root, '--campaign');
   const m = loadCampaignManifest();
-  if (cmd === 'status') { console.log(JSON.stringify(campaignStatus(m, readLedger(resolvedPath(root))), null, 2)); return; }
+  if (cmd === 'status') { console.log(JSON.stringify(campaignStatus(m, readLedger(resolvedPath(root)), resolvedPath(root)), null, 2)); return; }
   if (cmd === 'record') {
     const h = campaignGuard(argv, { manifest: m });
     const receipt = flag(argv, '--receipt');

@@ -72,6 +72,7 @@ import {
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { custodyTemplatesInput } from './sealed-confirmation-lib.ts';
+import { campaignGuard } from './q2/campaign.ts';
 import { TRANSITION_TYPES, closureCorrect, goldTransitions, transitionMetrics, type Transition } from './q2/transitions.ts';
 import { applyEvalConfig, evalConfigRecord, parseEvalConfig } from './eval-config.ts';
 
@@ -408,7 +409,9 @@ function argValue(argv: readonly string[], flag: string): string | undefined {
 }
 
 async function main(): Promise<void> {
-  const argv = process.argv.slice(2);
+  const rawArgv = process.argv.slice(2);
+  const campaign = campaignGuard(rawArgv);
+  const argv = campaign && !rawArgv.includes('--output') ? [...rawArgv, '--output', campaign.output] : rawArgv;
   const json = argv.includes('--json');
   const log = json ? () => {} : (s: string) => console.log(s);
   const seeds = (argValue(argv, '--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
@@ -486,6 +489,7 @@ async function main(): Promise<void> {
     data: { summary, ...(byRender ? { summary_by_render: byRender } : {}), ...(e5ByCell ? { e5_by_cell: e5ByCell } : {}), rows: r.rows, harness_error: r.harnessError, ...(r.singleValue ? { single_value: r.singleValue } : {}) },
   } as Receipt;
   writeReceipt(outPath, receipt);
+  campaign?.finish(outPath, 0);
   log('\n| metric | n | mean |\n|---|---|---|');
   for (const [k, v] of Object.entries(summary)) log(`| ${k} | ${v.n} | ${v.mean.toFixed(3)} |`);
   if (byRender) for (const [label, part] of [['relation lines', byRender.relation_lines], ['prose', byRender.prose]] as const) log(`${label}: ${Object.entries(part).map(([k, v]) => `${k} ${v.mean.toFixed(3)} (n ${v.n})`).join(', ')}`);

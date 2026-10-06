@@ -303,19 +303,20 @@ export function exportAggregates(source: unknown, allowlist: readonly string[]):
     }));
     throw new Error(`export refused: ${path} has an unsupported value type`);
   };
-  const set = (path: string[], value: unknown) => {
-    let cur = out;
-    for (const k of path.slice(0, -1)) cur = (cur[k] ??= {}) as Record<string, unknown>;
+  // Containers are rebuilt with the source's shape: arrays stay arrays.
+  const set = (path: string[], arrays: boolean[], value: unknown) => {
+    let cur = out as Record<string, unknown>;
+    path.slice(0, -1).forEach((k, i) => { cur = (cur[k] ??= arrays[i + 1] ? [] : {}) as Record<string, unknown>; });
     cur[path[path.length - 1]] = value;
   };
-  const walk = (node: unknown, pattern: string[], at: string[]) => {
-    if (!pattern.length) { set(at, checkLeaf(node, at.join('.'))); exported.push(at.join('.')); return; }
+  const walk = (node: unknown, pattern: string[], at: string[], arrays: boolean[]) => {
+    if (!pattern.length) { set(at, arrays, checkLeaf(node, at.join('.'))); exported.push(at.join('.')); return; }
     if (node === null || typeof node !== 'object') return;
     const [head, ...rest] = pattern;
     const keys = head === '*' ? Object.keys(node as object) : [head];
-    for (const k of keys) if (Object.prototype.hasOwnProperty.call(node, k)) walk((node as Record<string, unknown>)[k], rest, [...at, k]);
+    for (const k of keys) if (Object.prototype.hasOwnProperty.call(node, k)) walk((node as Record<string, unknown>)[k], rest, [...at, k], [...arrays, Array.isArray(node)]);
   };
-  for (const p of allowlist) walk(source, p.split('.'), []);
+  for (const p of allowlist) walk(source, p.split('.'), [], []);
   return { aggregate: out, exported: exported.sort() };
 }
 

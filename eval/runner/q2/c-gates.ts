@@ -15,8 +15,8 @@
  * bootstrap p-values at alpha = 0.025 per family (the preregistration's family-wise 0.05 with each test one-sided at
  * 0.025), recorded in the receipt.
  *
- * Each arm is given as `te=<temporal-edges receipt>,w=<line-grammar-typing receipt on W>,world=<line-grammar-typing
- * receipt on world-v1>`. A temporal-edges receipt must come from a `--c-gate` run (general single-value pass, E5
+ * Each arm is given as `te=<temporal-edges receipt>[+<receipt>...],w=<line-grammar-typing receipt on W>,world=<line-grammar-typing
+ * receipt on world-v1>`; the three phrasing files of I1 (or I2), one seed each, are joined with `+`. A temporal-edges receipt must come from a `--c-gate` run (general single-value pass, E5
  * probe and Q2 ledger on every arm).
  *
  *   bun eval/runner/q2/c-gates.ts select --baseline te=..,w=..,world=.. --unit U1:te=..,w=..,world=.. [...] --output <dir> [--joint-u34]
@@ -162,10 +162,13 @@ export function loadArm(label: string, spec: string): ArmData {
   const parts = Object.fromEntries(spec.split(',').map(kv => kv.split('=') as [string, string]));
   for (const k of ['te', 'w', 'world']) if (!parts[k]) throw new Error(`arm ${label} needs te=<temporal-edges receipt>,w=<typing receipt on W>,world=<typing receipt on world-v1>; ${k} is missing`);
   const read = (f: string) => JSON.parse(readFileSync(f, 'utf8')) as { run_status: string; category: string; resolved_config?: Record<string, unknown>; data: { rows: Row[]; summary: Record<string, unknown> } };
-  const te = read(parts.te), w = read(parts.w), world = read(parts.world);
-  for (const [k, r] of [['te', te], ['w', w], ['world', world]] as const) if (r.run_status !== 'completed') throw new Error(`arm ${label}: the ${k} receipt did not complete (run_status ${r.run_status}); rerun it before deciding`);
-  if (te.resolved_config?.c_gate !== true) throw new Error(`arm ${label}: the temporal-edges receipt is not a --c-gate run (general single-value pass, E5 probe and Q2 ledger on every arm); rerun with --c-gate`);
-  return { label, te: te.data.rows, w: w.data.rows, wSummary: w.data.summary, world: world.data.rows, sources: parts };
+  const tes = parts.te.split('+').map(read), w = read(parts.w), world = read(parts.world);
+  for (const [k, r] of [...tes.map(t => ['te', t] as const), ['w', w], ['world', world]] as const) if (r.run_status !== 'completed') throw new Error(`arm ${label}: the ${k} receipt did not complete (run_status ${r.run_status}); rerun it before deciding`);
+  if (tes.some(t => t.resolved_config?.c_gate !== true)) throw new Error(`arm ${label}: a temporal-edges receipt is not a --c-gate run (general single-value pass, E5 probe and Q2 ledger on every arm); rerun with --c-gate`);
+  const te = tes.flatMap(t => t.data.rows);
+  const ids = new Set(te.map(r => String(r.probe_id)));
+  if (ids.size !== te.length) throw new Error(`arm ${label}: the temporal-edges receipts share probe ids; each phrasing file runs its own seed`);
+  return { label, te, w: w.data.rows, wSummary: w.data.summary, world: world.data.rows, sources: parts };
 }
 
 const unitGate = (u: UnitSelection): GateOutcome => ({
