@@ -30,7 +30,7 @@ import {
 } from './sources.ts';
 import { anthropicTransport, openAiTransport } from './transport.ts';
 import { BatchLane } from './submit.ts';
-import { readerRows, scoreRows, summarize, type ReaderRow } from './receipts.ts';
+import { judgeOutcome, readerRows, scoreRows, summarize, type ReaderRow } from './receipts.ts';
 import { sessionIdFromSlug } from '../../../node_modules/gbrain/src/eval/longmemeval/metrics.ts';
 
 const ROOT = resolve(import.meta.dir, '../../..');
@@ -397,6 +397,14 @@ async function main(argv: string[]) {
       if (existsSync(manifestPath(id))) { manifest = readManifest(manifestPath(id)); bodies = loadBodies(id); }
       else { ({ manifest, bodies } = buildJudge(arm, extra, l)); freezeManifest(manifestPath(id), manifest); saveBodies(id, bodies); }
       await submitArm(l, manifest, bodies, run, argv.includes('--list-price'), argv.includes('--retry'));
+    } else if (cmd === 'export-baseline') {
+      if (!extra || (arm !== 'r1-sonnet46' && arm !== 'r2-sonnet46')) throw new Error('export-baseline r1-sonnet46|r2-sonnet46 <dir>');
+      const res = l.results(`${arm}--secondary`);
+      mkdirSync(resolve(extra), { recursive: true });
+      const replay = arm === 'r1-sonnet46' ? r1() : r2();
+      const lines = [...replay.keys()].sort().map(id => { const j = judgeOutcome(res.get(id)); return JSON.stringify({ question_id: id, secondary: j, correct_secondary: j.verdict === true ? 1 : 0 }); });
+      writeFileSync(join(resolve(extra), 'rows.ndjson'), lines.join('\n') + '\n');
+      writeJson(join(resolve(extra), 'receipt.json'), { arm_id: `${arm}--secondary`, manifest_sha256: sha256(readFileSync(manifestPath(`${arm}--secondary`))), intents: l.intents({ arm_id: `${arm}--secondary` }).map(i => ({ ...i, items: i.items.length })), preregistration_attestation: att });
     } else if (cmd === 'export') {
       if (!extra) throw new Error('export needs an output directory');
       const receipt = exportArm(l, arm, resolve(extra));
