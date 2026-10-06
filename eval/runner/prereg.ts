@@ -18,7 +18,7 @@
  * (`fetch-depth: 0`).
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export interface Attestation {
@@ -143,9 +143,17 @@ export function checkOrder(entries: ManifestEntry[], cwd = process.cwd()): Order
   return problems;
 }
 
+/** The main manifest plus one file per experiment group in `preregistrations.d/`, so parallel branches don't collide. */
+export function loadManifest(root = process.cwd()): ManifestEntry[] {
+  const read = (path: string) => (JSON.parse(readFileSync(path, 'utf8')) as { experiments: ManifestEntry[] }).experiments;
+  const main = join(root, 'docs/benchmarks/preregistrations.json');
+  const dir = join(root, 'docs/benchmarks/preregistrations.d');
+  const extra = existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith('.json')).sort().flatMap(f => read(join(dir, f))) : [];
+  return [...read(main), ...extra];
+}
+
 if (import.meta.main) {
-  const manifestPath = process.argv[2] ?? 'docs/benchmarks/preregistrations.json';
-  const entries = (JSON.parse(readFileSync(manifestPath, 'utf8')) as { experiments: ManifestEntry[] }).experiments;
+  const entries = loadManifest();
   const problems = checkOrder(entries);
   for (const p of problems) console.error(`prereg-order: ${p.id}: ${p.file}: ${p.problem}`);
   console.log(`prereg-order: ${entries.length} experiments checked, ${problems.length} problems`);

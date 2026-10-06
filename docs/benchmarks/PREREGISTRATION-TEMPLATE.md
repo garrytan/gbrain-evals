@@ -1,6 +1,6 @@
 # Preregistration template
 
-Copy this file to `docs/benchmarks/YYYY-MM-DD-<name>-preregistration.md`, fill every section, add an entry to [`preregistrations.json`](preregistrations.json) in the same commit, and push before the first paid or gating request. Runners call `attestPreregistration` (`eval/runner/prereg.ts`), which refuses when the file is uncommitted, edited or not on `origin`, and write the attestation into the receipt. CI checks that every listed result file was added after its preregistration.
+Copy this file to `docs/benchmarks/YYYY-MM-DD-<name>-preregistration.md`, fill every section, add an entry to [`preregistrations.json`](preregistrations.json) or a file under `preregistrations.d/` in the same commit, and push before the first paid or gating request. Runners call `attestPreregistration` (`eval/runner/prereg.ts`), which refuses when the file is uncommitted, edited or not on `origin`, and write the attestation into the receipt. CI checks that every listed result file was added after its preregistration.
 
 A change after a cell has run is a dated amendment appended at the end, never an edit.
 
