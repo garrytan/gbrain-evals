@@ -37,7 +37,7 @@ bun eval/runner/q2/campaign.ts status --campaign "$C"
 ```bash
 export C=~/q2-custody/campaign           # campaign root (ledger, receipts)
 export W=~/q2-custody/work               # work roots (brains, line text, labels)
-export K=~/q2-custody/material           # custody material as frozen: n/, k/k-pages.jsonl, i/phrasing-i1{a,b,c}.json, i/phrasing-i2{a,b,c}.json, w1/, w2/, q/q-questions.json, q/career-corpus/
+export K=~/q2-custody/material           # custody material as frozen: n/, k/k-pages.jsonl, i/phrasing-i1{a,b,c}.json, i/phrasing-i2{a,b,c}.json, w1/, w2/, q/q-questions.json, q/career-corpus/, g5/g5-seeds.json
 export GB=~/gbrain                       # a gbrain checkout holding every ref below
 export BASE=<baseline master SHA from the freeze record>
 export CAND=<frozen Q2 build SHA>
@@ -46,8 +46,10 @@ export UBI_OWNER=gbra49                  # if a step runs on Ubicloud
 ```
 
 Unit refs (`$U1` … `$U6`, or `$U34` when the freeze record makes U3 and U4 joint) and package refs (`$P1` … `$Pk`)
-come from the freeze record and the package script. If U3 and U4 are joint, the manifest's `units` list reads
-`["U1", "U2", "U34", "U5", "U6"]` in the harness commit the freeze record names.
+come from the freeze record and the package script. The manifest's `u34_joint` field holds that decision: it is
+`null` until the development trace settles it, and every step that runs one arm per unit refuses to start while it is
+`null`. `true` makes the family U1, U2, U34, U5, U6; `false` keeps the six units. It is set in the harness commit the
+freeze record names, before any cell runs.
 
 ## 1. Zero-cost smoke (`smoke`)
 
@@ -66,7 +68,7 @@ shapes the frozen build accepts.
 
 ```bash
 bun eval/runner/q2/campaign.ts preflight --campaign "$C" --step preflight --run preflight \
-  --baseline "$GB@$BASE" --candidate "$GB@$CAND" --custody-dir "$K/n,$K/k,$K/i,$K/w1,$K/w2,$K/q,$K/q/career-corpus"
+  --baseline "$GB@$BASE" --candidate "$GB@$CAND" --custody-dir "$K/n,$K/k,$K/i,$K/w1,$K/w2,$K/q,$K/q/career-corpus,$K/g5"
 ```
 
 Expected: every `preflight.*` gate passes: bun >= 1.4.0, git, tar and rsync, the pinned gbrain installed, a verified
@@ -216,15 +218,16 @@ Expected: a `q2-grammar-gates` receipt with `G1.material_floor`, `G1.zero_tolera
 ```bash
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/line-grammar-typing.ts --gbrain "$GB@$BASE" --campaign "$C" --step g5 --run world-v1-baseline
 GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/line-grammar-typing.ts --gbrain "$GB@$CAND" --campaign "$C" --step g5 --run world-v1-candidate
-GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/relation-line-variants.ts --phrasing-file <custodian's variants templates file> --seeds <fresh seeds> --decision-id "$DEC" --purpose "G5 variants" \
-  --gbrain "$GB@$CAND" --output "$C/g5/variants-candidate"
-bun eval/runner/q2/campaign.ts record --campaign "$C" --step g5 --run variants-candidate --receipt "$C/g5/variants-candidate/receipt.json"
+GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/relation-line-variants.ts --seeds-file "$K/g5/g5-seeds.json" --decision-id "$DEC" --purpose "G5 variants on fresh seeds" \
+  --gbrain "$GB@$CAND" --campaign "$C" --step g5 --run variants-candidate
 bun eval/runner/q2/g5.ts --world-baseline "$C/g5/world-v1-baseline/receipt.json" --world-candidate "$C/g5/world-v1-candidate/receipt.json" \
   --variants "$C/g5/variants-candidate/receipt.json" --campaign "$C" --step g5 --run decision
 ```
 
-The variants receipt is recorded with `campaign.ts record` because relation-line-variants runs outside the campaign
-guard; record it before the decision so `export` finds every `g5` run.
+The seeds file is `{ "id", "seeds": [..] }`, minted by the custodian; the templates stay the generator's own (set A).
+The runner logs the read, refuses development seeds 1-3, and its receipt records only the file's SHA-256 and the seed
+values. Expected: a `q2-g5` receipt with `G5.world_v1_any_type_match`, `G5.invariance`, `G5.variant_typed_recall` and
+`G5.variant_decoys_added`.
 
 ## 15. G6 answers (`g6-answers`), only after G1–G5 pass
 
@@ -287,4 +290,6 @@ A raise in sizes goes into the freeze record with its cost; sizes never fall.
 
 ## Changelog
 
+- 2026-10-06: G5 variants read fresh seeds from a custody seeds file (`--seeds-file`); the manifest's `u34_joint`
+  placeholder holds the U3/U4 decision until the freeze record settles it.
 - 2026-10-06: first version, with the campaign manifest and the Q2 harness on branch `capy/q2-parser-gaps`.

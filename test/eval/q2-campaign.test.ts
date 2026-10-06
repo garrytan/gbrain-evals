@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { campaignGuard, campaignStatus, expandRuns, loadCampaignManifest, readLedger, stepBlockers, type CampaignManifest } from '../../eval/runner/q2/campaign.ts';
+import { campaignGuard, campaignStatus, expandRuns, familyUnits, loadCampaignManifest, readLedger, stepBlockers, type CampaignManifest } from '../../eval/runner/q2/campaign.ts';
 import { Q2_EXPORT_ALLOWLIST } from '../../eval/runner/q2/export.ts';
 import { exportAggregates } from '../../eval/runner/sealed-confirmation-lib.ts';
 import { g5Gates } from '../../eval/runner/q2/g5.ts';
@@ -66,6 +66,20 @@ describe('campaign manifest order', () => {
   test('the campaign root must sit outside every git worktree; output is fixed per step and run', () => {
     expect(() => campaignGuard(['--campaign', join(REPO, 'eval/reports/q2'), '--step', 'smoke', '--run', 'a'], { manifest })).toThrow('inside the repository');
     expect(() => campaignGuard(['--campaign', root(), '--step', 'smoke', '--run', 'a', '--output', '/tmp/elsewhere'], { manifest })).toThrow('drop --output');
+  });
+  test('the U3/U4 placeholder: null refuses unit steps; true makes U34 the joint unit; false keeps six units', () => {
+    const m = loadCampaignManifest();
+    expect(m.u34_joint).toBeNull();
+    expect(() => familyUnits(m)).toThrow('u34_joint undecided');
+    expect(familyUnits({ ...m, u34_joint: true })).toEqual(['U1', 'U2', 'U34', 'U5', 'U6']);
+    expect(familyUnits({ ...m, u34_joint: false })).toEqual(['U1', 'U2', 'U3', 'U4', 'U5', 'U6']);
+    const r = root();
+    for (const [step, run] of [['smoke', 'dev-junk-audit-N'], ['smoke', 'dev-junk-audit-K'], ['smoke', 'dev-temporal-edges'], ['smoke', 'dev-wta-scripted'], ['preflight', 'preflight']]) {
+      const h = campaignGuard(['--campaign', r, '--step', step, '--run', run], { manifest: m })!;
+      h.finish(receipt(h.output, 'pass'), 0);
+    }
+    expect(() => campaignGuard(['--campaign', r, '--step', 'c-select-arms', '--run', 'te-I1-f1-U1'], { manifest: m })).toThrow('u34_joint undecided');
+    expect(campaignGuard(['--campaign', r, '--step', 'c-select-arms', '--run', 'te-I1-f1-U34'], { manifest: { ...m, u34_joint: true } })).not.toBeNull();
   });
   test('the committed manifest loads, keeps the preregistered order and budget', () => {
     const m = loadCampaignManifest();

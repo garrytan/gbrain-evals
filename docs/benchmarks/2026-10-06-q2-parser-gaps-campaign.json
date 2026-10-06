@@ -4,6 +4,8 @@
   "approved_usd": 2100,
   "alert_usd": 2800,
   "units": ["U1", "U2", "U3", "U4", "U5", "U6"],
+  "u34_joint": null,
+  "u34_joint_note": "Placeholder until the development trace decides (recorded in the freeze record before any cell): true makes the family U1, U2, U34, U5, U6; false keeps the six units. Steps that expand {unit} refuse to start while this is null.",
   "steps": [
     { "id": "smoke", "title": "Zero-cost smoke on development material", "after": [], "runs": ["dev-junk-audit-N", "dev-junk-audit-K", "dev-temporal-edges", "dev-wta-scripted"], "estimate_usd": 0,
       "commands": ["runbook step 1"], "expected": "four receipts, run_status completed, no model spend" },

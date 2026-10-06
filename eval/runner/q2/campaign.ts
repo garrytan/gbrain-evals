@@ -35,8 +35,10 @@ export interface CampaignStep {
 }
 export interface CampaignManifest {
   schema: 'q2-campaign-v1'; decision_id: string; approved_usd: number; alert_usd: number;
-  /** Typing units in the selection family (U34 replaces U3 and U4 when the freeze record says they are joint). */
+  /** Typing units in the selection family. */
   units: string[];
+  /** Whether U3 and U4 form the joint unit U34 (freeze record); null until decided, and {unit} steps refuse to start. */
+  u34_joint?: boolean | null;
   steps: CampaignStep[];
 }
 export interface LedgerEntry { step: string; run: string; receipt: string; receipt_sha256: string; run_status: string; verdict: string | null; spend_usd: number; at: string; note?: string }
@@ -59,10 +61,20 @@ export function readLedger(root: string): LedgerEntry[] {
  * baseline and P1..Pk, where k is the length of the order the recorded selection decision (step c-select, run
  * decision) produced. Null when `{package}` cannot be expanded yet.
  */
+/** The selection family: U34 replaces U3 and U4 when they are joint; throws while the manifest leaves it undecided. */
+export function familyUnits(m: CampaignManifest): string[] {
+  if (m.u34_joint === undefined) return m.units;
+  if (m.u34_joint === null) throw new Error('the campaign manifest leaves u34_joint undecided (null); set it to true or false from the freeze record in the harness commit before any selection or confirmation arm runs');
+  if (!m.u34_joint) return m.units.filter(u => u !== 'U34');
+  const out = m.units.filter(u => u !== 'U3' && u !== 'U4' && u !== 'U34');
+  out.splice(Math.min(2, out.length), 0, 'U34');
+  return out;
+}
+
 export function expandRuns(m: CampaignManifest, step: CampaignStep, root: string | null, entries: readonly LedgerEntry[]): string[] | null {
   const out: string[] = [];
   for (const r of step.runs) {
-    if (r.includes('{unit}')) { for (const u of ['baseline', ...m.units]) out.push(r.replace('{unit}', u)); continue; }
+    if (r.includes('{unit}')) { for (const u of ['baseline', ...familyUnits(m)]) out.push(r.replace('{unit}', u)); continue; }
     if (r.includes('{package}')) {
       const sel = latestRuns(entries).get('c-select/decision');
       if (!sel || !root) return null;
@@ -92,14 +104,16 @@ export function stepBlockers(m: CampaignManifest, entries: readonly LedgerEntry[
   const out: string[] = [];
   for (const pre of step.after) {
     const p = m.steps.find(s => s.id === pre)!;
-    const runs = expandRuns(m, p, root, entries);
+    let runs: string[] | null;
+    try { runs = expandRuns(m, p, root, entries); } catch (e) { out.push((e as Error).message); continue; }
     if (!runs) { out.push(`step ${pre} needs the recorded selection decision (c-select/decision) to know its packages`); continue; }
     const missing = runs.filter(r => latest.get(`${pre}/${r}`)?.run_status !== 'completed');
     if (missing.length) out.push(`step ${pre} has no completed receipt for ${missing.join(', ')}`);
   }
   for (const pre of step.requires_pass ?? []) {
     const p = m.steps.find(s => s.id === pre)!;
-    const runs = expandRuns(m, p, root, entries) ?? p.runs;
+    let runs: string[];
+    try { runs = expandRuns(m, p, root, entries) ?? p.runs; } catch { runs = p.runs; }
     const failed = runs.filter(r => latest.get(`${pre}/${r}`)?.verdict !== 'pass');
     if (failed.length) out.push(`step ${pre} did not pass for ${failed.join(', ')} (the preregistration runs ${stepId} only after it passes)`);
   }
@@ -163,7 +177,8 @@ export function campaignGuard(argv: readonly string[], o: { manifest?: CampaignM
 export function campaignStatus(m: CampaignManifest, entries: readonly LedgerEntry[], root: string | null = null): { steps: Array<{ id: string; done: string[]; missing: string[]; blockers: string[] }>; next: string | null; spent_usd: number; approved_usd: number; alert_usd: number } {
   const latest = latestRuns(entries);
   const steps = m.steps.map(s => {
-    const runs = expandRuns(m, s, root, entries) ?? s.runs;
+    let runs: string[];
+    try { runs = expandRuns(m, s, root, entries) ?? s.runs; } catch { runs = s.runs; }
     return { id: s.id, done: runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status === 'completed'), missing: runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status !== 'completed'), blockers: stepBlockers(m, entries, s.id, root) };
   });
   return { steps, next: steps.find(s => s.missing.length && !s.blockers.length)?.id ?? null, spent_usd: spentUsd(entries), approved_usd: m.approved_usd, alert_usd: m.alert_usd };

@@ -277,6 +277,33 @@ export function custodyTemplatesInput(argv: readonly string[], seeds: readonly n
   return { parsed, sha256, roots };
 }
 
+export interface CustodySeeds { id: string; seeds: number[]; sha256: string; roots: CustodyRoots }
+
+/**
+ * Fresh generator seeds from custody (`--seeds-file <custody path>` with `{ "id", "seeds": [..] }`), for runners
+ * whose templates stay the generator's own. Order: decision id and purpose, explicit --output outside every git
+ * worktree, the access-log line, then parsing. Dev seeds are refused, and so is a --seeds or --phrasing-file beside
+ * it. Callers record only the file's SHA-256 and the seed values.
+ */
+export function custodySeedsInput(argv: readonly string[], devSeeds: readonly number[]): CustodySeeds | null {
+  const file = argFlag(argv, '--seeds-file');
+  if (!file) return null;
+  if (argFlag(argv, '--seeds') || argFlag(argv, '--phrasing-file')) throw new Error('--seeds-file replaces --seeds and cannot run with --phrasing-file; pass exactly one seed source and rerun');
+  const decisionId = argFlag(argv, '--decision-id');
+  const purpose = argFlag(argv, '--purpose');
+  if (!decisionId || !purpose) throw new Error('custodian mode needs --decision-id and --purpose, recorded in the access log before the seeds file is read');
+  const roots = assertCustodyRoots({ output: argFlag(argv, '--output') });
+  const { bytes, sha256 } = openCustodyFile({ file, flag: '--seeds-file', decisionId, purpose });
+  let parsed: { id?: unknown; seeds?: unknown };
+  try { parsed = JSON.parse(bytes.toString('utf8')); } catch (e) { throw new Error(`--seeds-file (sha256 ${sha256}) is not JSON: ${(e as Error).message}; ask the custodian for the intact file`); }
+  const seeds = parsed.seeds;
+  if (typeof parsed.id !== 'string' || !Array.isArray(seeds) || !seeds.length || !seeds.every(x => Number.isSafeInteger(x) && (x as number) > 0)) throw new Error(`--seeds-file (sha256 ${sha256}) needs { "id": string, "seeds": [positive integers] }; ask the custodian to fix it`);
+  if (new Set(seeds).size !== seeds.length) throw new Error(`--seeds-file (sha256 ${sha256}) lists a seed twice; ask the custodian to fix it`);
+  const dev = (seeds as number[]).filter(x => devSeeds.includes(x));
+  if (dev.length) throw new Error(`--seeds-file (sha256 ${sha256}) lists development seed(s) ${dev.join(', ')}; fresh seeds must avoid ${devSeeds.join(', ')}. Ask the custodian for fresh seeds.`);
+  return { id: parsed.id, seeds: seeds as number[], sha256, roots };
+}
+
 // ─── Allowlisted aggregate export ─────────────────────────────────
 
 const SAFE_EXPORT_STRING = /^[A-Za-z0-9_.:@/+=-]{0,96}$/;

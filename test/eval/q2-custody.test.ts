@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
-  assertCustodyRoots, assertOutsideRepository, custodyTemplatesInput, exportAggregates, gitWorktreeRoot, openCustodyFile,
+  assertCustodyRoots, assertOutsideRepository, custodySeedsInput, custodyTemplatesInput, exportAggregates, gitWorktreeRoot, openCustodyFile,
 } from '../../eval/runner/sealed-confirmation-lib.ts';
 import { validateGateOutcomes, verdictFromGates, type GateOutcome } from '../../eval/runner/receipt.ts';
 
@@ -75,6 +75,29 @@ describe('custody paths outside every git worktree', () => {
     writeFileSync(join(linked, 'k-pages.jsonl'), '{}');
     expect(() => openCustodyFile({ file: join(linked, 'k-pages.jsonl'), flag: '--k', decisionId: 'q2', purpose: 'x' })).toThrow('another git worktree');
     expect(existsSync(join(linked, 'access-log.jsonl'))).toBe(false);
+  });
+});
+
+describe('fresh-seed custody file (G5 relation-line variants)', () => {
+  const seedsFile = (body: unknown) => { const d = scratch(); mkdirSync(join(d, 'g5')); writeFileSync(join(d, 'g5', 'g5-seeds.json'), JSON.stringify(body)); return { d, f: join(d, 'g5', 'g5-seeds.json') }; };
+  const argv = (f: string, out: string) => ['--seeds-file', f, '--decision-id', 'q2', '--purpose', 'G5 variants', '--output', out];
+  test('loads { id, seeds }, logs the access, and returns the hash and seed values only', () => {
+    const { d, f } = seedsFile({ id: 'g5-fresh', seeds: [211, 223] });
+    const r = custodySeedsInput(argv(f, join(d, 'out')), [1, 2, 3])!;
+    expect(r).toMatchObject({ id: 'g5-fresh', seeds: [211, 223] });
+    expect(r.sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(readFileSync(join(d, 'g5', 'access-log.jsonl'), 'utf8')).toContain(r.sha256);
+    expect(custodySeedsInput(['--seeds', '1'], [1, 2, 3])).toBeNull();
+  });
+  test('refuses dev seeds, a malformed file, a second seed source, and a missing output before reading', () => {
+    const { d, f } = seedsFile({ id: 'x', seeds: [211, 2] });
+    expect(() => custodySeedsInput(argv(f, join(d, 'out')), [1, 2, 3])).toThrow('development seed(s) 2');
+    const bad = seedsFile({ id: 'x', seeds: ['7'] });
+    expect(() => custodySeedsInput(argv(bad.f, join(bad.d, 'out')), [1, 2, 3])).toThrow('positive integers');
+    expect(() => custodySeedsInput([...argv(f, join(d, 'out')), '--seeds', '5'], [1, 2, 3])).toThrow('exactly one seed source');
+    const fresh = seedsFile({ id: 'x', seeds: [211] });
+    expect(() => custodySeedsInput(['--seeds-file', fresh.f, '--decision-id', 'q2', '--purpose', 'p'], [1, 2, 3])).toThrow('explicit --output');
+    expect(existsSync(join(fresh.d, 'g5', 'access-log.jsonl'))).toBe(false);
   });
 });
 
