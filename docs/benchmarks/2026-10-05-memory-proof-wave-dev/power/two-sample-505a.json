@@ -1,0 +1,383 @@
+{
+ "pairs": [
+  {
+   "gbrain": "beam-100k-gbrain-rag-17e85b266ad3",
+   "comparator": "beam-100k-comparator-rag-f504827a788f",
+   "samples": 2
+  },
+  {
+   "gbrain": "beam-500k-gbrain-rag-1564910a0528",
+   "comparator": "beam-500k-comparator-rag-ca58fe069534",
+   "samples": 2
+  },
+  {
+   "gbrain": "beam-1m-gbrain-rag-0c4104c4ef0e",
+   "comparator": "beam-1m-comparator-rag-bf65a7fdf4b8",
+   "samples": 2
+  }
+ ],
+ "samples_note": "second answer sample per question per system regenerated from the recorded retrievals (mpw/reanswer.py; every rebuilt prompt equal to the recorded one), judged jointly per split by the dataset's judge; per-question scores averaged over the two samples",
+ "schema": "gbrain-evals/mpw-dev-power/v1",
+ "margin": 3,
+ "estimate": {
+  "n": 360,
+  "clusters": 18,
+  "mean_points": 0.03,
+  "diff_variance": 0.15653,
+  "tau_points": 2.28,
+  "discordance": 0.55
+ },
+ "per_split": {
+  "100k": {
+   "n": 80,
+   "clusters": 4,
+   "mean_points": -4.33,
+   "diff_variance": 0.13564,
+   "tau_points": 0,
+   "discordance": 0.475
+  },
+  "500k": {
+   "n": 140,
+   "clusters": 7,
+   "mean_points": -1.08,
+   "diff_variance": 0.1676,
+   "tau_points": 6.89,
+   "discordance": 0.5429
+  },
+  "1m": {
+   "n": 140,
+   "clusters": 7,
+   "mean_points": 3.64,
+   "diff_variance": 0.15741,
+   "tau_points": 0,
+   "discordance": 0.6
+  }
+ },
+ "scenario": {
+  "name": "central",
+  "diff_variance": 0.15653,
+  "tau_points": 2.28,
+  "source": "dev pairs: 360 questions in 18 conversations"
+ },
+ "closed_form_mdm80": 3.14,
+ "power_at_true_0": {
+  "analytic": 0.7665,
+  "percentile": 0.7877,
+  "boot-t": 0.7628,
+  "wild-u-rademacher": 0.7658,
+  "wild-u-webb": 0.7652,
+  "wild-r-rademacher": 0.764,
+  "wild-r-webb": 0.7632
+ },
+ "decision_rule": "stop and report before anything else if power at a true difference of 0 drops below 80% at the adopted margin",
+ "stop": true,
+ "summary": {
+  "design": "beam-100k-500k-1m-18-18-54",
+  "label": "Adopted: BEAM 100k + 500k + 1M by conversation, 54 sealed",
+  "scenario": "central",
+  "sealed_clusters": 54,
+  "sealed_questions": 1080,
+  "discordance_probability": {
+   "beam/100k": 0.7993,
+   "beam/500k": 0.714,
+   "beam/1m": 0.9703
+  },
+  "effective_diff_variance": {
+   "beam/100k": 0.15653,
+   "beam/500k": 0.15653,
+   "beam/1m": 0.15653
+  },
+  "capped_strata": [],
+  "mean_se_points": 1.24,
+  "sd_estimate_points": 1.226,
+  "methods": {
+   "analytic": {
+    "coverage": 0.9543,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0457,
+      "theta_-1": 0.188,
+      "theta_0": 0.4798,
+      "theta_1": 0.7665,
+      "theta_2": 0.9335
+     },
+     "margin_2.5": {
+      "theta_-2": 0.0995,
+      "theta_-1": 0.3182,
+      "theta_0": 0.6322,
+      "theta_1": 0.867,
+      "theta_2": 0.9722
+     },
+     "margin_3": {
+      "theta_-2": 0.188,
+      "theta_-1": 0.4798,
+      "theta_0": 0.7665,
+      "theta_1": 0.9335,
+      "theta_2": 0.9895
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3182,
+      "theta_-1": 0.6322,
+      "theta_0": 0.867,
+      "theta_1": 0.9722,
+      "theta_2": 0.9975
+     },
+     "margin_4": {
+      "theta_-2": 0.4798,
+      "theta_-1": 0.7665,
+      "theta_0": 0.9335,
+      "theta_1": 0.9895,
+      "theta_2": 0.9995
+     }
+    },
+    "mdm80": 3.14
+   },
+   "percentile": {
+    "coverage": 0.9477,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0522,
+      "theta_-1": 0.2082,
+      "theta_0": 0.507,
+      "theta_1": 0.7877,
+      "theta_2": 0.9445
+     },
+     "margin_2.5": {
+      "theta_-2": 0.1123,
+      "theta_-1": 0.3448,
+      "theta_0": 0.6617,
+      "theta_1": 0.8842,
+      "theta_2": 0.9762
+     },
+     "margin_3": {
+      "theta_-2": 0.2082,
+      "theta_-1": 0.507,
+      "theta_0": 0.7877,
+      "theta_1": 0.9445,
+      "theta_2": 0.992
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3448,
+      "theta_-1": 0.6617,
+      "theta_0": 0.8842,
+      "theta_1": 0.9762,
+      "theta_2": 0.998
+     },
+     "margin_4": {
+      "theta_-2": 0.507,
+      "theta_-1": 0.7877,
+      "theta_0": 0.9445,
+      "theta_1": 0.992,
+      "theta_2": 0.9998
+     }
+    },
+    "mdm80": 3.05
+   },
+   "boot-t": {
+    "coverage": 0.9555,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0445,
+      "theta_-1": 0.186,
+      "theta_0": 0.4725,
+      "theta_1": 0.7628,
+      "theta_2": 0.9343
+     },
+     "margin_2.5": {
+      "theta_-2": 0.0965,
+      "theta_-1": 0.316,
+      "theta_0": 0.6325,
+      "theta_1": 0.867,
+      "theta_2": 0.9712
+     },
+     "margin_3": {
+      "theta_-2": 0.186,
+      "theta_-1": 0.4725,
+      "theta_0": 0.7628,
+      "theta_1": 0.9343,
+      "theta_2": 0.9895
+     },
+     "margin_3.5": {
+      "theta_-2": 0.316,
+      "theta_-1": 0.6325,
+      "theta_0": 0.867,
+      "theta_1": 0.9712,
+      "theta_2": 0.9972
+     },
+     "margin_4": {
+      "theta_-2": 0.4725,
+      "theta_-1": 0.7628,
+      "theta_0": 0.9343,
+      "theta_1": 0.9895,
+      "theta_2": 0.9992
+     }
+    },
+    "mdm80": 3.16
+   },
+   "wild-u-rademacher": {
+    "coverage": 0.9527,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0473,
+      "theta_-1": 0.1825,
+      "theta_0": 0.477,
+      "theta_1": 0.7658,
+      "theta_2": 0.935
+     },
+     "margin_2.5": {
+      "theta_-2": 0.0963,
+      "theta_-1": 0.3167,
+      "theta_0": 0.6288,
+      "theta_1": 0.866,
+      "theta_2": 0.9722
+     },
+     "margin_3": {
+      "theta_-2": 0.1825,
+      "theta_-1": 0.477,
+      "theta_0": 0.7658,
+      "theta_1": 0.935,
+      "theta_2": 0.989
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3167,
+      "theta_-1": 0.6288,
+      "theta_0": 0.866,
+      "theta_1": 0.9722,
+      "theta_2": 0.9975
+     },
+     "margin_4": {
+      "theta_-2": 0.477,
+      "theta_-1": 0.7658,
+      "theta_0": 0.935,
+      "theta_1": 0.989,
+      "theta_2": 0.9995
+     }
+    },
+    "mdm80": 3.14
+   },
+   "wild-u-webb": {
+    "coverage": 0.955,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.045,
+      "theta_-1": 0.1895,
+      "theta_0": 0.4755,
+      "theta_1": 0.7652,
+      "theta_2": 0.9343
+     },
+     "margin_2.5": {
+      "theta_-2": 0.0983,
+      "theta_-1": 0.3172,
+      "theta_0": 0.6308,
+      "theta_1": 0.867,
+      "theta_2": 0.9718
+     },
+     "margin_3": {
+      "theta_-2": 0.1895,
+      "theta_-1": 0.4755,
+      "theta_0": 0.7652,
+      "theta_1": 0.9343,
+      "theta_2": 0.9892
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3172,
+      "theta_-1": 0.6308,
+      "theta_0": 0.867,
+      "theta_1": 0.9718,
+      "theta_2": 0.998
+     },
+     "margin_4": {
+      "theta_-2": 0.4755,
+      "theta_-1": 0.7652,
+      "theta_0": 0.9343,
+      "theta_1": 0.9892,
+      "theta_2": 0.9995
+     }
+    },
+    "mdm80": 3.16
+   },
+   "wild-r-rademacher": {
+    "coverage": 0.9533,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0467,
+      "theta_-1": 0.1883,
+      "theta_0": 0.4755,
+      "theta_1": 0.764,
+      "theta_2": 0.9323
+     },
+     "margin_2.5": {
+      "theta_-2": 0.1003,
+      "theta_-1": 0.3202,
+      "theta_0": 0.6288,
+      "theta_1": 0.8672,
+      "theta_2": 0.9695
+     },
+     "margin_3": {
+      "theta_-2": 0.1883,
+      "theta_-1": 0.4755,
+      "theta_0": 0.764,
+      "theta_1": 0.9323,
+      "theta_2": 0.9895
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3202,
+      "theta_-1": 0.6288,
+      "theta_0": 0.8672,
+      "theta_1": 0.9695,
+      "theta_2": 0.9978
+     },
+     "margin_4": {
+      "theta_-2": 0.4755,
+      "theta_-1": 0.764,
+      "theta_0": 0.9323,
+      "theta_1": 0.9895,
+      "theta_2": 0.9995
+     }
+    },
+    "mdm80": 3.17
+   },
+   "wild-r-webb": {
+    "coverage": 0.9553,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0447,
+      "theta_-1": 0.187,
+      "theta_0": 0.4765,
+      "theta_1": 0.7632,
+      "theta_2": 0.9305
+     },
+     "margin_2.5": {
+      "theta_-2": 0.1005,
+      "theta_-1": 0.318,
+      "theta_0": 0.6342,
+      "theta_1": 0.8682,
+      "theta_2": 0.9715
+     },
+     "margin_3": {
+      "theta_-2": 0.187,
+      "theta_-1": 0.4765,
+      "theta_0": 0.7632,
+      "theta_1": 0.9305,
+      "theta_2": 0.9892
+     },
+     "margin_3.5": {
+      "theta_-2": 0.318,
+      "theta_-1": 0.6342,
+      "theta_0": 0.8682,
+      "theta_1": 0.9715,
+      "theta_2": 0.9972
+     },
+     "margin_4": {
+      "theta_-2": 0.4765,
+      "theta_-1": 0.7632,
+      "theta_0": 0.9305,
+      "theta_1": 0.9892,
+      "theta_2": 0.9995
+     }
+    },
+    "mdm80": 3.18
+   }
+  }
+ }
+}

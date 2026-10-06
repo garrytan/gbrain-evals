@@ -2,27 +2,28 @@
   "ledger": ".budget/mpw-dev-facts.sqlite",
   "state": "sqlite",
   "totals": {
-    "program_cap_usd": 165,
-    "committed_usd": 130.4725734,
-    "reconciled_usd": 130.43281674,
+    "program_cap_usd": 235,
+    "committed_usd": 193.00425475,
+    "reconciled_usd": 192.96449809,
     "open_reservations_usd": 0.03975666,
-    "remaining_usd": 34.52742660000001,
-    "requests": 213703,
-    "overshoot_usd": 0.05923561999999993
+    "remaining_usd": 41.99574525,
+    "requests": 375505,
+    "overshoot_usd": 0.10290658000000003
   },
   "run": null,
-  "runs": 105,
+  "runs": 141,
   "open_runs": 0,
   "last_cap_change": {
-    "program_cap_usd": 165,
+    "program_cap_usd": 235,
     "kind": "set_cap",
-    "reason": "dev phase: +$45 from the local partition for the 505a65aab combined rerun; $650 total unchanged",
+    "reason": "dev phase: move $30 of the facts partition to the local ledger (raised to $331) for the two-sample variance check; $750 dev cap unchanged",
     "by": "user@cox.local",
-    "at": "2026-10-06T03:13:00.667Z"
+    "at": "2026-10-06T10:20:09.434Z"
   },
-  "size_bytes": 101261312,
-  "read_ms": 44.44,
+  "size_bytes": 175984640,
+  "read_ms": 85.21,
   "hints": [
+    "the ledger is 176 MB; compaction is not implemented yet (TODOS.md), but reads stay constant-time",
     "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
     "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
   ]

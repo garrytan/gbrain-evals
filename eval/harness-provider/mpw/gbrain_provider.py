@@ -658,15 +658,19 @@ class GbrainMemoryProvider(MemoryProvider):
             raise GbrainRetrieveError(f"gbrain reported degraded retrieval: {degraded}")
         if not isinstance(rows, list):
             raise GbrainRetrieveError(f"query returned {type(rows).__name__}, not a list of blocks")
-        docs, fact_rows = [], []
+        from .context import count_tokens
+
+        docs, fact_rows, fact_row_tokens = [], [], 0
         for row in rows:
             slug = str(row.get("slug", ""))
             text = row.get("chunk_text") or row.get("text") or ""
             if row.get("result_type") == "fact":
                 # gbrain's query facts arm: the row text carries its own `valid from`, so no session date header.
                 fact_rows.append(str(row.get("fact_id") or slug.rsplit("/", 1)[-1]))
+                fact_row_tokens += count_tokens(text)
                 page = str(row.get("page_slug") or "")
-                docs.append(Document(id=page[len(SLUG_PREFIX):] if page.startswith(SLUG_PREFIX) else slug, content=text, user_id=user_id))
+                fid = page[len(SLUG_PREFIX):] if page.startswith(SLUG_PREFIX) else (slug or f"facts/{fact_rows[-1]}")
+                docs.append(Document(id=fid, content=text, user_id=user_id))
                 continue
             doc_id = slug[len(SLUG_PREFIX):] if slug.startswith(SLUG_PREFIX) else slug
             if self.cfg.get("date_header", True):
@@ -685,7 +689,7 @@ class GbrainMemoryProvider(MemoryProvider):
             "expansion_applied": retrieval.get("expansion_applied"),
             "degraded": degraded,
             "entity_anchored": sum(1 for row in rows if isinstance(row, dict) and row.get("entity_anchored")),
-            **({"fact_rows": fact_rows} if fact_rows else {}),
+            **({"fact_rows": fact_rows, "fact_row_tokens": fact_row_tokens} if fact_rows else {}),
         }
         if delivery.get("tokenizer") not in (None, "cl100k"):
             raise GbrainRetrieveError(f"gbrain packed evidence with tokenizer {delivery.get('tokenizer')!r}, not cl100k")

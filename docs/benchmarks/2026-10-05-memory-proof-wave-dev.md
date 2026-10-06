@@ -98,6 +98,22 @@ On builds before a87c, raw exchange pages delivered about 6.9k tokens on average
 
 On e8e1 and a87c, every fact's `valid_from` equals its source session date: 16,295 of 16,295 facts on BEAM dev. gbrain's extractor wrote no event date. Printing each fact's date changed nothing: pooled 0.636 with dates, 0.642 without. The temporal gap needs an extracted event date and fact recall ranked by the question. Build `505a65aab` adds `valid_from` for `remember` and a query facts arm. Neither shows up in BEAM's combined cells. `extract_facts` still writes no event date (0 of 16,234 facts carry one), and the facts arm added 0 rows in all 360 retrievals, because the page query already fills its budget. The combined lane on 505a scores 0.636 / 0.676 / 0.659, pooled 0.661, with every gate passing. Temporal reasoning there is 0.50 against the comparator's 0.72 ([write-up](2026-10-05-memory-proof-wave-dev/facts-lanes-fix1-505a.md)).
 
+**Fix round 2: date grounding** (dev evidence, scratch build `98537693f` = the wave plus #6020). With `extraction.date_grounding` on, 4.9–8.4% of facts carry an event date that differs from their session date, against 0% with it off. BEAM dev does not improve. The combined lane scores 0.653 pooled with grounding on and 0.663 with it off, against the comparator's 0.654. Temporal reasoning goes the wrong way, 0.438 on against 0.493 off (paired 0/3/33), and event ordering doesn't move (0.429 against 0.433). The dates barely reach the prompt: the facts block is 600 tokens, `recall` returns the newest 100 facts of which only 3–6% are dated, and the query facts arm adds no rows because the page query fills its budget. Every BEAM dev session has an observed date (158 of 158), so the lack of a gain is not for want of dates. Write-up: [facts-lanes-fix2-date-grounding.md](2026-10-05-memory-proof-wave-dev/facts-lanes-fix2-date-grounding.md).
+
+**Fix round 3: temporal fact reserve** (gate 1 of its preregistered decision, build `81631cffe`, combined lane with exchange pages at 8,000 delivered tokens: facts 600, pages 7,500). With `search.temporal_fact_reserve` on, `query` gives up to 1,200 tokens or 30% of rows on temporal-cue questions to question-ranked facts. It fired on 142 of 360 dev questions, all of them temporal-cue questions, delivering 5 to 9 fact rows (163 to 303 tokens) per firing. That covered 34 of 36 temporal-reasoning questions.
+
+| Arm | 100k | 500k | 1M | Pooled | Temporal reasoning | Event ordering |
+|---|---:|---:|---:|---:|---:|---:|
+| reserve on | 0.663 | 0.700 | 0.681 | **0.685** | **0.660** | 0.437 |
+| reserve off | 0.657 | 0.650 | 0.667 | 0.658 | 0.486 | 0.434 |
+
+Paired results, on against off:
+- temporal reasoning: 8 wins, 0 losses, 28 ties (+0.174);
+- event ordering: 9/13/14 (+0.003);
+- all questions: 51/43/266 (+0.026).
+
+Every cell passes every gate. The gate-1 rule holds as written: temporal reasoning and event ordering improve and pooled is not lower. The event-ordering clause, though, rests on +0.003 with more losses than wins, so one flipped question would reverse it. Abstention (0.694 against 0.750) and summarization (0.498 against 0.517) fall. With the reserve on, gbrain's pooled 0.685 is above the comparator's 0.654, and temporal reasoning (0.660) approaches the comparator's 0.72. Write-up: [facts-lanes-fix3-temporal-reserve.md](2026-10-05-memory-proof-wave-dev/facts-lanes-fix3-temporal-reserve.md).
+
 ## Public datasets at 8,000 tokens
 
 | Dataset | gbrain | comparator |
@@ -141,6 +157,15 @@ Agentic RAG lets the reader retrieve in rounds. Agent mode hands the question to
 | power report's central assumption | 0.097 | 3.5 points | 87% | |
 
 At the same 54 sealed conversations, a 3.5-point margin gives 82–84% and 4.0 gives 91%. The plan's rule (stop below 80%) fires: the margin or the design changes, in the preregistration, before any validation or sealed cell.
+
+**Two answer samples do not fix it.** The check used the primary pairing, gbrain combined with exchange pages on 505a65aab against the comparator. It regenerated a second answer for every question and system from the recorded retrievals: each rebuilt prompt was byte-identical to the recorded one, so only the answer varies. The second samples were judged jointly per split, and scores were averaged over the two samples.
+
+| Primary pairing (505a) | Paired variance | Conversation effect | Power at 0, margin 3.0 | 3.5 | 4.0 | Margin for 80% power |
+|---|---:|---:|---:|---:|---:|---:|
+| one answer sample | 0.158 | 1.8 points | 76% | 86% | 94% | 3.1 |
+| two samples averaged | 0.157 | 2.3 points | 76% | 87% | 93% | 3.1 |
+
+Answers barely move between samples: test–retest correlation is 0.90 for gbrain and 0.93 for the comparator, and 69–86% of questions get the identical score. Answer noise is about 0.025 of the 0.158 paired variance. Most of the variance is real question-by-question disagreement between the two systems, which more samples cannot average away. A 3.5-point margin reaches 86–87% power on the primary pairing. The check cost $22.78 ($10.68 of answers, $12.10 of judging).
 
 ## Fix lane
 
@@ -188,8 +213,8 @@ The dev phase is capped at $650 of proxy-metered spend. The ledger partitions we
 
 | Ledger | Cap | Committed |
 |---|---:|---:|
-| local (gbrain tracks, diagnosis, full context) | $301 | $270.63 |
+| local (gbrain tracks, diagnosis, full context, variance check) | $331 | $293.42 |
 | VM (comparator tracks, hybrid search; closed, VM destroyed) | $158.28 | $158.28 |
-| facts lanes | $165 | $130.47 |
+| facts lanes | $235 | $193.00 |
 | coding spike | $25 | $4.65 |
-| **total** | **$649.28** | $564.03 |
+| **total** | **$749.28** | $649.35 |
