@@ -68,7 +68,7 @@ export const GAPS: ReadonlyArray<{ capability: string; reason: string }> = [
   { capability: 'keyless answerer or "I don\'t know" response', reason: 'think without a chat model returns its gather without an answer (src/core/think/index.ts:784,1113-1116); the query op only grades. The keyless path cannot abstain, so A4 defines a paid harness answerer.' },
   { capability: 'attribute-level sufficiency in the CRAG grade', reason: 'the grade reads rank-1 evidence labels; an exact title match is strong whether or not the asked-for attribute is present (crag.ts:67-106, matrix P5).' },
   { capability: 'S4 abstention on exact-entity questions', reason: 'reduceAnswerable passes whenever there is an identity hit or a strong deterministic grade (answerable.ts:62-68), so S4 cannot abstain on a missing attribute of a company whose page matches exactly.' },
-  { capability: 'S4 on arm', reason: 'needs a TypeSafe key and explicit enabling. The budget ledger prices TypeSafe requests since gbrain-evals 0.10.10 (A4-3), but this runner does not implement the S4-on arm yet. Not run.' },
+  { capability: 'S4 on at gbrain defaults', reason: 'gbrain ships no reference calibration for the answerable slot, so decide.slots.answerable.mode=on is inactive (no_calibration) on a fresh brain; the --s4-on arm (2026-10-06) applies an explicit threshold with force_on.' },
 ];
 
 const LEVEL_RANK: Record<string, number> = { weak: 0, moderate: 1, strong: 2 };
@@ -645,7 +645,7 @@ async function main(): Promise<void> {
     log(`strong on unanswerable: ${crag.strong_on_unanswerable.hits}/${crag.strong_on_unanswerable.n} (${JSON.stringify(crag.strong_on_unanswerable.by_class)})`);
     for (const p of crag.operating_points) log(`  answer when grade >= ${p.answer_when_grade_at_least}: coverage ${pct(p.coverage)}, risk (no evidence) ${pct(p.risk_insufficient_evidence)}, risk (unanswerable) ${pct(p.risk_unanswerable)}`);
   }
-  if (s4) log(`S4 could not abstain on ${s4.blocked_from_abstaining}/${s4.unanswerable} unanswerable questions even if on (${JSON.stringify(s4.blocked_by_class)}); S4 on arm: not run`);
+  if (s4) log(`S4 could not abstain on ${s4.blocked_from_abstaining}/${s4.unanswerable} unanswerable questions even if on (${JSON.stringify(s4.blocked_by_class)}); S4 on arm: ${s4Out ? `run (threshold ${s4Threshold}, ${s4Out.rows.filter(r => r.verdict === 'abstain').length} abstain verdicts of ${s4Out.rows.length})` : 'not run (pass --s4-on)'}`);
   if (ps) {
     for (const k of ['retrieved', 'oracle'] as const) {
       const m = ps[k];
