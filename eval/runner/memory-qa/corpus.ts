@@ -238,6 +238,15 @@ function messageIds(src: unknown): number[] {
   return [];
 }
 
+/**
+ * The date of each turn group in a BEAM batch. BEAM dates a batch once, on the first message of its first turn group, so
+ * a group without its own anchor takes the batch's.
+ */
+export function beamGroupDates(batch: { time_anchor?: string | null; turns: Array<Array<{ time_anchor?: string }>> }): Array<string | undefined> {
+  const batchDate = batch.time_anchor ?? batch.turns.flat().find(msg => msg.time_anchor)?.time_anchor ?? undefined;
+  return batch.turns.map(group => group.find(msg => msg.time_anchor)?.time_anchor ?? batchDate);
+}
+
 /** `only` restricts loading to those conversation ids (a split), so other conversations' files are never read. */
 export function loadBeam(size: '100k' | '500k' | '1m', only?: ReadonlySet<string>): Corpus {
   const m = beamManifest();
@@ -249,9 +258,10 @@ export function loadBeam(size: '100k' | '500k' | '1m', only?: ReadonlySet<string
     const sessions: Session[] = [];
     const sessionOfMessage = new Map<number, string>();
     for (const batch of chat) {
+      const dates = beamGroupDates(batch);
       batch.turns.forEach((group, gi) => {
         const id = `b${batch.batch_number}-g${gi}`;
-        const date = group.find(msg => msg.time_anchor)?.time_anchor ?? batch.time_anchor ?? undefined;
+        const date = dates[gi];
         for (const msg of group) sessionOfMessage.set(msg.id, id);
         sessions.push({ id, date: date ?? undefined, turns: group.map(msg => ({ speaker: msg.role, content: msg.content.replace(MARKER, ''), message_ids: [msg.id] })) });
       });
