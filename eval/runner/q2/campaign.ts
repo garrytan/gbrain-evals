@@ -1,0 +1,161 @@
+/**
+ * The Q2 campaign manifest and ledger (plan section 9, item 8; preregistration "Order of runs").
+ *
+ * The committed manifest (docs/benchmarks/2026-10-06-q2-parser-gaps-campaign.json) lists every custodian step, the
+ * receipts it produces, the steps it needs first and the gates that must have passed. A runner started with
+ * `--campaign <root> --step <id> --run <name>` refuses to start until every predecessor's receipts are recorded in
+ * the campaign ledger (`<root>/campaign-ledger.jsonl`), writes its receipt to `<root>/<step>/<name>/receipt.json`,
+ * and records it with its spend when it ends. The ledger tracks spend against the approved $2,100 and refuses a paid
+ * step that would pass the $2,800 alert unless the owner's approval is passed with --owner-approved-over-alert.
+ *
+ *   bun eval/runner/q2/campaign.ts status --campaign <root>          what is done, what is next, spend
+ *   bun eval/runner/q2/campaign.ts preflight --campaign <root> ...   dependencies, prices, builds, permissions, access log
+ *   bun eval/runner/q2/campaign.ts record --campaign <root> --step <id> --run <name> --receipt <file> [--spend-usd N]
+ *                                                                    record a receipt produced outside a Q2 runner
+ */
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { join, relative, resolve } from 'node:path';
+import { assertOutsideRepository, resolvedPath } from '../sealed-confirmation-lib.ts';
+
+const REPO = resolve(import.meta.dir, '../../..');
+export const CAMPAIGN_MANIFEST = join(REPO, 'docs/benchmarks/2026-10-06-q2-parser-gaps-campaign.json');
+
+export interface CampaignStep {
+  id: string;
+  title: string;
+  after: string[];
+  /** Receipt names this step must record (one per run), e.g. "amara-B". */
+  runs: string[];
+  /** Steps whose recorded receipts must all have verdict pass before this step may start. */
+  requires_pass?: string[];
+  estimate_usd: number;
+  commands: string[];
+  expected: string;
+}
+export interface CampaignManifest { schema: 'q2-campaign-v1'; decision_id: string; approved_usd: number; alert_usd: number; steps: CampaignStep[] }
+export interface LedgerEntry { step: string; run: string; receipt: string; receipt_sha256: string; run_status: string; verdict: string | null; spend_usd: number; at: string; note?: string }
+
+export function loadCampaignManifest(path = CAMPAIGN_MANIFEST): CampaignManifest {
+  const m = JSON.parse(readFileSync(path, 'utf8')) as CampaignManifest;
+  const ids = new Set(m.steps.map(s => s.id));
+  for (const s of m.steps) for (const a of [...s.after, ...(s.requires_pass ?? [])]) if (!ids.has(a)) throw new Error(`campaign manifest: step ${s.id} names unknown step ${a}`);
+  return m;
+}
+
+export function readLedger(root: string): LedgerEntry[] {
+  const path = join(root, 'campaign-ledger.jsonl');
+  if (!existsSync(path)) return [];
+  return readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l) as LedgerEntry);
+}
+
+/** The latest ledger entry per (step, run). */
+export function latestRuns(entries: readonly LedgerEntry[]): Map<string, LedgerEntry> {
+  const m = new Map<string, LedgerEntry>();
+  for (const e of entries) m.set(`${e.step}/${e.run}`, e);
+  return m;
+}
+
+export const spentUsd = (entries: readonly LedgerEntry[]) => entries.reduce((a, e) => a + e.spend_usd, 0);
+
+/** Why a step may not start yet; empty when it may. */
+export function stepBlockers(m: CampaignManifest, entries: readonly LedgerEntry[], stepId: string): string[] {
+  const step = m.steps.find(s => s.id === stepId);
+  if (!step) return [`unknown step ${stepId}; steps are ${m.steps.map(s => s.id).join(', ')}`];
+  const latest = latestRuns(entries);
+  const out: string[] = [];
+  for (const pre of step.after) {
+    const p = m.steps.find(s => s.id === pre)!;
+    const missing = p.runs.filter(r => latest.get(`${pre}/${r}`)?.run_status !== 'completed');
+    if (missing.length) out.push(`step ${pre} has no completed receipt for ${missing.join(', ')}`);
+  }
+  for (const pre of step.requires_pass ?? []) {
+    const p = m.steps.find(s => s.id === pre)!;
+    const failed = p.runs.filter(r => latest.get(`${pre}/${r}`)?.verdict !== 'pass');
+    if (failed.length) out.push(`step ${pre} did not pass for ${failed.join(', ')} (the preregistration runs ${stepId} only after it passes)`);
+  }
+  return out;
+}
+
+export interface CampaignHandle { root: string; step: CampaignStep; run: string; output: string; finish(receiptPath: string, spendUsd: number, note?: string): LedgerEntry }
+
+function flag(argv: readonly string[], name: string): string | undefined {
+  const at = argv.indexOf(name);
+  if (at >= 0) return argv[at + 1];
+  return argv.find(a => a.startsWith(`${name}=`))?.slice(name.length + 1);
+}
+
+/**
+ * The campaign guard every Q2 runner calls before it reads material: null without --campaign; otherwise it checks
+ * the step's predecessors and the spend alert, fixes the output directory, and returns the handle that records the
+ * receipt.
+ */
+export function campaignGuard(argv: readonly string[], o: { manifest?: CampaignManifest; estimateUsd?: number } = {}): CampaignHandle | null {
+  const rootFlag = flag(argv, '--campaign');
+  if (!rootFlag) return null;
+  const stepId = flag(argv, '--step');
+  const run = flag(argv, '--run');
+  if (!stepId || !run) throw new Error('--campaign needs --step <id> and --run <name> (the runbook gives both for every command)');
+  assertOutsideRepository(rootFlag, '--campaign');
+  const root = resolvedPath(rootFlag);
+  const m = o.manifest ?? loadCampaignManifest();
+  const step = m.steps.find(s => s.id === stepId);
+  if (!step) throw new Error(`unknown campaign step ${stepId}; steps are ${m.steps.map(s => s.id).join(', ')}`);
+  if (!step.runs.includes(run)) throw new Error(`step ${stepId} records runs ${step.runs.join(', ')}; ${run} is not one of them`);
+  const entries = readLedger(root);
+  const blockers = stepBlockers(m, entries, stepId);
+  if (blockers.length) throw new Error(`campaign step ${stepId} cannot start: ${blockers.join('; ')}. Run \`bun eval/runner/q2/campaign.ts status --campaign ${rootFlag}\` to see the next step.`);
+  const spent = spentUsd(entries);
+  const estimate = o.estimateUsd ?? step.estimate_usd;
+  if (estimate > 0 && spent + estimate > m.alert_usd && !flag(argv, '--owner-approved-over-alert')) {
+    throw new Error(`campaign spend $${spent.toFixed(2)} plus this step's estimate $${estimate.toFixed(2)} passes the $${m.alert_usd} alert (approved $${m.approved_usd}). Stop and ask the owner; rerun with --owner-approved-over-alert "<who, when>" only after approval.`);
+  }
+  const output = join(root, stepId, run);
+  const given = flag(argv, '--output');
+  if (given && resolvedPath(given) !== output) throw new Error(`in a campaign the output of ${stepId}/${run} is ${output}; drop --output or pass exactly that`);
+  mkdirSync(output, { recursive: true });
+  return {
+    root, step, run, output,
+    finish(receiptPath, spendUsd, note) {
+      const r = JSON.parse(readFileSync(receiptPath, 'utf8')) as { run_status: string; verdict?: string };
+      const entry: LedgerEntry = { step: stepId, run, receipt: relative(root, receiptPath), receipt_sha256: createHash('sha256').update(readFileSync(receiptPath)).digest('hex'),
+        run_status: r.run_status, verdict: r.verdict ?? null, spend_usd: spendUsd, at: new Date().toISOString(), ...(note ? { note } : {}) };
+      appendFileSync(join(root, 'campaign-ledger.jsonl'), JSON.stringify(entry) + '\n');
+      const total = spent + spendUsd;
+      if (total > m.alert_usd) process.stderr.write(`[campaign] ALERT: spend $${total.toFixed(2)} is past the $${m.alert_usd} alert; stop and tell the owner before any further paid step.\n`);
+      else if (total > m.approved_usd) process.stderr.write(`[campaign] spend $${total.toFixed(2)} is past the approved $${m.approved_usd} (alert at $${m.alert_usd}); tell the owner.\n`);
+      return entry;
+    },
+  };
+}
+
+export function campaignStatus(m: CampaignManifest, entries: readonly LedgerEntry[]): { steps: Array<{ id: string; done: string[]; missing: string[]; blockers: string[] }>; next: string | null; spent_usd: number; approved_usd: number; alert_usd: number } {
+  const latest = latestRuns(entries);
+  const steps = m.steps.map(s => ({ id: s.id, done: s.runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status === 'completed'), missing: s.runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status !== 'completed'), blockers: stepBlockers(m, entries, s.id) }));
+  return { steps, next: steps.find(s => s.missing.length && !s.blockers.length)?.id ?? null, spent_usd: spentUsd(entries), approved_usd: m.approved_usd, alert_usd: m.alert_usd };
+}
+
+async function main(argv: string[]): Promise<void> {
+  const cmd = argv[0];
+  const root = flag(argv, '--campaign');
+  if (!root) throw new Error('usage: campaign.ts status|preflight|record --campaign <root outside every git worktree> ...');
+  assertOutsideRepository(root, '--campaign');
+  const m = loadCampaignManifest();
+  if (cmd === 'status') { console.log(JSON.stringify(campaignStatus(m, readLedger(resolvedPath(root))), null, 2)); return; }
+  if (cmd === 'record') {
+    const h = campaignGuard(argv, { manifest: m });
+    const receipt = flag(argv, '--receipt');
+    if (!h || !receipt) throw new Error('record needs --step, --run and --receipt <file>');
+    const e = h.finish(resolve(receipt), Number(flag(argv, '--spend-usd') ?? 0), flag(argv, '--note'));
+    console.log(JSON.stringify(e, null, 2));
+    return;
+  }
+  if (cmd === 'preflight') {
+    const { runPreflight } = await import('./preflight.ts');
+    await runPreflight(argv, m);
+    return;
+  }
+  throw new Error(`unknown command ${cmd}; use status, preflight or record`);
+}
+
+if (import.meta.main) main(process.argv.slice(2)).catch(e => { console.error(e instanceof Error ? e.message : e); process.exit(3); });
