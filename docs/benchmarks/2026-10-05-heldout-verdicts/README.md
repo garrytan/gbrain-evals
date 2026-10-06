@@ -16,6 +16,14 @@ published. Comparators are named by kind only.
 | `p3-e5-heldout-2026-10-05.json` | P3 declared single-value relations E5 | fail (3 wrong closures) |
 | `p3-e5-setf-retest-2026-10-05.json` | P3 E5 retest on fresh material (second custodian), guard vs no guard | guard: all gates pass, 0 closures applied (power precondition not met); no guard: 23 of 23 closures wrong |
 | `p4-pressure-heldout-2026-10-05.json` | P4 pre-compaction save notice, pressure gate (BEAM-500K sealed) | pass (+11.35 points [+8.3, +14.4]) |
+| `p5-heldout-2026-10-05.json` | P5 first run: H1 link typing, H2 relation lines, H4 forward references, H5a similar-page hint | pass |
+| `p5-h3-heldout-2026-10-06.json` | P5 H3 junk audit on minted lines (second custodian, from P0's run) | fail (precision 0/18) |
+| `p5-h5b-heldout-2026-10-06.json` | P5 H5b agent-loop duplicates | fail (wrong merges +1.25 points, bar +1) |
+| `p5-delta-heldout-2026-10-05.json` | P5 delta at `011bd0b6a`: H10 advisory-role guard on set C (H7 to H9 superseded by the re-frozen run) | H10 pass |
+| `p5-delta2-heldout-2026-10-05.json` | P5 delta re-frozen at `970c3088b`: H7 validity ranges, H9 typing changes, N4 guardrail (H8 blocked, rerun below) | pass |
+| `p5-h8r-heldout-2026-10-05.json` | P5 delta H8 remote wanted rows (rerun after the sweep fix) | pass |
+| `p5-delta-set-g-2026-10-05.json` | P5 H10 re-check and H11, set G | fail |
+| `p5-delta-set-h-2026-10-05.json` | P5 H10 re-check and H11, set H (cycle 2) | fail; post-freeze changes removed |
 | `p6-think-dates-sealed-locomo-2026-10-06.json` | P6 `think` date frame, sealed LoCoMo | pass (+14.0 points [+11.8, +16.2]) |
 | `p7-heldout-2-2026-10-04.json` | P7 multi-relation planner, N9 v1 second opening | pass |
 | `p8-write-cost-2026-10-05.json` | P8 write cost (gate: zero commit-path generative attempts) | pass |
@@ -25,4 +33,4 @@ published. Comparators are named by kind only.
 | `p8-quotes-retest2-2026-10-05.json` | P8 quote grounding retest on custodian-written synthetic sessions | pass (5/321, Wilson upper 3.59%) |
 | `p8-surface-heldout-2026-10-05.json` | P8 advertised tool surface (Cat 40 sealed world) | fail in both narrower arms; `full` stays |
 
-The table lists the verdicts of plans whose gbrain pull requests have merged (P1, P3, P4, P6, P7, P8). Each plan still in progress (P2, P5) lists its own verdict files on its page under [`../2026-10-05-heldout-program/`](../2026-10-05-heldout-program/), and they move into this table when its gbrain pull request merges. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.
+The table lists the verdicts of plans whose gbrain pull requests have merged (P1, P3, P4, P5, P6, P7, P8). Each plan still in progress (P2) lists its own verdict files on its page under [`../2026-10-05-heldout-program/`](../2026-10-05-heldout-program/), and they move into this table when its gbrain pull request merges. The [program report](../2026-10-05-heldout-program.md) puts these verdicts beside each plan's preregistration, development results and default.
