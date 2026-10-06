@@ -46,7 +46,7 @@ Every other category reported identical numbers at both pins apart from these, a
 | Temporal edges | during-year F1 | 0.594 | 0.921 | same |
 | Type accuracy | overall type accuracy | 0.747 | 0.753 | link typing changes in P1 and P5 |
 | Cat 6 prose scale | mean links per page | 5.73 | 5.67 | gazetteer mention links (entity-recall wave) |
-| N12 | formats registered / covered | 27 / 27 | 28 / 27 | a new transcript adapter without a fixture yet |
+| N12 | formats registered / rendered | 27 / 27 | 28 / 27 (28 / 28 with the new renderer) | gbrain's new `email-thread-heading` pattern |
 | MCP contract | handlers walked | 156 | 160 | new operations (P1, P5, P8) |
 | Cat 7 | `get_timeline` p50 at 1,000 pages | 0.075 ms | 0.078 ms | within the 25% rule |
 
@@ -62,6 +62,7 @@ The repro's median stays under its frozen 0.075 ms limit in all three runs at ea
 - The N7 runner names N7-2 and N7-5 only when its measurement shows them: an acknowledgement-only reply closing a loop, and a ranking that moves with the clock even with `as_of` pinned. At `c5fb0201` it names only the open N7-3 and N7-4.
 - The Cat 40 and Cat 41 protocols move new runs and the F1/F10 instruction check to `claude-sonnet-5-5`, `gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1`, amended before any new cell.
 - `scripts/model-freshness.ts` lists each provider's models, names the newest of each family the eval rules use, and blocks a run whose models have no price.
+- N12 gains a renderer for gbrain's new `email-thread-heading` pattern (the Gmail thread page shape, one `## <From> · YYYY-MM-DD HH:MM` heading per message), so every registered format is rendered again: 28 of 28 at seeds 12 and 7, every rule passing ([seed 12](2026-10-06-followups-repin/n12-email-thread-heading-seed12.json), [seed 7](2026-10-06-followups-repin/n12-email-thread-heading-seed7.json)). The VM runs above predate it and show 28 registered, 27 rendered.
 - Session-id audit: N6 is the only runner that sends gbrain MCP tool calls and compares two responses, and it now gives every probe its own session and parses notice blocks separately. No other runner needed a change.
 
 ## What to use and what to avoid
