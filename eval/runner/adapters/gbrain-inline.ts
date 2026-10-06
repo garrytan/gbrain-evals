@@ -177,6 +177,7 @@ export class GbrainInlineAdapter implements Adapter {
       embedding_model: this.opts.embeddingModel ?? 'openai:text-embedding-3-large',
       embedding_dimensions: this.opts.embeddingDimensions ?? 1536,
       env: process.env as Record<string, string | undefined>,
+      ...(process.env.OLLAMA_BASE_URL ? { base_urls: { ollama: process.env.OLLAMA_BASE_URL } } : {}),
     });
     if (this.opts.expectStubTransport) assertStubEmbedTransport('init', product.diagnoseEmbedding);
 

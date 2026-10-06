@@ -294,6 +294,7 @@ export async function runMatrixCell(
     embedding_dimensions: spec.embed_dim,
     reranker_model: spec.reranker ?? undefined,
     env: process.env as Record<string, string | undefined>,
+    ...(process.env.OLLAMA_BASE_URL ? { base_urls: { ollama: process.env.OLLAMA_BASE_URL } } : {}),
   });
 
   const engine: any = new PGLiteEngine();

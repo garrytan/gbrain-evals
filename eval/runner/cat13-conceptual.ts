@@ -734,6 +734,8 @@ export function ensureGateway(stubEmbed: boolean, embedder: EmbedderConfig = res
     embedding_model: embedder.model,
     embedding_dimensions: embedder.dims,
     env: process.env as Record<string, string | undefined>,
+    // gbrain reads OLLAMA_BASE_URL only through buildGatewayConfig; a direct configureGateway needs base_urls.
+    ...(process.env.OLLAMA_BASE_URL ? { base_urls: { ollama: process.env.OLLAMA_BASE_URL } } : {}),
   });
   __setEmbedTransportForTests(
     stubEmbed
