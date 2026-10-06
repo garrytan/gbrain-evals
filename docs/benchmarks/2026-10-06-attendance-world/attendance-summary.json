@@ -1,0 +1,3015 @@
+{
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-06-attendance-world-preregistration.md",
+    "preregistration_commit": "f0c9310a18cf5c6770ed6e239714cebe77bf6740",
+    "runner_commit": "f0c9310a18cf5c6770ed6e239714cebe77bf6740",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-06T19:29:43.219Z"
+  },
+  "gbrain": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "corpus_fingerprint": "25f53dc5eb464a7abbf5ca03427d6dd089e88e465ff66413ada4499cd39c3f4d",
+  "arms": {
+    "world-v1-attendees": {
+      "n9_hermetic": {
+        "attendance_edges": [
+          {
+            "seed": 1,
+            "edges": 132,
+            "false_edges": [],
+            "missing": []
+          },
+          {
+            "seed": 2,
+            "edges": 132,
+            "false_edges": [],
+            "missing": []
+          },
+          {
+            "seed": 3,
+            "edges": 132,
+            "false_edges": [],
+            "missing": []
+          }
+        ],
+        "by_split": {
+          "one-hop-template": {
+            "runs": 150,
+            "seed_resolved": 150,
+            "fired": 150,
+            "fire_rate": 1,
+            "unlisted_people_top5": {
+              "off": 4,
+              "on": 3
+            },
+            "recall_at_5_off": 0.3233333333333333,
+            "recall_at_5_on": 0.8033333333333332,
+            "errors": 0,
+            "missing_fields": 0,
+            "meets_fire_floor": true
+          },
+          "one-hop-paraphrase": {
+            "runs": 150,
+            "seed_resolved": 0,
+            "fired": 0,
+            "fire_rate": 0,
+            "unlisted_people_top5": {
+              "off": 3,
+              "on": 3
+            },
+            "recall_at_5_off": 0.26,
+            "recall_at_5_on": 0.26,
+            "errors": 0,
+            "missing_fields": 0,
+            "meets_fire_floor": false
+          }
+        },
+        "faithful_meetings": {
+          "one-hop-template": {
+            "runs": 126,
+            "fired": 126,
+            "fire_rate": 1
+          },
+          "one-hop-paraphrase": {
+            "runs": 126,
+            "fired": 0,
+            "fire_rate": 0
+          }
+        },
+        "perturbed_meetings": {
+          "one-hop-template": [
+            {
+              "meeting": "meetings/board-acme-2025-q1-0",
+              "kind": "removed",
+              "person": "people/mia-brown-0",
+              "key": [
+                "people/mia-brown-0",
+                "people/chris-jackson-91"
+              ],
+              "page": [
+                "people/chris-jackson-91"
+              ],
+              "runs": 3,
+              "fired": 3,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/board-nimbus-2025-q2-5",
+              "kind": "added",
+              "person": "people/tina-lopez-117",
+              "key": [
+                "people/mia-anderson-5"
+              ],
+              "page": [
+                "people/mia-anderson-5",
+                "people/tina-lopez-117"
+              ],
+              "runs": 3,
+              "fired": 3,
+              "top5_off": 0,
+              "top5_on": 3
+            },
+            {
+              "meeting": "meetings/demo-day-2024-03-17-batch-2",
+              "kind": "added",
+              "person": "people/chris-singh-96",
+              "key": [
+                "people/iris-lee-82",
+                "people/mark-jones-2",
+                "people/ulrich-johnson-7",
+                "people/mia-lee-13",
+                "people/tina-jones-112"
+              ],
+              "page": [
+                "people/iris-lee-82",
+                "people/mark-jones-2",
+                "people/ulrich-johnson-7",
+                "people/mia-lee-13",
+                "people/tina-jones-112",
+                "people/chris-singh-96"
+              ],
+              "runs": 3,
+              "fired": 3,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/demo-day-2024-06-20-batch-5",
+              "kind": "removed",
+              "person": "people/mia-anderson-5",
+              "key": [
+                "people/priya-taylor-85",
+                "people/mia-anderson-5",
+                "people/david-wang-10",
+                "people/ulrich-wang-16",
+                "people/quinten-nakamura-115"
+              ],
+              "page": [
+                "people/priya-taylor-85",
+                "people/david-wang-10",
+                "people/ulrich-wang-16",
+                "people/quinten-nakamura-115"
+              ],
+              "runs": 3,
+              "fired": 3,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/oneonone-10-2025-11-11",
+              "kind": "removed",
+              "person": "people/rosa-jackson-90",
+              "key": [
+                "people/rosa-jackson-90",
+                "people/david-wang-10"
+              ],
+              "page": [
+                "people/david-wang-10"
+              ],
+              "runs": 3,
+              "fired": 3,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/oneonone-12-2025-01-13",
+              "kind": "added",
+              "person": "people/eric-miller-35",
+              "key": [
+                "people/sarah-williams-92",
+                "people/henry-johnson-12"
+              ],
+              "page": [
+                "people/sarah-williams-92",
+                "people/henry-johnson-12",
+                "people/eric-miller-35"
+              ],
+              "runs": 3,
+              "fired": 3,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/oneonone-13-2025-02-14",
+              "kind": "removed",
+              "person": "people/mia-lee-13",
+              "key": [
+                "people/eric-martinez-93",
+                "people/mia-lee-13"
+              ],
+              "page": [
+                "people/eric-martinez-93"
+              ],
+              "runs": 3,
+              "fired": 3,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/oneonone-7-2025-08-08",
+              "kind": "removed",
+              "person": "people/helen-martinez-87",
+              "key": [
+                "people/helen-martinez-87",
+                "people/ulrich-johnson-7"
+              ],
+              "page": [
+                "people/ulrich-johnson-7"
+              ],
+              "runs": 3,
+              "fired": 3,
+              "top5_off": 0,
+              "top5_on": 0
+            }
+          ],
+          "one-hop-paraphrase": [
+            {
+              "meeting": "meetings/board-acme-2025-q1-0",
+              "kind": "removed",
+              "person": "people/mia-brown-0",
+              "key": [
+                "people/mia-brown-0",
+                "people/chris-jackson-91"
+              ],
+              "page": [
+                "people/chris-jackson-91"
+              ],
+              "runs": 3,
+              "fired": 0,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/board-nimbus-2025-q2-5",
+              "kind": "added",
+              "person": "people/tina-lopez-117",
+              "key": [
+                "people/mia-anderson-5"
+              ],
+              "page": [
+                "people/mia-anderson-5",
+                "people/tina-lopez-117"
+              ],
+              "runs": 3,
+              "fired": 0,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/demo-day-2024-03-17-batch-2",
+              "kind": "added",
+              "person": "people/chris-singh-96",
+              "key": [
+                "people/iris-lee-82",
+                "people/mark-jones-2",
+                "people/ulrich-johnson-7",
+                "people/mia-lee-13",
+                "people/tina-jones-112"
+              ],
+              "page": [
+                "people/iris-lee-82",
+                "people/mark-jones-2",
+                "people/ulrich-johnson-7",
+                "people/mia-lee-13",
+                "people/tina-jones-112",
+                "people/chris-singh-96"
+              ],
+              "runs": 3,
+              "fired": 0,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/demo-day-2024-06-20-batch-5",
+              "kind": "removed",
+              "person": "people/mia-anderson-5",
+              "key": [
+                "people/priya-taylor-85",
+                "people/mia-anderson-5",
+                "people/david-wang-10",
+                "people/ulrich-wang-16",
+                "people/quinten-nakamura-115"
+              ],
+              "page": [
+                "people/priya-taylor-85",
+                "people/david-wang-10",
+                "people/ulrich-wang-16",
+                "people/quinten-nakamura-115"
+              ],
+              "runs": 3,
+              "fired": 0,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/oneonone-10-2025-11-11",
+              "kind": "removed",
+              "person": "people/rosa-jackson-90",
+              "key": [
+                "people/rosa-jackson-90",
+                "people/david-wang-10"
+              ],
+              "page": [
+                "people/david-wang-10"
+              ],
+              "runs": 3,
+              "fired": 0,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/oneonone-12-2025-01-13",
+              "kind": "added",
+              "person": "people/eric-miller-35",
+              "key": [
+                "people/sarah-williams-92",
+                "people/henry-johnson-12"
+              ],
+              "page": [
+                "people/sarah-williams-92",
+                "people/henry-johnson-12",
+                "people/eric-miller-35"
+              ],
+              "runs": 3,
+              "fired": 0,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/oneonone-13-2025-02-14",
+              "kind": "removed",
+              "person": "people/mia-lee-13",
+              "key": [
+                "people/eric-martinez-93",
+                "people/mia-lee-13"
+              ],
+              "page": [
+                "people/eric-martinez-93"
+              ],
+              "runs": 3,
+              "fired": 0,
+              "top5_off": 0,
+              "top5_on": 0
+            },
+            {
+              "meeting": "meetings/oneonone-7-2025-08-08",
+              "kind": "removed",
+              "person": "people/helen-martinez-87",
+              "key": [
+                "people/helen-martinez-87",
+                "people/ulrich-johnson-7"
+              ],
+              "page": [
+                "people/ulrich-johnson-7"
+              ],
+              "runs": 3,
+              "fired": 0,
+              "top5_off": 0,
+              "top5_on": 0
+            }
+          ]
+        },
+        "composed_attendance_families": {
+          "composed-template": {
+            "meeting_investors": {
+              "off": {
+                "n": 81,
+                "strict_all_hit": 0.07407407407407407,
+                "answer_all_hit": 0.09876543209876543,
+                "support_all_hit": 0.37037037037037035,
+                "answer_recall": 0.16049382716049382,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 6,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "on": {
+                "n": 81,
+                "strict_all_hit": 0.07407407407407407,
+                "answer_all_hit": 0.09876543209876543,
+                "support_all_hit": 0.37037037037037035,
+                "answer_recall": 0.16049382716049382,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 6,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "paired_runs": {
+                "n": 81,
+                "gains": 0,
+                "losses": 0,
+                "ties": 81
+              },
+              "paired_questions": {
+                "n": 27,
+                "gains": 0,
+                "losses": 0,
+                "ties": 27,
+                "sign_test_p_two_sided": 1
+              },
+              "funnel": {
+                "n": 81,
+                "parsed": 81,
+                "seed_resolved": 0,
+                "fired": 0,
+                "all_support_on": 6,
+                "product_errors": 0
+              }
+            },
+            "investor_founder_meetings": {
+              "off": {
+                "n": 27,
+                "strict_all_hit": 0,
+                "answer_all_hit": 0,
+                "support_all_hit": 0,
+                "answer_recall": 0.14947089947089948,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 0,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "on": {
+                "n": 27,
+                "strict_all_hit": 0.7777777777777778,
+                "answer_all_hit": 0.7777777777777778,
+                "support_all_hit": 0.7777777777777778,
+                "answer_recall": 0.9259259259259259,
+                "strict_all_hit_at_5": 0.4444444444444444,
+                "strict_all_hit_count": 21,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "paired_runs": {
+                "n": 27,
+                "gains": 21,
+                "losses": 0,
+                "ties": 6
+              },
+              "paired_questions": {
+                "n": 9,
+                "gains": 7,
+                "losses": 0,
+                "ties": 2,
+                "sign_test_p_two_sided": 0.015625
+              },
+              "funnel": {
+                "n": 27,
+                "parsed": 27,
+                "seed_resolved": 27,
+                "fired": 27,
+                "all_support_on": 21,
+                "product_errors": 0
+              }
+            }
+          },
+          "composed-paraphrase": {
+            "meeting_investors": {
+              "off": {
+                "n": 81,
+                "strict_all_hit": 0,
+                "answer_all_hit": 0.037037037037037035,
+                "support_all_hit": 0.5061728395061729,
+                "answer_recall": 0.09259259259259259,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 0,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "on": {
+                "n": 81,
+                "strict_all_hit": 0,
+                "answer_all_hit": 0.037037037037037035,
+                "support_all_hit": 0.5061728395061729,
+                "answer_recall": 0.09259259259259259,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 0,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "paired_runs": {
+                "n": 81,
+                "gains": 0,
+                "losses": 0,
+                "ties": 81
+              },
+              "paired_questions": {
+                "n": 27,
+                "gains": 0,
+                "losses": 0,
+                "ties": 27,
+                "sign_test_p_two_sided": 1
+              },
+              "funnel": {
+                "n": 81,
+                "parsed": 63,
+                "seed_resolved": 0,
+                "fired": 0,
+                "all_support_on": 0,
+                "product_errors": 0
+              }
+            },
+            "investor_founder_meetings": {
+              "off": {
+                "n": 27,
+                "strict_all_hit": 0,
+                "answer_all_hit": 0,
+                "support_all_hit": 0,
+                "answer_recall": 0.14947089947089948,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 0,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "on": {
+                "n": 27,
+                "strict_all_hit": 0,
+                "answer_all_hit": 0,
+                "support_all_hit": 0,
+                "answer_recall": 0.22354497354497355,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 0,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "paired_runs": {
+                "n": 27,
+                "gains": 0,
+                "losses": 0,
+                "ties": 27
+              },
+              "paired_questions": {
+                "n": 9,
+                "gains": 0,
+                "losses": 0,
+                "ties": 9,
+                "sign_test_p_two_sided": 1
+              },
+              "funnel": {
+                "n": 27,
+                "parsed": 27,
+                "seed_resolved": 3,
+                "fired": 3,
+                "all_support_on": 0,
+                "product_errors": 0
+              }
+            }
+          }
+        },
+        "gate": {
+          "fire_floor": 0.8,
+          "every_split_meets_fire_floor": false,
+          "edges_recorded": true,
+          "false_attendance": 0,
+          "missing_attendance": 0
+        }
+      },
+      "n9_paid_composed_attendance": {
+        "composed-template": {
+          "meeting_investors": {
+            "off": {
+              "n": 81,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0.09876543209876543,
+              "support_all_hit": 0.2962962962962963,
+              "answer_recall": 0.11728395061728394,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "on": {
+              "n": 81,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0.09876543209876543,
+              "support_all_hit": 0.2962962962962963,
+              "answer_recall": 0.11728395061728394,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "paired_runs": {
+              "n": 81,
+              "gains": 0,
+              "losses": 0,
+              "ties": 81
+            },
+            "paired_questions": {
+              "n": 27,
+              "gains": 0,
+              "losses": 0,
+              "ties": 27,
+              "sign_test_p_two_sided": 1
+            },
+            "funnel": {
+              "n": 81,
+              "parsed": 81,
+              "seed_resolved": 0,
+              "fired": 0,
+              "all_support_on": 0,
+              "product_errors": 0
+            }
+          },
+          "investor_founder_meetings": {
+            "off": {
+              "n": 27,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0,
+              "support_all_hit": 0,
+              "answer_recall": 0.06613756613756615,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "on": {
+              "n": 27,
+              "strict_all_hit": 0.7777777777777778,
+              "answer_all_hit": 0.7777777777777778,
+              "support_all_hit": 0.7777777777777778,
+              "answer_recall": 0.9074074074074074,
+              "strict_all_hit_at_5": 0.4444444444444444,
+              "strict_all_hit_count": 21,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "paired_runs": {
+              "n": 27,
+              "gains": 21,
+              "losses": 0,
+              "ties": 6
+            },
+            "paired_questions": {
+              "n": 9,
+              "gains": 7,
+              "losses": 0,
+              "ties": 2,
+              "sign_test_p_two_sided": 0.015625
+            },
+            "funnel": {
+              "n": 27,
+              "parsed": 27,
+              "seed_resolved": 27,
+              "fired": 27,
+              "all_support_on": 21,
+              "product_errors": 0
+            }
+          }
+        },
+        "composed-paraphrase": {
+          "meeting_investors": {
+            "off": {
+              "n": 81,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0.07407407407407407,
+              "support_all_hit": 0.2962962962962963,
+              "answer_recall": 0.09259259259259259,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "on": {
+              "n": 81,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0.07407407407407407,
+              "support_all_hit": 0.2962962962962963,
+              "answer_recall": 0.09259259259259259,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "paired_runs": {
+              "n": 81,
+              "gains": 0,
+              "losses": 0,
+              "ties": 81
+            },
+            "paired_questions": {
+              "n": 27,
+              "gains": 0,
+              "losses": 0,
+              "ties": 27,
+              "sign_test_p_two_sided": 1
+            },
+            "funnel": {
+              "n": 81,
+              "parsed": 63,
+              "seed_resolved": 0,
+              "fired": 0,
+              "all_support_on": 0,
+              "product_errors": 0
+            }
+          },
+          "investor_founder_meetings": {
+            "off": {
+              "n": 27,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0,
+              "support_all_hit": 0,
+              "answer_recall": 0.217989417989418,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "on": {
+              "n": 27,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0,
+              "support_all_hit": 0,
+              "answer_recall": 0.29206349206349214,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "paired_runs": {
+              "n": 27,
+              "gains": 0,
+              "losses": 0,
+              "ties": 27
+            },
+            "paired_questions": {
+              "n": 9,
+              "gains": 0,
+              "losses": 0,
+              "ties": 9,
+              "sign_test_p_two_sided": 1
+            },
+            "funnel": {
+              "n": 27,
+              "parsed": 27,
+              "seed_resolved": 3,
+              "fired": 3,
+              "all_support_on": 0,
+              "product_errors": 0
+            }
+          }
+        }
+      },
+      "attendee_role": {
+        "summary": {
+          "questions": 198,
+          "planned": {
+            "n": 0,
+            "share": 0
+          },
+          "plan_outcomes": {
+            "not_applicable": 148,
+            "unsupported: time constraints are not planned (\"2025\")": 11,
+            "unsupported: the relations do not chain (page types disagree)": 39
+          },
+          "one_relation_parsed": {
+            "n": 187,
+            "share": 0.9444444444444444
+          },
+          "fired": {
+            "n": 137,
+            "share": 0.6919191919191919
+          },
+          "recall_at_10_off": 0.41919191919191917,
+          "recall_at_10_on": 0.6515151515151515,
+          "unlisted_people_top10": {
+            "off": 98,
+            "on": 94
+          },
+          "questions_with_other_role_attendees_top10": {
+            "off": {
+              "n": 74,
+              "share": 0.37373737373737376
+            },
+            "on": {
+              "n": 126,
+              "share": 0.6363636363636364
+            }
+          },
+          "errors": 0
+        },
+        "by_template": [
+          {
+            "questions": 99,
+            "planned": {
+              "n": 0,
+              "share": 0
+            },
+            "plan_outcomes": {
+              "not_applicable": 99
+            },
+            "one_relation_parsed": {
+              "n": 88,
+              "share": 0.8888888888888888
+            },
+            "fired": {
+              "n": 88,
+              "share": 0.8888888888888888
+            },
+            "recall_at_10_off": 0.41919191919191917,
+            "recall_at_10_on": 0.6919191919191919,
+            "unlisted_people_top10": {
+              "off": 49,
+              "on": 45
+            },
+            "questions_with_other_role_attendees_top10": {
+              "off": {
+                "n": 37,
+                "share": 0.37373737373737376
+              },
+              "on": {
+                "n": 65,
+                "share": 0.6565656565656566
+              }
+            },
+            "errors": 0
+          },
+          {
+            "questions": 99,
+            "planned": {
+              "n": 0,
+              "share": 0
+            },
+            "plan_outcomes": {
+              "not_applicable": 49,
+              "unsupported: time constraints are not planned (\"2025\")": 11,
+              "unsupported: the relations do not chain (page types disagree)": 39
+            },
+            "one_relation_parsed": {
+              "n": 99,
+              "share": 1
+            },
+            "fired": {
+              "n": 49,
+              "share": 0.494949494949495
+            },
+            "recall_at_10_off": 0.41919191919191917,
+            "recall_at_10_on": 0.6111111111111112,
+            "unlisted_people_top10": {
+              "off": 49,
+              "on": 49
+            },
+            "questions_with_other_role_attendees_top10": {
+              "off": {
+                "n": 37,
+                "share": 0.37373737373737376
+              },
+              "on": {
+                "n": 61,
+                "share": 0.6161616161616161
+              }
+            },
+            "errors": 0
+          }
+        ]
+      }
+    },
+    "world-v1": {
+      "n9_hermetic": {
+        "attendance_edges": [
+          {
+            "seed": 1,
+            "edges": 0,
+            "false_edges": [],
+            "missing": [
+              {
+                "person": "people/mia-brown-0",
+                "meeting": "meetings/board-acme-2025-q1-0"
+              },
+              {
+                "person": "people/chris-jackson-91",
+                "meeting": "meetings/board-acme-2025-q1-0"
+              },
+              {
+                "person": "people/victor-taylor-1",
+                "meeting": "meetings/board-beta-2025-q2-1"
+              },
+              {
+                "person": "people/victor-wilson-3",
+                "meeting": "meetings/board-delta-2025-q4-3"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/board-delta-2025-q4-3"
+              },
+              {
+                "person": "people/rachel-brown-95",
+                "meeting": "meetings/board-delta-2025-q4-3"
+              },
+              {
+                "person": "people/paul-rodriguez-4",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/sarah-lopez-84",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/sarah-williams-92",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/olivia-miller-176",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/mark-jones-2",
+                "meeting": "meetings/board-gamma-2025-q3-2"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/board-helix-2025-q2-9"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/board-nimbus-2025-q2-5"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/board-pulse-2025-q1-8"
+              },
+              {
+                "person": "people/eric-martinez-93",
+                "meeting": "meetings/board-pulse-2025-q1-8"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/board-quantum-2025-q4-7"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/board-vector-2025-q3-6"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/board-vector-2025-q3-6"
+              },
+              {
+                "person": "people/wendy-wilson-170",
+                "meeting": "meetings/board-vector-2025-q3-6"
+              },
+              {
+                "person": "people/wendy-hernandez-80",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/mia-brown-0",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/chris-smith-110",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/carol-jackson-81",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/victor-taylor-1",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/tara-kapoor-111",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/iris-lee-82",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/mark-jones-2",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/tina-jones-112",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/victor-wilson-3",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/adam-lopez-113",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/sarah-lopez-84",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/paul-rodriguez-4",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/noah-kapoor-15",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/julia-johnson-114",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/priya-taylor-85",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/david-wang-10",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/ulrich-wang-16",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/quinten-nakamura-115",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/julia-davis-86",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/quinten-wang-17",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/victor-jackson-116",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/helen-martinez-87",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/nina-rodriguez-18",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/tina-lopez-117",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/fiona-moore-88",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/adam-lee-19",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/xavier-nakamura-118",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/jack-davis-89",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/vera-singh-20",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/quinn-park-119",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/rosa-jackson-90",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/david-wang-10",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/noah-kapoor-15",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/eric-lee-21",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/chris-jackson-91",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/ulrich-wang-16",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/quinten-rodriguez-22",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/sarah-williams-92",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/quinten-wang-17",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/paul-anderson-23",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/eric-martinez-93",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/nina-rodriguez-18",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/quinten-lee-24",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/rosa-nakamura-94",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/adam-lee-19",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/vera-wilson-25",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/wendy-hernandez-80",
+                "meeting": "meetings/oneonone-0-2025-01-01"
+              },
+              {
+                "person": "people/mia-brown-0",
+                "meeting": "meetings/oneonone-0-2025-01-01"
+              },
+              {
+                "person": "people/carol-jackson-81",
+                "meeting": "meetings/oneonone-1-2025-02-02"
+              },
+              {
+                "person": "people/victor-taylor-1",
+                "meeting": "meetings/oneonone-1-2025-02-02"
+              },
+              {
+                "person": "people/rosa-jackson-90",
+                "meeting": "meetings/oneonone-10-2025-11-11"
+              },
+              {
+                "person": "people/david-wang-10",
+                "meeting": "meetings/oneonone-10-2025-11-11"
+              },
+              {
+                "person": "people/chris-jackson-91",
+                "meeting": "meetings/oneonone-11-2025-12-12"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/oneonone-11-2025-12-12"
+              },
+              {
+                "person": "people/sarah-williams-92",
+                "meeting": "meetings/oneonone-12-2025-01-13"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/oneonone-12-2025-01-13"
+              },
+              {
+                "person": "people/eric-martinez-93",
+                "meeting": "meetings/oneonone-13-2025-02-14"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/oneonone-13-2025-02-14"
+              },
+              {
+                "person": "people/rosa-nakamura-94",
+                "meeting": "meetings/oneonone-14-2025-03-15"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/oneonone-14-2025-03-15"
+              },
+              {
+                "person": "people/rachel-brown-95",
+                "meeting": "meetings/oneonone-15-2025-04-16"
+              },
+              {
+                "person": "people/noah-kapoor-15",
+                "meeting": "meetings/oneonone-15-2025-04-16"
+              },
+              {
+                "person": "people/chris-singh-96",
+                "meeting": "meetings/oneonone-16-2025-05-17"
+              },
+              {
+                "person": "people/ulrich-wang-16",
+                "meeting": "meetings/oneonone-16-2025-05-17"
+              },
+              {
+                "person": "people/tina-hernandez-97",
+                "meeting": "meetings/oneonone-17-2025-06-18"
+              },
+              {
+                "person": "people/quinten-wang-17",
+                "meeting": "meetings/oneonone-17-2025-06-18"
+              },
+              {
+                "person": "people/rosa-miller-98",
+                "meeting": "meetings/oneonone-18-2025-07-19"
+              },
+              {
+                "person": "people/nina-rodriguez-18",
+                "meeting": "meetings/oneonone-18-2025-07-19"
+              },
+              {
+                "person": "people/kate-lopez-99",
+                "meeting": "meetings/oneonone-19-2025-08-20"
+              },
+              {
+                "person": "people/adam-lee-19",
+                "meeting": "meetings/oneonone-19-2025-08-20"
+              },
+              {
+                "person": "people/iris-lee-82",
+                "meeting": "meetings/oneonone-2-2025-03-03"
+              },
+              {
+                "person": "people/mark-jones-2",
+                "meeting": "meetings/oneonone-2-2025-03-03"
+              },
+              {
+                "person": "people/vera-singh-20",
+                "meeting": "meetings/oneonone-20-2025-09-21"
+              },
+              {
+                "person": "people/eric-lee-21",
+                "meeting": "meetings/oneonone-21-2025-10-22"
+              },
+              {
+                "person": "people/quinten-rodriguez-22",
+                "meeting": "meetings/oneonone-22-2025-11-23"
+              },
+              {
+                "person": "people/paul-anderson-23",
+                "meeting": "meetings/oneonone-23-2025-12-24"
+              },
+              {
+                "person": "people/quinten-lee-24",
+                "meeting": "meetings/oneonone-24-2025-01-25"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/oneonone-3-2025-04-04"
+              },
+              {
+                "person": "people/victor-wilson-3",
+                "meeting": "meetings/oneonone-3-2025-04-04"
+              },
+              {
+                "person": "people/sarah-lopez-84",
+                "meeting": "meetings/oneonone-4-2025-05-05"
+              },
+              {
+                "person": "people/paul-rodriguez-4",
+                "meeting": "meetings/oneonone-4-2025-05-05"
+              },
+              {
+                "person": "people/priya-taylor-85",
+                "meeting": "meetings/oneonone-5-2025-06-06"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/oneonone-5-2025-06-06"
+              },
+              {
+                "person": "people/julia-davis-86",
+                "meeting": "meetings/oneonone-6-2025-07-07"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/oneonone-6-2025-07-07"
+              },
+              {
+                "person": "people/helen-martinez-87",
+                "meeting": "meetings/oneonone-7-2025-08-08"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/oneonone-7-2025-08-08"
+              },
+              {
+                "person": "people/fiona-moore-88",
+                "meeting": "meetings/oneonone-8-2025-09-09"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/oneonone-8-2025-09-09"
+              },
+              {
+                "person": "people/jack-davis-89",
+                "meeting": "meetings/oneonone-9-2025-10-10"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/oneonone-9-2025-10-10"
+              }
+            ]
+          },
+          {
+            "seed": 2,
+            "edges": 0,
+            "false_edges": [],
+            "missing": [
+              {
+                "person": "people/mia-brown-0",
+                "meeting": "meetings/board-acme-2025-q1-0"
+              },
+              {
+                "person": "people/chris-jackson-91",
+                "meeting": "meetings/board-acme-2025-q1-0"
+              },
+              {
+                "person": "people/victor-taylor-1",
+                "meeting": "meetings/board-beta-2025-q2-1"
+              },
+              {
+                "person": "people/victor-wilson-3",
+                "meeting": "meetings/board-delta-2025-q4-3"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/board-delta-2025-q4-3"
+              },
+              {
+                "person": "people/rachel-brown-95",
+                "meeting": "meetings/board-delta-2025-q4-3"
+              },
+              {
+                "person": "people/paul-rodriguez-4",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/sarah-lopez-84",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/sarah-williams-92",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/olivia-miller-176",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/mark-jones-2",
+                "meeting": "meetings/board-gamma-2025-q3-2"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/board-helix-2025-q2-9"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/board-nimbus-2025-q2-5"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/board-pulse-2025-q1-8"
+              },
+              {
+                "person": "people/eric-martinez-93",
+                "meeting": "meetings/board-pulse-2025-q1-8"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/board-quantum-2025-q4-7"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/board-vector-2025-q3-6"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/board-vector-2025-q3-6"
+              },
+              {
+                "person": "people/wendy-wilson-170",
+                "meeting": "meetings/board-vector-2025-q3-6"
+              },
+              {
+                "person": "people/wendy-hernandez-80",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/mia-brown-0",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/chris-smith-110",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/carol-jackson-81",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/victor-taylor-1",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/tara-kapoor-111",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/iris-lee-82",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/mark-jones-2",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/tina-jones-112",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/victor-wilson-3",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/adam-lopez-113",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/sarah-lopez-84",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/paul-rodriguez-4",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/noah-kapoor-15",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/julia-johnson-114",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/priya-taylor-85",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/david-wang-10",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/ulrich-wang-16",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/quinten-nakamura-115",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/julia-davis-86",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/quinten-wang-17",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/victor-jackson-116",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/helen-martinez-87",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/nina-rodriguez-18",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/tina-lopez-117",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/fiona-moore-88",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/adam-lee-19",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/xavier-nakamura-118",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/jack-davis-89",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/vera-singh-20",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/quinn-park-119",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/rosa-jackson-90",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/david-wang-10",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/noah-kapoor-15",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/eric-lee-21",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/chris-jackson-91",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/ulrich-wang-16",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/quinten-rodriguez-22",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/sarah-williams-92",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/quinten-wang-17",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/paul-anderson-23",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/eric-martinez-93",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/nina-rodriguez-18",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/quinten-lee-24",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/rosa-nakamura-94",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/adam-lee-19",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/vera-wilson-25",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/wendy-hernandez-80",
+                "meeting": "meetings/oneonone-0-2025-01-01"
+              },
+              {
+                "person": "people/mia-brown-0",
+                "meeting": "meetings/oneonone-0-2025-01-01"
+              },
+              {
+                "person": "people/carol-jackson-81",
+                "meeting": "meetings/oneonone-1-2025-02-02"
+              },
+              {
+                "person": "people/victor-taylor-1",
+                "meeting": "meetings/oneonone-1-2025-02-02"
+              },
+              {
+                "person": "people/rosa-jackson-90",
+                "meeting": "meetings/oneonone-10-2025-11-11"
+              },
+              {
+                "person": "people/david-wang-10",
+                "meeting": "meetings/oneonone-10-2025-11-11"
+              },
+              {
+                "person": "people/chris-jackson-91",
+                "meeting": "meetings/oneonone-11-2025-12-12"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/oneonone-11-2025-12-12"
+              },
+              {
+                "person": "people/sarah-williams-92",
+                "meeting": "meetings/oneonone-12-2025-01-13"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/oneonone-12-2025-01-13"
+              },
+              {
+                "person": "people/eric-martinez-93",
+                "meeting": "meetings/oneonone-13-2025-02-14"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/oneonone-13-2025-02-14"
+              },
+              {
+                "person": "people/rosa-nakamura-94",
+                "meeting": "meetings/oneonone-14-2025-03-15"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/oneonone-14-2025-03-15"
+              },
+              {
+                "person": "people/rachel-brown-95",
+                "meeting": "meetings/oneonone-15-2025-04-16"
+              },
+              {
+                "person": "people/noah-kapoor-15",
+                "meeting": "meetings/oneonone-15-2025-04-16"
+              },
+              {
+                "person": "people/chris-singh-96",
+                "meeting": "meetings/oneonone-16-2025-05-17"
+              },
+              {
+                "person": "people/ulrich-wang-16",
+                "meeting": "meetings/oneonone-16-2025-05-17"
+              },
+              {
+                "person": "people/tina-hernandez-97",
+                "meeting": "meetings/oneonone-17-2025-06-18"
+              },
+              {
+                "person": "people/quinten-wang-17",
+                "meeting": "meetings/oneonone-17-2025-06-18"
+              },
+              {
+                "person": "people/rosa-miller-98",
+                "meeting": "meetings/oneonone-18-2025-07-19"
+              },
+              {
+                "person": "people/nina-rodriguez-18",
+                "meeting": "meetings/oneonone-18-2025-07-19"
+              },
+              {
+                "person": "people/kate-lopez-99",
+                "meeting": "meetings/oneonone-19-2025-08-20"
+              },
+              {
+                "person": "people/adam-lee-19",
+                "meeting": "meetings/oneonone-19-2025-08-20"
+              },
+              {
+                "person": "people/iris-lee-82",
+                "meeting": "meetings/oneonone-2-2025-03-03"
+              },
+              {
+                "person": "people/mark-jones-2",
+                "meeting": "meetings/oneonone-2-2025-03-03"
+              },
+              {
+                "person": "people/vera-singh-20",
+                "meeting": "meetings/oneonone-20-2025-09-21"
+              },
+              {
+                "person": "people/eric-lee-21",
+                "meeting": "meetings/oneonone-21-2025-10-22"
+              },
+              {
+                "person": "people/quinten-rodriguez-22",
+                "meeting": "meetings/oneonone-22-2025-11-23"
+              },
+              {
+                "person": "people/paul-anderson-23",
+                "meeting": "meetings/oneonone-23-2025-12-24"
+              },
+              {
+                "person": "people/quinten-lee-24",
+                "meeting": "meetings/oneonone-24-2025-01-25"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/oneonone-3-2025-04-04"
+              },
+              {
+                "person": "people/victor-wilson-3",
+                "meeting": "meetings/oneonone-3-2025-04-04"
+              },
+              {
+                "person": "people/sarah-lopez-84",
+                "meeting": "meetings/oneonone-4-2025-05-05"
+              },
+              {
+                "person": "people/paul-rodriguez-4",
+                "meeting": "meetings/oneonone-4-2025-05-05"
+              },
+              {
+                "person": "people/priya-taylor-85",
+                "meeting": "meetings/oneonone-5-2025-06-06"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/oneonone-5-2025-06-06"
+              },
+              {
+                "person": "people/julia-davis-86",
+                "meeting": "meetings/oneonone-6-2025-07-07"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/oneonone-6-2025-07-07"
+              },
+              {
+                "person": "people/helen-martinez-87",
+                "meeting": "meetings/oneonone-7-2025-08-08"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/oneonone-7-2025-08-08"
+              },
+              {
+                "person": "people/fiona-moore-88",
+                "meeting": "meetings/oneonone-8-2025-09-09"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/oneonone-8-2025-09-09"
+              },
+              {
+                "person": "people/jack-davis-89",
+                "meeting": "meetings/oneonone-9-2025-10-10"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/oneonone-9-2025-10-10"
+              }
+            ]
+          },
+          {
+            "seed": 3,
+            "edges": 0,
+            "false_edges": [],
+            "missing": [
+              {
+                "person": "people/mia-brown-0",
+                "meeting": "meetings/board-acme-2025-q1-0"
+              },
+              {
+                "person": "people/chris-jackson-91",
+                "meeting": "meetings/board-acme-2025-q1-0"
+              },
+              {
+                "person": "people/victor-taylor-1",
+                "meeting": "meetings/board-beta-2025-q2-1"
+              },
+              {
+                "person": "people/victor-wilson-3",
+                "meeting": "meetings/board-delta-2025-q4-3"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/board-delta-2025-q4-3"
+              },
+              {
+                "person": "people/rachel-brown-95",
+                "meeting": "meetings/board-delta-2025-q4-3"
+              },
+              {
+                "person": "people/paul-rodriguez-4",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/sarah-lopez-84",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/sarah-williams-92",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/olivia-miller-176",
+                "meeting": "meetings/board-epsilon-2025-q1-4"
+              },
+              {
+                "person": "people/mark-jones-2",
+                "meeting": "meetings/board-gamma-2025-q3-2"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/board-helix-2025-q2-9"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/board-nimbus-2025-q2-5"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/board-pulse-2025-q1-8"
+              },
+              {
+                "person": "people/eric-martinez-93",
+                "meeting": "meetings/board-pulse-2025-q1-8"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/board-quantum-2025-q4-7"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/board-vector-2025-q3-6"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/board-vector-2025-q3-6"
+              },
+              {
+                "person": "people/wendy-wilson-170",
+                "meeting": "meetings/board-vector-2025-q3-6"
+              },
+              {
+                "person": "people/wendy-hernandez-80",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/mia-brown-0",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/chris-smith-110",
+                "meeting": "meetings/demo-day-2024-01-15-batch-0"
+              },
+              {
+                "person": "people/carol-jackson-81",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/victor-taylor-1",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/tara-kapoor-111",
+                "meeting": "meetings/demo-day-2024-02-16-batch-1"
+              },
+              {
+                "person": "people/iris-lee-82",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/mark-jones-2",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/tina-jones-112",
+                "meeting": "meetings/demo-day-2024-03-17-batch-2"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/victor-wilson-3",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/adam-lopez-113",
+                "meeting": "meetings/demo-day-2024-04-18-batch-3"
+              },
+              {
+                "person": "people/sarah-lopez-84",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/paul-rodriguez-4",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/noah-kapoor-15",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/julia-johnson-114",
+                "meeting": "meetings/demo-day-2024-05-19-batch-4"
+              },
+              {
+                "person": "people/priya-taylor-85",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/david-wang-10",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/ulrich-wang-16",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/quinten-nakamura-115",
+                "meeting": "meetings/demo-day-2024-06-20-batch-5"
+              },
+              {
+                "person": "people/julia-davis-86",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/quinten-wang-17",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/victor-jackson-116",
+                "meeting": "meetings/demo-day-2024-07-21-batch-6"
+              },
+              {
+                "person": "people/helen-martinez-87",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/nina-rodriguez-18",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/tina-lopez-117",
+                "meeting": "meetings/demo-day-2024-08-22-batch-7"
+              },
+              {
+                "person": "people/fiona-moore-88",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/adam-lee-19",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/xavier-nakamura-118",
+                "meeting": "meetings/demo-day-2024-09-23-batch-8"
+              },
+              {
+                "person": "people/jack-davis-89",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/vera-singh-20",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/quinn-park-119",
+                "meeting": "meetings/demo-day-2024-10-24-batch-9"
+              },
+              {
+                "person": "people/rosa-jackson-90",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/david-wang-10",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/noah-kapoor-15",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/eric-lee-21",
+                "meeting": "meetings/demo-day-2024-11-15-batch-10"
+              },
+              {
+                "person": "people/chris-jackson-91",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/ulrich-wang-16",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/quinten-rodriguez-22",
+                "meeting": "meetings/demo-day-2024-12-16-batch-11"
+              },
+              {
+                "person": "people/sarah-williams-92",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/quinten-wang-17",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/paul-anderson-23",
+                "meeting": "meetings/demo-day-2025-01-17-batch-12"
+              },
+              {
+                "person": "people/eric-martinez-93",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/nina-rodriguez-18",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/quinten-lee-24",
+                "meeting": "meetings/demo-day-2025-02-18-batch-13"
+              },
+              {
+                "person": "people/rosa-nakamura-94",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/adam-lee-19",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/vera-wilson-25",
+                "meeting": "meetings/demo-day-2025-03-19-batch-14"
+              },
+              {
+                "person": "people/wendy-hernandez-80",
+                "meeting": "meetings/oneonone-0-2025-01-01"
+              },
+              {
+                "person": "people/mia-brown-0",
+                "meeting": "meetings/oneonone-0-2025-01-01"
+              },
+              {
+                "person": "people/carol-jackson-81",
+                "meeting": "meetings/oneonone-1-2025-02-02"
+              },
+              {
+                "person": "people/victor-taylor-1",
+                "meeting": "meetings/oneonone-1-2025-02-02"
+              },
+              {
+                "person": "people/rosa-jackson-90",
+                "meeting": "meetings/oneonone-10-2025-11-11"
+              },
+              {
+                "person": "people/david-wang-10",
+                "meeting": "meetings/oneonone-10-2025-11-11"
+              },
+              {
+                "person": "people/chris-jackson-91",
+                "meeting": "meetings/oneonone-11-2025-12-12"
+              },
+              {
+                "person": "people/mark-thomas-11",
+                "meeting": "meetings/oneonone-11-2025-12-12"
+              },
+              {
+                "person": "people/sarah-williams-92",
+                "meeting": "meetings/oneonone-12-2025-01-13"
+              },
+              {
+                "person": "people/henry-johnson-12",
+                "meeting": "meetings/oneonone-12-2025-01-13"
+              },
+              {
+                "person": "people/eric-martinez-93",
+                "meeting": "meetings/oneonone-13-2025-02-14"
+              },
+              {
+                "person": "people/mia-lee-13",
+                "meeting": "meetings/oneonone-13-2025-02-14"
+              },
+              {
+                "person": "people/rosa-nakamura-94",
+                "meeting": "meetings/oneonone-14-2025-03-15"
+              },
+              {
+                "person": "people/vera-chen-14",
+                "meeting": "meetings/oneonone-14-2025-03-15"
+              },
+              {
+                "person": "people/rachel-brown-95",
+                "meeting": "meetings/oneonone-15-2025-04-16"
+              },
+              {
+                "person": "people/noah-kapoor-15",
+                "meeting": "meetings/oneonone-15-2025-04-16"
+              },
+              {
+                "person": "people/chris-singh-96",
+                "meeting": "meetings/oneonone-16-2025-05-17"
+              },
+              {
+                "person": "people/ulrich-wang-16",
+                "meeting": "meetings/oneonone-16-2025-05-17"
+              },
+              {
+                "person": "people/tina-hernandez-97",
+                "meeting": "meetings/oneonone-17-2025-06-18"
+              },
+              {
+                "person": "people/quinten-wang-17",
+                "meeting": "meetings/oneonone-17-2025-06-18"
+              },
+              {
+                "person": "people/rosa-miller-98",
+                "meeting": "meetings/oneonone-18-2025-07-19"
+              },
+              {
+                "person": "people/nina-rodriguez-18",
+                "meeting": "meetings/oneonone-18-2025-07-19"
+              },
+              {
+                "person": "people/kate-lopez-99",
+                "meeting": "meetings/oneonone-19-2025-08-20"
+              },
+              {
+                "person": "people/adam-lee-19",
+                "meeting": "meetings/oneonone-19-2025-08-20"
+              },
+              {
+                "person": "people/iris-lee-82",
+                "meeting": "meetings/oneonone-2-2025-03-03"
+              },
+              {
+                "person": "people/mark-jones-2",
+                "meeting": "meetings/oneonone-2-2025-03-03"
+              },
+              {
+                "person": "people/vera-singh-20",
+                "meeting": "meetings/oneonone-20-2025-09-21"
+              },
+              {
+                "person": "people/eric-lee-21",
+                "meeting": "meetings/oneonone-21-2025-10-22"
+              },
+              {
+                "person": "people/quinten-rodriguez-22",
+                "meeting": "meetings/oneonone-22-2025-11-23"
+              },
+              {
+                "person": "people/paul-anderson-23",
+                "meeting": "meetings/oneonone-23-2025-12-24"
+              },
+              {
+                "person": "people/quinten-lee-24",
+                "meeting": "meetings/oneonone-24-2025-01-25"
+              },
+              {
+                "person": "people/david-zhang-83",
+                "meeting": "meetings/oneonone-3-2025-04-04"
+              },
+              {
+                "person": "people/victor-wilson-3",
+                "meeting": "meetings/oneonone-3-2025-04-04"
+              },
+              {
+                "person": "people/sarah-lopez-84",
+                "meeting": "meetings/oneonone-4-2025-05-05"
+              },
+              {
+                "person": "people/paul-rodriguez-4",
+                "meeting": "meetings/oneonone-4-2025-05-05"
+              },
+              {
+                "person": "people/priya-taylor-85",
+                "meeting": "meetings/oneonone-5-2025-06-06"
+              },
+              {
+                "person": "people/mia-anderson-5",
+                "meeting": "meetings/oneonone-5-2025-06-06"
+              },
+              {
+                "person": "people/julia-davis-86",
+                "meeting": "meetings/oneonone-6-2025-07-07"
+              },
+              {
+                "person": "people/uma-brown-6",
+                "meeting": "meetings/oneonone-6-2025-07-07"
+              },
+              {
+                "person": "people/helen-martinez-87",
+                "meeting": "meetings/oneonone-7-2025-08-08"
+              },
+              {
+                "person": "people/ulrich-johnson-7",
+                "meeting": "meetings/oneonone-7-2025-08-08"
+              },
+              {
+                "person": "people/fiona-moore-88",
+                "meeting": "meetings/oneonone-8-2025-09-09"
+              },
+              {
+                "person": "people/yara-johnson-8",
+                "meeting": "meetings/oneonone-8-2025-09-09"
+              },
+              {
+                "person": "people/jack-davis-89",
+                "meeting": "meetings/oneonone-9-2025-10-10"
+              },
+              {
+                "person": "people/rachel-garcia-9",
+                "meeting": "meetings/oneonone-9-2025-10-10"
+              }
+            ]
+          }
+        ],
+        "by_split": {
+          "one-hop-template": {
+            "runs": 150,
+            "seed_resolved": 150,
+            "fired": 0,
+            "fire_rate": 0,
+            "unlisted_people_top5": {
+              "off": 8,
+              "on": 8
+            },
+            "recall_at_5_off": 0.456,
+            "recall_at_5_on": 0.456,
+            "errors": 0,
+            "missing_fields": 0,
+            "meets_fire_floor": false
+          },
+          "one-hop-paraphrase": {
+            "runs": 150,
+            "seed_resolved": 0,
+            "fired": 0,
+            "fire_rate": 0,
+            "unlisted_people_top5": {
+              "off": 7,
+              "on": 7
+            },
+            "recall_at_5_off": 0.3446666666666667,
+            "recall_at_5_on": 0.3446666666666667,
+            "errors": 0,
+            "missing_fields": 0,
+            "meets_fire_floor": false
+          }
+        },
+        "faithful_meetings": {
+          "one-hop-template": {
+            "runs": 150,
+            "fired": 0,
+            "fire_rate": 0
+          },
+          "one-hop-paraphrase": {
+            "runs": 150,
+            "fired": 0,
+            "fire_rate": 0
+          }
+        },
+        "perturbed_meetings": {
+          "one-hop-template": [],
+          "one-hop-paraphrase": []
+        },
+        "composed_attendance_families": {
+          "composed-template": {
+            "meeting_investors": {
+              "off": {
+                "n": 81,
+                "strict_all_hit": 0.08641975308641975,
+                "answer_all_hit": 0.12345679012345678,
+                "support_all_hit": 0.43209876543209874,
+                "answer_recall": 0.18930041152263374,
+                "strict_all_hit_at_5": 0.037037037037037035,
+                "strict_all_hit_count": 7,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "on": {
+                "n": 81,
+                "strict_all_hit": 0.08641975308641975,
+                "answer_all_hit": 0.12345679012345678,
+                "support_all_hit": 0.43209876543209874,
+                "answer_recall": 0.18930041152263374,
+                "strict_all_hit_at_5": 0.037037037037037035,
+                "strict_all_hit_count": 7,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "paired_runs": {
+                "n": 81,
+                "gains": 0,
+                "losses": 0,
+                "ties": 81
+              },
+              "paired_questions": {
+                "n": 27,
+                "gains": 0,
+                "losses": 0,
+                "ties": 27,
+                "sign_test_p_two_sided": 1
+              },
+              "funnel": {
+                "n": 81,
+                "parsed": 81,
+                "seed_resolved": 0,
+                "fired": 0,
+                "all_support_on": 7,
+                "product_errors": 0
+              }
+            },
+            "investor_founder_meetings": {
+              "off": {
+                "n": 27,
+                "strict_all_hit": 0,
+                "answer_all_hit": 0,
+                "support_all_hit": 0,
+                "answer_recall": 0.08597883597883597,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 0,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "on": {
+                "n": 27,
+                "strict_all_hit": 0,
+                "answer_all_hit": 0,
+                "support_all_hit": 0,
+                "answer_recall": 0.08597883597883597,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 0,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "paired_runs": {
+                "n": 27,
+                "gains": 0,
+                "losses": 0,
+                "ties": 27
+              },
+              "paired_questions": {
+                "n": 9,
+                "gains": 0,
+                "losses": 0,
+                "ties": 9,
+                "sign_test_p_two_sided": 1
+              },
+              "funnel": {
+                "n": 27,
+                "parsed": 27,
+                "seed_resolved": 27,
+                "fired": 0,
+                "all_support_on": 0,
+                "product_errors": 0
+              }
+            }
+          },
+          "composed-paraphrase": {
+            "meeting_investors": {
+              "off": {
+                "n": 81,
+                "strict_all_hit": 0.024691358024691357,
+                "answer_all_hit": 0.06172839506172839,
+                "support_all_hit": 0.5061728395061729,
+                "answer_recall": 0.12962962962962962,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 2,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "on": {
+                "n": 81,
+                "strict_all_hit": 0.024691358024691357,
+                "answer_all_hit": 0.06172839506172839,
+                "support_all_hit": 0.5061728395061729,
+                "answer_recall": 0.12962962962962962,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 2,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "paired_runs": {
+                "n": 81,
+                "gains": 0,
+                "losses": 0,
+                "ties": 81
+              },
+              "paired_questions": {
+                "n": 27,
+                "gains": 0,
+                "losses": 0,
+                "ties": 27,
+                "sign_test_p_two_sided": 1
+              },
+              "funnel": {
+                "n": 81,
+                "parsed": 63,
+                "seed_resolved": 0,
+                "fired": 0,
+                "all_support_on": 2,
+                "product_errors": 0
+              }
+            },
+            "investor_founder_meetings": {
+              "off": {
+                "n": 27,
+                "strict_all_hit": 0,
+                "answer_all_hit": 0,
+                "support_all_hit": 0,
+                "answer_recall": 0.1521164021164021,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 0,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "on": {
+                "n": 27,
+                "strict_all_hit": 0,
+                "answer_all_hit": 0,
+                "support_all_hit": 0,
+                "answer_recall": 0.1521164021164021,
+                "strict_all_hit_at_5": 0,
+                "strict_all_hit_count": 0,
+                "shuffled_gold_strict_all_hit": 0
+              },
+              "paired_runs": {
+                "n": 27,
+                "gains": 0,
+                "losses": 0,
+                "ties": 27
+              },
+              "paired_questions": {
+                "n": 9,
+                "gains": 0,
+                "losses": 0,
+                "ties": 9,
+                "sign_test_p_two_sided": 1
+              },
+              "funnel": {
+                "n": 27,
+                "parsed": 27,
+                "seed_resolved": 3,
+                "fired": 0,
+                "all_support_on": 0,
+                "product_errors": 0
+              }
+            }
+          }
+        },
+        "gate": {
+          "fire_floor": 0.8,
+          "every_split_meets_fire_floor": false,
+          "edges_recorded": true,
+          "false_attendance": 0,
+          "missing_attendance": 402
+        }
+      },
+      "n9_paid_composed_attendance": {
+        "composed-template": {
+          "meeting_investors": {
+            "off": {
+              "n": 81,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0.1111111111111111,
+              "support_all_hit": 0.2962962962962963,
+              "answer_recall": 0.12962962962962962,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "on": {
+              "n": 81,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0.1111111111111111,
+              "support_all_hit": 0.2962962962962963,
+              "answer_recall": 0.12962962962962962,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "paired_runs": {
+              "n": 81,
+              "gains": 0,
+              "losses": 0,
+              "ties": 81
+            },
+            "paired_questions": {
+              "n": 27,
+              "gains": 0,
+              "losses": 0,
+              "ties": 27,
+              "sign_test_p_two_sided": 1
+            },
+            "funnel": {
+              "n": 81,
+              "parsed": 81,
+              "seed_resolved": 0,
+              "fired": 0,
+              "all_support_on": 0,
+              "product_errors": 0
+            }
+          },
+          "investor_founder_meetings": {
+            "off": {
+              "n": 27,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0,
+              "support_all_hit": 0,
+              "answer_recall": 0.06613756613756615,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "on": {
+              "n": 27,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0,
+              "support_all_hit": 0,
+              "answer_recall": 0.06613756613756615,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "paired_runs": {
+              "n": 27,
+              "gains": 0,
+              "losses": 0,
+              "ties": 27
+            },
+            "paired_questions": {
+              "n": 9,
+              "gains": 0,
+              "losses": 0,
+              "ties": 9,
+              "sign_test_p_two_sided": 1
+            },
+            "funnel": {
+              "n": 27,
+              "parsed": 27,
+              "seed_resolved": 27,
+              "fired": 0,
+              "all_support_on": 0,
+              "product_errors": 0
+            }
+          }
+        },
+        "composed-paraphrase": {
+          "meeting_investors": {
+            "off": {
+              "n": 81,
+              "strict_all_hit": 0.012345679012345678,
+              "answer_all_hit": 0.12345679012345678,
+              "support_all_hit": 0.2962962962962963,
+              "answer_recall": 0.1419753086419753,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 1,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "on": {
+              "n": 81,
+              "strict_all_hit": 0.012345679012345678,
+              "answer_all_hit": 0.12345679012345678,
+              "support_all_hit": 0.2962962962962963,
+              "answer_recall": 0.1419753086419753,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 1,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "paired_runs": {
+              "n": 81,
+              "gains": 0,
+              "losses": 0,
+              "ties": 81
+            },
+            "paired_questions": {
+              "n": 27,
+              "gains": 0,
+              "losses": 0,
+              "ties": 27,
+              "sign_test_p_two_sided": 1
+            },
+            "funnel": {
+              "n": 81,
+              "parsed": 63,
+              "seed_resolved": 0,
+              "fired": 0,
+              "all_support_on": 1,
+              "product_errors": 0
+            }
+          },
+          "investor_founder_meetings": {
+            "off": {
+              "n": 27,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0,
+              "support_all_hit": 0,
+              "answer_recall": 0.1349206349206349,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "on": {
+              "n": 27,
+              "strict_all_hit": 0,
+              "answer_all_hit": 0,
+              "support_all_hit": 0,
+              "answer_recall": 0.1349206349206349,
+              "strict_all_hit_at_5": 0,
+              "strict_all_hit_count": 0,
+              "shuffled_gold_strict_all_hit": 0
+            },
+            "paired_runs": {
+              "n": 27,
+              "gains": 0,
+              "losses": 0,
+              "ties": 27
+            },
+            "paired_questions": {
+              "n": 9,
+              "gains": 0,
+              "losses": 0,
+              "ties": 9,
+              "sign_test_p_two_sided": 1
+            },
+            "funnel": {
+              "n": 27,
+              "parsed": 27,
+              "seed_resolved": 3,
+              "fired": 0,
+              "all_support_on": 0,
+              "product_errors": 0
+            }
+          }
+        }
+      },
+      "attendee_role": {
+        "summary": {
+          "questions": 204,
+          "planned": {
+            "n": 0,
+            "share": 0
+          },
+          "plan_outcomes": {
+            "not_applicable": 152,
+            "unsupported: time constraints are not planned (\"2025\")": 13,
+            "unsupported: the relations do not chain (page types disagree)": 39
+          },
+          "one_relation_parsed": {
+            "n": 194,
+            "share": 0.9509803921568627
+          },
+          "fired": {
+            "n": 0,
+            "share": 0
+          },
+          "recall_at_10_off": 0.49183006535947715,
+          "recall_at_10_on": 0.49183006535947715,
+          "unlisted_people_top10": {
+            "off": 162,
+            "on": 162
+          },
+          "questions_with_other_role_attendees_top10": {
+            "off": {
+              "n": 90,
+              "share": 0.4411764705882353
+            },
+            "on": {
+              "n": 90,
+              "share": 0.4411764705882353
+            }
+          },
+          "errors": 0
+        },
+        "by_template": [
+          {
+            "questions": 102,
+            "planned": {
+              "n": 0,
+              "share": 0
+            },
+            "plan_outcomes": {
+              "not_applicable": 102
+            },
+            "one_relation_parsed": {
+              "n": 92,
+              "share": 0.9019607843137255
+            },
+            "fired": {
+              "n": 0,
+              "share": 0
+            },
+            "recall_at_10_off": 0.4918300653594771,
+            "recall_at_10_on": 0.4918300653594771,
+            "unlisted_people_top10": {
+              "off": 81,
+              "on": 81
+            },
+            "questions_with_other_role_attendees_top10": {
+              "off": {
+                "n": 45,
+                "share": 0.4411764705882353
+              },
+              "on": {
+                "n": 45,
+                "share": 0.4411764705882353
+              }
+            },
+            "errors": 0
+          },
+          {
+            "questions": 102,
+            "planned": {
+              "n": 0,
+              "share": 0
+            },
+            "plan_outcomes": {
+              "unsupported: time constraints are not planned (\"2025\")": 13,
+              "not_applicable": 50,
+              "unsupported: the relations do not chain (page types disagree)": 39
+            },
+            "one_relation_parsed": {
+              "n": 102,
+              "share": 1
+            },
+            "fired": {
+              "n": 0,
+              "share": 0
+            },
+            "recall_at_10_off": 0.4918300653594771,
+            "recall_at_10_on": 0.4918300653594771,
+            "unlisted_people_top10": {
+              "off": 81,
+              "on": 81
+            },
+            "questions_with_other_role_attendees_top10": {
+              "off": {
+                "n": 45,
+                "share": 0.4411764705882353
+              },
+              "on": {
+                "n": 45,
+                "share": 0.4411764705882353
+              }
+            },
+            "errors": 0
+          }
+        ]
+      }
+    }
+  },
+  "decision": {
+    "narrow_claim_holds": false,
+    "outcome": "inconclusive (one split passes, one fails)"
+  }
+}

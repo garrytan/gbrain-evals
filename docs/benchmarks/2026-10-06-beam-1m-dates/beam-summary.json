@@ -1,0 +1,147 @@
+{
+  "preregistration_attestations": {
+    "retrieval": {
+      "preregistration": "docs/benchmarks/2026-10-06-beam-1m-dates-preregistration.md",
+      "preregistration_commit": "5046b4cb9ea9a9e2325ec38de8042af9f70e9e5b",
+      "runner_commit": "5046b4cb9ea9a9e2325ec38de8042af9f70e9e5b",
+      "worktree_clean_for_preregistration": true,
+      "on_origin": true,
+      "attested_at": "2026-10-06T19:08:46.123Z"
+    },
+    "answers": {
+      "preregistration": "docs/benchmarks/2026-10-06-beam-1m-dates-preregistration.md",
+      "preregistration_commit": "5046b4cb9ea9a9e2325ec38de8042af9f70e9e5b",
+      "runner_commit": "f0c9310a18cf5c6770ed6e239714cebe77bf6740",
+      "worktree_clean_for_preregistration": true,
+      "on_origin": true,
+      "attested_at": "2026-10-06T19:53:29.653Z"
+    }
+  },
+  "note": "BEAM-1M dev, 11 conversations, 220 questions (198 with gold), seed 42, balanced, reranker off, autocut off, top 10, openai:text-embedding-3-large 1536",
+  "retrieval": {
+    "starting_line_old_loader_6622a119e": {
+      "questions": 220,
+      "retrieval_scored": 198,
+      "errors": 0,
+      "recall_all_at_5": {
+        "hits": 36,
+        "rate": 0.18181818181818182
+      },
+      "recall_any_at_5": {
+        "hits": 136,
+        "rate": 0.6868686868686869
+      },
+      "recall_all_at_10": {
+        "hits": 55,
+        "rate": 0.2777777777777778
+      },
+      "ndcg_at_10": 0.42823381097682484
+    },
+    "fixed_loader_6622a119e": {
+      "questions": 220,
+      "retrieval_scored": 198,
+      "errors": 0,
+      "recall_all_at_5": {
+        "hits": 36,
+        "rate": 0.18181818181818182
+      },
+      "recall_any_at_5": {
+        "hits": 137,
+        "rate": 0.6919191919191919
+      },
+      "recall_all_at_10": {
+        "hits": 57,
+        "rate": 0.2878787878787879
+      },
+      "ndcg_at_10": 0.43152665474201424
+    },
+    "fixed_loader_c5fb0201": {
+      "questions": 220,
+      "retrieval_scored": 198,
+      "errors": 0,
+      "recall_all_at_5": {
+        "hits": 36,
+        "rate": 0.18181818181818182
+      },
+      "recall_any_at_5": {
+        "hits": 137,
+        "rate": 0.6919191919191919
+      },
+      "recall_all_at_10": {
+        "hits": 57,
+        "rate": 0.2878787878787879
+      },
+      "ndcg_at_10": 0.4315520807363542
+    },
+    "fixed_vs_old_same_build": {
+      "recall_all_at_5": {
+        "up": 2,
+        "down": 2
+      },
+      "recall_any_at_5": {
+        "up": 6,
+        "down": 5
+      }
+    },
+    "pin_vs_starting_build_fixed_loader": {
+      "recall_all_at_5": {
+        "up": 0,
+        "down": 0
+      },
+      "recall_any_at_5": {
+        "up": 0,
+        "down": 0
+      },
+      "identical_retrieved_lists": 212
+    },
+    "cost_usd": {
+      "fixed_loader_6622a119e": 1.5681530000000001,
+      "fixed_loader_c5fb0201": 0.055175
+    }
+  },
+  "answers": {
+    "reader_and_judge": "openai:gpt-4.1-mini (protocol-fixed, decisions G8 and G9), 1 run, top 5 sessions in date order",
+    "starting_line_old_loader_6622a119e": {
+      "questions": 220,
+      "qa_score": 0.5464754689754688,
+      "answerable": 0.5869929453262784,
+      "abstention": 0.18181818181818182,
+      "by_category": {
+        "abstention": 0.18181818181818182,
+        "contradiction_resolution": 0.6136363636363636,
+        "event_ordering": 0.5854617604617603,
+        "information_extraction": 0.6503787878787879,
+        "instruction_following": 0.7121212121212122,
+        "knowledge_update": 0.45454545454545453,
+        "multi_session_reasoning": 0.5841991341991343,
+        "preference_following": 0.8371212121212122,
+        "summarization": 0.398502886002886,
+        "temporal_reasoning": 0.446969696969697
+      }
+    },
+    "fixed_loader_6622a119e": {
+      "questions": 220,
+      "qa_score": 0.5348214285714284,
+      "answerable": 0.5614177489177488,
+      "abstention": 0.29545454545454547,
+      "by_category": {
+        "abstention": 0.29545454545454547,
+        "contradiction_resolution": 0.6590909090909091,
+        "event_ordering": 0.4683441558441558,
+        "information_extraction": 0.4123917748917749,
+        "instruction_following": 0.7121212121212122,
+        "knowledge_update": 0.45454545454545453,
+        "multi_session_reasoning": 0.6005411255411255,
+        "preference_following": 0.9242424242424242,
+        "summarization": 0.3972402597402598,
+        "temporal_reasoning": 0.4242424242424242
+      }
+    },
+    "fixed_vs_old_same_build": {
+      "up": 29,
+      "down": 42
+    },
+    "fixed_loader_c5fb0201": "Not run: the $2 answer-half cap could not cover a second arm after the first cost $1.14",
+    "cost_usd": 1.136069
+  }
+}
