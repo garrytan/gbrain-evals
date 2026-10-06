@@ -58,3 +58,45 @@ describe('cat18b per-cell cost and the local cell', () => {
     }
   }, 120_000);
 });
+
+describe('w6 keyless summary', () => {
+  const { cellFrom, compare, egressFor, summarize } = require('../../eval/runner/w6-embedding-matrix.ts') as typeof import('../../eval/runner/w6-embedding-matrix.ts');
+  const receipt = (model: string, firsts: number[], scored: number) => ({
+    resolved_config: { embedder: { model, dims: 1024 }, observed_by_adapter: { gbrain: { rerank_scored_queries: scored, queries: firsts.length } } },
+    data: {
+      scorecard: [{ name: 'gbrain', ndcg5: 0.5, p1_strict: 0.5, phase: { cost_per_1000_queries_usd: 0.5, query_cost_usd: 0.01, ingest_cost_usd: 0.02, query_ms: { mean: 100, p50: 90, p95: 200 } } }],
+      per_query: { gbrain: firsts.map((p, i) => ({ id: `q${i}`, subset: i < firsts.length - 1 ? 'holdout' : 'tuning', p1_strict: p, ndcg5: p, cluster_id: `c${i % 4}` })) },
+    },
+    cost: { usd: 0.03 },
+  });
+
+  test('a reranked run is invalid unless every query was reranked', () => {
+    expect(cellFrom('cat13-voyage-4-rerank-on.receipt.json', receipt('voyage:voyage-4', [1, 0, 1], 3) as never).valid).toBe(true);
+    const bad = cellFrom('cat13-voyage-4-rerank-on.receipt.json', receipt('voyage:voyage-4', [1, 0, 1], 2) as never);
+    expect(bad.valid).toBe(false);
+    expect(bad.invalid_reason).toBe('reranker scored 2 of 3 queries');
+    expect(cellFrom('cat13-voyage-4-rerank-off.receipt.json', receipt('voyage:voyage-4', [1, 0, 1], 0) as never).valid).toBe(true);
+  });
+
+  test('held-out counts exclude tuning questions, and names normalize', () => {
+    const c = cellFrom('cat13-openai-1536-rerank-off.receipt.json', receipt('openai:text-embedding-3-large', [1, 1, 0, 1], 0) as never);
+    expect(c.embedder).toBe('openai-1536');
+    expect(c.heldout_first).toBe(2);
+    expect(c.heldout_n).toBe(3);
+    expect(cellFrom('cat13-qwen3-local-rerank-off.receipt.json', receipt('ollama:qwen3-embedding:8b', [1, 0], 0) as never).embedder).toBe('qwen3-local');
+  });
+
+  test('egress labels and paired comparison', () => {
+    expect(egressFor('ollama:qwen3-embedding:8b', true)).toBe('local embedding, hosted reranking');
+    expect(egressFor('ollama:qwen3-embedding:8b', false)).toMatch(/^local:/);
+    const firsts = Array.from({ length: 41 }, (_, i) => (i % 2));
+    const a = cellFrom('cat13-voyage-4-rerank-on.receipt.json', receipt('voyage:voyage-4', firsts, 41) as never);
+    const b = cellFrom('cat13-voyage-4-large-rerank-on.receipt.json', receipt('voyage:voyage-4-large', firsts.map(() => 1), 41) as never);
+    const r = compare(a, b);
+    expect(r.delta).toBeCloseTo(0.5, 8);
+    expect(r.mcnemar.gained).toBe(20);
+    const s = summarize([a, b]);
+    expect(s.families[0]!.comparisons).toHaveLength(1);
+    expect(s.cells[0]).not.toHaveProperty('rows');
+  });
+});
