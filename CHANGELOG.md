@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.32] - 2026-10-06
+
+### P4 held-out records: pre-compaction save notice on, core memory tier off
+
+Mirrors gbrain [#6015](https://github.com/garrytan/gbrain/pull/6015) (merged as `66cf3f589` in v0.60.87.0) in [the P4 page](docs/benchmarks/2026-10-05-heldout-program/p4.md). The growth-aware save notice passes its sealed pressure gate on BEAM-500K with `claude-sonnet-5-5`: 51.7% → 63.0%, +11.35 points [+8.3, +14.4] over 460 paired questions, with no question type's interval entirely below −2.0. It costs $0.87 instead of $0.68 per question and $1.38 instead of $1.32 per correct answer, and ships on. The pressure gate ran before the BEAM loader's date fix (0.10.31); both arms saw the same headers, so the paired verdict stands, but the temporal-reasoning and event-ordering breakdowns were measured with most session dates hidden. The always-loaded core memory tier fails its sealed core gate on BEAM-100K: `gpt-6.1-sol` −2.4 points [−5.4, +0.3], from an instruction-following drop, against a bar of at least 0 on every model; `claude-sonnet-5-5` is +4.6 [−0.4, +10.7]. Core ships off as an opt-in. The `claude-opus-5-5` and `claude-fable-5-1` core runs stopped at their budget caps (32 and 28 of 56 questions); their remainders are report-only, cannot change the verdict, and land in a later pull request. The pressure gate's aggregate verdict file joins the verdict index.
+
 ## [0.10.31] - 2026-10-06
 
 ### BEAM loader dates every session
