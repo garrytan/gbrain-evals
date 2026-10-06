@@ -1,0 +1,56 @@
+{
+ "decision_id": "p6-think-dates-sealed",
+ "cell": "LoCoMo sealed, think date frame (R1)",
+ "candidate": "2815a8368",
+ "baseline": "67c4ff27b",
+ "harness": "gbrain-evals cf270c2 (amendment 3 LoCoMo latest-session-date fallback)",
+ "verdict": "pass on judged accuracy and the per-category rule; think p95 latency not measured by this lane",
+ "n": 1399,
+ "conversations": 7,
+ "baseline_pct": 74.2,
+ "candidate_pct": 88.2,
+ "delta_pts": 14.01,
+ "ci95": [
+  11.8,
+  16.2
+ ],
+ "wins": 229,
+ "losses": 33,
+ "per_category": {
+  "adversarial": {
+   "n": 323,
+   "baseline_correct": 284,
+   "candidate_correct": 290,
+   "delta_questions": 6
+  },
+  "multi-hop": {
+   "n": 211,
+   "baseline_correct": 164,
+   "candidate_correct": 177,
+   "delta_questions": 13
+  },
+  "open-domain": {
+   "n": 66,
+   "baseline_correct": 42,
+   "candidate_correct": 44,
+   "delta_questions": 2
+  },
+  "single-hop": {
+   "n": 578,
+   "baseline_correct": 521,
+   "candidate_correct": 524,
+   "delta_questions": 3
+  },
+  "temporal": {
+   "n": 221,
+   "baseline_correct": 27,
+   "candidate_correct": 199,
+   "delta_questions": 172
+  }
+ },
+ "recall_all_at_5": {
+  "baseline": 0.5411007862759114,
+  "candidate": 0.5411007862759114
+ },
+ "disclosure": "the first pass stopped at its $80 ledger cap after 4 of 7 conversations; 142 rows whose think call was refused by the cap were dropped and re-answered in a second pass ($90 run); spend about $162"
+}
