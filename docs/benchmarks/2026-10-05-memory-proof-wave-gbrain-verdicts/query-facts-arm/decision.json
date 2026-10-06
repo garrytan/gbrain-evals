@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "decision_id": "query-facts-arm",
+  "plan": "MEMORY_PROOF_WAVE fix lane (proposal 4)",
+  "title": "Facts arm in query: matching active saved facts as rows inside the caller's row count and budget",
+  "verdict_type": "quality",
+  "stage": "dev",
+  "candidate": {
+    "gbrain": "garrytan/gbrain@16288b95c",
+    "config": {
+      "search.query_facts_arm": "true"
+    }
+  },
+  "baselines": [
+    {
+      "gbrain": "garrytan/gbrain@16288b95c",
+      "config": {
+        "search.query_facts_arm": "false"
+      },
+      "note": "same build, same brain writes, same query op call, key off"
+    }
+  ],
+  "preregistration": "README.md in this directory, pushed in garrytan/gbrain@a87c3e2af before any code or gated run",
+  "models": {
+    "reader": "anthropic:claude-sonnet-5-5",
+    "judge": "anthropic:claude-sonnet-5-5 (B2 fixed judge for ambiguous answers)",
+    "embedding": "voyage:voyage-4 (1024d)",
+    "selection": "B-suite fixed reader and judge; gbrain default embedding"
+  },
+  "gates": {
+    "1": "B2 corrections (gbrain-evals eval/workload-suites, corrections-v1, seed 20261006, 100 items), forget-then-remember arm key on vs off; pass if key-on corrected-value accuracy is higher at after_1_write and after_5_writes and its stale-answer rate is not higher at either; edit-sync and append lose no more than 2 points with the key on",
+    "2": "NamedThingBench, relational retrieval-quality, LongMemEval nightly through the query op key on vs off; recall@10 over page rows; pass if no question's recall@10 is lower with the key on",
+    "3": "harness lane: LongMemEval knowledge-update and PersonaMem dev slices (optional; not run)"
+  },
+  "decision_rule": "default-on only if gates 1 and 2 pass (and gate 3 if it runs); off until then",
+  "budget": {
+    "max_usd": 40,
+    "metered_spend_usd": 26.05
+  },
+  "reproduce": {
+    "gate_1": "cd gbrain-evals && bun eval/workload-suites/bench.ts corrections --phase answer --arms gbrain-forget-remember --budget-usd 6 --out <dir> --gbrain <gbrain>@16288b95c [--gbrain-search-config search.query_facts_arm=true] [--remember-valid-from]; then the same command with --phase score. The two bracketed flags come from bench-flags.patch in the gbrain-evals mirror of this record, applied to gbrain-evals 00baf2b.",
+    "gate_2": "bun evals/entity-anchoring/regression.ts --json --key search.query_facts_arm"
+  }
+}
