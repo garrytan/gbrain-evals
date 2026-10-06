@@ -1,0 +1,81 @@
+{
+ "decision_id": "p2-e3-heldout-2026-10-05",
+ "verdict": "pass",
+ "preregistration": "gbrain-evals docs/benchmarks/2026-10-04-p2-ranking-extraction-preregistration.md Amendment 2",
+ "build": "gbrain 6fa1a77b3 (#6020)",
+ "harness": "gbrain-evals f03bc96",
+ "primary_assistant_said": {
+  "pass": true,
+  "n": 120,
+  "clusters": 60,
+  "base": 44.083333333333336,
+  "cand": 95.75,
+  "delta_pts": 51.66666666666667,
+  "ci95": [
+   42.916666666666664,
+   60.333333333333336
+  ],
+  "wins": 73,
+  "losses": 0,
+  "sign_p": 2.117582368135751e-22
+ },
+ "guard1_user_said": {
+  "pass": true,
+  "n": 120,
+  "clusters": 60,
+  "base": 97.16666666666667,
+  "cand": 98.58333333333333,
+  "delta_pts": 1.4166666666666667,
+  "ci95": [
+   -0.4166666666666666,
+   3.4166666666666665
+  ],
+  "wins": 9,
+  "losses": 5,
+  "sign_p": 0.4239501953125
+ },
+ "guard2_rejected_as_user_plan": {
+  "pass": true,
+  "facts_judged": 1208,
+  "judge_flagged": 32,
+  "confirmed": 0
+ },
+ "guard3_speaker_accuracy": {
+  "pass": true,
+  "accuracy": 0.97,
+  "sample": 200
+ },
+ "reported": {
+  "acceptance_user_said": {
+   "n": 24,
+   "clusters": 12,
+   "base": 90.83333333333333,
+   "cand": 96.25,
+   "delta_pts": 5.416666666666667,
+   "ci95": [
+    -0.41666666666666613,
+    12.5
+   ],
+   "wins": 4,
+   "losses": 2,
+   "sign_p": 0.6875
+  },
+  "facts_per_conversation": {
+   "baseline_run1": 34.3,
+   "baseline_run2": 34.3,
+   "candidate_run1": 48.5,
+   "candidate_run2": 48.5
+  },
+  "extraction_row_errors": {
+   "baseline": 0,
+   "candidate": 0
+  }
+ },
+ "cost_usd": {
+  "arms_ledger": 46.93,
+  "guard_judging": 1.33,
+  "total": 48.26,
+  "cap": 82
+ },
+ "outcome": "facts.attribution defaults on in gbrain#6020"
+}
