@@ -408,7 +408,26 @@ pilot $466, minting $23.09), inside the approved $2,100.
 
 ### Builds, runners and models
 
-(appended at the freeze)
+- **Candidate (frozen Q2 build):** gbrain `4ec7fbbe4221bd353b88cf46292b44153c542bb2` on branch `capy/q2-parser-gaps`
+  (master `5b589106`, v0.60.102.0, merged in). Every typing unit is off in it (`ENABLED_TYPING_UNITS` empty).
+- **Baseline for G1–G5 and the guardrails:** gbrain master `5b5891066` (the master merged into the candidate).
+- **C-gate comparator:** the units-off arm `2d95d01b0cf18045b03431b15e3389072d150a74`, the candidate with no typing
+  unit. It types every development page exactly as master does: the world-v1 identity test, and digests computed on
+  this build. Each unit arm is that build plus one unit, so a unit comparison measures only the unit. This clarifies
+  "baseline plus that unit" and is recorded before any cell.
+- **Unit arms** (built by `scripts/q2-typing-package.ts --base 4ec7fbbe4 --arm <unit>`, pushed as
+  `capy/q2-freeze/arm-<unit>`): U1 `b1de456e3ed9283e71a3e437480eb2fc0b4b2d08`, U25
+  `73e3061387355865f58938041abc8c8b6aa7cf20`, U34 `da7c6ca66c610820f61c49cac2f761baf5fad767`, U6
+  `695a0af5dc8e74584e06892810e9227217eaf9a6`. Package arms are built after selection with `--units` in the
+  selected order, from the same base.
+- **Harness:** gbrain-evals `1dca732ae0376baedd528e78ad263bebad24c849` (this branch), the commit holding this record and the runbook.
+- **Models:** G6 answerers `claude-sonnet-5-5`, `gpt-6.1-sol` and `claude-opus-5-5` (amendment 4); judges
+  `claude-opus-5-5` and `gpt-6.1-sol` (G1–G4 labels, `q2-judge-v1`); G6 judge `gpt-6.1-sol` (`q2-wta-judge-v1`) with
+  a 10% `claude-opus-5-5` audit.
+- **Arm-B guidance:** `eval/data/p5-write-then-answer/guidance-b.md` at the harness commit; its SHA-256 is printed by
+  preflight and recorded in each G6 receipt.
+- **Pending before G6 ingest (not before the C-gates):** the SHA-256 of the enlarged `q/q-questions.json` (150 pairs
+  per corpus). The C-gates, G1, G3, G4 and G5 do not read it.
 
 ## Changelog
 
