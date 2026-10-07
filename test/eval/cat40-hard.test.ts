@@ -541,6 +541,18 @@ describe('operator tools (T1, T3, T5, T11: DX-F1, DX-F4, DX-F7, DX-F13, CEO-F4, 
     expect(experimentFlags(['--new-budget-run', '--per-family', '10'])).toEqual({ '--per-family': '10' });
     expect(() => checkRunnerFlags(['--new-budget-run'])).not.toThrow();
   });
+  test('a resume from a later runner commit binds when every hashed evaluator file matches, and records both commits; --retire-models is not identity', () => {
+    const out = tmp();
+    const run = (id: string) => ({ run: { runId: id }, guard: {} }) as never;
+    const hard = { identity: {} as never, max_turns: 16, tool_limits: 'hard', judge: 'j', scorer: 's', judge_prompt: 'p', settings_digest: 'd', code: { 'a.ts': 'h1' }, runner_commit: 'c1' };
+    const manifest = { gbrain_commit: null, slot_commit: null, world_digest: 'w', models: ['m'], arms: ['fs'], label: 'g', flags: {}, hard };
+    bindExperiment(out, manifest, () => run('r1'));
+    const later = bindExperiment(out, { ...manifest, hard: { ...hard, runner_commit: 'c2' } }, () => run('r1'));
+    expect(later.manifest).toMatchObject({ runner_commits: ['c1', 'c2'], hard: { runner_commit: 'c1' } });
+    expect(() => bindExperiment(out, { ...manifest, hard: { ...hard, runner_commit: 'c3', code: { 'a.ts': 'h2' } } }, () => run('r1'))).toThrow('different experiment');
+    expect(experimentFlags(['--retire-models', 'm2', '--per-family', '10'])).toEqual({ '--per-family': '10' });
+    expect(() => checkRunnerFlags(['--retire-models', 'm2'])).not.toThrow();
+  });
   test('ledger roster: allocations within the $4,600 authorization (amendment A5); the Hard ledger is at $2,044; a missing or different ledger refuses', () => {
     const roster = JSON.parse(readFileSync(join(ROOT, 'docs/benchmarks/cat40-hard/ledger-roster.json'), 'utf8'));
     expect(roster.authorization_usd).toBe(4600);

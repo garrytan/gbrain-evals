@@ -300,6 +300,8 @@ export interface ExperimentManifest {
   budget_run_id: string | null;
   /** Every budget run this directory has charged, oldest first, once a resume opened a new one (`--new-budget-run`). */
   budget_runs?: string[];
+  /** Every runner commit that ran cells in this directory, oldest first, once a resume ran from a later commit. */
+  runner_commits?: string[];
   /** Hard worlds: identity, behavior settings and the evaluator's code hashes (DX-F14); a resume must match them. */
   hard?: { identity: ReturnType<typeof identityOf>; max_turns: number; tool_limits: string; judge: string | null; scorer: string; judge_prompt: string; settings_digest: string; code: Record<string, string>; runner_commit: string | null };
 }
@@ -330,7 +332,11 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
   const recorded = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) as ExperimentManifest : null;
   if (recorded) {
     const fresh: Record<string, unknown> = { schema: 'cat40-experiment-v1', ...manifest };
-    const differs = Object.keys(fresh).filter(k => JSON.stringify(fresh[k]) !== JSON.stringify((recorded as unknown as Record<string, unknown>)[k]));
+    // The runner commit is provenance, not identity: a resume from a later commit is the same experiment when
+    // every hashed evaluator file (hard.code) and setting matches. Each commit that ran cells is kept in runner_commits.
+    const sameBut = (k: string) => k === 'hard' && recorded.hard && manifest.hard
+      && JSON.stringify({ ...recorded.hard, runner_commit: null }) === JSON.stringify({ ...manifest.hard, runner_commit: null });
+    const differs = Object.keys(fresh).filter(k => JSON.stringify(fresh[k]) !== JSON.stringify((recorded as unknown as Record<string, unknown>)[k]) && !sameBut(k));
     if (differs.length) {
       throw new Error(`${out} already holds a different experiment (${differs.map(k => `${k}: recorded ${JSON.stringify((recorded as unknown as Record<string, unknown>)[k])}, now ${JSON.stringify(fresh[k])}`).join('; ')}). `
         + 'A resume must repeat the original command except for budget flags; a changed build, world or flag set needs a new --out.');
@@ -340,7 +346,9 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
   const paid = start(opts.newBudgetRun ? null : recorded?.budget_run_id ?? null);
   const runId = paid?.run.runId ?? recorded?.budget_run_id ?? null;
   const history = [...new Set([...(recorded?.budget_runs ?? (recorded?.budget_run_id ? [recorded.budget_run_id] : [])), ...(runId ? [runId] : [])])];
-  const bound: ExperimentManifest = { schema: 'cat40-experiment-v1', ...manifest, budget_run_id: runId, ...(history.length > 1 ? { budget_runs: history } : {}) };
+  const commits = [...new Set([...(recorded?.runner_commits ?? (recorded?.hard?.runner_commit ? [recorded.hard.runner_commit] : [])), ...(manifest.hard?.runner_commit ? [manifest.hard.runner_commit] : [])])];
+  const hard = recorded?.hard && manifest.hard ? { ...manifest.hard, runner_commit: recorded.hard.runner_commit } : manifest.hard;
+  const bound: ExperimentManifest = { schema: 'cat40-experiment-v1', ...manifest, ...(hard ? { hard } : {}), budget_run_id: runId, ...(history.length > 1 ? { budget_runs: history } : {}), ...(commits.length > 1 ? { runner_commits: commits } : {}) };
   mkdirSync(out, { recursive: true });
   writeFileSync(path, JSON.stringify(bound, null, 2) + '\n');
   return { paid, manifest: bound };
