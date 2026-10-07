@@ -11,7 +11,7 @@ gbrain lost to plain files on the Cat 40 Hard test by 11.3 points. The main reas
 
 ## What happened
 
-Held-out result ([report](../../benchmarks/2026-10-07-model-ladder-hard.md)): 100 tasks on a 55,235-document company, Sonnet 5.5, Opus 5.5 and GPT-6.1 Sol. gbrain finished 62.0% and fs 73.3%, a paired difference of −11.3 points with 95% CI [−16.7, −6.0]. pg finished 68.3% and the oracle 98.0%.
+Held-out result ([report](https://github.com/garrytan/gbrain-evals/blob/feat/cat40-hard/docs/benchmarks/2026-10-07-model-ladder-hard.md)): 100 tasks on a 55,235-document company, Sonnet 5.5, Opus 5.5 and GPT-6.1 Sol. gbrain finished 62.0% and fs 73.3%, a paired difference of −11.3 points with 95% CI [−16.7, −6.0]. pg finished 68.3% and the oracle 98.0%.
 
 ## Root cause, from the existing 50k results (no new spend)
 
