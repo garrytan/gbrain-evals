@@ -89,6 +89,8 @@ export interface LoopConfig {
   fetchImpl?: typeof fetch;
   /** Test hook: replace the provider with a scripted model. */
   scripted?: ScriptedModel;
+  /** The answer tool; default `SUBMIT_TOOL`. It must be named `submit_answer`. */
+  submitTool?: ToolSpec;
 }
 
 /** A scripted model returns the next tool call (or a final submit) given the transcript so far. */
@@ -134,7 +136,9 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
   const maxChars = cfg.maxToolChars ?? null;
   const fetchImpl = cfg.fetchImpl ?? fetch;
   const run: AgentRun = { model: cfg.model, final: null, stop: 'turn_cap', turns: 0, tools: [], usage: { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 }, usd: 0, ms: 0, model_ms: 0, tool_ms: 0 };
-  const specs = (): ToolSpec[] => [...cfg.arm.tools(), SUBMIT_TOOL];
+  const submitTool = cfg.submitTool ?? SUBMIT_TOOL;
+  if (submitTool.name !== SUBMIT_TOOL.name) throw new Error(`submitTool must be named ${SUBMIT_TOOL.name}`);
+  const specs = (): ToolSpec[] => [...cfg.arm.tools(), submitTool];
 
   const execute = async (name: string, args: Record<string, unknown>): Promise<{ text: string; submitted: boolean }> => {
     if (name === 'submit_answer') {

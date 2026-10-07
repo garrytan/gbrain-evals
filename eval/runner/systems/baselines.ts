@@ -11,6 +11,15 @@
  *                 sees everything, where it fits.
  *                 Its rows carry no recall: returning everything is not a
  *                 ranking (capability `retrieval_metrics: not-applicable`).
+ *                 Two Q1 modes name it by kind: `baseline-recency` (the same
+ *                 items under a token budget: the most recent sessions that
+ *                 fit) and `baseline-full-context` (the whole history, no
+ *                 budget). The whole history is checked against each
+ *                 reader's window (`READER_WINDOWS`) and refused with outcome
+ *                 `does_not_fit` when it does not fit; `answerFullContext`
+ *                 marks the history as a per-conversation prompt-cache
+ *                 prefix, so later questions on one conversation read it
+ *                 from the cache.
  *   no-memory     stores nothing and returns no items: the reader answers
  *                 from the question alone. Its rows carry no recall either.
  *   plain-hybrid  the simplest search a team would build: one row per
@@ -22,9 +31,12 @@
  *                 sends embedding calls to OPENAI_BASE_URL, so a cell meters
  *                 them through its lease proxy. No gbrain code runs.
  */
+import { createHash } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
 import { vector } from '@electric-sql/pglite/vector';
 import { PG_EMBED_DIMS, PG_EMBED_MODEL, type Embedder } from '../cat40/pg-arm.ts';
+import { decideError } from '../decisions/errors.ts';
+import type { Outcome } from '../memory-qa/outcomes.ts';
 import { SystemError, type CapabilityRecord, type DeleteResult, type FinishResult, type IngestResult, type Item, type MemorySystem, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from './types.ts';
 
 const sessionText = (s: SessionInput) => s.turns.map(t => `${t.speaker}: ${t.content}`).join('\n');
@@ -36,10 +48,20 @@ const record = (system: string, extra: Partial<CapabilityRecord>): CapabilityRec
 });
 const checkMode = (p: RetrievalPolicy) => { if (p?.mode !== 'vendor-default' && p?.mode !== 'fixed-evidence') throw new SystemError('invalid_request', 'policy.mode must be vendor-default or fixed-evidence', 400); };
 
+export type FullContextMode = 'whole-history' | 'recency';
+export const FULL_CONTEXT_IDS: Readonly<Record<FullContextMode, string>> = { 'whole-history': 'baseline-full-context', recency: 'baseline-recency' };
+
 export class FullContextSystem implements MemorySystem {
-  readonly name = 'full-context';
+  readonly name: string;
   private store = new Map<string, Array<{ src: string; text: string; event_time: string | null }>>();
-  async capabilities() { return record('full-context', { readiness: 'synchronous; retrieval returns every ingested session, most recent first', retrieval_metrics: 'not-applicable', presentation: 'event-time' }); }
+  /** No mode keeps the shootout's `full-context` system byte for byte; a mode names the Q1 kind. */
+  constructor(readonly mode: FullContextMode | null = null) { this.name = mode ? FULL_CONTEXT_IDS[mode] : 'full-context'; }
+  async capabilities() {
+    const base = { readiness: 'synchronous; retrieval returns every ingested session, most recent first', retrieval_metrics: 'not-applicable', presentation: 'event-time' };
+    if (this.mode === 'whole-history') return record(this.name, { ...base, budget: 'none: the whole history', fit: 'checked per reader against READER_WINDOWS; outcome does_not_fit when the history does not fit', prompt_cache: 'per conversation: the history is the cached prefix' });
+    if (this.mode === 'recency') return record(this.name, { ...base, budget: 'the arm\'s token budget; the packer keeps the most recent sessions that fit' });
+    return record('full-context', base);
+  }
   async reset(ns: string) { this.store.delete(ns); }
   async ingestSession(ns: string, s: SessionInput, event_time: string | null): Promise<IngestResult> {
     const list = this.store.get(ns) ?? [];
@@ -131,4 +153,118 @@ export class PlainHybridSystem implements MemorySystem {
   }
 
   async close() { await this.db?.close(); this.db = null; }
+}
+
+// ─── True full context: reader windows, fit check, cached reading ───
+
+/** The four frontier readers of every Q1 judged row (newest Opus, GPT, Sonnet and Fable; CLAUDE.md "Choose models"). */
+export const FRONTIER_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'anthropic:claude-sonnet-5-5', 'anthropic:claude-fable-5-1'] as const;
+
+export interface ReaderWindow {
+  /** Input plus output tokens per request. */
+  context_window: number;
+  /** The provider's own input ceiling, when it is below the window. */
+  max_input_tokens: number;
+  max_output_tokens: number;
+  source: string;
+}
+
+/** Every reader's context window, in one place. Checked 2026-10-06 on the providers' model pages. */
+export const READER_WINDOWS: Readonly<Record<string, ReaderWindow>> = {
+  'anthropic:claude-opus-5-5': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
+  'anthropic:claude-sonnet-5-5': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
+  'anthropic:claude-fable-5-1': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
+  'openai:gpt-6.1-sol': { context_window: 1_050_000, max_input_tokens: 922_000, max_output_tokens: 128_000, source: 'developers.openai.com/api/docs/models/gpt-6.1-sol, 2026-10-06' },
+};
+
+export function readerWindow(reader: string): ReaderWindow {
+  const w = READER_WINDOWS[reader];
+  if (w) return w;
+  throw decideError({
+    code: 'SPEC_INVALID', message: `reader ${reader} has no context window in READER_WINDOWS, so the full-context fit check cannot run`,
+    why: 'the full-context baseline refuses a history that does not fit the reader instead of letting the provider cut or reject it',
+    fix: { next: 'report', user_message: `look up ${reader}'s context window and input limit on the provider's model page and add them to READER_WINDOWS in eval/runner/systems/baselines.ts`, verify: ['grep', '-n', reader, 'eval/runner/systems/baselines.ts'] },
+  });
+}
+
+export interface FitTokenizer { id: string; count: (text: string) => number }
+
+/**
+ * Leans high on purpose (about 4 characters per token is typical English):
+ * an over-count refuses a history near the edge, an under-count would send a
+ * request the provider rejects. A cell with real tokenizers passes its own.
+ */
+export const FIT_TOKENIZER: FitTokenizer = { id: 'chars-div-3', count: text => Math.ceil(text.length / 3) };
+
+export interface FitCheck { reader: string; fits: boolean; prompt_tokens: number; output_tokens: number; max_input_tokens: number; context_window: number; tokenizer: string }
+
+export function checkFit(reader: string, prompt: string, outputTokens: number, tokenizer: FitTokenizer = FIT_TOKENIZER): FitCheck {
+  const w = readerWindow(reader);
+  const n = tokenizer.count(prompt);
+  return { reader, fits: n <= w.max_input_tokens && n + outputTokens <= w.context_window, prompt_tokens: n, output_tokens: outputTokens, max_input_tokens: w.max_input_tokens, context_window: w.context_window, tokenizer: tokenizer.id };
+}
+
+/** The history prefix of a reading prompt and the per-question rest (`Current Date:` onward); joined they are the prompt byte for byte. */
+export function splitForCache(prompt: string): { prefix: string; suffix: string } {
+  const i = prompt.lastIndexOf('Current Date: ');
+  return i < 0 ? { prefix: prompt, suffix: '' } : { prefix: prompt.slice(0, i), suffix: prompt.slice(i) };
+}
+
+export interface FullContextAnswer {
+  text: string;
+  outcome: Outcome | 'does_not_fit';
+  fit: FitCheck;
+  usage: { input: number; output: number; cache_read: number; cache_write: number };
+  provider_input_tokens: number;
+  latency_ms: number;
+  cache_key: string;
+  error?: string;
+}
+
+const TOO_LONG = /prompt is too long|context[_ ]length|context window|maximum context|too many (input )?tokens|input is too long|exceeds the context/i;
+const RETRYABLE = new Set([429, 500, 502, 503, 504, 529]);
+
+/**
+ * One whole-history reading. Refuses with `does_not_fit` before any call
+ * when the prompt does not fit the reader, and when the provider rejects it
+ * as too long. Anthropic readers get the history as a `cache_control`
+ * prefix; OpenAI readers get the same bytes with `prompt_cache_key` set to
+ * the conversation, so its automatic prefix cache routes them together.
+ * Request parameters match `ChatClient` (qa.ts) so only caching differs.
+ */
+export async function answerFullContext(opts: { reader: string; prompt: string; conversation: string; maxOutputTokens?: number; tokenizer?: FitTokenizer; fetchImpl?: typeof fetch }): Promise<FullContextAnswer> {
+  const outputTokens = opts.maxOutputTokens ?? 1024;
+  const fit = checkFit(opts.reader, opts.prompt, outputTokens, opts.tokenizer);
+  const cache_key = createHash('sha256').update(`full-context\u0000${opts.conversation}`).digest('hex').slice(0, 32);
+  const empty = { input: 0, output: 0, cache_read: 0, cache_write: 0 };
+  if (!fit.fits) return { text: '', outcome: 'does_not_fit', fit, usage: empty, provider_input_tokens: 0, latency_ms: 0, cache_key };
+  const [prov, model] = [opts.reader.slice(0, opts.reader.indexOf(':')), opts.reader.slice(opts.reader.indexOf(':') + 1)];
+  const { prefix, suffix } = splitForCache(opts.prompt);
+  const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
+  const request: { url: string; headers: Record<string, string>; body: unknown } = prov === 'anthropic'
+    ? { url: `${(process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com').replace(/\/$/, '')}/v1/messages`, headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
+      body: { model, max_tokens: outputTokens, temperature: 0, messages: [{ role: 'user', content: [{ type: 'text', text: prefix, cache_control: { type: 'ephemeral' } }, ...(suffix ? [{ type: 'text', text: suffix }] : [])] }] } }
+    : { url: `${(process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, '')}/chat/completions`, headers: { authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
+      body: /^(gpt-[5-9]|o\d)/.test(model)
+        ? { model, messages: [{ role: 'user', content: opts.prompt }], n: 1, max_completion_tokens: Math.max(outputTokens, 2000), prompt_cache_key: cache_key }
+        : { model, messages: [{ role: 'user', content: opts.prompt }], n: 1, temperature: 0, max_tokens: outputTokens, prompt_cache_key: cache_key } };
+  const t0 = performance.now();
+  let last = '';
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const res = await fetchImpl(request.url, { method: 'POST', headers: { 'content-type': 'application/json', ...request.headers }, body: JSON.stringify(request.body), signal: AbortSignal.timeout(600_000) });
+    const json = await res.json().catch(() => ({})) as any;
+    if (res.ok) {
+      const u = json.usage ?? {};
+      const usage = prov === 'anthropic'
+        ? { input: u.input_tokens ?? 0, output: u.output_tokens ?? 0, cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0 }
+        : { input: (u.prompt_tokens ?? 0) - (u.prompt_tokens_details?.cached_tokens ?? 0), output: u.completion_tokens ?? 0, cache_read: u.prompt_tokens_details?.cached_tokens ?? 0, cache_write: 0 };
+      const text = prov === 'anthropic' ? (json.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('') : String(json.choices?.[0]?.message?.content ?? '');
+      return { text, outcome: 'scored', fit, usage, provider_input_tokens: usage.input + usage.cache_read + usage.cache_write, latency_ms: performance.now() - t0, cache_key };
+    }
+    last = `${prov} ${res.status}: ${JSON.stringify(json?.error ?? json).slice(0, 300)}`;
+    if (res.status === 400 && TOO_LONG.test(last)) return { text: '', outcome: 'does_not_fit', fit: { ...fit, fits: false }, usage: empty, provider_input_tokens: 0, latency_ms: performance.now() - t0, cache_key, error: last };
+    if (!RETRYABLE.has(res.status) || /budget/i.test(last)) break;
+    await new Promise(r => setTimeout(r, 2000 * 2 ** attempt));
+  }
+  return { text: '', outcome: 'reader_error', fit, usage: empty, provider_input_tokens: 0, latency_ms: performance.now() - t0, cache_key, error: last };
 }
