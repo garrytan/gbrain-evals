@@ -333,6 +333,10 @@ estimated, $7.42 of it Graphiti's recipe. Recorded before any Phase 5 lease.
 
 ## Changelog
 
+### 2026-10-06: gbrain master moved
+
+gbrain master moved to 9cc7c4677 (v0.60.99.0) during Phase 4; keyless retrieval identical on the fixture and one LoCoMo dev conversation; counted rows stay at c5fb0201.
+
 ### 2026-10-06: amendment A4
 
 Added A4 (the eight PrecisionMemBench cells) and recorded the new campaign hash.
