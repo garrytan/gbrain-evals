@@ -339,11 +339,12 @@ Ubicloud setup script, which now installs a pinned Bun. The decision code
 gained key-aware defaults (S7 and S9 on when a TypeSafe key is present), which
 eval runs never receive and explicit slot modes override, so the matched-pair
 arms are unchanged. `build` and `analyze` reproduced the record at both
-commits. The declared gbrain
-dependency of this repository (master `6c8373c`, v0.60.13.0) has none of the
+commits. At publication the declared gbrain
+dependency of this repository (master `6c8373c`, v0.60.13.0) had none of the
 System One commands, so every command that runs gbrain takes
 `--gbrain <checkout>@<ref>`, which copies that commit into `.gbrain-overlays/`
-and records it.
+and records it. Since gbrain-evals v0.10.5 the pinned dependency includes System
+One (#5797); `--gbrain` stays the way to reproduce the measured commit.
 
 **Keyless checks.**
 

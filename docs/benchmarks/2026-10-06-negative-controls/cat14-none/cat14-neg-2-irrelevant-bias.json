@@ -1,0 +1,81 @@
+{
+  "probe_id": "cat14-neg-2-irrelevant-bias",
+  "category": "calibration-bias-irrelevant",
+  "question": "How should we evaluate this AI infrastructure pitch from a technical perspective?",
+  "baseline_answer": "## Answer\n\nThe brain has no material on how to evaluate an AI infrastructure pitch technically. It has no pages on the pitch itself, no technical criteria, no past technical evaluations, and no take hits.\n\nThe only retrieved material is two resolved geography takes by garry, and neither bears on technical evaluation:\n- \"This LA company won't scale\" was held at conviction weight 0.8 and resolved as incorrect [cat14/cat14-neg-2-irrelevant-bias/take-1].\n- \"That Chicago founder is wrong-coast\" was held at conviction weight 0.75 and resolved as incorrect [cat14/cat14-neg-2-irrelevant-bias/take-2].\n\nThese are the only pieces of evidence available. They show only that two past judgments based on a company's or founder's location turned out wrong. They say nothing about the technical merits of any infrastructure pitch, so I am not drawing a technical framework from them.",
+  "calibrated_answer": "## Answer\n\nThe brain has no material for evaluating an AI infrastructure pitch on technical grounds. The retrieved pages are two resolved takes from the geography domain, and neither concerns technical evaluation, AI infrastructure, or a specific pitch.\n\nWhat the pages do show is a pattern of geography-based judgments that turned out wrong:\n- garry's claim \"This LA company won't scale\" was resolved as incorrect (conviction weight 0.8, recorded 2024-05-12) [cat14/cat14-neg-2-irrelevant-bias/take-1].\n- garry's claim \"That Chicago founder is wrong-coast\" was resolved as incorrect (conviction weight 0.75, recorded 2024-09-04) [cat14/cat14-neg-2-irrelevant-bias/take-2].\n\nThese records suggest that location-based reasoning has not been a reliable signal in past calls. They say nothing about which technical criteria to apply, so I am not drawing technical conclusions from them.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE"
+    ]
+  },
+  "win_eligible": false,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers mention the geography bias, which is irrelevant to technical evaluation, although both explicitly avoid applying it to the pitch. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use impersonal retrieval language and untranslated conviction weights rather than a conversational voice. Their substance is equivalent: they decline to provide technical guidance because the retrieved material is irrelevant. || Both answers discuss geography overconfidence, which is irrelevant to evaluating the pitch technically, although both explicitly decline to apply it to technical conclusions. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Their substance is equivalent: they acknowledge missing evidence but provide no actionable technical evaluation framework."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers mention the geography bias, which is irrelevant to technical evaluation, although both explicitly avoid applying it to the pitch. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use impersonal retrieval language and untranslated conviction weights rather than a conversational voice. Their substance is equivalent: they decline to provide technical guidance because the retrieved material is irrelevant. || Both answers discuss geography overconfidence, which is irrelevant to evaluating the pitch technically, although both explicitly decline to apply it to technical conclusions. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Their substance is equivalent: they acknowledge missing evidence but provide no actionable technical evaluation framework."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers mention the geography bias, which is irrelevant to technical evaluation, although both explicitly avoid applying it to the pitch. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use impersonal retrieval language and untranslated conviction weights rather than a conversational voice. Their substance is equivalent: they decline to provide technical guidance because the retrieved material is irrelevant. || Both answers discuss geography overconfidence, which is irrelevant to evaluating the pitch technically, although both explicitly decline to apply it to technical conclusions. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Their substance is equivalent: they acknowledge missing evidence but provide no actionable technical evaluation framework."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers mention the geography bias, which is irrelevant to technical evaluation, although both explicitly avoid applying it to the pitch. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use impersonal retrieval language and untranslated conviction weights rather than a conversational voice. Their substance is equivalent: they decline to provide technical guidance because the retrieved material is irrelevant. || Both answers discuss geography overconfidence, which is irrelevant to evaluating the pitch technically, although both explicitly decline to apply it to technical conclusions. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Their substance is equivalent: they acknowledge missing evidence but provide no actionable technical evaluation framework."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers mention the geography bias, which is irrelevant to technical evaluation, although both explicitly avoid applying it to the pitch. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use impersonal retrieval language and untranslated conviction weights rather than a conversational voice. Their substance is equivalent: they decline to provide technical guidance because the retrieved material is irrelevant. || Both answers discuss geography overconfidence, which is irrelevant to evaluating the pitch technically, although both explicitly decline to apply it to technical conclusions. Neither identifies the user's gut prior or offers a relevant track-record counter-prior. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Their substance is equivalent: they acknowledge missing evidence but provide no actionable technical evaluation framework."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "voice_conversational",
+    "doesnt_force_fit_irrelevant_bias"
+  ]
+}

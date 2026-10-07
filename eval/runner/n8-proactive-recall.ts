@@ -22,19 +22,24 @@
  * Baselines: never-inject, always-inject (three seeded random pages per turn)
  * and turn-text keyword search (the search operation, top three).
  *
- * Report-only: the category stays report-only until associative-recall-v1
- * labels pass independent human review. The receipt verdict is the four
- * delivery contracts frozen in eval/registry.ts (proactive-recall).
+ * The associative arm and the quality metrics stay report-only until
+ * associative-recall-v1 labels pass independent human review. The receipt
+ * verdict is the four delivery contracts frozen on 2026-10-01.
  *
  * Hermetic: provider keys stripped, fresh GBRAIN_HOME, System One off (S6
  * recall_needed is not scoreable keyless).
  *
- * Usage: bun eval/runner/n8-proactive-recall.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]] [--json] [--record-bugs]
+ * Gate (preregistered 2026-10-06): the two privacy contracts, their marker
+ * counterparts and three signal floors in data.privacy_gate gate the offline
+ * tier (eval/registry.ts proactive-recall); everything else stays exploratory.
+ *
+ * Usage: bun eval/runner/n8-proactive-recall.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]] [--attest <preregistration.md>] [--json] [--record-bugs]
  */
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
+import { attestPreregistration } from './prereg.ts';
 import { WAVE_BUG_LEDGER, upsertBug, type BugEntry } from './bug-ledger.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
@@ -185,6 +190,34 @@ export function n8Targets(m: ModeMetrics): { pass: boolean; failed: string[] } {
   if (m.private_deliveries) failed.push(`private=${m.private_deliveries}`);
   if (m.withdrawn_deliveries) failed.push(`withdrawn=${m.withdrawn_deliveries}`);
   return { pass: failed.length === 0, failed };
+}
+
+/** The preregistered privacy gate (docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md), from delivered payloads and the ledger. */
+export interface PrivacyGate {
+  private_pages_delivered_remote: number;
+  private_pages_delivered_turn_context: number;
+  private_markers_delivered_remote: number;
+  private_markers_delivered_turn_context: number;
+  remote_alias_title_recall: number;
+  turn_context_alias_title_recall: number;
+  private_mention_turns: number;
+  trusted_local_private_deliveries: number;
+}
+
+export function privacyGate(world: Pick<GeneratedN8, 'ledger' | 'gold'>, d: { remote: readonly TurnDelivery[]; turnContext: readonly TurnDelivery[]; local: readonly TurnDelivery[] }): PrivacyGate {
+  const markers = (ds: readonly TurnDelivery[]) => ds.reduce((n, x) => n + new Set(x.private_markers ?? []).size, 0);
+  const remote = scoreMode(world, d.remote);
+  const tc = scoreMode(world, d.turnContext);
+  return {
+    private_pages_delivered_remote: remote.private_deliveries,
+    private_pages_delivered_turn_context: tc.private_deliveries,
+    private_markers_delivered_remote: markers(d.remote),
+    private_markers_delivered_turn_context: markers(d.turnContext),
+    remote_alias_title_recall: remote.recall_alias_title,
+    turn_context_alias_title_recall: tc.recall_alias_title,
+    private_mention_turns: [...world.gold.values()].filter(g => g.kind === 'private_mention').length,
+    trusted_local_private_deliveries: scoreMode(world, d.local).private_deliveries,
+  };
 }
 
 /** Trapezoid PR-AUC over sweep points (recall, precision), anchored at recall 0. */
@@ -368,6 +401,7 @@ export interface N8RunResult {
   sweep: Array<{ min_confidence: number; recall: number; recall_alias_title: number; false_alarm_rate: number; innocuous_and_no_mention_false_alarm_rate: number; collision_false_alarm_rate: number; useful_precision: number | null; recall_by_kind: ModeMetrics['recall_by_kind'] }>;
   associative: Record<string, unknown> | null;
   contracts: Record<string, number> | null;
+  privacy_gate: PrivacyGate | null;
   targets: { pass: boolean; failed: string[] } | null;
   verdict: 'pass' | 'fail' | null;
   leak_examples: Array<{ mode: string; turn: string; slug: string; private_body_marker_delivered: boolean }>;
@@ -386,7 +420,7 @@ async function runN8Hermetic(opts: { gut: GbrainUnderTest; seed?: number; log?: 
   const assoc = loadAssociative();
   const userTurns = world.gold.size;
   const acc = new ProbeAccounting(userTurns * 4 + assoc.probes.length);
-  const result: N8RunResult = { world, presence: null, modes: {}, sweep: [], associative: null, contracts: null, targets: null, verdict: null, leak_examples: [], outputs_sha256: null, acc, harnessError: null };
+  const result: N8RunResult = { world, presence: null, modes: {}, sweep: [], associative: null, contracts: null, privacy_gate: null, targets: null, verdict: null, leak_examples: [], outputs_sha256: null, acc, harnessError: null };
   const sut = await openSut(opts.gut);
   try {
     for (const e of world.ledger.entities) {
@@ -483,6 +517,7 @@ async function runN8Hermetic(opts: { gut: GbrainUnderTest; seed?: number; log?: 
       withdrawn_pages_delivered: lp.withdrawn_deliveries + rp.withdrawn_deliveries + tcm.withdrawn_deliveries,
       redelivered_with_prior_context: lp.redundant_deliveries + rp.redundant_deliveries,
     };
+    result.privacy_gate = privacyGate(world, { remote: deliveries.volunteer_remote_prior, turnContext: deliveries.turn_context_local, local: deliveries.volunteer_local_prior });
     result.verdict = Object.values(result.contracts).every(v => v === 0) ? 'pass' : 'fail';
     result.targets = n8Targets({ ...lp, private_deliveries: rp.private_deliveries });
     result.outputs_sha256 = createHash('sha256').update(JSON.stringify({ deliveries: Object.fromEntries(Object.entries(deliveries).map(([k, v]) => [k, v.map(d => [d.turn, d.delivered])])), assocDeliveries })).digest('hex');
@@ -571,6 +606,8 @@ async function main(): Promise<void> {
   const output = argValue(argv, '--output');
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
   const startedAt = new Date().toISOString();
+  const attestPath = argValue(argv, '--attest');
+  const attestation = attestPath ? attestPreregistration(attestPath) : null;
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const sha = gut.overlay?.build.commit ?? gbrainPin().split('#')[1] ?? 'unknown';
   log(`# BrainBench N8: unsolicited recall at final delivery (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
@@ -608,13 +645,15 @@ async function main(): Promise<void> {
       entry_points: ENTRY_POINTS,
       token_estimate: 'ceil(characters / 4) of the delivered payload (JSON pages for volunteer_context, the rendered block for turn_context)',
       gbrain_overlay: overlaySummary(gut),
-      report_only: 'until associative-recall-v1 labels pass independent human review (amendment 8, CEO requirement)',
+      report_only: 'everything outside data.privacy_gate, until associative-recall-v1 labels pass independent human review (amendment 8, CEO requirement)',
+      gate: 'data.privacy_gate (preregistered 2026-10-06: docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md)',
     },
     hashes: { ledger_sha256: r.world.fingerprint, outputs_sha256: r.outputs_sha256 ?? '' },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
     data: {
       contracts: r.contracts,
+      privacy_gate: r.privacy_gate,
       targets: r.targets,
       presence: r.presence,
       quality: {
@@ -633,12 +672,16 @@ async function main(): Promise<void> {
       harness_error: r.harnessError,
     },
   };
-  writeReceipt(outPath, receipt);
+  writeReceipt(outPath, (attestation ? { ...receipt, preregistration_attestation: attestation } : receipt) as Receipt);
 
-  log(`verdict: ${receipt.run_status === 'completed' ? `${receipt.verdict} (report-only)` : `error (${r.harnessError})`}`);
+  log(`verdict: ${receipt.run_status === 'completed' ? `${receipt.verdict} (the four 2026-10-01 contracts; the gate is the registry rules on data.privacy_gate)` : `error (${r.harnessError})`}`);
   if (r.contracts) {
-    log('delivery contracts (target 0, report-only):');
+    log('delivery contracts (target 0):');
     for (const [k, v] of Object.entries(r.contracts)) log(`  ${k}: ${v}`);
+  }
+  if (r.privacy_gate) {
+    log('privacy gate (registry proactive-recall rules):');
+    for (const [k, v] of Object.entries(r.privacy_gate)) log(`  ${k}: ${typeof v === 'number' && !Number.isInteger(v) ? v.toFixed(3) : v}`);
   }
   if (lp) {
     log('quality (volunteer_context, trusted local, prior_context passed, default gate):');

@@ -1,0 +1,3778 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, no embedding model, System One off; no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, no embedding model, System One off; no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n1-knowledge-update",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 149,
+  "n_scored": 149,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.104.0",
+  "gbrain_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+  "execution": {
+    "source_tree": {
+      "sha256": "dd3dc10647cb6c6e9acbe8569461ae032c50c888a8f083c9df6be5367e376c62",
+      "files": 4443,
+      "git_head": "7cfca650a171fe44080c33e1a23d788ee8a72c4f",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "declared_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "version": "0.60.104.0",
+      "package_sha256": "99add9ef401b69dc23b807aa66889af7aa836ec136896322f1ab5ff67fb83ef0",
+      "loaded_git_head": null
+    }
+  },
+  "latency_ms": {
+    "p50": 9,
+    "p95": 185,
+    "n": 181,
+    "basis": "primary-transport call latency over the PGLite cells"
+  },
+  "resolved_config": {
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "decide_status_per_cell": {
+      "n1-pglite-mcp-stdio": "all slots off"
+    },
+    "engines": {
+      "requested": [
+        "pglite"
+      ],
+      "run": [
+        "pglite"
+      ],
+      "postgres_unreachable": null
+    },
+    "interfaces": [
+      "mcp-stdio"
+    ],
+    "harness": "eval/runner/lifecycle/slice.ts (lifecycle drivers: trusted local CLI `gbrain call`, stdio `gbrain serve`, HTTP `gbrain serve --http` with an OAuth client_credentials client bound to the vault source)",
+    "init": "`gbrain init --no-embedding --non-interactive` (managed persistence, keyword search only), a git vault as the default source",
+    "seed": 11,
+    "generator_version": "n1-knowledge-update-gen@1",
+    "ledger_sha256": "df542ce278cd20f733f34d11ea9e3555ed50a314fe2588d86e1ac70bfbd42324",
+    "slice": {
+      "name": "ci",
+      "entities": [
+        "people/alder-example",
+        "people/birch-example",
+        "people/ember-example",
+        "companies/kappa-example"
+      ],
+      "engines": [
+        "pglite"
+      ],
+      "interfaces": [
+        "mcp-stdio"
+      ],
+      "preregistration": "docs/benchmarks/2026-10-02-ci-slices-preregistration.md",
+      "full_ledger_sha256": "6c176db0a8e4a53753d0c1a26b81f46d32779562abcd6a6542fb4fa7e4538d96"
+    },
+    "checkpoints": [
+      "updated",
+      "restart",
+      "reimport",
+      "concurrent"
+    ],
+    "oracle": {
+      "fence": "the author's own fence: the active row is current, struck rows are history (eval/generators/n1-knowledge-update-gen.ts fenceRowsAt)",
+      "ontology": "valid time: latest valid_from on or before the as-of day, later recorded wins ties (ontologyValueAt, the N3 semantics)",
+      "trajectory": "every unstruck point charted in date order; struck (corrected) points are not"
+    },
+    "gating_scope": "data.metrics aggregates the PGLite cells; data.metrics_postgres is report-only outside CI",
+    "gbrain_overlay": null
+  },
+  "hashes": {
+    "ledger_sha256": "df542ce278cd20f733f34d11ea9e3555ed50a314fe2588d86e1ac70bfbd42324",
+    "full_ledger_sha256": "6c176db0a8e4a53753d0c1a26b81f46d32779562abcd6a6542fb4fa7e4538d96"
+  },
+  "started_at": "2026-10-07T20:06:54.175Z",
+  "finished_at": "2026-10-07T20:07:58.692Z",
+  "data": {
+    "metrics": {
+      "current_value_probes": 64,
+      "current_value_correct": 64,
+      "current_value_accuracy": 1,
+      "stale_served": 0,
+      "stale_served_rate": 0,
+      "history_probes": 57,
+      "history_retained": 57,
+      "history_retained_rate": 1,
+      "negative_controls": 28,
+      "negative_controls_passed": 28,
+      "private_value_leaks": 0,
+      "exposure_probes": 12,
+      "exposure_probes_with_signal": 12,
+      "acknowledged_writes_lost": 0,
+      "sut_errors": 0,
+      "cells": 1,
+      "void_cells": 0
+    },
+    "metrics_postgres": null,
+    "safety": {
+      "stale_served": true,
+      "private_value_leaks": true,
+      "acknowledged_writes_lost": true
+    },
+    "quality": {
+      "current_value_accuracy": {
+        "value": 1,
+        "threshold": 1,
+        "pass": true
+      },
+      "history_retained_rate": {
+        "value": 1,
+        "threshold": 1,
+        "pass": true
+      }
+    },
+    "promotion_rules": {
+      "preregistered": "2026-10-02",
+      "basis": "preregistered 2026-10-02 in its own commit before any slice run (docs/benchmarks/2026-10-02-ci-slices-preregistration.md): the full category's safety contracts and utility floors unchanged, plus signal floors computed from the sliced generator ledger without running gbrain",
+      "safety_contracts": [
+        {
+          "id": "no-stale-served",
+          "path": "data.metrics.stale_served",
+          "op": "==",
+          "value": 0,
+          "description": "no surface serves a superseded value as current (a struck row inside a returned fence is history, not stale)"
+        },
+        {
+          "id": "no-private-value-exposed",
+          "path": "data.metrics.private_value_leaks",
+          "op": "==",
+          "value": 0,
+          "description": "no remote (stdio or HTTP) response carries a private fence row, private ontology observation or private trajectory point"
+        },
+        {
+          "id": "no-acknowledged-write-lost",
+          "path": "data.metrics.acknowledged_writes_lost",
+          "op": "==",
+          "value": 0,
+          "description": "every write gbrain acknowledged, including concurrent ones, is visible to the trusted caller afterwards"
+        }
+      ],
+      "quality_thresholds": [
+        {
+          "id": "current-value-floor",
+          "path": "data.metrics.current_value_accuracy",
+          "op": ">=",
+          "value": 1,
+          "description": "every current-value probe returns the ledger's current value (utility floor: an empty or stale system fails)"
+        },
+        {
+          "id": "history-retained-floor",
+          "path": "data.metrics.history_retained_rate",
+          "op": ">=",
+          "value": 1,
+          "description": "every superseded value stays readable as history: expired with recall include_expired, at its as-of date in ontology_get, and every unsuperseded trajectory point stays charted"
+        },
+        {
+          "id": "slice-current-probes",
+          "path": "data.metrics.current_value_probes",
+          "op": ">=",
+          "value": 64,
+          "description": "signal floor: the sliced ledger defines 64 world current-value probes over the four checkpoints (16 at each of updated, restart, reimport and concurrent)"
+        },
+        {
+          "id": "slice-history-probes",
+          "path": "data.metrics.history_probes",
+          "op": ">=",
+          "value": 57,
+          "description": "signal floor: the sliced ledger defines 57 world history probes over the four checkpoints (13 at each of updated, restart and reimport, 18 at concurrent)"
+        },
+        {
+          "id": "slice-exposure-signal",
+          "path": "data.metrics.exposure_probes_with_signal",
+          "op": ">=",
+          "value": 12,
+          "description": "signal floor: each of the 3 private items is read by the trusted control at each of the 4 checkpoints, so every zero-leak probe carries signal"
+        }
+      ],
+      "exploratory": [
+        "data.by_surface, data.by_depth and data.by_kind",
+        "data.metrics_postgres (report-only outside CI)",
+        "data.metrics.exposure_probes_with_signal",
+        "data.gaps (implicit supersession without an embedding key, natural-language change detection)",
+        "data.struck_history_in_search (superseded rows a search chunk carries by design)"
+      ]
+    },
+    "by_surface": {
+      "fence-recall": {
+        "probes": 20,
+        "passed": 20,
+        "stale": 0
+      },
+      "fence-search": {
+        "probes": 20,
+        "passed": 20,
+        "stale": 0
+      },
+      "recall-history": {
+        "probes": 20,
+        "passed": 20,
+        "stale": 0
+      },
+      "ontology_get": {
+        "probes": 20,
+        "passed": 20,
+        "stale": 0
+      },
+      "ontology_get-asof": {
+        "probes": 33,
+        "passed": 33,
+        "stale": 0
+      },
+      "find_trajectory": {
+        "probes": 4,
+        "passed": 4,
+        "stale": 0
+      },
+      "find_trajectory-history": {
+        "probes": 4,
+        "passed": 4,
+        "stale": 0
+      }
+    },
+    "by_depth": {
+      "depth 3": {
+        "probes": 18,
+        "passed": 18,
+        "stale": 0
+      },
+      "depth 1": {
+        "probes": 21,
+        "passed": 21,
+        "stale": 0
+      },
+      "depth 2": {
+        "probes": 36,
+        "passed": 36,
+        "stale": 0
+      },
+      "depth 4": {
+        "probes": 9,
+        "passed": 9,
+        "stale": 0
+      },
+      "depth 0": {
+        "probes": 3,
+        "passed": 3,
+        "stale": 0
+      }
+    },
+    "by_kind": {
+      "revert": {
+        "probes": 24,
+        "passed": 24,
+        "stale": 0
+      },
+      "explicit": {
+        "probes": 36,
+        "passed": 36,
+        "stale": 0
+      },
+      "forward": {
+        "probes": 22,
+        "passed": 22,
+        "stale": 0
+      },
+      "revert-same-source": {
+        "probes": 13,
+        "passed": 13,
+        "stale": 0
+      },
+      "backdated": {
+        "probes": 13,
+        "passed": 13,
+        "stale": 0
+      },
+      "exposure": {
+        "probes": 5,
+        "passed": 5,
+        "stale": 0
+      },
+      "correction": {
+        "probes": 8,
+        "passed": 8,
+        "stale": 0
+      }
+    },
+    "by_checkpoint": {
+      "updated": {
+        "probes": 29,
+        "passed": 29,
+        "stale": 0
+      },
+      "restart": {
+        "probes": 29,
+        "passed": 29,
+        "stale": 0
+      },
+      "reimport": {
+        "probes": 29,
+        "passed": 29,
+        "stale": 0
+      },
+      "concurrent": {
+        "probes": 34,
+        "passed": 34,
+        "stale": 0
+      }
+    },
+    "by_cell": [
+      {
+        "id": "n1-pglite-mcp-stdio",
+        "duration_ms": 60545,
+        "server_version": "0.60.104.0",
+        "private_value_leaks": 0,
+        "calls": {
+          "primary": 181,
+          "trusted": 36
+        },
+        "checkpoints": {
+          "updated": {
+            "probes": 36,
+            "passed": 36,
+            "stale": 0,
+            "acked_lost": [],
+            "exposure_signal": 3,
+            "exposure": 3
+          },
+          "restart": {
+            "probes": 36,
+            "passed": 36,
+            "stale": 0,
+            "acked_lost": [],
+            "exposure_signal": 3,
+            "exposure": 3
+          },
+          "reimport": {
+            "probes": 36,
+            "passed": 36,
+            "stale": 0,
+            "acked_lost": [],
+            "exposure_signal": 3,
+            "exposure": 3
+          },
+          "concurrent": {
+            "probes": 41,
+            "passed": 41,
+            "stale": 0,
+            "acked_lost": [],
+            "exposure_signal": 3,
+            "exposure": 3
+          }
+        },
+        "writes": {
+          "total": 37,
+          "refused_first": 0,
+          "failed": []
+        }
+      }
+    ],
+    "struck_history_in_search": 55,
+    "leak_evidence": [],
+    "ontology_unmanaged": {
+      "scope": "exploratory: the ontology chains replayed through in-process handlers on an unmanaged in-memory PGLite engine (no persistence coordinator), trusted local writes, local and remote reads",
+      "metrics": {
+        "current_value_probes": 12,
+        "current_value_correct": 12,
+        "current_value_accuracy": 1,
+        "stale_served": 0,
+        "stale_served_rate": 0,
+        "history_probes": 20,
+        "history_retained": 20,
+        "history_retained_rate": 1,
+        "negative_controls": 12,
+        "negative_controls_passed": 12,
+        "private_value_leaks": 0,
+        "exposure_probes": 2,
+        "exposure_probes_with_signal": 2,
+        "acknowledged_writes_lost": 0,
+        "sut_errors": 0
+      },
+      "writes": [
+        {
+          "chain": "ont-1-location",
+          "action": "0:inserted",
+          "ok": true
+        },
+        {
+          "chain": "ont-2-employer",
+          "action": "0:inserted",
+          "ok": true
+        },
+        {
+          "chain": "ont-5-role",
+          "action": "0:inserted",
+          "ok": true
+        },
+        {
+          "chain": "ont-1-role",
+          "action": "0:inserted",
+          "ok": true
+        },
+        {
+          "chain": "ont-2-risk",
+          "action": "0:inserted",
+          "ok": true
+        },
+        {
+          "chain": "ont-2-style",
+          "action": "0:inserted",
+          "ok": true
+        },
+        {
+          "chain": "ont-1-location",
+          "action": "1:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-2-employer",
+          "action": "1:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-5-role",
+          "action": "1:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-1-role",
+          "action": "1:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-2-employer",
+          "action": "2:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-5-role",
+          "action": "2:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-1-role",
+          "action": "2:inserted",
+          "ok": true
+        },
+        {
+          "chain": "ont-1-location",
+          "action": "C:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-2-employer",
+          "action": "C:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-5-role",
+          "action": "C:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-1-role",
+          "action": "C:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-2-risk",
+          "action": "C:superseded_prior",
+          "ok": true
+        },
+        {
+          "chain": "ont-2-style",
+          "action": "C:superseded_prior",
+          "ok": true
+        }
+      ],
+      "failures": [],
+      "exposure": [
+        {
+          "probe_id": "sequential:exposure:ontology_get:ont-2-risk",
+          "surface": "ontology_get",
+          "leak": false,
+          "control_trusted": true,
+          "control_twin": true,
+          "signal": true
+        },
+        {
+          "probe_id": "concurrent:exposure:ontology_get:ont-2-risk",
+          "surface": "ontology_get",
+          "leak": false,
+          "control_trusted": true,
+          "control_twin": true,
+          "signal": true
+        }
+      ]
+    },
+    "gaps": [
+      {
+        "capability": "implicit supersession (remember)",
+        "reason": "writeSingleFact supersedes only a near-duplicate (cosine >= 0.95, same kind, different text) and skips dedup without an embedding provider (src/core/facts/write-single.ts); a keyless run has none, so this is a gap, not a failure. The preregistered paid arm measures it with a real embedding model."
+      },
+      {
+        "capability": "natural-language change detection",
+        "reason": "no gbrain path detects \"moved from Lisbon to Porto\" in prose as a supersession beyond the near-duplicate rule (capability matrix, N1)."
+      },
+      {
+        "capability": "direct fact supersession op",
+        "reason": "no supersede_fact operation exists (capability matrix P1); explicit supersession is a fence edit through put_page."
+      },
+      {
+        "capability": "think over updated values",
+        "reason": "think synthesis needs a chat model; keyless think returns the gather only."
+      }
+    ],
+    "failures": [],
+    "cells": [
+      {
+        "id": "n1-pglite-mcp-stdio",
+        "engine": "pglite",
+        "interface": "mcp-stdio",
+        "started_at": "2026-10-07T20:06:54.192Z",
+        "duration_ms": 60545,
+        "server_version": "0.60.104.0",
+        "decide": {
+          "ok": true,
+          "slots": [
+            {
+              "slot": "rerank",
+              "effective": "off"
+            },
+            {
+              "slot": "intent",
+              "effective": "off"
+            },
+            {
+              "slot": "evidence",
+              "effective": "off"
+            },
+            {
+              "slot": "answerable",
+              "effective": "off"
+            },
+            {
+              "slot": "injection",
+              "effective": "off"
+            },
+            {
+              "slot": "recall_needed",
+              "effective": "off"
+            },
+            {
+              "slot": "triage",
+              "effective": "off"
+            },
+            {
+              "slot": "grounding",
+              "effective": "off"
+            },
+            {
+              "slot": "conflict",
+              "effective": "off"
+            }
+          ]
+        },
+        "presence": [
+          {
+            "name": "fence round-0 value readable: fence-1-city",
+            "ok": true,
+            "detail": "{\"tokens\":[\"cnryokvutiqg\"]}"
+          },
+          {
+            "name": "fence round-0 value readable: fence-1-employer",
+            "ok": true,
+            "detail": "{\"tokens\":[\"cnryqdjjywqk\"]}"
+          },
+          {
+            "name": "fence round-0 value readable: fence-2-city",
+            "ok": true,
+            "detail": "{\"tokens\":[\"cnrywosqamme\"]}"
+          },
+          {
+            "name": "fence round-0 value readable: fence-2-employer",
+            "ok": true,
+            "detail": "{\"tokens\":[\"cnryqadevdvf\"]}"
+          },
+          {
+            "name": "fence round-0 value readable: fence-5-employer",
+            "ok": true,
+            "detail": "{\"tokens\":[\"cnryqdiinuyb\"]}"
+          },
+          {
+            "name": "trajectory round-0 points readable: traj-3-mrr",
+            "ok": true,
+            "detail": "{\"latest\":47200}"
+          }
+        ],
+        "writes": [
+          {
+            "round": "0",
+            "target": "people/alder-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "0",
+            "target": "people/birch-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "0",
+            "target": "people/ember-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "0",
+            "target": "companies/kappa-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "0",
+            "target": "people/alder-example#location",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "0",
+            "target": "people/birch-example#employer",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "0",
+            "target": "people/ember-example#role",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "0",
+            "target": "people/alder-example#role",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "0",
+            "target": "people/birch-example#risk_tolerance",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "0",
+            "target": "people/birch-example#decision_style",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "1",
+            "target": "people/alder-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "1",
+            "target": "people/birch-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "1",
+            "target": "people/ember-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "1",
+            "target": "companies/kappa-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "1",
+            "target": "people/alder-example#location",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "1",
+            "target": "people/birch-example#employer",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "1",
+            "target": "people/ember-example#role",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "1",
+            "target": "people/alder-example#role",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "2",
+            "target": "people/alder-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "2",
+            "target": "people/birch-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "2",
+            "target": "people/ember-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "2",
+            "target": "people/birch-example#employer",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "2",
+            "target": "people/ember-example#role",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "2",
+            "target": "people/alder-example#role",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "3",
+            "target": "people/alder-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "3",
+            "target": "people/ember-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "4",
+            "target": "people/ember-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "people/alder-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "people/birch-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "people/ember-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "companies/kappa-example",
+            "op": "put_page",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "people/alder-example#location",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "people/birch-example#employer",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "people/ember-example#role",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "people/alder-example#role",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "people/birch-example#risk_tolerance",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          },
+          {
+            "round": "C",
+            "target": "people/birch-example#decision_style",
+            "op": "ontology_propose",
+            "ok": true,
+            "attempts": 1
+          }
+        ],
+        "checkpoints": {
+          "updated": {
+            "rows": [
+              {
+                "probe_id": "sequential:fence_current:recall:fence-1-city",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": "cnrytzhdtjoo",
+                "answer": {
+                  "tokens": [
+                    "cnrytzhdtjoo"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-1-city",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": "cnrytzhdtjoo",
+                "answer": {
+                  "unstruck": [
+                    "cnrytzhdtjoo"
+                  ],
+                  "struck": [
+                    "cnryokvutiqg",
+                    "cnrytzhdtjoo",
+                    "cnrydwvkabvm"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-1-city",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": [
+                  "cnryokvutiqg",
+                  "cnrytzhdtjoo",
+                  "cnrydwvkabvm"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnrydwvkabvm",
+                    "cnrytzhdtjoo",
+                    "cnryokvutiqg"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-1-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": "cnryppomcqqz",
+                "answer": {
+                  "tokens": [
+                    "cnryppomcqqz"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-1-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": "cnryppomcqqz",
+                "answer": {
+                  "unstruck": [
+                    "cnryppomcqqz"
+                  ],
+                  "struck": [
+                    "cnryqdjjywqk",
+                    "cnryplinawhk",
+                    "cnryctoncoqw"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-1-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": [
+                  "cnryqdjjywqk",
+                  "cnryplinawhk",
+                  "cnryctoncoqw"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryctoncoqw",
+                    "cnryplinawhk",
+                    "cnryqdjjywqk"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-2-city",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": "cnrybczpsvxz",
+                "answer": {
+                  "tokens": [
+                    "cnrybczpsvxz"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-2-city",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": "cnrybczpsvxz",
+                "answer": {
+                  "unstruck": [
+                    "cnrybczpsvxz"
+                  ],
+                  "struck": [
+                    "cnrywosqamme"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-2-city",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": [
+                  "cnrywosqamme"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnrywosqamme"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-2-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": "cnryqadevdvf",
+                "answer": {
+                  "tokens": [
+                    "cnryqadevdvf"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-2-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": "cnryqadevdvf",
+                "answer": {
+                  "unstruck": [
+                    "cnryqadevdvf"
+                  ],
+                  "struck": [
+                    "cnryqadevdvf",
+                    "cnryvtvcctfc"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-2-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": [
+                  "cnryqadevdvf",
+                  "cnryvtvcctfc"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryvtvcctfc",
+                    "cnryqadevdvf"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-5-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": "cnrycifyeaof",
+                "answer": {
+                  "tokens": [
+                    "cnrycifyeaof"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-5-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": "cnrycifyeaof",
+                "answer": {
+                  "unstruck": [
+                    "cnrycifyeaof"
+                  ],
+                  "struck": [
+                    "cnryqdiinuyb",
+                    "cnrykypmdqok",
+                    "cnrymydgpuih",
+                    "cnryivxhllkk"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-5-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": [
+                  "cnryqdiinuyb",
+                  "cnrykypmdqok",
+                  "cnrymydgpuih",
+                  "cnryivxhllkk"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryivxhllkk",
+                    "cnrymydgpuih",
+                    "cnrykypmdqok",
+                    "cnryqdiinuyb"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:ghost",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "negative",
+                "chain": "ghost",
+                "depth": 0,
+                "kind": "explicit",
+                "gold": null,
+                "answer": {
+                  "tokens": []
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:ghost",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "negative",
+                "chain": "ghost",
+                "depth": 0,
+                "kind": "explicit",
+                "gold": null,
+                "answer": {
+                  "unstruck": [],
+                  "struck": []
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-1-location",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": "Viseu cnryrkoqrkcu",
+                "answer": {
+                  "value": "Viseu cnryrkoqrkcu"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-location:2019-05-16",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-location:2019-11-01",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": "Lisbon cnryjbzqccdi",
+                "answer": {
+                  "value": "Lisbon cnryjbzqccdi"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-2-employer",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Orchard Labs cnryicbpdurt",
+                "answer": {
+                  "value": "Orchard Labs cnryicbpdurt"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-employer:2019-04-30",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-employer:2019-08-28",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Summit Freight cnryoxfarrqy",
+                "answer": {
+                  "value": "Summit Freight cnryoxfarrqy"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-employer:2020-05-05",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Lantern Media cnrydzqghsry",
+                "answer": {
+                  "value": "Lantern Media cnrydzqghsry"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-5-role",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "analyst cnrymyabeksg",
+                "answer": {
+                  "value": "analyst cnrymyabeksg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-5-role:2019-07-09",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-5-role:2020-02-29",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "analyst cnrymyabeksg",
+                "answer": {
+                  "value": "analyst cnrymyabeksg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-5-role:2021-06-20",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "manager cnrygrrylvax",
+                "answer": {
+                  "value": "manager cnrygrrylvax"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-1-role",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "engineer cnryplfdydiu",
+                "answer": {
+                  "value": "engineer cnryplfdydiu"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-role:2020-02-25",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-role:2020-08-28",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "founder cnryfhqklvhv",
+                "answer": {
+                  "value": "founder cnryfhqklvhv"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-role:2022-01-14",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "manager cnrypwhnwpsg",
+                "answer": {
+                  "value": "manager cnrypwhnwpsg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-2-style",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-2-style",
+                "depth": 0,
+                "kind": "exposure",
+                "gold": "consensus cnryxksymjaq",
+                "answer": {
+                  "value": "consensus cnryxksymjaq"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-style:2021-03-25",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-2-style",
+                "depth": 0,
+                "kind": "exposure",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:trajectory_current:traj-3-mrr",
+                "type": "trajectory_current",
+                "surface": "find_trajectory",
+                "class": "current",
+                "chain": "traj-3-mrr",
+                "depth": 1,
+                "kind": "correction",
+                "gold": 47200,
+                "answer": {
+                  "latest": 47200
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:trajectory_history:traj-3-mrr",
+                "type": "trajectory_history",
+                "surface": "find_trajectory-history",
+                "class": "history",
+                "chain": "traj-3-mrr",
+                "depth": 1,
+                "kind": "correction",
+                "gold": [
+                  [
+                    "2024-01",
+                    49850
+                  ],
+                  [
+                    "2024-02",
+                    35000
+                  ],
+                  [
+                    "2024-03",
+                    47200
+                  ]
+                ],
+                "answer": {
+                  "points": [
+                    [
+                      "2024-01",
+                      49850
+                    ],
+                    [
+                      "2024-02",
+                      35000
+                    ],
+                    [
+                      "2024-03",
+                      47200
+                    ]
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              }
+            ],
+            "exposure": [
+              {
+                "probe_id": "sequential:exposure:recall:fence-5-city",
+                "surface": "recall",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              },
+              {
+                "probe_id": "sequential:exposure:ontology_get:ont-2-risk",
+                "surface": "ontology_get",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              },
+              {
+                "probe_id": "sequential:exposure:find_trajectory:traj-3-burn",
+                "surface": "find_trajectory",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              }
+            ],
+            "acked_lost": [],
+            "struck_in_search": 13
+          },
+          "restart": {
+            "rows": [
+              {
+                "probe_id": "sequential:fence_current:recall:fence-1-city",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": "cnrytzhdtjoo",
+                "answer": {
+                  "tokens": [
+                    "cnrytzhdtjoo"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-1-city",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": "cnrytzhdtjoo",
+                "answer": {
+                  "unstruck": [
+                    "cnrytzhdtjoo"
+                  ],
+                  "struck": [
+                    "cnryokvutiqg",
+                    "cnrytzhdtjoo",
+                    "cnrydwvkabvm"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-1-city",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": [
+                  "cnryokvutiqg",
+                  "cnrytzhdtjoo",
+                  "cnrydwvkabvm"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnrydwvkabvm",
+                    "cnrytzhdtjoo",
+                    "cnryokvutiqg"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-1-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": "cnryppomcqqz",
+                "answer": {
+                  "tokens": [
+                    "cnryppomcqqz"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-1-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": "cnryppomcqqz",
+                "answer": {
+                  "unstruck": [
+                    "cnryppomcqqz"
+                  ],
+                  "struck": [
+                    "cnryqdjjywqk",
+                    "cnryplinawhk",
+                    "cnryctoncoqw"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-1-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": [
+                  "cnryqdjjywqk",
+                  "cnryplinawhk",
+                  "cnryctoncoqw"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryctoncoqw",
+                    "cnryplinawhk",
+                    "cnryqdjjywqk"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-2-city",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": "cnrybczpsvxz",
+                "answer": {
+                  "tokens": [
+                    "cnrybczpsvxz"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-2-city",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": "cnrybczpsvxz",
+                "answer": {
+                  "unstruck": [
+                    "cnrybczpsvxz"
+                  ],
+                  "struck": [
+                    "cnrywosqamme"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-2-city",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": [
+                  "cnrywosqamme"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnrywosqamme"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-2-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": "cnryqadevdvf",
+                "answer": {
+                  "tokens": [
+                    "cnryqadevdvf"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-2-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": "cnryqadevdvf",
+                "answer": {
+                  "unstruck": [
+                    "cnryqadevdvf"
+                  ],
+                  "struck": [
+                    "cnryqadevdvf",
+                    "cnryvtvcctfc"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-2-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": [
+                  "cnryqadevdvf",
+                  "cnryvtvcctfc"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryvtvcctfc",
+                    "cnryqadevdvf"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-5-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": "cnrycifyeaof",
+                "answer": {
+                  "tokens": [
+                    "cnrycifyeaof"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-5-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": "cnrycifyeaof",
+                "answer": {
+                  "unstruck": [
+                    "cnrycifyeaof"
+                  ],
+                  "struck": [
+                    "cnryqdiinuyb",
+                    "cnrykypmdqok",
+                    "cnrymydgpuih",
+                    "cnryivxhllkk"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-5-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": [
+                  "cnryqdiinuyb",
+                  "cnrykypmdqok",
+                  "cnrymydgpuih",
+                  "cnryivxhllkk"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryivxhllkk",
+                    "cnrymydgpuih",
+                    "cnrykypmdqok",
+                    "cnryqdiinuyb"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:ghost",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "negative",
+                "chain": "ghost",
+                "depth": 0,
+                "kind": "explicit",
+                "gold": null,
+                "answer": {
+                  "tokens": []
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:ghost",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "negative",
+                "chain": "ghost",
+                "depth": 0,
+                "kind": "explicit",
+                "gold": null,
+                "answer": {
+                  "unstruck": [],
+                  "struck": []
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-1-location",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": "Viseu cnryrkoqrkcu",
+                "answer": {
+                  "value": "Viseu cnryrkoqrkcu"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-location:2019-05-16",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-location:2019-11-01",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": "Lisbon cnryjbzqccdi",
+                "answer": {
+                  "value": "Lisbon cnryjbzqccdi"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-2-employer",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Orchard Labs cnryicbpdurt",
+                "answer": {
+                  "value": "Orchard Labs cnryicbpdurt"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-employer:2019-04-30",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-employer:2019-08-28",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Summit Freight cnryoxfarrqy",
+                "answer": {
+                  "value": "Summit Freight cnryoxfarrqy"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-employer:2020-05-05",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Lantern Media cnrydzqghsry",
+                "answer": {
+                  "value": "Lantern Media cnrydzqghsry"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-5-role",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "analyst cnrymyabeksg",
+                "answer": {
+                  "value": "analyst cnrymyabeksg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-5-role:2019-07-09",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-5-role:2020-02-29",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "analyst cnrymyabeksg",
+                "answer": {
+                  "value": "analyst cnrymyabeksg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-5-role:2021-06-20",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "manager cnrygrrylvax",
+                "answer": {
+                  "value": "manager cnrygrrylvax"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-1-role",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "engineer cnryplfdydiu",
+                "answer": {
+                  "value": "engineer cnryplfdydiu"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-role:2020-02-25",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-role:2020-08-28",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "founder cnryfhqklvhv",
+                "answer": {
+                  "value": "founder cnryfhqklvhv"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-role:2022-01-14",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "manager cnrypwhnwpsg",
+                "answer": {
+                  "value": "manager cnrypwhnwpsg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-2-style",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-2-style",
+                "depth": 0,
+                "kind": "exposure",
+                "gold": "consensus cnryxksymjaq",
+                "answer": {
+                  "value": "consensus cnryxksymjaq"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-style:2021-03-25",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-2-style",
+                "depth": 0,
+                "kind": "exposure",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:trajectory_current:traj-3-mrr",
+                "type": "trajectory_current",
+                "surface": "find_trajectory",
+                "class": "current",
+                "chain": "traj-3-mrr",
+                "depth": 1,
+                "kind": "correction",
+                "gold": 47200,
+                "answer": {
+                  "latest": 47200
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:trajectory_history:traj-3-mrr",
+                "type": "trajectory_history",
+                "surface": "find_trajectory-history",
+                "class": "history",
+                "chain": "traj-3-mrr",
+                "depth": 1,
+                "kind": "correction",
+                "gold": [
+                  [
+                    "2024-01",
+                    49850
+                  ],
+                  [
+                    "2024-02",
+                    35000
+                  ],
+                  [
+                    "2024-03",
+                    47200
+                  ]
+                ],
+                "answer": {
+                  "points": [
+                    [
+                      "2024-01",
+                      49850
+                    ],
+                    [
+                      "2024-02",
+                      35000
+                    ],
+                    [
+                      "2024-03",
+                      47200
+                    ]
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              }
+            ],
+            "exposure": [
+              {
+                "probe_id": "sequential:exposure:recall:fence-5-city",
+                "surface": "recall",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              },
+              {
+                "probe_id": "sequential:exposure:ontology_get:ont-2-risk",
+                "surface": "ontology_get",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              },
+              {
+                "probe_id": "sequential:exposure:find_trajectory:traj-3-burn",
+                "surface": "find_trajectory",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              }
+            ],
+            "acked_lost": [],
+            "struck_in_search": 13
+          },
+          "reimport": {
+            "rows": [
+              {
+                "probe_id": "sequential:fence_current:recall:fence-1-city",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": "cnrytzhdtjoo",
+                "answer": {
+                  "tokens": [
+                    "cnrytzhdtjoo"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-1-city",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": "cnrytzhdtjoo",
+                "answer": {
+                  "unstruck": [
+                    "cnrytzhdtjoo"
+                  ],
+                  "struck": [
+                    "cnryokvutiqg",
+                    "cnrytzhdtjoo",
+                    "cnrydwvkabvm"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-1-city",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": [
+                  "cnryokvutiqg",
+                  "cnrytzhdtjoo",
+                  "cnrydwvkabvm"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnrydwvkabvm",
+                    "cnrytzhdtjoo",
+                    "cnryokvutiqg"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-1-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": "cnryppomcqqz",
+                "answer": {
+                  "tokens": [
+                    "cnryppomcqqz"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-1-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": "cnryppomcqqz",
+                "answer": {
+                  "unstruck": [
+                    "cnryppomcqqz"
+                  ],
+                  "struck": [
+                    "cnryqdjjywqk",
+                    "cnryplinawhk",
+                    "cnryctoncoqw"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-1-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": [
+                  "cnryqdjjywqk",
+                  "cnryplinawhk",
+                  "cnryctoncoqw"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryctoncoqw",
+                    "cnryplinawhk",
+                    "cnryqdjjywqk"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-2-city",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": "cnrybczpsvxz",
+                "answer": {
+                  "tokens": [
+                    "cnrybczpsvxz"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-2-city",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": "cnrybczpsvxz",
+                "answer": {
+                  "unstruck": [
+                    "cnrybczpsvxz"
+                  ],
+                  "struck": [
+                    "cnrywosqamme"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-2-city",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": [
+                  "cnrywosqamme"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnrywosqamme"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-2-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": "cnryqadevdvf",
+                "answer": {
+                  "tokens": [
+                    "cnryqadevdvf"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-2-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": "cnryqadevdvf",
+                "answer": {
+                  "unstruck": [
+                    "cnryqadevdvf"
+                  ],
+                  "struck": [
+                    "cnryqadevdvf",
+                    "cnryvtvcctfc"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-2-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": [
+                  "cnryqadevdvf",
+                  "cnryvtvcctfc"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryvtvcctfc",
+                    "cnryqadevdvf"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:fence-5-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": "cnrycifyeaof",
+                "answer": {
+                  "tokens": [
+                    "cnrycifyeaof"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:fence-5-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": "cnrycifyeaof",
+                "answer": {
+                  "unstruck": [
+                    "cnrycifyeaof"
+                  ],
+                  "struck": [
+                    "cnryqdiinuyb",
+                    "cnrykypmdqok",
+                    "cnrymydgpuih",
+                    "cnryivxhllkk"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_history:fence-5-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": [
+                  "cnryqdiinuyb",
+                  "cnrykypmdqok",
+                  "cnrymydgpuih",
+                  "cnryivxhllkk"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryivxhllkk",
+                    "cnrymydgpuih",
+                    "cnrykypmdqok",
+                    "cnryqdiinuyb"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:recall:ghost",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "negative",
+                "chain": "ghost",
+                "depth": 0,
+                "kind": "explicit",
+                "gold": null,
+                "answer": {
+                  "tokens": []
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:fence_current:search:ghost",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "negative",
+                "chain": "ghost",
+                "depth": 0,
+                "kind": "explicit",
+                "gold": null,
+                "answer": {
+                  "unstruck": [],
+                  "struck": []
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-1-location",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": "Viseu cnryrkoqrkcu",
+                "answer": {
+                  "value": "Viseu cnryrkoqrkcu"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-location:2019-05-16",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-location:2019-11-01",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": "Lisbon cnryjbzqccdi",
+                "answer": {
+                  "value": "Lisbon cnryjbzqccdi"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-2-employer",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Orchard Labs cnryicbpdurt",
+                "answer": {
+                  "value": "Orchard Labs cnryicbpdurt"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-employer:2019-04-30",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-employer:2019-08-28",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Summit Freight cnryoxfarrqy",
+                "answer": {
+                  "value": "Summit Freight cnryoxfarrqy"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-employer:2020-05-05",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Lantern Media cnrydzqghsry",
+                "answer": {
+                  "value": "Lantern Media cnrydzqghsry"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-5-role",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "analyst cnrymyabeksg",
+                "answer": {
+                  "value": "analyst cnrymyabeksg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-5-role:2019-07-09",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-5-role:2020-02-29",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "analyst cnrymyabeksg",
+                "answer": {
+                  "value": "analyst cnrymyabeksg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-5-role:2021-06-20",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "manager cnrygrrylvax",
+                "answer": {
+                  "value": "manager cnrygrrylvax"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-1-role",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "engineer cnryplfdydiu",
+                "answer": {
+                  "value": "engineer cnryplfdydiu"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-role:2020-02-25",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-role:2020-08-28",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "founder cnryfhqklvhv",
+                "answer": {
+                  "value": "founder cnryfhqklvhv"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-1-role:2022-01-14",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "manager cnrypwhnwpsg",
+                "answer": {
+                  "value": "manager cnrypwhnwpsg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_current:ont-2-style",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-2-style",
+                "depth": 0,
+                "kind": "exposure",
+                "gold": "consensus cnryxksymjaq",
+                "answer": {
+                  "value": "consensus cnryxksymjaq"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:ontology_asof:ont-2-style:2021-03-25",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-2-style",
+                "depth": 0,
+                "kind": "exposure",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:trajectory_current:traj-3-mrr",
+                "type": "trajectory_current",
+                "surface": "find_trajectory",
+                "class": "current",
+                "chain": "traj-3-mrr",
+                "depth": 1,
+                "kind": "correction",
+                "gold": 47200,
+                "answer": {
+                  "latest": 47200
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "sequential:trajectory_history:traj-3-mrr",
+                "type": "trajectory_history",
+                "surface": "find_trajectory-history",
+                "class": "history",
+                "chain": "traj-3-mrr",
+                "depth": 1,
+                "kind": "correction",
+                "gold": [
+                  [
+                    "2024-01",
+                    49850
+                  ],
+                  [
+                    "2024-02",
+                    35000
+                  ],
+                  [
+                    "2024-03",
+                    47200
+                  ]
+                ],
+                "answer": {
+                  "points": [
+                    [
+                      "2024-01",
+                      49850
+                    ],
+                    [
+                      "2024-02",
+                      35000
+                    ],
+                    [
+                      "2024-03",
+                      47200
+                    ]
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              }
+            ],
+            "exposure": [
+              {
+                "probe_id": "sequential:exposure:recall:fence-5-city",
+                "surface": "recall",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              },
+              {
+                "probe_id": "sequential:exposure:ontology_get:ont-2-risk",
+                "surface": "ontology_get",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              },
+              {
+                "probe_id": "sequential:exposure:find_trajectory:traj-3-burn",
+                "surface": "find_trajectory",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              }
+            ],
+            "acked_lost": [],
+            "struck_in_search": 13
+          },
+          "concurrent": {
+            "rows": [
+              {
+                "probe_id": "concurrent:fence_current:recall:fence-1-city",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": "cnrylqzlmjbt",
+                "answer": {
+                  "tokens": [
+                    "cnrylqzlmjbt"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:search:fence-1-city",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": "cnrylqzlmjbt",
+                "answer": {
+                  "unstruck": [
+                    "cnrylqzlmjbt"
+                  ],
+                  "struck": [
+                    "cnryokvutiqg",
+                    "cnrytzhdtjoo",
+                    "cnrydwvkabvm"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_history:fence-1-city",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-1-city",
+                "depth": 3,
+                "kind": "revert",
+                "gold": [
+                  "cnryokvutiqg",
+                  "cnrytzhdtjoo",
+                  "cnrydwvkabvm",
+                  "cnrytzhdtjoo"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnrytzhdtjoo",
+                    "cnrydwvkabvm",
+                    "cnrytzhdtjoo",
+                    "cnryokvutiqg"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:recall:fence-1-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": "cnryyjtqbhrm",
+                "answer": {
+                  "tokens": [
+                    "cnryyjtqbhrm"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:search:fence-1-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": "cnryyjtqbhrm",
+                "answer": {
+                  "unstruck": [
+                    "cnryyjtqbhrm"
+                  ],
+                  "struck": [
+                    "cnryqdjjywqk",
+                    "cnryplinawhk",
+                    "cnryctoncoqw",
+                    "cnryppomcqqz"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_history:fence-1-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-1-employer",
+                "depth": 3,
+                "kind": "explicit",
+                "gold": [
+                  "cnryqdjjywqk",
+                  "cnryplinawhk",
+                  "cnryctoncoqw",
+                  "cnryppomcqqz"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryppomcqqz",
+                    "cnryctoncoqw",
+                    "cnryplinawhk",
+                    "cnryqdjjywqk"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:recall:fence-2-city",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": "cnrybbmhkski",
+                "answer": {
+                  "tokens": [
+                    "cnrybbmhkski"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:search:fence-2-city",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": "cnrybbmhkski",
+                "answer": {
+                  "unstruck": [
+                    "cnrybbmhkski"
+                  ],
+                  "struck": [
+                    "cnrywosqamme",
+                    "cnrybczpsvxz"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_history:fence-2-city",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-2-city",
+                "depth": 1,
+                "kind": "explicit",
+                "gold": [
+                  "cnrywosqamme",
+                  "cnrybczpsvxz"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnrybczpsvxz",
+                    "cnrywosqamme"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:recall:fence-2-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": "cnrysjtffdqa",
+                "answer": {
+                  "tokens": [
+                    "cnrysjtffdqa"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:search:fence-2-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": "cnrysjtffdqa",
+                "answer": {
+                  "unstruck": [
+                    "cnrysjtffdqa"
+                  ],
+                  "struck": [
+                    "cnryqadevdvf",
+                    "cnryvtvcctfc"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_history:fence-2-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-2-employer",
+                "depth": 2,
+                "kind": "revert",
+                "gold": [
+                  "cnryqadevdvf",
+                  "cnryvtvcctfc",
+                  "cnryqadevdvf"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnryqadevdvf",
+                    "cnryvtvcctfc",
+                    "cnryqadevdvf"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:recall:fence-5-employer",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "current",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": "cnrybebaywuq",
+                "answer": {
+                  "tokens": [
+                    "cnrybebaywuq"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:search:fence-5-employer",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "current",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": "cnrybebaywuq",
+                "answer": {
+                  "unstruck": [
+                    "cnrybebaywuq"
+                  ],
+                  "struck": [
+                    "cnryqdiinuyb",
+                    "cnrykypmdqok",
+                    "cnrymydgpuih",
+                    "cnryivxhllkk",
+                    "cnrycifyeaof"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_history:fence-5-employer",
+                "type": "fence_history",
+                "surface": "recall-history",
+                "class": "history",
+                "chain": "fence-5-employer",
+                "depth": 4,
+                "kind": "explicit",
+                "gold": [
+                  "cnryqdiinuyb",
+                  "cnrykypmdqok",
+                  "cnrymydgpuih",
+                  "cnryivxhllkk",
+                  "cnrycifyeaof"
+                ],
+                "answer": {
+                  "expired": [
+                    "cnrycifyeaof",
+                    "cnryivxhllkk",
+                    "cnrymydgpuih",
+                    "cnrykypmdqok",
+                    "cnryqdiinuyb"
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:recall:ghost",
+                "type": "fence_current",
+                "surface": "fence-recall",
+                "class": "negative",
+                "chain": "ghost",
+                "depth": 0,
+                "kind": "explicit",
+                "gold": null,
+                "answer": {
+                  "tokens": []
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:fence_current:search:ghost",
+                "type": "fence_current",
+                "surface": "fence-search",
+                "class": "negative",
+                "chain": "ghost",
+                "depth": 0,
+                "kind": "explicit",
+                "gold": null,
+                "answer": {
+                  "unstruck": [],
+                  "struck": []
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_current:ont-1-location",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": "Leiria cnryoywzliyt",
+                "answer": {
+                  "value": "Leiria cnryoywzliyt"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-1-location:2019-05-16",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-1-location:2019-11-01",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": "Lisbon cnryjbzqccdi",
+                "answer": {
+                  "value": "Lisbon cnryjbzqccdi"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-1-location:2020-08-11",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-location",
+                "depth": 1,
+                "kind": "forward",
+                "gold": "Viseu cnryrkoqrkcu",
+                "answer": {
+                  "value": "Viseu cnryrkoqrkcu"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_current:ont-2-employer",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Quarry Systems cnrydrzthhdj",
+                "answer": {
+                  "value": "Quarry Systems cnrydrzthhdj"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-2-employer:2019-04-30",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-2-employer:2019-08-28",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Summit Freight cnryoxfarrqy",
+                "answer": {
+                  "value": "Summit Freight cnryoxfarrqy"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-2-employer:2020-05-05",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Lantern Media cnrydzqghsry",
+                "answer": {
+                  "value": "Lantern Media cnrydzqghsry"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-2-employer:2021-02-02",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-employer",
+                "depth": 2,
+                "kind": "forward",
+                "gold": "Orchard Labs cnryicbpdurt",
+                "answer": {
+                  "value": "Orchard Labs cnryicbpdurt"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_current:ont-5-role",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "advisor cnrygsjzwuov",
+                "answer": {
+                  "value": "advisor cnrygsjzwuov"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-5-role:2019-07-09",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-5-role:2020-02-29",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "analyst cnrymyabeksg",
+                "answer": {
+                  "value": "analyst cnrymyabeksg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-5-role:2021-06-20",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "manager cnrygrrylvax",
+                "answer": {
+                  "value": "manager cnrygrrylvax"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-5-role:2022-06-15",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-5-role",
+                "depth": 2,
+                "kind": "revert-same-source",
+                "gold": "analyst cnrymyabeksg",
+                "answer": {
+                  "value": "analyst cnrymyabeksg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_current:ont-1-role",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "analyst cnryjemizngj",
+                "answer": {
+                  "value": "analyst cnryjemizngj"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-1-role:2020-02-25",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-1-role:2020-08-28",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "founder cnryfhqklvhv",
+                "answer": {
+                  "value": "founder cnryfhqklvhv"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-1-role:2022-01-14",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "manager cnrypwhnwpsg",
+                "answer": {
+                  "value": "manager cnrypwhnwpsg"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-1-role:2023-05-13",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-1-role",
+                "depth": 2,
+                "kind": "backdated",
+                "gold": "engineer cnryplfdydiu",
+                "answer": {
+                  "value": "engineer cnryplfdydiu"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_current:ont-2-style",
+                "type": "ontology_current",
+                "surface": "ontology_get",
+                "class": "current",
+                "chain": "ont-2-style",
+                "depth": 0,
+                "kind": "exposure",
+                "gold": "fast cnryjimmauya",
+                "answer": {
+                  "value": "fast cnryjimmauya"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-2-style:2021-03-25",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "negative",
+                "chain": "ont-2-style",
+                "depth": 0,
+                "kind": "exposure",
+                "gold": null,
+                "answer": {
+                  "value": null
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:ontology_asof:ont-2-style:2022-09-21",
+                "type": "ontology_asof",
+                "surface": "ontology_get-asof",
+                "class": "history",
+                "chain": "ont-2-style",
+                "depth": 0,
+                "kind": "exposure",
+                "gold": "consensus cnryxksymjaq",
+                "answer": {
+                  "value": "consensus cnryxksymjaq"
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:trajectory_current:traj-3-mrr",
+                "type": "trajectory_current",
+                "surface": "find_trajectory",
+                "class": "current",
+                "chain": "traj-3-mrr",
+                "depth": 1,
+                "kind": "correction",
+                "gold": 48600,
+                "answer": {
+                  "latest": 48600
+                },
+                "pass": true,
+                "stale": false
+              },
+              {
+                "probe_id": "concurrent:trajectory_history:traj-3-mrr",
+                "type": "trajectory_history",
+                "surface": "find_trajectory-history",
+                "class": "history",
+                "chain": "traj-3-mrr",
+                "depth": 1,
+                "kind": "correction",
+                "gold": [
+                  [
+                    "2024-01",
+                    49850
+                  ],
+                  [
+                    "2024-02",
+                    35000
+                  ],
+                  [
+                    "2024-03",
+                    47200
+                  ],
+                  [
+                    "2024-04",
+                    48600
+                  ]
+                ],
+                "answer": {
+                  "points": [
+                    [
+                      "2024-01",
+                      49850
+                    ],
+                    [
+                      "2024-02",
+                      35000
+                    ],
+                    [
+                      "2024-03",
+                      47200
+                    ],
+                    [
+                      "2024-04",
+                      48600
+                    ]
+                  ]
+                },
+                "pass": true,
+                "stale": false
+              }
+            ],
+            "exposure": [
+              {
+                "probe_id": "concurrent:exposure:recall:fence-5-city",
+                "surface": "recall",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              },
+              {
+                "probe_id": "concurrent:exposure:ontology_get:ont-2-risk",
+                "surface": "ontology_get",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              },
+              {
+                "probe_id": "concurrent:exposure:find_trajectory:traj-3-burn",
+                "surface": "find_trajectory",
+                "leak": false,
+                "control_trusted": true,
+                "control_twin": true,
+                "signal": true
+              }
+            ],
+            "acked_lost": [],
+            "struck_in_search": 16
+          }
+        },
+        "private_value_leaks": 0,
+        "leak_evidence": [],
+        "calls": {
+          "primary": 181,
+          "trusted": 36
+        },
+        "operator": [
+          {
+            "step": "init",
+            "args": [
+              "init",
+              "--pglite",
+              "--path",
+              "<tmp>/n1-knowledge-update-cells-RPG3mK/n1-pglite-mcp-stdio/gbrain-home/brain.pglite",
+              "--no-embedding",
+              "--non-interactive"
+            ],
+            "code": 0,
+            "ms": 4231,
+            "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v215)...\n  v142: takes.embedding resized to vector(1024); existing take vectors cleared\n  210 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <tmp>/n1-knowledge-update-cells-RPG3mK/n1-pglite-mcp-stdio/gbrain-home/.gbrain/content/4cdf4a00-1a18-4615-86b3-c3bcd8740fb5/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+          },
+          {
+            "step": "sources-add:vault",
+            "args": [
+              "sources",
+              "add",
+              "vault",
+              "--path",
+              "<tmp>/n1-knowledge-update-cells-RPG3mK/n1-pglite-mcp-stdio/vault-vault"
+            ],
+            "code": 0,
+            "ms": 1126,
+            "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"<tmp>/n1-knowledge-update-cells-RPG3mK/n1-pglite-mcp-stdio/vault-vault\",\n  \"source_incarnation\": \"9fc2f967-2a15-4d7d-b836-6409d4b6987d\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"b7b9ef47-090d-47eb-8afc-a377c75aa3b6\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+          },
+          {
+            "step": "sources-default",
+            "args": [
+              "sources",
+              "default",
+              "vault"
+            ],
+            "code": 0,
+            "ms": 1054,
+            "tail": "Default source set to \"vault\"."
+          },
+          {
+            "step": "decide-status",
+            "args": [
+              "decide",
+              "status",
+              "--json"
+            ],
+            "code": 0,
+            "ms": 1080,
+            "tail": "          \"oldest_pending_days\": null,\n          \"accepted_30d\": 0,\n          \"rejected_30d\": 0\n        }\n      ]\n    }\n  ]\n}"
+          },
+          {
+            "step": "reimport-sync",
+            "args": [
+              "sync",
+              "--source",
+              "vault",
+              "--full",
+              "--no-pull"
+            ],
+            "code": 0,
+            "ms": 1546,
+            "tail": "First sync complete. Checkpoint: 0f6f7162\n  0 file(s) imported, 0 chunks\nManaged sync synced: 4 entries this run (0 written, 4 waived), 550.5 pages/min.\n[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); extends while the sync keeps progressing (stops after 900s without progress); disable with --no-hard-deadline\n[sync] managed catch-up: 4 entries frozen, 4 remaining; one write request per page (bulk off: PGLite publishes without network round trips; bulk applies to Postgres).\n[sync] 1/4 processed (0 written, 1 waived this run) · 392.2 pages/min · indexing ETA 1s\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+          }
+        ]
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 149,
+    "attempted": 149,
+    "scored": 149,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  }
+}

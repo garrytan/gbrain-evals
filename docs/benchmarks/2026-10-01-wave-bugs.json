@@ -364,6 +364,53 @@
       ]
     },
     {
+      "id": "N1-7",
+      "category": "knowledge-update",
+      "classification": "bug",
+      "gbrain_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "status": "fixed",
+      "contract": "An acknowledged ontology_propose observation stays readable through ontology_get until a later observation supersedes it (Life Chronicle ontology; N1's no-acknowledged-write-lost rule, eval/registry.ts knowledge-update-ci). Ontology observations are facts rows with a dimension and row_num NULL (mergeOntologyFact), owned by the ontology, not by a page's Facts fence.",
+      "surface": "src/core/facts/unfenced-facts.ts planUnfencedFacts (selects every row_num IS NULL, expired_at IS NULL fact of the source, including ontology rows with dimension IS NOT NULL), called first by src/core/cycle/extract-facts.ts runExtractFacts since gbrain 7007ba60 (#6024, v0.60.53.0); reached from the serve-resident maintenance sweep (src/core/sweep.ts, after about 3 s of stdin silence) and the dream cycle",
+      "repro": "bun docs/benchmarks/2026-10-06-followups-repin/repros/n1-7-sweep-fences-ontology.ts   (exit 1 while it reproduces; GBRAIN_ROOT=<checkout> for another commit)",
+      "expected": "After a sweep and an ordinary rewrite of the entity page, ontology_get still returns the observation with its own source.",
+      "actual": "The first sweep fences the ontology row onto the page's Facts fence (its source becomes the page slug and it gets a row_num); the next page write without that row plus a sweep expires it as a row that left the fence, and ontology_get returns []. In N1-ci the sweep fires only when the harness pauses for 3 s between writes, so it shows under CPU contention (GitHub's 4-core runner, or the cell pinned to one core): 1 to 3 acknowledged ontology writes lost per run, current-value accuracy 0.86 to 0.95, history retained 0.60 to 0.82. On unloaded 16-core VMs and this 4-core machine unpinned, N1-ci passes. A second symptom has the same cause: in 5 of the 24 contended bisect runs at commits containing 7007ba60 (none of the 40 runs without it), N1-ci also served a superseded Facts-fence value, 6 stale current-value probes on chain fence-5-employer through recall and search.",
+      "reason": null,
+      "review": {
+        "date": "2026-10-07",
+        "gbrain_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-06-followups-repin/n1-7/repro-a865f8f.json",
+          "docs/benchmarks/2026-10-06-followups-repin/n1-7/n1-ci-a865f8f-unpinned.json",
+          "docs/benchmarks/2026-10-06-followups-repin/n1-7/n1-ci-a865f8f-contended.json"
+        ],
+        "note": "Rechecked at the new pin a865f8f (gbrain-evals 0.10.37). The keyless repro passes: the ontology row keeps its own source after the first sweep and ontology_get still returns it after the rewrite and second sweep. N1-ci passes on this 4-core machine unpinned and pinned to one core (taskset -c 0): 0 acknowledged writes lost, 64 of 64 current-value probes correct, 0 stale values served, history retained 1.0; it also passes in GitHub CI's checks job at 7cfca65. The stale fence-value symptom is gone with the lost writes: it appeared only at commits containing 7007ba60 and 0 stale values are served at a865f8f, so it is recorded as the same cause, not a separate entry."
+      },
+      "fixing_pr": "garrytan/gbrain#6265 (merged as a865f8f, v0.60.104.0)",
+      "fixing_commit": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "review_history": [
+        {
+          "date": "2026-10-07",
+          "gbrain_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/repro-new.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/repro-old.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/repro-1da881a3.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/repro-7007ba60.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/repro-master.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/n1-ci-c5fb0201-github-ci.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/n1-ci-c5fb0201-contended.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/n1-ci-739e5cc-contended.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/n1-ci-1da881a3-contended.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/n1-ci-7007ba60-contended.json",
+            "docs/benchmarks/2026-10-06-followups-repin/n1-7/bisect-summary.txt"
+          ],
+          "note": "Bisected with N1-ci pinned to one core (two runs per commit; any lost write or history below 1 counts as bad) over gbrain's first-parent history 739e5cc..c5fb0201, then inside #6024 and its lane D: 1da881a3 good, 7007ba60 ('fix(facts): the extract_facts cycle phase fences row_num-NULL facts itself (#5299)') bad. The keyless repro passes at 739e5cc and 1da881a3 and fails at 7007ba60, c5fb0201 and master 5b58910 (v0.60.102.0). Likely fix: planUnfencedFacts excludes rows with dimension IS NOT NULL (ontology observations), and runExtractFacts scopes the fence step to opts.slugs when the sweep passes them."
+        }
+      ]
+    },
+    {
       "id": "N2-1",
       "category": "contradiction-surfacing",
       "classification": "bug",
@@ -2119,6 +2166,52 @@
         "note": "Bisect: 0 oracles at 8b5ed04c6 (v0.60.45.0), 3 at 739e5cc, so the range is 8b5ed04c6..739e5cc89 (#5991). With one session id per probe call (gbrain-evals 0.10.17), N6 passes at 739e5cc and 109b992 with 0 oracles; no other N6 metric changes."
       },
       "reason": "Harness defect in gbrain-evals (N6's callers shared one notice session), exposed by gbrain #5991's notice dedupe and fixed in gbrain-evals 0.10.17: every probe call gets its own session id. Not a gbrain leak: the extra block is a fixed info notice and follows call order."
+    },
+    {
+      "id": "N6-2",
+      "category": "visibility-leak-fuzz",
+      "classification": "category-defect",
+      "gbrain_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "status": "not-a-bug",
+      "contract": "N6 (eval/registry.ts visibility-leak-fuzz) gates on zero existence-oracle probes, comparing protected and ghost responses after masking target values and volatile keys such as latency_ms; gbrain documents that a tool result's body is content[0] and that notice blocks follow it (src/core/connect-probe.ts resultBodyText).",
+      "surface": "eval/runner/n6-visibility-fuzz.ts parseToolResult joined every content block before JSON.parse, against the [gbrain notice mention_index kind=degraded] block entity appends at v0.60.95.0",
+      "repro": "bun eval/runner/n6-visibility-fuzz.ts --only entity   (at gbrain-evals 084d373 or d841738: oracles > 0; at 3894363 and later: 0)",
+      "expected": "0 existence-oracle probes, as at 739e5cc",
+      "actual": "13 to 14 oracle probes, all on entity, across stdio, http-read, http-write and http-bound; each protected and ghost response differs only in latency_ms, because the joined text is not JSON, so data stayed a raw string and the volatile-key mask never applied",
+      "reason": "a harness defect in gbrain-evals, not a gbrain leak: fixed in gbrain-evals 3894363 (parseToolResult parses content[0] as the body; the oracle check compares the parsed body plus the notice blocks)",
+      "review": {
+        "date": "2026-10-06",
+        "gbrain_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-06-n8-privacy-gate/n6-receipt-c5fb0201-run1-notice-parse.json",
+          "docs/benchmarks/2026-10-06-n8-privacy-gate/n6-receipt-c5fb0201.json"
+        ],
+        "note": "before the fix 13 oracle probes on entity (the W1 offline-tier VM run at c5fb0201 saw 14); after it 0 content, 0 existence and 0 oracle probes over 6,490 exposed probes, every N6 rule passing; entity signal rose from 16 to 20 probes once its body parsed"
+      }
+    },
+    {
+      "id": "N6-3",
+      "category": "visibility-leak-fuzz",
+      "classification": "category-defect",
+      "gbrain_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "status": "not-a-bug",
+      "contract": "N6 (eval/registry.ts visibility-leak-fuzz) gates on zero existence-oracle probes, comparing protected and ghost responses after masking target values and volatile keys (ids, scores, *_at, *_ms, now, timestamp).",
+      "surface": "eval/runner/n6-visibility-fuzz.ts VOLATILE_KEY did not cover as_of, the reference time open_loops echoes in its response (default: now); gbrain fix wave 10 (#6217, v0.60.97.0) added an id parameter to open_loops, so N6 now probes it as a targeted op",
+      "repro": "bun eval/runner/all.ts --only N6   (at gbrain-evals 7cfca65 with gbrain a865f8f: 156 oracle probes, all open_loops; at d6b4aac and later: 0)",
+      "expected": "0 existence-oracle probes, as at c5fb0201",
+      "actual": "142 to 156 oracle probes, all on open_loops across stdio, http-read, http-write and http-bound; each protected and ghost response is identical except as_of, the wall-clock time of the call, a millisecond apart",
+      "reason": "a harness defect in gbrain-evals, not a gbrain leak: fixed in gbrain-evals d6b4aac (as_of joins the volatile keys; a unit test fails before and passes after)",
+      "review": {
+        "date": "2026-10-07",
+        "gbrain_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-06-followups-repin/n6-a865f8f-before-as-of-mask.json",
+          "docs/benchmarks/2026-10-06-followups-repin/n6-a865f8f-as-of-mask.json"
+        ],
+        "note": "before the fix 156 oracle probes locally and 142 in GitHub CI at 7cfca65; after it 0 content, 0 existence and 0 oracle probes over 6,938 exposed probes, every N6 rule passing; open_loops now runs 756 targeted probes with 0 signal"
+      }
     },
     {
       "id": "CL-1",

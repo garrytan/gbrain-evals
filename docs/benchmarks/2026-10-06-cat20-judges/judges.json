@@ -1,0 +1,100 @@
+{
+  "real": {
+    "ideas": 216,
+    "passing": 0,
+    "judges": [
+      {
+        "judge": "anthropic:claude-sonnet-5-5",
+        "judgments": 216,
+        "errors": 0,
+        "mean_passing": null,
+        "ci_passing": null,
+        "mean_rejected": 3.138888888888889,
+        "mean_all": 3.138888888888889,
+        "passing_minus_rejected": null,
+        "crosses_floor": false
+      },
+      {
+        "judge": "openai:gpt-6.1-sol",
+        "judgments": 216,
+        "errors": 0,
+        "mean_passing": null,
+        "ci_passing": null,
+        "mean_rejected": 3.548611111111111,
+        "mean_all": 3.548611111111111,
+        "passing_minus_rejected": null,
+        "crosses_floor": false
+      },
+      {
+        "judge": "anthropic:claude-opus-5-5",
+        "judgments": 216,
+        "errors": 0,
+        "mean_passing": null,
+        "ci_passing": null,
+        "mean_rejected": 3.113425925925926,
+        "mean_all": 3.113425925925926,
+        "passing_minus_rejected": null,
+        "crosses_floor": false
+      },
+      {
+        "judge": "anthropic:claude-fable-5-1",
+        "judgments": 216,
+        "errors": 24,
+        "mean_passing": null,
+        "ci_passing": null,
+        "mean_rejected": 3.2083333333333335,
+        "mean_all": 3.2083333333333335,
+        "passing_minus_rejected": null,
+        "crosses_floor": false
+      }
+    ],
+    "pairs": [
+      {
+        "a": "anthropic:claude-sonnet-5-5",
+        "b": "openai:gpt-6.1-sol",
+        "n": 216,
+        "spearman": 0.48934980521290533,
+        "mean_abs_diff": 0.5439814814814815
+      },
+      {
+        "a": "anthropic:claude-sonnet-5-5",
+        "b": "anthropic:claude-opus-5-5",
+        "n": 216,
+        "spearman": 0.6184378938357711,
+        "mean_abs_diff": 0.33101851851851855
+      },
+      {
+        "a": "anthropic:claude-sonnet-5-5",
+        "b": "anthropic:claude-fable-5-1",
+        "n": 192,
+        "spearman": 0.5516763113298051,
+        "mean_abs_diff": 0.3776041666666667
+      },
+      {
+        "a": "openai:gpt-6.1-sol",
+        "b": "anthropic:claude-opus-5-5",
+        "n": 216,
+        "spearman": 0.6462457093396387,
+        "mean_abs_diff": 0.49074074074074076
+      },
+      {
+        "a": "openai:gpt-6.1-sol",
+        "b": "anthropic:claude-fable-5-1",
+        "n": 192,
+        "spearman": 0.5334710686008978,
+        "mean_abs_diff": 0.5104166666666666
+      },
+      {
+        "a": "anthropic:claude-opus-5-5",
+        "b": "anthropic:claude-fable-5-1",
+        "n": 192,
+        "spearman": 0.5439207024498549,
+        "mean_abs_diff": 0.3619791666666667
+      }
+    ],
+    "median_of_judge_means_on_passing": null,
+    "judges_crossing_floor": 0,
+    "decision": "inconclusive",
+    "median_of_judge_means_on_all": 3.173611111111111
+  }
+}

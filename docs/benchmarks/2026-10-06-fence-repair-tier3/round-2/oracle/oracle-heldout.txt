@@ -1,0 +1,55 @@
+h-f-st-01: repaired   residual=short_row requests=1
+h-f-st-02: repaired   residual=short_row requests=1
+h-f-st-03: repaired   residual=short_row requests=1
+h-f-st-04: repaired   residual=short_row requests=1
+h-f-st-05: repaired   residual=short_row requests=1
+h-f-st-06: repaired   residual=short_row requests=1
+h-t-st-01: repaired   residual=short_row requests=1
+h-t-st-02: repaired   residual=short_row requests=1
+h-t-st-03: repaired   residual=short_row requests=1
+h-f-sg-01: repaired   residual=short_row requests=1
+h-f-sg-02: repaired   residual=short_row requests=1
+h-f-sg-03: repaired   residual=short_row requests=1
+h-f-sg-04: repaired   residual=short_row requests=1
+h-f-nh-01: repaired   residual=no_header requests=1
+h-f-nh-02: repaired   residual=no_header requests=1
+h-f-nh-03: repaired   residual=no_header requests=1
+h-f-nh-04: repaired   residual=no_header requests=1
+h-t-nh-01: repaired   residual=no_header requests=1
+h-t-nh-02: repaired   residual=no_header requests=1
+h-f-rb-01: repaired   residual=row_before_header requests=1
+h-f-rb-02: repaired   residual=row_before_header requests=1
+h-f-rb-03: repaired   residual=row_before_header requests=1
+h-t-rb-01: repaired   residual=row_before_header requests=1
+h-t-rb-02: repaired   residual=row_before_header requests=1
+h-f-hu-01: repaired   residual=header_unmapped requests=1
+h-f-hu-02: repaired   residual=header_unmapped requests=1
+h-f-hu-03: repaired   residual=header_unmapped requests=1
+h-f-hu-03 (# left empty): repaired   residual=header_unmapped requests=1
+h-f-hu-04: repaired   residual=header_unmapped requests=1
+h-t-hu-01: repaired   residual=header_unmapped requests=1
+h-t-hu-02: repaired   residual=header_unmapped requests=1
+h-t-hu-02 (# left empty): repaired   residual=header_unmapped requests=1
+h-f-mix-01: repaired   residual=short_row requests=1
+h-t-mix-01: repaired   residual=row_before_header,short_row requests=1
+h-b-mix-01: repaired   residual=no_header,short_row requests=2
+h-adv-03: repaired   residual=header_unmapped requests=1
+h-adv-04: repaired   residual=header_unmapped requests=1
+h-adv-05: repaired   residual=short_row requests=1
+h-adv-06: repaired   residual=short_row requests=1
+h-spl-04: repaired   residual=no_header requests=1
+h-unr-01: held cell_changed f residual=short_row requests=1
+h-unr-02: held cell_changed f residual=short_row requests=1
+ROUTING h-f-ex-01: repaired by Tier 1 (deterministic) exactly as expected
+ROUTING h-f-ex-02: repaired by Tier 1 (deterministic) exactly as expected
+ROUTING h-f-ex-03: repaired by Tier 1 (deterministic) exactly as expected
+ROUTING h-f-ex-04: repaired by Tier 1 (deterministic) exactly as expected
+ROUTING h-f-ex-05: held before Tier 3 (extra_cells)
+ROUTING h-t-ex-01: repaired by Tier 1 (deterministic) exactly as expected
+ROUTING h-t-ex-02: repaired by Tier 1 (deterministic) exactly as expected
+ROUTING h-adv-01: held before Tier 3 (extra_cells)
+ROUTING h-adv-02: held before Tier 3 (extra_cells)
+ROUTING h-spl-01: held before Tier 3 (extra_cells)
+ROUTING h-spl-02: held before Tier 3 (extra_cells)
+ROUTING h-spl-03: held before Tier 3 (claim_split)
+oracle: 52 fixture(s) from evals/fence-repair-tier3/heldout.jsonl, 12 routing note(s), 0 violation(s)

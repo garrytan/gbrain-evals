@@ -1,0 +1,82 @@
+{
+  "probe_id": "cat14-pos-3-macro",
+  "category": "calibration-pattern-relevant",
+  "question": "AI valuations are at all-time highs. Should we pull our AI investment activity for 6 months?",
+  "baseline_answer": "## Answer\n\nThe brain has no direct evidence on whether pausing AI investment for 6 months is the right call. It does hold a track record of garry's past macro-timing calls on AI, and those calls were wrong.\n\n- Garry predicted \"AI hype cycle peaks by Q3 2024\" with conviction weight 0.85. The outcome was incorrect [cat14/cat14-pos-3-macro/take-1].\n- Garry predicted \"AI valuations correct by year-end 2024\" with conviction weight 0.8. The outcome was incorrect [cat14/cat14-pos-3-macro/take-2].\n- Garry predicted \"The bubble pops in 2025\" with conviction weight 0.85. The outcome was incorrect [cat14/cat14-pos-3-macro/take-3].\n\nAll three resolved takes are in the macro-timing domain, all were held at high conviction (0.8–0.85), and all were wrong. Each was a call that AI valuations or hype would turn down. A pause justified by high valuations would rest on a similar timing view. The brain's record shows that this kind of call has not worked for garry so far.\n\nThese three takes are a small sample. They show that past timing calls on valuation peaks were wrong. They do not show that valuations today are justified, or that a pause would be a mistake. The brain holds no takes on current (2026) valuations, on the fund's own AI portfolio performance, or on the cost of sitting out for 6 months.",
+  "calibrated_answer": "## Answer\n\nThe brain has no evidence on whether to pause AI investment activity for 6 months. It holds no data on current valuations, portfolio exposure, pipeline, or fund constraints. It does hold a track record of earlier macro-timing calls that bears on how the question is framed.\n\n**Track record on this theme (domain: macro-timing, holder: garry):**\n- \"AI hype cycle peaks by Q3 2024\" was recorded 2024-01-15 at conviction 0.85. It resolved **incorrect** [cat14/cat14-pos-3-macro/take-1].\n- \"AI valuations correct by year-end 2024\" was recorded 2024-04-10 at conviction 0.8. It resolved **incorrect** [cat14/cat14-pos-3-macro/take-2].\n- \"The bubble pops in 2025\" was recorded 2024-07-30 at conviction 0.85. It resolved **incorrect** [cat14/cat14-pos-3-macro/take-3].\n\nThe premise that valuations are at all-time highs is stated in the question and is not verified by anything in the brain. Pulling back on that basis is the same style of reasoning the three resolved calls above rested on: high valuations imply a near-term correction.\n\n## Calibration\n\n- **Prior (default reasoning):** Valuations at all-time highs signal froth, so reduce exposure. This matches the thesis in all three resolved takes above.\n- **Counter-prior (from the hedged macro-timing self):** The calibration profile says three high-conviction macro-timing calls in 2024 all missed, and that the macro-timing prior is consistently early by 12-18 months. [unverified] On that reading, the instinct that valuations are stretched may be directionally defensible but poorly timed.\n- **Caveat on the \"early\" framing:** The resolved pages record the outcomes only as \"incorrect.\" The early by 12-18 months [unverified] interpretation comes from the calibration profile, not from the pages themselves. The brain cannot say whether the underlying thesis was wrong or only mistimed.\n- **Bias tag:** The only active tag is `well-calibrated-founder-patterns`. It does not speak to macro-timing, so it offers no debiasing signal here.\n- **Track-record summary:** The brain shows 0 correct out of 3 on AI macro-timing calls, with conviction weights of 0.8–0.85 on each. All three are resolved and none is still open [cat14/cat14-pos-3-macro/take-1] [cat14/cat14-pos-3-macro/take-2] [cat14/cat14-pos-3-macro/take-3].",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "QUOTE_NOT_IN_EVIDENCE"
+    ]
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the instinct to pause because of high valuations with the user's unsuccessful macro-timing track record, but neither gives a substantive recommendation. Both use detached, record-reporting language and untranslated conviction weights rather than a conversational voice. B includes the relevant 12–18-month timing pattern, but also introduces an unrelated founder-pattern bias tag and incorrectly calls it the only active tag. A is more useful overall because it delivers the relevant caution without that misleading addition. || Both answers connect the instinct to pause because valuations are high with the user's poor macro-timing track record, without establishing that a pause is necessarily wrong. Neither maintains a friend-like voice, and both expose untranslated conviction weights. A additionally invents an unrelated active bias tag and treats the supplied timing profile as unverified; that tag is not actually a profile pattern, so it does not meet the defined irrelevant-bias criterion. B is more useful because it delivers essentially the same caution more clearly and without those contradictions."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the instinct to pause because of high valuations with the user's unsuccessful macro-timing track record, but neither gives a substantive recommendation. Both use detached, record-reporting language and untranslated conviction weights rather than a conversational voice. B includes the relevant 12–18-month timing pattern, but also introduces an unrelated founder-pattern bias tag and incorrectly calls it the only active tag. A is more useful overall because it delivers the relevant caution without that misleading addition. || Both answers connect the instinct to pause because valuations are high with the user's poor macro-timing track record, without establishing that a pause is necessarily wrong. Neither maintains a friend-like voice, and both expose untranslated conviction weights. A additionally invents an unrelated active bias tag and treats the supplied timing profile as unverified; that tag is not actually a profile pattern, so it does not meet the defined irrelevant-bias criterion. B is more useful because it delivers essentially the same caution more clearly and without those contradictions."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers connect the instinct to pause because of high valuations with the user's unsuccessful macro-timing track record, but neither gives a substantive recommendation. Both use detached, record-reporting language and untranslated conviction weights rather than a conversational voice. B includes the relevant 12–18-month timing pattern, but also introduces an unrelated founder-pattern bias tag and incorrectly calls it the only active tag. A is more useful overall because it delivers the relevant caution without that misleading addition. || Both answers connect the instinct to pause because valuations are high with the user's poor macro-timing track record, without establishing that a pause is necessarily wrong. Neither maintains a friend-like voice, and both expose untranslated conviction weights. A additionally invents an unrelated active bias tag and treats the supplied timing profile as unverified; that tag is not actually a profile pattern, so it does not meet the defined irrelevant-bias criterion. B is more useful because it delivers essentially the same caution more clearly and without those contradictions."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers connect the instinct to pause because of high valuations with the user's unsuccessful macro-timing track record, but neither gives a substantive recommendation. Both use detached, record-reporting language and untranslated conviction weights rather than a conversational voice. B includes the relevant 12–18-month timing pattern, but also introduces an unrelated founder-pattern bias tag and incorrectly calls it the only active tag. A is more useful overall because it delivers the relevant caution without that misleading addition. || Both answers connect the instinct to pause because valuations are high with the user's poor macro-timing track record, without establishing that a pause is necessarily wrong. Neither maintains a friend-like voice, and both expose untranslated conviction weights. A additionally invents an unrelated active bias tag and treats the supplied timing profile as unverified; that tag is not actually a profile pattern, so it does not meet the defined irrelevant-bias criterion. B is more useful because it delivers essentially the same caution more clearly and without those contradictions."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        true
+      ],
+      "score": 0.5,
+      "outcome": "split",
+      "rationale": "Both answers connect the instinct to pause because of high valuations with the user's unsuccessful macro-timing track record, but neither gives a substantive recommendation. Both use detached, record-reporting language and untranslated conviction weights rather than a conversational voice. B includes the relevant 12–18-month timing pattern, but also introduces an unrelated founder-pattern bias tag and incorrectly calls it the only active tag. A is more useful overall because it delivers the relevant caution without that misleading addition. || Both answers connect the instinct to pause because valuations are high with the user's poor macro-timing track record, without establishing that a pause is necessarily wrong. Neither maintains a friend-like voice, and both expose untranslated conviction weights. A additionally invents an unrelated active bias tag and treats the supplied timing profile as unverified; that tag is not actually a profile pattern, so it does not meet the defined irrelevant-bias criterion. B is more useful because it delivers essentially the same caution more clearly and without those contradictions."
+    }
+  ],
+  "win_score": 0,
+  "win_overall": "baseline",
+  "per_axis_pass_rate": 0.5,
+  "failure_modes": [
+    "changes_recommendation_meaningfully",
+    "voice_conversational",
+    "doesnt_force_fit_irrelevant_bias"
+  ]
+}

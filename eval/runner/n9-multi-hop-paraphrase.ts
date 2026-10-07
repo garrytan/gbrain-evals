@@ -29,6 +29,7 @@
  *   bun eval/runner/n9-multi-hop-paraphrase.ts
  *   bun eval/runner/n9-multi-hop-paraphrase.ts --gbrain ../gbrain@3a284ae --output /tmp/n9
  *   bun eval/runner/n9-multi-hop-paraphrase.ts --paid --budget-run-id <id>
+ *   bun eval/runner/n9-multi-hop-paraphrase.ts --corpus eval/data/world-v1-attendees   # another world-v1-shaped corpus
  *
  * Decision rules and void conditions: docs/benchmarks/2026-10-01-n9-multi-hop-preregistration.md.
  */
@@ -259,7 +260,7 @@ export interface N9Options {
   quiet?: boolean;
   /** Test seam: replaces the product's hybridSearch (the broken-adapter test). */
   search?: RelationalSearch;
-  /** Test seam: a smaller corpus directory (gold is then regenerated from it, not read from the committed file). */
+  /** Another world-v1-shaped corpus (`--corpus`, e.g. eval/data/world-v1-attendees); gold is then regenerated from it, not read from the committed question file. */
   corpusDir?: string;
   /** Run each ingestion seed's index in its own process (hermetic arm, default on); results merge in seed order. */
   parallelSeeds?: boolean;
@@ -280,6 +281,7 @@ export function parseN9Args(argv: readonly string[]): N9Options {
     if (flag === '--seed') o.seeds = [Number(value())];
     else if (flag === '--seeds') o.seeds = value().split(',').map(Number);
     else if (flag === '--output') o.outputDir = value();
+    else if (flag === '--corpus') o.corpusDir = value();
     else if (flag === '--record-bugs') o.recordBugs = true;
     else if (flag === '--quiet') o.quiet = true;
     else if (flag === '--serial-seeds') o.parallelSeeds = false;
@@ -308,7 +310,9 @@ const sha256 = (v: string | Buffer) => createHash('sha256').update(v).digest('he
 export interface N9Result { receipt: Receipt; exitCode: number; findings: BugEntry[] }
 
 type Presence = { seed: number; anchors: number; found: number; rate: number };
-interface SeedRun { rows: PairedRow[]; indices: Array<Record<string, unknown>>; presence: Presence[]; accounting: ReturnType<ProbeAccounting['toJSON']> }
+/** Every stored `attended` link after one seed's extraction, as [from slug, to slug]: the graph the relational arm walks. */
+type AttendanceEdges = { seed: number; edges: Array<[string, string]> };
+interface SeedRun { rows: PairedRow[]; indices: Array<Record<string, unknown>>; presence: Presence[]; attendance: AttendanceEdges[]; accounting: ReturnType<ProbeAccounting['toJSON']> }
 
 /** Everything both the scorer and a seed worker need: the product, corpus, questions and query list. */
 async function prepareN9(options: N9Options, paid: boolean) {
@@ -340,6 +344,7 @@ async function prepareN9(options: N9Options, paid: boolean) {
 async function indexSeeds(prep: Awaited<ReturnType<typeof prepareN9>>, seeds: readonly number[], embed: EmbedMode, options: N9Options, accounting: ProbeAccounting, log: (s: string) => void): Promise<Omit<SeedRun, 'accounting'>> {
   const { product, pages, queries, anchors } = prep;
   const presence: Presence[] = [];
+  const attendance: AttendanceEdges[] = [];
   const run = await runSharedIndexPairs({
     product, pages, queries, seeds, embed, search: options.search, accounting, log,
     afterIndex: async (engine: PGLiteEngine, seed: number, search: RelationalSearch) => {
@@ -350,9 +355,11 @@ async function indexSeeds(prep: Awaited<ReturnType<typeof prepareN9>>, seeds: re
         if (pair.off.pages.includes(slug)) found += 1;
       }
       presence.push({ seed, anchors: anchors.length, found, rate: found / anchors.length });
+      const edges = await engine.executeRaw<{ f: string; t: string }>(`SELECT DISTINCT f.slug AS f, t.slug AS t FROM links l JOIN pages f ON f.id = l.from_page_id JOIN pages t ON t.id = l.to_page_id WHERE l.link_type = 'attended' ORDER BY f.slug, t.slug`);
+      attendance.push({ seed, edges: edges.map(e => [e.f, e.t] as [string, string]) });
     },
   });
-  return { rows: run.rows, indices: run.indices, presence };
+  return { rows: run.rows, indices: run.indices, presence, attendance };
 }
 
 /**
@@ -430,6 +437,7 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
   });
 
   const presence: Presence[] = [];
+  const attendance: AttendanceEdges[] = [];
   const accounting = new ProbeAccounting(seeds.length * queries.length * 2);
   const paidRun = paid ? startPaidRun(CATEGORY, { ...budgetOptionsFrom(options.paidArgv!), estimateUsd: N9_PAID_ESTIMATE_USD, log }) : null;
   let rows: PairedRow[] = [];
@@ -442,6 +450,7 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
         rows.push(...run.rows);
         indices.push(...run.indices);
         presence.push(...run.presence);
+        attendance.push(...(run.attendance ?? []));
         accounting.absorb(run.accounting);
       }
     } else {
@@ -449,6 +458,7 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
       rows = run.rows;
       indices = run.indices;
       presence.push(...run.presence);
+      attendance.push(...run.attendance);
     }
   } finally {
     paidRun?.guard.uninstall();
@@ -527,12 +537,14 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
       })),
       per_query: oneHopRows.map(r => {
         const m = r.on.relational_meta[0] as { kind?: string | null; seeds_resolved?: number; fired?: boolean; candidates?: number } | undefined;
-        return { seed: r.seed, query_id: r.query_id, split: r.split, template: r.template, text: r.text,
+        return { seed: r.seed, query_id: r.query_id, split: r.split, template: r.template, text: r.text, relevant: r.relevant,
           parsed: Boolean(m?.kind), seeds_resolved: m?.seeds_resolved ?? 0, fired: Boolean(m?.fired), candidates: m?.candidates ?? 0,
+          off_pages: r.off.pages.slice(0, RELATIONAL_LIMIT), on_pages: r.on.pages.slice(0, RELATIONAL_LIMIT),
           off: r.off.metrics, on: r.on.metrics, error: r.off.error?.message ?? r.on.error?.message ?? null };
       }),
     } : null,
     indices,
+    attendance_edges: attendance,
     per_question: composedRows,
     findings: findings.map(f => ({ id: f.id, classification: f.classification, surface: f.surface, expected: f.expected, actual: f.actual })),
   };

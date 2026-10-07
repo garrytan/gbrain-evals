@@ -1,0 +1,19 @@
+{
+  "model": "anthropic:claude-sonnet-5-5",
+  "cases": 123,
+  "predictions": 123,
+  "aborted": false,
+  "estimate_usd": 0.468254,
+  "ceiling_usd": 2.559254,
+  "max_usd": 0.8,
+  "spent_usd": 0.22458400000000003,
+  "price_used": {
+    "input": 2,
+    "output": 10,
+    "cache_read": 0.2,
+    "cache_write": 2.5
+  },
+  "price_source": "gbrain canonicalLookup",
+  "case_errors": [],
+  "wall_ms": 203446
+}

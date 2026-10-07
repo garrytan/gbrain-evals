@@ -1,0 +1,94 @@
+{
+  "probe_id": "cat14-neg-1-empty-profile",
+  "category": "calibration-empty-profile",
+  "question": "Should I invest in a Seattle-based vertical SaaS startup?",
+  "baseline_answer": "## Answer\n\nThe brain has no pages, takes, or graph data relevant to this question, so no cited answer is possible. Nothing in it mentions a specific Seattle-based vertical SaaS startup, your investment criteria, or any prior views on this sector or region. The brain can't say whether to invest, and no claims are made here without support.",
+  "calibrated_answer": "## Answer\n\nThe brain has no information relevant to this question. There were no page hits and no takes, so there is nothing to cite about this Seattle-based vertical SaaS startup, your investment criteria, or related theses or past decisions.\n\nThe brain therefore can't say whether to invest. The missing inputs are listed in the gaps field.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [
+      "CITATIONS_REGEX_FALLBACK"
+    ],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE",
+      "CITATIONS_REGEX_FALLBACK"
+    ]
+  },
+  "win_eligible": false,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate given the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” page hits, and data fields sound like system reports rather than conversational advice, but neither uses clinical statistics jargon. Neither provides practical next steps for evaluating the startup. || Neither answer mentions a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” pages, and internal data structures are system-oriented rather than conversational, but neither uses clinical statistics jargon. Neither provides actionable investment guidance or identifies concrete information the user should supply."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate given the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” page hits, and data fields sound like system reports rather than conversational advice, but neither uses clinical statistics jargon. Neither provides practical next steps for evaluating the startup. || Neither answer mentions a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” pages, and internal data structures are system-oriented rather than conversational, but neither uses clinical statistics jargon. Neither provides actionable investment guidance or identifies concrete information the user should supply."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate given the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” page hits, and data fields sound like system reports rather than conversational advice, but neither uses clinical statistics jargon. Neither provides practical next steps for evaluating the startup. || Neither answer mentions a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” pages, and internal data structures are system-oriented rather than conversational, but neither uses clinical statistics jargon. Neither provides actionable investment guidance or identifies concrete information the user should supply."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate given the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” page hits, and data fields sound like system reports rather than conversational advice, but neither uses clinical statistics jargon. Neither provides practical next steps for evaluating the startup. || Neither answer mentions a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” pages, and internal data structures are system-oriented rather than conversational, but neither uses clinical statistics jargon. Neither provides actionable investment guidance or identifies concrete information the user should supply."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate given the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” page hits, and data fields sound like system reports rather than conversational advice, but neither uses clinical statistics jargon. Neither provides practical next steps for evaluating the startup. || Neither answer mentions a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” pages, and internal data structures are system-oriented rather than conversational, but neither uses clinical statistics jargon. Neither provides actionable investment guidance or identifies concrete information the user should supply."
+    },
+    {
+      "axis": "behaves_like_baseline",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate given the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” page hits, and data fields sound like system reports rather than conversational advice, but neither uses clinical statistics jargon. Neither provides practical next steps for evaluating the startup. || Neither answer mentions a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both decline to recommend an investment because relevant information is missing, so their substance is equivalent. Their references to “the brain,” pages, and internal data structures are system-oriented rather than conversational, but neither uses clinical statistics jargon. Neither provides actionable investment guidance or identifies concrete information the user should supply."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.8333333333333334,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}

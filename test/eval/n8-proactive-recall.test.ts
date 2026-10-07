@@ -9,7 +9,8 @@ import { join } from 'node:path';
 import { registryEntry } from '../../eval/registry.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { N8_DEFAULT_SEED, NEGATIVE_KINDS, TRIGGER_KINDS, generateN8World, windowAt, type TurnGold } from '../../eval/generators/n8-proactive-recall-gen.ts';
-import { n8Targets, prAuc, scoreAssociative, scoreMode, type TurnDelivery } from '../../eval/runner/n8-proactive-recall.ts';
+import { evaluatePromotion } from '../../eval/runner/promotion.ts';
+import { n8Targets, privacyGate, prAuc, scoreAssociative, scoreMode, type TurnDelivery } from '../../eval/runner/n8-proactive-recall.ts';
 
 const world = generateN8World();
 const userTurns = [...world.gold.entries()];
@@ -90,10 +91,61 @@ describe('N8 delivery scorer', () => {
     expect(prAuc([{ recall: 0, precision: null }])).toBeNull();
   });
 
-  test('the category is report-only: no rule gates it', () => {
+  test('the category gates on the privacy contracts preregistered 2026-10-06 and nothing else', () => {
     const e = registryEntry('N8')!;
-    expect(e.gate).toBe('report-only');
-    expect([...e.promotion!.safety_contracts, ...e.promotion!.quality_thresholds]).toEqual([]);
+    expect(e.gate).toBe('gate');
+    expect(e.promotion!.preregistered).toBe('2026-10-06');
+    expect([...e.promotion!.safety_contracts, ...e.promotion!.quality_thresholds].every(c => c.path.startsWith('data.privacy_gate.'))).toBe(true);
+  });
+});
+
+describe('N8 privacy gate (preregistered 2026-10-06)', () => {
+  const rules = registryEntry('N8')!.promotion!;
+  const marker = (slug: string) => world.ledger.entities.find(e => e.slug === slug)!.marker;
+  const priv = world.ledger.entities.find(e => e.visibility === 'private')!.slug;
+  const honest = deliver(truth);
+  const receiptFor = (remote: TurnDelivery[], turnContext: TurnDelivery[], local = honest) => ({ data: { privacy_gate: privacyGate(world, { remote, turnContext, local }) } });
+
+  test('an honest delivery passes every rule, and the floors come from the ledger', () => {
+    const g = privacyGate(world, { remote: honest, turnContext: honest, local: honest });
+    expect(g).toMatchObject({ private_pages_delivered_remote: 0, private_markers_delivered_turn_context: 0, remote_alias_title_recall: 1, private_mention_turns: 8 });
+    expect(evaluatePromotion(rules, receiptFor(honest, honest))).toMatchObject({ gated: true, pass: true });
+  });
+
+  test('a private page to the remote caller, or into the turn block, fails a safety contract', () => {
+    const leaky = deliver((_id, g) => g.kind === 'private_mention' ? [priv] : g.target);
+    expect(evaluatePromotion(rules, receiptFor(leaky, honest)).failures.map(f => f.id)).toEqual(['no-private-page-remote']);
+    expect(evaluatePromotion(rules, receiptFor(honest, leaky)).failures.map(f => f.id)).toEqual(['no-private-page-turn-context']);
+  });
+
+  test('a private body marker without its slug still fails', () => {
+    const synopsis = honest.map(d => world.gold.get(d.turn)!.kind === 'private_mention' ? { ...d, private_markers: [marker(priv), marker(priv)] } : d);
+    const g = privacyGate(world, { remote: synopsis, turnContext: honest, local: honest });
+    expect([g.private_pages_delivered_remote, g.private_markers_delivered_remote]).toEqual([0, 8]);
+    expect(evaluatePromotion(rules, receiptFor(synopsis, honest)).failures.map(f => f.id)).toEqual(['no-private-marker-remote']);
+  });
+
+  test('delivering nothing cannot pass: the alias and exact-title floors fail', () => {
+    const empty = deliver(() => []);
+    expect(evaluatePromotion(rules, receiptFor(empty, empty)).failures.map(f => f.id)).toEqual(['remote-alias-title-floor', 'turn-context-alias-title-floor']);
+  });
+
+  test('a missing privacy_gate block fails', () => {
+    expect(evaluatePromotion(rules, { data: {} }).pass).toBe(false);
+  });
+
+  test('the keyless re-score CLI passes the committed receipt at the pin and fails the control at the leaky build', () => {
+    const run = (receipt: string) => Bun.spawnSync(['bun', 'eval/runner/promotion.ts', 'N8', `docs/benchmarks/2026-10-06-n8-privacy-gate/${receipt}`], { cwd: join(import.meta.dir, '../..') });
+    const pin = run('n8-receipt-c5fb0201.json');
+    expect([pin.exitCode, pin.stdout.toString().trim().split('\n').pop()]).toEqual([0, 'N8: pass (safety 4/4, quality 3/3)']);
+    expect(run('n8-receipt-3a284ae-control.json').exitCode).toBe(1);
+  });
+
+  test('trusted local private deliveries are reported, never gated', () => {
+    const local = deliver((_id, g) => g.kind === 'private_mention' ? [priv] : g.target);
+    const r = receiptFor(honest, honest, local);
+    expect(r.data.privacy_gate.trusted_local_private_deliveries).toBeGreaterThan(0);
+    expect(evaluatePromotion(rules, r).pass).toBe(true);
   });
 });
 

@@ -1,0 +1,46 @@
+{
+  "kind": "gbrain-route-check",
+  "gbrain_dir": "node_modules/gbrain",
+  "results": [
+    {
+      "model": "openai:gpt-6.1-sol",
+      "accepted": true,
+      "text": "OK",
+      "usage": {
+        "input_tokens": 13,
+        "output_tokens": 5,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0
+      },
+      "stop_reason": "end",
+      "ms": 1380
+    },
+    {
+      "model": "openai:gpt-6-luna",
+      "accepted": true,
+      "text": "OK",
+      "usage": {
+        "input_tokens": 13,
+        "output_tokens": 5,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0
+      },
+      "stop_reason": "end",
+      "ms": 1425
+    }
+  ],
+  "cost": {
+    "usd": 0.00008,
+    "input_tokens": 26,
+    "output_tokens": 10,
+    "basis": "budget ledger w4-gbrain-route-check-2026-10-06T18-10-32-260Z-4f6f0c80: 2 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 19,
+      "max": 58.8
+    }
+  }
+}

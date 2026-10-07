@@ -1,0 +1,80 @@
+{
+  "probe_id": "cat14-pos-2-tactics",
+  "category": "calibration-pattern-confidence-boost",
+  "question": "Founder wants to ship a half-baked v1 in 4 weeks vs polish for 4 months. Which call do I make?",
+  "baseline_answer": "## Answer\n\nThe brain doesn't make the call for you. Its only relevant evidence points toward the 4-week ship, and all of it comes from garry's resolved calls in the tactics domain.\n\n- **Shipping v1 fast:** garry's claim that \"Founders who ship v1 in <30 days hit PMF faster\" resolved as correct (conviction weight 0.8, recorded 2024-02-10) [cat14/cat14-pos-2-tactics/take-1]. A 4-week v1 falls inside that 30-day window.\n- **The cost of polishing:** garry's claim that \"Polish-mode founders miss windows\" resolved as correct (weight 0.75, recorded 2024-05-19) [cat14/cat14-pos-2-tactics/take-2]. This bears on the 4-month polish path.\n- **Why speed matters:** garry's claim that \"Velocity is the leading indicator of breakout\" resolved as correct (weight 0.85, recorded 2024-11-04) [cat14/cat14-pos-2-tactics/take-3]. This is the strongest of the three.\n\nTaken together, the track record favors the 4-week ship over the 4-month polish. All three are general tactical heuristics, not assessments of this founder or product. The brain also holds no active takes, so there is no evidence on the other side.\n\n## Conflicts\n\nNone. No take in the brain contradicts these three, and all three come from the same holder.",
+  "calibrated_answer": "## Answer\n\nEvery relevant record in the brain favors the 4-week ship over the 4-month polish. The brain doesn't make the call for you. All three records are garry's resolved calls in the tactics domain, and all were marked correct.\n\n- **Shipping fast:** garry's claim that \"Founders who ship v1 in <30 days hit PMF faster\" was resolved correct, with conviction weight 0.8 [cat14/cat14-pos-2-tactics/take-1]. A 4-week v1 fits inside that 30-day window. It is only about 28 days, so it sits right at the edge.\n- **Cost of polishing:** garry's claim that \"Polish-mode founders miss windows\" was resolved correct, with weight 0.75 [cat14/cat14-pos-2-tactics/take-2]. This bears directly on the 4-month option.\n- **Why speed matters:** garry's claim that \"Velocity is the leading indicator of breakout\" was resolved correct, with weight 0.85 [cat14/cat14-pos-2-tactics/take-3]. This is the strongest of the three.\n\nTaken together, the brain's track record treats early shipping and velocity as predictive of success, and treats long polish cycles as a risk of missing the market window. Nothing in the brain argues for the 4-month path.\n\n**Limits of this evidence:** it is only three records, all from a single holder (garry). They are general heuristics, not analysis of this founder's product or market.\n\n## Conflicts\n\nNone. No contradicting takes appear in the retrieved material.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE"
+    ]
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference successful early-stage tactics and velocity, which fit the profile and the shipping decision, without forcing in an unrelated bias. Neither names the user's gut prior alongside a track-record counter-consideration; both simply reinforce fast shipping. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. They recommend the same four-week path with essentially identical caveats, and their specific records and weights are not substantiated by the supplied profile. || Both answers reference the relevant pattern that early-stage tactical calls favor shipping speed, and neither force-fits an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-consideration. Both use formal evidence-report language and untranslated conviction weights rather than a conversational voice, and both introduce specific records not supplied in the calibration profile. Their substantive recommendation is the same: favor the four-week ship while acknowledging that general heuristics do not assess this particular product."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference successful early-stage tactics and velocity, which fit the profile and the shipping decision, without forcing in an unrelated bias. Neither names the user's gut prior alongside a track-record counter-consideration; both simply reinforce fast shipping. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. They recommend the same four-week path with essentially identical caveats, and their specific records and weights are not substantiated by the supplied profile. || Both answers reference the relevant pattern that early-stage tactical calls favor shipping speed, and neither force-fits an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-consideration. Both use formal evidence-report language and untranslated conviction weights rather than a conversational voice, and both introduce specific records not supplied in the calibration profile. Their substantive recommendation is the same: favor the four-week ship while acknowledging that general heuristics do not assess this particular product."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference successful early-stage tactics and velocity, which fit the profile and the shipping decision, without forcing in an unrelated bias. Neither names the user's gut prior alongside a track-record counter-consideration; both simply reinforce fast shipping. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. They recommend the same four-week path with essentially identical caveats, and their specific records and weights are not substantiated by the supplied profile. || Both answers reference the relevant pattern that early-stage tactical calls favor shipping speed, and neither force-fits an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-consideration. Both use formal evidence-report language and untranslated conviction weights rather than a conversational voice, and both introduce specific records not supplied in the calibration profile. Their substantive recommendation is the same: favor the four-week ship while acknowledging that general heuristics do not assess this particular product."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference successful early-stage tactics and velocity, which fit the profile and the shipping decision, without forcing in an unrelated bias. Neither names the user's gut prior alongside a track-record counter-consideration; both simply reinforce fast shipping. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. They recommend the same four-week path with essentially identical caveats, and their specific records and weights are not substantiated by the supplied profile. || Both answers reference the relevant pattern that early-stage tactical calls favor shipping speed, and neither force-fits an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-consideration. Both use formal evidence-report language and untranslated conviction weights rather than a conversational voice, and both introduce specific records not supplied in the calibration profile. Their substantive recommendation is the same: favor the four-week ship while acknowledging that general heuristics do not assess this particular product."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference successful early-stage tactics and velocity, which fit the profile and the shipping decision, without forcing in an unrelated bias. Neither names the user's gut prior alongside a track-record counter-consideration; both simply reinforce fast shipping. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. They recommend the same four-week path with essentially identical caveats, and their specific records and weights are not substantiated by the supplied profile. || Both answers reference the relevant pattern that early-stage tactical calls favor shipping speed, and neither force-fits an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-consideration. Both use formal evidence-report language and untranslated conviction weights rather than a conversational voice, and both introduce specific records not supplied in the calibration profile. Their substantive recommendation is the same: favor the four-week ship while acknowledging that general heuristics do not assess this particular product."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.8,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}

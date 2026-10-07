@@ -60,3 +60,19 @@ export function describeOutcome(o: PromotionOutcome): string {
   const failed = o.failures.map(f => `${f.id} (${f.expected}, observed ${f.observed === undefined ? 'missing' : JSON.stringify(f.observed)})`);
   return `safety ${count('safety')}, quality ${count('quality')}${failed.length ? `; failed: ${failed.join('; ')}` : ''}`;
 }
+
+/** Keyless re-score: `bun eval/runner/promotion.ts <category id or alias> <receipt.json>` exits 0 when every rule passes. */
+if (import.meta.main) {
+  const { readFileSync } = await import('node:fs');
+  const { registryEntry } = await import('../registry.ts');
+  const [id, file] = process.argv.slice(2);
+  const rules = id ? registryEntry(id)?.promotion : undefined;
+  if (!rules || !file) {
+    console.error('usage: bun eval/runner/promotion.ts <registry id or legacy alias> <receipt.json>');
+    process.exit(2);
+  }
+  const outcome = evaluatePromotion(rules, JSON.parse(readFileSync(file, 'utf8')));
+  for (const r of outcome.results) console.log(`${r.pass ? 'pass' : 'FAIL'}  ${r.kind.padEnd(7)} ${r.id}: ${r.expected}, observed ${r.observed === undefined ? 'missing' : JSON.stringify(r.observed)}`);
+  console.log(`${id}: ${outcome.pass ? 'pass' : 'fail'} (${describeOutcome(outcome)})`);
+  process.exit(outcome.pass ? 0 : 1);
+}
