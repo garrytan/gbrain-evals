@@ -68,8 +68,9 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Malformed facts/takes tables repaired by a model without a wrong cell (held-out set, model tier only) | **96.0%** repaired, **0** wrong cells (gpt-6.1-sol and claude-opus-5-5, the measured defaults); every other case held | v0.60.102.0 ([`5b58910`](https://github.com/garrytan/gbrain/commit/5b5891069)) | [Fence repair Tier 3](docs/benchmarks/2026-10-06-fence-repair-tier3.md) |
 | Useful material kept when a session becomes a memory page | **88.1%** judged (judge calibration awaiting a person's review); 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 
-All 28 reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `c5fb0201`, and moving to
-that pin cost no category any accuracy ([re-pin report](docs/benchmarks/2026-10-06-followups-repin.md)). The
+All 28 earlier reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `c5fb0201`. The move to that pin
+brought one open gbrain bug, N1-7: after a maintenance sweep and a page rewrite, acknowledged ontology observations
+can disappear, which fails the N1 CI slice under load ([re-pin report](docs/benchmarks/2026-10-06-followups-repin.md)). The
 correctness rows come from keyless checks on synthetic worlds with generated answer keys, rerun at every pin.
 
 Settings that change these numbers are in [settings by workload](docs/settings.md). Two matter most: keep autocut off
@@ -244,7 +245,7 @@ gbrain-evals v0.10.38. The LongMemEval answer row moves from 453 of 500 (Sonnet 
 
 ### 2026-10-06: Re-pin to gbrain `c5fb0201` and the October follow-up round
 
-gbrain-evals v0.10.38. The pin moves from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), which contains every held-out-program plan, so the "newer builds also measured" row is gone. Results rows: privacy now covers Postgres over real HTTP and the N8 gate at `c5fb0201` (was N6 and N8 at `739e5cc`); chat formats 28 of 28 (was 27 of 27); new rows for attendance from documented lists, the contradiction judge on current models and the takes classifier on frontier models; the Cat 35 row says its judge calibration awaits a person's review; the ledger sentence names the October 6 re-pin. Reasons and receipts: the [round plan](docs/plans/2026-10-06-followups-round/PLAN.md) and its reports.
+gbrain-evals v0.10.38. The pin moves from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), which contains every held-out-program plan, so the "newer builds also measured" row is gone. Results rows: privacy now covers Postgres over real HTTP and the N8 gate at `c5fb0201` (was N6 and N8 at `739e5cc`); chat formats 28 of 28 (was 27 of 27); new rows for attendance from documented lists, the contradiction judge on current models and the takes classifier on frontier models; the Cat 35 row says its judge calibration awaits a person's review; the ledger sentence names the October 6 re-pin and the open N1-7 bug it found. Reasons and receipts: the [round plan](docs/plans/2026-10-06-followups-round/PLAN.md) and its reports.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.

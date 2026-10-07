@@ -1,6 +1,6 @@
-# Re-pin to gbrain v0.60.95.0: no regression; relationship and multi-hop gains show up in the offline tier
+# Re-pin to gbrain v0.60.95.0: one acknowledged-write regression under load (N1-7); relationship and multi-hop gains show up in the offline tier
 
-**Finding, 2026-10-06.** Moving this repository's gbrain pin from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), 78 merges that include the nine held-out-program plans, changes no category for the worse. Every offline-tier category, all 28 ledger repros and every preregistered check pass at the new pin once one harness defect is fixed. Two categories improve sharply, as the plans predicted:
+**Finding, 2026-10-06, corrected 2026-10-07.** Moving this repository's gbrain pin from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), 78 merges that include the nine held-out-program plans, brings one regression: under CPU contention, gbrain's serve-resident maintenance sweep makes acknowledged ontology observations unreadable (ledger entry **N1-7**, a gbrain bug from `7007ba60` in #6024, v0.60.53.0, still on gbrain master). The paired 16-core VMs below did not show it, so the October 6 version of this report said "no regression"; GitHub's 4-core CI runner fails N1-ci on it every time. Every other offline-tier category, all 28 ledger repros and every preregistered check pass at the new pin once one harness defect is fixed. Two categories improve sharply, as the plans predicted:
 
 - **Composed multi-hop questions (N9).** With relationship retrieval on, gbrain now answers 61.9% of 375 composed two- and three-hop question runs with every needed page in the top ten, against 2.7% before (222 runs better, 0 worse). This is the P7 multi-relation planner, on by default since v0.60.60.0.
 - **Dated relationships (temporal edges).** Current-employer precision rose from 0.34 to 1.00 and the trap score (investments and alumni meetings that must not change who someone works for) from 0.45 to 1.00. This is P1, on by default since v0.60.57.0.
@@ -8,6 +8,19 @@
 The `get_timeline` latency regression from Foundations 1 (ledger entry Cat7-1) is unchanged: 0.078 ms per call at 1,000 pages, against 0.045 ms before Foundations 1. Under its frozen closure rule the entry stays open.
 
 Evidence class: regression check. Tested at gbrain-evals `6155609`, Bun 1.4.2, on two identical Ubicloud `standard-16` VMs started together, one per pin, with no provider key ([preregistration](2026-10-06-followups-repin-preregistration.md), committed before the runs). Provider spend: $0.
+
+## N1-7: acknowledged ontology writes lost after a maintenance sweep
+
+**What happens.** `gbrain serve` runs a maintenance sweep after about 3 seconds without input. Since gbrain `7007ba60` ([#6024](https://github.com/garrytan/gbrain/pull/6024), v0.60.53.0) the sweep's facts reconcile first moves every fact row without a row number onto its entity page's `## Facts` table. Ontology observations (`ontology_propose`, such as "Alder's location is Viseu from 2021") are stored as fact rows without a row number, so the sweep moves them too: their source becomes the page, and they now belong to the page's table. The next ordinary rewrite of that page, which doesn't list them, plus one more sweep, retires them, and `ontology_get` returns nothing.
+
+**Why the VMs missed it.** N1-ci writes its ledger as fast as the machine allows. On an unloaded machine no 3-second gap opens between writes, so the sweep never runs mid-ledger. On GitHub's 4-core runner, with another category running beside it, gaps open and N1-ci loses 1 acknowledged write and fails its current-value and history floors, on both CI runs of this branch. Pinned to one core here, it loses 1 to 3 per run at `c5fb0201` and none at `739e5cc` (two runs each).
+
+**Evidence.**
+- Keyless repro [`repros/n1-7-sweep-fences-ontology.ts`](2026-10-06-followups-repin/repros/n1-7-sweep-fences-ontology.ts): one observation, `gbrain sweep --once`, a page rewrite, another sweep. It passes at `739e5cc` and `1da881a3` and fails at `7007ba60`, `c5fb0201` and gbrain master `5b58910` (v0.60.102.0). [Outputs](2026-10-06-followups-repin/n1-7/).
+- Bisection with N1-ci pinned to one core, two runs per commit, over gbrain's first-parent history and then inside #6024 and its lane D: last good `1da881a3`, first bad `7007ba60`, "fix(facts): the extract_facts cycle phase fences row_num-NULL facts itself (#5299)". [Every run](2026-10-06-followups-repin/n1-7/bisect-summary.txt).
+- The failing GitHub CI receipt and the contended receipts at each end are in [`n1-7/`](2026-10-06-followups-repin/n1-7/).
+
+**Likely fix in gbrain.** `planUnfencedFacts` should skip rows with a `dimension` (ontology observations belong to the ontology, not to a page table), and the sweep's reconcile should fence only the pages it was given. N1-ci keeps gating; nothing in its rules changed.
 
 ## What the check covers
 
@@ -67,7 +80,7 @@ The repro's median stays under its frozen 0.075 ms limit in all three runs at ea
 
 ## What to use and what to avoid
 
-Use the new pin. It is the gbrain the follow-up round measures, and nothing this repository can see got worse. The composed-question and dated-relationship gains are development evidence on synthetic worlds this project has inspected; their held-out verdicts are in [the held-out program report](2026-10-05-heldout-program.md).
+Use the new pin with one caveat: until gbrain fixes N1-7, a brain served by `gbrain serve` can lose ontology observations after a page rewrite (facts in page tables and pages themselves are not affected). It is the gbrain the follow-up round measures, and nothing else this repository can see got worse. The composed-question and dated-relationship gains are development evidence on synthetic worlds this project has inspected; their held-out verdicts are in [the held-out program report](2026-10-05-heldout-program.md).
 
 ## Reproduce and inspect
 
