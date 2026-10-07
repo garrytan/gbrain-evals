@@ -240,7 +240,7 @@ export class AgentRuntimeSystem implements AnsweringSystem {
     const usd = this.opts.keyless || !p ? 0 : (usage.input * p.input + cache_read * (p.cache_read ?? p.input) + cache_write * (p.cache_write ?? p.input) + usage.output * p.output) / 1e6;
     const providerFailure = /\b(429|5\d\d)\b|rate.?limit|overloaded|ECONNREFUSED|ETIMEDOUT|budget/i.test(t.error ?? '');
     const verdict = t.stop === 'success' && t.text.trim() ? { stop_reason: 'submitted', outcome: 'scored' as const }
-      : t.stop === 'max_steps' ? { stop_reason: 'turn_cap', outcome: 'retrieval_error' as const }
+      : t.stop === 'max_steps' ? { stop_reason: 'turn_cap', outcome: 'turn_cap' as const }
       : t.stop === 'timeout' ? { stop_reason: 'wall_time', outcome: 'retrieval_error' as const }
       : providerFailure || t.stop === 'no_result' ? { stop_reason: 'provider_error', outcome: 'reader_error' as const }
       : { stop_reason: t.stop === 'success' ? 'empty_answer' : 'product_error', outcome: 'retrieval_error' as const };

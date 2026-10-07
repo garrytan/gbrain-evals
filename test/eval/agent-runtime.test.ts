@@ -86,7 +86,7 @@ describe('agent-runtime driver (recorded host)', () => {
 
   test('stop reasons map to outcomes', async () => {
     const cases: Array<[string, Partial<RuntimeProcess>, string, string]> = [
-      [line({ type: 'error', message: 'Maximum turns limit reached (40/40 steps)', stop_reason: 'max_steps' }), {}, 'turn_cap', 'retrieval_error'],
+      [line({ type: 'error', message: 'Maximum turns limit reached (40/40 steps)', stop_reason: 'max_steps' }), {}, 'turn_cap', 'turn_cap'],
       ['', { timed_out: true }, 'wall_time', 'retrieval_error'],
       [line({ type: 'error', message: 'LLM API error: 529 overloaded' }), {}, 'provider_error', 'reader_error'],
       ['', { stderr: 'Error: No such container' }, 'provider_error', 'reader_error'],

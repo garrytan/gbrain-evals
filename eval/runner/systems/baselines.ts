@@ -212,7 +212,7 @@ export function splitForCache(prompt: string): { prefix: string; suffix: string 
 
 export interface FullContextAnswer {
   text: string;
-  outcome: Outcome | 'does_not_fit';
+  outcome: Outcome;
   fit: FitCheck;
   usage: { input: number; output: number; cache_read: number; cache_write: number };
   provider_input_tokens: number;

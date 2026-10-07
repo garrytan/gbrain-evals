@@ -217,7 +217,7 @@ describe('file agent end to end (scripted, fixture)', () => {
     expect(FILE_AGENT_MAX_TURNS).toBe(40);
     expect(a.turns).toBe(40);
     expect(a.stop_reason).toBe('turn_cap');
-    expect(a.outcome).toBe('retrieval_error');
+    expect(a.outcome).toBe('turn_cap');
     expect(a.text).toBe('');
     await sys.close();
   });
@@ -236,7 +236,7 @@ describe('file agent end to end (scripted, fixture)', () => {
     expect(classifyRun(run({ stop: 'no_tool_call', text: 'prose' })).outcome).toBe('scored');
     expect(classifyRun(run({ stop: 'no_tool_call', text: '' })).outcome).toBe('retrieval_error');
     expect(classifyRun(run({ error: 'provider error 400: {"type":"invalid_request_error","message":"prompt is too long: 1204512 tokens > 1000000 maximum"}' })).stop_reason).toBe('context_overflow');
-    expect(classifyRun(run({ error: 'provider error 400: {"code":"context_length_exceeded"}' })).outcome).toBe('retrieval_error');
+    expect(classifyRun(run({ error: 'provider error 400: {"code":"context_length_exceeded"}' })).outcome).toBe('context_overflow');
     expect(classifyRun(run({ error: 'provider error 529: overloaded' }))).toMatchObject({ stop_reason: 'provider_error', outcome: 'reader_error' });
   });
 

@@ -53,7 +53,7 @@ export interface AgentAnswer {
   text: string;
   /** Why the agent stopped: `submitted`, `turn_cap`, `no_tool_call`, `context_overflow`, `provider_error`, ... */
   stop_reason: string;
-  /** `scored`; a product failure (`retrieval_error`, scored 0) such as a turn-cap stop; or a harness failure (`reader_error`). */
+  /** `scored`; a product failure scored 0 (`turn_cap`, `context_overflow`, `retrieval_error`); or a harness failure (`reader_error`). */
   outcome: Outcome;
   usage: AnswerUsage;
   /** Input tokens the provider billed, cached and uncached together. */
@@ -228,8 +228,8 @@ const CONTEXT_OVERFLOW = /prompt is too long|context[_ ]length|context window|ma
 export function classifyRun(run: AgentRun): Pick<AgentAnswer, 'text' | 'stop_reason' | 'outcome' | 'error'> {
   if (run.stop === 'submitted') return { text: String(run.final?.answer ?? ''), stop_reason: 'submitted', outcome: 'scored' };
   if (run.stop === 'no_tool_call') return run.text?.trim() ? { text: run.text, stop_reason: 'no_tool_call', outcome: 'scored' } : { text: '', stop_reason: 'no_tool_call', outcome: 'retrieval_error' };
-  if (run.stop === 'turn_cap') return { text: '', stop_reason: 'turn_cap', outcome: 'retrieval_error' };
-  if (CONTEXT_OVERFLOW.test(run.error ?? '')) return { text: '', stop_reason: 'context_overflow', outcome: 'retrieval_error', error: run.error };
+  if (run.stop === 'turn_cap') return { text: '', stop_reason: 'turn_cap', outcome: 'turn_cap' };
+  if (CONTEXT_OVERFLOW.test(run.error ?? '')) return { text: '', stop_reason: 'context_overflow', outcome: 'context_overflow', error: run.error };
   return { text: '', stop_reason: 'provider_error', outcome: 'reader_error', error: run.error };
 }
 
