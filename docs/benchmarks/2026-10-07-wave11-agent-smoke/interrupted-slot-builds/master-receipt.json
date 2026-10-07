@@ -91,7 +91,7 @@
     "input_tokens": 0,
     "output_tokens": 0,
     "basis": "budget ledger cat40-slot-build-2026-10-07T15-11-19-529Z-1c69b121: 1 paid requests, 0 charged at their reservation because usage was unavailable",
-    "ledger": "/workspace/gbrain-evals/.budget/w11-d12-smoke.sqlite",
+    "ledger": ".budget/w11-d12-smoke.sqlite",
     "program_cap_usd": 100,
     "overshoot_usd": 0,
     "event_loop_lag_ms": {

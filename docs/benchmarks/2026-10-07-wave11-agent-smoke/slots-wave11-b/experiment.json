@@ -11,7 +11,7 @@
   "flags": {
     "--build-slots": true,
     "--gbrain": "/workspace/gbrain@b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
-    "--gbrain-root": "/home/user/.capy/work/cat40/gbrain-wave11",
+    "--gbrain-root": "~/.capy/work/cat40/gbrain-wave11",
     "--slots": "4",
     "--slot-build-allowance-usd": "1",
     "--budget-ledger": ".budget/w11-d12-smoke.sqlite",

@@ -16,7 +16,7 @@
     "--repeat": "1",
     "--arms": "gbrain",
     "--gbrain": "/workspace/gbrain@b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
-    "--gbrain-root": "/home/user/.capy/work/cat40/gbrain-wave11",
+    "--gbrain-root": "~/.capy/work/cat40/gbrain-wave11",
     "--gbrain-label": "wave11",
     "--slots": "4",
     "--surface": "starter",

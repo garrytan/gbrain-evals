@@ -14,7 +14,7 @@
     "--models": "gpt-6.1-sol",
     "--arms": "gbrain",
     "--gbrain": "/workspace/gbrain@5b5891069413b28b2fe3a50675116d67d5a1e145",
-    "--gbrain-root": "/home/user/.capy/work/cat40/gbrain-master",
+    "--gbrain-root": "~/.capy/work/cat40/gbrain-master",
     "--gbrain-label": "master",
     "--slots": "2",
     "--tasks": "C06,F01",

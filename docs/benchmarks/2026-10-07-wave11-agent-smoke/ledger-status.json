@@ -1,5 +1,5 @@
 {
-  "ledger": "/workspace/gbrain-evals/.budget/w11-d12-smoke.sqlite",
+  "ledger": ".budget/w11-d12-smoke.sqlite",
   "state": "sqlite",
   "totals": {
     "program_cap_usd": 100,
