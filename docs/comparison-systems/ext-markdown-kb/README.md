@@ -1,7 +1,7 @@
 # Basic Memory shim
 
 This directory runs [Basic Memory](https://github.com/basicmachines-co/basic-memory) `0.23.2` behind the shootout's
-[shim protocol v1](../PROTOCOL.md). Basic Memory stores notes as Markdown files and indexes them in SQLite with
+[shim protocol v1](../../../eval/systems/PROTOCOL.md). Basic Memory stores notes as Markdown files and indexes them in SQLite with
 full-text search and local vector search (sqlite-vec). Its documented local install needs no API key, so the recipe
 configuration runs end to end without any provider call.
 

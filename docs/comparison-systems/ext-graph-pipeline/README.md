@@ -1,7 +1,7 @@
 # Cognee shim
 
 This directory runs [cognee](https://github.com/topoteretes/cognee) 1.6.2 behind the shootout's shim protocol
-([PROTOCOL.md](../PROTOCOL.md)). Cognee turns documents into a knowledge graph: `add` stores the text, `cognify`
+([PROTOCOL.md](../../../eval/systems/PROTOCOL.md)). Cognee turns documents into a knowledge graph: `add` stores the text, `cognify`
 chunks it, has an LLM extract entities and relationships, writes summaries and embeds everything. The shim exposes
 that pipeline as `/ingest` and cognee's hybrid retrieval as `/retrieve`, with no answer generation.
 

@@ -1,6 +1,6 @@
 # Memory-system shim protocol (v1)
 
-Every system in the [open-source memory shootout](../../docs/plans/2026-10-05-oss-memory-shootout/PLAN.md) runs
+Every system in the [open-source memory shootout](https://github.com/garrytan/gbrain-evals/blob/1b7cc28/docs/plans/2026-10-05-oss-memory-shootout/PLAN.md) runs
 behind a small HTTP service, its shim, inside the vendor's own pinned image. The harness
 (`eval/runner/systems/http.ts`) talks only this protocol, so vendor Python never enters the Bun process. gbrain
 implements the same interface in process (`eval/runner/systems/gbrain.ts`).

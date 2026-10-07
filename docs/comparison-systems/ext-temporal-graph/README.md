@@ -1,8 +1,8 @@
 # Graphiti shim
 
 This directory runs [Graphiti](https://github.com/getzep/graphiti) (the open-source `graphiti-core` 0.30.2, not
-Zep Cloud) on Neo4j 5.26 behind the shootout's shim protocol ([PROTOCOL.md](../PROTOCOL.md)) for the
-[open-source memory shootout](../../../docs/plans/2026-10-05-oss-memory-shootout/PLAN.md). Graphiti turns each
+Zep Cloud) on Neo4j 5.26 behind the shootout's shim protocol ([PROTOCOL.md](../../../eval/systems/PROTOCOL.md)) for the
+[open-source memory shootout](https://github.com/garrytan/gbrain-evals/blob/1b7cc28/docs/plans/2026-10-05-oss-memory-shootout/PLAN.md). Graphiti turns each
 conversation into a temporal knowledge graph: an LLM extracts entities and the facts between them, and each fact
 carries the time it became true and, once contradicted, the time it stopped being true.
 
@@ -125,7 +125,7 @@ if the removed episode created it, and a node goes only if no other episode ment
 
 ## Phase 2 pilot
 
-[PILOT.md](PILOT.md) records the 2026-10-05 pilots through the memory-qa runner (one LoCoMo conversation, one
+[PILOT.md](https://github.com/garrytan/gbrain-evals/blob/1b7cc28/eval/systems/graphiti/PILOT.md) records the 2026-10-05 pilots through the memory-qa runner (one LoCoMo conversation, one
 LongMemEval-S haystack, one BEAM-100K conversation): costs per ingested item, reader and judge costs, latency,
 outcomes and the Phase 4 cost extrapolation. Its scores are setup evidence, not results.
 

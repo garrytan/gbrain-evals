@@ -1,7 +1,7 @@
 # Mem0 shim
 
 This directory runs [Mem0](https://github.com/mem0ai/mem0) open source, `mem0ai` `2.2.1`, behind the shootout's
-[shim protocol v1](../PROTOCOL.md). Mem0 asks an LLM to extract short facts ("memories") from each batch of
+[shim protocol v1](../../../eval/systems/PROTOCOL.md). Mem0 asks an LLM to extract short facts ("memories") from each batch of
 messages, embeds them and stores them in Qdrant; search combines vector similarity, BM25 keyword scores and an entity
 boost. This is the open-source SDK, not the Mem0 platform, so platform-only features (timestamps, reference dates)
 are absent.
