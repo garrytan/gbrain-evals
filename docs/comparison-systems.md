@@ -184,11 +184,11 @@ A causal explanation needs a controlled change. If two systems use different mod
 
 ### 2026-10-07: The matched-reader link on the release retrieval
 
-gbrain-evals v0.10.37. Context for the vendor rows that used `gpt-5.4`: on gbrain's reranked retrieval from `a7cb37b` (2026-09-29), `gpt-5.4` at medium reasoning with LongMemEval's official prompt answered 460 of 500 (official judge), against 447 of 500 on the reranker-off retrieval of 2026-10-04 ([reader replay](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md)). Judges and retrieval budgets still differ from the vendor rows, so no row of the comparison table changed.
+gbrain-evals v0.10.38. Context for the vendor rows that used `gpt-5.4`: on gbrain's reranked retrieval from `a7cb37b` (2026-09-29), `gpt-5.4` at medium reasoning with LongMemEval's official prompt answered 460 of 500 (official judge), against 447 of 500 on the reranker-off retrieval of 2026-10-04 ([reader replay](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md)). Judges and retrieval budgets still differ from the vendor rows, so no row of the comparison table changed.
 
 ### 2026-10-06: Re-pin to gbrain `c5fb0201`
 
-gbrain-evals v0.10.37. The pin named in the opening and in the LongMemEval installed-dependency note changed from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0). No comparison row changed.
+gbrain-evals v0.10.38. The pin named in the opening and in the LongMemEval installed-dependency note changed from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0). No comparison row changed.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
