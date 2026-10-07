@@ -122,3 +122,7 @@ The two builds run at the same time. Results, receipts, run logs and compressed 
 - Cat 40 tasks rarely produce a gbrain error envelope, so the moved error protocol (including `ask_user`) is read but seldom exercised. Real harness consent behaviour is Cat 41's subject.
 - One world, the published v1 world, which is synthetic and small (3,973 documents).
 - 2 repeats on 20 gated tasks is a smoke, not the full ladder.
+
+## Amendment 1 (2026-10-07, before any cell)
+
+Every command above also gets `--gbrain-root ~/.capy/work/cat40/gbrain-<label>`. Without it both builds share one overlay directory (`builds/under-test`), and running them at the same time lets one build's checkout replace the other's. The first slot builds hit exactly that, were stopped before any cell, and are rebuilt under separate roots. Machine setup: Bun was upgraded from 1.3.14 to 1.4.2 because gbrain at both commits requires Bun 1.4.0 or newer. Nothing else changes: models, tasks, repeats, measurements and the pass threshold stand.
