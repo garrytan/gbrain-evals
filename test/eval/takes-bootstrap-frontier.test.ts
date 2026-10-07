@@ -84,7 +84,7 @@ describe('takes-bootstrap harness overlay (keyless refusals)', () => {
   });
 
   test('an unpriced model without price flags refuses with exit 2', () => {
-    const r = run(['--model', 'openai:gpt-6.1-sol', '--max', '1'], { ...process.env, OPENAI_API_KEY: 'sk-test-not-used' } as Record<string, string>);
+    const r = run(['--model', 'openai:gpt-unpriced-fixture', '--max', '1'], { ...process.env, OPENAI_API_KEY: 'sk-test-not-used' } as Record<string, string>);
     expect(r.status).toBe(2);
     expect(r.stderr).toContain('has no canonical price');
   });
