@@ -23,7 +23,7 @@ The systems:
 
 Receipts for every cell (summary, cell, spec, spend and tuning files) are in [`2026-10-05-memory-proof-wave-dev/cells/`](2026-10-05-memory-proof-wave-dev/cells/), with the collected rows in [`dev-cells.json`](2026-10-05-memory-proof-wave-dev/dev-cells.json) (regenerate with `bun eval/runner/memory-proof-wave-dev-table.ts`).
 
-**Overlap with a separately drawn split.** Another campaign drew its own BEAM split, called P0, independently of this grouping manifest. Eight of this wave's BEAM dev conversations are sealed in P0. This wave's own sealed set is unaffected, because its grouping manifest drew it. P0's sealed set, though, has been partly opened by this wave's dev phase, so those eight conversations cannot serve as untouched sealed conversations for P0. BEAM 10M is not opened, ingested or answered by this wave.
+**Overlap with a separately drawn split.** Another campaign drew its own BEAM split, called P0, independently of this grouping manifest. Eight of this wave's BEAM dev conversations are sealed in P0. This wave's own sealed set is unaffected, because its grouping manifest drew it. P0's sealed set, though, has been partly opened by this wave's dev phase, so those eight conversations cannot serve as untouched sealed conversations for P0. BEAM 10M is reserved for another campaign and is never opened, ingested or answered by this wave ([addenda](2026-10-05-memory-proof-wave-preregistration-addenda.md)).
 
 ## BEAM at 8,000 tokens
 

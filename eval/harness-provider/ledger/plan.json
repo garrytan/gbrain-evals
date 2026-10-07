@@ -1,5 +1,5 @@
 {
-  "note": "Purchase plan for the memory proof wave priced from measured acceptance-cell usage. Each item is questions x systems x targets x readers, plus ingest per system. Items marked assumed in their note use a figure this lane could not measure.",
+  "note": "Purchase plan for the memory proof wave priced from measured acceptance-cell usage. Each item is questions x systems x targets x readers, plus ingest per system. Items marked assumed in their note use a figure this lane could not measure. Line 7 (BEAM 10M) was dropped on October 6: BEAM 10M is reserved as another campaign's held-out set and is never opened, ingested or answered here. LongMemEval-M was dropped from line 8 (the harness pin does not load it).",
   "cap_usd": 2500,
   "spent_usd": 4.16,
   "primary_reader": "gemini:gemini-3.8-flash",
@@ -409,26 +409,6 @@
       "readers": []
     },
     {
-      "line": 7,
-      "name": "BEAM 10M, both systems, 8k target (the harness loader makes each conversation one 11M-token document)",
-      "data": [
-        {
-          "split": "beam:10m",
-          "fraction": 1
-        }
-      ],
-      "systems": [
-        "gbrain",
-        "comparator"
-      ],
-      "targets": [
-        8000
-      ],
-      "readers": [
-        "gemini:gemini-3.8-flash"
-      ]
-    },
-    {
       "line": 8,
       "name": "Two extra frontier targets on sealed BEAM (16k, 32k), stores reused",
       "data": [
@@ -453,15 +433,6 @@
       "readers": [
         "gemini:gemini-3.8-flash"
       ]
-    },
-    {
-      "line": 8,
-      "name": "LongMemEval-M (not loaded by this harness pin; plan figure share)",
-      "fixed_usd": 100,
-      "data": [],
-      "systems": [],
-      "targets": [],
-      "readers": []
     },
     {
       "line": 9,

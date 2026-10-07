@@ -11,7 +11,7 @@ import os
 from . import register
 from .context import count_tokens
 
-DEFAULT = ["longmemeval:s", "locomo:locomo10", "beam:100k", "beam:500k", "beam:1m", "beam:10m", "personamem:32k",
+DEFAULT = ["longmemeval:s", "locomo:locomo10", "beam:100k", "beam:500k", "beam:1m", "personamem:32k",
            "lifebench:en", "precisionmembench:single-turn"]
 
 

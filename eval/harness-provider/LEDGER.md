@@ -2,7 +2,7 @@
 
 Measured October 5, 2026. The plan approved a $2,500 cap and asked that the paid acceptance cells rebuild its eight purchase lines from measured usage, and that the plan come back for approval if the rebuilt total exceeds the cap.
 
-**Result: as planned, the work costs about $2,720, which is $220 over the cap.** The overrun is almost all in line 4: the B-suite frontier sweep sends 25% of 76M reader input tokens to three models priced at up to $10 per million input tokens. Sweeping 10% of questions instead of 25% brings the total to about $2,421, inside the cap with $79 to spare. That is a decision for the plan owner; nothing broad runs until it is made.
+**Result: as planned on October 5, the work cost about $2,720, $220 over the cap. With line 7 dropped and LongMemEval-M removed from line 8 on October 6, the rebuilt total is about $2,451.** The overrun is almost all in line 4: the B-suite frontier sweep sends 25% of 76M reader input tokens to three models priced at up to $10 per million input tokens. Sweeping 10% of questions instead of 25% brings the total to about $2,421, inside the cap with $79 to spare. That is a decision for the plan owner; nothing broad runs until it is made.
 
 ## Lines
 
@@ -14,11 +14,11 @@ Measured October 5, 2026. The plan approved a $2,500 cap and asked that the paid
 | 4 | B suites and B5 | $200 | $719 |
 | 5 | Fix-lane validation reruns | $100 | $27 |
 | 6 | Full coding-agent benchmark run | $400 | $400 |
-| 7 | BEAM 10M, both systems | $350 | $169 |
-| 8 | Extra frontier points on sealed, LongMemEval-M | $200 | $244 |
+| 7 | BEAM 10M, both systems: dropped October 6 (reserved as another campaign's held-out set; never opened, ingested or answered here) | $350 | — |
+| 8 | Extra frontier points on sealed (LongMemEval-M dropped: the harness pin does not load it) | $200 | $144 |
 | 9 | Reserve | $100 | $100 |
 | | Already spent in this lane (acceptance cells, reader probes, re-judges) | | $4.16 |
-| | **Total** | **$2,500** | **$2,720** |
+| | **Total** | **$2,500** | **$2,451** |
 
 The primary comparison is cheaper than planned ($153 against $500) because BEAM answers and rubric judging use Gemini Flash models at $0.75 and $1.50 per million input tokens, and the comparator's extraction model is the inexpensive gpt-4o-mini. Lines 3 and 4 grew: line 3 now prices gbrain's facts-lane extraction over all of LongMemEval-S (57M document tokens), and line 4 prices the B suites' actual 76M-token reader volume.
 
@@ -44,9 +44,7 @@ Each item is questions x systems x delivered-context targets x readers, plus one
 | 4 | B5 pinned-question benefit gate (not measured here; plan figure share) | $40.0 | fixed $40.0 |
 | 5 | Fix lane: three gbrain rounds re-ingested and answered on BEAM validation | $26.7 | answer gemini:gemini-3.8-flash $13.2; judge gemini:gemini-3.5-flash $10.4; ingest gbrain embeddings $3.1 |
 | 6 | Coding-agent memory benchmark, full run (not measured here; plan figure) | $400.0 | fixed $400.0 |
-| 7 | BEAM 10M, both systems, 8k target (the harness loader makes each conversation one 11M-token document) | $168.8 | ingest comparator extraction $147.2; ingest gbrain embeddings $10.5; answer gemini:gemini-3.8-flash $6.3 |
 | 8 | Two extra frontier targets on sealed BEAM (16k, 32k), stores reused | $144.2 | answer gemini:gemini-3.8-flash $102.6; judge gemini:gemini-3.5-flash $41.6 |
-| 8 | LongMemEval-M (not loaded by this harness pin; plan figure share) | $100.0 | fixed $100.0 |
 | 9 | Reserve | $100.0 | fixed $100.0 |
 
 ## Measured rates

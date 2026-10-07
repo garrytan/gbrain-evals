@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-10-05T08:59:12.214Z",
+  "generated_at": "2026-10-07T00:42:39.271Z",
   "cap_usd": 2500,
   "spent_usd": 4.16,
-  "total_usd": 2719.9136158513725,
-  "within_cap": false,
+  "total_usd": 2451.0880622565614,
+  "within_cap": true,
   "rates": {
     "reader_input_ratio": {
       "anthropic:claude-fable-5-1": 1.25,
@@ -671,33 +671,6 @@
       }
     },
     {
-      "line": 7,
-      "name": "BEAM 10M, both systems, 8k target (the harness loader makes each conversation one 11M-token document)",
-      "data": [
-        {
-          "split": "beam:10m",
-          "fraction": 1
-        }
-      ],
-      "systems": [
-        "gbrain",
-        "comparator"
-      ],
-      "targets": [
-        8000
-      ],
-      "readers": [
-        "gemini:gemini-3.8-flash"
-      ],
-      "usd": 168.825553594811,
-      "parts": {
-        "ingest gbrain embeddings": 10.462458503771655,
-        "answer gemini:gemini-3.8-flash": 6.29239174257675,
-        "judge gemini:gemini-3.5-flash": 4.919111362831858,
-        "ingest comparator extraction": 147.15159198563074
-      }
-    },
-    {
       "line": 8,
       "name": "Two extra frontier targets on sealed BEAM (16k, 32k), stores reused",
       "data": [
@@ -729,19 +702,6 @@
       }
     },
     {
-      "line": 8,
-      "name": "LongMemEval-M (not loaded by this harness pin; plan figure share)",
-      "fixed_usd": 100,
-      "data": [],
-      "systems": [],
-      "targets": [],
-      "readers": [],
-      "usd": 100,
-      "parts": {
-        "fixed": 100
-      }
-    },
-    {
       "line": 9,
       "name": "Reserve",
       "fixed_usd": 100,
@@ -758,15 +718,15 @@
   "alternatives": [
     {
       "reader": "anthropic:claude-sonnet-5-5",
-      "total_usd": 3482.7745656443544
+      "total_usd": 3207.664049090256
     },
     {
       "reader": "anthropic:claude-opus-5-5",
-      "total_usd": 4975.712122725032
+      "total_usd": 4686.860251469069
     },
     {
       "reader": "openai:gpt-6.1-sol",
-      "total_usd": 3014.34554090994
+      "total_usd": 2743.268072592661
     }
   ]
 }
