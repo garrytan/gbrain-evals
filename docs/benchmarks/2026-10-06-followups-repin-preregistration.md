@@ -48,4 +48,11 @@ None: no paid request. The VMs are compute only.
 
 ## Amendments
 
-None yet.
+### 2026-10-07: re-pin to `a865f8f` for the N1-7 fix
+
+The check at `c5fb0201` found ledger entry N1-7: since gbrain #6024, the serve maintenance sweep fences ontology rows and a later sweep expires them, so N1-ci loses acknowledged writes on a contended runner. gbrain #6265 fixes it and merged as `a865f8f8b7c95b9f8c30690702797bafcfef537a` (v0.60.104.0). The pin moves from `c5fb0201` to `a865f8f`, under the re-pin rule in "The question". Nothing above changes. Frozen before any run at `a865f8f`:
+
+1. **After** becomes `a865f8f` for the free and gating checks. **Before** for the regression rules is `c5fb0201`: a category, metric, repro or check that passes at `c5fb0201` and fails at `a865f8f` is a regression under the same four rules. The `739e5cc` to `c5fb0201` results stand as recorded.
+2. Steps 1 to 5 of "What runs" rerun on two identical `standard-16` VMs started together, one at `c5fb0201` and one at `a865f8f`, so latency compares paired VMs. The offline-tier receipts at `a865f8f` are also diffed against the recorded `offline-tier/c5fb020` receipts.
+3. Added for N1-7, run on the Capy machine (4 cores): the keyless repro `repros/n1-7-sweep-fences-ontology.ts`, and N1-ci (`eval/runner/n1-knowledge-update.ts --slice ci`) once unpinned and once pinned to one core with `taskset -c 0`. N1-7 closes as fixed only when the repro exits 0 and both N1-ci runs show 0 acknowledged writes lost, 64 of 64 current-value probes correct and 0 stale values served.
+4. The paid results of the round stay as measured at `c5fb0201` (W10b retrieval at `a7cb37b`) and are not rerun.
