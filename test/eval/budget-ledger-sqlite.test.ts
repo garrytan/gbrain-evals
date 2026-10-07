@@ -530,9 +530,16 @@ describe('event-loop lag', () => {
 });
 
 describe('cost at scale', () => {
-  /** Fill the ledger with `n` settled entries the way months of runs would, then time reserve+settle pairs. */
+  /**
+   * Fill the ledger with `n` settled entries the way months of runs would, then time reserve+settle pairs.
+   * The ledger lives on tmpfs (/dev/shm) and the seeding writes are checkpointed before timing, so the clock
+   * measures the ledger's own work per pair. On a disk, every pair waits for two `synchronous = FULL` commit
+   * fsyncs whose latency is set by whatever else is writing to the runner's disk, not by the ledger's size.
+   */
   function timePairs(n: number, pairs: number) {
-    const path = join(tmp(), `scale-${n}.sqlite`);
+    const dir = mkdtempSync(join(existsSync('/dev/shm') ? '/dev/shm' : tmpdir(), 'ledger-scale-'));
+    dirs.push(dir);
+    const path = join(dir, `scale-${n}.sqlite`);
     initLedger({ ledgerPath: path, programCapUsd: 1e9 });
     const run = BudgetRun.open({ runner: 'scale', budgetUsd: 1e8, ledgerPath: path });
     const db = new Database(path);
@@ -544,6 +551,7 @@ describe('cost at scale', () => {
       db.query('UPDATE runs SET committed_usd = committed_usd + ? WHERE run_id = ?').run(n * 0.01, run.runId);
       db.query('UPDATE program SET committed_usd = committed_usd + ? WHERE id = 1').run(n * 0.01);
     })();
+    db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
     db.close();
     const times: number[] = [];
     for (let i = 0; i < pairs; i++) {
