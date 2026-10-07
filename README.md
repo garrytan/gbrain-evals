@@ -63,6 +63,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
 | Managed Postgres catch-up 57 ms from the database (10,000-file backlog) | **152.8 pages/min** steady, about **1.2 h** for the backlog (was 3.4 pages/min, about 49 h) | v0.60.73.0 | [Catch-up](docs/benchmarks/2026-10-05-managed-sync-catchup.md) |
+| Malformed facts/takes tables repaired by a model without a wrong cell (held-out set, model tier only) | **96.0%** repaired, **0** wrong cells (gpt-6.1-sol and claude-opus-5-5, the measured defaults); every other case held | v0.60.102.0 | [Fence repair Tier 3](docs/benchmarks/2026-10-06-fence-repair-tier3.md) |
 | Useful material kept when a session becomes a memory page | **88.1%** judged; 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 
 All 28 reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `739e5cc`, and moving to
@@ -235,6 +236,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.
+
+### 2026-10-06: Fence repair accuracy added to current results
+
+gbrain-evals v0.10.36. New row: gbrain v0.60.102.0 repairs malformed facts and takes tables by itself, and its model tier ships with a measured default. On a 52-fence held-out set written before the repair fixes existed, gpt-6.1-sol and claude-opus-5-5 each repaired 96.0% of the fences that reach the model with zero wrong cells, and answered HOLD on the rest; claude-opus-4-7 and claude-sonnet-5-5 did not qualify. Details and both preregistered rounds are in [the fence repair report](docs/benchmarks/2026-10-06-fence-repair-tier3.md).
 
 ### 2026-10-05: Managed Postgres catch-up speed added to current results
 
