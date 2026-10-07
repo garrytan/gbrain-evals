@@ -16,14 +16,17 @@
  * sparse-error scenario (false answers on unanswerable items set to `--sparse-rate`), the coverage of the
  * false-answer difference interval. Sizes may rise, never fall, before the freeze.
  *
- *   bun eval/runner/q2/power-sim.ts --receipts <a.json,b.json,...> --pairs 100 --ingests 3 --sims 200 [--effects 0,3,5] [--seed 20261006] --output <dir>
+ *   bun eval/runner/q2/power-sim.ts --receipts <a.json,b.json,...> --pairs 100 --ingests 3 --sims 200 [--effects 0,3,5] [--seed 20261006]
+ *     [--exclude-models claude-fable-5-1] --output <dir>
+ * `--exclude-models` drops those models' rows before fitting (amendment 4: the pilot's Fable 5.1 cells stay in its
+ * receipts but never size G6).
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { flagValue } from '../p5-agent.ts';
 import { seededRandom } from '../stats/paired.ts';
 import { g6Gates, crossedBootstrap, type AnswerRow } from './crossed-bootstrap.ts';
-import { rowsFromReceipt } from '../write-then-answer.ts';
+import { excludeModels, rowsFromReceipt } from '../write-then-answer.ts';
 
 const logit = (p: number) => Math.log(p / (1 - p));
 const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
@@ -145,12 +148,13 @@ async function main(argv: string[]): Promise<void> {
   const receipts = (flagValue(argv, '--receipts') ?? '').split(',').filter(Boolean);
   const output = flagValue(argv, '--output');
   if (!receipts.length || !output) throw new Error('usage: power-sim.ts --receipts <dev pilot receipts of both arms> --output <dir> [--pairs 100] [--ingests 3] [--sims 200] [--effects 0,3,5]');
-  const rows = receipts.flatMap(rowsFromReceipt);
+  const excluded = (flagValue(argv, '--exclude-models') ?? '').split(',').filter(Boolean);
+  const rows = excludeModels(receipts.flatMap(rowsFromReceipt), excluded);
   const fit = fitPilot(rows);
   const o = { pairs: Number(flagValue(argv, '--pairs') ?? 100), ingests: Number(flagValue(argv, '--ingests') ?? 3), sims: Number(flagValue(argv, '--sims') ?? 200),
     effects: (flagValue(argv, '--effects') ?? '0,3,5').split(',').map(Number), seed: Number(flagValue(argv, '--seed') ?? 20261006), bootDraws: Number(flagValue(argv, '--boot-draws') ?? 1000), sparseRate: Number(flagValue(argv, '--sparse-rate') ?? 0.02) };
   const table = powerTable(fit, o);
-  const report = { inputs: receipts, pilot: { answers: rows.length, corpora: fit.corpora, models: fit.models, pairs: Object.fromEntries(fit.corpora.map(c => [c, fit.pairs.get(c)!.length])), sigma_ingest_logit: Object.fromEntries(fit.sigma) }, matrix: { pairs_per_corpus: o.pairs, ingests: o.ingests, models: fit.models.length, arms: 2 }, settings: o, results: table,
+  const report = { inputs: receipts, excluded_models: excluded, pilot: { answers: rows.length, corpora: fit.corpora, models: fit.models, pairs: Object.fromEntries(fit.corpora.map(c => [c, fit.pairs.get(c)!.length])), sigma_ingest_logit: Object.fromEntries(fit.sigma) }, matrix: { pairs_per_corpus: o.pairs, ingests: o.ingests, models: fit.models.length, arms: 2 }, settings: o, results: table,
     note: 'Sizes may rise, never fall, before the freeze; a raise goes into the freeze record with its cost.' };
   mkdirSync(output, { recursive: true });
   writeFileSync(join(output, 'power-sim.json'), JSON.stringify(report, null, 2) + '\n');

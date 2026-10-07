@@ -35,6 +35,9 @@ export interface CampaignStep {
 }
 export interface CampaignManifest {
   schema: 'q2-campaign-v1'; decision_id: string; approved_usd: number; alert_usd: number;
+  /** G6 models (amendment 4); a paid step refuses a model outside this list. */
+  models?: string[];
+  estimate_basis?: string;
   /** Typing units in the selection family. */
   units: string[];
   /** Dependency units from the development trace (preregistration amendment 3): joint id -> member units. */
@@ -168,6 +171,11 @@ export function campaignGuard(argv: readonly string[], o: { manifest?: CampaignM
   const estimate = o.estimateUsd ?? step.estimate_usd;
   if (estimate > 0 && spent + estimate > m.alert_usd && !flag(argv, '--owner-approved-over-alert')) {
     throw new Error(`campaign spend $${spent.toFixed(2)} plus this step's estimate $${estimate.toFixed(2)} passes the $${m.alert_usd} alert (approved $${m.approved_usd}). Stop and ask the owner; rerun with --owner-approved-over-alert "<who, when>" only after approval.`);
+  }
+  const given0 = flag(argv, '--models');
+  if (m.models && given0) {
+    const outside = given0.split(',').filter(x => x && !m.models!.includes(x));
+    if (outside.length) throw new Error(`campaign step ${stepId}: --models names ${outside.join(', ')}, outside the preregistered G6 models (${m.models.join(', ')}); counted cells run only those (amendment 4). Drop it and rerun.`);
   }
   const output = join(root, stepId, run);
   const given = flag(argv, '--output');

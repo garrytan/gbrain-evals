@@ -17,11 +17,18 @@
  *   http-journey  one HTTP-writer journey: a finished brain's pages written over `gbrain serve --http`, typed edges
  *              read before and after `gbrain sweep --once`
  *
+ * Models: claude-sonnet-5-5, gpt-6.1-sol and claude-opus-5-5 (preregistration amendment 4; Fable 5.1 is smoke-test
+ * only). `--skip-models <list>` resumes an existing work root without some of its recorded models: the experiment
+ * identity (experiment.json, and its model list when --models is not given) stays the recorded one, no ingest, answer
+ * or judgment is made for a skipped model, and its existing checkpoint records stay in place; the receipt keeps the
+ * rows it already has, flagged `skipped_model: 1` and left out of the accounting and summaries. `compare` and
+ * `q2/power-sim.ts` take `--exclude-models <list>` to drop a model's rows before scoring.
+ *
  * Arms: A = the final Q2 build with GBRAIN_EVAL_CONFIG=line_grammar.enabled=false and guidance-a.md; B = the same
  * build with line_grammar.enabled=true and the guidance that would ship. Rows pair across arms by
  * (corpus, model, ingest, question); the cluster is the question pair, whose key is shared across models.
  *
- *   bun eval/runner/write-then-answer.ts compare --a <receipt>[,..] --b <receipt>[,..] --output <dir>   crossed bootstrap, G6 gates
+ *   bun eval/runner/write-then-answer.ts compare --a <receipt>[,..] --b <receipt>[,..] --output <dir> [--exclude-models <list>]   crossed bootstrap, G6 gates
  *   bun eval/runner/write-then-answer.ts adoption --work <arm B work root> --output <dir> --paid ...      adoption-recall labels
  *
  * Corpora: `--corpus amara` (amara-life-v1, chronicle-lift renderCorpus) or `--corpus career`. Development runs use dev
@@ -32,7 +39,7 @@
  *
  * Usage:
  *   bun eval/runner/write-then-answer.ts --gbrain <checkout>@<ref> --arm-label A|B --guidance <file> --corpus amara|career
- *     --output <dir> --work <dir> [--models claude-sonnet-5-5,gpt-6.1-sol,claude-opus-5-5,claude-fable-5-1] [--ingests 3]
+ *     --output <dir> --work <dir> [--models claude-sonnet-5-5,gpt-6.1-sol,claude-opus-5-5] [--skip-models <list>] [--ingests 3]
  *     [--judge gpt-6.1-sol] [--audit-judge claude-opus-5-5] [--audit-fraction 0.1] [--phase ingest|answer|judge|immediate|http-journey|all]
  *     [--dev-seed 1] [--dev-pairs 8] [--batch-chars 24000] [--ingest-batches N] [--concurrency 4] [--pilot | --limit N]
  *     [--scripted] [--paid --budget-usd N | --paid --budget-run-id <id>] [--campaign <root> --step <id> --run <name>]
@@ -249,7 +256,7 @@ export function summarizeArm(rows: ReadonlyArray<Record<string, unknown>>): Reco
 // ─── Run ────────────────────────────────────────────────────────────
 
 interface RunOptions {
-  argv: string[]; gut: GbrainUnderTest; corpus: CorpusContext; questions: QaQuestion[]; models: string[]; ingests: number; arm: string; guidance: { text: string; sha256: string; words: number; path: string };
+  argv: string[]; gut: GbrainUnderTest; corpus: CorpusContext; questions: QaQuestion[]; models: string[]; skippedModels: string[]; ingests: number; arm: string; guidance: { text: string; sha256: string; words: number; path: string };
   config: Record<string, string>; judge: string; auditJudge: string; auditFraction: number; phase: string; output: string; work: string; scripted: boolean; concurrency: number;
   batches: Array<Array<{ path: string; content: string }>>; ingestMaxTurns: number; answerMaxTurns: number; custody: { set: string; sha256: string } | null; log: (s: string) => void;
 }
@@ -417,6 +424,9 @@ async function runArm(o: RunOptions): Promise<void> {
   }
 
   const rows = answerRows({ corpus: o.corpus.id, arm: o.arm, models: o.models, ingests: ingestIdx, questions: o.questions, answers, judgments, judge: o.judge, auditJudge: o.auditJudge, redact: !!o.custody });
+  // Skipped models keep the rows they already have, flagged and outside the accounting and summaries.
+  const skippedRows = o.skippedModels.length ? answerRows({ corpus: o.corpus.id, arm: o.arm, models: o.skippedModels, ingests: ingestIdx, questions: o.questions, answers, judgments, judge: o.judge, auditJudge: o.auditJudge, redact: !!o.custody })
+    .filter(r => r.answer_state !== 'not_started').map(r => ({ ...r, skipped_model: 1 }) as Record<string, unknown>) : [];
   const immRows = phases.includes('immediate') ? answerRows({ corpus: o.corpus.id, arm: o.arm, models: o.models, ingests: [IMMEDIATE_INGEST], questions: imm, answers, judgments, judge: o.judge, auditJudge: o.auditJudge, redact: !!o.custody }) : [];
   const planned = rows.length;
   const attempted = rows.filter(r => r.answer_state !== 'not_started').length;
@@ -425,11 +435,12 @@ async function runArm(o: RunOptions): Promise<void> {
   const wantsJudged = phases.includes('judge');
   const incomplete = wantsJudged ? planned - scored - terminal : 0;
   const receipt = p5Receipt({
-    category: CATEGORY, gut: o.gut, startedAt, rows: [...rows, ...immRows.map(r => ({ ...r, cell: 'immediate' }))],
+    category: CATEGORY, gut: o.gut, startedAt, rows: [...rows, ...immRows.map(r => ({ ...r, cell: 'immediate' })), ...skippedRows],
     harnessError: harnessError ?? (incomplete > 0 ? `${incomplete} of ${planned} answers lack a judgment; rerun the same command to resume` : null),
     accounting: { planned, attempted, scored, errors: terminal },
     summary: {
       arm: o.arm, corpus: o.corpus.id, ...summarizeArm(rows), graphs,
+      ...(o.skippedModels.length ? { skipped_models: Object.fromEntries(o.skippedModels.map(m => { const xs = skippedRows.filter(r => r.model === m); return [m, { rows_kept: xs.length, judged: xs.filter(r => typeof r.correct === 'number').length }]; })) } : {}),
       ...(phases.includes('immediate') ? { immediate_cell: { ...immediate, answers: summarizeArm(immRows) } } : {}),
       ...(phases.includes('http-journey') ? { http_writer_journey: httpJourney } : {}),
       ingest: Object.fromEntries(o.models.map(m => { const rs = ingest.values().filter(r => r.model === m && r.ingest >= 0); return [m, { batches: rs.length, batches_planned: o.batches.length * o.ingests, usd: rs.reduce((s, r) => s + r.run.usd, 0) }]; })),
@@ -438,7 +449,7 @@ async function runArm(o: RunOptions): Promise<void> {
     basis: o.scripted ? 'scripted agent: no model and no paid request' : 'agent and judge calls through the paid-request guard; gbrain runs keyless (no provider key, no gbrain model calls)',
     resolvedConfig: {
       version: VERSION, arm: o.arm, corpus: { id: o.corpus.id, source: o.corpus.source, digest: o.custody ? `custody (${o.custody.sha256})` : corpusDigest(o.corpus.pages), pages: o.corpus.pages.length, batches: o.batches.length },
-      models: o.models, ingests: o.ingests, judge: o.judge, rubric: WTA_RUBRIC_VERSION, rubric_sha256: WTA_RUBRIC_SHA256, audit: { judge: o.auditJudge, fraction: o.auditFraction, selection: 'sha256(q2-wta-audit-v1, answer key) < fraction' },
+      models: o.models, ...(o.skippedModels.length ? { skipped_models: o.skippedModels } : {}), ingests: o.ingests, judge: o.judge, rubric: WTA_RUBRIC_VERSION, rubric_sha256: WTA_RUBRIC_SHA256, audit: { judge: o.auditJudge, fraction: o.auditFraction, selection: 'sha256(q2-wta-audit-v1, answer key) < fraction' },
       scripted: o.scripted, phase: o.phase, pair_key: 'question pair, shared across models; cluster = corpus|pair',
       guidance: { path: relative(REPO, o.guidance.path), sha256: o.guidance.sha256, words: o.guidance.words },
       questions: o.custody ? `sealed set ${o.custody.set} (custody file sha256 ${o.custody.sha256}), ${o.questions.length} questions` : `development: ${o.questions.length} questions`,
@@ -467,18 +478,24 @@ export function rowsFromReceipt(path: string): AnswerRow[] {
     type: x.type as 'relational' | 'temporal', answerable: x.answerable !== false, correct: typeof x.correct === 'number' ? x.correct : null, false_answer: typeof x.false_answer === 'number' ? x.false_answer : null }));
 }
 
+/** Drop the rows of the named models (compare and power-sim `--exclude-models`). */
+export function excludeModels<T extends { model: string }>(rows: readonly T[], models: readonly string[]): T[] {
+  return rows.filter(r => !models.includes(r.model));
+}
+
 async function cmdCompare(argv: string[]): Promise<void> {
   const campaign = campaignGuard(argv);
   const output = campaign?.output ?? flagValue(argv, '--output');
   const a = (flagValue(argv, '--a') ?? '').split(',').filter(Boolean), b = (flagValue(argv, '--b') ?? '').split(',').filter(Boolean);
   if (!output || !a.length || !b.length) throw new Error('usage: write-then-answer.ts compare --a <arm A receipts, comma-separated> --b <arm B receipts> --output <dir>');
-  const rows = [...a, ...b].flatMap(rowsFromReceipt);
+  const excluded = (flagValue(argv, '--exclude-models') ?? '').split(',').filter(Boolean);
+  const rows = excludeModels([...a, ...b].flatMap(rowsFromReceipt), excluded);
   for (const r of rows) if ((a.length && r.arm !== 'A' && r.arm !== 'B')) throw new Error('receipt rows must carry arm A or B (pass --arm-label A or B when running)');
   const seed = Number(flagValue(argv, '--seed') ?? 20261006), draws = Number(flagValue(argv, '--draws') ?? 10_000);
   const g = g6Gates(rows, { seed, draws });
   const receipt = p5Receipt({ category: 'q2-g6', gut: resolveGbrainUnderTest(null), startedAt: new Date().toISOString(), rows: [], harnessError: null, gates: g.gates,
     summary: { estimates: g.estimates, answers: rows.length, by_cell: Object.fromEntries([...new Set(rows.map(r => `${r.corpus}|${r.model}|${r.arm}`))].sort().map(k => [k, { ingests: new Set(rows.filter(r => `${r.corpus}|${r.model}|${r.arm}` === k).map(r => r.ingest)).size }])) },
-    basis: 'decision only: receipts in, no model call', resolvedConfig: { seed, draws, inference: 'crossed bootstrap: question pairs within corpus strata (shared across models and arms) x ingest brains within corpus x model x arm', inputs: { a, b } } });
+    basis: 'decision only: receipts in, no model call', resolvedConfig: { seed, draws, excluded_models: excluded, inference: 'crossed bootstrap: question pairs within corpus strata (shared across models and arms) x ingest brains within corpus x model x arm', inputs: { a, b } } });
   writeReceipt(join(output, 'receipt.json'), receipt);
   campaign?.finish(join(output, 'receipt.json'), 0);
   for (const x of g.gates) process.stderr.write(`${x.gate}: ${x.outcome}${x.failed_threshold ? ` (${x.failed_threshold})` : ''}\n`);
@@ -537,6 +554,21 @@ async function cmdAdoption(argv: string[], log: (s: string) => void): Promise<vo
   log(`adoption recall ${JSON.stringify((res as { adoption_recall: number | null }).adoption_recall)}; receipt ${join(roots.output, 'receipt.json')}`);
 }
 
+/**
+ * The experiment's model list and the models this invocation runs. Without --models a resume takes the list recorded
+ * in experiment.json (so a changed default never changes a recorded experiment); a fresh work root takes the default.
+ * --skip-models must name recorded models and leave at least one.
+ */
+export function resolveModels(o: { modelsFlag: string | undefined; skipModels: readonly string[]; recorded: { models?: string[] } | null }): { models: string[]; active: string[] } {
+  const models = o.modelsFlag ? o.modelsFlag.split(',').filter(Boolean) : o.recorded?.models ?? [...DEFAULT_MODELS];
+  const unknown = o.skipModels.filter(m => !models.includes(m));
+  if (unknown.length) throw new Error(`--skip-models names ${unknown.join(', ')}, which the experiment (${models.join(', ')}) does not include; skip only recorded models`);
+  if (o.skipModels.length && !o.recorded) throw new Error('--skip-models resumes an existing work root; this --work has no experiment.json. For a new experiment, pass --models without the model instead');
+  const active = models.filter(m => !o.skipModels.includes(m));
+  if (!active.length) throw new Error('--skip-models leaves no model to run; drop a model from the list');
+  return { models, active };
+}
+
 // ─── Main ───────────────────────────────────────────────────────────
 
 async function main(argv: string[]): Promise<void> {
@@ -576,7 +608,7 @@ async function main(argv: string[]): Promise<void> {
       : generateCareerDevWorld(devSeed).questions;
   }
   const questions = selectUnits(allQuestions, q => q.id, { pilot: argv.includes('--pilot'), limit: limitFlag(argv) });
-  const models = (flagValue(argv, '--models') ?? DEFAULT_MODELS.join(',')).split(',').filter(Boolean);
+  const skippedModels = (flagValue(argv, '--skip-models') ?? '').split(',').filter(Boolean);
   const ingests = Number(flagValue(argv, '--ingests') ?? DEFAULT_INGESTS);
   if (!Number.isInteger(ingests) || ingests < 1) throw new Error('--ingests must be a positive integer');
   const guidancePath = resolve(flagValue(argv, '--guidance') ?? join(REPO, 'eval/data/p5-write-then-answer/guidance-a.md'));
@@ -599,16 +631,18 @@ async function main(argv: string[]): Promise<void> {
   const auditJudge = flagValue(argv, '--audit-judge') ?? G6_AUDIT_JUDGE;
   const ingestMaxTurns = Number(flagValue(argv, '--ingest-max-turns') ?? 60);
   const answerMaxTurns = Number(flagValue(argv, '--answer-max-turns') ?? 16);
+  const identityPath = join(work, 'experiment.json');
+  const { models, active } = resolveModels({ modelsFlag: flagValue(argv, '--models'), skipModels: skippedModels, recorded: existsSync(identityPath) ? JSON.parse(readFileSync(identityPath, 'utf8')) as { models?: string[] } : null });
+  if (skippedModels.length) log(`skipping ${skippedModels.join(', ')}: no new ingest, answer or judgment for them; the recorded experiment (${models.join(', ')}) is unchanged`);
   const identity = { version: VERSION, build: commit, config, arm: armLabel, corpus: corpusId, corpus_digest: corpusDigest(corpus.pages), guidance_sha256: guidance.sha256, models, ingests, judge, audit_judge: auditJudge, scripted,
     batches: batches.map(b => b.map(p => p.path)), ingest_max_turns: ingestMaxTurns, answer_max_turns: answerMaxTurns, questions_sha256: sha256(JSON.stringify(allQuestions)) };
-  const identityPath = join(work, 'experiment.json');
   if (existsSync(identityPath) && readFileSync(identityPath, 'utf8') !== JSON.stringify(identity, null, 2) + '\n') throw new Error(`${work} holds a different experiment (experiment.json differs); rerun the exact original command, or use a new --work`);
   writeFileSync(identityPath, JSON.stringify(identity, null, 2) + '\n');
   if (custody) {
     const op = openOrContinue(work, custody.set, identity);
     log(op.continues ? `continuing opening ${op.opening_id} of ${custody.set}` : `opening ${op.opening_id} of ${custody.set} (one opening per work root)`);
   }
-  await runArm({ argv, gut, corpus, questions, models, ingests, arm: armLabel, guidance, config, judge, auditJudge, auditFraction: Number(flagValue(argv, '--audit-fraction') ?? 0.1),
+  await runArm({ argv, gut, corpus, questions, models: active, skippedModels, ingests, arm: armLabel, guidance, config, judge, auditJudge, auditFraction: Number(flagValue(argv, '--audit-fraction') ?? 0.1),
     phase: flagValue(argv, '--phase') ?? 'all', output, work, scripted, concurrency: Number(flagValue(argv, '--concurrency') ?? 4), batches, ingestMaxTurns, answerMaxTurns, custody, log });
 }
 

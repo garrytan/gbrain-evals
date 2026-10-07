@@ -22,7 +22,8 @@ import { assertOutsideRepository } from '../sealed-confirmation-lib.ts';
 import { campaignGuard, type CampaignManifest } from './campaign.ts';
 import { Q2_LINE_JUDGES } from './judge.ts';
 
-export const G6_MODELS: readonly string[] = ['claude-sonnet-5-5', 'gpt-6.1-sol', 'claude-opus-5-5', 'claude-fable-5-1'];
+/** G6 models (preregistration amendment 4, owner rule 2026-10-07): Fable 5.1 is smoke-test only and never a counted cell. */
+export const G6_MODELS: readonly string[] = ['claude-sonnet-5-5', 'gpt-6.1-sol', 'claude-opus-5-5'];
 export const G6_JUDGE = 'gpt-6.1-sol';
 export const G6_AUDIT_JUDGE = 'claude-opus-5-5';
 

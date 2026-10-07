@@ -9,7 +9,8 @@ import { fitPilot, powerTable, shiftFor, simulate } from '../../eval/runner/q2/p
 import { loadCareerCorpus, validateQuestions } from '../../eval/runner/q2/q-set.ts';
 import { inAudit, parseWtaVerdict, wtaJudgePrompt } from '../../eval/runner/q2/wta-judge.ts';
 import { CAREER_DEV_SEEDS, generateCareerDevWorld } from '../../eval/generators/career-chronicle-dev-gen.ts';
-import { adoptionRecall, immediateQuestions, snapshotOrRefuse } from '../../eval/runner/write-then-answer.ts';
+import { DEFAULT_MODELS, adoptionRecall, excludeModels, immediateQuestions, resolveModels, snapshotOrRefuse } from '../../eval/runner/write-then-answer.ts';
+import { G6_MODELS } from '../../eval/runner/q2/preflight.ts';
 
 const scratch = () => mkdtempSync(join(tmpdir(), 'q2-wta-'));
 
@@ -53,6 +54,33 @@ describe('answer and judge checkpoints', () => {
     expect(r).toContain('12 answers, 30 judgments');
     expect(r).toContain('$41.50');
     expect(r).toContain('continues the same opening (q/career, opening op-1)');
+  });
+});
+
+describe('G6 models (amendment 4) and --skip-models', () => {
+  const four = ['claude-sonnet-5-5', 'gpt-6.1-sol', 'claude-opus-5-5', 'claude-fable-5-1'];
+  test('the default and preflight lists are Sonnet 5.5, GPT-6.1 Sol and Opus 5.5; Fable 5.1 never counts', () => {
+    expect([...G6_MODELS]).toEqual(['claude-sonnet-5-5', 'gpt-6.1-sol', 'claude-opus-5-5']);
+    expect([...DEFAULT_MODELS]).toEqual([...G6_MODELS]);
+  });
+  test('a resume without --models keeps the recorded four-model experiment; skipping Fable runs the other three', () => {
+    expect(resolveModels({ modelsFlag: undefined, skipModels: ['claude-fable-5-1'], recorded: { models: four } })).toEqual({ models: four, active: four.slice(0, 3) });
+    expect(resolveModels({ modelsFlag: four.join(','), skipModels: ['claude-fable-5-1'], recorded: { models: four } }).models).toEqual(four);
+    expect(resolveModels({ modelsFlag: undefined, skipModels: [], recorded: null })).toEqual({ models: [...G6_MODELS], active: [...G6_MODELS] });
+  });
+  test('skipping refuses unknown models, a fresh work root, and an empty remainder', () => {
+    expect(() => resolveModels({ modelsFlag: undefined, skipModels: ['claude-haiku-4-5'], recorded: { models: four } })).toThrow('does not include');
+    expect(() => resolveModels({ modelsFlag: undefined, skipModels: ['claude-fable-5-1'], recorded: null })).toThrow('does not include');
+    expect(() => resolveModels({ modelsFlag: four.join(','), skipModels: ['claude-fable-5-1'], recorded: null })).toThrow('no experiment.json');
+    expect(() => resolveModels({ modelsFlag: undefined, skipModels: ['gpt-6.1-sol'], recorded: { models: ['gpt-6.1-sol'] } })).toThrow('leaves no model');
+  });
+  test('--exclude-models drops a model\'s rows before scoring, so its partial cells cannot block the G6 gates', () => {
+    const rows = design({ pairs: 30, ingests: 2, models: four, pA: 0.5, pB: 0.8, seed: 2 }).map(r => (r.model === 'claude-fable-5-1' && r.ingest === 1 ? { ...r, correct: null } : r));
+    expect(g6Gates(rows, { seed: 1, draws: 200 }).gates.every(g => g.outcome === 'not_run')).toBe(true);
+    const kept = excludeModels(rows, ['claude-fable-5-1']);
+    expect(new Set(kept.map(r => r.model))).toEqual(new Set(four.slice(0, 3)));
+    expect(g6Gates(kept, { seed: 1, draws: 200 }).gates.map(g => g.gate)).not.toContain('G6.model.claude-fable-5-1');
+    expect(fitPilot(kept).models).toEqual([...four.slice(0, 3)].sort());
   });
 });
 
@@ -100,7 +128,7 @@ function design(o: { pairs: number; ingests: number; models: string[]; pA: numbe
 }
 
 describe('crossed bootstrap and G6 gates', () => {
-  const models = ['claude-sonnet-5-5', 'gpt-6.1-sol', 'claude-opus-5-5', 'claude-fable-5-1'];
+  const models = ['claude-sonnet-5-5', 'gpt-6.1-sol', 'claude-opus-5-5'];
   test('point estimate is the B - A difference of arm means; the interval is reproducible from the seed', () => {
     const rows = design({ pairs: 30, ingests: 3, models, pA: 0.6, pB: 0.7, seed: 3 });
     const meanOf = (arm: string) => { const xs = rows.filter(r => r.arm === arm); return xs.reduce((a, r) => a + (r.correct as number), 0) / xs.length; };

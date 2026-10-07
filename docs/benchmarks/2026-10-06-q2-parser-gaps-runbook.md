@@ -20,7 +20,8 @@ bun eval/runner/q2/campaign.ts status --campaign "$C"
   `access-log.jsonl` beside the file.
 - **Receipts that leave custody carry aggregates only.** Line text, questions and answers stay in the work roots. Only
   step 20's allowlisted aggregate goes to Capy Drive or the gbrain-evals verdict index.
-- **Spend.** The ledger tracks spend against the approved $2,100. A paid step whose estimate would take the total past
+- **Spend.** The ledger tracks spend against the approved $2,100. The manifest's step estimates assume the three G6
+  models (`estimate_basis` gives the arithmetic); the dev pilot replaces them with measured figures. A paid step whose estimate would take the total past
   the $2,800 alert refuses to start. Stop and ask the owner; after approval, rerun with
   `--owner-approved-over-alert "<who, when>"`.
 - **Resume.** A paid step that stops (budget, network, Ctrl-C) prints the exact resume command, the remaining work, the
@@ -168,7 +169,9 @@ GBRAIN_EVAL_CONFIG=line_grammar.enabled=true bun eval/runner/write-then-answer.t
   --work "$W/g6-X-B" --paid --budget-usd <step budget> --campaign "$C" --step g6-ingest --run X-B
 ```
 
-Defaults are the preregistered matrix: four models and three ingests per arm. Expected: one receipt per corpus and arm;
+Defaults are the preregistered matrix (amendment 4): three models (`claude-sonnet-5-5`, `gpt-6.1-sol`,
+`claude-opus-5-5`) and three ingests per arm. Fable 5.1 is smoke-test only and never runs in a counted cell; inside the
+campaign a `--models` list outside those three is refused. Expected: one receipt per corpus and arm;
 `$W/g6-X-B/grammar-lines/` holds every brain's grammar lines and list lines. No earlier ingest artifact is reused.
 
 ## 10. Minting on N and K (`grammar-mint`)
@@ -265,7 +268,7 @@ bun eval/runner/write-then-answer.ts compare --a "$C/g6-judging/amara-A/receipt.
   --b "$C/g6-judging/amara-B/receipt.json,$C/g6-judging/career-B/receipt.json" --campaign "$C" --step g6-decision --run decision
 ```
 
-Expected: a `q2-g6` receipt with `G6.pooled`, `G6.model.<model>` for each of the four models, `G6.type.relational`,
+Expected: a `q2-g6` receipt with `G6.pooled`, `G6.model.<model>` for each of the three models, `G6.type.relational`,
 `G6.type.temporal` and `G6.unanswerable_false_answers`, from the crossed bootstrap (question pairs within corpus strata,
 shared across models and arms; ingest brains within corpus × model × arm; 10,000 draws, seed recorded).
 
@@ -281,16 +284,23 @@ file leaves custody.
 ## Development pilot and power simulation (before the freeze)
 
 The implementer's dev pilot runs steps 9, 15 and 16 on development material (`--dev-seed 1`, no `--questions-file`,
-`--ingests 2`, both corpora, four models), then estimates the power of every G6 gate at the planned matrix:
+`--ingests 2`, both corpora, the three G6 models), then estimates the power of every G6 gate at the planned matrix.
+A pilot work root recorded with Fable 5.1 before amendment 4 resumes with `--skip-models claude-fable-5-1` (same
+command otherwise; the recorded experiment is unchanged, no new Fable work is made, and its finished rows stay in the
+receipt flagged `skipped_model`), and the power simulation drops its cells:
 
 ```bash
-bun eval/runner/q2/power-sim.ts --receipts <dev pilot receipts of both arms and corpora> --pairs 100 --ingests 3 --sims 200 --effects 0,3,5 --output <dir>
+bun eval/runner/q2/power-sim.ts --receipts <dev pilot receipts of both arms and corpora> --exclude-models claude-fable-5-1 \
+  --pairs 100 --ingests 3 --sims 200 --effects 0,3,5 --output <dir>
 ```
 
 A raise in sizes goes into the freeze record with its cost; sizes never fall.
 
 ## Changelog
 
+- 2026-10-07: G6 runs claude-sonnet-5-5, gpt-6.1-sol and claude-opus-5-5 (amendment 4; Fable 5.1 smoke-test only);
+  step estimates scaled to three models; `--skip-models` resumes a pilot work root recorded with Fable, and
+  `--exclude-models` keeps its cells out of `compare` and the power simulation.
 - 2026-10-06: the selection family is U1, U25, U34 and U6 (amendment 3); the manifest's `joint_units` replaces the
   `u34_joint` placeholder, and the selection refuses any other `--unit` set.
 - 2026-10-06: G5 variants read fresh seeds from a custody seeds file (`--seeds-file`); the manifest's `u34_joint`

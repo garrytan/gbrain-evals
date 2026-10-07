@@ -84,6 +84,14 @@ describe('campaign manifest order', () => {
     expect(() => campaignGuard(['--campaign', r, '--step', 'c-select-arms', '--run', 'te-I1-f1-U3'], { manifest: m })).toThrow('te-I1-f1-U3 is not one of them');
     expect(campaignGuard(['--campaign', r, '--step', 'c-select-arms', '--run', 'te-I1-f1-U25'], { manifest: m })).not.toBeNull();
   });
+  test('inside the campaign a --models list outside the preregistered G6 models is refused (Fable 5.1 smoke-test only)', () => {
+    const m = loadCampaignManifest();
+    expect(m.models).toEqual(['claude-sonnet-5-5', 'gpt-6.1-sol', 'claude-opus-5-5']);
+    expect(JSON.stringify(m.steps)).not.toContain('fable');
+    const r = root();
+    expect(() => campaignGuard(['--campaign', r, '--step', 'smoke', '--run', 'dev-wta-scripted', '--models', 'claude-sonnet-5-5,claude-fable-5-1'], { manifest: m })).toThrow('outside the preregistered G6 models');
+    expect(campaignGuard(['--campaign', r, '--step', 'smoke', '--run', 'dev-wta-scripted', '--models', 'claude-sonnet-5-5'], { manifest: m })).not.toBeNull();
+  });
   test('the committed manifest loads, keeps the preregistered order and budget', () => {
     const m = loadCampaignManifest();
     expect([m.approved_usd, m.alert_usd]).toEqual([2100, 2800]);
