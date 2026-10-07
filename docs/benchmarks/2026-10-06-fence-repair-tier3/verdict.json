@@ -4,6 +4,11 @@
   "preregistration": "docs/benchmarks/2026-10-06-fence-repair-tier3-preregistration.md (commit 27d8fe5)",
   "gbrain_commit": "171a7e24663640987f8c1e773202aa296d196a89",
   "gbrain_branch": "capy/6188-t4-eval",
+  "gbrain_shipped_in": {
+    "version": "0.60.102.0",
+    "merge_commit": "5b5891069",
+    "pull_request": 6229
+  },
   "fixtures_sha256": "769f7f04cda52128144383a95b1940228b684b80ed2743b81e7db05784799896",
   "prompt_version": 1,
   "system_prompt_sha256": "de1795ee19df61acb36574a1adb09bd1b9a235371deeeac852ed4b38570b5545",

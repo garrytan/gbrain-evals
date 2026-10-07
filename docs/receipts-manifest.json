@@ -4589,7 +4589,7 @@
       "claim_id": "fence-repair-tier3-2026-10-06",
       "readme_anchor": "docs/benchmarks/2026-10-06-fence-repair-tier3.md: default claude-opus-4-7 195/198 gate-pass and 8/198 false accepts (fails the 1% bar); gpt-6.1-sol 198/198 and 1/198; claude-fable-5-1 191/198 and 0/198",
       "artifact_path": "docs/benchmarks/2026-10-06-fence-repair-tier3/verdict.json",
-      "artifact_sha256": "cda8d016e9cc1facfe6f895dc4ff49ef3529c6db4dccbe774ed657be5f24cad4",
+      "artifact_sha256": "2f79a7fd4dcfadd914e0d34e507e20674c4230877647cb813676fb18a558cbbf",
       "expected": {
         "/models/anthropic:claude-opus-4-7/repaired": 195,
         "/models/anthropic:claude-opus-4-7/false_accepts": 8,
@@ -4607,7 +4607,7 @@
       "claim_id": "fence-repair-tier3-round-2-2026-10-06",
       "readme_anchor": "docs/benchmarks/2026-10-06-fence-repair-tier3.md: round 2 at gbrain 7d75e08c; gpt-6.1-sol, claude-opus-5-5 and claude-fable-5-1 qualify (held-out 95, 95 and 93 of 99, no false accept); claude-opus-4-7 fails on the round 1 fixtures (3 of 165); default order gpt-6.1-sol, claude-opus-5-5, claude-fable-5-1",
       "artifact_path": "docs/benchmarks/2026-10-06-fence-repair-tier3/round-2/verdict.json",
-      "artifact_sha256": "352bfeb41f5a0416a447f9291895343e8a25fb63355ca33240fbfff10f437818",
+      "artifact_sha256": "328adeddb9ae3a85e7e5e5760ada9ae29120b5092f074b955bca88e28ac5466e",
       "expected": {
         "/sets/heldout/openai:gpt-6.1-sol/repaired": 95,
         "/sets/heldout/anthropic:claude-opus-5-5/repaired": 95,
@@ -4619,7 +4619,7 @@
       },
       "golden_test": "test/eval/fence-repair-tier3-recount.test.ts: round 2 Tier 3 counts recounted from the raw per-fixture rows of both sets",
       "status": "covered",
-      "note": "1,950 fixture runs (5 models x 3 runs x 130 fences: the 78 round 1 fixtures and a 52-fence held-out set frozen in amendment 1 at 40fd5e1) through gbrain's production Tier 3 path at 7d75e08c with the harness from ead0b0c9. $13.67."
+      "note": "1,950 fixture runs (5 models x 3 runs x 130 fences: the 78 round 1 fixtures and a 52-fence held-out set frozen in amendment 1 at 40fd5e1) through gbrain's production Tier 3 path at 7d75e08c with the harness from ead0b0c9; shipped in gbrain v0.60.102.0 (5b5891069, #6229), where only h-spl-04 routes differently (to manual). $13.67."
     }
   ]
 }
