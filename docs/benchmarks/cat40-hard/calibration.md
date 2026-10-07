@@ -182,6 +182,8 @@ Round 5's knobs are frozen (`knobs.frozen.json`, `freeze.json`, knob digest `37a
 
 ## Notes after the freeze
 
+- 2026-10-07: the held-out result is in [the Cat 40 Hard report](../2026-10-07-model-ladder-hard.md). Runner changes after the freeze left every frozen code hash unchanged: the staged slot build's first batch (`8767cce`, `f3f3967`), the warm server start before each slot snapshot (`03fb55c`), projection scale handling (`fcb2f5b`), `--retire-models` (`815d6b6`) and runner-commit provenance (`a1af1b6`).
+
 Dated notes for runner or scorer fixes that leave every world digest unchanged (CEO-F17, ENG-F6).
 
 ## Analyzer output
