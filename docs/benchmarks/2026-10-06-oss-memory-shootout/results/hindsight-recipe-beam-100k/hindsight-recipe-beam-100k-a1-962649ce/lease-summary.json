@@ -1,0 +1,8 @@
+{
+  "run_id": "hindsight-recipe-beam-100k-a1-962649ce",
+  "lease_usd": 6,
+  "committed_usd": 5.99201004999999,
+  "requests": 3832,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

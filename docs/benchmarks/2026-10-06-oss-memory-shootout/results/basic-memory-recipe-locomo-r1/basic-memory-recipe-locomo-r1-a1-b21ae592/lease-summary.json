@@ -1,0 +1,8 @@
+{
+  "run_id": "basic-memory-recipe-locomo-r1-a1-b21ae592",
+  "lease_usd": 7,
+  "committed_usd": 4.723170200000008,
+  "requests": 4468,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

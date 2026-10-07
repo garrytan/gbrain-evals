@@ -1,0 +1,913 @@
+{
+  "kind": "lifecycle-lite",
+  "schema_version": 1,
+  "report_only": true,
+  "run_status": "complete",
+  "started_at": "2026-10-07T21:08:50.437Z",
+  "finished_at": "2026-10-07T21:25:57.564Z",
+  "duration_ms": 1027128,
+  "run_config_hash": "88d37fdb22173a7466a634a6cf9583f4f1c2221c661052f0174eccb2ba69a86e",
+  "config": {
+    "runner": "lifecycle-lite-run@1",
+    "generator": "lifecycle-lite-gen@1",
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "worlds": [
+      "fa1a00d6521989d8318040f43846572b64c92d3c2a1f988dd361be83d3e6e49d",
+      "7dc8a066a5277560f9eabc7290134c712fc7d2b06507fffed47f5b2c174335ae",
+      "63dd67576c3b92aa34597ce553d9b1d9f9c246ec89d7e4ab8216d16302ef1e7e",
+      "cec13a42e19ab40dde34b766100e46274c6a9196edd293df6a21641a230c916e",
+      "d7abab8627d8ea785656e70e9e53abd73f97c946ec7155a566df1178ccdfd3f7"
+    ],
+    "system": "gbrain-shootout",
+    "capabilities_system": "gbrain-shootout",
+    "versions": {
+      "package": "0.60.46.0",
+      "commit": "unknown",
+      "image": null,
+      "lock_sha256": null,
+      "vendor_benchmark_code": null
+    },
+    "policy": {
+      "name": "gbrain-shootout:fixed-evidence",
+      "mode": "fixed-evidence",
+      "settings": {
+        "limit": 40
+      }
+    },
+    "restart": "in-process: PGLite brain on disk closed and reopened",
+    "qa": {
+      "reader": "openai:gpt-4o-mini",
+      "judge": "openai:gpt-4o-2024-08-06",
+      "budgetTokens": 8000
+    },
+    "identity": {
+      "system": "gbrain-shootout",
+      "gbrain": {
+        "package": "gbrain",
+        "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "version": "0.60.46.0",
+        "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+        "loaded_git_head": null
+      },
+      "overlay": null,
+      "embedding": {
+        "mode": "real",
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536
+      },
+      "config": {},
+      "hermetic": {
+        "decide": "off (no key, fresh GBRAIN_HOME)"
+      },
+      "metering": {
+        "mode": "lease-proxy",
+        "proxy": "http://127.0.0.1:8787",
+        "lease_id": "gbrain-shootout-common-lifecycle-lite-a1-d7db59d7"
+      }
+    }
+  },
+  "generator": {
+    "version": "lifecycle-lite-gen@1",
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "fingerprints": {
+      "1": "fa1a00d6521989d8318040f43846572b64c92d3c2a1f988dd361be83d3e6e49d",
+      "2": "7dc8a066a5277560f9eabc7290134c712fc7d2b06507fffed47f5b2c174335ae",
+      "3": "63dd67576c3b92aa34597ce553d9b1d9f9c246ec89d7e4ab8216d16302ef1e7e",
+      "4": "cec13a42e19ab40dde34b766100e46274c6a9196edd293df6a21641a230c916e",
+      "5": "d7abab8627d8ea785656e70e9e53abd73f97c946ec7155a566df1178ccdfd3f7"
+    },
+    "sources": {
+      "1": {
+        "n1_fingerprint": "f0529e745a556be694bf8d5215ad622e03c8422520d154d6e9c1cd9a956b6212",
+        "n5_fingerprint": "6e542f0808bed3db0ecaff4fe48a31086d94b47d7feae67515eed17352f243fb"
+      },
+      "2": {
+        "n1_fingerprint": "07953e4e71a99c9a87010c0af2027dde38349480a36698cb148fbb77c1bde3ee",
+        "n5_fingerprint": "c8042c2617b66f8608abe8572c2a54321360d1e0631816d05519e4d38b20092c"
+      },
+      "3": {
+        "n1_fingerprint": "2b56fb36bf9970bb0c4207155ef4fbc59006ca037e0ac66a980281e57169d321",
+        "n5_fingerprint": "c0f286f9dede7f800684186958709a38aa32a1e92a49fa10990a15d7bff8cacc"
+      },
+      "4": {
+        "n1_fingerprint": "f7841965ac8d5fac08c6af4fd76bd7111d4c280a43cae6099384752be3a392b5",
+        "n5_fingerprint": "f3f98b505a6515a0af9de62dc36a671147e8278dc17fd8a3cf229e573e10adca"
+      },
+      "5": {
+        "n1_fingerprint": "de6225dd650185f97db80ce35078ee56099de58d36eefece365d70dbeeb812de",
+        "n5_fingerprint": "65323fb7605d5d8ec0d87252124993a74828335976606fa8e2997574f02c9da5"
+      }
+    }
+  },
+  "system": {
+    "name": "gbrain-shootout",
+    "capabilities": {
+      "system": "gbrain-shootout",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.46.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "gbrain init defaults for search; embedder from the run"
+        },
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "unsettable": [
+            "extraction"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each chunk cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 40
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [
+        "retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-shootout",
+      "gbrain": {
+        "package": "gbrain",
+        "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "version": "0.60.46.0",
+        "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+        "loaded_git_head": null
+      },
+      "overlay": null,
+      "embedding": {
+        "mode": "real",
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536
+      },
+      "config": {},
+      "hermetic": {
+        "decide": "off (no key, fresh GBRAIN_HOME)"
+      },
+      "metering": {
+        "mode": "lease-proxy",
+        "proxy": "http://127.0.0.1:8787",
+        "lease_id": "gbrain-shootout-common-lifecycle-lite-a1-d7db59d7"
+      }
+    }
+  },
+  "policy": {
+    "name": "gbrain-shootout:fixed-evidence",
+    "mode": "fixed-evidence",
+    "settings": {
+      "limit": 40
+    },
+    "settings_source": "settings"
+  },
+  "restart": {
+    "enabled": true,
+    "how": "in-process: PGLite brain on disk closed and reopened"
+  },
+  "finish_timeout_s": 600,
+  "qa": {
+    "reader": "openai:gpt-4o-mini",
+    "judge": "openai:gpt-4o-2024-08-06",
+    "budget_tokens": 8000,
+    "context": "native",
+    "renderer": "shootout-render-v1",
+    "checkpoint": "after_restart",
+    "reader_max_tokens": 1024,
+    "judge_max_tokens": 10
+  },
+  "outcomes": {
+    "scored": 665,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "missing": 0,
+  "foreign": 0,
+  "metrics": {
+    "final_checkpoint": "after_restart",
+    "update": {
+      "probes": 60,
+      "gold_served": 60,
+      "stale_active": 60,
+      "correct": 0,
+      "correct_rate": 0,
+      "stale_marked_only": 0,
+      "mixed_item_probes": 0
+    },
+    "asof": {
+      "probes": 60,
+      "gold_served": 60,
+      "future_active": 60,
+      "correct": 0,
+      "correct_rate": 0
+    },
+    "forget": {
+      "targets": 50,
+      "deletes": {
+        "deleted": 50,
+        "partial": 0,
+        "unsupported": 0,
+        "error": 0
+      },
+      "signal": 50,
+      "no_signal": 0,
+      "lost_before_delete": 0,
+      "forgotten": 50,
+      "residue_after_delete": 0,
+      "residue_after_restart": 0,
+      "reactivated": 0,
+      "forget_rate": 1,
+      "unsupported": false
+    },
+    "survivors": {
+      "witnessed": 95,
+      "canaries_witnessed": 35,
+      "values_witnessed": 60,
+      "kept_after_delete": 95,
+      "kept_after_restart": 95,
+      "retention": 1
+    },
+    "restart": {
+      "ran": true,
+      "lost": 0,
+      "reactivated": 0
+    },
+    "reader": {
+      "ran": true,
+      "update": {
+        "probes": 60,
+        "correct": 28,
+        "correct_rate": 0.4666666666666667
+      },
+      "asof": {
+        "probes": 60,
+        "correct": 13,
+        "correct_rate": 0.21666666666666667
+      },
+      "forget": {
+        "targets": 50,
+        "not_affirmed": 44
+      },
+      "survivors": {
+        "canaries": 35,
+        "confirmed": 35
+      }
+    },
+    "rows": {
+      "total": 665,
+      "harness_failures": 0,
+      "product_failures": 0,
+      "ingest_degraded": 0
+    }
+  },
+  "checks": {
+    "update": "fail",
+    "forget": "pass",
+    "survivors": "pass",
+    "restart": "pass",
+    "update_retrieval": "fail",
+    "asof": "fail",
+    "overall": "fail",
+    "failed": [
+      "update:fail"
+    ],
+    "report_only_failed": [
+      "update_retrieval:fail",
+      "asof:fail"
+    ]
+  },
+  "by_seed": {
+    "1": {
+      "metrics": {
+        "final_checkpoint": "after_restart",
+        "update": {
+          "probes": 12,
+          "gold_served": 12,
+          "stale_active": 12,
+          "correct": 0,
+          "correct_rate": 0,
+          "stale_marked_only": 0,
+          "mixed_item_probes": 0
+        },
+        "asof": {
+          "probes": 12,
+          "gold_served": 12,
+          "future_active": 12,
+          "correct": 0,
+          "correct_rate": 0
+        },
+        "forget": {
+          "targets": 10,
+          "deletes": {
+            "deleted": 10,
+            "partial": 0,
+            "unsupported": 0,
+            "error": 0
+          },
+          "signal": 10,
+          "no_signal": 0,
+          "lost_before_delete": 0,
+          "forgotten": 10,
+          "residue_after_delete": 0,
+          "residue_after_restart": 0,
+          "reactivated": 0,
+          "forget_rate": 1,
+          "unsupported": false
+        },
+        "survivors": {
+          "witnessed": 19,
+          "canaries_witnessed": 7,
+          "values_witnessed": 12,
+          "kept_after_delete": 19,
+          "kept_after_restart": 19,
+          "retention": 1
+        },
+        "restart": {
+          "ran": true,
+          "lost": 0,
+          "reactivated": 0
+        },
+        "reader": {
+          "ran": true,
+          "update": {
+            "probes": 12,
+            "correct": 5,
+            "correct_rate": 0.4166666666666667
+          },
+          "asof": {
+            "probes": 12,
+            "correct": 7,
+            "correct_rate": 0.5833333333333334
+          },
+          "forget": {
+            "targets": 10,
+            "not_affirmed": 10
+          },
+          "survivors": {
+            "canaries": 7,
+            "confirmed": 7
+          }
+        },
+        "rows": {
+          "total": 133,
+          "harness_failures": 0,
+          "product_failures": 0,
+          "ingest_degraded": 0
+        }
+      },
+      "checks": {
+        "update": "fail",
+        "forget": "pass",
+        "survivors": "pass",
+        "restart": "pass",
+        "update_retrieval": "fail",
+        "asof": "fail",
+        "overall": "fail",
+        "failed": [
+          "update:fail"
+        ],
+        "report_only_failed": [
+          "update_retrieval:fail",
+          "asof:fail"
+        ]
+      }
+    },
+    "2": {
+      "metrics": {
+        "final_checkpoint": "after_restart",
+        "update": {
+          "probes": 12,
+          "gold_served": 12,
+          "stale_active": 12,
+          "correct": 0,
+          "correct_rate": 0,
+          "stale_marked_only": 0,
+          "mixed_item_probes": 0
+        },
+        "asof": {
+          "probes": 12,
+          "gold_served": 12,
+          "future_active": 12,
+          "correct": 0,
+          "correct_rate": 0
+        },
+        "forget": {
+          "targets": 10,
+          "deletes": {
+            "deleted": 10,
+            "partial": 0,
+            "unsupported": 0,
+            "error": 0
+          },
+          "signal": 10,
+          "no_signal": 0,
+          "lost_before_delete": 0,
+          "forgotten": 10,
+          "residue_after_delete": 0,
+          "residue_after_restart": 0,
+          "reactivated": 0,
+          "forget_rate": 1,
+          "unsupported": false
+        },
+        "survivors": {
+          "witnessed": 19,
+          "canaries_witnessed": 7,
+          "values_witnessed": 12,
+          "kept_after_delete": 19,
+          "kept_after_restart": 19,
+          "retention": 1
+        },
+        "restart": {
+          "ran": true,
+          "lost": 0,
+          "reactivated": 0
+        },
+        "reader": {
+          "ran": true,
+          "update": {
+            "probes": 12,
+            "correct": 7,
+            "correct_rate": 0.5833333333333334
+          },
+          "asof": {
+            "probes": 12,
+            "correct": 2,
+            "correct_rate": 0.16666666666666666
+          },
+          "forget": {
+            "targets": 10,
+            "not_affirmed": 7
+          },
+          "survivors": {
+            "canaries": 7,
+            "confirmed": 7
+          }
+        },
+        "rows": {
+          "total": 133,
+          "harness_failures": 0,
+          "product_failures": 0,
+          "ingest_degraded": 0
+        }
+      },
+      "checks": {
+        "update": "fail",
+        "forget": "pass",
+        "survivors": "pass",
+        "restart": "pass",
+        "update_retrieval": "fail",
+        "asof": "fail",
+        "overall": "fail",
+        "failed": [
+          "update:fail"
+        ],
+        "report_only_failed": [
+          "update_retrieval:fail",
+          "asof:fail"
+        ]
+      }
+    },
+    "3": {
+      "metrics": {
+        "final_checkpoint": "after_restart",
+        "update": {
+          "probes": 12,
+          "gold_served": 12,
+          "stale_active": 12,
+          "correct": 0,
+          "correct_rate": 0,
+          "stale_marked_only": 0,
+          "mixed_item_probes": 0
+        },
+        "asof": {
+          "probes": 12,
+          "gold_served": 12,
+          "future_active": 12,
+          "correct": 0,
+          "correct_rate": 0
+        },
+        "forget": {
+          "targets": 10,
+          "deletes": {
+            "deleted": 10,
+            "partial": 0,
+            "unsupported": 0,
+            "error": 0
+          },
+          "signal": 10,
+          "no_signal": 0,
+          "lost_before_delete": 0,
+          "forgotten": 10,
+          "residue_after_delete": 0,
+          "residue_after_restart": 0,
+          "reactivated": 0,
+          "forget_rate": 1,
+          "unsupported": false
+        },
+        "survivors": {
+          "witnessed": 19,
+          "canaries_witnessed": 7,
+          "values_witnessed": 12,
+          "kept_after_delete": 19,
+          "kept_after_restart": 19,
+          "retention": 1
+        },
+        "restart": {
+          "ran": true,
+          "lost": 0,
+          "reactivated": 0
+        },
+        "reader": {
+          "ran": true,
+          "update": {
+            "probes": 12,
+            "correct": 6,
+            "correct_rate": 0.5
+          },
+          "asof": {
+            "probes": 12,
+            "correct": 3,
+            "correct_rate": 0.25
+          },
+          "forget": {
+            "targets": 10,
+            "not_affirmed": 10
+          },
+          "survivors": {
+            "canaries": 7,
+            "confirmed": 7
+          }
+        },
+        "rows": {
+          "total": 133,
+          "harness_failures": 0,
+          "product_failures": 0,
+          "ingest_degraded": 0
+        }
+      },
+      "checks": {
+        "update": "fail",
+        "forget": "pass",
+        "survivors": "pass",
+        "restart": "pass",
+        "update_retrieval": "fail",
+        "asof": "fail",
+        "overall": "fail",
+        "failed": [
+          "update:fail"
+        ],
+        "report_only_failed": [
+          "update_retrieval:fail",
+          "asof:fail"
+        ]
+      }
+    },
+    "4": {
+      "metrics": {
+        "final_checkpoint": "after_restart",
+        "update": {
+          "probes": 12,
+          "gold_served": 12,
+          "stale_active": 12,
+          "correct": 0,
+          "correct_rate": 0,
+          "stale_marked_only": 0,
+          "mixed_item_probes": 0
+        },
+        "asof": {
+          "probes": 12,
+          "gold_served": 12,
+          "future_active": 12,
+          "correct": 0,
+          "correct_rate": 0
+        },
+        "forget": {
+          "targets": 10,
+          "deletes": {
+            "deleted": 10,
+            "partial": 0,
+            "unsupported": 0,
+            "error": 0
+          },
+          "signal": 10,
+          "no_signal": 0,
+          "lost_before_delete": 0,
+          "forgotten": 10,
+          "residue_after_delete": 0,
+          "residue_after_restart": 0,
+          "reactivated": 0,
+          "forget_rate": 1,
+          "unsupported": false
+        },
+        "survivors": {
+          "witnessed": 19,
+          "canaries_witnessed": 7,
+          "values_witnessed": 12,
+          "kept_after_delete": 19,
+          "kept_after_restart": 19,
+          "retention": 1
+        },
+        "restart": {
+          "ran": true,
+          "lost": 0,
+          "reactivated": 0
+        },
+        "reader": {
+          "ran": true,
+          "update": {
+            "probes": 12,
+            "correct": 6,
+            "correct_rate": 0.5
+          },
+          "asof": {
+            "probes": 12,
+            "correct": 1,
+            "correct_rate": 0.08333333333333333
+          },
+          "forget": {
+            "targets": 10,
+            "not_affirmed": 8
+          },
+          "survivors": {
+            "canaries": 7,
+            "confirmed": 7
+          }
+        },
+        "rows": {
+          "total": 133,
+          "harness_failures": 0,
+          "product_failures": 0,
+          "ingest_degraded": 0
+        }
+      },
+      "checks": {
+        "update": "fail",
+        "forget": "pass",
+        "survivors": "pass",
+        "restart": "pass",
+        "update_retrieval": "fail",
+        "asof": "fail",
+        "overall": "fail",
+        "failed": [
+          "update:fail"
+        ],
+        "report_only_failed": [
+          "update_retrieval:fail",
+          "asof:fail"
+        ]
+      }
+    },
+    "5": {
+      "metrics": {
+        "final_checkpoint": "after_restart",
+        "update": {
+          "probes": 12,
+          "gold_served": 12,
+          "stale_active": 12,
+          "correct": 0,
+          "correct_rate": 0,
+          "stale_marked_only": 0,
+          "mixed_item_probes": 0
+        },
+        "asof": {
+          "probes": 12,
+          "gold_served": 12,
+          "future_active": 12,
+          "correct": 0,
+          "correct_rate": 0
+        },
+        "forget": {
+          "targets": 10,
+          "deletes": {
+            "deleted": 10,
+            "partial": 0,
+            "unsupported": 0,
+            "error": 0
+          },
+          "signal": 10,
+          "no_signal": 0,
+          "lost_before_delete": 0,
+          "forgotten": 10,
+          "residue_after_delete": 0,
+          "residue_after_restart": 0,
+          "reactivated": 0,
+          "forget_rate": 1,
+          "unsupported": false
+        },
+        "survivors": {
+          "witnessed": 19,
+          "canaries_witnessed": 7,
+          "values_witnessed": 12,
+          "kept_after_delete": 19,
+          "kept_after_restart": 19,
+          "retention": 1
+        },
+        "restart": {
+          "ran": true,
+          "lost": 0,
+          "reactivated": 0
+        },
+        "reader": {
+          "ran": true,
+          "update": {
+            "probes": 12,
+            "correct": 4,
+            "correct_rate": 0.3333333333333333
+          },
+          "asof": {
+            "probes": 12,
+            "correct": 0,
+            "correct_rate": 0
+          },
+          "forget": {
+            "targets": 10,
+            "not_affirmed": 9
+          },
+          "survivors": {
+            "canaries": 7,
+            "confirmed": 7
+          }
+        },
+        "rows": {
+          "total": 133,
+          "harness_failures": 0,
+          "product_failures": 0,
+          "ingest_degraded": 0
+        }
+      },
+      "checks": {
+        "update": "fail",
+        "forget": "pass",
+        "survivors": "pass",
+        "restart": "pass",
+        "update_retrieval": "fail",
+        "asof": "fail",
+        "overall": "fail",
+        "failed": [
+          "update:fail"
+        ],
+        "report_only_failed": [
+          "update_retrieval:fail",
+          "asof:fail"
+        ]
+      }
+    }
+  },
+  "seeds": [
+    {
+      "seed": 1,
+      "sessions": 67,
+      "failed_sessions": 0,
+      "error_kinds": {},
+      "finish": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "finish_after_delete": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "degraded": false,
+      "aborted": null,
+      "restart_ms": 305,
+      "started_at": "2026-10-07T21:08:50.444Z"
+    },
+    {
+      "seed": 2,
+      "sessions": 67,
+      "failed_sessions": 0,
+      "error_kinds": {},
+      "finish": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "finish_after_delete": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "degraded": false,
+      "aborted": null,
+      "restart_ms": 494,
+      "started_at": "2026-10-07T21:12:25.978Z"
+    },
+    {
+      "seed": 3,
+      "sessions": 67,
+      "failed_sessions": 0,
+      "error_kinds": {},
+      "finish": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "finish_after_delete": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "degraded": false,
+      "aborted": null,
+      "restart_ms": 437,
+      "started_at": "2026-10-07T21:15:51.449Z"
+    },
+    {
+      "seed": 4,
+      "sessions": 67,
+      "failed_sessions": 0,
+      "error_kinds": {},
+      "finish": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "finish_after_delete": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "degraded": false,
+      "aborted": null,
+      "restart_ms": 487,
+      "started_at": "2026-10-07T21:19:12.651Z"
+    },
+    {
+      "seed": 5,
+      "sessions": 67,
+      "failed_sessions": 0,
+      "error_kinds": {},
+      "finish": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "finish_after_delete": {
+        "ready": true,
+        "waited_ms": 0,
+        "completeness": "known"
+      },
+      "degraded": false,
+      "aborted": null,
+      "restart_ms": 425,
+      "started_at": "2026-10-07T21:22:28.658Z"
+    }
+  ],
+  "files": {
+    "rows": "rows.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "attempts": "attempts.ndjson",
+    "deletes": "deletes.ndjson",
+    "retrievals": "retrievals.ndjson",
+    "forget_cases": "forget-cases.ndjson",
+    "manifest": "manifest.json"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "cognee-common-lifecycle-lite-a1-3096e0e5",
+  "lease_usd": 5.71,
+  "committed_usd": 0.5467974300000055,
+  "requests": 4430,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

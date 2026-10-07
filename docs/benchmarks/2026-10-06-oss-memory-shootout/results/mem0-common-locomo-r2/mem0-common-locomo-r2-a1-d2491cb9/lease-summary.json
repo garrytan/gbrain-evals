@@ -1,0 +1,8 @@
+{
+  "run_id": "mem0-common-locomo-r2-a1-d2491cb9",
+  "lease_usd": 5,
+  "committed_usd": 2.9252737300000025,
+  "requests": 10504,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

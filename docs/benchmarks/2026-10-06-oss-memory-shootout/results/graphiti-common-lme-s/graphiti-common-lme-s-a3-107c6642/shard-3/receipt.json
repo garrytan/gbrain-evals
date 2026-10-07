@@ -1,0 +1,397 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "lme-s",
+  "split": "dev",
+  "started_at": "2026-10-07T19:30:42.538Z",
+  "finished_at": "2026-10-07T22:45:15.497Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "LongMemEval-S cleaned",
+    "files": [
+      {
+        "path": "longmemeval/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+      }
+    ],
+    "revision": "98d7416c",
+    "license": "MIT"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "graphiti",
+    "lease_id": "graphiti-common-lme-s-a3-107c6642",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 13,
+    "sessions": 626,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 9.492311600000011,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 19701
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "8eee174dc0b61bf0c65c1494a3d65c3e0b4ed02951e92f8810c32906cb1722a0",
+  "selection": {
+    "categories": null,
+    "limit": 100,
+    "seed": 42,
+    "shard": {
+      "index": 3,
+      "count": 8
+    },
+    "conversations": 13,
+    "questions_expected": 13
+  },
+  "system": {
+    "name": "http:http://127.0.0.1:8700",
+    "capability_system": "graphiti",
+    "capabilities": {
+      "protocol": 1,
+      "system": "graphiti",
+      "versions": {
+        "package": "graphiti-core==0.30.2 (getzep/graphiti@eaa4128681bc53487138a4bbc22d58336ebe70d2, tag v0.30.2)",
+        "lock_sha256": "4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13",
+        "image": "shim built from graphiti/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "backend_image": "neo4j:5.26.2@sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365 (the Neo4j tag in graphiti's own docker-compose.yml at v0.30.2)",
+        "vendor_benchmark_code": "getzep/zep-papers@4b7f26cc76cca20743314ba9acb8c2cb6adc42f6 kg_architecture_agent_memory/locomo_eval/zep_locomo_ingestion.py and zep_locomo_search.py (written for the Zep Cloud client; translated to the graphiti-core calls it wraps)"
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": "gpt-5.5",
+            "small": "gpt-4.1-nano",
+            "embedder": "text-embedding-3-small",
+            "dims": 1024,
+            "reranker": "gpt-4.1-nano"
+          },
+          "notes": "graphiti-core defaults when Graphiti() is built without clients: OpenAIClient (llm_client/openai_base_client.py DEFAULT_MODEL='gpt-5.5', DEFAULT_SMALL_MODEL='gpt-4.1-nano'; reasoning 'auto' resolves to effort 'none' for gpt-5.5), OpenAIEmbedder (embedder/openai.py DEFAULT_EMBEDDING_MODEL='text-embedding-3-small'; embedder/client.py EMBEDDING_DIM env default 1024, applied by truncating the returned vector), OpenAIRerankerClient (cross_encoder/openai_reranker_client.py DEFAULT_MODEL='gpt-4.1-nano', one logprob-scored chat call per candidate passage). The shim passes these same values explicitly so the record and the run cannot drift."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": "gpt-4.1-mini",
+            "small": "gpt-4.1-mini",
+            "embedder": "text-embedding-3-large",
+            "dims": 1536,
+            "reranker": "gpt-4.1-nano"
+          },
+          "unsettable": [],
+          "notes": "Both LLM roles (main and small) are set to gpt-4.1-mini. Dimensions are set the way graphiti-core sets them: OpenAIEmbedderConfig.embedding_dim truncates the 3,072-dimension text-embedding-3-large vector client-side (the API's `dimensions` parameter is never sent). The reranker is outside the common contract and stays at the recipe's gpt-4.1-nano."
+        }
+      },
+      "time": "native",
+      "time_notes": "add_episode(reference_time=session event_time). In message granularity each turn gets reference_time = event_time + turn_index milliseconds so retrieve_episodes (ORDER BY valid_at DESC) sees the conversation order instead of ties. search_ takes no query time, so query_time is ignored and applied_settings says so. An event_time or query_time without a UTC offset is read as UTC.",
+      "granularity": "session (default, SHIM_GRANULARITY=session): one EpisodeType.message episode per session whose body is the session's 'speaker: text' lines. message (SHIM_GRANULARITY=message): one episode per turn, as Zep's LoCoMo harness does. The metered smoke measures both; the preregistration fixes one.",
+      "provenance": {
+        "status": "partial",
+        "mechanism": "Mixed by item class. Edges (facts): EntityEdge.episodes lists the episodes that produced or re-asserted the fact; episode uuids map to source ids through the episode name (source_id or source_id#turn) via EpisodicNode.get_by_uuids, provenance exact (partial if an episode was deleted). Entity nodes: EntityNode carries no episodes field at 0.30.2 (nodes.py:499-504); the public classmethod EpisodicNode.get_by_entity_node_uuid returns the episodes with a MENTIONS edge to the node, reported as partial because the node summary is rewritten per episode and need not reflect every mention. Set settings.node_provenance='none' to report entity nodes as unavailable. Episodes: exact (the episode itself). Communities: unavailable (none are built)."
+      },
+      "delete": "native",
+      "delete_notes": "Graphiti.remove_episode for every episode of the source (graphiti.py:1824-1855). Its semantics are the product's: it deletes edges whose FIRST episode is the removed one (even if later episodes re-asserted them), keeps edges first created by another episode (their episodes list keeps the removed uuid), and deletes entity nodes mentioned only by the removed episode. P2 measures the residue; the shim does not repair it.",
+      "readiness": "synchronous: add_episode returns after extraction, resolution and writes; /finish has no background work to wait for",
+      "namespace": "group_id (group_id = ns, one Neo4j database); reset = graph_data_operations.clear_data(driver, group_ids=[ns])",
+      "parallel_namespaces": true,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
+            "limit": 10,
+            "node_provenance": "mentions"
+          },
+          "notes": "Graphiti.search_() with no config argument: COMBINED_HYBRID_SEARCH_CROSS_ENCODER (edges, nodes, episodes and communities; BM25 + cosine + BFS candidates, cross-encoder rerank) at SearchConfig's default limit 10 per class (search_config.py DEFAULT_SEARCH_LIMIT)."
+        },
+        "fixed-evidence": {
+          "settings": {
+            "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
+            "limit": 50,
+            "node_provenance": "mentions"
+          },
+          "notes": "The same recipe with 50 results per class, enough to fill the 8,000-token evidence budget (facts run about 25 tokens, node summaries about 100); the harness packer truncates."
+        },
+        "allowed_settings_overrides": [
+          "recipe (any upper-case name in graphiti_core.search.search_config_recipes)",
+          "limit",
+          "node_provenance (mentions | none)"
+        ],
+        "vendor_benchmark_reference": {
+          "searches": [
+            {
+              "scope": "nodes",
+              "reranker": "rrf",
+              "limit": 20,
+              "graphiti_recipe": "NODE_HYBRID_SEARCH_RRF"
+            },
+            {
+              "scope": "edges",
+              "reranker": "cross_encoder",
+              "limit": 20,
+              "graphiti_recipe": "EDGE_HYBRID_SEARCH_CROSS_ENCODER"
+            }
+          ],
+          "notes": "Zep's LoCoMo harness (zep_locomo_search.py) runs these two Zep Cloud searches and renders facts as '<fact> (event_time: <valid_at>)' followed by entities as '<name>: <summary>'. Recorded for reference, not a shootout policy."
+        },
+        "item_mapping": "search_ returns separate ranked lists per class whose reranker scores are not on one scale, so the shim concatenates them in a fixed class order, each in Graphiti's own rank order: edges, then entity nodes, then episodes, then communities (Zep's harness also puts facts before entities). Edge -> type fact, text = fact, valid_from = valid_at, valid_to = invalid_at. Node -> type entity, text = '<name>: <summary>'. Episode -> type episode, text = content, valid_from = valid_at. Community -> type observation, text = '<name>: <summary>'. Raw per-class uuids and reranker scores are returned under raw."
+      },
+      "streaming": "disabled",
+      "provider_routes": [
+        "POST /v1/responses (structured extraction, responses.parse)",
+        "POST /v1/chat/completions (cross-encoder reranker with logprobs)",
+        "POST /v1/embeddings"
+      ],
+      "telemetry_off": [
+        "GRAPHITI_TELEMETRY_ENABLED=false",
+        "NEO4J_dbms_usage__report_enabled=false"
+      ],
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "http",
+        "version": "graphiti mcp_server mcp-v1.1.0 (getzep/graphiti@11538f6d45561bcce9a4400b374fb2dc533dccb6); its pyproject declares graphiti-core[falkordb]>=0.30.1, so the Cat 40 build must constrain graphiti-core==0.30.2"
+      },
+      "deviations_from_vendor_code": [
+        "Zep Cloud's zep.graph.add(data, type='message', created_at, group_id) becomes graphiti-core's Graphiti.add_episode(episode_body, source=EpisodeType.message, reference_time, group_id); Zep Cloud is a different product built on Graphiti.",
+        "Default granularity is one episode per session, not Zep's one per message: per-message ingestion multiplies extraction calls by the turns per session (about 30x on LoCoMo) and, with every turn carrying the session time, makes Graphiti's previous-episode window pick tied episodes in arbitrary order. SHIM_GRANULARITY=message reproduces Zep's granularity, with millisecond offsets that keep turn order.",
+        "Episode body lines are 'speaker: content' exactly as the harness sends each turn; Zep appended '(description of attached image: <blip_caption>)' itself, here any caption arrives inside content.",
+        "source_description='chat conversation' (graphiti-core requires one and shows it to the extraction prompt; Zep Cloud's add has no such field).",
+        "Episode name = opaque source_id (or source_id#turn) so provenance and deletion map back to sessions through public node APIs; names are not shown to any prompt.",
+        "group_id = opaque namespace id instead of 'locomo_experiment_user_<idx>'.",
+        "Retrieval follows the shootout's two policies over Graphiti.search_() rather than Zep's two-search recipe, which is recorded under vendor_benchmark_reference; the edge validity window travels in valid_from/valid_to instead of being printed into the text.",
+        "Provider clients are constructed explicitly with the configured models and OPENAI_BASE_URL rather than relying on Graphiti()'s implicit defaults; for SHIM_CONFIG=recipe the values are identical."
+      ]
+    },
+    "identity": {
+      "system": "graphiti",
+      "config": "common",
+      "versions": {
+        "package": "graphiti-core==0.30.2 (getzep/graphiti@eaa4128681bc53487138a4bbc22d58336ebe70d2, tag v0.30.2)",
+        "lock_sha256": "4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13",
+        "image": "shim built from graphiti/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "backend_image": "neo4j:5.26.2@sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365 (the Neo4j tag in graphiti's own docker-compose.yml at v0.30.2)",
+        "vendor_benchmark_code": "getzep/zep-papers@4b7f26cc76cca20743314ba9acb8c2cb6adc42f6 kg_architecture_agent_memory/locomo_eval/zep_locomo_ingestion.py and zep_locomo_search.py (written for the Zep Cloud client; translated to the graphiti-core calls it wraps)"
+      },
+      "health": {
+        "ok": true,
+        "config": "common",
+        "granularity": "session"
+      }
+    }
+  },
+  "counts": {
+    "rows": 26,
+    "scored": 26,
+    "errors": 0,
+    "abstention": 0
+  },
+  "summary": {
+    "recall_all_at_5": 0.5,
+    "recall_any_at_5": 0.6538461538461539,
+    "recall_all_at_10": 0.5769230769230769,
+    "ndcg_at_10": 0.560224834946874,
+    "latency_p50_ms": 4243.950000000001,
+    "latency_p95_ms": 39466.25
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 26,
+    "outcomes": {
+      "scored": 26,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence",
+      "vendor-default"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 52
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.native.b8000.main",
+      "dir": "arms/fixed-evidence.native.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 13,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 13,
+        "scored": 13,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 0.5384615384615384,
+        "recall_any_at_5": 0.6153846153846154,
+        "recall_all_at_10": 0.6153846153846154,
+        "ndcg_at_10": 0.5290624222605966,
+        "latency_p50_ms": 5390.6,
+        "latency_p95_ms": 36087.919999999955,
+        "qa_score": 0.38461538461538464,
+        "qa_rows": 13,
+        "qa_errors": 0,
+        "qa_service_score": 0.38461538461538464,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.rehydrated.b8000.main",
+      "dir": "arms/fixed-evidence.rehydrated.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 13,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 13,
+        "scored": 13,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 0.5384615384615384,
+        "recall_any_at_5": 0.6153846153846154,
+        "recall_all_at_10": 0.6153846153846154,
+        "ndcg_at_10": 0.5290624222605966,
+        "latency_p50_ms": 5390.6,
+        "latency_p95_ms": 36087.919999999955,
+        "qa_score": 0.23076923076923078,
+        "qa_rows": 13,
+        "qa_errors": 0,
+        "qa_service_score": 0.23076923076923078,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "vendor-default.native.bnone.main",
+      "dir": "arms/vendor-default.native.bnone.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 13,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 13,
+        "scored": 13,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 0.46153846153846156,
+        "recall_any_at_5": 0.6923076923076923,
+        "recall_all_at_10": 0.5384615384615384,
+        "ndcg_at_10": 0.5913872476331515,
+        "latency_p50_ms": 3158.2,
+        "latency_p95_ms": 30576.539999999968,
+        "qa_score": 0.8461538461538461,
+        "qa_rows": 13,
+        "qa_errors": 0,
+        "qa_service_score": 0.8461538461538461,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "vendor-default.rehydrated.bnone.main",
+      "dir": "arms/vendor-default.rehydrated.bnone.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 13,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 13,
+        "scored": 13,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 0.46153846153846156,
+        "recall_any_at_5": 0.6923076923076923,
+        "recall_all_at_10": 0.5384615384615384,
+        "ndcg_at_10": 0.5913872476331515,
+        "latency_p50_ms": 3158.2,
+        "latency_p95_ms": 30576.539999999968,
+        "qa_score": 0.7692307692307693,
+        "qa_rows": 13,
+        "qa_errors": 0,
+        "qa_service_score": 0.7692307692307693,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    }
+  ]
+}

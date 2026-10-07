@@ -1,0 +1,8 @@
+{
+  "run_id": "mem0-common-beam-100k-a1-f41a8eff",
+  "lease_usd": 4,
+  "committed_usd": 3.998475420000012,
+  "requests": 4842,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}
