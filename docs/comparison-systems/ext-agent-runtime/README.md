@@ -111,3 +111,32 @@ route; after `letta connect anthropic --base-url`, the proxy refused Letta's req
 32,768). The counted run used `--max-output-tokens 64000` on the proxy, which made the turn's worst-case reservation
 $0.45 on Haiku. Frontier models need a lower Letta output limit to fit a small lease. Haiku was used only to prove the
 route; Cat 40 cells use the newest models.
+
+## Answering cell for memory QA (Q1 scoreboard)
+
+Letta has no passive memory API, so in the Q1 scoreboard it answers whole questions on the LoCoMo slice, in its own
+row. The driver is [eval/runner/systems/agent-runtime.ts](../../../eval/runner/systems/agent-runtime.ts):
+
+- **Sessions as files.** Each question gets a fresh copy of the conversation's sessions in the container's workspace,
+  one Markdown file per session laid out by date (`YYYY/MM/DD/<opaque>.md`, the same tree the file-agent baseline
+  reads). Nothing is pre-loaded into Letta's memory; Letta decides what to read.
+- **One new agent per question.** The driver reads the container and CLI names from [answer-cell.json](answer-cell.json) and runs `letta -p <question> --backend local --new-agent --personality blank -m <model>
+  --output-format stream-json --no-skills --no-mods --reflection-trigger off --max-turns 40`, run with the copy as its
+  working directory. The reader is the agent model: `anthropic:<model>` runs as `anthropic/<model>` and
+  `openai:<model>` as `openai-compatible/<model>`, both through the proxy providers the shim registers.
+- **Tool policy.** `--allowedTools Read,Bash,exec_command,write_stdin` (the file reader and the shell, which is the
+  only search path in both the Claude and GPT toolsets) and `--disallowedTools` for edits, writes, patches, subagents,
+  worktrees, skills, workflows and messaging. The copy is deleted after the question.
+- **Records.** The full answer text, the stop reason (`max_steps` is a turn-cap product failure scored 0, a timeout
+  is a product failure, a provider error is a harness failure), Letta's reported usage, and the session files the
+  agent read (`Read` calls and `cat`-family shell commands), mapped back to sessions on the evaluator side.
+
+Keyless check, from the repository root: `AGENT_RUNTIME_KEYLESS=1 bun test test/eval/agent-runtime.test.ts`. It
+brings up this compose stack with a scripted, tool-calling fake provider behind the egress relay. On 2026-10-06 the
+real 0.34.4 runtime denied a scripted `Write` call, ran a scripted `Bash` `cat` of the gold session, and returned the
+answer built from that file; the driver recorded the gold session as opened, three model requests and 30 output
+tokens.
+
+Not yet measured: no paid turn with a frontier model has run through this cell. A paid cell must raise the proxy's
+output cap to Letta's 64,000-token Anthropic request (or lower Letta's limit per agent) and budget the 22,000 to
+26,000 input tokens of Letta's system prompt per model request.
