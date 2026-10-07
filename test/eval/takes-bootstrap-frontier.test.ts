@@ -58,6 +58,8 @@ describe('takes-bootstrap wrapper', () => {
     const repo = mkdtempSync(join(tmpdir(), 'tree-'));
     const git = (...a: string[]) => execFileSync('git', ['-C', repo, ...a], { encoding: 'utf8' }).trim();
     git('init', '-q');
+    git('config', 'user.email', 'fixture@example.invalid');
+    git('config', 'user.name', 'fixture');
     writeFileSync(join(repo, 'a.txt'), 'one\n');
     writeFileSync(join(repo, 'b.txt'), 'two\n');
     git('add', '.');
