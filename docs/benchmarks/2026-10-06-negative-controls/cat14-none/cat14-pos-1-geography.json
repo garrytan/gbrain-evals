@@ -1,0 +1,82 @@
+{
+  "probe_id": "cat14-pos-1-geography",
+  "category": "calibration-pattern-relevant",
+  "question": "Should we lead the seed round for a SaaS startup based in Austin? Founder has strong product instinct but no Bay Area network.",
+  "baseline_answer": "## Answer\n\nThe brain has no data on this specific Austin SaaS startup or its founder, so it cannot say whether to lead the round. It does contain a relevant pattern in garry's own past geography-based judgments.\n\n**Garry's track record on geography-based calls:** three resolved takes in the geography domain were all marked incorrect.\n- \"This New York startup will hit $5M ARR in 12 months\" was incorrect (conviction weight 0.85, recorded 2024-03-01) [cat14/cat14-pos-1-geography/take-1].\n- \"That Boston founder can't build a marketplace from there\" was incorrect (conviction weight 0.75, recorded 2024-09-22) [cat14/cat14-pos-1-geography/take-3].\n- \"This Miami fintech won't scale outside Florida\" was incorrect (conviction weight 0.8, recorded 2024-06-15) [cat14/cat14-pos-1-geography/take-2].\n\nTwo of these (Boston, Miami) were skeptical calls about non-Bay Area locations, and both were wrong at high conviction. The New York call was an optimistic ARR prediction, also wrong, so it is less directly about location skepticism. Together they suggest that location-driven conviction, in either direction, has not been well calibrated in the brain's record. This is a small sample of three, so it is thin evidence.\n\nThe brain says nothing about the founder's product instinct, the startup's traction, the SaaS category, round terms, or how much a missing Bay Area network has mattered in past outcomes.",
+  "calibrated_answer": "## Answer\n\nThe brain has no direct data on this Austin SaaS startup, its founder, or the round terms, so it cannot say whether to lead. What it does hold is a pattern in garry's own past geography-based calls, all of which were resolved as incorrect:\n\n- garry held a high-conviction view (w=0.85) that a New York startup would hit $5M ARR in 12 months. It was resolved as incorrect [cat14/cat14-pos-1-geography/take-1].\n- garry held a view (w=0.75) that a Boston founder could not build a marketplace from there. It was resolved as incorrect [cat14/cat14-pos-1-geography/take-3].\n- garry held a view (w=0.8) that a Miami fintech would not scale outside Florida. It was resolved as incorrect [cat14/cat14-pos-1-geography/take-2].\n\nTaken together, three geography-linked judgments outside the Bay Area were each resolved incorrect, at conviction weights of 0.75 to 0.85. That suggests location-based skepticism has a weak track record in this brain. Note that the New York call was a growth forecast rather than a claim about location limits, so it is not a perfect parallel. The three data points are also a small sample, and nothing in them concerns Austin, SaaS, or network effects from a missing Bay Area network.\n\nNo evidence here evaluates the founder's product instinct, which is the other factor in the question.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE"
+    ]
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers appropriately connect the decision to the user's poor track record on geography-based judgments, without force-fitting another bias. Neither clearly names the user's present gut prior alongside the track-record counter-consideration, and both use detached language and raw conviction weights rather than a conversational voice. Both also introduce detailed past predictions and citations not supplied in the calibration profile. Their substance is essentially the same: temper geography-based skepticism, acknowledge limited evidence, and decline to recommend leading without startup-specific information. || Both answers correctly connect the geography blind spot to concerns about Austin and the founder's missing Bay Area network, without forcing an unrelated bias into the discussion. Neither clearly names the user's own gut prior alongside the track-record counter-consideration. Both use detached 'the brain' language and untranslated conviction weights rather than a conversational voice, and both introduce detailed historical examples not supplied in the profile. Their substantive advice is equivalent: geography-based conviction deserves caution, but the available information cannot support a decision to lead the round."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers appropriately connect the decision to the user's poor track record on geography-based judgments, without force-fitting another bias. Neither clearly names the user's present gut prior alongside the track-record counter-consideration, and both use detached language and raw conviction weights rather than a conversational voice. Both also introduce detailed past predictions and citations not supplied in the calibration profile. Their substance is essentially the same: temper geography-based skepticism, acknowledge limited evidence, and decline to recommend leading without startup-specific information. || Both answers correctly connect the geography blind spot to concerns about Austin and the founder's missing Bay Area network, without forcing an unrelated bias into the discussion. Neither clearly names the user's own gut prior alongside the track-record counter-consideration. Both use detached 'the brain' language and untranslated conviction weights rather than a conversational voice, and both introduce detailed historical examples not supplied in the profile. Their substantive advice is equivalent: geography-based conviction deserves caution, but the available information cannot support a decision to lead the round."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers appropriately connect the decision to the user's poor track record on geography-based judgments, without force-fitting another bias. Neither clearly names the user's present gut prior alongside the track-record counter-consideration, and both use detached language and raw conviction weights rather than a conversational voice. Both also introduce detailed past predictions and citations not supplied in the calibration profile. Their substance is essentially the same: temper geography-based skepticism, acknowledge limited evidence, and decline to recommend leading without startup-specific information. || Both answers correctly connect the geography blind spot to concerns about Austin and the founder's missing Bay Area network, without forcing an unrelated bias into the discussion. Neither clearly names the user's own gut prior alongside the track-record counter-consideration. Both use detached 'the brain' language and untranslated conviction weights rather than a conversational voice, and both introduce detailed historical examples not supplied in the profile. Their substantive advice is equivalent: geography-based conviction deserves caution, but the available information cannot support a decision to lead the round."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers appropriately connect the decision to the user's poor track record on geography-based judgments, without force-fitting another bias. Neither clearly names the user's present gut prior alongside the track-record counter-consideration, and both use detached language and raw conviction weights rather than a conversational voice. Both also introduce detailed past predictions and citations not supplied in the calibration profile. Their substance is essentially the same: temper geography-based skepticism, acknowledge limited evidence, and decline to recommend leading without startup-specific information. || Both answers correctly connect the geography blind spot to concerns about Austin and the founder's missing Bay Area network, without forcing an unrelated bias into the discussion. Neither clearly names the user's own gut prior alongside the track-record counter-consideration. Both use detached 'the brain' language and untranslated conviction weights rather than a conversational voice, and both introduce detailed historical examples not supplied in the profile. Their substantive advice is equivalent: geography-based conviction deserves caution, but the available information cannot support a decision to lead the round."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers appropriately connect the decision to the user's poor track record on geography-based judgments, without force-fitting another bias. Neither clearly names the user's present gut prior alongside the track-record counter-consideration, and both use detached language and raw conviction weights rather than a conversational voice. Both also introduce detailed past predictions and citations not supplied in the calibration profile. Their substance is essentially the same: temper geography-based skepticism, acknowledge limited evidence, and decline to recommend leading without startup-specific information. || Both answers correctly connect the geography blind spot to concerns about Austin and the founder's missing Bay Area network, without forcing an unrelated bias into the discussion. Neither clearly names the user's own gut prior alongside the track-record counter-consideration. Both use detached 'the brain' language and untranslated conviction weights rather than a conversational voice, and both introduce detailed historical examples not supplied in the profile. Their substantive advice is equivalent: geography-based conviction deserves caution, but the available information cannot support a decision to lead the round."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.4,
+  "failure_modes": [
+    "presents_counter_prior",
+    "changes_recommendation_meaningfully",
+    "voice_conversational"
+  ]
+}

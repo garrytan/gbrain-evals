@@ -1,0 +1,74 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "mcp-contract",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 24,
+  "n_scored": 24,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "resolved_config": {
+    "search_mode": "keyword-only (search.mcp_keyword_only=true — hermetic, no embedding gateway, no keys)",
+    "seeded_pages": 137,
+    "chain_length": 16,
+    "traverse_depth_cap": 10,
+    "remote_list_pages_cap": 100,
+    "trust_contexts": [
+      "remote=false (trusted local)",
+      "remote=true (untrusted remote)"
+    ]
+  },
+  "started_at": "2026-10-06T18:12:55.111Z",
+  "finished_at": "2026-10-06T18:12:58.360Z",
+  "data": {
+    "behavioral": {
+      "passed": 24,
+      "failed": 0,
+      "total": 24
+    },
+    "handler_walk": {
+      "total": 160,
+      "missing": []
+    },
+    "failures": []
+  },
+  "accounting": {
+    "planned": 24,
+    "attempted": 24,
+    "scored": 24,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "51a844e41a15021d2c8f1cbfbaf4298d4657239b9c28420608bdf358e63608d2",
+      "files": 3588,
+      "git_head": "615560956ab9deee098cb2a0801fc4be606c56f2",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}

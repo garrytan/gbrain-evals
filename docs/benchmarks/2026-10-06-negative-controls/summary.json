@@ -1,0 +1,86 @@
+{
+  "rule": "degraded <= 0.5 x real",
+  "controls": [
+    {
+      "category": "Cat 14 calibration",
+      "statistic": "calibrated win rate over win-eligible probes",
+      "real": 0.6666666666666666,
+      "degraded": 0,
+      "floor": "at least 2 calibrated wins in the real arm",
+      "floor_met": true,
+      "injection_ok": true,
+      "injection_note": "no calibration block in any calibrated prompt of the none arm (8/8)",
+      "ratio": 0,
+      "verdict": "pass"
+    },
+    {
+      "category": "Cat 20 brainstorm",
+      "statistic": "median of the four judges' mean score on all generated ideas",
+      "real": 3.173611111111111,
+      "degraded": 2.9870290549169862,
+      "floor": "real median above 1.0",
+      "floor_met": true,
+      "injection_ok": true,
+      "injection_note": "degraded corpus: synthetic-v1, sentences shuffled across pages (seed 20261006)",
+      "ratio": 0.9412082798863152,
+      "verdict": "fail"
+    },
+    {
+      "category": "Cat 29 think vs search",
+      "statistic": "mean think score from the blind pairwise judge (0 to 5)",
+      "real": 3.2600000000000002,
+      "degraded": 3.62,
+      "floor": "real think mean above 0",
+      "floor_met": true,
+      "injection_ok": true,
+      "injection_note": "degraded receipt embed_transport: stubbed-hash",
+      "ratio": 1.1104294478527608,
+      "verdict": "fail"
+    },
+    {
+      "category": "Cat 35 distillation (dream lane, 8 transcripts)",
+      "statistic": "dream-lane coverage",
+      "real": 0.890625,
+      "degraded": 0,
+      "floor": "real coverage above 0.10",
+      "floor_met": true,
+      "injection_ok": true,
+      "injection_note": "unrelated arm lists 8 donor inputs with hashes",
+      "ratio": 0,
+      "verdict": "pass"
+    }
+  ],
+  "partial_faults": [
+    {
+      "fault": "30% of profile facts swapped",
+      "real": 0.6666666666666666,
+      "partial": 0.16666666666666666,
+      "drop": 0.5,
+      "axes_real": {
+        "mentions_relevant_bias_tag": 1,
+        "presents_counter_prior": 0.75,
+        "changes_recommendation_meaningfully": 0.625,
+        "voice_conversational": 0,
+        "doesnt_force_fit_irrelevant_bias": 0.75,
+        "behaves_like_baseline": 1,
+        "voice_must_not_be_clinical": 0
+      },
+      "axes_partial": {
+        "mentions_relevant_bias_tag": 1,
+        "presents_counter_prior": 1,
+        "changes_recommendation_meaningfully": 0.75,
+        "voice_conversational": 0,
+        "doesnt_force_fit_irrelevant_bias": 0.5,
+        "behaves_like_baseline": 1,
+        "voice_must_not_be_clinical": 0
+      }
+    },
+    {
+      "fault": "each transcript cut to its first half",
+      "real": 0.890625,
+      "partial": 0.24131944444444442,
+      "drop": 0.6493055555555556,
+      "half_inputs_ok": true
+    }
+  ]
+}

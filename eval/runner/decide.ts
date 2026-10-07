@@ -244,6 +244,8 @@ async function cmdDev(argv: string[]): Promise<string> {
     throw decideError({ code: 'PAID_FLAGS_MISSING', message: 'paid sources need --paid with --budget-run-id', why: 'an inherited run id must never turn on spending by itself',
       fix: { next: 'run', argv: [...DECIDE, 'dev', '--decision', dirname(specPath), '--paid', '--budget-run-id', budgetRunId!] } });
   }
+  // Arm processes inherit the environment, not the flags: a named ledger reaches them through BRAINBENCH_BUDGET_LEDGER.
+  if (flag(argv, '--budget-ledger')) process.env.BRAINBENCH_BUDGET_LEDGER = budgetOptionsFrom(argv).ledgerPath;
   // Build both overlays here, one at a time, so parallel arm processes reuse them instead of racing.
   for (const arm of [spec.baseline, spec.candidate]) if (arm.gbrain) resolveGbrainUnderTest(arm.gbrain);
   const jobs = planJobs(spec, runs, { shards: Number(flag(argv, '--shards') ?? 1), only, budgetRunId });

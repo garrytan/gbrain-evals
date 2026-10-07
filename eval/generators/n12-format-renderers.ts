@@ -548,6 +548,10 @@ const PATTERN_SPECS: Readonly<Record<string, PatternSpec>> = {
     carries: 'none', seconds: false, flatten: false, blank_between: true, labels: p => [p.role === 'user' ? 'User' : 'Assistant'],
     line: (p, _i, _t, first) => `## ${p.role === 'user' ? 'User' : 'Assistant'}\n${first}`,
   },
+  'email-thread-heading': {
+    carries: 'date-time', seconds: false, flatten: false, blank_between: true, labels: nameLabels,
+    line: (p, _i, t, first) => { const u = utcParts(t); return `## ${p.name} <${p.handle}@example.com> \u00b7 ${u.date} ${pad(u.h)}:${pad(u.mi)}\n${first}`; },
+  },
   'python-dict-utterance': {
     carries: 'none', seconds: false, flatten: true, labels: p => [p.role === 'user' ? 'me' : p.handle],
     line: (p, _i, _t, first) => (p.role === 'user' ? `{'source': 'microphone', 'attribution': 'me'}: ${first}` : `{'source': 'speaker', 'name': '${p.handle}', 'attribution': 'them'}: ${first}`),

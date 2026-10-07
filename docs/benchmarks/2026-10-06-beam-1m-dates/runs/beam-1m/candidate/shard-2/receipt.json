@@ -1,0 +1,112 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-1m",
+  "split": "dev",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "started_at": "2026-10-06T19:32:57.184Z",
+  "finished_at": "2026-10-06T19:35:17.763Z",
+  "run_config_hash": "e75e4171d9a41fa38e9262942afcbc42b5a2f9743980ae6f8cf66eb6a35dd9ed",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "version": "0.60.95.0",
+    "package_sha256": "d463f36620585760ae2f9c1ca3602b89961ae5a5a28b3be879d61dcf8c6fa9e5",
+    "loaded_git_head": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
+  },
+  "overlay": {
+    "requested": "<gbrain checkout>@c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "ref": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "commit": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+    "version": "0.60.95.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.95.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "retrieval_path": "hybridSearch (expansion off), chunks reduced to distinct sessions",
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 10124,
+      "misses": 0,
+      "inserts": 0,
+      "bytes": 0
+    }
+  },
+  "dataset": {
+    "name": "BEAM 1m",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 2,
+      "count": 3
+    },
+    "conversations": 3,
+    "questions_expected": 60
+  },
+  "counts": {
+    "rows": 60,
+    "scored": 52,
+    "errors": 0,
+    "abstention": 6
+  },
+  "summary": {
+    "recall_all_at_5": 0.19230769230769232,
+    "recall_any_at_5": 0.6538461538461539,
+    "recall_all_at_10": 0.28846153846153844,
+    "ndcg_at_10": 0.3976025374800474,
+    "latency_p50_ms": 177.45,
+    "latency_p95_ms": 304.16499999999985
+  },
+  "facts": null,
+  "qa": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "budget ledger decide:beam-1m-dates-2026-10-06-2026-10-06T19-11-47-672Z-e8724dda: 0 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<repo>/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 45,
+      "p99": 35787,
+      "max": 35787.4
+    }
+  },
+  "rows_file": "rows.ndjson.gz"
+}

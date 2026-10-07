@@ -1,0 +1,123 @@
+{"id":"take-plain-v1","claims":[{"claim":"Acme Example is the strongest team in the batch.","kind":"take","weight":0.7},{"claim":"Acme Example's focus on distribution over features is exactly the right strategy.","kind":"take","weight":0.6}]}
+{"id":"take-plain-v2","claims":[{"claim":"Widget Co is the strongest team in the batch.","kind":"take","weight":0.6},{"claim":"Widget Co's focus on distribution over features is exactly the right strategy.","kind":"take","weight":0.6}]}
+{"id":"take-plain-v3","claims":[{"claim":"Gadget Example is the strongest team in the batch.","kind":"take","weight":0.7},{"claim":"Gadget Example's focus on distribution over features is exactly the right strategy.","kind":"take","weight":0.6}]}
+{"id":"take-hedged-v1","claims":[{"claim":"Acme Example is underpriced at this stage.","kind":"take","weight":0.5},{"claim":"The market Acme Example operates in is crowded.","kind":"fact","weight":0.3}]}
+{"id":"take-hedged-v2","claims":[{"claim":"Widget Co is underpriced at this stage.","kind":"take","weight":0.5},{"claim":"The market Widget Co operates in is crowded.","kind":"fact","weight":0.35}]}
+{"id":"take-hedged-v3","claims":[{"claim":"Gadget Example is underpriced at this stage.","kind":"take","weight":0.4},{"claim":"The market Gadget Example operates in is crowded.","kind":"fact","weight":0.3}]}
+{"id":"take-strong-v1","claims":[{"claim":"Acme Example will win its category.","kind":"bet","weight":0.8},{"claim":"Acme Example's founder-market fit is the best the author has seen this year.","kind":"take","weight":0.7}]}
+{"id":"take-strong-v2","claims":[{"claim":"Widget Co wins its category.","kind":"bet","weight":0.8},{"claim":"Widget Co's founder-market fit is the best the author has seen this year.","kind":"take","weight":0.7}]}
+{"id":"take-strong-v3","claims":[{"claim":"Gadget Example wins its category.","kind":"bet","weight":0.85},{"claim":"Gadget Example's founder-market fit is the best the author has seen this year.","kind":"take","weight":0.8}]}
+{"id":"take-negative-v1","claims":[{"claim":"Acme Example's wedge is too narrow.","kind":"take","weight":0.6},{"claim":"The Acme Example team underestimates onboarding friction.","kind":"take","weight":0.6}]}
+{"id":"take-negative-v2","claims":[{"claim":"Widget Co's market wedge is too narrow.","kind":"take","weight":0.6},{"claim":"The Widget Co team underestimates onboarding friction.","kind":"take","weight":0.6}]}
+{"id":"take-negative-v3","claims":[{"claim":"Gadget Example's wedge is too narrow.","kind":"take","weight":0.6},{"claim":"The Gadget Example team underestimates onboarding friction.","kind":"take","weight":0.6}]}
+{"id":"take-comparative-v1","claims":[{"claim":"Acme Example ships faster than any competitor the author tracks.","kind":"take","weight":0.6},{"claim":"Speed is the only moat that matters in this market.","kind":"take","weight":0.7}]}
+{"id":"take-comparative-v2","claims":[{"claim":"Widget Co ships faster than any competitor we track.","kind":"take","weight":0.6},{"claim":"Speed is the only moat that matters in this market.","kind":"take","weight":0.7}]}
+{"id":"take-comparative-v3","claims":[{"claim":"Gadget Example ships faster than any competitor we track.","kind":"take","weight":0.6},{"claim":"Speed is the only moat that matters in this market.","kind":"take","weight":0.7}]}
+{"id":"fact-bio-v1","claims":[{"claim":"Alice Example is the CEO of Acme Example.","kind":"fact","weight":0.6},{"claim":"Alice Example previously led platform engineering at fund-a portfolio services.","kind":"fact","weight":0.5},{"claim":"Alice Example is based in Austin.","kind":"fact","weight":0.4}]}
+{"id":"fact-bio-v2","claims":[{"claim":"Bob Example is the CEO of Widget Co.","kind":"fact","weight":0.5},{"claim":"Bob Example previously led platform engineering at fund-b portfolio services.","kind":"fact","weight":0.4},{"claim":"Bob Example is based in Austin.","kind":"fact","weight":0.3}]}
+{"id":"fact-bio-v3","claims":[{"claim":"Carol Example is the CEO of Gadget Example.","kind":"fact","weight":0.5},{"claim":"Carol Example previously led platform engineering at fund-c portfolio services.","kind":"fact","weight":0.4},{"claim":"Carol Example is based in Austin.","kind":"fact","weight":0.3}]}
+{"id":"fact-metric-v1","claims":[{"claim":"Acme Example reported MRR of 40k this quarter.","kind":"fact","weight":0.6},{"claim":"Acme Example's MRR this quarter is up from last quarter.","kind":"fact","weight":0.5},{"claim":"Acme Example's team is 12 people across two offices.","kind":"fact","weight":0.5}]}
+{"id":"fact-metric-v2","claims":[{"claim":"Widget Co reported ARR of 1.2M this quarter.","kind":"fact","weight":0.6},{"claim":"Widget Co's ARR this quarter is up from last quarter.","kind":"fact","weight":0.5},{"claim":"Widget Co's team is 12 people across two offices.","kind":"fact","weight":0.5}]}
+{"id":"fact-metric-v3","claims":[{"claim":"Gadget Example reported a headcount of 35 this quarter.","kind":"fact","weight":0.5},{"claim":"Gadget Example's headcount this quarter is higher than last quarter's.","kind":"fact","weight":0.4},{"claim":"The Gadget Example team is 12 people across two offices.","kind":"fact","weight":0.4}]}
+{"id":"fact-funding-v1","claims":[{"claim":"Acme Example closed a seed round led by fund-a in March.","kind":"fact","weight":0.6},{"claim":"Acme Example's seed round was oversubscribed.","kind":"fact","weight":0.5}]}
+{"id":"fact-funding-v2","claims":[{"claim":"Widget Co closed a seed round in March.","kind":"fact","weight":0.6},{"claim":"Widget Co's seed round was led by fund-b.","kind":"fact","weight":0.7},{"claim":"Widget Co's seed round was oversubscribed.","kind":"fact","weight":0.5}]}
+{"id":"fact-funding-v3","claims":[{"claim":"Gadget Example closed a seed round led by fund-c in March.","kind":"fact","weight":0.6},{"claim":"Gadget Example's seed round was oversubscribed.","kind":"fact","weight":0.4}]}
+{"id":"fact-product-v1","claims":[{"claim":"Acme Example launched their self-serve tier last week.","kind":"fact","weight":0.5},{"claim":"Acme Example's self-serve tier pricing starts at $49/month with a 14-day trial.","kind":"fact","weight":0.6}]}
+{"id":"fact-product-v2","claims":[{"claim":"Widget Co launched their self-serve tier last week.","kind":"fact","weight":0.6},{"claim":"Widget Co's self-serve tier pricing starts at $49/month.","kind":"fact","weight":0.7},{"claim":"Widget Co's self-serve tier includes a 14-day trial.","kind":"fact","weight":0.6}]}
+{"id":"fact-product-v3","claims":[{"claim":"Gadget Example launched their self-serve tier last week.","kind":"fact","weight":0.5},{"claim":"Gadget Example's self-serve tier pricing starts at $49/month.","kind":"fact","weight":0.6},{"claim":"Gadget Example's self-serve tier includes a 14-day trial.","kind":"fact","weight":0.5}]}
+{"id":"fact-multi-v1","claims":[{"claim":"Alice Example founded Acme Example in 2024.","kind":"fact","weight":0.6},{"claim":"Alice Example holds a PhD in distributed systems.","kind":"fact","weight":0.5},{"claim":"Alice Example previously sold a devtools startup.","kind":"fact","weight":0.5}]}
+{"id":"fact-multi-v2","claims":[{"claim":"Bob Example founded Widget Co in 2024.","kind":"fact","weight":0.6},{"claim":"Bob Example holds a PhD in distributed systems.","kind":"fact","weight":0.5},{"claim":"Bob Example previously sold a devtools startup.","kind":"fact","weight":0.5}]}
+{"id":"fact-multi-v3","claims":[{"claim":"Carol Example founded Gadget Example in 2024.","kind":"fact","weight":0.6},{"claim":"Carol Example holds a PhD in distributed systems.","kind":"fact","weight":0.5},{"claim":"Carol Example previously sold a devtools startup.","kind":"fact","weight":0.5}]}
+{"id":"bet-dated-v1","claims":[{"claim":"Acme Example will reach 40k MRR by Q4 next year.","kind":"bet","weight":0.6}]}
+{"id":"bet-dated-v2","claims":[{"claim":"Widget Co will reach 1.2M ARR by Q4 next year.","kind":"bet","weight":0.6}]}
+{"id":"bet-dated-v3","claims":[{"claim":"Gadget Example will reach 35 headcount by Q4 next year.","kind":"bet","weight":0.6}]}
+{"id":"bet-market-v1","claims":[{"claim":"Within two years, every serious team in this space will consolidate onto two platforms.","kind":"bet","weight":0.7},{"claim":"Acme Example will be one of the two platforms that serious teams consolidate onto within two years.","kind":"bet","weight":0.7}]}
+{"id":"bet-market-v2","claims":[{"claim":"Within two years, every serious team in this space will consolidate onto two platforms.","kind":"bet","weight":0.8},{"claim":"Widget Co will be one of the two platforms that the space consolidates onto within two years.","kind":"bet","weight":0.8}]}
+{"id":"bet-market-v3","claims":[{"claim":"Within two years, every serious team in this space will consolidate onto two platforms.","kind":"bet","weight":0.7},{"claim":"Gadget Example will be one of the two platforms that serious teams consolidate onto within two years.","kind":"bet","weight":0.7}]}
+{"id":"bet-hiring-v1","claims":[{"claim":"Alice Example will be running a 100-person org within 18 months.","kind":"bet","weight":0.8},{"claim":"Alice Example's career trajectory is unmistakable.","kind":"take","weight":0.5}]}
+{"id":"bet-hiring-v2","claims":[{"claim":"Bob Example will be running a 100-person org within 18 months.","kind":"bet","weight":0.8},{"claim":"Bob Example's career trajectory is unmistakably pointing toward senior leadership.","kind":"take","weight":0.5}]}
+{"id":"bet-hiring-v3","claims":[{"claim":"Carol Example will be running a 100-person org within 18 months.","kind":"bet","weight":0.8},{"claim":"Carol Example's career trajectory is unmistakable.","kind":"take","weight":0.5}]}
+{"id":"bet-conditional-v1","claims":[{"claim":"If Acme Example lands the enterprise pilot, it will double MRR within two quarters.","kind":"bet","weight":0.5}]}
+{"id":"bet-conditional-v2","claims":[{"claim":"If Widget Co lands the enterprise pilot, it will double ARR within two quarters.","kind":"bet","weight":0.5}]}
+{"id":"bet-conditional-v3","claims":[{"claim":"If Gadget Example lands the enterprise pilot, it will double headcount within two quarters.","kind":"bet","weight":0.5}]}
+{"id":"bet-vs-fact-v1","claims":[{"claim":"Acme Example has 40k MRR today.","kind":"fact","weight":0.6},{"claim":"Acme Example will triple its MRR (to ~120k) within a year.","kind":"bet","weight":0.7}]}
+{"id":"bet-vs-fact-v2","claims":[{"claim":"Widget Co has $1.2M in ARR today.","kind":"fact","weight":0.6},{"claim":"Widget Co will triple its ARR within a year.","kind":"bet","weight":0.7}]}
+{"id":"bet-vs-fact-v3","claims":[{"claim":"Gadget Example has 35 headcount today.","kind":"fact","weight":0.5},{"claim":"Gadget Example will triple its headcount (to ~105) within a year.","kind":"bet","weight":0.6}]}
+{"id":"hunch-plain-v1","claims":[{"claim":"Something about the Acme Example demo felt off.","kind":"hunch","weight":0.2}]}
+{"id":"hunch-plain-v2","claims":[{"claim":"Something about the Widget Co demo felt off.","kind":"hunch","weight":0.2}]}
+{"id":"hunch-plain-v3","claims":[{"claim":"Something about the Gadget Example demo felt off.","kind":"hunch","weight":0.2}]}
+{"id":"hunch-vibe-v1","claims":[{"claim":"Alice Example is fundraising quietly.","kind":"hunch","weight":0.3},{"claim":"Alice Example's calendar going dark is a signal that she is fundraising.","kind":"hunch","weight":0.2}]}
+{"id":"hunch-vibe-v2","claims":[{"claim":"Bob Example is fundraising quietly.","kind":"hunch","weight":0.3},{"claim":"Bob Example's calendar going dark is a signal that she is fundraising.","kind":"hunch","weight":0.25}]}
+{"id":"hunch-vibe-v3","claims":[{"claim":"Carol Example is fundraising quietly.","kind":"hunch","weight":0.3},{"claim":"Carol Example's calendar has gone dark, which is a sign she may be fundraising.","kind":"hunch","weight":0.25}]}
+{"id":"hunch-maybe-v1","claims":[{"claim":"Acme Example and fund-a keep appearing together at events.","kind":"fact","weight":0.3},{"claim":"Acme Example and fund-a may have a partnership brewing.","kind":"hunch","weight":0.3}]}
+{"id":"hunch-maybe-v2","claims":[{"claim":"Widget Co and fund-b keep appearing together at events.","kind":"fact","weight":0.3},{"claim":"Widget Co and fund-b may have a partnership brewing.","kind":"hunch","weight":0.3}]}
+{"id":"hunch-maybe-v3","claims":[{"claim":"Gadget Example and fund-c keep appearing together at events.","kind":"fact","weight":0.3},{"claim":"Gadget Example and fund-c may have a partnership brewing.","kind":"hunch","weight":0.25}]}
+{"id":"empty-logistics-v1","claims":[]}
+{"id":"empty-logistics-v2","claims":[]}
+{"id":"empty-logistics-v3","claims":[]}
+{"id":"empty-boilerplate-v1","claims":[]}
+{"id":"empty-boilerplate-v2","claims":[]}
+{"id":"empty-boilerplate-v3","claims":[]}
+{"id":"empty-todo-v1","claims":[]}
+{"id":"empty-todo-v2","claims":[]}
+{"id":"empty-todo-v3","claims":[]}
+{"id":"empty-linkdump-v1","claims":[]}
+{"id":"empty-linkdump-v2","claims":[]}
+{"id":"empty-linkdump-v3","claims":[]}
+{"id":"attr-quote-v1","claims":[]}
+{"id":"attr-quote-v2","claims":[]}
+{"id":"attr-quote-v3","claims":[]}
+{"id":"attr-press-v1","claims":[{"claim":"Acme Example is the fastest-growing tool in its niche (as claimed by a recent article).","kind":"fact","weight":0.4},{"claim":"The article's claim about Acme Example is unverified and the author's sponsorship relationship undermines its credibility.","kind":"take","weight":0.5},{"claim":"The article's author has a sponsorship relationship with Acme Example.","kind":"fact","weight":0.4}]}
+{"id":"attr-press-v2","claims":[{"claim":"The claim that Widget Co is \"the fastest-growing tool in its niche\" is unverified.","kind":"fact","weight":0.4},{"claim":"The article's author has a sponsorship relationship with Widget Co.","kind":"fact","weight":0.5}]}
+{"id":"attr-press-v3","claims":[{"claim":"Gadget Example is the fastest-growing tool in its niche (as claimed by a recent article).","kind":"fact","weight":0.3},{"claim":"The article's author has a sponsorship relationship with Gadget Example.","kind":"fact","weight":0.4},{"claim":"The 'fastest-growing' claim about Gadget Example is unverified and potentially biased by the author's sponsorship.","kind":"take","weight":0.4}]}
+{"id":"attr-rumor-v1","claims":[{"claim":"Acme Example lost their lead investor (unconfirmed rumor relayed via a mutual contact).","kind":"fact","weight":0.15}]}
+{"id":"attr-rumor-v2","claims":[{"claim":"Widget Co lost their lead investor.","kind":"hunch","weight":0.2}]}
+{"id":"attr-rumor-v3","claims":[{"claim":"Gadget Example lost their lead investor.","kind":"hunch","weight":0.2}]}
+{"id":"mixed-full-v1","claims":[{"claim":"Alice Example is CTO of Acme Example.","kind":"fact","weight":0.5},{"claim":"Acme Example has 40k in MRR.","kind":"fact","weight":0.5},{"claim":"Alice Example is the strongest technical founder in the cohort.","kind":"take","weight":0.7},{"claim":"Acme Example will ship the enterprise tier by summer.","kind":"bet","weight":0.7},{"claim":"Alice seemed distracted on the last call.","kind":"hunch","weight":0.3}]}
+{"id":"mixed-full-v2","claims":[{"claim":"Bob Example is CTO of Widget Co.","kind":"fact","weight":0.4},{"claim":"Widget Co has 1.2M in ARR.","kind":"fact","weight":0.4},{"claim":"Bob Example is the strongest technical founder in the cohort.","kind":"take","weight":0.7},{"claim":"Widget Co will ship the enterprise tier by summer.","kind":"bet","weight":0.7},{"claim":"Bob Example seemed distracted on the last call.","kind":"hunch","weight":0.3}]}
+{"id":"mixed-full-v3","claims":[{"claim":"Carol Example is CTO of Gadget Example.","kind":"fact","weight":0.5},{"claim":"Gadget Example has 35 headcount.","kind":"fact","weight":0.5},{"claim":"Carol Example is the strongest technical founder in the cohort.","kind":"take","weight":0.7},{"claim":"Gadget Example will ship the enterprise tier by summer.","kind":"bet","weight":0.7},{"claim":"Carol seemed distracted on the last call.","kind":"hunch","weight":0.3}]}
+{"id":"mixed-two-v1","claims":[{"claim":"Acme Example moved upmarket last quarter.","kind":"fact","weight":0.5},{"claim":"Acme Example now derives 60% of its revenue from enterprise customers.","kind":"fact","weight":0.7},{"claim":"Acme Example's move upmarket was premature.","kind":"take","weight":0.8}]}
+{"id":"mixed-two-v2","claims":[{"claim":"Widget Co moved upmarket last quarter, and enterprise customers now account for 60% of its revenue.","kind":"fact","weight":0.6},{"claim":"Widget Co's move upmarket was premature.","kind":"take","weight":0.7}]}
+{"id":"mixed-two-v3","claims":[{"claim":"Gadget Example moved upmarket last quarter.","kind":"fact","weight":0.4},{"claim":"Gadget Example now derives 60% of its revenue from enterprise customers.","kind":"fact","weight":0.6},{"claim":"Gadget Example's move upmarket was premature.","kind":"take","weight":0.7}]}
+{"id":"adv-injection-v1","claims":[]}
+{"id":"adv-injection-v2","claims":[]}
+{"id":"adv-injection-v3","claims":[]}
+{"id":"adv-json-noise-v1","claims":[]}
+{"id":"adv-json-noise-v2","claims":[]}
+{"id":"adv-json-noise-v3","claims":[]}
+{"id":"adv-overbait-v1","claims":[{"claim":"It rained during the Acme Example offsite.","kind":"fact","weight":0.2},{"claim":"The venue coffee at the Acme Example offsite was excellent.","kind":"take","weight":0.2}]}
+{"id":"adv-overbait-v2","claims":[]}
+{"id":"adv-overbait-v3","claims":[]}
+{"id":"adv-markdown-v1","claims":[{"claim":"Acme Example's tooling is solid.","kind":"take","weight":0.5},{"claim":"Acme Example's pricing page is confusing.","kind":"take","weight":0.5}]}
+{"id":"adv-markdown-v2","claims":[{"claim":"Widget Co tooling is solid.","kind":"take","weight":0.5},{"claim":"Widget Co's pricing page is confusing.","kind":"take","weight":0.5}]}
+{"id":"adv-markdown-v3","claims":[{"claim":"Gadget Example tooling is solid.","kind":"take","weight":0.5},{"claim":"Gadget Example's pricing page is confusing.","kind":"take","weight":0.5}]}
+{"id":"take-team-v1","claims":[{"claim":"The Acme Example founding team argues well with each other.","kind":"take","weight":0.4},{"claim":"A founding team's ability to argue well with each other is a leading indicator of resilience.","kind":"take","weight":0.6}]}
+{"id":"take-team-v2","claims":[{"claim":"The Widget Co founding team argues well with each other.","kind":"take","weight":0.4},{"claim":"A founding team's ability to argue well with each other is a leading indicator of resilience.","kind":"take","weight":0.6}]}
+{"id":"take-team-v3","claims":[{"claim":"The Gadget Example founding team argues well with each other.","kind":"take","weight":0.5},{"claim":"A founding team that argues well internally is a leading indicator of resilience.","kind":"take","weight":0.6}]}
+{"id":"fact-churn-v1","claims":[{"claim":"Churn at Acme Example is under 2% monthly.","kind":"fact","weight":0.6},{"claim":"Acme Example's net revenue retention (NRR) is 118%.","kind":"fact","weight":0.6}]}
+{"id":"fact-churn-v2","claims":[{"claim":"Churn at Widget Co is under 2% monthly.","kind":"fact","weight":0.6},{"claim":"Widget Co's net revenue retention (NRR) is 118%.","kind":"fact","weight":0.6}]}
+{"id":"fact-churn-v3","claims":[{"claim":"Gadget Example's monthly churn is under 2%.","kind":"fact","weight":0.6},{"claim":"Gadget Example's net revenue retention (NRR) is 118%.","kind":"fact","weight":0.6}]}
+{"id":"bet-exit-v1","claims":[{"claim":"Acme Example will be acquired within three years.","kind":"bet","weight":0.7},{"claim":"Acme Example's most likely acquirer is a platform vendor consolidating the space.","kind":"bet","weight":0.5}]}
+{"id":"bet-exit-v2","claims":[{"claim":"Widget Co will be acquired within three years.","kind":"bet","weight":0.7},{"claim":"Widget Co's most likely acquirer is a platform vendor consolidating the space.","kind":"bet","weight":0.5}]}
+{"id":"bet-exit-v3","claims":[{"claim":"Gadget Example gets acquired within three years.","kind":"bet","weight":0.7},{"claim":"The most likely acquirer of Gadget Example is a platform vendor consolidating the space.","kind":"bet","weight":0.5}]}
+{"id":"hunch-timing-v1","claims":[{"claim":"The timing feels early for this market/product.","kind":"hunch","weight":0.4},{"claim":"Buyers are not yet describing this as a problem.","kind":"take","weight":0.35}]}
+{"id":"hunch-timing-v2","claims":[{"claim":"The timing feels early for this market/problem.","kind":"hunch","weight":0.4},{"claim":"The buyers I talk to are not yet describing this as a problem.","kind":"fact","weight":0.3}]}
+{"id":"hunch-timing-v3","claims":[{"claim":"The timing feels early for this market/product.","kind":"hunch","weight":0.3},{"claim":"The buyers I talk to are not yet describing this as a problem.","kind":"fact","weight":0.35}]}
+{"id":"empty-receipt-v1","claims":[{"claim":"The workshop fee was reimbursed.","kind":"fact","weight":0.3},{"claim":"The receipt for the workshop fee is filed under Q3 expenses.","kind":"fact","weight":0.3}]}
+{"id":"empty-receipt-v2","claims":[{"claim":"The workshop fee was reimbursed.","kind":"fact","weight":0.3},{"claim":"The receipt for the workshop fee is filed under Q3 expenses.","kind":"fact","weight":0.25}]}
+{"id":"empty-receipt-v3","claims":[]}
+{"id":"attr-panel-v1","claims":[]}
+{"id":"attr-panel-v2","claims":[]}
+{"id":"attr-panel-v3","claims":[]}
+{"id":"mixed-retro-v1","claims":[{"claim":"The intro to fund-a happened on Tuesday.","kind":"fact","weight":0.3},{"claim":"The partner at fund-a was lukewarm about the Acme Example intro.","kind":"take","weight":0.5},{"claim":"The fund-a partner will pass on Acme Example within two weeks.","kind":"bet","weight":0.7}]}
+{"id":"mixed-retro-v2","claims":[{"claim":"The intro to fund-b regarding Widget Co happened on Tuesday.","kind":"fact","weight":0.4},{"claim":"The fund-b partner was lukewarm on the Widget Co intro.","kind":"take","weight":0.5},{"claim":"The fund-b partner will pass on Widget Co within two weeks of the intro.","kind":"bet","weight":0.6}]}
+{"id":"mixed-retro-v3","claims":[{"claim":"The intro to fund-c happened on Tuesday.","kind":"fact","weight":0.4},{"claim":"The fund-c partner was lukewarm about the intro.","kind":"take","weight":0.5},{"claim":"The fund-c partner will pass within two weeks of the intro.","kind":"bet","weight":0.7}]}
+{"id":"adv-empty-body-v1","claims":[]}
+{"id":"adv-empty-body-v2","claims":[]}
+{"id":"adv-empty-body-v3","claims":[]}
+{"id":"fact-partnership-v1","claims":[{"claim":"Acme Example signed a distribution partnership with fund-a's platform arm.","kind":"fact","weight":0.5},{"claim":"The Acme Example–fund-a platform arm distribution partnership was announced on Acme Example's blog.","kind":"fact","weight":0.4}]}
+{"id":"fact-partnership-v2","claims":[{"claim":"Widget Co signed a distribution partnership with fund-b's platform arm.","kind":"fact","weight":0.6},{"claim":"The Widget Co and fund-b platform arm partnership was announced on their blog.","kind":"fact","weight":0.4}]}
+{"id":"fact-partnership-v3","claims":[{"claim":"Gadget Example signed a distribution partnership with fund-c's platform arm.","kind":"fact","weight":0.5},{"claim":"Gadget Example announced the distribution partnership with fund-c's platform arm on their blog.","kind":"fact","weight":0.3}]}
+{"id":"take-pricing-v1","claims":[{"claim":"Acme Example's usage-based pricing is mispriced for the mid-market segment they claim to want.","kind":"take","weight":0.6}]}
+{"id":"take-pricing-v2","claims":[{"claim":"Widget Co's usage-based pricing is mispriced for the mid-market segment they claim to want.","kind":"take","weight":0.6}]}
+{"id":"take-pricing-v3","claims":[{"claim":"Gadget Example's usage-based pricing is mispriced for the mid-market segment they claim to want.","kind":"take","weight":0.6}]}

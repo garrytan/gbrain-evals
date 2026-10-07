@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "2026-10-06-takes-bootstrap-frontier",
+      "preregistration": "docs/benchmarks/2026-10-06-takes-bootstrap-frontier-preregistration.md",
+      "results": ["docs/benchmarks/2026-10-06-takes-bootstrap-frontier/*", "docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md"]
+    }
+  ]
+}

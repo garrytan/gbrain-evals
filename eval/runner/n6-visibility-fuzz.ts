@@ -56,7 +56,12 @@
  * GBRAIN_HOME pointed at a temp dir. `--gbrain <checkout>[@ref]` runs a
  * copied overlay (eval/runner/gbrain-under-test.ts).
  *
- * Usage: bun eval/runner/n6-visibility-fuzz.ts [--seed N] [--gbrain <path>[@ref]] [--output <dir>] [--only op1,op2] [--json]
+ * Named window (2026-10-06): an op parameter named `window` gets a one-turn
+ * window naming the target page by its capitalized title, so
+ * volunteer_context resolves the page for the trusted caller and its probes
+ * carry signal (docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md).
+ *
+ * Usage: bun eval/runner/n6-visibility-fuzz.ts [--seed N] [--gbrain <path>[@ref]] [--output <dir>] [--only op1,op2] [--attest <preregistration.md>] [--json]
  */
 import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
@@ -66,6 +71,7 @@ import { generateN6World, ledgerFingerprint, personIntro, N6_DEFAULT_SEED, N6_GE
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
+import { attestPreregistration, type Attestation } from './prereg.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 
@@ -83,6 +89,8 @@ export interface CallOutcome {
   error_code?: string;
   raw: string;
   data: unknown;
+  /** Extra text blocks after the body (`[gbrain notice ...]`), compared in the oracle check. */
+  notices?: string[];
   timed_out?: boolean;
 }
 
@@ -99,17 +107,36 @@ export type ScopeVariant = 'ambient' | 'foreign' | 'all';
 export interface Synthesized { params: Record<string, unknown>; unsupported?: undefined }
 export interface Unsupported { params?: undefined; unsupported: string }
 
+/**
+ * A one-turn conversation window that names a page by its title, each word capitalized so gbrain's entity
+ * extractor sees a name (lower-case titles and slugs resolve nothing). Preregistered 2026-10-06
+ * (docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md).
+ */
+export function namingWindow(title: string): string {
+  return `user: I was just reading ${title.split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ')} again.`;
+}
+
+/** Title of the ledger page a target names; for a never-written ghost, the protected title with its query word swapped. */
+export function targetTitle(ledger: Pick<N6Ledger, 'pages'>, target: N6Target, protectedTwin?: N6Target): string | undefined {
+  const page = ledger.pages.find(p => p.slug === target.slug && p.source_id === (target.source_id ?? 'alpha'));
+  const title = page ? /^title:\s*(.+)$/m.exec(page.content)?.[1]?.trim() : undefined;
+  if (title || !protectedTwin) return title;
+  const base = targetTitle(ledger, protectedTwin);
+  return base?.includes(protectedTwin.query) ? base.split(protectedTwin.query).join(target.query) : base;
+}
+
 /** Build arguments for one op aimed at one target. Returns why not when a required param has no rule. */
 export function synthesizeParams(
   params: Record<string, ParamDef>,
   target: N6Target | null,
-  opts: { scope?: ScopeVariant; enumOverride?: [string, string] } = {},
+  opts: { scope?: ScopeVariant; enumOverride?: [string, string]; title?: string } = {},
 ): Synthesized | Unsupported {
   const out: Record<string, unknown> = {};
   for (const [name, def] of Object.entries(params)) {
     let value: unknown;
     if (target) {
-      if (SLUG_PARAMS.has(name)) value = target.slug;
+      if (name === 'window' && opts.title) value = namingWindow(opts.title);
+      else if (SLUG_PARAMS.has(name)) value = target.slug;
       else if (QUERY_PARAMS.has(name)) value = target.query;
       else if (ENTITY_PARAMS.has(name)) value = target.slug;
       else if (name === 'partial') value = target.slug;
@@ -159,7 +186,7 @@ export function variantsFor(params: Record<string, ParamDef>): Array<{ id: strin
 // ─── Scoring helpers ───────────────────────────────────────────────────
 
 const SLUG_FIELDS = new Set(['slug', 'to_slug', 'from_slug', 'entity_slug', 'page_slug', 'target_slug', 'source_slug', 'resolved_slug', 'candidates', 'slugs']);
-const VOLATILE_KEY = /^(id|page_id|chunk_id|fact_id|take_id|revision|knowledge_revision|request_id|job_id|session_id|score|rank_score|.*_at|.*_ms|took.*|elapsed.*|latency.*|duration.*|generated.*|now|timestamp)$/i;
+const VOLATILE_KEY = /^(id|page_id|chunk_id|fact_id|take_id|revision|knowledge_revision|request_id|job_id|session_id|score|rank_score|.*_at|.*_ms|took.*|elapsed.*|latency.*|duration.*|generated.*|now|as_of|timestamp)$/i;
 
 /** Slugs named in slug-like result fields (strings or string arrays), at any depth. */
 export function namedSlugs(data: unknown, out: Set<string> = new Set()): Set<string> {
@@ -302,7 +329,7 @@ function excerpt(raw: string, needle: string): string {
 
 // ─── gbrain wiring ─────────────────────────────────────────────────────
 
-interface Gbrain {
+export interface Gbrain {
   operations: Operation[];
   PGLiteEngine: new () => { connect(c: unknown): Promise<void>; initSchema(): Promise<void>; disconnect(): Promise<void>; executeRaw<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]> };
   dispatchToolCall: (engine: unknown, name: string, params: Record<string, unknown> | undefined, opts: Record<string, unknown>) => Promise<{ content: { text: string }[]; isError?: boolean }>;
@@ -310,7 +337,7 @@ interface Gbrain {
   buildBrainTools: (opts: Record<string, unknown>) => Array<{ name: string; execute(input: unknown, ctx: unknown): Promise<unknown> }>;
 }
 
-async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
+export async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
   const [ops, pglite, dispatch, scope, tools] = await Promise.all([
     importGbrain<{ operations: Operation[] }>(gut, 'src/core/operations.ts'),
     importGbrain<{ PGLiteEngine: Gbrain['PGLiteEngine'] }>(gut, 'src/core/pglite-engine.ts'),
@@ -324,37 +351,50 @@ async function loadGbrain(gut: GbrainUnderTest): Promise<Gbrain> {
 const CONFIG = { engine: 'pglite', database_path: ':memory:' } as OperationContext['config'];
 const QUIET = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
 
-function parseToolResult(result: { content: { text: string }[]; isError?: boolean }): CallOutcome {
+/**
+ * The body is content[0]; gbrain appends notice blocks (`[gbrain notice <code> kind=<kind>]`) as further
+ * blocks, so the joined text is not JSON (gbrain src/core/connect-probe.ts resultBodyText). `raw` keeps every
+ * block for the leak scan; `data` parses the body alone.
+ */
+export function parseToolResult(result: { content: { text: string }[]; isError?: boolean }): CallOutcome {
   const raw = result.content.map(c => c.text).join('\n');
+  const body = result.content[0]?.text ?? '';
   let data: unknown = raw;
-  try { data = JSON.parse(raw); } catch { /* plain text */ }
+  try { data = JSON.parse(body); } catch { /* plain text */ }
+  const notices = result.content.slice(1).map(c => c.text);
   const code = data && typeof data === 'object' && !Array.isArray(data) && typeof (data as Record<string, unknown>).error === 'string'
     ? String((data as Record<string, unknown>).error) : undefined;
-  return { exposed: true, ok: !result.isError, raw, data, ...(result.isError ? { error_code: code ?? 'error' } : {}) };
+  return { exposed: true, ok: !result.isError, raw, data, ...(notices.length ? { notices } : {}), ...(result.isError ? { error_code: code ?? 'error' } : {}) };
+}
+
+/** What the oracle check compares: the parsed body and the notice blocks, or the error code. */
+export function oracleView(o: CallOutcome): unknown {
+  return o.ok ? { data: o.data, notices: o.notices ?? [] } : { error: o.error_code };
 }
 
 const DENIAL_CODES = new Set(['insufficient_scope', 'permission_denied', 'unknown_tool', 'unknown_operation', 'scope_denied', 'not_exposed']);
-const isDenial = (o: CallOutcome) => !o.exposed || DENIAL_CODES.has(o.error_code ?? '') || /unknown tool|not (available|found) in this surface/i.test(o.raw);
+export const isDenial = (o: CallOutcome) => !o.exposed || DENIAL_CODES.has(o.error_code ?? '') || /unknown tool|not (available|found) in this surface/i.test(o.raw);
 
-type Caller = (op: Operation, params: Record<string, unknown>) => Promise<CallOutcome>;
+export type Caller = (op: Operation, params: Record<string, unknown>) => Promise<CallOutcome>;
+export type N6Engine = { executeRaw<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]> };
 
 function authFor(clientId: string, scopes: string[], extra: Partial<AuthInfo> = {}): AuthInfo {
   return { token: `n6-${clientId}`, clientId, principal: { kind: 'oauth_client', id: clientId }, scopes, sourceId: 'alpha', allowedSources: ['alpha'], hasSourceGrant: true, ...extra };
 }
 
-function makeCallers(g: Gbrain, engine: unknown): Record<CallerId, Caller> {
+export function makeCallers(g: Gbrain, engine: unknown, config: OperationContext['config'] = CONFIG): Record<CallerId, Caller> {
   // Each probe call gets its own session id. gbrain v0.60.46.0 dedupes agent notices per (transport, principal,
   // session); with no session id every call of a caller shares one ledger, so the first of two otherwise identical
   // calls carried a notice the second lacked and the protected-before-ghost order read as an existence oracle.
   const viaDispatch = (opts: Record<string, unknown>): Caller => async (op, params) =>
-    parseToolResult(await g.dispatchToolCall(engine, op.name, params, { config: CONFIG, logger: QUIET, sessionId: `n6-${randomUUID()}`, ...opts }));
+    parseToolResult(await g.dispatchToolCall(engine, op.name, params, { config, logger: QUIET, sessionId: `n6-${randomUUID()}`, ...opts }));
   const viaServeHttp = (auth: AuthInfo): Caller => async (op, params) => {
     if (!g.operationScopesAllowed(auth.scopes, op)) return { exposed: false, ok: false, error_code: 'insufficient_scope', raw: '', data: null };
     return viaDispatch({ remote: true, transport: 'http', takesHoldersAllowList: auth.takesHoldersAllowList ?? ['world'], sourceId: auth.sourceId ?? 'default', auth })(op, params);
   };
   const viaSubagent = (delegated: boolean): Caller => {
     const registry = g.buildBrainTools({
-      engine, config: CONFIG, subagentId: 6, jobId: 6, sourceId: 'alpha',
+      engine, config, subagentId: 6, jobId: 6, sourceId: 'alpha',
       ...(delegated ? { delegatedAuth: { clientId: 'n6-subagent', scopes: ['read'], sourceId: 'alpha', allowedSources: ['alpha'] } } : {}),
     });
     const byOp = new Map(registry.map(t => [t.name.replace(/^brain_/, ''), t]));
@@ -393,13 +433,15 @@ async function withTimeout(p: Promise<CallOutcome>): Promise<CallOutcome> {
 
 // ─── Seeding and presence ──────────────────────────────────────────────
 
-async function seed(g: Gbrain, engine: Awaited<ReturnType<typeof newEngine>>, ledger: N6Ledger): Promise<string[]> {
+/** Writes the ledger through gbrain's own write path as the trusted local caller. Engine-agnostic (PGLite or Postgres). */
+export async function seed(g: Gbrain, engine: N6Engine, ledger: N6Ledger, config: OperationContext['config'] = CONFIG): Promise<string[]> {
   const errors: string[] = [];
+  // Only missing sources are inserted (no row, no trigger): on Postgres the caller adds them through writer administration first.
   for (const s of ledger.sources) {
-    await engine.executeRaw(`INSERT INTO sources (id, name, config) VALUES ($1, $1, '{}'::jsonb) ON CONFLICT (id) DO NOTHING`, [s]);
+    await engine.executeRaw(`INSERT INTO sources (id, name, config) SELECT $1::text, $1::text, '{}'::jsonb WHERE NOT EXISTS (SELECT 1 FROM sources WHERE id = $1::text)`, [s]);
   }
   const putPage = g.operations.find(o => o.name === 'put_page')!;
-  const local = makeCallers(g, engine).local;
+  const local = makeCallers(g, engine, config).local;
   // Hub first so links resolve; then everything else in ledger order.
   const ordered = [...ledger.pages.filter(p => p.slug === ledger.hub_slug), ...ledger.pages.filter(p => p.slug !== ledger.hub_slug)];
   // Two writes per page, so version history exists for get_versions to expose (or not).
@@ -411,7 +453,7 @@ async function seed(g: Gbrain, engine: Awaited<ReturnType<typeof newEngine>>, le
       const args = { slug: page.slug, content: write(page.content), ...(revisions.has(key) ? { expected_revision: revisions.get(key) } : {}) };
       const r = page.source_id === 'alpha'
         ? await local(putPage, args)
-        : parseToolResult(await g.dispatchToolCall(engine, 'put_page', args, { config: CONFIG, logger: QUIET, remote: false, sourceId: page.source_id }));
+        : parseToolResult(await g.dispatchToolCall(engine, 'put_page', args, { config, logger: QUIET, remote: false, sourceId: page.source_id }));
       if (!r.ok) errors.push(`put_page ${key}: ${r.raw.slice(0, 200)}`);
       const revision = (r.data as { revision?: unknown } | null)?.revision;
       if (typeof revision === 'string') revisions.set(key, revision);
@@ -431,7 +473,7 @@ async function seed(g: Gbrain, engine: Awaited<ReturnType<typeof newEngine>>, le
 }
 
 /** The trusted local read that must show a class's protected markers (the positive control). Page-borne classes use get_page. */
-const CONTROL_READ: Partial<Record<N6ClassSpec['class'], (t: N6Target) => [string, Record<string, unknown>]>> = {
+export const CONTROL_READ: Partial<Record<N6ClassSpec['class'], (t: N6Target) => [string, Record<string, unknown>]>> = {
   private_ontology: t => ['ontology_get', { entity: t.slug }],
   private_raw_data: t => ['get_raw_data', { slug: t.slug }],
 };
@@ -445,7 +487,7 @@ async function newEngine(g: Gbrain) {
 
 export interface PresenceResult { name: string; pass: boolean; detail: string }
 
-async function presence(engine: Awaited<ReturnType<typeof newEngine>>, ledger: N6Ledger, local: Caller, getPage: Operation, opByName: (name: string) => Operation): Promise<{ checks: PresenceResult[]; sealed_chunk_violations: string[] }> {
+export async function presence(engine: N6Engine, ledger: N6Ledger, local: Caller, getPage: Operation, opByName: (name: string) => Operation): Promise<{ checks: PresenceResult[]; sealed_chunk_violations: string[] }> {
   const checks: PresenceResult[] = [];
   const count = async (sql: string, params: unknown[]) => Number((await engine.executeRaw<{ n: number }>(sql, params))[0]?.n ?? 0);
   let found = 0;
@@ -507,7 +549,7 @@ export function uncoveredReason(s: OpSummary, rows: readonly ProbeRow[]): string
 
 // ─── Main run ──────────────────────────────────────────────────────────
 
-export interface N6Options { seed?: number; gbrainSpec?: string | null; only?: string[]; reportsDir?: string; outputDir?: string; quiet?: boolean }
+export interface N6Options { seed?: number; gbrainSpec?: string | null; only?: string[]; reportsDir?: string; outputDir?: string; quiet?: boolean; attestation?: Attestation | null }
 
 export interface OpSummary {
   op: string;
@@ -562,6 +604,9 @@ async function runN6Hermetic(options: N6Options) {
   log(`[n6] gbrain ${gut.version}${gut.overlay ? ` (overlay ${gut.overlay.build.commit.slice(0, 12)})` : ' (pinned)'}; ${g.operations.length} operations, ${readOps.length} read ops fuzzed; presence ${presenceOk ? 'ok' : 'FAILED'}`);
 
   const hubTarget: N6Target = { slug: ledger.hub_slug, query: 'offsite planning', type: 'note', date: ledger.classes[0].twin.date };
+  const unitTitles = (unit: ProbeUnit) => unit.cls
+    ? { protected: targetTitle(ledger, unit.cls.protected), twin: targetTitle(ledger, unit.cls.twin), ghost: targetTitle(ledger, unit.cls.ghost, unit.cls.protected) }
+    : { protected: unit.protected ? targetTitle(ledger, unit.protected) : undefined, twin: undefined, ghost: undefined };
   const localReplay = new Map<string, boolean>();
   let localOraclePairs = 0;
   let localOracleDiffs = 0;
@@ -578,13 +623,14 @@ async function runN6Hermetic(options: N6Options) {
       for (const caller of REMOTE_CALLERS) {
         for (const unit of units) {
           for (const v of variants) {
-            const prot = synthesizeParams(op.params, unit.protected, v);
+            const titles = unitTitles(unit);
+            const prot = synthesizeParams(op.params, unit.protected, { ...v, title: titles.protected });
             if (!prot.params) { unsupported.add(prot.unsupported); continue; }
             const protParams = prot.params;
             const probe_id = `${caller}:${op.name}:${unit.id}:${v.id}`;
             const base = { probe_id, caller, op: op.name, target: unit.id, variant: v.id };
             const replayKey = `${op.name}:${unit.id}:${v.id}`;
-            const gh = unit.cls ? synthesizeParams(op.params, unit.cls.ghost, v) : null;
+            const gh = unit.cls ? synthesizeParams(op.params, unit.cls.ghost, { ...v, title: titles.ghost }) : null;
             if (!localReplay.has(replayKey)) {
               const lr = await call('local', op, protParams);
               const lg = gh?.params ? await call('local', op, gh.params) : null;
@@ -593,7 +639,7 @@ async function runN6Hermetic(options: N6Options) {
               if (lg && unit.cls) {
                 const mask = [...targetValues(unit.cls.protected), ...targetValues(unit.cls.ghost)];
                 localOraclePairs++;
-                if (normalizeForOracle(lr.ok ? lr.data : { error: lr.error_code }, mask) !== normalizeForOracle(lg.ok ? lg.data : { error: lg.error_code }, mask)) localOracleDiffs++;
+                if (normalizeForOracle(oracleView(lr), mask) !== normalizeForOracle(oracleView(lg), mask)) localOracleDiffs++;
               }
             }
             const pr = await call(caller, op, protParams);
@@ -612,7 +658,7 @@ async function runN6Hermetic(options: N6Options) {
             let twinError: string | undefined;
             if (unit.cls) {
               const cls = unit.cls;
-              const tw = synthesizeParams(op.params, cls.twin, v);
+              const tw = synthesizeParams(op.params, cls.twin, { ...v, title: titles.twin });
               const tr = tw.params ? await call(caller, op, tw.params) : null;
               twinSeen = tr ? controlSeen(tr, cls.twin_markers, [cls.twin.slug]) : false;
               if (tr && !tr.ok) twinError = `${tr.error_code}: ${tr.raw.slice(0, 160)}`;
@@ -625,8 +671,8 @@ async function runN6Hermetic(options: N6Options) {
               }
               if (gr && !gr.timed_out && !leak.content && !leak.existence) {
                 const mask = [...targetValues(cls.protected), ...targetValues(cls.ghost)];
-                const a = normalizeForOracle(pr.ok ? pr.data : { error: pr.error_code }, mask);
-                const b = normalizeForOracle(gr.ok ? gr.data : { error: gr.error_code }, mask);
+                const a = normalizeForOracle(oracleView(pr), mask);
+                const b = normalizeForOracle(oracleView(gr), mask);
                 if (a !== b) oracle = `protected: ${a.slice(0, 300)} | ghost: ${b.slice(0, 300)}`;
               }
               if (expansionUnit && tr) {
@@ -748,6 +794,7 @@ async function runN6Hermetic(options: N6Options) {
     probes_exposed: exposedRows.length,
     probes_with_signal: exposedRows.filter(r => r.control).length,
     probes_no_signal: exposedRows.filter(r => r.status === 'no_signal').length,
+    named_window_probes_with_signal: exposedRows.filter(r => r.control && 'window' in (readOps.find(o => o.name === r.op)?.params ?? {})).length,
     content_leak_probes: count('content'),
     existence_leak_probes: count('existence'),
     oracle_probes: count('oracle'),
@@ -816,7 +863,7 @@ async function runN6Hermetic(options: N6Options) {
     },
   };
   const file = options.outputDir ? join(options.outputDir, 'receipt.json') : receiptPath(N6_CATEGORY, options.reportsDir);
-  writeReceipt(file, receipt);
+  writeReceipt(file, (options.attestation ? { ...receipt, preregistration_attestation: options.attestation } : receipt) as Receipt);
   log(`[n6] coverage ${covered}/${readOps.length} read ops; content leaks ${metrics.content_leak_probes}, existence ${metrics.existence_leak_probes}, oracles ${metrics.oracle_probes}, gate bypasses ${metrics.gate_bypasses}; receipt ${file}`);
   return { receipt, file };
 }
@@ -826,7 +873,8 @@ if (import.meta.main) {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const seedArg = flag('--seed');
   const only = flag('--only');
-  runN6({ seed: seedArg ? Number(seedArg) : undefined, gbrainSpec: gbrainSpecFrom(argv), only: only ? only.split(',') : undefined, outputDir: flag('--output') })
+  const attest = flag('--attest');
+  runN6({ seed: seedArg ? Number(seedArg) : undefined, gbrainSpec: gbrainSpecFrom(argv), only: only ? only.split(',') : undefined, outputDir: flag('--output'), attestation: attest ? attestPreregistration(attest) : null })
     .then(({ receipt }) => {
       if (argv.includes('--json')) console.log(JSON.stringify(receipt.data, null, 2));
       process.exit(receipt.run_status === 'completed' ? 0 : 1);

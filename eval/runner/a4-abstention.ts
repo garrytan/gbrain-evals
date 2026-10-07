@@ -38,6 +38,9 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
 import { paidRequested, requirePaidArm } from './paid-arm.ts';
+import { acceptsTemperature } from './openai-judge-shim.ts';
+import { attestPreregistration } from './prereg.ts';
+import { exactMcNemar, holmAdjusted } from './stats/paired.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   A4_DEFAULT_SEED, A4_GENERATOR_VERSION, generateA4World, isAnswerable, renderA4Page,
@@ -46,6 +49,7 @@ import {
 
 export const CATEGORY = 'a4-abstention';
 export const READER_MODEL = 'anthropic:claude-sonnet-4-6';
+const DEFAULT_READER_MODEL = READER_MODEL;
 export const READER_MAX_TOKENS = 1024;
 export const PAID_ESTIMATE_USD = 3;
 const TOP_K = 5;
@@ -64,7 +68,7 @@ export const GAPS: ReadonlyArray<{ capability: string; reason: string }> = [
   { capability: 'keyless answerer or "I don\'t know" response', reason: 'think without a chat model returns its gather without an answer (src/core/think/index.ts:784,1113-1116); the query op only grades. The keyless path cannot abstain, so A4 defines a paid harness answerer.' },
   { capability: 'attribute-level sufficiency in the CRAG grade', reason: 'the grade reads rank-1 evidence labels; an exact title match is strong whether or not the asked-for attribute is present (crag.ts:67-106, matrix P5).' },
   { capability: 'S4 abstention on exact-entity questions', reason: 'reduceAnswerable passes whenever there is an identity hit or a strong deterministic grade (answerable.ts:62-68), so S4 cannot abstain on a missing attribute of a company whose page matches exactly.' },
-  { capability: 'S4 on arm', reason: 'needs a TypeSafe key and explicit enabling. The budget ledger prices TypeSafe requests since gbrain-evals 0.10.10 (A4-3), but this runner does not implement the S4-on arm yet. Not run.' },
+  { capability: 'S4 on at gbrain defaults', reason: 'gbrain ships no reference calibration for the answerable slot, so decide.slots.answerable.mode=on is inactive (no_calibration) on a fresh brain; the --s4-on arm (2026-10-06) applies an explicit threshold with force_on.' },
 ];
 
 const LEVEL_RANK: Record<string, number> = { weak: 0, moderate: 1, strong: 2 };
@@ -125,6 +129,28 @@ export function scoreAnswer(q: Pick<A4Question, 'attribute' | 'answer' | 'siblin
   return { outcome: 'unscorable', final, hedged: false };
 }
 
+/**
+ * A4-4 revision (2026-10-06 preregistration, applied only to the S4-on arm and
+ * its matched S4-off comparison; the frozen rule above stays for every earlier
+ * arm). Two changes: the abstention pattern also matches "I don't have the
+ * information" phrasings, and an answer that abstains for the asked company
+ * while naming another company's value only as context counts as an
+ * abstention instead of wrong_source. A stated wrong value without an
+ * abstention is still wrong or wrong_source.
+ */
+export const ABSTAIN_RE_V2 = new RegExp(`${ABSTAIN_RE.source}|(?:don['’]t|do not|doesn['’]t|does not) have (?:the |enough |any )?(?:information|data|details)`, 'i');
+
+export function scoreAnswerV2(q: Pick<A4Question, 'attribute' | 'answer' | 'sibling_value'>, text: string, values: Record<string, readonly string[]>): { outcome: Outcome; final: string; hedged: boolean } {
+  const final = finalAnswer(text);
+  const abstains = ABSTAIN_RE_V2.test(final);
+  if (q.answer && states(final, q.attribute, q.answer)) return { outcome: 'correct', final, hedged: abstains };
+  const others = (values[q.attribute] ?? []).filter(v => v !== q.answer && states(final, q.attribute, v));
+  if ((q.sibling_value && states(final, q.attribute, q.sibling_value)) || others.length) return { outcome: abstains ? 'abstain' : 'wrong_source', final, hedged: abstains };
+  if (ANSWER_SHAPE[q.attribute]?.test(norm(final))) return { outcome: abstains ? 'abstain' : 'wrong', final, hedged: abstains };
+  if (abstains) return { outcome: 'abstain', final, hedged: false };
+  return { outcome: 'unscorable', final, hedged: false };
+}
+
 export interface ArmMetrics {
   n: number; answerable: number; unanswerable: number;
   correct_useful_rate: number | null; false_refusal_rate: number | null; wrong_answerable_rate: number | null;
@@ -174,7 +200,7 @@ export function abstainsUsefully(m: ArmMetrics): { pass: boolean; failed: string
   return { pass: failed.length === 0, failed };
 }
 
-export interface Retrieval { id: string; cls: A4Class; grade: string | null; reason: string | null; slugs: string[]; texts: string[]; sufficient: boolean; s4: { asked: boolean; identity_hit: boolean; strong_grade: boolean }; lookup?: { grade: string | null; reason: string | null; s4_blocked: boolean }; top1?: { evidence: string | null; keyword_relaxed: boolean } }
+export interface Retrieval { id: string; cls: A4Class; grade: string | null; reason: string | null; slugs: string[]; texts: string[]; evidence?: Array<Record<string, unknown>>; sufficient: boolean; s4: { asked: boolean; identity_hit: boolean; strong_grade: boolean }; lookup?: { grade: string | null; reason: string | null; s4_blocked: boolean }; top1?: { evidence: string | null; keyword_relaxed: boolean } }
 
 /** CRAG grade summaries against evidence sufficiency and answerability (hermetic). */
 export function cragSummary(rs: readonly Retrieval[]) {
@@ -236,6 +262,7 @@ export async function retrieveAll(gut: GbrainUnderTest, ledger: A4Ledger, log: (
   const { operations } = await importGbrain<{ operations: Array<{ name: string; handler: (c: unknown, p: Record<string, unknown>) => Promise<unknown> }> }>(gut, 'src/core/operations.ts');
   const { gradeRetrievalConfidence } = await importGbrain<{ gradeRetrievalConfidence: (r: Result[], o?: Record<string, unknown>) => { level: string } }>(gut, 'src/core/search/crag.ts');
   const { isProtectedResult } = await importGbrain<{ isProtectedResult: (r: Result) => boolean }>(gut, 'src/core/ai/decide/protection.ts');
+  const { candidateItem } = await importGbrain<{ candidateItem: (r: Result) => Record<string, unknown> }>(gut, 'src/core/search/decide-retrieval.ts');
   const engine = new PGLiteEngine();
   await engine.connect({});
   await engine.initSchema();
@@ -271,7 +298,7 @@ export async function retrieveAll(gut: GbrainUnderTest, ledger: A4Ledger, log: (
       const top = results.slice(0, TOP_K);
       rows.push({
         id: q.id, cls: q.cls, grade: m?.crag?.confidence ?? null, reason: m?.crag?.reason ?? null,
-        slugs: top.map(r => r.slug), texts: top.map(r => r.chunk_text),
+        slugs: top.map(r => r.slug), texts: top.map(r => r.chunk_text), evidence: top.map(r => candidateItem(r)),
         sufficient: q.answer !== null && top.some(r => r.chunk_text.includes(q.answer!)),
         top1: { evidence: top[0]?.evidence ?? null, keyword_relaxed: top[0]?.keyword_relaxed === true },
         s4: { asked: top.length > 0, identity_hit: top.some(r => isProtectedResult(r)), strong_grade: top.length > 0 && gradeRetrievalConfidence(top, { ignoreDecideEvidence: true }).level === 'strong' },
@@ -295,7 +322,7 @@ export async function retrieveAll(gut: GbrainUnderTest, ledger: A4Ledger, log: (
 
 // ─── Paid answerer ───────────────────────────────────────────────────────
 
-export interface AnswerRow { id: string; cls: A4Class; arm: 'retrieved' | 'oracle'; outcome: Outcome; final: string; hedged: boolean; text?: string; error?: string; usage?: { input: number; output: number } }
+export interface AnswerRow { id: string; cls: A4Class; arm: 'retrieved' | 'oracle'; outcome: Outcome; outcome_v2?: Outcome; final: string; hedged: boolean; text?: string; error?: string; usage?: { input: number; output: number } }
 
 async function pool<T, R>(items: readonly T[], n: number, fn: (t: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -307,6 +334,8 @@ async function pool<T, R>(items: readonly T[], n: number, fn: (t: T) => Promise<
 }
 
 async function runPaid(gut: GbrainUnderTest, ledger: A4Ledger, retrieved: readonly Retrieval[], anthropicKey: string, argv: readonly string[], log: (s: string) => void): Promise<{ answers: AnswerRow[]; cost: RunSummary | null; reader: Record<string, unknown> }> {
+  const READER_MODEL = argValue(argv, '--reader-model') ?? DEFAULT_READER_MODEL;
+  const temperature = acceptsTemperature(READER_MODEL) ? { temperature: 0 } : {};
   const { run, guard } = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), estimateUsd: PAID_ESTIMATE_USD, log });
   let out: { answers: AnswerRow[]; cost: RunSummary | null; reader: Record<string, unknown> } | undefined;
   try {
@@ -330,14 +359,15 @@ async function runPaid(gut: GbrainUnderTest, ledger: A4Ledger, retrieved: readon
         for (let attempt = 0; attempt < 2; attempt++) {
           if (guard.exhausted) break;
           try {
-            const res = await gw.chat({ model: READER_MODEL, system: reader.READER_NOTES_SYSTEM_TEXT, messages: [{ role: 'user', content }], maxTokens: READER_MAX_TOKENS, temperature: 0 });
+            const res = await gw.chat({ model: READER_MODEL, system: reader.READER_NOTES_SYSTEM_TEXT, messages: [{ role: 'user', content }], maxTokens: READER_MAX_TOKENS, ...temperature });
             const s = scoreAnswer(q, res.text, ledger.values);
-            return { id: q.id, cls: q.cls, arm, ...s, text: res.text, usage: { input: res.usage.input_tokens ?? 0, output: res.usage.output_tokens ?? 0 } };
+            const v2 = scoreAnswerV2(q, res.text, ledger.values);
+            return { id: q.id, cls: q.cls, arm, ...s, outcome_v2: v2.outcome, text: res.text, usage: { input: res.usage.input_tokens ?? 0, output: res.usage.output_tokens ?? 0 } };
           } catch (e) { lastError = e instanceof Error ? e.message : String(e); }
         }
         return { id: q.id, cls: q.cls, arm, outcome: 'error', final: '', hedged: false, error: lastError || 'budget exhausted' };
       });
-      return { answers, cost: null, reader: { model: READER_MODEL, system_prompt_version: reader.READER_NOTES_PROMPT_VERSION, max_tokens: READER_MAX_TOKENS, temperature: 0, rendering: 'renderChatBlock, one block per result, session id = page slug, no date', concurrency: CONCURRENCY, retries: 1 } };
+      return { answers, cost: null, reader: { model: READER_MODEL, system_prompt_version: reader.READER_NOTES_PROMPT_VERSION, max_tokens: READER_MAX_TOKENS, temperature: acceptsTemperature(READER_MODEL) ? 0 : 'provider default (the model rejects temperature)', rendering: 'renderChatBlock, one block per result, session id = page slug, no date', concurrency: CONCURRENCY, retries: 1 } };
     });
   } finally {
     guard.uninstall();
@@ -345,6 +375,109 @@ async function runPaid(gut: GbrainUnderTest, ledger: A4Ledger, retrieved: readon
     if (out) out.cost = summary;
   }
   return out;
+}
+
+// ─── S4 on (G8, 2026-10-06) ──────────────────────────────────────────────
+
+export const S4_PROVIDER = 'typesafe:jev-1.13.0';
+export const S4_DEFAULT_THRESHOLD = 0.5;
+export const S4_MARGIN = 0.05;
+/**
+ * The decide config the S4-on arm applies. The egress keys send the query and
+ * the candidate pages to TypeSafe: the A4 world is fictional and has no private
+ * pages, and the arm runs after the brain is closed, so gbrain's per-page
+ * visibility check (which needs the engine) is replaced by allowing private
+ * egress. Recorded in the receipt.
+ */
+export const S4_CONFIG = (threshold: number): Record<string, string> => ({
+  'decide.provider': S4_PROVIDER, 'decide.slots.answerable.mode': 'on', 'decide.slots.answerable.threshold': String(threshold), 'decide.slots.answerable.force_on': 'true',
+  'decide.egress.typesafe.query': 'allow', 'decide.egress.typesafe.candidates': 'allow', 'decide.egress.private': 'allow',
+});
+
+export interface S4Row { id: string; cls: A4Class; asked: boolean; k_used: number; p: number | null; verdict: 'pass' | 'abstain' | 'margin_hold' | 'incomplete' | 'not_asked' | 'error'; error?: string; model_resolved?: string | null }
+
+/**
+ * S4 answerable over each question's retrieved top five, through gbrain's own
+ * pieces: the query op's evidence items (`candidateItem`), `answerableK`,
+ * `answerableQuestion`, one `runDecide` request on TypeSafe Jev, and the one
+ * production reducer `reduceAnswerable` with the identity-hit and strong-grade
+ * signals the hermetic arm computed. gbrain ships no reference calibration for
+ * this slot, so `on` is inactive on a fresh brain ("no_calibration"); this arm
+ * applies an explicit preregistered threshold, as a user would with
+ * `decide.slots.answerable.threshold` and `force_on`.
+ */
+async function runS4(gut: GbrainUnderTest, ledger: A4Ledger, rows: readonly Retrieval[], typesafeKey: string, threshold: number, argv: readonly string[], log: (s: string) => void): Promise<{ rows: S4Row[]; cost: RunSummary | null }> {
+  const { run, guard } = startPaidRun(`${CATEGORY}-s4`, { ...budgetOptionsFrom(argv), estimateUsd: 0.5, log });
+  let out: S4Row[] = [];
+  try {
+    out = await withHermeticEnv('a4-s4', async () => {
+      const gw = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void }>(gut, 'src/core/ai/gateway.ts');
+      const ans = await importGbrain<{ answerableK: (q: string, e: unknown[]) => number; answerableQuestion: (e: unknown[]) => unknown; reduceAnswerable: (p: number, policy: { threshold: number; margin: number }, s: { complete: boolean; identityHit: boolean; strongGrade: boolean }) => S4Row['verdict'] }>(gut, 'src/core/ai/decide/answerable.ts');
+      const { runDecide } = await importGbrain<{ runDecide: (req: Record<string, unknown>, ctx: Record<string, unknown>) => Promise<{ answers: Record<string, { kind: string; p?: number }>; model_resolved: string | null }> }>(gut, 'src/core/ai/decide/index.ts');
+      const { readDecideConfig } = await importGbrain<{ readDecideConfig: (s: Record<string, string>, o?: Record<string, unknown>) => Record<string, unknown> }>(gut, 'src/core/ai/decide/config.ts');
+      gw.configureGateway({ env: { TYPESAFE_API_KEY: typesafeKey } });
+      const cfg = readDecideConfig(S4_CONFIG(threshold), { typesafeKey: true });
+      const byQ = new Map(ledger.questions.map(q => [q.id, q]));
+      log(`S4 answerable (${S4_PROVIDER}, threshold ${threshold}) over ${rows.length} questions`);
+      return pool(rows, CONCURRENCY, async (r): Promise<S4Row> => {
+        const evidence = r.evidence ?? [];
+        if (evidence.length === 0) return { id: r.id, cls: r.cls, asked: false, k_used: 0, p: null, verdict: 'not_asked' };
+        const query = byQ.get(r.id)!.question;
+        const k = ans.answerableK(query, evidence);
+        if (k === 0) return { id: r.id, cls: r.cls, asked: false, k_used: 0, p: null, verdict: 'incomplete' };
+        if (guard.exhausted) return { id: r.id, cls: r.cls, asked: false, k_used: k, p: null, verdict: 'error', error: 'budget exhausted' };
+        try {
+          const res = await runDecide({ slot: 'answerable', callSite: 'query', state: { query: { text: query, class: 'query' } }, questions: [ans.answerableQuestion(evidence.slice(0, k))], deadlineMs: 30_000, provider: S4_PROVIDER, remote: false }, { config: cfg, sourceId: 'default' });
+          const a = res.answers['answerable:0'];
+          const p = a?.kind === 'noul' && typeof a.p === 'number' ? a.p : null;
+          const verdict = p === null ? 'incomplete' : ans.reduceAnswerable(p, { threshold, margin: S4_MARGIN }, { complete: k === evidence.length, identityHit: r.s4.identity_hit, strongGrade: r.s4.strong_grade });
+          return { id: r.id, cls: r.cls, asked: true, k_used: k, p, verdict, model_resolved: res.model_resolved };
+        } catch (e) {
+          return { id: r.id, cls: r.cls, asked: true, k_used: k, p: null, verdict: 'error', error: e instanceof Error ? e.message : String(e) };
+        }
+      });
+    });
+  } finally {
+    guard.uninstall();
+  }
+  return { rows: out, cost: run.close() };
+}
+
+/** The S4-on answerer: the retrieved-arm reader's answer, replaced by an abstention where S4 says abstain (think skips synthesis then). */
+export function s4OnOutcomes(answers: readonly AnswerRow[], s4: readonly S4Row[], rule: 'v1' | 'v2'): Array<{ cls: A4Class; outcome: Outcome }> {
+  const verdict = new Map(s4.map(r => [r.id, r.verdict]));
+  return answers.filter(a => a.arm === 'retrieved').map(a => {
+    const base = rule === 'v2' ? (a.outcome_v2 ?? a.outcome) : a.outcome;
+    return { cls: a.cls, outcome: verdict.get(a.id) === 'abstain' && base !== 'error' ? 'abstain' as Outcome : base };
+  });
+}
+
+/** Exact McNemar, S4 on vs S4 off (revised rule), on abstaining for unanswerable and refusing answerable questions; Holm across the two. */
+export function s4PairedTests(answers: readonly AnswerRow[], s4: readonly S4Row[]) {
+  const retrieved = answers.filter(a => a.arm === 'retrieved');
+  const on = new Map(retrieved.map((a, i) => [a.id, s4OnOutcomes(retrieved, s4, 'v2')[i]!.outcome]));
+  const pairs = (keep: (a: AnswerRow) => boolean) => retrieved.filter(a => keep(a) && (a.outcome_v2 ?? a.outcome) !== 'error')
+    .map(a => ({ id: a.id, cluster: a.id, a: (a.outcome_v2 ?? a.outcome) === 'abstain' ? 1 : 0, b: on.get(a.id) === 'abstain' ? 1 : 0 }));
+  const una = exactMcNemar(pairs(a => !isAnswerable(a.cls)));
+  const ans = exactMcNemar(pairs(a => isAnswerable(a.cls)));
+  const [pu, pa] = holmAdjusted([una.p_two_sided, ans.p_two_sided]);
+  return { unanswerable_abstentions: { ...una, p_holm: pu }, answerable_refusals: { ...ans, p_holm: pa } };
+}
+
+/** Report-only threshold sweep: S4-on metrics (revised rule) if the threshold were t, from the recorded probabilities. */
+export function s4Sweep(answers: readonly AnswerRow[], s4: readonly S4Row[], rows: readonly Retrieval[], thresholds: readonly number[]) {
+  const byId = new Map(rows.map(r => [r.id, r]));
+  return thresholds.map(t => {
+    const simulated: S4Row[] = s4.map(r => {
+      if (r.p === null) return r;
+      const sig = byId.get(r.id)!.s4;
+      const complete = r.k_used === (byId.get(r.id)!.evidence?.length ?? r.k_used);
+      const verdict: S4Row['verdict'] = r.p >= t ? 'pass' : !complete ? 'incomplete' : r.p >= t - S4_MARGIN ? 'margin_hold' : (sig.identity_hit || sig.strong_grade) ? 'pass' : 'abstain';
+      return { ...r, verdict };
+    });
+    const m = armMetrics(s4OnOutcomes(answers, simulated, 'v2'));
+    return { threshold: t, abstain_recall: m.abstain_recall, false_refusal_rate: m.false_refusal_rate, correct_useful_rate: m.correct_useful_rate, utility_l1: m.utility_l1 };
+  });
 }
 
 /** The CRAG-gated reader: arm 1's answers, replaced by an abstention when the grade is below `level`. */
@@ -395,7 +528,14 @@ async function main(): Promise<void> {
   const seed = seedArg === undefined ? A4_DEFAULT_SEED : Number(seedArg);
   if (!Number.isInteger(seed)) throw new Error('--seed needs an integer');
   const paid = paidRequested(argv);
-  const budget = paid ? requirePaidArm(argv, { arm: 'A4 answer arm', estimateUsd: PAID_ESTIMATE_USD }) : null;
+  const ledgerPath = budgetOptionsFrom(argv).ledgerPath;
+  const budget = paid ? requirePaidArm(argv, { arm: 'A4 answer arm', estimateUsd: PAID_ESTIMATE_USD, ledgerPath }) : null;
+  const s4On = argv.includes('--s4-on');
+  const s4Threshold = Number(argValue(argv, '--s4-threshold') ?? S4_DEFAULT_THRESHOLD);
+  const typesafeKey = process.env.TYPESAFE_API_KEY ?? process.env.JEV_TYPESAFE_API_KEY ?? '';
+  if (s4On && (!paid || !typesafeKey)) throw new Error('--s4-on needs the paid reader arm (--paid --budget-run-id) and a TypeSafe key (TYPESAFE_API_KEY or JEV_TYPESAFE_API_KEY)');
+  const prereg = argValue(argv, '--preregistration');
+  const attestation = paid && prereg ? attestPreregistration(prereg) : null;
   const anthropicKey = process.env.ANTHROPIC_API_KEY ?? '';
   if (paid && !anthropicKey) throw new Error('A4 paid arm needs ANTHROPIC_API_KEY (the house reader is anthropic:claude-sonnet-4-6)');
   const output = argValue(argv, '--output');
@@ -414,10 +554,15 @@ async function main(): Promise<void> {
   const s4 = h && !harnessError ? s4Summary(h.rows) : null;
   let paidOut: Awaited<ReturnType<typeof runPaid>> | null = null;
   let paidError: string | null = null;
+  let s4Out: Awaited<ReturnType<typeof runS4>> | null = null;
   if (paid && h && !harnessError) {
     try { paidOut = await runPaid(gut, ledger, h.rows, anthropicKey, argv, log); }
     catch (e) { paidError = e instanceof Error ? e.message : String(e); }
-    const st = ledgerStatus({ runId: budget!.budgetRunId });
+    if (s4On && paidOut) {
+      try { s4Out = await runS4(gut, ledger, h.rows, typesafeKey, s4Threshold, argv, log); }
+      catch (e) { paidError = `${paidError ? `${paidError}; ` : ''}S4: ${e instanceof Error ? e.message : String(e)}`; }
+    }
+    const st = ledgerStatus({ ledgerPath, runId: budget!.budgetRunId });
     log(`[budget] run ${budget!.budgetRunId}: $${st.run?.remaining_usd.toFixed(2)} left`);
   }
   const ps = paidOut ? paidSummary(paidOut.answers, h!.rows) : null;
@@ -448,7 +593,9 @@ async function main(): Promise<void> {
       search_path: `query operation, expand=false, limit=${TOP_K}; no embedding gateway (keyword only); search.crag_escalation and search.crag_think at defaults (off)`,
       seed, generator_version: A4_GENERATOR_VERSION, ledger_sha256: world.fingerprint,
       answerer: paidOut ? paidOut.reader : 'not run (hermetic)',
-      s4_on: 'not run: the runner has no S4-on arm yet (needs a TypeSafe key and explicit enabling; the budget guard prices TypeSafe requests since 0.10.10)',
+      s4_on: s4Out
+        ? { provider: S4_PROVIDER, threshold: s4Threshold, margin: S4_MARGIN, force_on: true, decide_config: S4_CONFIG(s4Threshold), evidence: 'the retrieved arm\'s top five, as candidateItem evidence', reducer: 'gbrain reduceAnswerable', note: 'gbrain ships no reference calibration for the answerable slot, so on a fresh brain S4 on is inactive (no_calibration); this arm sets the threshold explicitly' }
+        : 'not run (pass --s4-on with the paid arm and a TypeSafe key)',
       entrypoints: ENTRYPOINTS,
       gbrain_overlay: overlaySummary(gut),
       paid: paid ? { budget_run_id: budget?.budgetRunId ?? null, provider_keys: ['ANTHROPIC_API_KEY'], error: paidError, evidence: 'the retrieved arm reads exactly the hermetic arm\'s top five query results' } : null,
@@ -464,11 +611,30 @@ async function main(): Promise<void> {
       timings_ms: { hermetic_total: hermeticMs, seed: h?.seed_ms ?? null, queries: h?.probe_ms ?? null },
       gaps: GAPS,
       rows: h?.rows.map(r => ({ id: r.id, cls: r.cls, grade: r.grade, reason: r.reason, slugs: r.slugs, sufficient: r.sufficient, s4: r.s4, lookup: r.lookup ?? null, top1: r.top1 ?? null })) ?? [],
-      paid: ps ? { ...ps, answers: paidOut!.answers.map(a => ({ id: a.id, cls: a.cls, arm: a.arm, outcome: a.outcome, hedged: a.hedged, final: a.final.slice(0, 400), error: a.error ?? null })) } : null,
+      s4_on: s4Out && paidOut ? (() => {
+        const v2Off = armMetrics(paidOut.answers.filter(a => a.arm === 'retrieved').map(a => ({ cls: a.cls, outcome: a.outcome_v2 ?? a.outcome })));
+        const v2On = armMetrics(s4OnOutcomes(paidOut.answers, s4Out.rows, 'v2'));
+        const v1On = armMetrics(s4OnOutcomes(paidOut.answers, s4Out.rows, 'v1'));
+        const verdicts: Record<string, Record<string, number>> = {};
+        for (const r of s4Out.rows) { const row = verdicts[r.cls] ??= {}; row[r.verdict] = (row[r.verdict] ?? 0) + 1; }
+        return {
+          rule: 'A4-4 revised abstention rule (scoreAnswerV2) for the S4-on arm and its matched S4-off comparison; the frozen rule\'s numbers beside',
+          s4_on_revised: { ...v2On, decision: abstainsUsefully(v2On) },
+          s4_off_revised: { ...v2Off, decision: abstainsUsefully(v2Off) },
+          s4_on_frozen_rule: { ...v1On, decision: abstainsUsefully(v1On) },
+          verdicts_by_class: verdicts,
+          paired_vs_s4_off: s4PairedTests(paidOut.answers, s4Out.rows),
+          sweep_report_only: s4Sweep(paidOut.answers, s4Out.rows, h!.rows, [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]),
+          rows: s4Out.rows,
+          cost: s4Out.cost ? receiptCost(s4Out.cost) : null,
+        };
+      })() : null,
+      paid: ps ? { ...ps, answers: paidOut!.answers.map(a => ({ id: a.id, cls: a.cls, arm: a.arm, outcome: a.outcome, outcome_v2: a.outcome_v2 ?? null, hedged: a.hedged, final: a.final.slice(0, 400), error: a.error ?? null })) } : null,
       harness_error: harnessError,
     },
   };
   if (paidOut?.cost) receipt.cost = receiptCost(paidOut.cost);
+  if (attestation) receipt.preregistration_attestation = attestation;
   writeReceipt(outPath, receipt);
 
   log(`\nverdict: ${receipt.verdict ?? 'error'}`);
@@ -479,7 +645,7 @@ async function main(): Promise<void> {
     log(`strong on unanswerable: ${crag.strong_on_unanswerable.hits}/${crag.strong_on_unanswerable.n} (${JSON.stringify(crag.strong_on_unanswerable.by_class)})`);
     for (const p of crag.operating_points) log(`  answer when grade >= ${p.answer_when_grade_at_least}: coverage ${pct(p.coverage)}, risk (no evidence) ${pct(p.risk_insufficient_evidence)}, risk (unanswerable) ${pct(p.risk_unanswerable)}`);
   }
-  if (s4) log(`S4 could not abstain on ${s4.blocked_from_abstaining}/${s4.unanswerable} unanswerable questions even if on (${JSON.stringify(s4.blocked_by_class)}); S4 on arm: not run`);
+  if (s4) log(`S4 could not abstain on ${s4.blocked_from_abstaining}/${s4.unanswerable} unanswerable questions even if on (${JSON.stringify(s4.blocked_by_class)}); S4 on arm: ${s4Out ? `run (threshold ${s4Threshold}, ${s4Out.rows.filter(r => r.verdict === 'abstain').length} abstain verdicts of ${s4Out.rows.length})` : 'not run (pass --s4-on)'}`);
   if (ps) {
     for (const k of ['retrieved', 'oracle'] as const) {
       const m = ps[k];
