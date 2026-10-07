@@ -186,7 +186,7 @@ export function variantsFor(params: Record<string, ParamDef>): Array<{ id: strin
 // ─── Scoring helpers ───────────────────────────────────────────────────
 
 const SLUG_FIELDS = new Set(['slug', 'to_slug', 'from_slug', 'entity_slug', 'page_slug', 'target_slug', 'source_slug', 'resolved_slug', 'candidates', 'slugs']);
-const VOLATILE_KEY = /^(id|page_id|chunk_id|fact_id|take_id|revision|knowledge_revision|request_id|job_id|session_id|score|rank_score|.*_at|.*_ms|took.*|elapsed.*|latency.*|duration.*|generated.*|now|timestamp)$/i;
+const VOLATILE_KEY = /^(id|page_id|chunk_id|fact_id|take_id|revision|knowledge_revision|request_id|job_id|session_id|score|rank_score|.*_at|.*_ms|took.*|elapsed.*|latency.*|duration.*|generated.*|now|as_of|timestamp)$/i;
 
 /** Slugs named in slug-like result fields (strings or string arrays), at any depth. */
 export function namedSlugs(data: unknown, out: Set<string> = new Set()): Set<string> {

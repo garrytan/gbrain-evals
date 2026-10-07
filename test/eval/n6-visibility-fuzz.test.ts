@@ -197,6 +197,13 @@ describe('N6 leak scoring', () => {
     expect(normalizeForOracle({ entries: [] }, [])).not.toBe(normalizeForOracle({ error: 'page_not_found' }, []));
     expect(countOccurrences('ABC abc', 'abc')).toBe(2);
   });
+
+  test('the reference clock open_loops echoes (as_of) is volatile', () => {
+    const protectedRun = { data: { as_of: '2026-10-07T20:13:29.085Z', count: 0, groups: [], redacted: true }, notices: [] };
+    const ghostRun = { data: { as_of: '2026-10-07T20:13:29.086Z', count: 0, groups: [], redacted: true }, notices: [] };
+    expect(normalizeForOracle(protectedRun, [])).toBe(normalizeForOracle(ghostRun, []));
+    expect(normalizeForOracle(protectedRun, [])).not.toBe(normalizeForOracle({ ...ghostRun, data: { ...ghostRun.data, count: 1 } }, []));
+  });
 });
 
 describe('gbrain under test', () => {
