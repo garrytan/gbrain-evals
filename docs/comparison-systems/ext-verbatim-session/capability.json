@@ -1,0 +1,86 @@
+{
+  "system": "ext-verbatim-session",
+  "versions": {
+    "package": "mempalace==3.10.0",
+    "lock_sha256": null,
+    "image": null,
+    "vendor_benchmark_code": "MemPalace/mempalace@22fd87f09c19d5ffb2d6966486483353937931c0 (tag v3.10.0), benchmarks/locomo_bench.py (sha256 ba7178748a14bd1c7667f2479d486bf37a8d19e6a8a810b27bd7bc4b40c8aad2, imported unmodified for its corpus and scoring helpers) and benchmarks/longmemeval_bench.py (read for the raw and hybrid recipes; not run)",
+    "resolved_dependencies": "uv.lock holds all 77 transitive dependencies to mempalace's own uv.lock at the tag (chromadb==1.5.7, onnxruntime==1.24.4, tokenizers==0.22.2, numpy==2.4.4), resolved with exclude-newer 2026-10-06T00:00:00Z; PyPI wheel mempalace-3.10.0-py3-none-any.whl sha256 9f65645235ba4da58fda237e5fad0ba83a5941066a18bcfdbf178b7fc8cf7abf"
+  },
+  "configs": {
+    "recipe": {
+      "model_roles": {
+        "extraction": null,
+        "small": null,
+        "embedder": "chromadb DefaultEmbeddingFunction: all-MiniLM-L6-v2 ONNX (chroma-onnx-models onnx.tar.gz, sha256 913d7300ceae3b2dbc2c50d1de4baacab4be7b9380491c27fab7418616a16ec3), baked into the image",
+        "dims": 384,
+        "reranker": null
+      },
+      "notes": "The vendor's no-LLM benchmark modes. Both benchmark scripts build each palace with chromadb directly (`client.create_collection('mempal_drawers')`, no embedding_function, so ChromaDB's default all-MiniLM-L6-v2 and its default l2 space), the same model mempalace's own `minilm` default wraps (embedding.py; the image build checks the two give the same vector). `raw` is the vendor's default `--mode raw`; `hybrid` is locomo_bench.py `--mode hybrid` without `--llm-rerank`. No LLM is called on ingest or retrieval, so this config makes zero provider calls."
+    },
+    "common": {
+      "supported": false,
+      "model_roles": {
+        "extraction": null,
+        "embedder": null,
+        "dims": null
+      },
+      "unsettable": [
+        "extraction",
+        "embedder"
+      ],
+      "notes": "Not built. The system has no extraction model, and this bundle runs only the local-embedder benchmark modes; the shim refuses SHIM_CONFIG=common at start. mempalace 3.10.0 can send embeddings to an OpenAI-compatible endpoint (embedding_model openai-compat), which a later common arm could route through the proxy."
+    }
+  },
+  "time": "native",
+  "time_notes": "event_time is stored as the drawer's `timestamp` metadata, where the vendor benchmark stores the session date, and returned as each item's valid_from. The drawer text carries no date (the vendor's session document has none), and neither recipe reads a reference date, so query_time is ignored.",
+  "provenance": {
+    "status": "exact",
+    "mechanism": "one drawer per session whose ChromaDB id is the session's source_id; every item is one whole drawer, so it cites exactly that session"
+  },
+  "delete": "native",
+  "delete_notes": "ChromaDB `collection.delete(ids=[source_id])` on the session's drawer, then `collection.get(ids=[source_id])` confirms it is gone. Nothing is derived across drawers, so no residue is expected.",
+  "readiness": "synchronous: ChromaDB embeds and indexes each drawer inside `upsert`, so /ingest returns after the write is searchable and /finish only reports the drawer count",
+  "namespace": "palace: one ChromaDB PersistentClient per namespace at /data/palaces/<ns>/palace, collection mempal_drawers",
+  "parallel_namespaces": false,
+  "retrieval_policies": {
+    "vendor-default": {
+      "settings": {
+        "recipe": "raw",
+        "k": 10
+      },
+      "maps_to": "collection.query(query_texts=[question], n_results=10): locomo_bench.py's default --mode raw and --top-k 10 (session granularity). `--policy-setting recipe=hybrid` runs the vendor's hybrid recipe at the same k: query 3k candidates, then fused = distance * (1 - 0.50 * predicate-keyword overlap) * (1 - 0.60 * quoted-phrase hits) * (1 - 0.20 * person-name hits), keep the top k"
+    },
+    "fixed-evidence": {
+      "settings": {
+        "recipe": "raw",
+        "k": 50
+      },
+      "maps_to": "the same call with n_results=50 (the vendor's documented --top-k 50 run and longmemeval_bench.py's 50-candidate pool), so the harness packer, not the vendor cutoff, decides what fits the evidence budget; recipe=hybrid queries 150 candidates and keeps 50"
+    }
+  },
+  "recipes": {
+    "raw": "vector search only: the vendor's headline no-LLM mode",
+    "hybrid": "locomo_bench.py --mode hybrid with the LLM reranker off: vector candidates re-ranked by keyword, quoted-phrase and person-name boosts"
+  },
+  "streaming": "disabled",
+  "telemetry_off": [
+    "ANONYMIZED_TELEMETRY=False",
+    "HF_HUB_OFFLINE=1",
+    "HF_HUB_DISABLE_TELEMETRY=1"
+  ],
+  "agent_surface": {
+    "kind": "none",
+    "transport": null,
+    "version": "mempalace 3.10.0 ships an MCP server (mempalace-mcp); it is not wired here, because the shim builds palaces with the benchmark's ChromaDB calls rather than the mempalace miner"
+  },
+  "deviations_from_vendor_code": [
+    "Sessions arrive one at a time through /ingest and are upserted into a persistent palace per namespace; the vendor builds one palace per conversation from all sessions in one add call and deletes it afterwards. Both insert in session order; HNSW search is approximate, so batching could change near-ties at the margin.",
+    "Drawer ids are the opaque source ids (src-...) instead of doc_<i>, and the corpus_id metadata is the source id instead of session_<n>, so no dataset identity crosses the sanitizer.",
+    "The timestamp metadata is the ISO event_time; the vendor copies LoCoMo's raw date string. Neither recipe reads it.",
+    "Every dataset uses the LoCoMo session document (every turn as `Speaker said, \"text\"`). longmemeval_bench.py indexes user turns only, joined by newlines; the shim cannot tell datasets apart, so it keeps all turns, which also lets questions about what the assistant said find their session.",
+    "The hybrid recipe is locomo_bench.py's (predicate keywords 0.50, quoted phrases 0.60, person names 0.20 over 3k candidates). longmemeval_bench.py's hybrid modes (v1 to v4: keyword weight 0.30, question-date boosts, assistant-reference two-pass, synthetic preference drawers, and v4's three fixes tuned on named LongMemEval misses) are not run, because they depend on LongMemEval's question_date format and question wording.",
+    "The scoring loop in run_benchmark is re-implemented in shim.py with the vendor's constants; the corpus builder, keyword, quoted-phrase and person-name helpers and the query call are the vendor's own functions, imported from the pinned locomo_bench.py.",
+    "The embedder is baked into the image at build time and the container runs with no route to the internet; the vendor downloads it on first use."
+  ]
+}
