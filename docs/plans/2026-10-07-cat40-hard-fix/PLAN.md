@@ -1,7 +1,7 @@
 <!-- /autoplan restore point: "/home/user/.gstack/projects/garrytan-gbrain-evals/plan-cat40-hard-fix-autoplan-restore-20261007-193754.md" -->
 # Cat 40 Hard fix wave: make gbrain find what plain files find
 
-Status: draft for autoplan review, 2026-10-07. Owner: GBRA-39. Merge queue: GBRA-40.
+Status: approved by Garry 2026-10-07 after autoplan review (decisions in Phase 4 below). Owner: GBRA-39. Merge queue: GBRA-40.
 
 ## Implementation plan
 
@@ -1377,6 +1377,8 @@ Lanes: Lane 1 A → B and E; Lane 2 C after A's resolver interface lands; Lane 3
 
 
 ### Phase 4: Final approval gate (for Garry)
+
+**Approved 2026-10-07 by Garry: "approve all".** UC1 to UC4 accepted as recommended (no title-only identity union; sealed set co-primary; keep `effective_date` and label it by source; F3 demotes only gbrain-owned markers). Taste calls C4 (defer owner phrases), C9 (confirmation spend authorized only after the development record), C16 (gbrain-plus-fs exploratory arm on development, about $45) and C19 accepted as recommended. Authorized now: development, about $433. The confirmation (about $1,280) waits for Garry's decision on the development record.
 
 This run is a Capy subagent with no direct line to Garry, so the gate below is delivered to the parent thread for Garry's decision; nothing here is approved yet. Pre-gate verification: CEO, DX and Eng outputs listed in the autoplan table are present above (premises, sections 1-10, registries, NOT in scope, what exists, dream delta, completion summaries, consensus tables; DX scores, journey map, empathy narrative, TTHW, checklist; Eng scope challenge, architecture diagram, test diagram, test plan at `~/.gstack/projects/garrytan-gbrain-evals/user-plan-cat40-hard-fix-eng-review-test-plan-20261007-202619.md`, failure modes). Design was skipped (no UI scope).
 
