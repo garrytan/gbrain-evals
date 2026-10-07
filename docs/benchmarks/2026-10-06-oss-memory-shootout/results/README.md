@@ -34,7 +34,17 @@ Every other directory here is a complete cell. Directories with `shard-<i>/` hol
 LongMemEval-S cell; `pmb/` holds a PrecisionMemBench run (rows without the fixture's query and description text,
 which the repository already carries in `eval/precisionmembench/fixtures/`).
 
+## Stop rules and the unknown-actual reservation
+
+The per-system stop (1.5 times the pilot estimate) counts measured settled spend only. Graphiti's lease `a1-cfb6cb33`
+($283) is a reservation with unknown actual spend from a cell command that never started; the campaign ledger keeps it
+in `committed` against the $1,450 cap, but the stop check counts it separately. On 2026-10-07 the driver had counted it
+as spend and tripped Graphiti's stop at $535.78; Graphiti's measured spend was $252.78 against its $252 pilot estimate
+(1.0 times; the stop is $378), so the check was corrected and the stop cleared before any Phase 7 cell.
+
 ## Changelog
+
+- 2026-10-07: The per-system stop counts measured spend only; Graphiti's stop trip from the unknown-actual reservation cleared.
 
 - 2026-10-07: Phase 4 and Phase 5 cells as they settled, with the harness failures above.
 

@@ -438,6 +438,10 @@ reserved questions, the five vendor common rows, gbrain-shootout common at the p
 with its fixed label, aggregates only, run last, and the audit list of prior sealed use. The campaign hash is filled
 when the cells join the campaign.
 
+### 2026-10-07: gbrain master moved again
+
+gbrain master moved to 8e11aa1f (v0.60.105.0) during Phase 4; keyless retrieval identical on the fixture and one LoCoMo dev conversation; counted rows stay at c5fb0201.
+
 ### 2026-10-07: amendments A5 completed and A7
 
 A5's sealed cells join the campaign with all four arms (Garry's choice) and a four-hour `/finish` wait; A7 reruns four
