@@ -3,7 +3,7 @@
   "schema_version": 1,
   "system": "precisionmembench",
   "config": "common",
-  "notes": "DRAFT for Phase 5 (PrecisionMemBench, P3), not part of the frozen Phase 4 campaign. Each cell sets its own system and config. Workload per system: 6 namespaces, 50 one-belief sessions (35 beliefs; the 5 universal beliefs sit in each of the 4 searched scopes of the test user), 72 searching cases and 6 readiness probes. Estimates sum to about $1.85 without Graphiti's recipe and about $9.27 with it (per-session basis, the conservative one); leases sum to $5.00 without it and $16.50 with it. Adding these cells to the campaign changes its hash and needs a preregistration amendment.",
+  "notes": "Phase 5, PrecisionMemBench (P3), added by amendment A4. Each cell sets its own system and config. Workload per system: 6 namespaces, 50 one-belief sessions, 72 searching cases and 6 readiness probes; leases from each system's pilot ingest cost per session.",
   "cells": [
     {
       "id": "basic-memory-common-pmb",

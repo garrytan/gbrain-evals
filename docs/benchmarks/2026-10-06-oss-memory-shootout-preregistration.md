@@ -81,6 +81,8 @@ arms file a cell names.
 - Campaign hash after amendment A3: **`c5901391c1516861d666ebdc93e3ca336a1733d354ac6af38d228236eb461ad3`** (64 cells,
   leases $1,140). The ten LoCoMo dev r1 cells that settled before A3 ran under the frozen hash; A3 does not change
   their commands.
+- Campaign hash after amendment A4: **`bd60fb49c2f46a520b772b18fa84ca8a8cfb769526b3c33ff8c2604ef4662744`** (72 cells,
+  leases $1,156.50). A4 adds the eight PrecisionMemBench cells and changes no Phase 4 cell.
 
 A cell ingests each namespace once, retrieves once per question and policy, and derives every arm from that state
 (`memory-qa --arms`). LoCoMo dev is ingested a second time per configuration (`--ingest-replicate 2`, retrieval only)
@@ -318,7 +320,22 @@ measurement, scoring, arm, lease or budget. Attempt 1 stays in the record as a h
 attempt 2 under a new lease. Recorded on 2026-10-06, after ten cells had settled and before any other cell was
 reserved; the campaign hash changes (see "Cells and the manifest").
 
+**A4 (2026-10-06), PrecisionMemBench cells.** The campaign gains eight Phase 5 cells in `cells/pmb.json`: Basic Memory,
+Mem0, Hindsight, Graphiti and Cognee at common, Graphiti at recipe (the plan's risk table allows its recipe on
+PrecisionMemBench), and gbrain-shootout common at the pin and at frozen master. They run
+`eval/runner/precisionmembench-system.ts`, which sends only `searchText` through the system; the vendored scorer
+supplies persona, pins, open questions and relation expansion for every system. The S3 rules (namespaces per user and
+scope, disclosed synthetic event times in fixture order, the `vendor-default` policy cut at upstream's limit, items
+without provenance not counted against precision with each system's share reported, the scorer's own structural split
+of 34 structural and 43 search-only cases, and the pairing with Holm in which a system with no measurable provenance
+leaves the family) were accepted by Garry on 2026-10-06 and are stated under S3. Leases sum to $16.50, about $9.27
+estimated, $7.42 of it Graphiti's recipe. Recorded before any Phase 5 lease.
+
 ## Changelog
+
+### 2026-10-06: amendment A4
+
+Added A4 (the eight PrecisionMemBench cells) and recorded the new campaign hash.
 
 ### 2026-10-06: amendment A3
 
