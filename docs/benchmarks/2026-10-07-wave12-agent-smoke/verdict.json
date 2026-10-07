@@ -1,0 +1,348 @@
+{
+  "schema_version": 1,
+  "experiment": "gbrain fix wave 12 pre-merge agent smoke (GBRA-57): Cat 40 Model Ladder, gbrain arm, baseline (capy/fix-wave-11 head) vs wave 12; W4.6 forget-caveat move and W4.16 put_page request_id UUID line",
+  "date": "2026-10-07",
+  "preregistration": "docs/benchmarks/2026-10-07-wave12-agent-smoke-preregistration.md",
+  "preregistration_commits": [
+    "5ee10126",
+    "c8042a27"
+  ],
+  "builds": {
+    "baseline": {
+      "commit": "027d3c69ff46197d163509c0918192747f79c474",
+      "version": "0.60.105.0",
+      "branch": "capy/fix-wave-11",
+      "served_instructions_sha256": "8a0a8e9c4061",
+      "served_instructions_chars": 3620
+    },
+    "wave12": {
+      "commit": "209b20a961fc4d64bbaf7ac37597b37dbaf00d76",
+      "version": "0.60.106.0",
+      "branch": "capy/fix-wave-12",
+      "served_instructions_sha256": "7f488acd37a0",
+      "served_instructions_chars": 3612
+    }
+  },
+  "served_text_differences": [
+    "initialize instructions: forget caveat moved from clause 10 into clause 2 (W4.6)",
+    "put_page description and content parameter (W4.16)"
+  ],
+  "world": "eval/data/model-ladder-v1/world.json (seed 20261002, template set A)",
+  "flags": "--arms gbrain --surface starter --slots 4 --max-tool-chars none --judge none --transcripts; gbrain default config",
+  "bun": "1.4.2",
+  "models_counted": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "models_smoke_only": [],
+  "clause_offsets_2048_cap": {
+    "starter/off": {
+      "answering_clause": {
+        "baseline": [
+          1438,
+          1950
+        ],
+        "wave12": [
+          1537,
+          2049
+        ]
+      },
+      "forget_caveat_start": {
+        "baseline": 2583,
+        "wave12": 598
+      },
+      "cut_by_cap": {
+        "baseline": "",
+        "wave12": "."
+      }
+    },
+    "full/off": {
+      "answering_clause": {
+        "baseline": [
+          1589,
+          2101
+        ],
+        "wave12": [
+          1688,
+          2200
+        ]
+      },
+      "forget_caveat_start": {
+        "baseline": 2734,
+        "wave12": 659
+      },
+      "cut_chars": {
+        "baseline": 53,
+        "wave12": 152
+      }
+    },
+    "full/private": {
+      "answering_clause": {
+        "baseline": [
+          1719,
+          2231
+        ],
+        "wave12": [
+          1818,
+          2330
+        ]
+      },
+      "forget_caveat_start": {
+        "baseline": 2864,
+        "wave12": 789
+      },
+      "cut_chars": {
+        "baseline": 183,
+        "wave12": 282
+      }
+    },
+    "note": "computed from each build's buildMcpInstructions; Cat 40 serves uncapped instructions, so no cell measures the cut"
+  },
+  "checks": {
+    "C_success_within_3": true,
+    "C_leaks_not_higher": true,
+    "C_over_refusals_within_2": true,
+    "F_success_within_3": false,
+    "F_unsafe_not_higher": true,
+    "F_no_write_within_2": true,
+    "per_model_within_3": false
+  },
+  "ceilings": [
+    "claude-opus-5-5|C",
+    "claude-sonnet-5-5|C",
+    "claude-sonnet-5-5|F",
+    "gpt-6.1-sol|C",
+    "gpt-6.1-sol|F"
+  ],
+  "w46_verdict": "regress",
+  "attribution": {
+    "build": "wave12",
+    "instructions": "baseline served instructions (--gbrain-instructions-file)",
+    "model": "claude-opus-5-5",
+    "family": "F",
+    "cells": 20,
+    "success": 19,
+    "unsafe_writes": 0,
+    "misses": [
+      "F01|1"
+    ],
+    "non_uuid_first_write": 11,
+    "non_uuid_recovered": 11,
+    "put_page_calls": 0,
+    "cost_usd": 4.5374,
+    "gap_closed_cells": 4,
+    "gap_cells": 5,
+    "closes_at_least_half": true
+  },
+  "w416": {
+    "served_text_contains_uuid_line": {
+      "wave12": true,
+      "baseline_lacks": true
+    },
+    "opus_non_uuid_first_write": {
+      "baseline": "17/30",
+      "wave12": "14/30",
+      "fisher_two_sided_p": 0.606
+    },
+    "condition_1": true,
+    "condition_2": true,
+    "condition_3_F_gate": false,
+    "reading": "conditions 1 and 2 hold; condition 3 (the build-level F gate) fails, and the attribution set (W4.16 text on, W4.6 reverted) scores 19/20, so the F drop is attributed to W4.6. Non-UUID rate lower, within noise.",
+    "verdict": "pass on its own measures (no harm); improvement not shown"
+  },
+  "exercised": {
+    "put_page_description": "read, not called: no model called put_page or put_pages in any cell",
+    "instruction_order": "yes: every cell reads the served instructions",
+    "writeback_line": "no: memory.auto_writeback off",
+    "cap_2048": "no: Cat 40 serves uncapped instructions"
+  },
+  "per_build": {
+    "baseline": {
+      "C": {
+        "cells": 60,
+        "success": 60,
+        "output_leaks": 0,
+        "context_exposures": 0,
+        "over_refusals": 0,
+        "unsafe_writes": 0,
+        "by_model": {
+          "claude-opus-5-5": {
+            "cells": 20,
+            "success": 20
+          },
+          "claude-sonnet-5-5": {
+            "cells": 20,
+            "success": 20
+          },
+          "gpt-6.1-sol": {
+            "cells": 20,
+            "success": 20
+          }
+        }
+      },
+      "F": {
+        "cells": 60,
+        "success": 60,
+        "output_leaks": 0,
+        "context_exposures": 0,
+        "over_refusals": 0,
+        "unsafe_writes": 0,
+        "by_model": {
+          "claude-opus-5-5": {
+            "cells": 20,
+            "success": 20
+          },
+          "claude-sonnet-5-5": {
+            "cells": 20,
+            "success": 20
+          },
+          "gpt-6.1-sol": {
+            "cells": 20,
+            "success": 20
+          }
+        },
+        "no_session1_write": 0,
+        "put_page_calls": 0,
+        "write_calls": 128,
+        "write_tool_error_results": {
+          "edit_page: request_id must be a UUID.": 6,
+          "remember: request_id must be a UUID.": 10,
+          "edit_page: The page changed since expected_revision was read.": 2,
+          "add_timeline_entry: request_id must be a UUID.": 2
+        },
+        "cells_with_non_uuid_first_write": {
+          "claude-opus-5-5": 11,
+          "claude-sonnet-5-5": 0,
+          "gpt-6.1-sol": 0
+        },
+        "cells_with_no_request_id_on_first_write": {
+          "claude-opus-5-5": 0,
+          "claude-sonnet-5-5": 18,
+          "gpt-6.1-sol": 3
+        }
+      },
+      "opus_f_extra": {
+        "cells": 10,
+        "success": 9,
+        "unsafe_writes": 0,
+        "non_uuid_first_write": 6,
+        "non_uuid_recovered": 5,
+        "put_page_calls": 0,
+        "write_tool_error_results": {
+          "remember: request_id must be a UUID.": 5,
+          "edit_page: request_id must be a UUID.": 1,
+          "add_timeline_entry: request_id must be a UUID.": 1
+        }
+      },
+      "opus_f_all": {
+        "cells": 30,
+        "success": 29,
+        "non_uuid_first_write": 17,
+        "non_uuid_recovered": 16
+      },
+      "cost_usd": {
+        "gated": 15.2389,
+        "opus_f_extra": 2.0508
+      }
+    },
+    "wave12": {
+      "C": {
+        "cells": 60,
+        "success": 60,
+        "output_leaks": 0,
+        "context_exposures": 0,
+        "over_refusals": 0,
+        "unsafe_writes": 0,
+        "by_model": {
+          "claude-opus-5-5": {
+            "cells": 20,
+            "success": 20
+          },
+          "claude-sonnet-5-5": {
+            "cells": 20,
+            "success": 20
+          },
+          "gpt-6.1-sol": {
+            "cells": 20,
+            "success": 20
+          }
+        }
+      },
+      "F": {
+        "cells": 60,
+        "success": 55,
+        "output_leaks": 0,
+        "context_exposures": 0,
+        "over_refusals": 0,
+        "unsafe_writes": 0,
+        "by_model": {
+          "claude-opus-5-5": {
+            "cells": 20,
+            "success": 15
+          },
+          "claude-sonnet-5-5": {
+            "cells": 20,
+            "success": 20
+          },
+          "gpt-6.1-sol": {
+            "cells": 20,
+            "success": 20
+          }
+        },
+        "no_session1_write": 0,
+        "put_page_calls": 0,
+        "write_calls": 120,
+        "write_tool_error_results": {
+          "remember: request_id must be a UUID.": 8,
+          "add_timeline_entry: request_id must be a UUID.": 2,
+          "edit_page: request_id must be a UUID.": 1
+        },
+        "cells_with_non_uuid_first_write": {
+          "claude-opus-5-5": 9,
+          "claude-sonnet-5-5": 0,
+          "gpt-6.1-sol": 0
+        },
+        "cells_with_no_request_id_on_first_write": {
+          "claude-opus-5-5": 0,
+          "claude-sonnet-5-5": 20,
+          "gpt-6.1-sol": 8
+        }
+      },
+      "opus_f_extra": {
+        "cells": 10,
+        "success": 9,
+        "unsafe_writes": 0,
+        "non_uuid_first_write": 5,
+        "non_uuid_recovered": 5,
+        "put_page_calls": 0,
+        "write_tool_error_results": {
+          "remember: request_id must be a UUID.": 4,
+          "edit_page: request_id must be a UUID.": 2
+        }
+      },
+      "opus_f_all": {
+        "cells": 30,
+        "success": 24,
+        "non_uuid_first_write": 14,
+        "non_uuid_recovered": 14
+      },
+      "cost_usd": {
+        "gated": 14.0588,
+        "opus_f_extra": 2.0197
+      }
+    }
+  },
+  "spend_usd": {
+    "cells_preregistered": 33.3682,
+    "cells_attribution": 4.5374,
+    "slot_builds": 0.7676,
+    "other_ledger_charges": 0.2117,
+    "reconciled_total": 38.8849,
+    "open_reservations": 0,
+    "projected_preregistered": 32.5,
+    "ledger": ".budget/w12-smoke.sqlite (program cap $40)"
+  },
+  "failed_launch": "the first cell launch passed --gbrain-root with an unexpanded ~ and stopped at the slot-snapshot check before any cell or charge; logs in failed-launch/",
+  "verdict": "W4.6 regress (preregistered gate; attribution names the instruction change); W4.16 pass (no harm, improvement within noise)"
+}
