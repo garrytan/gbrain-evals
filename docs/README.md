@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.29, with gbrain master `739e5cc` (v0.60.46.0) as the product under test. Results measured at
+gbrain-evals v0.10.36, with gbrain master `739e5cc` (v0.60.46.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -60,6 +60,7 @@ gap does not isolate the effect of a graph alone.
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
 | Where does a small decision model (TypeSafe Jev) help gbrain triage, rerank, prune, abstain or spot contradicting facts, and where does it hurt? | [September 30 System One v1 slots](benchmarks/2026-09-30-system-one-jev.md) |
 | Did gbrain's takes-bootstrap classifier (facts, takes, bets and hunches from a person's pages) pass its graduation bar for running on autopilot? | [October 4 graduation verdict, mirrored from gbrain #6013](benchmarks/2026-10-04-takes-bootstrap-verdict.md) |
+| When gbrain asks a chat model to repair a malformed facts or takes table (Tier 3), which models write it correctly? | [October 6 Tier 3 fence repair, two rounds](benchmarks/2026-10-06-fence-repair-tier3.md) ([preregistration](benchmarks/2026-10-06-fence-repair-tier3-preregistration.md), [amendment 1](benchmarks/2026-10-06-fence-repair-tier3-amendment-1.md)): after the round 1 fixes, `gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1` write no wrong cell on a held-out set and qualify; `claude-opus-4-7` and `claude-sonnet-5-5` do not |
 | What did gbrain fix wave 9 cost on fact inserts, and can takes-quality receipts from before and after it be compared? | [October 5 fix wave 9 mirror, from gbrain #6111](benchmarks/2026-10-05-fix-wave-9-mirror.md): pinning `search_path` makes bulk fact inserts about 10-13% slower with fingerprints unchanged; takes-quality protocol 1 and 2 receipts are dissimilar inputs |
 | Can a skill improve on held-out tasks, and can the judge detect cheating? | [Skill optimization](benchmarks/2026-06-03-skillopt.md) |
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026), [October 2 blind rerun of the advice test](benchmarks/2026-10-02-cat14-rerun.md) |
@@ -158,6 +159,14 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 How this index changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-06: Tier 3 fence repair row covers round 2
+
+gbrain-evals v0.10.36. The Tier 3 fence repair row now answers which models write the repair correctly, with round 2 and its held-out set: `gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1` qualify, `claude-opus-4-7` and `claude-sonnet-5-5` do not. It had reported round 1 only (the default `claude-opus-4-7` at 8 of 198 wrong cells) and links amendment 1.
+
+### 2026-10-06: Tier 3 fence repair row
+
+gbrain-evals v0.10.36. The memory table gained a row for the October 6 Tier 3 fence-repair measurement (gbrain #6188, taste decision T4, branch `capy/6188-t4-eval`): every model passes the gates on 96.5-100% of repairs, the default `claude-opus-4-7` fails the preregistered 1% false-accept bar with 8 of 198, and `gpt-6.1-sol` and `claude-fable-5-1` meet it. The opening line names v0.10.36 (it had named v0.10.29 since the fix wave 9 row).
 
 ### 2026-10-05: Fix wave 9 mirror row
 

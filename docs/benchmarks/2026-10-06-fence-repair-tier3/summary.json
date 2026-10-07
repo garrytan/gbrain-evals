@@ -1,0 +1,342 @@
+{
+  "scorer_version": 1,
+  "files": [
+    "results/opus-4-7-default-run1.jsonl",
+    "results/opus-4-7-default-run2.jsonl",
+    "results/opus-4-7-default-run3.jsonl",
+    "results/opus-5-5-run1.jsonl",
+    "results/opus-5-5-run2.jsonl",
+    "results/opus-5-5-run3.jsonl",
+    "results/sonnet-5-5-run1.jsonl",
+    "results/sonnet-5-5-run2.jsonl",
+    "results/sonnet-5-5-run3.jsonl",
+    "results/gpt-6.1-sol-run1.jsonl",
+    "results/gpt-6.1-sol-run2.jsonl",
+    "results/gpt-6.1-sol-run3.jsonl",
+    "results/fable-5-1-run1.jsonl",
+    "results/fable-5-1-run2.jsonl",
+    "results/fable-5-1-run3.jsonl"
+  ],
+  "models": [
+    {
+      "model": "anthropic:claude-opus-4-7",
+      "runs": 3,
+      "repairable": {
+        "n": 198,
+        "repaired": 195,
+        "gate_pass": 0.9848484848484849,
+        "gate_pass_ci": [
+          0.956407667080573,
+          0.9948339711049505
+        ],
+        "false_accepts": 8,
+        "false_accept": 0.04040404040404041,
+        "false_accept_ci": [
+          0.02061316607189584,
+          0.0776890310647433
+        ],
+        "exact_matches": 117,
+        "per_run_gate_pass": [
+          0.9848484848484849,
+          0.9848484848484849,
+          0.9848484848484849
+        ],
+        "reask_used": 6,
+        "reask_rescued": 3,
+        "held_by": {
+          "gate_f": 3
+        }
+      },
+      "adversarial": {
+        "n": 27,
+        "held": 23,
+        "held_rate": 0.8518518518518519,
+        "ambiguous_n": 18,
+        "ambiguous_held": 14,
+        "unrecoverable_n": 9,
+        "unrecoverable_held": 9,
+        "accepted_ids": [
+          "f-adv-01",
+          "f-adv-02"
+        ]
+      },
+      "gate_limited": {
+        "n": 9,
+        "held": 7,
+        "accepted_ids": [
+          "f-gl-02"
+        ]
+      },
+      "cost": {
+        "usd_total": 1.9296999999999995,
+        "usd_repairable": 1.4619,
+        "usd_per_repair": 0.007496923076923077,
+        "usd_per_item": 0.008246581196581195,
+        "usd_unregistered_per_repair": 0.007449871794871794,
+        "input_tokens": 207432,
+        "output_tokens": 35183,
+        "calls": 275
+      },
+      "latency_ms": {
+        "p50": 1943,
+        "p95": 5027.75
+      },
+      "meets_rule": false
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "runs": 3,
+      "repairable": {
+        "n": 198,
+        "repaired": 195,
+        "gate_pass": 0.9848484848484849,
+        "gate_pass_ci": [
+          0.956407667080573,
+          0.9948339711049505
+        ],
+        "false_accepts": 3,
+        "false_accept": 0.015151515151515152,
+        "false_accept_ci": [
+          0.005166028895049465,
+          0.043592332919426977
+        ],
+        "exact_matches": 165,
+        "per_run_gate_pass": [
+          0.9848484848484849,
+          0.9848484848484849,
+          0.9848484848484849
+        ],
+        "reask_used": 3,
+        "reask_rescued": 0,
+        "held_by": {
+          "llm_truncated": 3
+        }
+      },
+      "adversarial": {
+        "n": 27,
+        "held": 27,
+        "held_rate": 1,
+        "ambiguous_n": 18,
+        "ambiguous_held": 18,
+        "unrecoverable_n": 9,
+        "unrecoverable_held": 9,
+        "accepted_ids": []
+      },
+      "gate_limited": {
+        "n": 9,
+        "held": 7,
+        "accepted_ids": [
+          "f-gl-02"
+        ]
+      },
+      "cost": {
+        "usd_total": 1.9934000000000003,
+        "usd_repairable": 1.3816999999999995,
+        "usd_per_repair": 0.007085641025641023,
+        "usd_per_item": 0.00851880341880342,
+        "usd_unregistered_per_repair": 0.007037620512820508,
+        "input_tokens": 192185,
+        "output_tokens": 60608,
+        "calls": 260
+      },
+      "latency_ms": {
+        "p50": 3825,
+        "p95": 10939.299999999996
+      },
+      "meets_rule": false
+    },
+    {
+      "model": "anthropic:claude-sonnet-5-5",
+      "runs": 3,
+      "repairable": {
+        "n": 198,
+        "repaired": 195,
+        "gate_pass": 0.9848484848484849,
+        "gate_pass_ci": [
+          0.956407667080573,
+          0.9948339711049505
+        ],
+        "false_accepts": 10,
+        "false_accept": 0.050505050505050504,
+        "false_accept_ci": [
+          0.027661556388479072,
+          0.09045817487702514
+        ],
+        "exact_matches": 77,
+        "per_run_gate_pass": [
+          0.9848484848484849,
+          0.9848484848484849,
+          0.9848484848484849
+        ],
+        "reask_used": 3,
+        "reask_rescued": 0,
+        "held_by": {
+          "gate_f": 3
+        }
+      },
+      "adversarial": {
+        "n": 27,
+        "held": 24,
+        "held_rate": 0.8888888888888888,
+        "ambiguous_n": 18,
+        "ambiguous_held": 15,
+        "unrecoverable_n": 9,
+        "unrecoverable_held": 9,
+        "accepted_ids": [
+          "f-adv-03"
+        ]
+      },
+      "gate_limited": {
+        "n": 9,
+        "held": 8,
+        "accepted_ids": [
+          "f-gl-02"
+        ]
+      },
+      "cost": {
+        "usd_total": 0.7687000000000004,
+        "usd_repairable": 0.5692999999999995,
+        "usd_per_repair": 0.002919487179487177,
+        "usd_per_item": 0.0032850427350427365,
+        "usd_unregistered_per_repair": 0.0028754461538461526,
+        "input_tokens": 206752,
+        "output_tokens": 34250,
+        "calls": 276
+      },
+      "latency_ms": {
+        "p50": 1696,
+        "p95": 3724.45
+      },
+      "meets_rule": false
+    },
+    {
+      "model": "openai:gpt-6.1-sol",
+      "runs": 3,
+      "repairable": {
+        "n": 198,
+        "repaired": 198,
+        "gate_pass": 1,
+        "gate_pass_ci": [
+          0.9809679393788213,
+          1
+        ],
+        "false_accepts": 1,
+        "false_accept": 0.005050505050505051,
+        "false_accept_ci": [
+          0.0008920951791984311,
+          0.02804873250641294
+        ],
+        "exact_matches": 115,
+        "per_run_gate_pass": [
+          1,
+          1,
+          1
+        ],
+        "reask_used": 0,
+        "reask_rescued": 0,
+        "held_by": {}
+      },
+      "adversarial": {
+        "n": 27,
+        "held": 16,
+        "held_rate": 0.5925925925925926,
+        "ambiguous_n": 18,
+        "ambiguous_held": 7,
+        "unrecoverable_n": 9,
+        "unrecoverable_held": 9,
+        "accepted_ids": [
+          "f-adv-01",
+          "f-adv-02",
+          "f-adv-03",
+          "f-adv-04",
+          "f-adv-05"
+        ]
+      },
+      "gate_limited": {
+        "n": 9,
+        "held": 6,
+        "accepted_ids": [
+          "f-gl-02"
+        ]
+      },
+      "cost": {
+        "usd_total": 0.6830000000000003,
+        "usd_repairable": 0.4613000000000004,
+        "usd_per_repair": 0.0023297979797979817,
+        "usd_per_item": 0.00291880341880342,
+        "usd_unregistered_per_repair": 0.011400101010101011,
+        "input_tokens": 136448,
+        "output_tokens": 39769,
+        "calls": 260
+      },
+      "latency_ms": {
+        "p50": 3304,
+        "p95": 11997.499999999998
+      },
+      "meets_rule": true
+    },
+    {
+      "model": "anthropic:claude-fable-5-1",
+      "runs": 3,
+      "repairable": {
+        "n": 198,
+        "repaired": 191,
+        "gate_pass": 0.9646464646464646,
+        "gate_pass_ci": [
+          0.928835437321672,
+          0.9827711326061216
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_ci": [
+          0,
+          0.019032060621178834
+        ],
+        "exact_matches": 143,
+        "per_run_gate_pass": [
+          0.9696969696969697,
+          0.9696969696969697,
+          0.9545454545454546
+        ],
+        "reask_used": 0,
+        "reask_rescued": 0,
+        "held_by": {
+          "llm_empty": 3,
+          "llm_truncated": 4
+        }
+      },
+      "adversarial": {
+        "n": 27,
+        "held": 27,
+        "held_rate": 1,
+        "ambiguous_n": 18,
+        "ambiguous_held": 18,
+        "unrecoverable_n": 9,
+        "unrecoverable_held": 9,
+        "accepted_ids": []
+      },
+      "gate_limited": {
+        "n": 9,
+        "held": 8,
+        "accepted_ids": [
+          "f-gl-02"
+        ]
+      },
+      "cost": {
+        "usd_total": 4.370799999999999,
+        "usd_repairable": 3.323600000000001,
+        "usd_per_repair": 0.017401047120418855,
+        "usd_per_item": 0.018678632478632475,
+        "usd_unregistered_per_repair": 0.017351204188481687,
+        "input_tokens": 174710,
+        "output_tokens": 52236,
+        "calls": 241
+      },
+      "latency_ms": {
+        "p50": 5727.5,
+        "p95": 11637.85
+      },
+      "meets_rule": true
+    }
+  ]
+}
