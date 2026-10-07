@@ -1,0 +1,104 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50,
+    "templates": "A",
+    "templates_file_sha256": null,
+    "strata": {
+      "memory-only": 40,
+      "page-authoring": 10,
+      "hidden-tool": 0
+    }
+  },
+  "evals_commit": "dade12c6a8cb0c6d4fce5734558c207622aa587c",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+    "label": "gbrain",
+    "commit": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+    "version": "0.60.103.0",
+    "tree": "9fca067e0253a8e6dc5f814118ebd896bfc18d4c",
+    "verified": {
+      "copy_tree": "9fca067e0253a8e6dc5f814118ebd896bfc18d4c",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.103.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "advertised_surface": null,
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": null,
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "mode": "build-slots",
+  "order": "task",
+  "complete": false,
+  "cells_planned": 0,
+  "slot_builds": [],
+  "models": [],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F",
+    "H"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--build-slots",
+    "--gbrain",
+    "/workspace/gbrain@b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+    "--slots",
+    "4",
+    "--slot-build-allowance-usd",
+    "1",
+    "--budget-usd",
+    "5",
+    "--budget-ledger",
+    ".budget/w11-d12-smoke.sqlite",
+    "--out",
+    "eval/reports/cat40/w11-d12/slots-wave11"
+  ],
+  "budget_run_id": "cat40-slot-build-2026-10-07T15-11-39-589Z-a58dd48e",
+  "resumed": false,
+  "proxy_unattributed": {},
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "budget ledger cat40-slot-build-2026-10-07T15-11-39-589Z-a58dd48e: 1 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/w11-d12-smoke.sqlite",
+    "program_cap_usd": 100,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3871,
+      "max": 3871.8
+    }
+  },
+  "finished_at": "2026-10-07T15:11:43.946Z"
+}

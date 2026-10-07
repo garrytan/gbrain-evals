@@ -1,0 +1,30 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "5b5891069413b28b2fe3a50675116d67d5a1e145",
+  "slot_commit": "5b5891069413b28b2fe3a50675116d67d5a1e145",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "claude-fable-5-1"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "master",
+  "flags": {
+    "--models": "claude-fable-5-1",
+    "--families": "F",
+    "--repeat": "1",
+    "--arms": "gbrain",
+    "--gbrain": "/workspace/gbrain@5b5891069413b28b2fe3a50675116d67d5a1e145",
+    "--gbrain-root": "/home/user/.capy/work/cat40/gbrain-master",
+    "--gbrain-label": "master",
+    "--slots": "4",
+    "--surface": "starter",
+    "--max-tool-chars": "none",
+    "--judge": "none",
+    "--transcripts": true,
+    "--budget-ledger": ".budget/w11-d12-smoke.sqlite",
+    "--out": "eval/reports/cat40/w11-d12/master-fable-smoke"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-07T16-13-37-963Z-bc39d1d4"
+}

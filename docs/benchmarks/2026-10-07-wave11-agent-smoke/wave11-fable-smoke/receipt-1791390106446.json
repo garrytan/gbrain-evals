@@ -1,0 +1,162 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50,
+    "templates": "A",
+    "templates_file_sha256": null,
+    "strata": {
+      "memory-only": 0,
+      "page-authoring": 10,
+      "hidden-tool": 0
+    }
+  },
+  "evals_commit": "98b3a9e8d0ebef04e3da3851560c7aef6a526913",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+    "label": "wave11",
+    "commit": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+    "version": "0.60.103.0",
+    "tree": "9fca067e0253a8e6dc5f814118ebd896bfc18d4c",
+    "verified": {
+      "copy_tree": "9fca067e0253a8e6dc5f814118ebd896bfc18d4c",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.103.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "advertised_surface": null,
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": "8a0a8e9c40612d1f736b6d823f95bf7b9fc93c355046a13c6447b75e69dfb5a9",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "mode": "cells",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 10,
+  "slot_builds": [],
+  "models": [
+    "claude-fable-5-1"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--models",
+    "claude-fable-5-1",
+    "--families",
+    "F",
+    "--repeat",
+    "1",
+    "--budget-usd",
+    "10",
+    "--arms",
+    "gbrain",
+    "--gbrain",
+    "/workspace/gbrain@b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+    "--gbrain-root",
+    "/home/user/.capy/work/cat40/gbrain-wave11",
+    "--gbrain-label",
+    "wave11",
+    "--slots",
+    "4",
+    "--surface",
+    "starter",
+    "--max-tool-chars",
+    "none",
+    "--judge",
+    "none",
+    "--transcripts",
+    "--budget-ledger",
+    ".budget/w11-d12-smoke.sqlite",
+    "--out",
+    "eval/reports/cat40/w11-d12/wave11-fable-smoke"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-07T16-14-28-158Z-ab4dd644",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot1": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot2": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot3": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 7.432048,
+    "input_tokens": 2492860,
+    "output_tokens": 39098,
+    "basis": "budget ledger cat40-model-ladder-2026-10-07T16-14-28-158Z-ab4dd644: 196 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/w11-d12-smoke.sqlite",
+    "program_cap_usd": 100,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 2,
+      "max": 2081.5
+    }
+  },
+  "finished_at": "2026-10-07T16:21:46.445Z"
+}

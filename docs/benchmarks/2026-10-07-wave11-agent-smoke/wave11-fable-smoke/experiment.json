@@ -1,0 +1,30 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+  "slot_commit": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "claude-fable-5-1"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "wave11",
+  "flags": {
+    "--models": "claude-fable-5-1",
+    "--families": "F",
+    "--repeat": "1",
+    "--arms": "gbrain",
+    "--gbrain": "/workspace/gbrain@b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+    "--gbrain-root": "/home/user/.capy/work/cat40/gbrain-wave11",
+    "--gbrain-label": "wave11",
+    "--slots": "4",
+    "--surface": "starter",
+    "--max-tool-chars": "none",
+    "--judge": "none",
+    "--transcripts": true,
+    "--budget-ledger": ".budget/w11-d12-smoke.sqlite",
+    "--out": "eval/reports/cat40/w11-d12/wave11-fable-smoke"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-07T16-14-28-158Z-ab4dd644"
+}
