@@ -84,6 +84,10 @@ jobs:
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
 
+      # The file-agent baseline's grep runs ripgrep (eval/runner/systems/file-agent.ts).
+      - name: Install ripgrep
+        run: sudo apt-get update -q && sudo apt-get install -y ripgrep
+
       # test/eval/ plus the unit tests colocated under eval/.
       - name: Unit + integration tests (shard ${{ matrix.shard }}/4)
         run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/

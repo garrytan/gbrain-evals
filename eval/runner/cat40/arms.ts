@@ -44,7 +44,7 @@ export class FileStore {
   }
 }
 
-function cleanPath(p: unknown): string {
+export function cleanPath(p: unknown): string {
   const s = String(p ?? '').trim().replace(/^\/?memories\/?/, '').replace(/^\.?\/+/, '').replace(/\/+$/, '');
   if (s.split('/').includes('..')) throw new Error('path traversal is not allowed');
   return s;
@@ -62,12 +62,46 @@ function listDir(store: FileStore, dir: string): string[] {
   return [...out].sort();
 }
 
+/** What the agent asked an uncapped grep for. `max_results` is null unless the agent set it. */
+export interface GrepRequest { pattern: string; path: string; ignore_case: boolean; max_results: number | null; files_only: boolean }
+
+/** A grep that returns every match the request asks for, whole lines, in a cancellable process. */
+export type UncappedGrep = (req: GrepRequest) => Promise<string>;
+
+/**
+ * Options beyond Cat 40. With none, `FsArm` is exactly the Cat 40 arm: grep
+ * capped at 200 matches of 300 characters, and `write_file` offered.
+ */
+export interface FsArmOptions {
+  /** Replaces the capped grep with an uncapped one: agent-chosen `max_results` with no default, `files_only`, whole lines. */
+  grep?: UncappedGrep;
+  /** False removes `write_file`, so the arm only reads. */
+  write?: boolean;
+}
+
+export const UNCAPPED_GREP_TOOL: ToolSpec = {
+  name: 'grep',
+  description: 'Search file contents with a regular expression (ripgrep syntax), like ripgrep. Returns every matching line, whole, as path:line:text, in path order. There is no default limit on matches; set max_results to stop after that many. Set files_only to list only the paths of matching files.',
+  input_schema: { type: 'object', properties: {
+    pattern: { type: 'string' },
+    path: { type: 'string', description: 'Directory or file to search; default the root.' },
+    ignore_case: { type: 'boolean', description: 'Default true.' },
+    max_results: { type: 'number', description: 'Optional. Stop after this many matching lines (or files, with files_only). Omit it to get every match.' },
+    files_only: { type: 'boolean', description: 'Return only the paths of files that match, one per line. Default false.' },
+  }, required: ['pattern'] },
+};
+
 export class FsArm implements Arm {
-  constructor(readonly name: 'fs' | 'fs-acl', readonly store: FileStore) {}
+  constructor(readonly name: 'fs' | 'fs-acl' | 'file-agent', readonly store: FileStore, readonly options: FsArmOptions = {}) {}
   systemHint() {
+    if (this.options.write === false) return 'The knowledge base is a directory of Markdown files with YAML frontmatter. Use list_dir, grep and read_file to find information. You cannot change the files.';
     return 'The knowledge base is a directory of Markdown files with YAML frontmatter. Use list_dir, grep and read_file to find information. Use write_file to save new notes.';
   }
   tools(): ToolSpec[] {
+    const all = this.cat40Tools();
+    return all.flatMap(t => t.name === 'grep' && this.options.grep ? [UNCAPPED_GREP_TOOL] : t.name === 'write_file' && this.options.write === false ? [] : [t]);
+  }
+  private cat40Tools(): ToolSpec[] {
     return [
       { name: 'list_dir', description: 'List the entries of one directory (not recursive). Directories end with /.', input_schema: { type: 'object', properties: { path: { type: 'string', description: 'Directory path relative to the knowledge base root; "." for the root.' } } } },
       { name: 'grep', description: 'Search file contents with a regular expression, like ripgrep. Returns matching lines as path:line: text.', input_schema: { type: 'object', properties: { pattern: { type: 'string' }, path: { type: 'string', description: 'Directory or file to search; default the root.' }, ignore_case: { type: 'boolean', description: 'Default true.' }, max_results: { type: 'number', description: 'Default 50.' } }, required: ['pattern'] } },
@@ -75,8 +109,14 @@ export class FsArm implements Arm {
       { name: 'write_file', description: 'Create or replace a file.', input_schema: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ['path', 'content'] } },
     ];
   }
-  writeTools() { return ['write_file']; }
+  writeTools() { return this.options.write === false ? [] : ['write_file']; }
   async call(name: string, args: Record<string, unknown>): Promise<string> {
+    if (name === 'grep' && this.options.grep) {
+      const max = args.max_results === undefined || args.max_results === null ? null : Math.floor(Number(args.max_results));
+      if (max !== null && !(max > 0)) return 'max_results must be a positive number; omit it to get every match.';
+      return this.options.grep({ pattern: String(args.pattern ?? ''), path: cleanPath(args.path === '.' ? '' : args.path), ignore_case: args.ignore_case !== false, max_results: max, files_only: args.files_only === true });
+    }
+    if (name === 'write_file' && this.options.write === false) throw new Error('unknown tool write_file');
     if (name === 'list_dir') {
       const dir = cleanPath(args.path === '.' ? '' : args.path);
       const entries = listDir(this.store, dir);
