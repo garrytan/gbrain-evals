@@ -386,6 +386,13 @@ Aggregates:
 
 - C-gate selection applies Holm to one-sided p-values at a family-wise α of 0.025 (the stricter reading of "family-wise α = 0.05" together with "each test one-sided at α = 0.025").
 
+### Custodian deviations during the C-gates (recorded 2026-10-07)
+
+1. The C-gate baseline arms ran on the units-off comparator `2d95d01b0`, as this record's Builds section states. Runbook
+   step 3 said `$BASE` (master); the record governs.
+2. W1 and W2 runs read `--dir $K/w{1,2}/pages`. The runner expects a manifest keyed `files`, while the frozen
+   manifests are keyed `pages`. The bytes read are the hashed bytes.
+
 ### G6 size raise from the power simulation (recorded 2026-10-07, before any cell)
 
 The development pilot covered both corpora, three models (Fable 5.1 cells excluded under amendment 4), two ingests per
@@ -409,8 +416,8 @@ pilot $466, minting $23.09), inside the approved $2,100.
 ### Builds, runners and models
 
 - **Candidate (frozen Q2 build):** gbrain `4ec7fbbe4221bd353b88cf46292b44153c542bb2` on branch `capy/q2-parser-gaps`
-  (master `5b589106`, v0.60.102.0, merged in). Every typing unit is off in it (`ENABLED_TYPING_UNITS` empty).
-- **Baseline for G1–G5 and the guardrails:** gbrain master `5b5891066` (the master merged into the candidate).
+  (master `5b5891069413b28b2fe3a50675116d67d5a1e145`, v0.60.102.0, merged in). Every typing unit is off in it (`ENABLED_TYPING_UNITS` empty).
+- **Baseline for G1–G5 and the guardrails:** gbrain master `5b5891069413b28b2fe3a50675116d67d5a1e145` (the master merged into the candidate; an earlier version of this line abbreviated it wrongly as `5b5891066`).
 - **C-gate comparator:** the units-off arm `2d95d01b0cf18045b03431b15e3389072d150a74`, the candidate with no typing
   unit. It types every development page exactly as master does: the world-v1 identity test, and digests computed on
   this build. Each unit arm is that build plus one unit, so a unit comparison measures only the unit. This clarifies

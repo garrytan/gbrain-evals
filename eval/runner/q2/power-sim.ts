@@ -16,7 +16,7 @@
  * sparse-error scenario (false answers on unanswerable items set to `--sparse-rate`), the coverage of the
  * false-answer difference interval. Sizes may rise, never fall, before the freeze.
  *
- *   bun eval/runner/q2/power-sim.ts --receipts <a.json,b.json,...> --pairs 100 --ingests 3 --sims 200 [--effects 0,3,5] [--seed 20261006]
+ *   bun eval/runner/q2/power-sim.ts --receipts <a.json,b.json,...> --pairs 100|amara=106,career=200 --ingests 3 --sims 200 [--effects 0,3,5] [--seed 20261006]
  *     [--exclude-models claude-fable-5-1] --output <dir>
  * `--exclude-models` drops those models' rows before fitting (amendment 4: the pilot's Fable 5.1 cells stay in its
  * receipts but never size G6).
@@ -82,12 +82,15 @@ function normal(rnd: () => number): number {
 }
 
 /** One simulated experiment; arm B's accuracy logit shifted by `shift` (A untouched); B's false-answer rate optionally fixed. */
-export function simulate(fit: PilotModel, o: { pairs: number; ingests: number; shift: number; seed: number; nullArms?: boolean; sparseRate?: number }): AnswerRow[] {
+export type PairCount = number | Record<string, number>;
+const pairsFor = (p: PairCount, corpus: string) => typeof p === 'number' ? p : (p[corpus] ?? 0);
+
+export function simulate(fit: PilotModel, o: { pairs: PairCount; ingests: number; shift: number; seed: number; nullArms?: boolean; sparseRate?: number }): AnswerRow[] {
   const rnd = seededRandom(o.seed);
   const rows: AnswerRow[] = [];
   for (const c of fit.corpora) {
     const pool = fit.pairs.get(c)!;
-    const drawn = Array.from({ length: o.pairs }, (_, k) => ({ src: pool[Math.floor(rnd() * pool.length)], key: `${c}-sim-p${k}` }));
+    const drawn = Array.from({ length: pairsFor(o.pairs, c) }, (_, k) => ({ src: pool[Math.floor(rnd() * pool.length)], key: `${c}-sim-p${k}` }));
     for (const m of fit.models) for (const arm of ['A', 'B'] as const) for (let i = 0; i < o.ingests; i++) {
       const u = normal(rnd) * (fit.sigma.get(`${c}|${m}|${arm}`) ?? 0);
       for (const d of drawn) for (const q of d.src.questions) {
@@ -117,7 +120,7 @@ export function shiftFor(fit: PilotModel, points: number): number {
   return (lo + hi) / 2;
 }
 
-export function powerTable(fit: PilotModel, o: { pairs: number; ingests: number; sims: number; effects: number[]; seed: number; bootDraws: number; sparseRate: number }) {
+export function powerTable(fit: PilotModel, o: { pairs: PairCount; ingests: number; sims: number; effects: number[]; seed: number; bootDraws: number; sparseRate: number }) {
   const out: Record<string, unknown> = {};
   for (const e of o.effects) {
     const shift = shiftFor(fit, e);
@@ -151,7 +154,8 @@ async function main(argv: string[]): Promise<void> {
   const excluded = (flagValue(argv, '--exclude-models') ?? '').split(',').filter(Boolean);
   const rows = excludeModels(receipts.flatMap(rowsFromReceipt), excluded);
   const fit = fitPilot(rows);
-  const o = { pairs: Number(flagValue(argv, '--pairs') ?? 100), ingests: Number(flagValue(argv, '--ingests') ?? 3), sims: Number(flagValue(argv, '--sims') ?? 200),
+  const pairsFlag = flagValue(argv, '--pairs') ?? '100';
+  const o = { pairs: /=/.test(pairsFlag) ? Object.fromEntries(pairsFlag.split(',').map(kv => { const [k, v] = kv.split('='); return [k.trim(), Number(v)]; })) as Record<string, number> : Number(pairsFlag), ingests: Number(flagValue(argv, '--ingests') ?? 3), sims: Number(flagValue(argv, '--sims') ?? 200),
     effects: (flagValue(argv, '--effects') ?? '0,3,5').split(',').map(Number), seed: Number(flagValue(argv, '--seed') ?? 20261006), bootDraws: Number(flagValue(argv, '--boot-draws') ?? 1000), sparseRate: Number(flagValue(argv, '--sparse-rate') ?? 0.02) };
   const table = powerTable(fit, o);
   const report = { inputs: receipts, excluded_models: excluded, pilot: { answers: rows.length, corpora: fit.corpora, models: fit.models, pairs: Object.fromEntries(fit.corpora.map(c => [c, fit.pairs.get(c)!.length])), sigma_ingest_logit: Object.fromEntries(fit.sigma) }, matrix: { pairs_per_corpus: o.pairs, ingests: o.ingests, models: fit.models.length, arms: 2 }, settings: o, results: table,
