@@ -6,7 +6,8 @@
  *   check    [args]                     regenerate every table and aggregate from committed rows ($0; eval/runner/scoreboard.ts)
  *   fixture  [--stub generator,judge-repeat] [--out <dir>] [--keep]
  *                                       the fake system end to end ($0): shim, metering proxy, packer, reader stub,
- *                                       judge stub, judge repeats, cost and speed, generator
+ *                                       judge stub, judge repeats, cost and speed, then the generator's render and
+ *                                       check on the synthetic receipt (test/eval/fixtures/scoreboard/synthetic.ts)
  *   explain  <row> <column>              the chain behind one published number (eval/runner/scoreboard.ts)
  *   doctor   [--campaign <m> [--state <dir>]] [--for fixture|local|run|sealed] [--benchmark <b>]...
  *                                       preflight before any lease: Bun, Python, Docker, architecture, disk, ports,
@@ -38,7 +39,7 @@
  * (SCOREBOARD_JUDGE_REPEAT). A missing delegate is an operator message, never
  * a silent pass.
  */
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statfsSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statfsSync, writeFileSync } from 'node:fs';
 import { hostname, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
@@ -48,6 +49,9 @@ import { Campaign, DEFAULT_ROUTE_CLASSES, isQ1, loadCampaign, planWaves, resolve
 import { costSpeed, loadCell, renderCostSpeed, renderProgress } from './cost-speed.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import { DATASET_ROOT, filesFor, sha256 } from './memory-qa/corpus.ts';
+import { answerId, type AnswerRecord, type JudgmentRecord } from './scoreboard.ts';
+import type { Outcome } from './memory-qa/outcomes.ts';
+import { writeSyntheticReceipt } from '../../test/eval/fixtures/scoreboard/synthetic.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 export const SUBCOMMANDS = ['check', 'fixture', 'explain', 'doctor', 'plan', 'smoke', 'run', 'status', 'judge', 'render', 'dispute'] as const;
@@ -67,12 +71,18 @@ const has = (a: Args, n: string) => a.includes(n);
 // ─── Delegation to other tools ──────────────────────────────────────
 
 /** Run `bun <script> ...args` with inherited output and return its exit code; a missing script is an operator message. */
-export async function delegate(script: string, args: string[], what: string, stubHint?: string[]): Promise<number> {
+export async function delegate(script: string, args: string[], what: string, stubHint?: string[], logTo?: string): Promise<number> {
   const path = resolve(REPO_ROOT, script);
   if (!existsSync(path)) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `${what} needs ${script}, which is not in this checkout`,
     why: 'the front door wraps the scoreboard tools and never passes silently when one is missing',
     fix: { next: stubHint ? 'run' : 'report', argv: stubHint, user_message: stubHint ? undefined : `${script} has not landed on this branch; merge the lane that adds it, or point the override variable at it`,
       verify: ['ls', script] } });
+  if (logTo) {
+    const p = Bun.spawn([process.execPath, path, ...args], { cwd: REPO_ROOT, stdout: 'pipe', stderr: 'pipe', env: process.env });
+    const [o, e, code] = await Promise.all([new Response(p.stdout).text(), new Response(p.stderr).text(), p.exited]);
+    appendFileSync(logTo, `$ bun ${script} ${args.join(' ')}\n${o}${e}exit ${code}\n`);
+    return code;
+  }
   const p = Bun.spawn([process.execPath, path, ...args], { cwd: REPO_ROOT, stdout: 'inherit', stderr: 'inherit', env: process.env });
   return await p.exited;
 }
@@ -333,13 +343,6 @@ export async function runCells(a: Args, opts: { smoke?: boolean; runner?: Runner
 
 export const FIXTURE_STUBS = ['generator', 'judge-repeat'] as const;
 
-/** Shared answer record (mirrors eval/runner/memory-qa/records.ts; the fixture's judge stub writes it from the rows). */
-export interface AnswerRecord { answer_id: string; cell_id: string; realization_id: string | null; question_id: string; conversation: string; system: string; arm: string; reader: string; replicate: number;
-  context_sha256: string | null; text: string; usage: { input: number; output: number; cache_read: number; cache_write: number }; provider_input_tokens: number | null; latency_ms: number | null; outcome: string }
-export interface JudgmentRecord { answer_id: string; instrument_id: string; instrument_sha256: string; judge: string; judge_replicate: number; temperature: number; score: number; parse_ok: boolean; raw_sha256: string | null; outcome: string }
-
-export const answerId = (cell: string, question: string, reader: string, replicate: number) => createHash('sha256').update(`${cell}|${question}|${reader}|${replicate}`).digest('hex');
-
 async function startPython(args: string[], env: Record<string, string>, health: string): Promise<ReturnType<typeof Bun.spawn>> {
   const proc = Bun.spawn(['python3', ...args], { cwd: REPO_ROOT, env: { ...process.env, ...env }, stdout: 'ignore', stderr: 'pipe' });
   for (let i = 0; i < 200; i++) {
@@ -402,17 +405,17 @@ export async function fixture(a: Args): Promise<Result> {
     const receipt = JSON.parse(readFileSync(join(cellDir, 'receipt.json'), 'utf8')) as Record<string, any>;
     const reader = String(receipt.qa?.reader ?? 'openai:gpt-4o-mini'), judge = String(receipt.qa?.judge ?? 'openai:gpt-4o-mini');
     await stage('answers and judgments (shared records)', async () => {
-      const answers: AnswerRecord[] = rows.map(r => ({ answer_id: answerId('fixture-cell', r.id, reader, 0), cell_id: 'fixture-cell', realization_id: null, question_id: r.id, conversation: r.conversation ?? '', system: r.system ?? 'fake',
-        arm: r.policy ?? 'vendor-default', reader, replicate: 0, context_sha256: r.qa_context?.prompt_sha256 ?? null, text: String(r.qa_answer ?? ''), usage: { input: r.qa_input_tokens ?? 0, output: r.qa_output_tokens ?? 0, cache_read: 0, cache_write: 0 },
-        provider_input_tokens: r.qa_input_tokens ?? null, latency_ms: null, outcome: r.outcome ?? 'scored' }));
+      const answers: AnswerRecord[] = rows.map(r => ({ answer_id: answerId('fixture-cell', r.id, reader, 0), cell_id: 'fixture-cell', realization_id: 'real-fixture-cell', question_id: r.id, conversation: r.conversation ?? '', system: r.system ?? 'fake',
+        arm: r.policy ?? 'vendor-default', reader, replicate: 0, context_sha256: r.qa_context?.prompt_sha256 ?? sha256(String(r.qa_prompt ?? '')), text: String(r.qa_answer ?? ''), usage: { input: r.qa_input_tokens ?? 0, output: r.qa_output_tokens ?? 0, cache_read: 0, cache_write: 0 },
+        provider_input_tokens: r.qa_input_tokens ?? null, latency_ms: null, outcome: (r.outcome ?? 'scored') as Outcome }));
       const judgments: JudgmentRecord[] = rows.map((r, i) => ({ answer_id: answers[i].answer_id, instrument_id: 'fixture:locomo-style', instrument_sha256: sha256('fixture judge prompt'), judge, judge_replicate: 0, temperature: 0,
-        score: Number(r.qa_score ?? 0), parse_ok: true, raw_sha256: null, outcome: r.outcome ?? 'scored' }));
+        score: Number(r.qa_score ?? 0), parse_ok: true, raw_sha256: sha256(JSON.stringify(r.qa_scores ?? [])), outcome: (r.outcome ?? 'scored') as Outcome }));
       writeFileSync(join(out, 'answers.ndjson'), answers.map(x => JSON.stringify(x)).join('\n') + '\n');
       writeFileSync(join(out, 'judgments.ndjson'), judgments.map(x => JSON.stringify(x)).join('\n') + '\n');
     });
     if (stubs.has('judge-repeat')) stages.push({ stage: 'judge repeats', ms: 0, stub: true, detail: 'stubbed: the in-run judge (fake provider) stands in' });
     else await stage('judge repeats (eval/runner/judge-repeat.ts)', async () => {
-      const code = await delegate(judgeRepeatPath(), ['--answers', join(out, 'answers.ndjson'), '--cell', cellDir, '--benchmark', 'fixture', '--replicates', '2', '--output', join(out, 'judgments-repeat.ndjson'), '--provider-proxy', proxyUrl], 'fixture judge repeats');
+      const code = await delegate(judgeRepeatPath(), ['--answers', join(out, 'answers.ndjson'), '--cell', cellDir, '--benchmark', 'fixture', '--replicates', '2', '--output', join(out, 'judgments-repeat.ndjson'), '--provider-proxy', proxyUrl], 'fixture judge repeats', undefined, join(out, 'judge-repeat.log'));
       if (code !== 0) throw fail(`judge-repeat exited ${code}`);
     });
     const cs = await stage('cost and speed', async () => {
@@ -429,9 +432,14 @@ export async function fixture(a: Args): Promise<Result> {
       writeFileSync(join(out, 'scoreboard.md'), ['| System | Accuracy (stub judge) | recall_all@10 | p50 retrieval ms | Billed |', '|---|---:|---:|---:|---:|',
         `| fake | ${mean(scored.map(r => Number(r.qa_score ?? 0)))} | ${mean(scored.filter(r => r.recall_all_at_10 !== undefined).map(r => Number(r.recall_all_at_10)))} | ${cs.latency_ms.retrieval?.p50 ?? 'n/a'} | $${cs.spend.campaign.billed_usd} |`, ''].join('\n'));
     }, true);
-    else await stage('generator (eval/runner/scoreboard.ts render)', async () => {
-      const code = await delegate(generatorPath(), ['render', '--receipts', out, '--out', join(out, 'scoreboard'), '--fixture'], 'fixture generator');
-      if (code !== 0) throw fail(`the generator exited ${code}`);
+    else await stage('generator (eval/runner/scoreboard.ts render and check on the synthetic receipt)', async () => {
+      const receiptDir = join(out, 'receipt');
+      writeSyntheticReceipt(receiptDir, { draws: 99 });
+      for (const sub of ['render', 'check']) {
+        const code = await delegate(generatorPath(), [sub, '--receipt', receiptDir], `fixture generator ${sub}`, undefined, join(out, 'generator.log'));
+        if (code !== 0) throw fail(`the generator's ${sub} exited ${code} on the synthetic receipt (see generator.log)`);
+      }
+      if (!existsSync(join(receiptDir, 'scoreboard.md'))) throw fail('the generator wrote no scoreboard.md');
     });
     const st = proxy!.status();
     const usage = usageSplit(usageLog);

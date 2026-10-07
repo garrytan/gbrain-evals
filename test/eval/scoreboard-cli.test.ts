@@ -12,7 +12,8 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, wr
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
-import { answerId, doctor, plan, priceProbe, runCells } from '../../eval/runner/scoreboard-cli.ts';
+import { doctor, plan, priceProbe, runCells } from '../../eval/runner/scoreboard-cli.ts';
+import { answerId } from '../../eval/runner/scoreboard.ts';
 import { exitCodeOf, ScoreboardError } from '../../eval/runner/scoreboard-errors.ts';
 import type { LaunchContext } from '../../eval/runner/shootout-cell.ts';
 
@@ -58,6 +59,17 @@ describe('fixture', () => {
     const provider = readFileSync(join(out, 'fake-provider.jsonl'), 'utf8');
     expect(provider).not.toContain('sk-planted');
     for (const f of ['usage.ndjson', 'answers.ndjson', 'cost-speed.json', 'harness.log']) expect(readFileSync(join(out, f), 'utf8')).not.toContain('sk-planted');
+  }, 300_000);
+
+  test('with the generator in the checkout, the fixture renders and checks the synthetic receipt through eval/runner/scoreboard.ts', () => {
+    const out = join(tmp, 'fixture-generator');
+    const r = cli(['fixture', '--json', '--stub', 'judge-repeat', '--out', out], { SCOREBOARD_JUDGE_REPEAT: MISSING });
+    expect(r.code, r.err).toBe(0);
+    const res = JSON.parse(r.out);
+    expect(res.stubbed).toEqual(['judge-repeat']);
+    expect(res.stages.map((s: { stage: string }) => s.stage)).toContain('generator (eval/runner/scoreboard.ts render and check on the synthetic receipt)');
+    expect(readFileSync(join(out, 'receipt', 'scoreboard.md'), 'utf8').length).toBeGreaterThan(0);
+    expect(existsSync(join(out, 'receipt', 'scoreboard.json'))).toBe(true);
   }, 300_000);
 
   test('a part another lane owns that is not in the checkout is an operator message naming the --stub to add, never a silent skip', () => {

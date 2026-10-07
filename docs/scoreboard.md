@@ -37,9 +37,10 @@ byte differs. It also scans receipts for provider keys and keeps the receipt tre
 **`fixture`** runs the protocol's reference fake system end to end with no provider key and no Docker: the Python
 reference shim, the metering proxy in lease mode (with a cell token, per-route output caps and admission control), the
 memory-qa harness with the native packer at an 8,000-token budget, a keyless fake provider standing in for the reader
-and the judge, the shared answer and judgment records, the cost and speed report, and the table generator. Its scores
-say nothing about memory quality; they prove the wiring. `--stub generator,judge-repeat` replaces a stage that is not
-in the checkout yet with a stub and says so in the output. CI runs it on every pull request.
+and the judge, the shared answer and judgment records, the cost and speed report, and the generator's `render` and
+`check` on the synthetic receipt (`test/eval/fixtures/scoreboard/synthetic.ts`, every number invented). Its scores say
+nothing about memory quality; they prove the wiring. `--stub judge-repeat` (or `generator`) replaces a stage that is not
+in the checkout with a stub and says so in the output. CI runs it on every pull request.
 
 **`doctor`** is the preflight that runs before any lease is reserved. It checks the Bun version (1.4.0 or later), Python,
 Docker, the CPU architecture, free disk, the default proxy and shim ports, which provider keys are present (never their
