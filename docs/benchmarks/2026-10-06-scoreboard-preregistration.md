@@ -1,0 +1,286 @@
+# Preregistration: the head-to-head memory scoreboard (2026-10-06)
+
+**Status: draft.** The design below is fixed. A few values are still open and are marked OPEN: the frozen gbrain
+commit, the campaign hash, the power-simulation result, the engine rule's measured inputs and the per-reader token
+calibration. They are filled by the freezing commit, before any counted cell reserves a lease. After the first counted
+cell runs, nothing here changes; a later change is a dated amendment at the end of this file, written before any cell
+it affects. Changes to a bar or a family need the program owner's approval first.
+
+Owner: GBRA-49 (the competitor-ideas program). Plan approved by Garry on 2026-10-06, with every recommendation
+accepted. This campaign replaces the sealed phase of the open-source comparison (gbrain-evals#73) and reuses its
+harness code.
+
+## The question
+
+An engineer adding memory to an agent can use gbrain, another open-source memory system, paste the whole history
+into the prompt, or give the agent the history as Markdown files and a grep tool. For the same conversations, the
+same answer models and the same amount of evidence, which choice answers more questions correctly? How much of the
+right evidence does each return? What does each cost to write and to read, how fast does it answer, and how soon
+does a new memory become searchable? At what history size does a memory system start to beat pasting everything or
+grepping files?
+
+The report states where gbrain loses as plainly as where it wins.
+
+## Systems
+
+Every system is described by kind (`eval/systems/kinds.json`). Products, versions and sources are on
+[comparisons and their protocols](../comparison-systems.md), and nowhere else.
+
+| Public id | Kind | Role |
+|---|---|---|
+| `gbrain-defaults` | gbrain with its shipped defaults, installed and read the documented way | headline row |
+| `gbrain-common-embedder` | the same with `text-embedding-3-large` at 1,536 dimensions | component diagnostic on BEAM-1M sealed only |
+| `ext-extract-first` | an extract-first memory server (an LLM extracts and updates facts on every write) | every BEAM set, LoCoMo |
+| `ext-memory-bank` | a memory-bank server with background extraction and reflection | every BEAM set, LoCoMo |
+| `ext-graph-pipeline` | a knowledge-graph pipeline (an LLM builds a graph per document) | every BEAM set, LoCoMo |
+| `ext-temporal-graph` | a temporal knowledge-graph library (bi-temporal edges, LLM extraction per episode) | every BEAM set, LoCoMo |
+| `ext-markdown-kb` | a Markdown-file knowledge base (local embedder, no LLM on write) | every set |
+| `ext-verbatim-session` | a verbatim-session memory system (whole sessions, vector search, LLM rerank off) | every set |
+| `ext-agent-runtime` | a self-editing agent memory runtime | LoCoMo slice, agent cell |
+| `baseline-full-context` | the whole history in the prompt | where it fits each reader's window |
+| `baseline-recency` | the most recent sessions that fit the token budget | component control |
+| `baseline-file-agent` | an agent with list, grep and read tools over the same Markdown files | whole-system baseline |
+| `baseline-hybrid` | Postgres full text plus pgvector with reciprocal-rank fusion | control |
+| `baseline-none` | the question alone | floor |
+
+**`gbrain-defaults`.** One brain per conversation, from a frozen install recipe that matches the documented install
+with provider keys: Bun 1.4.2, `bun install -g github:garrytan/gbrain#<frozen sha>`, `gbrain init --pglite`, scripted
+defaults for every first-run question, and the MCP registration gbrain writes (the `starter` surface). It runs as a
+sandboxed container with dummy keys; every provider call goes through the metering proxy. Sessions are written
+through MCP `put_page` as conversation pages with their session date. Reads use only `starter` ops: `query` for the
+component and default-amount rows (its default query expansion is one counted LLM call per question) and
+`synthesize` for gbrain's own answer. A labeled full-surface row runs `think` with each reader as `model` and the
+question date as `reference_date`. No request carries `token_budget`. The resolved configuration (search mode,
+reranker, expansion, embedder, internal models) is published beside its hash. OPEN: frozen gbrain commit (gbrain
+master on the freeze date).
+
+**External configurations.** Each system runs its documented recipe as the headline row where the recipe's measured
+ingest fits 48 hours per conversation and its block cap. Otherwise it runs the common configuration (extraction
+`gpt-4.1-mini`, embedder `text-embedding-3-large` at 1,536 dimensions wherever settable) and the row says so. The
+common configuration also runs for every system on LoCoMo and BEAM-100K sealed as a diagnostic. Where the
+shootout's pilots already decided it: the extract-first server and the temporal graph library run common on BEAM and
+their recipes on LoCoMo. A system's own answer endpoint, where it has one, joins the whole-system table as a
+descriptive row.
+
+## Data, exposure and custody
+
+| Set | Data | Questions | Clusters | Exposure | Role |
+|---|---|---|---|---|---|
+| S1 BEAM-10M | HF `Mohammadta/BEAM-10M` at `9b209619` (CC BY-SA 4.0) | 199 (200 minus `1_abstention_0`) | 10 | never used to tune gbrain | **headline, inferential** |
+| S2a BEAM-100K sealed | P0 split, 14 conversations | 140 (10 per conversation, stratified by ability, seed `q1-beam-100k`) | 14 | used to choose gbrain settings | public row |
+| S2b BEAM-1M sealed | P0 split, 24 conversations | 240 (10 per conversation, stratified, seed `q1-beam-1m`) | 24 | used to choose gbrain settings | public row |
+| S3 LoCoMo | all 10 conversations | 200, stratified by category with at least 40 adversarial (seed `q1-locomo`) | 10 | used to choose gbrain settings (7) or development data (3) | public row |
+| S4 LongMemEval-S | cleaned, `98d7416c` | 500 for gbrain; the shootout's 100-question slice (seed 42) for other systems | per question | gbrain was developed on it | regression row |
+| S5 LongMemEval-M | cleaned, `98d7416c` | 100, stratified by type plus abstention (seed `q1-lme-m-v1`) | per question | gbrain was developed on it | scale row |
+
+- **BEAM-10M exposure record.** Before this campaign, another thread's tooling read BEAM-10M's question and document
+  counts and token sizes. One exploration script printed the gold answer, rubric, unanswerable note and a public
+  comparator outcome for question `1_abstention_0`, and aggregate statistics of the memory-bank server's public 10M
+  result file into an agent context. That question is excluded from every confirmatory cohort and reported
+  separately. No other question, rubric or chat text was read. The custodian records the audit in
+  `exposure.json`.
+- **BEAM 100K and 1M sealed.** These were held out from P0's implementers, but gbrain settings have since been chosen
+  on them: P4's gates, and the proof wave, whose groups cover every BEAM 100K/500K/1M conversation and whose sealed
+  run sets gbrain defaults. They are public rows, descriptive only.
+- **BEAM-1M per-question rows.** Another held-out decision (Q2's junk audit) uses 21 BEAM-1M sealed conversations.
+  Until that decision is recorded, every BEAM-1M sealed row, answer, judgment and context stays in custody. Only
+  pooled aggregates come back: system-level means, intervals and cost and speed columns, with no per-conversation or
+  per-question numbers. Per-question rows publish only after Q2's decision is in its record.
+- **LongMemEval.** It has no sealed split, and gbrain's retrieval configuration was chosen on it. Every LongMemEval
+  number carries that sentence.
+- **External systems** were also developed against these public benchmarks. "Held out" in this campaign means held
+  out from gbrain's development.
+- **Custody.** The program's custodian runs S1 and S2 cells from its own host with the repository-owned runner.
+  Dataset caches, Docker volumes, logs, row pulls and store snapshots stay on that host. Only aggregates and proxy
+  summaries come back before publication, and VM disks are destroyed at teardown. The BEAM-10M loader used before
+  questions open is corpus-only and cannot read question files. Sealed text and rows never land on Capy Drive or an
+  implementer's machine. The sealed-confirmation-v2 corpus is not used.
+- **Opening order for S1.** Custodian structure check (counts only) → corpus ingest → questions. The structure check
+  picks the session rule from this decision tree, fixed now:
+  1. Turn groups with `time_anchor`: use them.
+  2. Groups without dates: inherit batch dates.
+  3. Neither: one disclosed synthetic monotone date sequence for every system, with sessions synthesized at
+     message-pair boundaries so gold mapping holds.
+
+  Sessions over 24,000 tokens are counted and reported.
+- **Retirement.** Publishing per-question rows retires S1 (and S2b once Q2 clears). A fresh held-out supply minted by
+  the custodian starts before S1 opens.
+
+## Arms
+
+**Component table (matched evidence).** One ingest per system per conversation (an immutable realization with a
+stored snapshot) and one retrieval per question. The harness packs each system's ranked items into 2,000, 8,000
+and 16,000 tokens:
+
+- **One byte string per arm**, filled until the largest count among the participating readers' tokenizers reaches
+  the budget. Counts use local `cl100k_base` and `o200k_base`, each reader with a calibration factor measured on dev
+  packs against provider-reported input tokens (OPEN: factors); the provider count is recorded for every call.
+- **Cut rule.** An item larger than the remaining budget is cut at its last whole turn, else its last whole line, else
+  its last sentence. Packing stops after a cut and never skips to a smaller, lower-ranked item.
+- **Packing loss** is reported apart from retrieval loss. Fill rate is a diagnostic beside each cell, not a gate.
+- **Coverage.** 8k runs everywhere. The 2k/16k sweep runs on a stratified 100-question S1 subset covering all 10
+  conversations (four readers, seed `q1-sweep`), and on S2b with `claude-sonnet-5-5` as a labeled sensitivity view.
+
+gbrain's retrieval request is `query` with `limit: 50` and no `token_budget`; the harness packs from the delivered
+pages.
+
+**Whole-system table (as an operator runs each system):**
+
+- every passive system at its own default amount (gbrain: bare `query`, up to 24,000 tokens);
+- each external system's own answer endpoint, where it exists;
+- gbrain `synthesize` (own answer) and `think` (full surface, each reader);
+- the file agent: Markdown laid out by date, uncapped grep in a linear-time regex worker with `files_only`, turn cap
+  40, no write tool;
+- full context where the history fits the reader's window (otherwise refused and recorded), with per-conversation
+  prompt caching;
+- the agent runtime on the LoCoMo slice.
+
+Tokens and dollars per question sit beside every accuracy.
+
+## Readers, judges, repeats
+
+- **Readers:** `anthropic:claude-opus-5-5`, `openai:gpt-6.1-sol`, `anthropic:claude-sonnet-5-5`,
+  `anthropic:claude-fable-5-1` (the newest of each family on 2026-10-06), on every judged component and whole-system
+  row of every set. Reasoning effort `medium`, in the request and the cache key. The prompt is LongMemEval's reading
+  prompt, byte for byte the starting line's. S4's 500-question gbrain regression uses `claude-sonnet-5-5` only.
+- **Canonical judges, one per benchmark:**
+  - LongMemEval and LoCoMo: `gpt-4o-2024-08-06` with LongMemEval's official per-type prompts, the unanswerable prompt
+    for abstention and LoCoMo adversarial questions, and LoCoMo's temporal off-by-one prompt.
+  - BEAM: its rubric judge, `gpt-4.1-mini`, yes or no per rubric item.
+
+  These are measuring instruments with pinned prompts, parsers and hashes in `eval/runner/memory-qa/instruments.ts`.
+  A malformed judgment is retried, never scored as a no.
+- **Frontier-judge column:** `claude-opus-5-5` and `gpt-6.1-sol` re-judge, with the same prompts and rubrics, every
+  S1 `claude-sonnet-5-5` row and every `think` and file-agent row, plus a stratified 300-item sample on every other
+  set. Agreement under 90% with the canonical judge on any system's items flags that column.
+- **Judge repeats:** 10 further runs at temperature 0 on fixed answers (zero reader calls) for every
+  `claude-sonnet-5-5` 8k row and every `think` and file-agent row on S1, S2 and S3. Judges that accept only their
+  default temperature are noted. The report gives the judge SD and verdict stability, meaning the share of the 11
+  judge runs under which each Family 1 conclusion holds.
+- **Reader replicates:** three per question on every S1 component arm (`claude-sonnet-5-5`, 8k).
+- **Ingestion replicate:** a second LoCoMo ingest per system, disclosed.
+
+## Metrics
+
+1. **Answer accuracy decides.** Service quality (product failures count 0) and the completed-call mean, under the
+   outcome rules in `eval/runner/memory-qa/outcomes.ts`: first attempt plus the bounded retries those rules allow,
+   counted in cost and latency. LoCoMo also reports the adversarial abstention rate and the planted-answer repeat
+   rate.
+2. **Retrieval diagnostics (judge-free):**
+   - strict recall of all gold sessions at 5 and 10, recall of any gold session at 10, and nDCG@10, with provenance
+     coverage and source fan-out per system;
+   - an evidence-delivered audit: the gold span inside the packed context, where span labels exist, otherwise "session
+     delivery";
+   - partial provenance is labeled and unavailable provenance is "not measurable";
+   - the file agent's "evidence opened" is a different measure, labeled as such.
+3. **Cost and speed:**
+   - p50/p95 retrieval latency, measured server-side inside each container;
+   - p50/p95 end-to-end answer latency;
+   - delivered and total reader tokens per question;
+   - LLM calls and dollars per 1,000 ingested messages and per million ingested tokens;
+   - commit versus background split for synchronous systems (ingest-phase total, labeled, for queued systems);
+   - write-start-to-queryable p50/p95 (the last session and a fixed 20-session sample per conversation);
+   - ingest wall time;
+   - monthly cost for a personal workload (2,000 messages, 300 questions) and a team workload (50,000 messages,
+     10,000 questions).
+
+   Campaign spend, cached-replay spend and projected workload cost are three separate numbers. Projections for a
+   system not run on a set are labeled experiment limits.
+
+## Statistics
+
+- **Estimand.** The per-question mean over the four readers' scores, clustered by conversation on S1 to S3 and by
+  question on S4 and S5.
+- **Family 1 (headline, inferential).** S1, 8k component table, service quality: `gbrain-defaults` against every
+  other component row. Restricted wild cluster bootstrap-t with Webb weights (`eval/runner/stats/wild-cluster.ts`),
+  two-sided, Holm-adjusted, α = 0.05. Its family-wise error and coverage for this family are re-simulated
+  (`power.json`).
+- **Family 2.** S1 whole-system rows, the same method, Holm within the family.
+- **Family 3 (diagnostic).** Strict recall of all gold sessions at 10 on S1.
+- Everything on S2 to S5 is descriptive, with clustered intervals.
+- **Power rule.** OPEN: the simulated minimum detectable difference. If it exceeds 10 points for most Family 1
+  rows, Family 1 shrinks to `gbrain-defaults` against the four strongest rows on dev data (BEAM-1M dev and LoCoMo dev,
+  8k, `claude-sonnet-5-5`), chosen before S1 opens. If power is still inadequate, S1 is published descriptively with
+  its detectable difference and no superiority claim.
+- **Cohorts.**
+  - Each comparison uses its own pairwise cohort. Coverage is measured against the scheduled cohort.
+  - A claim needs at least 9 of S1's 10 clusters and at least 95% of the scheduled questions scored.
+  - Excluded ids and reasons are published with best-case and worst-case bounds.
+  - The all-system exclusion join is a sensitivity view only.
+
+## What the report may say
+
+Each sentence takes the measured numbers in braces and no stronger claim.
+
+- **Holm-adjusted p ≤ 0.05, gbrain ahead:** "On BEAM-10M, with the same four answer models and 8,000 tokens of each
+  system's own evidence, gbrain answered more questions correctly than {kind} ({a} vs {b}, difference {d} points, 95%
+  interval {lo} to {hi})."
+- **Holm-adjusted p ≤ 0.05, gbrain behind:** the same sentence with {kind} first.
+- **p > 0.05:** "On BEAM-10M we could not tell gbrain and {kind} apart ({a} vs {b}); a difference smaller than about
+  {mdd} points would not have been detected." Never "equivalent".
+- **Both systems at or above 0.95:** "Both answered nearly every question; this set cannot separate them."
+- **Fewer than 9 clusters or under 95% of the cohort:** "The comparison is incomplete ({n} of {N} questions, cause
+  {c})." No direction is stated.
+- **Descriptive sets:** "On {set} ({exposure in plain words}), {kind} scored {a} and gbrain {b}." This states a
+  measurement, not a ranking.
+- **"Leads", "best" or "beats"** only for a Holm-significant comparison. "Beats the field" only if every Family 1
+  comparison favors gbrain and every external kind ran on S1.
+
+## Where gbrain loses
+
+The report and README generate this section by rule.
+
+1. List every cell (set × reader × budget, both tables) where a row beats `gbrain-defaults` with an interval excluding
+   zero, and every category where gbrain ranks in the bottom half.
+2. Classify gbrain's misses on those questions:
+   - evidence page not delivered;
+   - page delivered, span missing (where span labels exist);
+   - span delivered, answered wrong;
+   - packing loss.
+3. Name the setting or open work that addresses each, or say "no current fix".
+
+README carries the top three by size.
+
+## Engine rule for S1
+
+A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain's own `pglite_scale` advice at
+1,000 pages. A dev stress pilot writes the 11 BEAM-1M dev conversations into one brain.
+
+- **PGLite** is the S1 headline engine if query p95 is under 10 seconds, with no rerank or evidence-fetch fallbacks,
+  and RSS fits the VM.
+- **Otherwise** the S1 row is `gbrain-defaults` on Postgres, following gbrain's own advice, and says so.
+- `pglite_scale` is an allowed S1 doctor warning. OPEN: the pilot's measurements and the resulting engine.
+
+## Budget and stop rules
+
+- **Cap.** $8,500 of model and embedding calls for the whole campaign, held in the campaign ledger as per-block runs
+  with hard caps at 1.5 times each block's estimate. Ubicloud VM time is billed outside the ledger and reported.
+- **Re-pricing.** Before freeze, the dev stress pilot and paid smokes re-price every block from the executable cell
+  manifest. If the total exceeds the cap, the campaign stops for the owner's decision before any S1 spend.
+- **Order and scope reduction.** S1 (T1) runs and settles before other readers spend. If the cap is reached mid-run,
+  scope is cut in this order: S5, S2a, the S2b sweep, S3's agent-runtime cell. T1 is never cut once started.
+- **Stops.**
+  - Any block passing its estimate by more than 50% stops for a report.
+  - A system projecting past 1.5 times its line, or past 48 hours per conversation, runs common or is reported as not
+    run, with the projection.
+  - A cell that ends `invalid` (sanitizer, proxy or leak tripwire; install drift; calls bypassing the proxy) stops
+    that system's cells until the cause is recorded.
+- **Never rerun to improve a number.** Retries happen only under the outcome rules, and every attempt stays in the
+  log.
+
+## Freeze checklist (filled by the freezing commit)
+
+- OPEN: gbrain commit; campaign hash, covering the git tree of every executed file and images by digest; resolved
+  gbrain configuration and its hash; power result; engine rule inputs; token calibration factors; the cell manifest
+  and its re-priced total; the S1 subset ids; Family 1 membership if shrunk.
+
+## Amendments
+
+None yet.
+
+## Changelog
+
+### 2026-10-06: draft
+
+First draft, from the approved Q1 plan. It records the BEAM-10M exposure audit (question `1_abstention_0` excluded)
+and the custody rule for BEAM-1M rows while Q2's decision is open. Values marked OPEN are filled at freeze.

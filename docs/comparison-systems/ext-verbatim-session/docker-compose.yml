@@ -1,0 +1,61 @@
+# MemPalace shim on an internal network. The only container with a route out is `proxy`, a TCP relay to the metering
+# proxy (PROXY_UPSTREAM, on the VM host by default). The raw and hybrid recipes call no provider at all; the shim still
+# holds a dummy key and points OPENAI_BASE_URL at the proxy, so any unexpected SDK call would be counted there.
+#
+#   docker compose -f docs/comparison-systems/ext-verbatim-session/docker-compose.yml up -d --build
+#   Keyless (fake provider as the upstream): docs/comparison-systems/ext-verbatim-session/tests/run_keyless.sh
+# The harness reaches the shim at 127.0.0.1:${SHIM_HOST_PORT:-8703}.
+name: shootout-mempalace
+
+services:
+  shim:
+    build:
+      context: ../../..
+      dockerfile: docs/comparison-systems/ext-verbatim-session/Dockerfile
+    image: shootout/mempalace:3.10.0
+    environment:
+      SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
+      SHIM_IMAGE: ${SHIM_IMAGE:-}
+      OPENAI_API_KEY: sk-dummy-metering-proxy-injects-the-real-key
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-${PROXY_URL:-http://proxy:8787}/${PROXY_SLOT:-ext-verbatim-session}/openai/v1}
+    volumes:
+      - data:/data
+    networks: [sandbox]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,json,sys; sys.exit(0 if json.load(urllib.request.urlopen('http://127.0.0.1:8700/health'))['ok'] else 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  proxy:
+    image: alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    command: ["TCP-LISTEN:8787,fork,reuseaddr", "TCP:${PROXY_UPSTREAM:-host.docker.internal:8787}"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    networks: [sandbox, egress]
+
+  # Publishes the shim's port to the host without giving the shim itself a route out.
+  ingress:
+    image: alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    command: ["TCP-LISTEN:8700,fork,reuseaddr", "TCP:shim:8700"]
+    ports: ["127.0.0.1:${SHIM_HOST_PORT:-8703}:8700"]
+    networks: [sandbox, egress]
+
+  # Keyless runs only: stands where the metering proxy stands and counts every request it receives.
+  fake-provider:
+    profiles: [keyless]
+    image: python:3.12-slim-bookworm@sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3
+    command: ["python", "/fake/fake_provider.py", "--log", "/out/fake_provider_requests.jsonl"]
+    volumes:
+      - ../../../eval/systems/_shim:/fake:ro
+      - ./tests/out:/out
+    ports: ["127.0.0.1:${FAKE_PROVIDER_HOST_PORT:-8790}:8787"]
+    networks: [egress]
+
+networks:
+  sandbox:
+    internal: true
+  egress: {}
+
+volumes:
+  data: {}
