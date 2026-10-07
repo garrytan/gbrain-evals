@@ -2,6 +2,28 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.39] - 2026-10-07
+
+### gbrain fix wave 11: relaxed HNSW scan order ships default-on; the D12 agent smoke passes
+
+Two records paired with gbrain fix wave 11 (branch `capy/fix-wave-11`, head `b5c8fd5e8`, v0.60.103.0).
+
+- **W6.3, relaxed HNSW scan order (mirror, $0 here).** [Report](docs/benchmarks/2026-10-07-hnsw-relaxed-order.md), [`verdict.json`](docs/benchmarks/2026-10-07-hnsw-relaxed-order/verdict.json), raw tables and logs, and a copy of gbrain's `scripts/bench/hnsw-iterative-scan.ts`. On about 60,000 chunks of real text, 100 queries, Postgres 16 with pgvector 0.8.7, recall@10 at a 50% source filter goes from 0.962 to 0.983 with `voyage-4` at 1,024 dimensions and from 0.950 to 0.967 with `text-embedding-3-small` at 1,536 dimensions; k=50 and the 10% filter are unchanged (the 10% rows are exact in both modes). Latency moves both ways, by at most 3.7 ms at p50 and 5.7 ms at p95. Verdict: `relaxed_order` ships default-on, with `search.hnsw_iterative_scan strict_order` as the escape hatch. The lane's 128-d synthetic numbers (+8.3 points filtered recall) are recorded as a limit. Idea from #6132 by @MarvinDontPanic.
+- **D12 agent smoke (Cat 40, $49.21).** [Report](docs/benchmarks/2026-10-07-wave11-agent-smoke.md), [preregistration](docs/benchmarks/2026-10-07-wave11-agent-smoke-preregistration.md) committed before any cell with one amendment (separate `--gbrain-root` per build, Bun 1.4.2). gbrain master `5b5891069` against the wave, same window, `gbrain` arm, `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol` counted, `claude-fable-5-1` smoke-only. Verdict: pass. Permission tasks 60/60 on both builds with no leaks; write-back 55/60 on master and 56/60 on the wave with no unsafe writes. Five of six model-family cells sit at the ceiling. No model called `put_page`, so its shorter description is untested by agents; Opus 5.5 sent a non-UUID `request_id` on its first write in 12 of 20 write-back cells on master and 17 of 20 on the wave (p = 0.16), and recovered every time.
+- **Version.** 0.10.39, the next free version after #94 shipped 0.10.38.
+
+## [0.10.38] - 2026-10-07
+
+### The budget-ledger scale test measures the ledger, not the runner's disk
+
+`test/eval/budget-ledger-sqlite.test.ts` "reserve+settle averages under 5 ms on a 200k-entry ledger" turned main's CI red (run 37685939608: a 1k-entry mean of 15.3 ms against a 9.0 ms median, and a 200k-entry mean of 5.5 ms against a 0.6 ms median). Each reserve and each settle is a durable `synchronous = FULL` commit, so every timed pair waits for two fsyncs of the WAL, plus a fsync of the database file at each automatic checkpoint. On GitHub's runner, with the other test shards writing to the same disk, a few of those fsyncs take hundreds of milliseconds. They set the mean, and they have nothing to do with how many entries the ledger holds. In the failing run, the 200k-entry ledger was faster per pair than the 1k-entry one. The test now keeps its scale ledger on tmpfs (`/dev/shm`, where fsync does not wait on a disk) and checkpoints the seeding writes before timing. It runs the same ledger code, and the 5 ms mean bar and the no-growth median check are unchanged.
+
+Evidence, with a stall-injection shim (`LD_PRELOAD` over `fsync` and `fdatasync`, stalling only files on a disk):
+- **The old test fails on stalls alone.** With one in fifty disk fsyncs stalling 200 ms, it failed 3 of 3 runs (200k mean 8.4 to 8.5 ms, median 0.33 to 0.38 ms). With each checkpoint's database-file fsync taking 500 ms, it also failed 3 of 3 (mean 5.4 ms, median 0.3 ms): the CI signature.
+- **The new test ignores stalls.** It passed 3 of 3 under each injection, and 20 of 20 with both injected at once (200k mean about 0.1 ms).
+- **The new test still catches the regressions it guards against.** Making settle find its entry without the id index failed it 3 of 3 (200k mean 56.6 to 57.8 ms). Making reserve sum the run's entries failed it 3 of 3 (33.8 to 36.6 ms).
+- **It holds under load.** The whole test file passed 25 of 25 runs with four CPU-bound processes and two fsync-heavy disk writers running beside it.
+
 ## [0.10.37] - 2026-10-07
 
 ### The October follow-up round: re-pin to gbrain v0.60.104.0, privacy gates, current-model reruns and LongMemEval at the current pin
