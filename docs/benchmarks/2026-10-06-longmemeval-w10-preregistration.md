@@ -154,3 +154,14 @@ W10a's retrieval capture runs for about four hours on a cold embedding cache (25
 ### 2026-10-06, after W10a's retrieval capture and before any W10a reader request: W10a's Sonnet 5.5 output limit is 3,500 tokens
 
 The capture finished with 500 of 500 questions captured, 0 harness errors and $7.90 of retrieval spend (embeddings on a cold cache plus Voyage rerank, 24,851 ledger-reserved requests). The `w10a-sonnet55-notes` arm's worst case at the preregistered 4,096-token limit is $21.33 at the confirmed batch factor (11,091,538 counted input tokens), which does not fit the $20.10 left of W10a's $28 cap, so under the start-only-if-fits rule it could not start. Its limit is therefore 3,500 tokens (worst case $19.84). The two W10b Sonnet 5.5 arms that already ran at 4,096 used at most 864 output tokens (notes, 500 rows, 99th percentile 672) and 624 (direct), and none finished at the limit, so the lower limit is not expected to bind; W10a reports its `max_tokens` finishes like every arm, and any such finish is named beside the W10a against W10b comparison. Nothing else changes: same captured text, model and effort. This was decided from the cost table and the W10b token counts only, before any W10a reader output existed.
+
+### 2026-10-07, after every W10 cell had settled and before any `gpt-5.4`, Opus or Fable score was looked at: Fable is smoke-test only
+
+Garry 2026-10-07: Fable smoke-only; Opus 5.5 is the top Anthropic model. From this date Fable (5 or 5.1) runs only in small smoke tests, never in paid counted cells, practice rounds or held-out runs.
+
+The `w10b-fable51-notes` arm (200 questions) and its two judges had already run and settled on 2026-10-07 at 03:33 UTC, before the rule reached this lane, so no spend could be saved on it. Under the rule's "finished cells stay as recorded, add no more":
+
+- The Fable rows are kept and published as recorded, labeled "Fable 5.1, 200-question subset; run before the 2026-10-07 smoke-only rule; not a counted cell going forward".
+- No further Fable cell runs in W10 (no retry, no extension to 500, no Fable cell in W10a or W10c, which never had one).
+- The preregistered W10b family `w10b-official.json` is not edited after its cells ran: the Fable comparison stays in it, so the Holm adjustment for every other arm is the one preregistered (keeping it can only make the other arms' adjusted p-values larger, never smaller). No decision, gate or README row rests on the Fable comparison; it is reported in its own labeled row after the others.
+- Opus 5.5 is the top Anthropic reader in every W10b statement. No other arm, model, judge or setting changes.
