@@ -112,7 +112,7 @@ The output is committed as [holdout-stats.md](2026-10-07-model-ladder-hard/holdo
 - **Frozen settings.** Knob digest `37a16085…27434`.
 - **Preregistration.** [PREREGISTRATION.md](cat40-hard/PREREGISTRATION.md), amendments A1 to A6.
 - **Calibration record.** [calibration.md](cat40-hard/calibration.md).
-- **Sealed validation variant.** Digests recorded in [SEALED.md](cat40-hard/SEALED.md); not run.
+- **Sealed validation variant.** Digests recorded in `docs/benchmarks/cat40-hard/SEALED.md` on the sealed branch ([#77](https://github.com/garrytan/gbrain-evals/pull/77)); not run.
 - **Keys.** `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `VOYAGE_API_KEY`.
 - **Outputs.** [`2026-10-07-model-ladder-hard/`](2026-10-07-model-ladder-hard/): `cells-50k/`, `oracle-50k/` and `pg-50k/`, each with `results.jsonl`, `experiment.json`, receipts, `run.log` and gzipped transcripts; the held-out world as `world-50k.json.gz`.
 
