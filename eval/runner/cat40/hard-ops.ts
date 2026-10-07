@@ -20,7 +20,7 @@ export const HARD_DOCS = resolve(import.meta.dir, '../../../docs/benchmarks/cat4
 export const REPO_ROOT = resolve(import.meta.dir, '../../..');
 
 /** Frontier models in the order people use them most (CEO-F8). */
-export const HARD_MODELS = ['claude-sonnet-5-5', 'claude-opus-5-5', 'gpt-6.1-sol', 'claude-fable-5-1'];
+export const HARD_MODELS = ['claude-sonnet-5-5', 'claude-opus-5-5', 'gpt-6.1-sol'];
 export const CALIBRATION_MODELS = ['claude-sonnet-5-5', 'gpt-6-astra'];
 export const FREEZE_CHECK_MODELS = ['claude-opus-5-5', 'claude-fable-5-1', 'gpt-6.1-sol'];
 export const HARD_JUDGE = 'gpt-6.1-sol';

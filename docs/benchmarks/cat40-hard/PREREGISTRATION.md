@@ -13,7 +13,7 @@ On tasks where plain files with grep finish roughly half of the work for frontie
 - Calibration seed: 20261005. Smoke seed: 20261099.
 - Held-out seed: 20261006 (50k only, amendment A2).
 - Generator: `model-ladder-hard-v2` (amendment A1), frozen at step 3 (`freeze.json` and `knobs.frozen.json` in this directory).
-- Models: Sonnet 5.5 (`claude-sonnet-5-5`), Opus 5.5 (`claude-opus-5-5`), GPT-6.1 Sol (`gpt-6.1-sol`), Fable 5.1 (`claude-fable-5-1`); GPT-6 Astra (`gpt-6-astra`) is a calibration model only (amendment A3). A newer frontier release replaces its predecessor in the same family and tier only through a dated amendment below, with its price registered, before any cell of the next step runs (rules in the plan, CEO-F3).
+- Models: Sonnet 5.5 (`claude-sonnet-5-5`), Opus 5.5 (`claude-opus-5-5`), GPT-6.1 Sol (`gpt-6.1-sol`), Fable 5.1 (`claude-fable-5-1`, smoke and finished cells only from amendment A6); GPT-6 Astra (`gpt-6-astra`) is a calibration model only (amendment A3). A newer frontier release replaces its predecessor in the same family and tier only through a dated amendment below, with its price registered, before any cell of the next step runs (rules in the plan, CEO-F3).
 - Claims judge: `gpt-6.1-sol` on every cell (reported, never part of success).
 - Arms: oracle (reference only), fs, pg, memory (Sonnet 5.5 and GPT-6.1 Sol only, amendment A1) and gbrain, uncapped tool results, Hard tool limits (grep returns every match with full lines and a total; pg searches page with offsets, totals and an exhaustion flag, limit up to 100).
 - Turn cap: 16 per session (each H5 session separately), unless calibration moved it; the frozen value is `max_turns` in knobs.frozen.json.
@@ -138,3 +138,14 @@ Garry, 2026-10-06, after calibration round 5 failed the freeze rule (pooled fs 7
 The freeze check stopped at 288 of 450 cells when its budget run was spent ($237; the projection used estimated costs for Opus 5.5, Fable 5.1 and GPT-6.1 Sol, and Fable 5.1 on fs measured $2.49 per cell). With 31 to 33 cells per model and arm it showed, on the better simple arm: Opus 5.5 75% (fs), GPT-6.1 Sol 84% (fs), Fable 5.1 81% (pg; fs 19%, 26 of 26 failures turn-cap stops); every oracle at 100%. Two models are above 80%, so under A4 the result went to Garry with the measured cost of the primary batch (about $1,020, $1,174 with margin, against $1,053 left).
 
 Garry, 2026-10-06: "1", the option to add about $250 and run the 50k held-out primary batch at full size (20 tasks per family). The program authorization becomes $4,600 and the Hard ledger cap $2,044 (`ledger-roster.json`). The freeze check is not resumed; its 288 cells are its record. Round 5's knobs freeze. GPT-6.1 Sol (84%) and Fable 5.1 (81% on pg) are reported with that ceiling note beside their comparisons.
+
+### A6 (2026-10-07): Fable leaves counted cells; the primary endpoint covers three models
+
+Garry, 2026-10-07, relayed by GBRA-40: "I think we should just use opus 5.5 and reduce fable usage to just smoke tests." The project rule is now: Opus 5.5 is the top Anthropic model in counted runs; Fable runs only in small smoke tests (project AGENTS.md, "Eval model selection").
+
+- **State when the rule arrived.** The primary 50k batch (cells-50k) had stopped at 662 of 800 cells when its budget run was spent: Sonnet 5.5, Opus 5.5 and GPT-6.1 Sol had 82 to 84 of 100 cells per arm; Fable 5.1 had 82 fs and 80 gbrain cells.
+- **Models.** No new Fable 5.1 cell runs in any batch (`--retire-models claude-fable-5-1` on cells-50k; Fable is removed from oracle-50k, pg-50k and the held-out model list). Fable's 162 finished 50k cells stay as recorded.
+- **Primary endpoint.** The pooled 50k paired difference, gbrain minus fs, over Sonnet 5.5, Opus 5.5 and GPT-6.1 Sol (each 100 tasks, complete). Fable 5.1's finished cells are reported descriptively beside it, on the tasks where both of its arms finished, and are not part of any interval or decision sentence.
+- **Gates whose model set changed.** The A4 go rule now covers Sonnet 5.5, Opus 5.5 and GPT-6.1 Sol. The A5 ceiling note for Fable 5.1 no longer applies to the primary comparison; GPT-6.1 Sol's note stays.
+- **Spend.** The remaining 100 primary cells project to $83 ($96 with margin) against $245 left. Dropping Fable from the rest of cells-50k, oracle-50k and pg-50k removes about $340 of projected spend.
+- **Unchanged.** Arms, endpoints' analysis method, the 16-turn cap, the authorization ($4,600) and the Hard ledger cap ($2,044).

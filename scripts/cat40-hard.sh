@@ -43,7 +43,10 @@ STEP="${2:-}"
 GBRAIN_REPO="${GBRAIN_REPO:-../gbrain}"
 LEDGER="${LEDGER:-.budget/cat40-hard.sqlite}"
 JUDGE=gpt-6.1-sol
-MODELS=claude-sonnet-5-5,claude-opus-5-5,gpt-6.1-sol,claude-fable-5-1
+MODELS=claude-sonnet-5-5,claude-opus-5-5,gpt-6.1-sol
+# cells-50k started on four models; amendment A6 retired Fable 5.1 from its remaining cells (the bound model list stays).
+CELLS50K_MODELS=claude-sonnet-5-5,claude-opus-5-5,gpt-6.1-sol,claude-fable-5-1
+RETIRED_MODELS=claude-fable-5-1
 CAL_MODELS=claude-sonnet-5-5,gpt-6-astra
 CHECK_MODELS=claude-opus-5-5,claude-fable-5-1,gpt-6.1-sol
 MEMORY_MODELS=claude-sonnet-5-5,gpt-6.1-sol
@@ -266,7 +269,7 @@ case "$CMD" in
         CAL=(); for p in "$FROZEN_DIR"/cells/attempts.jsonl "$FROZEN_DIR"/freeze-check/attempts.jsonl "$REPORTS"/cells-50k-smoke/attempts.jsonl "$REPORTS"/cells-50k/attempts.jsonl; do [[ -f "$p" ]] && CAL+=("$p"); done
         M="$(measured ${CAL[@]+"${CAL[@]}"})"
         case "$STEP" in
-          cells-50k) REF="$(gbrain_ref)"; ARMS=(--models "$MODELS" --arms gbrain,fs --gbrain-label "$GBRAIN_LABEL" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5) ;;
+          cells-50k) REF="$(gbrain_ref)"; ARMS=(--models "$CELLS50K_MODELS" --retire-models "$RETIRED_MODELS" --arms gbrain,fs --gbrain-label "$GBRAIN_LABEL" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5) ;;
           oracle-50k) ARMS=(--models "$MODELS" --arms oracle) ;;
           pg-50k) ARMS=(--models "$MODELS" --arms pg) ;;
           memory-50k) ARMS=(--models "$MEMORY_MODELS" --arms memory) ;;

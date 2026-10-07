@@ -284,7 +284,7 @@ export function scheduleCells(o: { tasks: LadderTask[]; models: string[]; arms: 
 // ─── Experiment identity of an output directory ─────────────────────
 
 /** Flags that set money, not the experiment: a resume may change them. */
-const BUDGET_FLAGS = new Set(['--budget-usd', '--estimate-usd', '--budget-run-id', '--new-budget-run']);
+const BUDGET_FLAGS = new Set(['--budget-usd', '--estimate-usd', '--budget-run-id', '--new-budget-run', '--retire-models']);
 
 export interface ExperimentManifest {
   schema: 'cat40-experiment-v1';
@@ -385,7 +385,7 @@ export function incompleteSlotCoverage(dir: string, n: number): { problems: stri
 export const VALUE_FLAGS = ['--arms', '--models', '--families', '--tasks', '--repeat', '--concurrency', '--slots', '--gbrain-repo', '--gbrain-ref', '--gbrain-root', '--gbrain-label', '--judge', '--world', '--out',
   '--max-tool-chars', '--order', '--slot-ref', '--surface', '--gbrain-instructions-file', '--gbrain-tool-descriptions-file', '--gbrain-drop-tools', '--gbrain-config', '--slot-build-allowance-usd',
   '--budget-usd', '--estimate-usd', '--budget-run-id', '--budget-ledger', '--program-cap-usd', '--max-turns', '--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step',
-  '--gbrain', '--advertised', '--world-templates-file', '--decision-id', '--purpose'];
+  '--gbrain', '--advertised', '--world-templates-file', '--decision-id', '--purpose', '--retire-models'];
 export const BOOLEAN_FLAGS = ['--scripted', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help', '--new-budget-run'];
 const NUMERIC_FLAGS = new Set(['--repeat', '--concurrency', '--slots', '--slot-build-allowance-usd', '--budget-usd', '--estimate-usd', '--program-cap-usd', '--max-turns', '--per-family']);
 
@@ -504,8 +504,12 @@ export async function main(argv = process.argv.slice(2)) {
   for (const a of hardAttempts) priorAttempts.set(a.key, (priorAttempts.get(a.key) ?? 0) + 1);
   const done = hard ? new Set(hardAttempts.filter(a => a.stop !== 'harness_error').map(a => a.key))
     : new Set(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).key as string) : []);
-  const cells = buildSlots ? [] : scheduleCells({ tasks, models, arms, repeats, order, gbrainLabel: ctx.gbrainLabel, done });
-  log(buildSlots ? 'building gbrain slots' : `${cells.length} cells to run (${done.size} already done, order ${order}) in ${out}`);
+  // --retire-models: a dated preregistration amendment removed these models from the rest of a bound experiment;
+  // their finished cells stay as recorded and no new cell of theirs runs.
+  const retired = new Set((flag(argv, '--retire-models') ?? '').split(',').filter(Boolean));
+  for (const m of retired) if (!models.includes(m)) throw new UsageError(`--retire-models names ${m}, which this experiment does not run`);
+  const cells = buildSlots ? [] : scheduleCells({ tasks, models, arms, repeats, order, gbrainLabel: ctx.gbrainLabel, done }).filter(c => !retired.has(c.model));
+  log(buildSlots ? 'building gbrain slots' : `${cells.length} cells to run (${done.size} already done, order ${order}${retired.size ? `, retired: ${[...retired].join(',')}` : ''}) in ${out}`);
   if (!buildSlots && cells.length === 0) { log('nothing to run'); return; }
 
   // gbrain identity and the slot preflight come first, so a refusal opens no budget run.
