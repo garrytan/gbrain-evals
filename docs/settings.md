@@ -6,10 +6,10 @@ autocut off. That setup retrieves all labeled conversations for 451/470 answerab
 with opaque session ids at gbrain `109b992`. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
 [original experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-This page describes the gbrain this repository installs, master `c5fb0201` (v0.60.95.0, declared in
+This page describes the gbrain this repository installs, master `a865f8f` (v0.60.104.0, declared in
 `package.json`). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
 number. The `balanced`, `conservative` and `tokenmax` mode definitions (`MODE_BUNDLES` in
-`src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `c5fb0201`, apart from three keys v0.60.60.0
+`src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `a865f8f`, apart from three keys v0.60.60.0
 added for the multi-relation planner (`relational_planner`, on in `balanced` and `tokenmax`). The planner plans none
 of LongMemEval's 500 questions, so the conversation measurements describe the installed modes; other code differs. Existing per-key overrides take precedence over a mode, so a mode name alone
 is not a complete description of an experiment. Everything above [Changelog](#changelog) is current.
@@ -149,9 +149,13 @@ reproducible matrix used here.
 
 ## Changelog
 
+### 2026-10-07: Installed pin moves to `a865f8f`
+
+gbrain-evals v0.10.40. The installed gbrain commit changed from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0). `src/core/search/mode.ts` is identical at both commits, so the mode-definition note stands with the new end commit.
+
 ### 2026-10-06: Installed pin moves to `c5fb0201`; an embedder row
 
-gbrain-evals v0.10.38. The installed gbrain commit changed from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0). The mode-definition note now says the bundles are unchanged except the three multi-relation planner keys, which plan no LongMemEval question. A new "Choosing an embedder" row cites the October 6 embedding matrix (reranker +13 to +17 points; no embedder better than `voyage-4`) and Cat 21's paraphrase questions (no gain from a code embedder).
+gbrain-evals v0.10.40. The installed gbrain commit changed from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0). The mode-definition note now says the bundles are unchanged except the three multi-relation planner keys, which plan no LongMemEval question. A new "Choosing an embedder" row cites the October 6 embedding matrix (reranker +13 to +17 points; no embedder better than `voyage-4`) and Cat 21's paraphrase questions (no gain from a code embedder).
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).

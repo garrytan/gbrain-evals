@@ -1,6 +1,6 @@
 # Comparing memory systems without comparing different things
 
-This page compares gbrain, as this repository pins it (master `c5fb0201`, v0.60.95.0), with published results for other memory systems. Every row keeps its own measurement or access date; external sources were last checked September 9, 2026. A source check confirms what an author published; it does not mean we reproduced the system. Everything above [Changelog](#changelog) is current.
+This page compares gbrain, as this repository pins it (master `a865f8f`, v0.60.104.0), with published results for other memory systems. Every row keeps its own measurement or access date; external sources were last checked September 9, 2026. A source check confirms what an author published; it does not mean we reproduced the system. Everything above [Changelog](#changelog) is current.
 
 Before comparing two memory scores, ask what each system had to do. Find one useful conversation? Find every conversation needed? Return only the right facts? Write the right answer? Those are different jobs, and a system can do one well while struggling with another.
 
@@ -25,7 +25,7 @@ A fifth detail matters: what does K count? Gbrain's ordinary LongMemEval path re
 
 The official [retrieval evaluator](https://github.com/xiaowu0162/LongMemEval/blob/main/src/retrieval/eval_utils.py) distinguishes `recall_all` from `recall_any`. Its [printing code](https://github.com/xiaowu0162/LongMemEval/blob/main/src/evaluation/print_retrieval_metrics.py) excludes abstention questions for retrieval. For the cleaned small split, that leaves 470 of 500 questions. Answer accuracy includes the 30 abstention questions.
 
-The September 6 run measured gbrain v0.48.4.0 at `2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d` (receipts from the pre-squash branch head `fd7e7fd9`). This repository now installs a different commit, gbrain master `c5fb0201` (v0.60.95.0), so a fresh `bun install` does not reproduce that code exactly. The run used cached OpenAI `text-embedding-3-large` embeddings at 1,536 dimensions, balanced search, Voyage `rerank-2.5`, autocut off, relational pin three, and lexical metadata gating. The embedding choice pins this experiment; the current new-install embedding default is a different setting.
+The September 6 run measured gbrain v0.48.4.0 at `2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d` (receipts from the pre-squash branch head `fd7e7fd9`). This repository now installs a different commit, gbrain master `a865f8f` (v0.60.104.0), so a fresh `bun install` does not reproduce that code exactly. The run used cached OpenAI `text-embedding-3-large` embeddings at 1,536 dimensions, balanced search, Voyage `rerank-2.5`, autocut off, relational pin three, and lexical metadata gating. The embedding choice pins this experiment; the current new-install embedding default is a different setting.
 
 Without reranking, gbrain found all evidence on 439/470 questions (93.40%) and some evidence on 464/470 (98.72%). With reranking, the counts were 449/470 (95.53%) and 469/470 (99.79%). The paired strict comparison gained 18 questions and lost eight. The result supports the reranker in this configuration, while making its losses visible. October 4, 2026: [recounted with opaque session ids](benchmarks/2026-10-04-longmemeval-opaque-followups.md) at gbrain `109b992`, the counts are 434/470 and 463/470 without the reranker and 451/470 and 470/470 with it (+23/−6 paired); the published numbers are confirmed.
 
@@ -182,13 +182,17 @@ A causal explanation needs a controlled change. If two systems use different mod
 
 ## Changelog
 
+### 2026-10-07: Re-pin to gbrain `a865f8f`
+
+gbrain-evals v0.10.40. The pin named in the opening and in the LongMemEval installed-dependency note changed from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0). No comparison row changed.
+
 ### 2026-10-07: The matched-reader link on the release retrieval
 
-gbrain-evals v0.10.38. Context for the vendor rows that used `gpt-5.4`: on gbrain's reranked retrieval from `a7cb37b` (2026-09-29), `gpt-5.4` at medium reasoning with LongMemEval's official prompt answered 460 of 500 (official judge), against 447 of 500 on the reranker-off retrieval of 2026-10-04 ([reader replay](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md)). Judges and retrieval budgets still differ from the vendor rows, so no row of the comparison table changed.
+gbrain-evals v0.10.40. Context for the vendor rows that used `gpt-5.4`: on gbrain's reranked retrieval from `a7cb37b` (2026-09-29), `gpt-5.4` at medium reasoning with LongMemEval's official prompt answered 460 of 500 (official judge), against 447 of 500 on the reranker-off retrieval of 2026-10-04 ([reader replay](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md)). Judges and retrieval budgets still differ from the vendor rows, so no row of the comparison table changed.
 
 ### 2026-10-06: Re-pin to gbrain `c5fb0201`
 
-gbrain-evals v0.10.38. The pin named in the opening and in the LongMemEval installed-dependency note changed from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0). No comparison row changed.
+gbrain-evals v0.10.40. The pin named in the opening and in the LongMemEval installed-dependency note changed from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0). No comparison row changed.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
