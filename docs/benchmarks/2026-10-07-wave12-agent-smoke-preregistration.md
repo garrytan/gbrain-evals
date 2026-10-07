@@ -126,3 +126,13 @@ The two builds run at the same time. Results, receipts, run logs, served texts a
 - Wave 12 changes 270 files against the baseline; build-against-build attributes any difference to the wave, not to the two texts alone.
 - In #92 no model called `put_page`. The UUID line can still matter because models read every tool description before their first write, which is the mechanism #92's diagnostic suggested; but if no model calls put_page here either, the put_page path itself stays untested.
 - 2 repeats on 20 gated tasks (3 for Opus F) is a smoke, not the full ladder.
+
+## Amendment 1 (2026-10-07, after the 260 preregistered cells, before any further cell)
+
+The preregistered cells finished. Opus 5.5 write-back (F) is 20/20 on `baseline` and 15/20 on `wave12`, so checks 2 (F success, 60 → 55) and 3 (Opus F, 5 cells below) trip and the preregistered W4.6 verdict is **regress**. That verdict stands as recorded. The five misses are on F01, F07 and F09, the tasks Opus also missed in #92 on both of its builds, by the mechanism #92 named (Opus keeps the older CRM record over the correction it saved itself).
+
+The only served-text differences between the builds are the initialize instructions (W4.6) and the put_page description and content parameter (W4.16). To find whether the instruction change is responsible, one attribution set runs, as #92's preregistration describes for a failing gate:
+
+- **`wave12-baseline-instructions`**: the `wave12` build, `claude-opus-5-5`, F01-F10, 2 repeats (20 cells), with `--gbrain-instructions-file` set to the baseline's served instructions (`baseline-gated/served-instructions.txt`). Only the instructions the model sees change; tools, code and slots stay `wave12`.
+
+Reading: if this set closes at least half of the 5-cell gap (16/20 or better), the instruction change is named responsible; otherwise the gap is attributed to run-to-run variation or other wave code and the regress verdict is reported with that context. Budget: about $4.3 from #92's and this run's Opus F cost, inside the $40 ledger cap ($34.35 committed so far); `--budget-usd 5.5`. If the ledger stops it early, the partial set is reported as partial.
