@@ -145,13 +145,12 @@ The baseline is the released gbrain the candidate replaces.
 A change to MCP initialize instructions (F1) or tool descriptions (F10) changes
 what every agent reads before its first call. Its effect on task success is
 checked with the [Cat 40 Model Ladder](2026-10-02-model-ladder-protocol.md)
-`gbrain` arm: models `claude-sonnet-5-5`, `gpt-6.1-sol`, `claude-opus-5-5` and
-`claude-fable-5-1`, all 50 development-world tasks, `--surface starter`,
-uncapped tool results, no judge, two repeats. The baseline build runs in the
-same window, immediately before the candidate, with identical settings. The
-candidate passes when its pooled success is no more than 3 points (12 of 400
-cells) below that same-window baseline and its finance-only leak count does not
-rise. The check reports; it is not a registry gate.
+`gbrain` arm: models `claude-sonnet-5-5`, `gpt-6.1-sol` and `claude-opus-5-5`,
+all 50 development-world tasks, `--surface starter`, uncapped tool results, no
+judge, two repeats. The baseline build runs in the same window, immediately
+before the candidate, with identical settings. The candidate passes when its
+pooled success is no more than 3 points (9 of 300 cells) below that same-window
+baseline and its finance-only leak count does not rise. The check reports; it is not a registry gate.
 
 Cat 40's `--gbrain-instructions-file`, `--gbrain-tool-descriptions-file` and
 `--gbrain-drop-tools` flags replace the text the model is shown, without
@@ -185,6 +184,10 @@ A three-repeat pass costs about $12 to $17 and takes about 35 minutes at
 concurrency 4 on a 4-core machine; the Cat 40 pair costs about $65.
 
 ## Changelog
+
+### 2026-10-07: Fable leaves the F1/F10 check
+
+Under Garry's 2026-10-07 model rule (Opus 5.5 is the top Anthropic model in counted runs; Fable is smoke-only), the check's models change from `claude-sonnet-5-5`, `gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1` (400 cells, 12-cell margin) to the first three (300 cells, the same 3-point margin, 9 cells). No cell had run under the 2026-10-06 model list.
 
 ### 2026-10-06: the F1/F10 check moves to the newest frontier models
 

@@ -33,6 +33,10 @@ describe current behavior first, then the older work behind a decision.
 | Does gbrain's automatic whole-conversation delivery hold up on the sealed held-out set? | [September 30 auto v2 release check](benchmarks/2026-09-30-evidence-auto-v2.md) |
 | Does it hold up on a harder held-out set where chunks fall short? | [October 2 sealed v2 release decision 1](benchmarks/2026-10-02-sealed-v2-decision-1.md) ([preregistration](benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md)) |
 | Should an agent get neighbor chunks, sections or whole pages instead of bare chunks, and at what token cost? | [September 30 evidence-delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
+| What does today's gbrain answer on LongMemEval end to end? | [October 7 current-pin run](benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) ([preregistration](benchmarks/2026-10-06-longmemeval-w10-preregistration.md)) |
+| Which reader should read gbrain's results? | [October 7 reader replay on frozen retrieval](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
+| Is gbrain worth it compared with pasting the whole history into the reader? | [October 7 full-context comparison](benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
+| Does the LongMemEval answer score notice broken retrieval? | [October 6 LongMemEval negative control](benchmarks/2026-10-06-w8-longmemeval-control.md) ([preregistration](benchmarks/2026-10-06-w8-longmemeval-control-preregistration.md)) |
 | Do the published LongMemEval retrieval and reading-notes numbers hold with opaque session ids, and what does a frontier reader score on gbrain's retrieval? | [October 4 opaque-id follow-ups and frontier reader](benchmarks/2026-10-04-longmemeval-opaque-followups.md) ([preregistration](benchmarks/2026-10-04-longmemeval-opaque-followups-preregistration.md)) |
 | With the answer key hidden, how accurate are gbrain's answers, and does the reader prompt or the amount of evidence matter more? | [September 29 opaque-id answer re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
 | Does taking brief notes before answering help when the original conversations remain available? | [September 25 reading-notes comparison](benchmarks/2026-09-25-reading-notes.md) |
@@ -169,7 +173,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-10-06: The October follow-up round and the re-pin to `c5fb0201`
 
-gbrain-evals v0.10.37. The opening names gbrain master `c5fb0201` (v0.60.95.0, was `739e5cc`). The route table points to the October 6 re-pin (was October 4) and the round's plan, and to the review packets awaiting Garry's labels. New rows link the embedding-provider matrix, Cat 21 paraphrases, the frontier takes-bootstrap rerun, Cat 20 with four judges, N6 on Postgres over HTTP, the N8 privacy gate, the N2 judges on current models, the attendance world, A4 with S4 on, the October 6 negative controls and the BEAM-1M dated rerun.
+gbrain-evals v0.10.37. The opening names gbrain master `c5fb0201` (v0.60.95.0, was `739e5cc`). The route table points to the October 6 re-pin (was October 4) and the round's plan, and to the review packets awaiting Garry's labels. New rows link the embedding-provider matrix, Cat 21 paraphrases, the frontier takes-bootstrap rerun, Cat 20 with four judges, N6 on Postgres over HTTP, the N8 privacy gate, the N2 judges on current models, the attendance world, A4 with S4 on, the October 6 negative controls, the BEAM-1M dated rerun, and the October 7 LongMemEval current-pin run, reader replay, full-context comparison and LongMemEval negative control.
 
 How this index changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).

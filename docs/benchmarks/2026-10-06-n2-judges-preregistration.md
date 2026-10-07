@@ -70,4 +70,6 @@ bun eval/runner/n2-judge-replay.ts score --selection selection.json --receipt <2
 
 ## Amendments
 
-None yet.
+### 2026-10-07: Fable 5.1 is smoke-only
+
+On 2026-10-07 Garry set a new eval model rule: Claude Opus 5.5 is the top Anthropic model in counted runs, and Claude Fable runs only in small smoke tests, never in counted cells (gbrain project instructions, "Eval model selection"). This amendment is recorded after the run, under that rule. The finished `claude-fable-5-1` replay stays in the receipt as recorded, labeled smoke-only, and is not counted toward any decision. The preregistered rules are applied per model, so the counted result covers `gpt-6-luna`, `claude-sonnet-5-5`, `gpt-6.1-sol` and `claude-opus-5-5`: all four pass, and the cheapest passing model (`gpt-6-luna`) is unchanged. The Holm family over models against Haiku 4.5 keeps its preregistered five members, since removing one after the results would be a post-hoc change; every counted model's adjusted p is at most the five-member value. No further Fable cell runs.

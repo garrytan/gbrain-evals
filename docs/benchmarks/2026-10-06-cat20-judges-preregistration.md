@@ -50,4 +50,6 @@ Runner: `bun eval/runner/cat20-brainstorm.ts --model anthropic:claude-sonnet-5-5
 
 ## Amendments
 
-None yet.
+### 2026-10-07: Fable 5.1 is smoke-only
+
+On 2026-10-07 Garry set a new eval model rule: Claude Opus 5.5 is the top Anthropic model in counted runs, and Claude Fable runs only in small smoke tests, never in counted cells (gbrain project instructions, "Eval model selection"). This amendment is recorded after the run, under that rule. The finished `claude-fable-5-1` judge scores stay in the receipt as recorded, labeled smoke-only, and are not counted toward the decision. The deciding statistic becomes the median of the three counted judges' means (`claude-sonnet-5-5`, `gpt-6.1-sol`, `claude-opus-5-5`): 3.14 on all 216 ideas, against 3.17 for the preregistered four-judge median. The decision is unchanged either way: no idea passed the internal judge, so the passing-idea statistic is undefined and the preregistered outcome is "inconclusive". No further Fable cell runs.

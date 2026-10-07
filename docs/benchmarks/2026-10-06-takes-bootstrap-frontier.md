@@ -1,8 +1,10 @@
 # Takes-bootstrap on the four frontier models: no forbidden attributions, still not graduated
 
-**Finding.** On gbrain's 123-case takes-bootstrap eval, none of the four current frontier models credited someone else's claim to the page holder, and none produced unparseable output. On October 6, 2026, at gbrain `c5fb0201` (v0.60.95.0), Claude Sonnet 5.5, GPT-6.1 Sol, Claude Opus 5.5 and Claude Fable 5.1 each had **0 forbidden attributions and 0 malformed cases of 123**, against 3 forbidden attributions for Claude Haiku 4.5 on October 4. So the press-attribution leak that blocked graduation is model-dependent: current frontier models don't show it on this corpus. None of the four meets the per-kind bars either (fact and bet precision stay under 0.80 for every model), but those numbers are provisional: gbrain says its labels are incomplete, so the graduation verdict waits for a free re-score once gbrain finishes them.
+**Finding.** On gbrain's 123-case takes-bootstrap eval, none of the current frontier models credited someone else's claim to the page holder, and none produced unparseable output. On October 6, 2026, at gbrain `c5fb0201` (v0.60.95.0), Claude Sonnet 5.5, GPT-6.1 Sol and Claude Opus 5.5 each had **0 forbidden attributions and 0 malformed cases of 123** (so did Claude Fable 5.1, run before Fable became smoke-only), against 3 forbidden attributions for Claude Haiku 4.5 on October 4. So the press-attribution leak that blocked graduation is model-dependent: current frontier models don't show it on this corpus. None of them meets the per-kind bars either (fact and bet precision stay under 0.80 for every model), but those numbers are provisional: gbrain says its labels are incomplete, so the graduation verdict waits for a free re-score once gbrain finishes them.
 
 Status: **Complete** (4 of 4 arms, 123 of 123 cases each). Evidence class: **development evidence**. Preregistration: [2026-10-06-takes-bootstrap-frontier-preregistration.md](2026-10-06-takes-bootstrap-frontier-preregistration.md), pushed before the first classifier call (`17f36a1`).
+
+**Model rule, 2026-10-07.** Claude Opus 5.5 is the top Anthropic model in counted results; Claude Fable 5.1 is smoke-only. The Fable rows below were run before that rule, are kept as recorded and labeled smoke-only, and count toward no decision ([amendment](2026-10-06-takes-bootstrap-frontier-preregistration.md#2026-10-07-fable-51-is-smoke-only)).
 
 ## What takes-bootstrap does
 
@@ -26,7 +28,7 @@ Label-independent verdict (the preregistered decision), 123 cases per model:
 | Claude Sonnet 5.5 | 0 | 0 | yes | 18.5% |
 | GPT-6.1 Sol | 0 | 0 | yes | 18.5% |
 | Claude Opus 5.5 | 0 | 0 | yes | 18.5% |
-| Claude Fable 5.1 | 0 | 0 | yes | 18.5% |
+| Claude Fable 5.1 (smoke-only, not counted) | 0 | 0 | yes | 18.5% |
 | *Claude Haiku 4.5 (Oct 4, published counts)* | *3* | *0* | *no* | |
 
 The upper bounds are exact Clopper-Pearson: 0 of 18 trap cases rules out a high leak rate, not a low one. With 0 malformed of 123, the malformed rate's upper bound is 2.95% for each model.
@@ -38,7 +40,7 @@ Per-kind precision and recall, **provisional** (incomplete labels push precision
 | Claude Sonnet 5.5 | 0.615 / 0.833 | 0.818 / 1.000 | 0.576 / 0.792 | 0.850 / 0.944 | 72 | no |
 | GPT-6.1 Sol | 0.714 / 0.857 | 0.913 / 0.909 | 0.667 / 0.833 | 0.619 / 0.722 | 82 | no |
 | Claude Opus 5.5 | 0.616 / 0.857 | 0.746 / 0.970 | 0.514 / 0.750 | 0.611 / 0.611 | 69 | no |
-| Claude Fable 5.1 | 0.614 / 0.857 | 0.837 / 0.939 | 0.515 / 0.708 | 0.316 / 0.333 | 68 | no |
+| Claude Fable 5.1 (smoke-only, not counted) | 0.614 / 0.857 | 0.837 / 0.939 | 0.515 / 0.708 | 0.316 / 0.333 | 68 | no |
 | *Claude Haiku 4.5 (Oct 4)* | *0.714 / 0.762* | *0.894 / 0.970* | *0.545 / 0.750* | *0.750 / 0.667* | *75* | *no* |
 
 Every model misses the fact and bet precision bars. GPT-6.1 Sol has the most pages fully right (82). Fable 5.1 rarely labels anything a hunch (6 of 18 found), which is a typing choice the incomplete labels may or may not explain. Bigger models did not do better here: Opus and Fable got fewer pages fully right than Sonnet and GPT.
@@ -50,7 +52,7 @@ Run facts per arm (from the request log): 123 provider requests each, 0 non-2xx 
 | Claude Sonnet 5.5 | $0.225 | $0.80 | 3.4 min |
 | GPT-6.1 Sol | $0.174 | $0.80 | 6.9 min |
 | Claude Opus 5.5 | $0.583 | $1.40 | 5.4 min |
-| Claude Fable 5.1 | $1.538 | $5.01 | 10.6 min |
+| Claude Fable 5.1 (smoke-only, not counted) | $1.538 | $5.01 | 10.6 min |
 
 The tracker's spend matches the provider-reported tokens in the request log at list price (for example Sonnet: 55,472 input and 11,364 output tokens, $0.2246).
 

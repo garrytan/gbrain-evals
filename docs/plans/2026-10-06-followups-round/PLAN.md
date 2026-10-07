@@ -18,6 +18,8 @@ Spend: about $221 expected, capped at $287, inside the $300 limit. No sealed set
 
 ## Models
 
+*Amended 2026-10-07: under Garry's new rule, Claude Opus 5.5 is the top Anthropic model in counted runs and Claude Fable 5.1 is smoke-only. Fable cells that had already run stay as recorded, labeled smoke-only, and count toward no decision; no further Fable cell runs.*
+
 Checked on 2026-10-06 against each provider's model list (`GET /v1/models` on OpenAI and Anthropic) and the price table in `eval/runner/budget-ledger.ts`.
 
 | Family | Newest frontier model | Released | Price per M tokens (in / out) | Role this round |

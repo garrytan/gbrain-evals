@@ -26,14 +26,14 @@ Models: `claude-sonnet-5-5` for `think`, `brainstorm`, the Cat 35 distiller, fac
 | Category | Statistic | Real | Broken | Ratio (limit 0.5) | Signal floor | Injection check | Verdict |
 |---|---|---:|---:|---:|---|---|---|
 | Cat 14 calibration | calibrated win rate (of 6 win-eligible probes) | 0.667 (4 of 6) | 0.000 | 0.00 | met (≥ 2 wins) | no calibration block in any of 8 calibrated prompts | **pass** |
-| Cat 20 brainstorm | median of four judges' mean score on all ideas (0 to 5) | 3.17 | 2.99 | 0.94 | met (> 1.0) | shuffled corpus recorded (seed, hash) | **fail** |
+| Cat 20 brainstorm | median of the three counted judges' mean score on all ideas (0 to 5) | 3.14 | 2.99 | 0.95 | met (> 1.0) | shuffled corpus recorded (seed, hash) | **fail** |
 | Cat 29 think vs search | mean `think` score, blind pairwise judge (0 to 5) | 3.26 | 3.62 | 1.11 | met (> 0) | `embed_transport: stubbed-hash` | **fail** |
 | Cat 35 distillation | dream-lane coverage, macro (67 planted items) | 0.891 | 0.000 | 0.00 | met (> 0.10) | 8 donor transcripts, each from another scenario, with hashes | **pass** |
 
 What the failures mean:
 
 - **Cat 29.** Its five questions ask about named companies and facts in the synthetic corpus, so keyword search finds the right pages without meaningful embeddings, and `think` writes as good an answer (here slightly better, within noise for 5 questions). The category measures synthesis over keyword-findable pages, not retrieval. `think` beat raw search on all 5 questions in both arms.
-- **Cat 20.** With shuffled pages, Sonnet 5.5 still writes plausible, well-formed ideas that cite the pages, and the judges rate them nearly as well: 2.92 to 3.15 by judge against 3.11 to 3.55 for the real corpus. The judges score idea quality in general more than whether the ideas follow from the brain's content.
+- **Cat 20.** The table counts Claude Sonnet 5.5, GPT-6.1 Sol and Claude Opus 5.5; the preregistered four-judge median with Claude Fable 5.1 (smoke-only since 2026-10-07, [amendment](2026-10-06-negative-controls-preregistration.md#2026-10-07-fable-51-is-smoke-only)) gives 3.17 against 2.99, ratio 0.94, the same verdict. With shuffled pages, Sonnet 5.5 still writes plausible, well-formed ideas that cite the pages, and the judges rate them nearly as well: 2.92 to 3.15 by judge against 3.11 to 3.55 for the real corpus. The judges score idea quality in general more than whether the ideas follow from the brain's content.
 
 Partial faults (report-only, no rule):
 

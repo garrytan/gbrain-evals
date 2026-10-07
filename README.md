@@ -46,8 +46,8 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | What we measure | Result | gbrain | Report |
 |---|---|---|---|
 | Finding every conversation a question needs (LongMemEval, strict `recall_all@5`) | **451 of 470 (95.96%)** | `109b992` | [Recount](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md) |
-| Answer accuracy on LongMemEval, house reader with reranker | **453 of 500 (90.6%)** | v0.59.13.0 | [Re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
-| Answer accuracy with a frontier reader (`gpt-5.4`) on gbrain's retrieval | **447 of 500 (89.4%)** | v0.59.13.0 retrieval | [Frontier reader](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md#2-a-frontier-reader-on-gbrains-retrieval) |
+| Answer accuracy on LongMemEval, release retrieval, benchmark notes reader (`claude-sonnet-5-5`, official `gpt-4o` judge) | **468 of 500 (93.6%)** | `c5fb0201` | [Current pin](docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) |
+| Best reader on the same retrieval (`claude-opus-5-5`, frozen 2026-09-29 retrieval) | **474 of 500 (94.8%)**, above Sonnet 4.6's 453 after Holm | `a7cb37b` retrieval | [Reader replay](docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
 | Whole-conversation delivery against bare chunks, sealed held-out set | **192 vs 132 of 200** (+60/−0) | `d44296c` | [Sealed decision](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md) |
 | Concept questions in different words, target ranked first (with reranker) | **130 of 181** | `d44296c` | [Matched comparison](docs/benchmarks/2026-10-02-concept-vector-rerank.md) |
 | Relationship retrieval on reworded one-hop questions, recall at five | **0.411 → 0.537**, 19 better, 0 worse | `3a284ae` | [N9](docs/benchmarks/2026-10-01-n9-multi-hop.md) |
@@ -59,8 +59,8 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller); proactive recall gated in CI | `c5fb0201` | [N6 on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md), [N8 gate](docs/benchmarks/2026-10-06-n8-privacy-gate.md) |
 | Keeping speaker and time across chat export formats | **28 of 28** formats | `c5fb0201` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-06-followups-repin.md) |
 | Finding contradicting notes | **149 of 150** conflicts with the default judge model | `739e5cc` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md) |
-| Contradiction judge on current models | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of five current models; cheapest passing model $0.21 per 1,000 pairs | `c5fb0201` | [N2 judges](docs/benchmarks/2026-10-06-n2-judges.md) |
-| Attributing someone else's claim to the page holder (takes classifier) | **0 of 123** cases on each of four frontier models (3 with Claude Haiku 4.5); the classifier is not yet graduated | `c5fb0201` | [Takes-bootstrap](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
+| Contradiction judge on current models | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models (Opus 5.5 the top Anthropic one); cheapest passing model $0.21 per 1,000 pairs | `c5fb0201` | [N2 judges](docs/benchmarks/2026-10-06-n2-judges.md) |
+| Attributing someone else's claim to the page holder (takes classifier) | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5); the classifier is not yet graduated | `c5fb0201` | [Takes-bootstrap](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
 | Real agents (Claude Code, Codex) spending or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | v0.60.46.0 | [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) |
 | Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
@@ -97,6 +97,8 @@ Many headline LongMemEval "R@5" scores of 95% to 100% count a question as found 
 appears; on that looser metric gbrain finds at least one for 470 of 470. Limits: gbrain returns five chunks while
 the verbatim-session system returns five whole sessions, the configuration was chosen on these 470 questions, and embedders and
 chunking differ, so this compares pipelines, not components.
+
+**Retrieval or the whole history: within 7 points at a seventh of the recurring cost.** On 150 LongMemEval-S questions with the same reader, gbrain's retrieval answered 139 against 144 with the whole ~115,000-token history pasted in (Sonnet 5.5), and 137 against 141 (GPT-6.1 Sol). Both stay within the preregistered 7-point margin, which is not the same as equal: the gap is in questions that need several conversations. gbrain's recurring cost per question is $0.024 against $0.173 with Sonnet 5.5, plus a one-time $0.015 to index each history. [Full-context comparison](docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md).
 
 **Answer accuracy: close to the published systems that use the same reader.** With `gpt-5.4` as the reader,
 gbrain's retrieval answers 89.4%; a temporal knowledge-graph service publishes 90.2% and a database-backed memory
@@ -235,6 +237,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-07: LongMemEval answers at the current pin, the full-context comparison, Fable smoke-only
+
+gbrain-evals v0.10.37. The LongMemEval answer row moves from 453 of 500 (Sonnet 4.6 house reader, v0.59.13.0) to 468 of 500 at `c5fb0201` with the Sonnet 5.5 benchmark notes reader; against the same reader on the old retrieval that is "no change shown" (462, p = 0.08), so the move reflects the reader and the current pin. The `gpt-5.4` frontier-reader row (447 of 500) is replaced by the best current reader on the same frozen retrieval, Opus 5.5 at 474. "How gbrain compares" gains the matched-reader full-context comparison. Takes and contradiction-judge rows count Opus 5.5 as the top Anthropic model; Fable 5.1 results are smoke-only under Garry's 2026-10-07 rule.
 
 ### 2026-10-06: Re-pin to gbrain `c5fb0201` and the October follow-up round
 

@@ -138,8 +138,9 @@ is shown, without changing gbrain, for A/B tests of that text.
 ## Models
 
 New runs use the newest frontier model of each family: `claude-sonnet-5-5`,
-`gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1`, provider default
-settings, two repeats per cell. An older model joins only as the single link to
+`gpt-6.1-sol` and `claude-opus-5-5` (the top Anthropic model), provider default
+settings, two repeats per cell. `claude-fable-5-1` runs only in small smoke
+tests, never in counted cells. An older model joins only as the single link to
 an earlier result, named in the run's preregistration.
 
 The published 2026-10-02 to 2026-10-04 runs used two ladders of three rungs,
@@ -189,8 +190,8 @@ evidence, not a precise estimate. "Inconclusive" is a permitted result, and so i
 A build-versus-build comparison runs the control build in the same window as
 the candidate, with identical models, tasks, repeats and flags, because the
 same build's scores move between runs hours apart. The agent-first operator
-check (F1/F10) on the `gbrain` arm uses `claude-sonnet-5-5`, `gpt-6.1-sol`,
-`claude-opus-5-5` and `claude-fable-5-1`, all 50 tasks and two repeats, and passes when pooled
+check (F1/F10) on the `gbrain` arm uses `claude-sonnet-5-5`, `gpt-6.1-sol` and
+`claude-opus-5-5`, all 50 tasks and two repeats, and passes when pooled
 success is no more than 3 points below the same-window control with no rise in
 leaks ([Cat 41 protocol](2026-10-03-agent-operator-protocol.md#the-f1f10-agent-loop-check)).
 
@@ -216,7 +217,7 @@ bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle \
 # gbrain arm: build the slots once per commit, then run the cells
 bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-repo <gbrain checkout> --gbrain-ref <sha> \
   --slots 5 --slot-build-allowance-usd 2 --budget-usd 10 --out eval/reports/cat40/slots-<sha>
-bun eval/runner/cat40-model-ladder.ts --models claude-sonnet-5-5,gpt-6.1-sol,claude-opus-5-5,claude-fable-5-1 --arms gbrain \
+bun eval/runner/cat40-model-ladder.ts --models claude-sonnet-5-5,gpt-6.1-sol,claude-opus-5-5 --arms gbrain \
   --gbrain-repo <gbrain checkout> --gbrain-ref <sha> --gbrain-label <label> --slots 5 --repeat 2 \
   --transcripts --judge none --budget-usd 45 --out eval/reports/cat40/<label>
 ```
@@ -227,6 +228,10 @@ cost about $0.05 per cell; a `gbrain` cell costs $0.02 to $0.30 depending on the
 model.
 
 ## Changelog
+
+### 2026-10-07: Fable is smoke-only
+
+Under Garry's 2026-10-07 model rule, new counted runs and the F1/F10 check drop `claude-fable-5-1` (was one of four models); Opus 5.5 is the top Anthropic model. The published 2026-10-04 Fable 5.1 cells stay as recorded. No cell had run under the 2026-10-06 list.
 
 ### 2026-10-06: new runs use the newest frontier models
 

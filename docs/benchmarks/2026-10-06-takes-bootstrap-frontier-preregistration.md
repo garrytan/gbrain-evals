@@ -68,4 +68,6 @@ Runner: `bun eval/runner/takes-bootstrap-frontier.ts run --preregistration docs/
 
 ## Amendments
 
-None yet.
+### 2026-10-07: Fable 5.1 is smoke-only
+
+On 2026-10-07 Garry set a new eval model rule: Claude Opus 5.5 is the top Anthropic model in counted runs, and Claude Fable runs only in small smoke tests, never in counted cells (gbrain project instructions, "Eval model selection"). This amendment is recorded after the run, under that rule. The finished `claude-fable-5-1` arm stays in the receipts as recorded, labeled smoke-only, and is not counted toward the verdict. The preregistered verdict is per model (forbidden attributions and malformed cases), so the counted verdict covers `claude-sonnet-5-5`, `gpt-6.1-sol` and `claude-opus-5-5`: 0 forbidden attributions and 0 malformed cases each, unchanged by the exclusion. No further Fable cell runs.
