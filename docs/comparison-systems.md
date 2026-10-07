@@ -25,7 +25,7 @@ were first written for the open-source comparison plan (gbrain-evals#73, branch 
 | `ext-temporal-graph` | Graphiti (open-source; the hosted Zep service is built on it) | graphiti-core==0.30.2 (getzep/graphiti@eaa4128681bc53487138a4bbc22d58336ebe70d2, tag v0.30.2) | getzep/zep-papers@4b7f26c, LoCoMo scripts |
 | `ext-markdown-kb` | Basic Memory | basic-memory==0.23.2 | basicmachines-co/basic-memory@c0bd87c, benchmarks/ |
 | `ext-agent-runtime` | Letta Code | @letta-ai/letta-code@0.34.4 | none for memory QA |
-| `ext-verbatim-session` | MemPalace (raw vector mode and hybrid mode without the LLM reranker) | pinned when its bundle lands | MemPalace/mempalace benchmarks/ (LongMemEval) |
+| `ext-verbatim-session` | MemPalace (raw vector mode and the LoCoMo hybrid mode with the LLM reranker off) | mempalace==3.10.0 (MemPalace/mempalace@22fd87f) | MemPalace/mempalace@22fd87f benchmarks/locomo_bench.py |
 
 The machine-readable pin table below is what `bun run eval:scoreboard check` validates against the bundles (lockfile
 and capability-record hashes).
@@ -94,13 +94,13 @@ and capability-record hashes).
   },
   {
     "kind": "ext-verbatim-session",
-    "product": "MemPalace (raw vector mode and hybrid mode without the LLM reranker)",
-    "package": "pinned when its bundle lands",
-    "image": null,
-    "lock_file": null,
-    "lock_sha256": null,
-    "capability_sha256": null,
-    "vendor_benchmark_code": "MemPalace/mempalace benchmarks/ (LongMemEval)"
+    "product": "MemPalace (raw vector mode and the LoCoMo hybrid mode with the LLM reranker off)",
+    "package": "mempalace==3.10.0 (MemPalace/mempalace@22fd87f09c19d5ffb2d6966486483353937931c0)",
+    "image": "built from the bundle Dockerfile on python:3.12-slim-bookworm; the run receipt records the image id",
+    "lock_file": "docs/comparison-systems/ext-verbatim-session/uv.lock",
+    "lock_sha256": "e2e066bf182dff9570e6f3c0e1b5509f2325a6c7f42d67d93752c760f7ce9b1d",
+    "capability_sha256": "ffd48dae0fcd93b2bc72a1bddd5ae773411052c4b200010b6ca6da0f9d288203",
+    "vendor_benchmark_code": "MemPalace/mempalace@22fd87f benchmarks/locomo_bench.py"
   }
 ]
 ```
