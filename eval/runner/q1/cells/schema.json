@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gbrain-evals/q1-cell/v1",
+  "title": "Q1 cell definition",
+  "description": "One system x configuration x set of the Q1 scoreboard: one ingest realization per conversation, one retrieval per question per policy, and the arms derived from them. Each arm writes one scoreboard cell (cells/<cell_id>/ with receipt.json, run-config.json, rows, answers and judgments). Generated into q1-cells.json by eval/runner/q1/cells/definitions.ts, which also validates every definition (definitionProblems). A campaign manifest references a cell by `id` and a scoreboard cell by an arm's `cell_id`.",
+  "type": "object",
+  "required": ["schema", "id", "set", "block", "benchmark", "split", "selection", "exclusions", "system", "configuration", "runner", "ingest_replicate", "effort", "canonical_instrument", "probes", "shards", "expected_hours", "arms", "estimate"],
+  "properties": {
+    "schema": { "const": "gbrain-evals/q1-cell/v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,79}$", "description": "<set>.<system>.<configuration>[.r<n>]" },
+    "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5"], "description": "The preregistered set the cell selects questions from." },
+    "block": { "enum": ["T1", "T2-S2a", "T2-S2b", "T2-S3", "T2-S4-S5"], "description": "The spend block (ledger run) the cell is charged to." },
+    "benchmark": { "enum": ["beam-10m", "beam-100k", "beam-1m", "locomo", "lme-s", "lme-m"] },
+    "split": { "enum": ["dev", "sealed", "all"], "description": "Conversations from the benchmark's split file; sealed and all need custody (GBRAIN_EVALS_CUSTODY_LOG and an output directory outside the repository)." },
+    "selection": { "$ref": "#/$defs/selection" },
+    "exclusions": { "type": "array", "items": { "type": "object", "required": ["question_id", "reason"], "properties": { "question_id": { "type": "string" }, "reason": { "type": "string" } } }, "description": "Preregistered exclusions: they run and are reported apart, never in a confirmatory cohort." },
+    "system": { "type": "string", "description": "A kind id from eval/systems/kinds.json." },
+    "configuration": { "enum": ["shipped-defaults", "recipe", "common", "common-embedder", "baseline"] },
+    "runner": { "enum": ["shim", "in-process"], "description": "shim: a protocol v1 system at --system-url (one VM per conversation shard on S1); in-process: a harness control or answering system." },
+    "ingest_replicate": { "type": "integer", "minimum": 1, "description": "2 for the disclosed second LoCoMo ingest." },
+    "effort": { "const": "medium" },
+    "canonical_instrument": { "type": "string", "description": "The benchmark's instrument id in eval/runner/memory-qa/instruments.ts; its judgments are judge_replicate 0." },
+    "probes": { "type": "object", "required": ["sample", "seed"], "properties": { "sample": { "type": "integer", "minimum": 0 }, "seed": { "type": "string" } }, "description": "Write-start-to-queryable probes: the last session plus `sample` sessions per conversation." },
+    "shards": { "type": "integer", "minimum": 1, "description": "VM launch units (conversation shards)." },
+    "expected_hours": { "type": "number", "minimum": 0 },
+    "arms": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/arm" } },
+    "estimate": { "type": "object", "required": ["usd", "lines"], "properties": { "usd": { "type": "number" }, "lines": { "type": "object", "additionalProperties": { "type": "number" } } }, "description": "Planned dollars from budget-ledger.ts prices and the manifest's stated assumptions." }
+  },
+  "$defs": {
+    "selection": {
+      "oneOf": [
+        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "all" } } },
+        { "type": "object", "required": ["kind", "per_conversation", "seed"], "properties": { "kind": { "const": "per-conversation" }, "per_conversation": { "type": "integer", "minimum": 1 }, "seed": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "limit", "stratify", "seed"], "properties": { "kind": { "const": "stratified" }, "limit": { "type": "integer", "minimum": 1 }, "stratify": { "enum": ["category", "conversation-category"] }, "seed": { "type": "string" }, "min": { "type": "object", "additionalProperties": { "type": "integer" } } } },
+        { "type": "object", "required": ["kind", "limit", "seed"], "properties": { "kind": { "const": "shootout-slice" }, "limit": { "type": "integer", "minimum": 1 }, "seed": { "type": "integer" } } }
+      ]
+    },
+    "arm": {
+      "type": "object",
+      "required": ["id", "cell_id", "set", "arm", "mode", "policy", "budget", "questions", "readers", "reader_replicates", "frontier", "judge_repeats", "label"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$" },
+        "cell_id": { "type": "string", "description": "The scoreboard cell id: <cell id>.<arm id>." },
+        "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5"] },
+        "arm": { "enum": ["component", "whole-system", "diagnostic"] },
+        "mode": { "enum": ["packed", "native-default", "own-answer", "agent", "full-context", "retrieval-only"], "description": "packed: the system's items packed into `budget` tokens, one frozen byte string per question for every reader; native-default: the system's own default amount; own-answer: the system's answer route; agent: an answering system's loop; full-context: the whole history where it fits each reader's window; retrieval-only: rows without readers." },
+        "policy": { "enum": ["fixed-evidence", "vendor-default", null] },
+        "budget": { "type": ["integer", "null"] },
+        "variant": { "enum": ["synthesize", "think"] },
+        "questions": { "oneOf": [{ "$ref": "#/$defs/selection" }, { "type": "null" }] },
+        "readers": { "type": "array", "items": { "type": "string" } },
+        "reader_replicates": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } },
+        "frontier": { "oneOf": [{ "type": "null" }, { "type": "object", "required": ["judges", "readers", "sample"], "properties": { "judges": { "type": "array", "items": { "type": "string" } }, "readers": { "type": ["array", "null"] }, "sample": { "type": ["integer", "null"] } } }] },
+        "judge_repeats": { "oneOf": [{ "type": "null" }, { "type": "object", "required": ["count", "readers"], "properties": { "count": { "type": "integer" }, "readers": { "type": ["array", "null"] } } }] },
+        "label": { "type": "string" },
+        "anchor": { "type": "boolean" }
+      }
+    }
+  }
+}
