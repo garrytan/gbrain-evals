@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.36] - 2026-10-06
+## [0.10.37] - 2026-10-06
 
 ### Cat 40 Hard round 4: questions about several accounts; the held-out run is 50k only
 
@@ -109,6 +109,16 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.36] - 2026-10-06
+
+### Tier 3 fence repair across five models, two rounds (gbrain #6188, T4)
+
+gbrain repairs malformed facts and takes tables in tiers; Tier 3 sends the rows deterministic rules cannot place to a chat model and writes the answer only if it passes seven validation gates, which check that text is preserved but not which free-text column it belongs in. [The report](docs/benchmarks/2026-10-06-fence-repair-tier3.md) covers two preregistered rounds ([preregistration](docs/benchmarks/2026-10-06-fence-repair-tier3-preregistration.md), [amendment 1](docs/benchmarks/2026-10-06-fence-repair-tier3-amendment-1.md)), three runs per model on fresh brains through gbrain's production path.
+
+**Round 1** (gbrain `171a7e24`, prompt v1, 78 synthetic fences): gate-pass 96.5% to 100%, but the default `claude-opus-4-7` put a cell in the wrong column in 8 of 198 repairs (4.0%, bar 1%); `gpt-6.1-sol` (1 of 198) and `claude-fable-5-1` (0) met the bar. The report proposed seven fixes, and gbrain's PR 4 made them.
+
+**Round 2** (gbrain `7d75e08c`, prompt v2 with a `HOLD` decline, a Tier 1 rule for stray empty cells, split claims and extra text cells held for a person, a reasoning allowance): measured on the round 1 fixtures and on a 52-fence held-out set frozen before the new code ran. `gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1` qualify: on the held-out set they repaired 95, 95 and 93 of the 99 attempts that reached the model with no wrong cell and answered `HOLD` on the rest. `claude-opus-4-7` fails on the round 1 fixtures (3 of 165) and `claude-sonnet-5-5` on both sets. With an Anthropic key only, the default becomes `claude-opus-5-5` (gbrain [`51f4602d`](https://github.com/garrytan/gbrain/commit/51f4602d4420ee5471984bac19e8a948d939fc73)), which ties `gpt-6.1-sol` and beats Fable 5.1 on gate-pass, cost and speed. A claim cut by an unescaped pipe in a fence with no header reached the model at the measured code; gbrain fixed that routing before shipping, and the result shipped in v0.60.102.0 ([`5b5891069`](https://github.com/garrytan/gbrain/commit/5b5891069), #6229), where a $0 routing replay moves only that fixture to manual. Raw per-fixture rows, summaries and verdicts for both rounds are committed with a keyless recount test and receipts-manifest entries. $23.50 in all.
 
 ## [0.10.35] - 2026-10-06
 
