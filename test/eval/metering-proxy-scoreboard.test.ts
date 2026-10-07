@@ -122,14 +122,17 @@ describe('attribution', () => {
 
 describe('route output caps and billed versus reserved dollars', () => {
   beforeEach(() => closeLedgers());
-  test('each slot gets its route class cap: injected when absent, refused when exceeded', async () => {
+  test('harness slots get their route class cap (injected when absent, refused when exceeded); a system slot is never rewritten or refused', async () => {
     const up = upstream();
     const { proxy, post, lines } = start(up.fetchImpl, { routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { harness: 'reader', judge: 'judge' }, defaultClass: 'extraction' } });
     try {
       await post('/ext-memory-bank/openai/v1/chat/completions', chat());
       await post('/harness/openai/v1/chat/completions', chat());
       await post('/judge/openai/v1/chat/completions', chat());
-      expect(up.seen.map(s => s.body.max_completion_tokens)).toEqual([4096, 2048, 1024]);
+      expect(up.seen.map(s => s.body.max_completion_tokens)).toEqual([undefined, 2048, 1024]);
+      const big = await post('/ext-memory-bank/openai/v1/chat/completions', chat({ max_completion_tokens: 64000 }));
+      expect(big.status).toBe(200);
+      expect(up.seen[3].body.max_completion_tokens).toBe(64000);
       const over = await post('/judge/openai/v1/chat/completions', chat({ max_completion_tokens: 2000 }));
       expect(over.status).toBe(400);
       expect((await over.json() as any).error.message).toContain('judge route cap of 1024');

@@ -298,10 +298,17 @@ of its hash list: OPEN (relayed by the program owner when minting finishes).
 
 ## Changelog
 
+**A3 (2026-10-07, before freeze): output caps bind only the harness's own calls.** The dev stress pilot showed the
+metering proxy refusing gbrain's query-expansion call, which states a 64,000-token output allowance, because the
+proxy's default output cap was 32,768. Every pilot query therefore ran without expansion, which is not gbrain's shipped
+behavior. The proxy now applies output caps (inject when absent, refuse when exceeded) only to reader and judge calls.
+A system under test's requests pass unmodified, and their reservation is the allowance they state. The pilot's query
+phase is rerun on the fixed proxy.
+
 ### 2026-10-07: amendments A1 and A2
 
 Readers drop to Opus 5.5, GPT-6.1 Sol and Sonnet 5.5 (Fable smoke-only, program rule); the fresh held-out reserve is
-recorded.
+recorded; output caps bind only harness calls (A3).
 
 ### 2026-10-06: shipped-behavior fallbacks, the full-surface cell
 

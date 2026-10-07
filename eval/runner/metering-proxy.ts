@@ -527,7 +527,11 @@ export class MeteringProxy {
     if (streamed && (p.streaming ?? 'meter') === 'refuse') return refuse(400, 'invalid_request', 'streaming is disabled for this cell', model);
     if (streamed && prov === 'openai' && route === '/v1/chat/completions') body!.stream_options = { ...(body!.stream_options ?? {}), include_usage: true };
     const field = body ? outputField(prov, route) : null;
-    if (field && body) {
+    // Output caps bind only the harness's own calls (readers, judges). A system under test sends its requests as it
+    // would in production: the proxy never rewrites or refuses them for their output allowance, because that would
+    // change the system being measured. Its reservation is the allowance it states (budget-ledger priceRequest), and a
+    // request that states none reserves the default allowance.
+    if (field && body && this.harnessSlot(tag.slot)) {
       const stated = [body.max_tokens, body.max_completion_tokens, body.max_output_tokens].filter((v): v is number => typeof v === 'number');
       if (stated.some(v => v > cap)) return refuse(400, 'invalid_request', `requested ${Math.max(...stated)} output tokens, above this cell's ${routeClass !== undefined ? `${routeClass} route ` : ''}cap of ${cap}`, model);
       if (!stated.length) body[field] = cap;

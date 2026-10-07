@@ -65,7 +65,7 @@ describe('lease mode refuses before forwarding', () => {
     const { proxy, post } = leased(lease, up.fetchImpl, { allowModels: ['openai:gpt-4.1-mini'], maxOutputTokens: 1000, streaming: 'refuse', forbiddenMarkers: ['conv-26:q007'] });
     try {
       expect((await post('/c/openai/v1/chat/completions', chat('gpt-4o-mini'))).status).toBe(403);
-      expect((await post('/c/openai/v1/chat/completions', chat('gpt-4.1-mini', { max_completion_tokens: 5000 }))).status).toBe(400);
+      expect((await post('/harness/openai/v1/chat/completions', chat('gpt-4.1-mini', { max_completion_tokens: 5000 }))).status).toBe(400);
       expect((await post('/c/openai/v1/chat/completions', chat('gpt-4.1-mini', { stream: true }))).status).toBe(400);
       const leak = await post('/c/openai/v1/chat/completions', chat('gpt-4.1-mini', { messages: [{ role: 'user', content: 'metadata conv-26:q007' }] }));
       expect(leak.status).toBe(403);
@@ -96,7 +96,7 @@ describe('lease mode forwarding', () => {
     const { proxy, post } = leased(lease, up.fetchImpl, { maxOutputTokens: 2048 });
     try {
       const body = { model: 'gpt-4.1-mini', messages: [{ role: 'user', content: 'hi' }] };
-      const res = await post('/c/openai/v1/chat/completions', body, { authorization: 'Bearer dummy-from-container', 'x-api-key': 'dummy2' });
+      const res = await post('/harness/openai/v1/chat/completions', body, { authorization: 'Bearer dummy-from-container', 'x-api-key': 'dummy2' });
       expect(res.status).toBe(200);
       expect(up.seen[0].headers.get('authorization')).toBe('Bearer placeholder-openai');
       expect(up.seen[0].headers.get('x-api-key')).toBeNull();
