@@ -201,6 +201,41 @@ In the secondary families, "gbrain-shootout common" also means the frozen-master
 - **S3, PrecisionMemBench (P3).** The upstream contract (the shared evaluator supplies persona, pins and relation
   expansion for every system), cases as clusters: each system's common configuration against gbrain-shootout common
   on the search-only categories' precision and recall (ten comparisons); structural categories reported separately.
+  The runner is `eval/runner/precisionmembench-system.ts` and the analysis `eval/runner/precisionmembench-s3.ts`. Seven
+  rules fix what the upstream contract leaves open, each accepted by Garry on 2026-10-06:
+  1. *Users and scopes.* The shim protocol has no user or scope field. Each (user, scope) that a case searches is its
+     own opaque namespace, holding that user's beliefs in that scope plus the user's universal beliefs, the same
+     federation the legacy gbrain adapter uses. The five universal beliefs are therefore ingested once per searched
+     scope (50 sessions for 35 beliefs). A belief that no searched namespace holds (the other user's) gets a namespace
+     of its own, so every belief reaches the system, and the cross-user case tests namespace isolation.
+  2. *Event times.* Upstream sends no dates, but the Graphiti and Hindsight shims refuse an undated session. Each
+     belief gets a disclosed synthetic time, 2026-05-29T00:00 plus one minute per position in the fixture: the order in
+     which upstream providers received the beliefs. No belief's own dates are used, since they would hint at which
+     belief supersedes which. A query is asked at its namespace's last event time.
+  3. *Retrieval amount.* Each case runs one retrieval under the system's `vendor-default` settings. The returned items
+     map to beliefs by the strict-source rule (distinct cited sources in first-appearance order, whole items), cut at
+     the case's limit (`maxBeliefs`, 20 unless the case sets 0, 1, 2 or 8), as upstream's `/search` limit would.
+  4. *Provenance.* An item whose provenance is unavailable cites nothing and so counts neither for nor against
+     precision; the share of such items is reported beside each system's precision. An item that cites several
+     beliefs counts all of them. A system whose returned items all lack provenance is "not measurable" and leaves the
+     Holm family.
+  5. *Families.* The search-only categories are every category outside the vendored scorer's `STRUCTURAL_CATEGORIES`:
+     43 search-only cases and 34 structural ones. Scope disambiguation, supersession and ranking stability are
+     structural under that list, although search shapes them.
+  6. *The test.* Per pair, on the 43 search-only cases with each case its own cluster: `pairObservations`,
+     `clusteredPairedDelta` (seed 20261006, 10,000 draws, delta = system minus gbrain), the two-sided cluster sign-flip
+     p-value and `holmAdjusted` across the family. The family's baseline is gbrain-shootout common at frozen master
+     (amendment A2); the same comparisons against the pin build are a separate, descriptive family. As in the primary
+     family, a case that is a harness failure (or has no row) on any run in the family is excluded from every pair of
+     that family (`crossSystemExclusion`), and the count is reported; a system that is not measurable has left the
+     family and does not take part. Following the upstream scorer, a case whose metric the scorer leaves undefined on
+     either side is dropped from that metric's pair, with the count reported per side. As in the primary family, a
+     pair with more than 5% of the search-only cases excluded (3 or more of 43), or with a run that is invalid or
+     incomplete, reads "incomplete", with its numbers and no direction, and stays in the Holm family. Structural
+     categories get means and pass counts per system, with no tests.
+  7. *Configurations and cells.* Graphiti's recipe configuration runs on PrecisionMemBench as its own descriptive
+     cell (the plan's risk table allows it; its lease uses the per-session cost basis, the conservative one). The
+     Phase 5 cells join the campaign only through an amendment.
 
 ### Descriptive (no tests)
 
@@ -336,6 +371,13 @@ estimated, $7.42 of it Graphiti's recipe. Recorded before any Phase 5 lease.
 ### 2026-10-06: gbrain master moved
 
 gbrain master moved to 9cc7c4677 (v0.60.99.0) during Phase 4; keyless retrieval identical on the fixture and one LoCoMo dev conversation; counted rows stay at c5fb0201.
+
+### 2026-10-06: S3 rules
+
+Wrote the seven PrecisionMemBench rules into S3 (users and scopes, event times, retrieval amount, provenance, families,
+the test, configurations and cells), each accepted by Garry on 2026-10-06, and named the runner and the analysis. The
+test rule adds the family-wide harness exclusion and the incomplete reading as in the primary family, and drops a case
+whose metric the upstream scorer leaves undefined, following the scorer. No PrecisionMemBench cell had run.
 
 ### 2026-10-06: amendment A4
 

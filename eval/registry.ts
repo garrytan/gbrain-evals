@@ -1185,6 +1185,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'paid-arm.ts': { role: 'paid-arm guard: --paid and --budget-run-id against the budget ledger' },
   'pins.ts': { role: 'declared gbrain pins from package.json' },
   'precisionmembench-instrument.ts': { role: 'PrecisionMemBench instrumentation sweep', part_of: 'precisionmembench' },
+  'precisionmembench-s3.ts': { role: 'open-source memory shootout family S3: PrecisionMemBench search-only precision and recall, each common configuration paired with gbrain-shootout common (frozen master, and the pin as a descriptive family), cluster sign-flip and Holm', part_of: 'precisionmembench' },
   'precisionmembench-system.ts': { role: 'PrecisionMemBench on the upstream contract for any open-source memory shootout system (protocol v1 shim or in-process gbrain-shootout): Phase 5, family S3', part_of: 'precisionmembench' },
   'probe-accounting.ts': { role: 'shared probe accounting' },
   'promotion.ts': { role: 'evaluates preregistered promotion rules against a receipt' },

@@ -5,7 +5,7 @@
  * (eval/systems/_fake), every canonical failure outcome, the not-measurable provenance rule,
  * gbrain-shootout in process behind a stand-in metering proxy (hash vectors through the
  * transport, then OpenAI-style embeddings and Voyage reranks answered by the stand-in), and the
- * Phase 5 draft cells. With GBRAIN_OVERLAY_SPEC=<checkout>@<sha> it also runs gbrain-shootout on
+ * Phase 5 cells (amendment A4). With GBRAIN_OVERLAY_SPEC=<checkout>@<sha> it also runs gbrain-shootout on
  * that overlay build.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
@@ -319,17 +319,13 @@ describe.skipIf(!process.env.GBRAIN_OVERLAY_SPEC)('gbrain-shootout on an overlay
   }, 900_000);
 });
 
-describe('Phase 5 draft cells (docs/benchmarks/2026-10-06-oss-memory-shootout/phase5-cells.draft.json)', () => {
-  const DRAFT = join(ROOT, 'docs/benchmarks/2026-10-06-oss-memory-shootout/phase5-cells.draft.json');
+describe('Phase 5 cells (amendment A4, manifests/cells/pmb.json)', () => {
   const MANIFESTS = join(ROOT, 'docs/benchmarks/2026-10-06-oss-memory-shootout/manifests');
-  const load = () => {
-    const dir = mkdtempSync(join(tmpdir(), 'phase5-'));
-    const c = JSON.parse(readFileSync(join(MANIFESTS, 'campaign.json'), 'utf8'));
-    writeFileSync(join(dir, 'campaign.json'), JSON.stringify({ ...c, campaign_id: 'phase5-draft-check', cells_from: [DRAFT] }));
-    return loadCampaign(join(dir, 'campaign.json')).manifest;
-  };
+  const PMB = join(MANIFESTS, 'cells/pmb.json');
+  const campaign = () => loadCampaign(join(MANIFESTS, 'campaign.json'));
+  const load = () => { const m = campaign().manifest; return { ...m, cells: m.cells.filter(c => c.id.endsWith('-pmb')) }; };
 
-  test('load in the cell schema under the frozen campaign parameters, one cell per system configuration, every command the PMB runner', () => {
+  test('load in the cell schema under the campaign parameters, one cell per system configuration, every command the PMB runner', () => {
     const m = load();
     expect(m.cells.map(c => `${c.system}:${c.config}`).sort()).toEqual(['basic-memory:common', 'cognee:common', 'gbrain-shootout-master:common', 'gbrain-shootout:common', 'graphiti:common', 'graphiti:recipe', 'hindsight:common', 'mem0:common']);
     for (const c of m.cells) {
@@ -344,16 +340,15 @@ describe('Phase 5 draft cells (docs/benchmarks/2026-10-06-oss-memory-shootout/ph
 
   test('every lease names its basis; the common-model cells fit the plan\'s $10 Phase 5 line, Graphiti\'s recipe is the one cell that does not', () => {
     const m = load();
-    const draft = JSON.parse(readFileSync(DRAFT, 'utf8')) as { notes: string; cells: Array<{ lease_basis?: string }> };
-    expect(draft.cells.every(c => (c.lease_basis ?? '').startsWith('1.5 x'))).toBe(true);
+    const file = JSON.parse(readFileSync(PMB, 'utf8')) as { cells: Array<{ lease_basis?: string }> };
+    expect(file.cells.every(c => (c.lease_basis ?? '').startsWith('1.5 x'))).toBe(true);
     const common = m.cells.filter(c => c.config === 'common').reduce((s, c) => s + c.lease_usd, 0);
-    const all = m.cells.reduce((s, c) => s + c.lease_usd, 0);
+    expect([common, m.cells.reduce((s, c) => s + c.lease_usd, 0)]).toEqual([5, 16.5]);
     expect(common).toBeLessThanOrEqual(10);
-    expect(draft.notes).toContain(`$${common.toFixed(2)} without it and $${all.toFixed(2)} with it`);
   });
 
-  test('the draft sits outside the frozen manifests directory, so the Phase 4 campaign hash is unchanged', () => {
-    expect(DRAFT.startsWith(MANIFESTS)).toBe(false);
-    expect(loadCampaign(join(MANIFESTS, 'campaign.json')).sha256).toBe('c5901391c1516861d666ebdc93e3ca336a1733d354ac6af38d228236eb461ad3');
+  test('A4 adds the cells to the campaign under the hash the preregistration records', () => {
+    expect(campaign().manifest.cells_from).toContain('cells/pmb.json');
+    expect(campaign().sha256).toBe('bd60fb49c2f46a520b772b18fa84ca8a8cfb769526b3c33ff8c2604ef4662744');
   });
 });
