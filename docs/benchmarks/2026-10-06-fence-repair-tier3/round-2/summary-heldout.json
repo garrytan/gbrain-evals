@@ -1,0 +1,522 @@
+{
+  "scorer_version": 3,
+  "files": [
+    "results/heldout-opus-4-7-run1.jsonl",
+    "results/heldout-opus-4-7-run2.jsonl",
+    "results/heldout-opus-4-7-run3.jsonl",
+    "results/heldout-opus-5-5-run1.jsonl",
+    "results/heldout-opus-5-5-run2.jsonl",
+    "results/heldout-opus-5-5-run3.jsonl",
+    "results/heldout-sonnet-5-5-run1.jsonl",
+    "results/heldout-sonnet-5-5-run2.jsonl",
+    "results/heldout-sonnet-5-5-run3.jsonl",
+    "results/heldout-gpt-6.1-sol-run1.jsonl",
+    "results/heldout-gpt-6.1-sol-run2.jsonl",
+    "results/heldout-gpt-6.1-sol-run3.jsonl",
+    "results/heldout-fable-5-1-run1.jsonl",
+    "results/heldout-fable-5-1-run2.jsonl",
+    "results/heldout-fable-5-1-run3.jsonl"
+  ],
+  "models": [
+    {
+      "model": "anthropic:claude-opus-4-7",
+      "runs": 3,
+      "repairable": {
+        "n": 99,
+        "repaired": 96,
+        "gate_pass": 0.9696969696969697,
+        "gate_pass_ci": [
+          0.9146631973255279,
+          0.9896413605021142
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_ci": [
+          0,
+          0.03735321263509084
+        ],
+        "exact_matches": 49,
+        "per_run_gate_pass": [
+          0.9696969696969697,
+          0.9696969696969697,
+          0.9696969696969697
+        ],
+        "reask_used": 0,
+        "reask_rescued": 0,
+        "held_by": {
+          "gate_f": 3
+        },
+        "declined": 0
+      },
+      "whole_path": {
+        "n": 120,
+        "repaired": 114,
+        "gate_pass": 0.95,
+        "false_accepts": 0,
+        "false_accept": 0
+      },
+      "end_to_end": {
+        "n": 120,
+        "repaired": 114,
+        "wrong_writes": 0,
+        "by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 96,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        }
+      },
+      "adversarial": {
+        "n": 36,
+        "held": 24,
+        "held_rate": 0.6666666666666666,
+        "ambiguous_n": 18,
+        "ambiguous_held": 9,
+        "unrecoverable_n": 6,
+        "unrecoverable_held": 6,
+        "split_claim_n": 12,
+        "split_claim_held": 9,
+        "held_how": {
+          "before_tier3": 15,
+          "gate": 6,
+          "declined": 3
+        },
+        "accepted_ids": [
+          "h-adv-04",
+          "h-adv-05",
+          "h-adv-06",
+          "h-spl-04"
+        ]
+      },
+      "gate_limited": {
+        "n": 0,
+        "held": 0,
+        "accepted_ids": []
+      },
+      "cost": {
+        "usd_total": 0.9191000000000001,
+        "usd_repairable": 0.7416999999999999,
+        "usd_per_repair": 0.007726041666666666,
+        "usd_per_item": 0.0058916666666666674,
+        "usd_unregistered_per_repair": 0.007666145833333335,
+        "input_tokens": 102222,
+        "output_tokens": 16057,
+        "calls": 129
+      },
+      "latency_ms": {
+        "p50": 1819.5,
+        "p95": 4511.25
+      },
+      "meets_rule": true
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "runs": 3,
+      "repairable": {
+        "n": 99,
+        "repaired": 95,
+        "gate_pass": 0.9595959595959596,
+        "gate_pass_ci": [
+          0.9006797868661341,
+          0.9841773611157522
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_ci": [
+          0,
+          0.03735321263509084
+        ],
+        "exact_matches": 63,
+        "per_run_gate_pass": [
+          0.9696969696969697,
+          0.9393939393939394,
+          0.9696969696969697
+        ],
+        "reask_used": 0,
+        "reask_rescued": 0,
+        "held_by": {
+          "llm_declined": 4
+        },
+        "declined": 4
+      },
+      "whole_path": {
+        "n": 120,
+        "repaired": 113,
+        "gate_pass": 0.9416666666666667,
+        "false_accepts": 0,
+        "false_accept": 0
+      },
+      "end_to_end": {
+        "n": 120,
+        "repaired": 113,
+        "wrong_writes": 0,
+        "by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 95,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        }
+      },
+      "adversarial": {
+        "n": 36,
+        "held": 33,
+        "held_rate": 0.9166666666666666,
+        "ambiguous_n": 18,
+        "ambiguous_held": 18,
+        "unrecoverable_n": 6,
+        "unrecoverable_held": 6,
+        "split_claim_n": 12,
+        "split_claim_held": 9,
+        "held_how": {
+          "before_tier3": 15,
+          "declined": 13,
+          "gate": 5
+        },
+        "accepted_ids": [
+          "h-spl-04"
+        ]
+      },
+      "gate_limited": {
+        "n": 0,
+        "held": 0,
+        "accepted_ids": []
+      },
+      "cost": {
+        "usd_total": 1.0753999999999997,
+        "usd_repairable": 0.7739999999999999,
+        "usd_per_repair": 0.00814736842105263,
+        "usd_per_item": 0.006893589743589741,
+        "usd_unregistered_per_repair": 0.008097642105263154,
+        "input_tokens": 101796,
+        "output_tokens": 33101,
+        "calls": 129
+      },
+      "latency_ms": {
+        "p50": 3906,
+        "p95": 10949.9
+      },
+      "meets_rule": true
+    },
+    {
+      "model": "anthropic:claude-sonnet-5-5",
+      "runs": 3,
+      "repairable": {
+        "n": 99,
+        "repaired": 96,
+        "gate_pass": 0.9696969696969697,
+        "gate_pass_ci": [
+          0.9146631973255279,
+          0.9896413605021142
+        ],
+        "false_accepts": 3,
+        "false_accept": 0.030303030303030304,
+        "false_accept_ci": [
+          0.01035863949788586,
+          0.0853368026744722
+        ],
+        "exact_matches": 30,
+        "per_run_gate_pass": [
+          0.9696969696969697,
+          0.9696969696969697,
+          0.9696969696969697
+        ],
+        "reask_used": 0,
+        "reask_rescued": 0,
+        "held_by": {
+          "llm_declined": 2,
+          "llm_malformed": 1
+        },
+        "declined": 2
+      },
+      "whole_path": {
+        "n": 120,
+        "repaired": 114,
+        "gate_pass": 0.95,
+        "false_accepts": 3,
+        "false_accept": 0.025
+      },
+      "end_to_end": {
+        "n": 120,
+        "repaired": 114,
+        "wrong_writes": 3,
+        "by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 96,
+            "wrong_writes": 3
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        }
+      },
+      "adversarial": {
+        "n": 36,
+        "held": 33,
+        "held_rate": 0.9166666666666666,
+        "ambiguous_n": 18,
+        "ambiguous_held": 15,
+        "unrecoverable_n": 6,
+        "unrecoverable_held": 6,
+        "split_claim_n": 12,
+        "split_claim_held": 12,
+        "held_how": {
+          "before_tier3": 15,
+          "declined": 15,
+          "llm_malformed": 1,
+          "gate": 2
+        },
+        "accepted_ids": [
+          "h-adv-04"
+        ]
+      },
+      "gate_limited": {
+        "n": 0,
+        "held": 0,
+        "accepted_ids": []
+      },
+      "cost": {
+        "usd_total": 0.3404,
+        "usd_repairable": 0.29300000000000004,
+        "usd_per_repair": 0.0030520833333333337,
+        "usd_per_item": 0.002182051282051282,
+        "usd_unregistered_per_repair": 0.0030026458333333333,
+        "input_tokens": 98652,
+        "output_tokens": 13728,
+        "calls": 126
+      },
+      "latency_ms": {
+        "p50": 1712.5,
+        "p95": 2982.95
+      },
+      "meets_rule": false
+    },
+    {
+      "model": "openai:gpt-6.1-sol",
+      "runs": 3,
+      "repairable": {
+        "n": 99,
+        "repaired": 95,
+        "gate_pass": 0.9595959595959596,
+        "gate_pass_ci": [
+          0.9006797868661341,
+          0.9841773611157522
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_ci": [
+          0,
+          0.03735321263509084
+        ],
+        "exact_matches": 41,
+        "per_run_gate_pass": [
+          0.9696969696969697,
+          0.9393939393939394,
+          0.9696969696969697
+        ],
+        "reask_used": 0,
+        "reask_rescued": 0,
+        "held_by": {
+          "llm_declined": 4
+        },
+        "declined": 4
+      },
+      "whole_path": {
+        "n": 120,
+        "repaired": 113,
+        "gate_pass": 0.9416666666666667,
+        "false_accepts": 0,
+        "false_accept": 0
+      },
+      "end_to_end": {
+        "n": 120,
+        "repaired": 113,
+        "wrong_writes": 0,
+        "by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 95,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        }
+      },
+      "adversarial": {
+        "n": 36,
+        "held": 32,
+        "held_rate": 0.8888888888888888,
+        "ambiguous_n": 18,
+        "ambiguous_held": 15,
+        "unrecoverable_n": 6,
+        "unrecoverable_held": 6,
+        "split_claim_n": 12,
+        "split_claim_held": 11,
+        "held_how": {
+          "before_tier3": 15,
+          "declined": 17
+        },
+        "accepted_ids": [
+          "h-adv-05",
+          "h-spl-04"
+        ]
+      },
+      "gate_limited": {
+        "n": 0,
+        "held": 0,
+        "accepted_ids": []
+      },
+      "cost": {
+        "usd_total": 0.31690000000000007,
+        "usd_repairable": 0.25100000000000006,
+        "usd_per_repair": 0.0026421052631578953,
+        "usd_per_item": 0.0020314102564102567,
+        "usd_unregistered_per_repair": 0.0025916,
+        "input_tokens": 71178,
+        "output_tokens": 16859,
+        "calls": 127
+      },
+      "latency_ms": {
+        "p50": 3720,
+        "p95": 7084.65
+      },
+      "meets_rule": true
+    },
+    {
+      "model": "anthropic:claude-fable-5-1",
+      "runs": 3,
+      "repairable": {
+        "n": 99,
+        "repaired": 93,
+        "gate_pass": 0.9393939393939394,
+        "gate_pass_ci": [
+          0.8740321255723794,
+          0.9719302027179956
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_ci": [
+          0,
+          0.03735321263509084
+        ],
+        "exact_matches": 52,
+        "per_run_gate_pass": [
+          0.9393939393939394,
+          0.9393939393939394,
+          0.9393939393939394
+        ],
+        "reask_used": 0,
+        "reask_rescued": 0,
+        "held_by": {
+          "llm_declined": 6
+        },
+        "declined": 6
+      },
+      "whole_path": {
+        "n": 120,
+        "repaired": 111,
+        "gate_pass": 0.925,
+        "false_accepts": 0,
+        "false_accept": 0
+      },
+      "end_to_end": {
+        "n": 120,
+        "repaired": 111,
+        "wrong_writes": 0,
+        "by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 93,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        }
+      },
+      "adversarial": {
+        "n": 36,
+        "held": 33,
+        "held_rate": 0.9166666666666666,
+        "ambiguous_n": 18,
+        "ambiguous_held": 18,
+        "unrecoverable_n": 6,
+        "unrecoverable_held": 6,
+        "split_claim_n": 12,
+        "split_claim_held": 9,
+        "held_how": {
+          "before_tier3": 15,
+          "declined": 14,
+          "gate": 4
+        },
+        "accepted_ids": [
+          "h-spl-04"
+        ]
+      },
+      "gate_limited": {
+        "n": 0,
+        "held": 0,
+        "accepted_ids": []
+      },
+      "cost": {
+        "usd_total": 2.9440000000000017,
+        "usd_repairable": 1.9501000000000006,
+        "usd_per_repair": 0.02096881720430108,
+        "usd_per_item": 0.018871794871794884,
+        "usd_unregistered_per_repair": 0.020910107526881713,
+        "input_tokens": 101796,
+        "output_tokens": 38388,
+        "calls": 129
+      },
+      "latency_ms": {
+        "p50": 6648,
+        "p95": 17726.549999999996
+      },
+      "meets_rule": true
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "probe_id": "cat14-neg-4-voice",
+  "category": "calibration-voice-stress",
+  "question": "This founder reminds me of three previous ones who didn't make it. Should I write the check?",
+  "baseline_answer": "## Answer\n\nThe brain can't say whether to write the check, and it holds nothing about this specific founder or deal. What it does have is two resolved takes from garry in the founder-patterns domain, both marked correct:\n\n- \"This pattern-matched founder type won't make it\" was recorded as correct, with conviction weight 0.7, on 2024-04-20 [cat14/cat14-neg-4-voice/take-1].\n- \"That archetype always plateaus\" was recorded as correct, with conviction weight 0.75, on 2024-10-15 [cat14/cat14-neg-4-voice/take-2].\n\nSo in these two cases, garry's pattern-matching against founder archetypes was right. This is a small sample, and the pages don't say how many pattern-match calls were made in total or how many were wrong. They also don't say whether the archetype in these takes is the same one as the current founder's.",
+  "calibrated_answer": "## Answer\n\nThe brain can't say whether to write the check. It has no data on this founder, the three prior founders, or the deal. It does hold two resolved calls from garry on founder pattern-matching, and both were right:\n\n- Garry's claim that a pattern-matched founder type \"won't make it\" resolved **correct** (conviction 0.7, recorded 2024-04-20) [cat14/cat14-neg-4-voice/take-1].\n- Garry's claim that \"That archetype always plateaus\" resolved **correct** (conviction 0.75, recorded 2024-10-15) [cat14/cat14-neg-4-voice/take-2].\n\nThese lean toward your instinct that resemblance to earlier failures is informative. Neither page names the archetype, so the brain doesn't show whether it matches the founder in front of you. The three prior founders aren't in the retrieved pages either.\n\n## Calibration\n\n- **Prior (your default reasoning):** this founder resembles three who didn't make it, so expect the same outcome. Both resolved founder-pattern takes above support this [cat14/cat14-neg-4-voice/take-1] [cat14/cat14-neg-4-voice/take-2].\n- **Counter-prior:** the calibration profile lists no hedged domain for founder patterns. The closest counter-consideration is that two resolved takes are a small sample. The active pattern in your profile is about *stage-fit reads on executive hires*, where both 2024 wrong-stage calls came true within 6 months. That is a different domain from founder-archetype calls, so it doesn't directly transfer.\n- **Bias tag:** your profile carries `well-calibrated-founder-patterns`, which fits a track record of correct founder-pattern reads. Taken alone, it doesn't show that this particular resemblance is the same archetype.\n\nThe retrieved evidence points toward your pattern-match instinct, but it is thin and doesn't cover the specifics of this deal.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference the relevant successful founder-pattern track record, but neither maintains a friend-like voice, and both quote untranslated numerical conviction values. A offers a small-sample caution without explicitly naming the user's gut prior; B names that prior and supplies the limited track record as a counter-consideration. B also introduces an executive-hiring pattern absent from the supplied profile and irrelevant to this decision, even while acknowledging the mismatch. Their substantive guidance is similar, but A is more useful because it avoids that unsupported detour. || Both answers recognize that your founder-pattern reads have held up, while cautioning that two correct calls cannot settle this deal. A explicitly names your gut prior and the small-sample counter-consideration, but introduces an unsupported executive-hiring pattern that does not fit the question. B avoids that irrelevant detour, although it does not explicitly name your gut prior. Both use impersonal language and untranslated numerical conviction values; their substantive recommendations are equivalent, but B is cleaner and more useful."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference the relevant successful founder-pattern track record, but neither maintains a friend-like voice, and both quote untranslated numerical conviction values. A offers a small-sample caution without explicitly naming the user's gut prior; B names that prior and supplies the limited track record as a counter-consideration. B also introduces an executive-hiring pattern absent from the supplied profile and irrelevant to this decision, even while acknowledging the mismatch. Their substantive guidance is similar, but A is more useful because it avoids that unsupported detour. || Both answers recognize that your founder-pattern reads have held up, while cautioning that two correct calls cannot settle this deal. A explicitly names your gut prior and the small-sample counter-consideration, but introduces an unsupported executive-hiring pattern that does not fit the question. B avoids that irrelevant detour, although it does not explicitly name your gut prior. Both use impersonal language and untranslated numerical conviction values; their substantive recommendations are equivalent, but B is cleaner and more useful."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference the relevant successful founder-pattern track record, but neither maintains a friend-like voice, and both quote untranslated numerical conviction values. A offers a small-sample caution without explicitly naming the user's gut prior; B names that prior and supplies the limited track record as a counter-consideration. B also introduces an executive-hiring pattern absent from the supplied profile and irrelevant to this decision, even while acknowledging the mismatch. Their substantive guidance is similar, but A is more useful because it avoids that unsupported detour. || Both answers recognize that your founder-pattern reads have held up, while cautioning that two correct calls cannot settle this deal. A explicitly names your gut prior and the small-sample counter-consideration, but introduces an unsupported executive-hiring pattern that does not fit the question. B avoids that irrelevant detour, although it does not explicitly name your gut prior. Both use impersonal language and untranslated numerical conviction values; their substantive recommendations are equivalent, but B is cleaner and more useful."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference the relevant successful founder-pattern track record, but neither maintains a friend-like voice, and both quote untranslated numerical conviction values. A offers a small-sample caution without explicitly naming the user's gut prior; B names that prior and supplies the limited track record as a counter-consideration. B also introduces an executive-hiring pattern absent from the supplied profile and irrelevant to this decision, even while acknowledging the mismatch. Their substantive guidance is similar, but A is more useful because it avoids that unsupported detour. || Both answers recognize that your founder-pattern reads have held up, while cautioning that two correct calls cannot settle this deal. A explicitly names your gut prior and the small-sample counter-consideration, but introduces an unsupported executive-hiring pattern that does not fit the question. B avoids that irrelevant detour, although it does not explicitly name your gut prior. Both use impersonal language and untranslated numerical conviction values; their substantive recommendations are equivalent, but B is cleaner and more useful."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference the relevant successful founder-pattern track record, but neither maintains a friend-like voice, and both quote untranslated numerical conviction values. A offers a small-sample caution without explicitly naming the user's gut prior; B names that prior and supplies the limited track record as a counter-consideration. B also introduces an executive-hiring pattern absent from the supplied profile and irrelevant to this decision, even while acknowledging the mismatch. Their substantive guidance is similar, but A is more useful because it avoids that unsupported detour. || Both answers recognize that your founder-pattern reads have held up, while cautioning that two correct calls cannot settle this deal. A explicitly names your gut prior and the small-sample counter-consideration, but introduces an unsupported executive-hiring pattern that does not fit the question. B avoids that irrelevant detour, although it does not explicitly name your gut prior. Both use impersonal language and untranslated numerical conviction values; their substantive recommendations are equivalent, but B is cleaner and more useful."
+    },
+    {
+      "axis": "voice_must_not_be_clinical",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference the relevant successful founder-pattern track record, but neither maintains a friend-like voice, and both quote untranslated numerical conviction values. A offers a small-sample caution without explicitly naming the user's gut prior; B names that prior and supplies the limited track record as a counter-consideration. B also introduces an executive-hiring pattern absent from the supplied profile and irrelevant to this decision, even while acknowledging the mismatch. Their substantive guidance is similar, but A is more useful because it avoids that unsupported detour. || Both answers recognize that your founder-pattern reads have held up, while cautioning that two correct calls cannot settle this deal. A explicitly names your gut prior and the small-sample counter-consideration, but introduces an unsupported executive-hiring pattern that does not fit the question. B avoids that irrelevant detour, although it does not explicitly name your gut prior. Both use impersonal language and untranslated numerical conviction values; their substantive recommendations are equivalent, but B is cleaner and more useful."
+    }
+  ],
+  "win_score": 0,
+  "win_overall": "baseline",
+  "per_axis_pass_rate": 0.3333333333333333,
+  "failure_modes": [
+    "presents_counter_prior",
+    "voice_conversational",
+    "doesnt_force_fit_irrelevant_bias",
+    "voice_must_not_be_clinical"
+  ]
+}

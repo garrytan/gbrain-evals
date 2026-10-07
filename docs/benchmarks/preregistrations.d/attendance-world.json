@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "w3-attendance-world",
+      "preregistration": "docs/benchmarks/2026-10-06-attendance-world-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-06-attendance-world/**",
+        "docs/benchmarks/2026-10-06-attendance-world.md"
+      ]
+    }
+  ]
+}

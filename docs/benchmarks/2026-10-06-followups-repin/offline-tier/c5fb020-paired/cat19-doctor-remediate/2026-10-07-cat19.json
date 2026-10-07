@@ -1,0 +1,90 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat19-doctor-remediate",
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "started_at": "2026-10-07T20:04:04.832Z",
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hash embedding stub: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hash embedding stub: no model and no paid request"
+  },
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 5,
+  "n_scored": 5,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "resolved_config": {
+    "embed_transport": "stubbed-hash",
+    "embedding_model": "openai:text-embedding-3-large",
+    "embedding_dimensions": 1536,
+    "min_links_inserted": 20,
+    "min_score_delta": 15,
+    "skip_remediation": false,
+    "search_mode": null,
+    "reranker_enabled": null
+  },
+  "finished_at": "2026-10-07T20:04:08.182Z",
+  "data": {
+    "seed_pages": 30,
+    "baseline": {
+      "brain_score": 10,
+      "page_count": 30,
+      "missing_embeddings": 30,
+      "embed_coverage": 0,
+      "stale_pages": 30,
+      "orphan_pages": 30,
+      "dead_links": 0,
+      "embed_coverage_score": 0,
+      "link_density_score": 0,
+      "no_orphans_score": 0,
+      "link_count": 0,
+      "chunk_count": 30
+    },
+    "achieved": {
+      "brain_score": 85,
+      "page_count": 30,
+      "missing_embeddings": 0,
+      "embed_coverage": 1,
+      "stale_pages": 30,
+      "orphan_pages": 0,
+      "dead_links": 0,
+      "embed_coverage_score": 35,
+      "link_density_score": 25,
+      "no_orphans_score": 15,
+      "link_count": 35,
+      "chunk_count": 30
+    },
+    "brain_score_delta": 75,
+    "links_inserted": 35,
+    "doctor_plan_ids": [
+      "embed.stale",
+      "extract.stale"
+    ],
+    "steps": [
+      {
+        "id": "extract.links",
+        "description": "gbrain extract links --source db (runExtract)",
+        "duration_ms": 214,
+        "outcome": "extract links --source db completed",
+        "error": null
+      },
+      {
+        "id": "embed.stale",
+        "description": "gbrain embed --stale (runEmbedCore)",
+        "duration_ms": 265,
+        "outcome": "embedded 30, skipped 0, failures 0",
+        "error": null
+      }
+    ],
+    "wall_clock_ms": 3349
+  }
+}

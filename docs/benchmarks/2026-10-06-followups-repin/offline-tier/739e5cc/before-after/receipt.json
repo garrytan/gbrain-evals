@@ -1,0 +1,74 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "before-after",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 145,
+  "n_scored": 145,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.46.0",
+  "gbrain_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+  "started_at": "2026-10-06T18:12:40.493Z",
+  "finished_at": "2026-10-06T18:12:44.511Z",
+  "data": {
+    "top_k": 5,
+    "precision_denominators": {
+      "precision_at_k": "standard: correct in top-5 / (5 x queries)",
+      "precision_at_k_legacy": "legacy, pre-2026-09-28 headline: correct in top-5 / sum(min(5, returned))",
+      "precision_at_k_ceiling": "best achievable standard value: sum(min(5, expected)) / (5 x queries)"
+    },
+    "before": {
+      "recall_at_k": 0.8314176245210728,
+      "precision_at_k": 0.2993103448275862,
+      "precision_at_k_legacy": 0.3924050632911392,
+      "precision_at_k_ceiling": 0.36,
+      "found_at_k": 217
+    },
+    "after": {
+      "recall_at_k": 0.9348659003831418,
+      "precision_at_k": 0.33655172413793105,
+      "precision_at_k_legacy": 0.4412296564195298,
+      "precision_at_k_ceiling": 0.36,
+      "found_at_k": 244
+    },
+    "gate_failures": []
+  },
+  "accounting": {
+    "planned": 145,
+    "attempted": 145,
+    "scored": 145,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "01b6a13b3c65150da89c1a164b53a8499e28632d4559deac30188953645d8658",
+      "files": 3588,
+      "git_head": "7a11f21315dd309bab4ae6e80fa981bdb6a6b137",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "version": "0.60.46.0",
+      "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+      "loaded_git_head": null
+    }
+  }
+}

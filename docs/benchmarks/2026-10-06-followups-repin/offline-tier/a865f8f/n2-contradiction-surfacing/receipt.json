@@ -1,0 +1,552 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only, injected oracle and throwing judges; no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only, injected oracle and throwing judges; no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n2-contradiction-surfacing",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 270,
+  "n_scored": 270,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.104.0",
+  "gbrain_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+  "execution": {
+    "source_tree": {
+      "sha256": "dd3dc10647cb6c6e9acbe8569461ae032c50c888a8f083c9df6be5367e376c62",
+      "files": 4443,
+      "git_head": "7cfca650a171fe44080c33e1a23d788ee8a72c4f",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "declared_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "version": "0.60.104.0",
+      "package_sha256": "99add9ef401b69dc23b807aa66889af7aa836ec136896322f1ab5ff67fb83ef0",
+      "loaded_git_head": null
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "caller": "operation handlers with OperationContext { remote: false, sourceId: default } for writes; runContradictionProbe in-process",
+    "search_path": "runContradictionProbe default hybridSearch (wrapped only to record results), top-K 5, no embedding gateway (keyword only)",
+    "probe": {
+      "top_k": 5,
+      "sampling": "deterministic",
+      "no_cache": true,
+      "yes_override": true,
+      "budget_usd": 10
+    },
+    "judges": {
+      "hermetic": "oracle-recording judge (gold verdicts from the ledger) and a throwing judge on the first 30 queries",
+      "paid": "not run"
+    },
+    "seed": 20261001,
+    "generator_version": "n2-contradiction-gen/1.0.0",
+    "ledger_sha256": "19459c108444a19de466b0b416c9a63521c1dfb57c30a80479bc925d6288de31",
+    "entrypoints": [
+      "src/core/eval-contradictions/runner.ts runContradictionProbe (judgeFn, searchFn injected; searchFn wraps the default hybridSearch unchanged)",
+      "src/core/search/hybrid.ts hybridSearch",
+      "src/core/eval-contradictions/judge.ts judgeContradiction (paid arm)",
+      "src/core/eval-contradictions/auto-supersession.ts pairToFinding (via the runner)",
+      "src/core/eval-contradictions/trends.ts writeRunRow",
+      "operations: put_page, find_contradictions"
+    ],
+    "gbrain_overlay": null,
+    "paid": null,
+    "verdict_rule": "verdict = the preregistered safety contracts only (no applied mutation; no judge exception counted as a verdict); quality and paid metrics live in data and never change the verdict"
+  },
+  "hashes": {
+    "ledger_sha256": "19459c108444a19de466b0b416c9a63521c1dfb57c30a80479bc925d6288de31"
+  },
+  "started_at": "2026-10-07T20:05:35.579Z",
+  "finished_at": "2026-10-07T20:06:21.599Z",
+  "data": {
+    "safety": {
+      "applied_mutations": 0,
+      "changed_pages": [],
+      "judge_errors_counted_as_verdicts": 0
+    },
+    "candidate": {
+      "conflict_recall": 1,
+      "conflicts_offered": 150,
+      "conflicts_total": 150,
+      "both_retrieved_own_query": {
+        "n": 150,
+        "hits": 150,
+        "rate": 1
+      },
+      "offered_own_query": {
+        "n": 150,
+        "hits": 150,
+        "rate": 1
+      },
+      "by_variant": {
+        "same_time_conflict/dated_same_day": {
+          "total": 50,
+          "both_retrieved_own_query": 50,
+          "offered_any_query": 50
+        },
+        "same_time_conflict/undated": {
+          "total": 50,
+          "both_retrieved_own_query": 50,
+          "offered_any_query": 50
+        },
+        "same_time_conflict/mixed_dated": {
+          "total": 50,
+          "both_retrieved_own_query": 50,
+          "offered_any_query": 50
+        },
+        "dated_change/frontmatter_dates": {
+          "total": 20,
+          "both_retrieved_own_query": 20,
+          "offered_any_query": 20
+        },
+        "dated_change/text_dates": {
+          "total": 20,
+          "both_retrieved_own_query": 20,
+          "offered_any_query": 0
+        },
+        "dated_change/regression": {
+          "total": 20,
+          "both_retrieved_own_query": 20,
+          "offered_any_query": 20
+        },
+        "holder_opinion/plain": {
+          "total": 15,
+          "both_retrieved_own_query": 15,
+          "offered_any_query": 15
+        },
+        "agreement/plain": {
+          "total": 15,
+          "both_retrieved_own_query": 15,
+          "offered_any_query": 15
+        },
+        "namesake/plain": {
+          "total": 15,
+          "both_retrieved_own_query": 6,
+          "offered_any_query": 6
+        },
+        "negation/plain": {
+          "total": 15,
+          "both_retrieved_own_query": 15,
+          "offered_any_query": 15
+        }
+      },
+      "negatives_offered": {
+        "dated_changes": {
+          "n": 60,
+          "hits": 40,
+          "rate": 0.6666666666666666
+        },
+        "compatible": {
+          "n": 60,
+          "hits": 51,
+          "rate": 0.85
+        }
+      },
+      "pairs_offered_total": 2680,
+      "unplanted_pairs_offered": 1977
+    },
+    "oracle": {
+      "e2e_conflict_recall": {
+        "n": 150,
+        "hits": 150,
+        "rate": 1
+      },
+      "classification_recall_offered_conflicts": {
+        "n": 150,
+        "hits": 150,
+        "rate": 1
+      },
+      "false_contradiction_dated_changes": {
+        "n": 40,
+        "hits": 0,
+        "rate": 0
+      },
+      "false_contradiction_compatible": {
+        "n": 51,
+        "hits": 0,
+        "rate": 0
+      },
+      "false_contradiction_unplanted_pairs": {
+        "n": 1977,
+        "hits": 0,
+        "rate": 0
+      },
+      "judged_pair_precision": {
+        "n": 150,
+        "hits": 150,
+        "rate": 1
+      },
+      "temporal_recognition": {
+        "n": 40,
+        "hits": 40,
+        "rate": 1
+      },
+      "judge_errors": {
+        "n": 2680,
+        "hits": 0,
+        "rate": 0
+      },
+      "resolution_acceptable": {
+        "n": 190,
+        "hits": 190,
+        "rate": 1
+      },
+      "resolution_by_variant": {
+        "same_time_conflict/dated_same_day": {
+          "findings": 50,
+          "acceptable": 50,
+          "kinds": {
+            "manual_review": 50
+          }
+        },
+        "same_time_conflict/undated": {
+          "findings": 50,
+          "acceptable": 50,
+          "kinds": {
+            "manual_review": 50
+          }
+        },
+        "same_time_conflict/mixed_dated": {
+          "findings": 50,
+          "acceptable": 50,
+          "kinds": {
+            "manual_review": 50
+          }
+        },
+        "dated_change/frontmatter_dates": {
+          "findings": 20,
+          "acceptable": 20,
+          "kinds": {
+            "temporal_supersede": 20
+          }
+        },
+        "dated_change/regression": {
+          "findings": 20,
+          "acceptable": 20,
+          "kinds": {
+            "flag_for_review": 20
+          }
+        }
+      },
+      "by_variant": {
+        "same_time_conflict/dated_same_day": {
+          "offered": 50,
+          "contradiction": 50,
+          "temporal": 0,
+          "not_contradiction": 0,
+          "error": 0
+        },
+        "same_time_conflict/undated": {
+          "offered": 50,
+          "contradiction": 50,
+          "temporal": 0,
+          "not_contradiction": 0,
+          "error": 0
+        },
+        "same_time_conflict/mixed_dated": {
+          "offered": 50,
+          "contradiction": 50,
+          "temporal": 0,
+          "not_contradiction": 0,
+          "error": 0
+        },
+        "dated_change/frontmatter_dates": {
+          "offered": 20,
+          "contradiction": 0,
+          "temporal": 20,
+          "not_contradiction": 0,
+          "error": 0
+        },
+        "dated_change/text_dates": {
+          "offered": 0,
+          "contradiction": 0,
+          "temporal": 0,
+          "not_contradiction": 0,
+          "error": 0
+        },
+        "dated_change/regression": {
+          "offered": 20,
+          "contradiction": 0,
+          "temporal": 20,
+          "not_contradiction": 0,
+          "error": 0
+        },
+        "holder_opinion/plain": {
+          "offered": 15,
+          "contradiction": 0,
+          "temporal": 0,
+          "not_contradiction": 15,
+          "error": 0
+        },
+        "agreement/plain": {
+          "offered": 15,
+          "contradiction": 0,
+          "temporal": 0,
+          "not_contradiction": 15,
+          "error": 0
+        },
+        "namesake/plain": {
+          "offered": 6,
+          "contradiction": 0,
+          "temporal": 0,
+          "not_contradiction": 6,
+          "error": 0
+        },
+        "negation/plain": {
+          "offered": 15,
+          "contradiction": 0,
+          "temporal": 0,
+          "not_contradiction": 15,
+          "error": 0
+        }
+      },
+      "decision": {
+        "separates": true,
+        "failed_rules": []
+      }
+    },
+    "throwing_control": {
+      "queries": 30,
+      "offered": 300,
+      "judge_errors": 300,
+      "verdicts": 0,
+      "findings": 0,
+      "run_status": "judge_failed"
+    },
+    "date_signal": {
+      "undated_planted_pages_offered": 190,
+      "undated_shown_with_a_date": 0,
+      "undated_effective_date_source": {
+        "fallback": 190
+      },
+      "example_undated": {
+        "slug": "notes/n2-i002-a",
+        "ledger_date": null,
+        "shown_to_judge": null,
+        "effective_date_source": "fallback"
+      },
+      "dated_pages_shown_their_date": 341,
+      "dated_pages_offered": 341,
+      "pairs_skipped_by_date": 20,
+      "text_dated_changes_offered": 0,
+      "text_dated_changes": 20,
+      "note": "text_dates items state dates more than 30 days apart in both texts; the date pre-filter would skip them if the pages carried no effective date (date-filter.ts rule 1)"
+    },
+    "find_contradictions": {
+      "stored_findings": 190,
+      "remote_caller": {
+        "returned": 0,
+        "total_in_run": null,
+        "note": "Stored contradiction reports are temporarily available only to trusted local callers without a source filter."
+      },
+      "local_default_scope_cli": {
+        "returned": 0,
+        "total_in_run": null,
+        "note": "Stored contradiction reports are temporarily available only to trusted local callers without a source filter."
+      },
+      "local_all_sources": {
+        "returned": 100,
+        "total_in_run": 190,
+        "note": null
+      },
+      "local_bare_cli": {
+        "returned": 100,
+        "total_in_run": 190,
+        "note": null
+      }
+    },
+    "generic_queries": {
+      "queries": 8,
+      "pairs_offered": 71,
+      "planted_conflicts_offered": 4,
+      "planted_conflicts_total": 150
+    },
+    "amara": {
+      "pages": 98,
+      "seed_errors": 0,
+      "pairs_offered_total": 94,
+      "judge_errors": 0,
+      "pairs": 15,
+      "offered": 8,
+      "rows": [
+        {
+          "id": "c-001",
+          "original": "contradiction",
+          "adjudicated": "contradiction",
+          "offered": false,
+          "offered_own_query": false
+        },
+        {
+          "id": "c-002",
+          "original": "contradiction",
+          "adjudicated": "not_same_fact",
+          "offered": false,
+          "offered_own_query": false
+        },
+        {
+          "id": "c-003",
+          "original": "contradiction",
+          "adjudicated": "not_same_fact",
+          "offered": false,
+          "offered_own_query": false
+        },
+        {
+          "id": "c-004",
+          "original": "contradiction",
+          "adjudicated": "contradiction",
+          "offered": false,
+          "offered_own_query": false
+        },
+        {
+          "id": "c-005",
+          "original": "contradiction",
+          "adjudicated": "holder_difference",
+          "offered": false,
+          "offered_own_query": false
+        },
+        {
+          "id": "c-006",
+          "original": "contradiction",
+          "adjudicated": "temporal_evolution",
+          "offered": true,
+          "offered_own_query": true
+        },
+        {
+          "id": "c-007",
+          "original": "contradiction",
+          "adjudicated": "temporal_evolution",
+          "offered": true,
+          "offered_own_query": true
+        },
+        {
+          "id": "c-008",
+          "original": "contradiction",
+          "adjudicated": "contradiction",
+          "offered": false,
+          "offered_own_query": false
+        },
+        {
+          "id": "c-009",
+          "original": "contradiction",
+          "adjudicated": "contradiction",
+          "offered": true,
+          "offered_own_query": true
+        },
+        {
+          "id": "c-010",
+          "original": "contradiction",
+          "adjudicated": "temporal_evolution",
+          "offered": true,
+          "offered_own_query": true
+        },
+        {
+          "id": "s-001",
+          "original": "temporal_supersession",
+          "adjudicated": "temporal_supersession",
+          "offered": true,
+          "offered_own_query": false
+        },
+        {
+          "id": "s-002",
+          "original": "temporal_supersession",
+          "adjudicated": "temporal_supersession",
+          "offered": true,
+          "offered_own_query": true
+        },
+        {
+          "id": "s-003",
+          "original": "temporal_supersession",
+          "adjudicated": "temporal_supersession",
+          "offered": true,
+          "offered_own_query": true
+        },
+        {
+          "id": "s-004",
+          "original": "temporal_supersession",
+          "adjudicated": "temporal_supersession",
+          "offered": false,
+          "offered_own_query": false
+        },
+        {
+          "id": "s-005",
+          "original": "temporal_supersession",
+          "adjudicated": "temporal_supersession",
+          "offered": true,
+          "offered_own_query": true
+        }
+      ]
+    },
+    "presence": [
+      {
+        "name": "planted claim spans present in a stored chunk",
+        "ok": true,
+        "expected": 540,
+        "actual": 540
+      },
+      {
+        "name": "pages written without error",
+        "ok": true,
+        "expected": 825,
+        "actual": 825
+      },
+      {
+        "name": "oracle-judge control surfaces planted conflicts",
+        "ok": true,
+        "expected": 1,
+        "actual": 150
+      },
+      {
+        "name": "throwing-judge control offered pairs",
+        "ok": true,
+        "expected": 1,
+        "actual": 300
+      }
+    ],
+    "timings_ms": {
+      "seed": 28132,
+      "oracle_probe": 9948,
+      "throwing_probe": 1094,
+      "total": 44958
+    },
+    "gaps": [
+      {
+        "capability": "corpus-wide or fact-identity contradiction discovery",
+        "reason": "runContradictionProbe only pairs the top-K results of the queries a caller supplies (runner.ts:316-428); no scanner enumerates facts or pages. Discovery is scored with generator-written queries."
+      },
+      {
+        "capability": "applied resolutions",
+        "reason": "auto-supersession.ts renders paste-ready proposals and never applies them; one kind (log_timeline_change) points at a deferred timeline writer."
+      },
+      {
+        "capability": "find_contradictions for remote callers",
+        "reason": "the op returns an empty note to every remote caller (insights.ts:197-200), by documented design (\"temporarily available only to trusted local callers\")."
+      }
+    ],
+    "paid": null,
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 270,
+    "attempted": 270,
+    "scored": 270,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

@@ -1,0 +1,17 @@
+{
+  "model": "openai:gpt-6.1-sol",
+  "cases": 3,
+  "predictions": 3,
+  "aborted": false,
+  "estimate_usd": 0.01143,
+  "ceiling_usd": 0.06243,
+  "max_usd": 0.1,
+  "spent_usd": 0.004562,
+  "price_used": {
+    "input": 2,
+    "output": 10
+  },
+  "price_source": "--price-input/--price-output",
+  "case_errors": [],
+  "wall_ms": 13991
+}

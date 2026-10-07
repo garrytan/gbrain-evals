@@ -1,0 +1,27 @@
+{
+ "schema_version": 1,
+ "family_id": "w10a-current-pin-vs-replay",
+ "registered_at": "2026-10-06",
+ "description": "W10a: claude-sonnet-5-5 notes reader on gbrain c5fb0201 release retrieval (B) against the same reader on the 2026-09-29 a7cb37b replay (A), 500 pairs, official judge. A combined build and configuration difference. Superiority at min_effect 0: pass = higher at the new pin; fail (interval entirely below 0) = a drop; otherwise no change shown.",
+ "alpha": 0.05,
+ "seed": 20261006,
+ "draws": 10000,
+ "id_field": "question_id",
+ "comparisons": [
+  {
+   "id": "w10a-vs-w10b-sonnet55",
+   "metric": "correct_official",
+   "gate": "superiority",
+   "direction": "higher",
+   "min_effect": 0,
+   "cluster_by": "question_id"
+  },
+  {
+   "id": "w10a-vs-w10b-sonnet55-secondary",
+   "metric": "correct_secondary",
+   "gate": "exploratory",
+   "direction": "higher",
+   "cluster_by": "question_id"
+  }
+ ]
+}

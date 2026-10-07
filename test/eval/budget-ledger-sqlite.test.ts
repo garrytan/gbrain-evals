@@ -157,6 +157,17 @@ describe('creation rule', () => {
     expect(existsSync(path)).toBe(false);
   });
 
+  test('requirePaidArm finds a run in the ledger named by --budget-ledger or BRAINBENCH_BUDGET_LEDGER, not only the default', () => {
+    const path = join(tmp(), 'named.sqlite');
+    initLedger({ ledgerPath: path, programCapUsd: 10 });
+    const run = BudgetRun.open({ runner: 'named', budgetUsd: 2, ledgerPath: path });
+    expect(requirePaidArm(['--paid', '--budget-run-id', run.runId, '--budget-ledger', path], { arm: 'cat x', estimateUsd: 1 }).budgetRunId).toBe(run.runId);
+    const before = process.env.BRAINBENCH_BUDGET_LEDGER;
+    process.env.BRAINBENCH_BUDGET_LEDGER = path;
+    try { expect(requirePaidArm(['--paid', '--budget-run-id', run.runId], { arm: 'cat x', estimateUsd: 1 }).remainingUsd).toBe(2); }
+    finally { if (before === undefined) delete process.env.BRAINBENCH_BUDGET_LEDGER; else process.env.BRAINBENCH_BUDGET_LEDGER = before; }
+  });
+
   test('a .json path means its sibling .sqlite ledger', () => {
     const dir = tmp();
     expect(ledgerPaths(join(dir, 'ledger.json'))).toEqual({ ledger: join(dir, 'ledger.sqlite'), legacy: join(dir, 'ledger.json'), remapped: true });

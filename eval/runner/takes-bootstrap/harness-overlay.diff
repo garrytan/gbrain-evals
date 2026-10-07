@@ -1,0 +1,168 @@
+--- /home/user/gbrain/evals/takes-bootstrap/harness.mjs	2026-10-06 17:19:40.030163383 +0000
++++ harness-overlay.mjs	2026-10-06 18:10:53.771928773 +0000
+@@ -1,4 +1,20 @@
+ #!/usr/bin/env bun
++// harness-overlay.mjs: gbrain-evals overlay of gbrain's evals/takes-bootstrap/harness.mjs
++// (gbrain c5fb0201, v0.60.95.0). Three changes, nothing else:
++//   1. --gbrain-dir <path> (default node_modules/gbrain): the harness, corpus, scorer,
++//      run-case and src/ are loaded from that gbrain tree instead of relative paths.
++//   2. --price-input / --price-output <usd per 1M tokens>: used for the spend estimate
++//      when gbrain's built-in table (canonicalLookup) has no row for --model, and loaded
++//      into the BudgetTracker as a pricingOverrides row so its hard cap can price the
++//      model. gbrain's table at c5fb0201 stops at gpt-5.6; `gbrain pricing set` writes the
++//      config plane, which this harness's fresh in-memory brain never reads.
++//   3. --summary <path>: writes model, estimate, ceiling, hard cap, spend, prices used,
++//      per-case classifier errors and wall time as JSON before scoring.
++//   4. --request-log <path>: an observe-only fetch wrapper appends one JSON line per
++//      provider request (case id, HTTP status, stop reason, provider usage), so retries
++//      and output-limit finishes are countable. Request and response bodies pass unchanged.
++// Exit codes and scoring are unchanged. The diff against upstream is committed beside it.
++//
+ // harness.mjs — takes-bootstrap classifier eval runner (H1 / TODOS TODO-E).
+ //
+ // LIVE mode (default; requires a chat-capable key, spends real tokens):
+@@ -27,15 +43,17 @@
+ 
+ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+ import { tmpdir } from 'node:os';
+-import { join, dirname } from 'node:path';
++import { join, dirname, resolve } from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
+-const here = dirname(fileURLToPath(import.meta.url));
+ const args = process.argv.slice(2);
+ const flag = (name) => {
+   const i = args.indexOf(name);
+   return i === -1 ? null : args[i + 1];
+ };
++const gbrainDir = resolve(flag('--gbrain-dir') ?? join(dirname(fileURLToPath(import.meta.url)), '../../../node_modules/gbrain'));
++const here = join(gbrainDir, 'evals/takes-bootstrap');
++const startedAt = Date.now();
+ 
+ const fullCorpus = readFileSync(join(here, 'corpus.jsonl'), 'utf8')
+   .trim().split('\n').map(l => JSON.parse(l));
+@@ -46,7 +64,7 @@
+ }
+ const corpus = fullCorpus.slice(0, max);
+ 
+-const { scoreCorpus } = await import('./scorer.ts');
++const { scoreCorpus } = await import(join(here, 'scorer.ts'));
+ 
+ function finish(predictions) {
+   const report = scoreCorpus(corpus, predictions);
+@@ -72,8 +90,28 @@
+ // ── LIVE mode ───────────────────────────────────────────────────────────────
+ const model = flag('--model') ?? 'anthropic:claude-haiku-4-5';
+ const maxUsd = Number(flag('--max-usd') ?? 1);
+-const { configureEvalGateway } = await import('../../src/eval/shared/gateway-bootstrap.ts');
+-const { isAvailable, withBudgetTracker } = await import('../../src/core/ai/gateway.ts');
++const requestLog = flag('--request-log');
++let currentCase = null;
++if (requestLog) {
++  writeFileSync(requestLog, '');
++  const { appendFileSync } = await import('node:fs');
++  const inner = globalThis.fetch;
++  const hosts = new Set(['api.openai.com', 'api.anthropic.com']);
++  globalThis.fetch = async (input, init) => {
++    const url = input instanceof Request ? input.url : String(input);
++    if (!hosts.has(new URL(url).hostname)) return inner(input, init);
++    const started = Date.now();
++    const res = await inner(input, init);
++    let body = null;
++    try { body = await res.clone().json(); } catch { body = null; }
++    const stop = body?.stop_reason ?? body?.incomplete_details?.reason ?? body?.status ?? body?.choices?.[0]?.finish_reason ?? null;
++    appendFileSync(requestLog, JSON.stringify({ case: currentCase, host: new URL(url).hostname, status: res.status, stop, usage: body?.usage ?? null, ms: Date.now() - started }) + '\n');
++    return res;
++  };
++}
++
++const { configureEvalGateway } = await import(join(gbrainDir, 'src/eval/shared/gateway-bootstrap.ts'));
++const { isAvailable, withBudgetTracker } = await import(join(gbrainDir, 'src/core/ai/gateway.ts'));
+ configureEvalGateway({ chatModel: model });
+ if (!isAvailable('chat', model)) {
+   console.error(`takes-bootstrap harness: no chat-capable provider configured for ${model} — refusing to run keyless.`);
+@@ -83,8 +121,27 @@
+ 
+ // Estimate: system prompt (~1.1k chars) + page body at ~4 chars/token in,
+ // ~300 tokens out per call; the extractor caps output at 2000 tokens.
+-const { canonicalLookup } = await import('../../src/core/model-pricing.ts');
+-const price = canonicalLookup(model);
++const { canonicalLookup } = await import(join(gbrainDir, 'src/core/model-pricing.ts'));
++const flagRate = (name) => {
++  const raw = flag(name);
++  if (raw === null) return null;
++  const n = Number(raw);
++  if (!Number.isFinite(n) || n < 0) {
++    console.error(`takes-bootstrap harness: ${name} must be a non-negative number of USD per 1M tokens (got ${raw}).`);
++    process.exit(2);
++  }
++  return n;
++};
++const priceInput = flagRate('--price-input');
++const priceOutput = flagRate('--price-output');
++if ((priceInput === null) !== (priceOutput === null)) {
++  console.error('takes-bootstrap harness: pass --price-input and --price-output together.');
++  process.exit(2);
++}
++const builtinPrice = canonicalLookup(model) ?? null;
++const flagPrice = priceInput === null ? null : { input: priceInput, output: priceOutput };
++const price = builtinPrice ?? flagPrice;
++const priceSource = builtinPrice ? 'gbrain canonicalLookup' : flagPrice ? '--price-input/--price-output' : null;
+ if (!price) {
+   console.error(`takes-bootstrap harness: ${model} has no canonical price, so the $${maxUsd} cap cannot be enforced.`);
+   console.error(`Look up its rate and register it (gbrain pricing set ${model} --input <usd/1M> --output <usd/1M> --source <url>), or pick a priced --model.`);
+@@ -99,28 +156,34 @@
+   process.exit(2);
+ }
+ 
+-const { PGLiteEngine } = await import('../../src/core/pglite-engine.ts');
+-const { BudgetTracker } = await import('../../src/core/budget/budget-tracker.ts');
+-const { runCase } = await import('./run-case.ts');
++const { PGLiteEngine } = await import(join(gbrainDir, 'src/core/pglite-engine.ts'));
++const { BudgetTracker } = await import(join(gbrainDir, 'src/core/budget/budget-tracker.ts'));
++const { runCase } = await import(join(here, 'run-case.ts'));
+ 
+ const outPath = flag('--out') ?? join(here, 'results-latest.jsonl');
+ const brainDir = mkdtempSync(join(tmpdir(), 'takes-bootstrap-eval-'));
+-const tracker = new BudgetTracker({ maxCostUsd: maxUsd, label: 'takes-bootstrap-eval', auditPath: join(brainDir, 'budget-audit.jsonl') });
++const tracker = new BudgetTracker({ maxCostUsd: maxUsd, label: 'takes-bootstrap-eval', auditPath: join(brainDir, 'budget-audit.jsonl'),
++  ...(builtinPrice || !flagPrice ? {} : { pricingOverrides: { [model.toLowerCase()]: flagPrice } }) });
+ const engine = new PGLiteEngine();
+ await engine.connect({});
+ await engine.initSchema();
+ await engine.setConfig('sync.repo_path', brainDir);
+ 
+ const predictions = [];
++const caseErrors = [];
+ try {
+   await withBudgetTracker(tracker, async () => {
+     for (const c of corpus) {
++      currentCase = c.id;
+       const run = await runCase(engine, brainDir, c, model);
+       await engine.deletePage(c.page.slug);
+       if (run.error?.includes('BudgetExhausted')) {
+         throw new Error(`case ${c.id}: the $${maxUsd} spend cap was reached after $${tracker.totalSpent.toFixed(4)}`);
+       }
+-      if (run.error) console.error(`case ${c.id}: classifier call failed (${run.error}); scored as malformed`);
++      if (run.error) {
++        console.error(`case ${c.id}: classifier call failed (${run.error}); scored as malformed`);
++        caseErrors.push({ id: c.id, error: run.error });
++      }
+       predictions.push({ id: run.id, claims: run.claims });
+       if (predictions.length % 10 === 0) console.error(`…${predictions.length}/${corpus.length}`);
+     }
+@@ -133,6 +196,14 @@
+   rmSync(brainDir, { recursive: true, force: true });
+ }
+ console.error(`spend: $${tracker.totalSpent.toFixed(4)} on ${model}`);
++const summaryPath = flag('--summary');
++if (summaryPath) {
++  writeFileSync(summaryPath, JSON.stringify({
++    model, cases: corpus.length, predictions: predictions.length, aborted: process.exitCode === 2,
++    estimate_usd: estimate, ceiling_usd: ceiling, max_usd: maxUsd, spent_usd: tracker.totalSpent,
++    price_used: price, price_source: priceSource, case_errors: caseErrors, wall_ms: Date.now() - startedAt,
++  }, null, 2) + '\n');
++}
+ if (process.exitCode === 2) process.exit(2);
+ 
+ writeFileSync(outPath, predictions.map(p => JSON.stringify(p)).join('\n') + '\n');

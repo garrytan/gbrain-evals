@@ -1,0 +1,72 @@
+{
+  "mode": "live",
+  "total_probes": 0,
+  "scored_probes": 0,
+  "judge_failed": 0,
+  "sut_failed": 0,
+  "win_eligible_n": 0,
+  "win_rate_calibrated": null,
+  "win_rate_baseline": null,
+  "win_rate_tie": null,
+  "per_axis": {
+    "mentions_relevant_bias_tag": {
+      "rate": null,
+      "n": 0,
+      "subset": "positive"
+    },
+    "presents_counter_prior": {
+      "rate": null,
+      "n": 0,
+      "subset": "positive"
+    },
+    "changes_recommendation_meaningfully": {
+      "rate": null,
+      "n": 0,
+      "subset": "all"
+    },
+    "voice_conversational": {
+      "rate": null,
+      "n": 0,
+      "subset": "all"
+    },
+    "doesnt_force_fit_irrelevant_bias": {
+      "rate": null,
+      "n": 0,
+      "subset": "negative"
+    },
+    "behaves_like_baseline": {
+      "rate": null,
+      "n": 0,
+      "subset": "declaring"
+    },
+    "voice_must_not_be_clinical": {
+      "rate": null,
+      "n": 0,
+      "subset": "declaring"
+    }
+  },
+  "failure_mode_counts": {},
+  "doctor_flags": [],
+  "gate": "fail",
+  "gate_reasons": [
+    "win_rate: no win-eligible probes scored (cannot evaluate the >=60% gate)",
+    "mentions_relevant_bias_tag: no scored probes in positive subset (cannot evaluate the >=80% gate)",
+    "presents_counter_prior: no scored probes in positive subset (cannot evaluate the >=80% gate)",
+    "doesnt_force_fit_irrelevant_bias: no scored probes in negative subset (cannot evaluate the >=90% gate)",
+    "behaves_like_baseline: no scored probes in declaring subset (cannot evaluate the >=90% gate)",
+    "voice_conversational: no scored probes in all subset (cannot evaluate the >=95% gate)",
+    "voice_must_not_be_clinical: no scored probes in declaring subset (cannot evaluate the >=95% gate)"
+  ],
+  "provenance": {
+    "probe_filter": null,
+    "probes_planned": 8,
+    "probes_in_fixture": 8,
+    "think_model": "claude-sonnet-5-5",
+    "think_temperature": 0,
+    "judge_model": "openai:gpt-6.1-sol",
+    "judge_temperature": 0,
+    "probes_jsonl_sha256_16": "e65f3d49a5f6bf9f",
+    "started_at": "2026-10-06T18:49:08.286Z",
+    "finished_at": "2026-10-06T18:49:43.553Z"
+  }
+}

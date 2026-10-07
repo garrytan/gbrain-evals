@@ -1,0 +1,9 @@
+[
+  {
+    "jobId": 1,
+    "status": "completed",
+    "turns": 4,
+    "synth_mode_used": "agentic_fallback",
+    "fallback_reason": "bad_slug"
+  }
+]
