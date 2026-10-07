@@ -5,17 +5,10 @@
   "readers": [
     "anthropic:claude-opus-5-5",
     "openai:gpt-6.1-sol",
-    "anthropic:claude-sonnet-5-5",
-    "anthropic:claude-fable-5-1"
+    "anthropic:claude-sonnet-5-5"
   ],
   "effort": "medium",
   "prices": {
-    "anthropic:claude-fable-5-1": {
-      "input": 10,
-      "output": 50,
-      "cache_read": 0.25,
-      "cache_write": 12.5
-    },
     "anthropic:claude-haiku-4-5": {
       "input": 1,
       "output": 5,
@@ -305,36 +298,36 @@
       "id": "T1",
       "label": "T1 S1 headline (complete)",
       "plan_usd": 3995,
-      "estimate_usd": 4154.4,
-      "cap_usd": 6231.6
+      "estimate_usd": 3101.81,
+      "cap_usd": 4652.72
     },
     {
       "id": "T2-S2a",
       "label": "T2 S2a BEAM-100K",
       "plan_usd": 585,
-      "estimate_usd": 773.05,
-      "cap_usd": 1159.58
+      "estimate_usd": 418.54,
+      "cap_usd": 627.81
     },
     {
       "id": "T2-S2b",
       "label": "T2 S2b BEAM-1M",
       "plan_usd": 1720,
-      "estimate_usd": 1750.69,
-      "cap_usd": 2626.04
+      "estimate_usd": 1155.46,
+      "cap_usd": 1733.19
     },
     {
       "id": "T2-S3",
       "label": "T2 S3 LoCoMo",
       "plan_usd": 730,
-      "estimate_usd": 1047.96,
-      "cap_usd": 1571.94
+      "estimate_usd": 528.05,
+      "cap_usd": 792.08
     },
     {
       "id": "T2-S4-S5",
       "label": "T2 S4, S5",
       "plan_usd": 420,
-      "estimate_usd": 348.01,
-      "cap_usd": 522.02
+      "estimate_usd": 213.73,
+      "cap_usd": 320.6
     }
   ],
   "cells": [
@@ -385,8 +378,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -427,8 +419,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -461,8 +452,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -490,8 +480,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -528,14 +517,14 @@
         }
       ],
       "estimate": {
-        "usd": 255.72,
+        "usd": 154.9,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 13.2,
           "judge_repeats": 2.74,
-          "judges": 4.1,
+          "judges": 3.28,
           "own_answer": 30,
-          "readers": 192.4,
+          "readers": 92.4,
           "system_queries": 0.32
         }
       }
@@ -590,8 +579,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -610,13 +598,13 @@
         }
       ],
       "estimate": {
-        "usd": 190.12,
+        "usd": 100.79,
         "lines": {
-          "frontier_judges": 17.28,
+          "frontier_judges": 12.96,
           "ingest": 13.2,
-          "judge_repeats": 10.94,
-          "judges": 1.09,
-          "own_answer": 147.6
+          "judge_repeats": 8.21,
+          "judges": 0.82,
+          "own_answer": 65.6
         }
       }
     },
@@ -667,8 +655,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -708,8 +695,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -742,8 +728,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -771,8 +756,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -790,13 +774,13 @@
         }
       ],
       "estimate": {
-        "usd": 363.33,
+        "usd": 294.51,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 209,
           "judge_repeats": 2.74,
-          "judges": 3.83,
-          "readers": 134.8
+          "judges": 3.01,
+          "readers": 66.8
         }
       }
     },
@@ -847,8 +831,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -888,8 +871,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -922,8 +904,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -951,8 +932,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -970,13 +950,13 @@
         }
       ],
       "estimate": {
-        "usd": 308.33,
+        "usd": 239.51,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 154,
           "judge_repeats": 2.74,
-          "judges": 3.83,
-          "readers": 134.8
+          "judges": 3.01,
+          "readers": 66.8
         }
       }
     },
@@ -1027,8 +1007,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -1068,8 +1047,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1102,8 +1080,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1131,8 +1108,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1150,13 +1126,13 @@
         }
       ],
       "estimate": {
-        "usd": 308.33,
+        "usd": 239.51,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 154,
           "judge_repeats": 2.74,
-          "judges": 3.83,
-          "readers": 134.8
+          "judges": 3.01,
+          "readers": 66.8
         }
       }
     },
@@ -1207,8 +1183,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -1248,8 +1223,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1282,8 +1256,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1311,8 +1284,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1330,13 +1302,13 @@
         }
       ],
       "estimate": {
-        "usd": 1474.33,
+        "usd": 1405.51,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 1320,
           "judge_repeats": 2.74,
-          "judges": 3.83,
-          "readers": 134.8
+          "judges": 3.01,
+          "readers": 66.8
         }
       }
     },
@@ -1387,8 +1359,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -1428,8 +1399,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1462,8 +1432,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1491,8 +1460,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1510,13 +1478,13 @@
         }
       ],
       "estimate": {
-        "usd": 165.33,
+        "usd": 96.51,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 11,
           "judge_repeats": 2.74,
-          "judges": 3.83,
-          "readers": 134.8
+          "judges": 3.01,
+          "readers": 66.8
         }
       }
     },
@@ -1567,8 +1535,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -1608,8 +1575,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1642,8 +1608,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1671,8 +1636,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1690,13 +1654,13 @@
         }
       ],
       "estimate": {
-        "usd": 165.33,
+        "usd": 96.51,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 11,
           "judge_repeats": 2.74,
-          "judges": 3.83,
-          "readers": 134.8
+          "judges": 3.01,
+          "readers": 66.8
         }
       }
     },
@@ -1741,8 +1705,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -1782,8 +1745,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1816,8 +1778,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1835,12 +1796,12 @@
         }
       ],
       "estimate": {
-        "usd": 108.11,
+        "usd": 61.56,
         "lines": {
           "frontier_judges": 8.64,
           "judge_repeats": 2.74,
-          "judges": 2.74,
-          "readers": 94
+          "judges": 2.19,
+          "readers": 48
         }
       }
     },
@@ -1885,8 +1846,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -1926,8 +1886,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1960,8 +1919,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -1989,8 +1947,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2008,13 +1965,13 @@
         }
       ],
       "estimate": {
-        "usd": 168.63,
+        "usd": 99.81,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 14.3,
           "judge_repeats": 2.74,
-          "judges": 3.83,
-          "readers": 134.8
+          "judges": 3.01,
+          "readers": 66.8
         }
       }
     },
@@ -2059,8 +2016,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {
             "anthropic:claude-sonnet-5-5": 3
@@ -2100,8 +2056,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2134,8 +2089,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2153,12 +2107,12 @@
         }
       ],
       "estimate": {
-        "usd": 108.11,
+        "usd": 61.56,
         "lines": {
           "frontier_judges": 8.64,
           "judge_repeats": 2.74,
-          "judges": 2.74,
-          "readers": 94
+          "judges": 2.19,
+          "readers": 48
         }
       }
     },
@@ -2203,8 +2157,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2222,10 +2175,10 @@
         }
       ],
       "estimate": {
-        "usd": 5.41,
+        "usd": 5.14,
         "lines": {
           "frontier_judges": 4.32,
-          "judges": 1.09
+          "judges": 0.82
         }
       }
     },
@@ -2270,8 +2223,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2290,12 +2242,12 @@
         }
       ],
       "estimate": {
-        "usd": 533.32,
+        "usd": 245.99,
         "lines": {
-          "agent": 504,
-          "frontier_judges": 17.28,
-          "judge_repeats": 10.94,
-          "judges": 1.09
+          "agent": 224,
+          "frontier_judges": 12.96,
+          "judge_repeats": 8.21,
+          "judges": 0.82
         }
       }
     },
@@ -2343,8 +2295,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2353,7 +2304,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -2383,7 +2334,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -2407,7 +2358,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
@@ -2432,14 +2383,14 @@
         }
       ],
       "estimate": {
-        "usd": 105.78,
+        "usd": 79.05,
         "lines": {
           "frontier_judges": 0.65,
           "ingest": 2.88,
           "judge_repeats": 3.28,
-          "judges": 2.3,
+          "judges": 1.97,
           "own_answer": 36,
-          "readers": 60.48,
+          "readers": 34.08,
           "system_queries": 0.19
         }
       }
@@ -2491,8 +2442,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2511,13 +2461,13 @@
         }
       ],
       "estimate": {
-        "usd": 189.26,
+        "usd": 96.47,
         "lines": {
-          "frontier_judges": 20.74,
+          "frontier_judges": 15.55,
           "ingest": 2.88,
-          "judge_repeats": 13.13,
-          "judges": 1.31,
-          "own_answer": 151.2
+          "judge_repeats": 9.85,
+          "judges": 0.98,
+          "own_answer": 67.2
         }
       }
     },
@@ -2565,8 +2515,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2575,7 +2524,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -2604,7 +2553,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -2628,20 +2577,20 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
         }
       ],
       "estimate": {
-        "usd": 111.98,
+        "usd": 85.25,
         "lines": {
           "frontier_judges": 0.65,
           "ingest": 45.6,
           "judge_repeats": 3.28,
-          "judges": 1.97,
-          "readers": 60.48
+          "judges": 1.64,
+          "readers": 34.08
         }
       }
     },
@@ -2689,8 +2638,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2699,7 +2647,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -2728,7 +2676,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -2752,20 +2700,20 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
         }
       ],
       "estimate": {
-        "usd": 99.98,
+        "usd": 73.25,
         "lines": {
           "frontier_judges": 0.65,
           "ingest": 33.6,
           "judge_repeats": 3.28,
-          "judges": 1.97,
-          "readers": 60.48
+          "judges": 1.64,
+          "readers": 34.08
         }
       }
     },
@@ -2813,8 +2761,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2823,7 +2770,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -2852,7 +2799,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -2876,20 +2823,20 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
         }
       ],
       "estimate": {
-        "usd": 99.98,
+        "usd": 73.25,
         "lines": {
           "frontier_judges": 0.65,
           "ingest": 33.6,
           "judge_repeats": 3.28,
-          "judges": 1.97,
-          "readers": 60.48
+          "judges": 1.64,
+          "readers": 34.08
         }
       }
     },
@@ -2937,8 +2884,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -2947,7 +2893,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -2976,7 +2922,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -3000,20 +2946,20 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
         }
       ],
       "estimate": {
-        "usd": 354.38,
+        "usd": 327.65,
         "lines": {
           "frontier_judges": 0.65,
           "ingest": 288,
           "judge_repeats": 3.28,
-          "judges": 1.97,
-          "readers": 60.48
+          "judges": 1.64,
+          "readers": 34.08
         }
       }
     },
@@ -3061,8 +3007,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3071,7 +3016,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -3100,7 +3045,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -3124,20 +3069,20 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
         }
       ],
       "estimate": {
-        "usd": 68.78,
+        "usd": 42.05,
         "lines": {
           "frontier_judges": 0.65,
           "ingest": 2.4,
           "judge_repeats": 3.28,
-          "judges": 1.97,
-          "readers": 60.48
+          "judges": 1.64,
+          "readers": 34.08
         }
       }
     },
@@ -3185,8 +3130,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3195,7 +3139,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -3224,7 +3168,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -3248,20 +3192,20 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
         }
       ],
       "estimate": {
-        "usd": 68.78,
+        "usd": 42.05,
         "lines": {
           "frontier_judges": 0.65,
           "ingest": 2.4,
           "judge_repeats": 3.28,
-          "judges": 1.97,
-          "readers": 60.48
+          "judges": 1.64,
+          "readers": 34.08
         }
       }
     },
@@ -3303,8 +3247,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3313,7 +3256,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -3342,7 +3285,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -3366,19 +3309,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
         }
       ],
       "estimate": {
-        "usd": 66.38,
+        "usd": 39.65,
         "lines": {
           "frontier_judges": 0.65,
           "judge_repeats": 3.28,
-          "judges": 1.97,
-          "readers": 60.48
+          "judges": 1.64,
+          "readers": 34.08
         }
       }
     },
@@ -3420,8 +3363,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3430,7 +3372,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -3459,7 +3401,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -3483,20 +3425,20 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
         }
       ],
       "estimate": {
-        "usd": 69.5,
+        "usd": 42.77,
         "lines": {
           "frontier_judges": 0.65,
           "ingest": 3.12,
           "judge_repeats": 3.28,
-          "judges": 1.97,
-          "readers": 60.48
+          "judges": 1.64,
+          "readers": 34.08
         }
       }
     },
@@ -3538,8 +3480,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3548,7 +3489,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -3577,7 +3518,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 2,000 tokens (sweep)"
@@ -3601,19 +3542,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 16,000 tokens (sweep)"
         }
       ],
       "estimate": {
-        "usd": 66.38,
+        "usd": 39.65,
         "lines": {
           "frontier_judges": 0.65,
           "judge_repeats": 3.28,
-          "judges": 1.97,
-          "readers": 60.48
+          "judges": 1.64,
+          "readers": 34.08
         }
       }
     },
@@ -3661,8 +3602,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3671,19 +3611,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component diagnostic, text-embedding-3-large at 1,536 dimensions"
         }
       ],
       "estimate": {
-        "usd": 54.02,
+        "usd": 27.25,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.39,
           "ingest": 3.12,
-          "judges": 1.31,
-          "readers": 48.96,
+          "judges": 0.98,
+          "readers": 22.56,
           "system_queries": 0.19
         }
       }
@@ -3726,8 +3666,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3736,17 +3675,17 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "whole history, where it fits"
         }
       ],
       "estimate": {
-        "usd": 1.75,
+        "usd": 1.37,
         "lines": {
-          "frontier_judges": 0.43,
-          "judges": 1.31
+          "frontier_judges": 0.39,
+          "judges": 0.98
         }
       }
     },
@@ -3788,8 +3727,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3808,12 +3746,12 @@
         }
       ],
       "estimate": {
-        "usd": 393.74,
+        "usd": 185.75,
         "lines": {
-          "agent": 358.56,
-          "frontier_judges": 20.74,
-          "judge_repeats": 13.13,
-          "judges": 1.31
+          "agent": 159.36,
+          "frontier_judges": 15.55,
+          "judge_repeats": 9.85,
+          "judges": 0.98
         }
       }
     },
@@ -3861,8 +3799,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3871,7 +3808,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -3902,14 +3839,14 @@
         }
       ],
       "estimate": {
-        "usd": 53.22,
+        "usd": 37.65,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 0.24,
           "judge_repeats": 1.92,
-          "judges": 0.96,
+          "judges": 0.77,
           "own_answer": 21,
-          "readers": 28.56,
+          "readers": 13.16,
           "system_queries": 0.11
         }
       }
@@ -3961,8 +3898,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -3981,13 +3917,13 @@
         }
       ],
       "estimate": {
-        "usd": 86.28,
+        "usd": 44.75,
         "lines": {
-          "frontier_judges": 12.1,
+          "frontier_judges": 9.07,
           "ingest": 0.24,
-          "judge_repeats": 7.66,
-          "judges": 0.77,
-          "own_answer": 65.52
+          "judge_repeats": 5.75,
+          "judges": 0.57,
+          "own_answer": 29.12
         }
       }
     },
@@ -4035,8 +3971,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4045,7 +3980,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -4057,13 +3992,13 @@
         }
       ],
       "estimate": {
-        "usd": 35.47,
+        "usd": 19.9,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 3.8,
           "judge_repeats": 1.92,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4111,8 +4046,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4121,7 +4055,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -4133,13 +4067,13 @@
         }
       ],
       "estimate": {
-        "usd": 34.47,
+        "usd": 18.9,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 2.8,
           "judge_repeats": 1.92,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4187,8 +4121,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4197,7 +4130,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -4209,13 +4142,13 @@
         }
       ],
       "estimate": {
-        "usd": 34.47,
+        "usd": 18.9,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 2.8,
           "judge_repeats": 1.92,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4263,8 +4196,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4273,7 +4205,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -4285,13 +4217,13 @@
         }
       ],
       "estimate": {
-        "usd": 55.67,
+        "usd": 40.1,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 24,
           "judge_repeats": 1.92,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4339,8 +4271,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4349,7 +4280,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -4361,13 +4292,13 @@
         }
       ],
       "estimate": {
-        "usd": 31.87,
+        "usd": 16.3,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 0.2,
           "judge_repeats": 1.92,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4415,8 +4346,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4425,7 +4355,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -4437,13 +4367,13 @@
         }
       ],
       "estimate": {
-        "usd": 31.87,
+        "usd": 16.3,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 0.2,
           "judge_repeats": 1.92,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4485,8 +4415,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4495,7 +4424,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -4507,12 +4436,12 @@
         }
       ],
       "estimate": {
-        "usd": 31.67,
+        "usd": 16.1,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "judge_repeats": 1.92,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4554,8 +4483,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4564,7 +4492,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -4576,13 +4504,13 @@
         }
       ],
       "estimate": {
-        "usd": 31.93,
+        "usd": 16.36,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 0.26,
           "judge_repeats": 1.92,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4624,8 +4552,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4634,7 +4561,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": {
             "count": 10,
@@ -4646,12 +4573,12 @@
         }
       ],
       "estimate": {
-        "usd": 31.67,
+        "usd": 16.1,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "judge_repeats": 1.92,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4699,8 +4626,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4709,19 +4635,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 32.56,
+        "usd": 16.99,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 2.8,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4769,8 +4695,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4779,19 +4704,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 32.56,
+        "usd": 16.99,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 2.8,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4839,8 +4764,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4849,19 +4773,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 29.96,
+        "usd": 14.39,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 0.2,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4909,8 +4833,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4919,19 +4842,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 29.96,
+        "usd": 14.39,
         "lines": {
-          "frontier_judges": 0.43,
+          "frontier_judges": 0.45,
           "ingest": 0.2,
-          "judges": 0.77,
-          "readers": 28.56
+          "judges": 0.57,
+          "readers": 13.16
         }
       }
     },
@@ -4973,8 +4896,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -4983,18 +4905,18 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 7
           },
           "judge_repeats": null,
           "label": "whole history, where it fits"
         }
       ],
       "estimate": {
-        "usd": 68.1,
+        "usd": 34.23,
         "lines": {
-          "frontier_judges": 0.43,
-          "full_context": 66.9,
-          "judges": 0.77
+          "frontier_judges": 0.45,
+          "full_context": 33.2,
+          "judges": 0.57
         }
       }
     },
@@ -5036,8 +4958,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5056,12 +4977,12 @@
         }
       ],
       "estimate": {
-        "usd": 121.32,
+        "usd": 60.19,
         "lines": {
-          "agent": 100.8,
-          "frontier_judges": 12.1,
-          "judge_repeats": 7.66,
-          "judges": 0.77
+          "agent": 44.8,
+          "frontier_judges": 9.07,
+          "judge_repeats": 5.75,
+          "judges": 0.57
         }
       }
     },
@@ -5113,8 +5034,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5123,7 +5043,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5136,13 +5056,13 @@
         }
       ],
       "estimate": {
-        "usd": 46.29,
+        "usd": 23.91,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.03,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8,
+          "judges": 1.11,
+          "readers": 18.8,
           "system_queries": 0.16
         }
       }
@@ -5198,8 +5118,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5218,13 +5137,13 @@
         }
       ],
       "estimate": {
-        "usd": 111.11,
+        "usd": 55.84,
         "lines": {
-          "frontier_judges": 4.8,
+          "frontier_judges": 3.6,
           "ingest": 0.03,
-          "judge_repeats": 14.8,
-          "judges": 1.48,
-          "own_answer": 90
+          "judge_repeats": 11.1,
+          "judges": 1.11,
+          "own_answer": 40
         }
       }
     },
@@ -5276,8 +5195,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5286,7 +5204,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5298,13 +5216,13 @@
         }
       ],
       "estimate": {
-        "usd": 46.59,
+        "usd": 24.21,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.49,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -5356,8 +5274,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5366,7 +5283,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5378,13 +5295,13 @@
         }
       ],
       "estimate": {
-        "usd": 46.46,
+        "usd": 24.08,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.36,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -5436,8 +5353,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5446,7 +5362,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5458,13 +5374,13 @@
         }
       ],
       "estimate": {
-        "usd": 46.46,
+        "usd": 24.08,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.36,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -5516,8 +5432,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5526,7 +5441,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5538,13 +5453,13 @@
         }
       ],
       "estimate": {
-        "usd": 49.22,
+        "usd": 26.84,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 3.12,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -5596,8 +5511,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5606,7 +5520,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5618,13 +5532,13 @@
         }
       ],
       "estimate": {
-        "usd": 46.13,
+        "usd": 23.74,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.03,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -5676,8 +5590,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5686,7 +5599,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5698,13 +5611,13 @@
         }
       ],
       "estimate": {
-        "usd": 46.13,
+        "usd": 23.74,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.03,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -5750,8 +5663,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5760,7 +5672,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5772,12 +5684,12 @@
         }
       ],
       "estimate": {
-        "usd": 46.1,
+        "usd": 23.72,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -5823,8 +5735,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5833,7 +5744,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5845,13 +5756,13 @@
         }
       ],
       "estimate": {
-        "usd": 46.13,
+        "usd": 23.75,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.03,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -5897,8 +5808,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5907,7 +5817,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": {
             "count": 10,
@@ -5919,12 +5829,12 @@
         }
       ],
       "estimate": {
-        "usd": 46.1,
+        "usd": 23.72,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "judge_repeats": 3.7,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -5976,8 +5886,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -5986,19 +5895,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 42.89,
+        "usd": 20.51,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.49,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -6050,8 +5959,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -6060,19 +5968,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 42.76,
+        "usd": 20.38,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.36,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -6124,8 +6032,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -6134,19 +6041,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 42.76,
+        "usd": 20.38,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.36,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -6198,8 +6105,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -6208,19 +6114,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 45.52,
+        "usd": 23.14,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 3.12,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -6272,8 +6178,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -6282,19 +6187,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 42.43,
+        "usd": 20.04,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.03,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -6346,8 +6251,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -6356,19 +6260,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, common configuration (diagnostic)"
         }
       ],
       "estimate": {
-        "usd": 42.43,
+        "usd": 20.04,
         "lines": {
-          "frontier_judges": 0.12,
+          "frontier_judges": 0.11,
           "ingest": 0.03,
-          "judges": 1.48,
-          "readers": 40.8
+          "judges": 1.11,
+          "readers": 18.8
         }
       }
     },
@@ -6414,8 +6318,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -6424,18 +6327,18 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "whole history, where it fits"
         }
       ],
       "estimate": {
-        "usd": 23.16,
+        "usd": 12.29,
         "lines": {
-          "frontier_judges": 0.12,
-          "full_context": 21.56,
-          "judges": 1.48
+          "frontier_judges": 0.11,
+          "full_context": 11.07,
+          "judges": 1.11
         }
       }
     },
@@ -6481,8 +6384,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -6501,12 +6403,12 @@
         }
       ],
       "estimate": {
-        "usd": 121.88,
+        "usd": 60.61,
         "lines": {
-          "agent": 100.8,
-          "frontier_judges": 4.8,
-          "judge_repeats": 14.8,
-          "judges": 1.48
+          "agent": 44.8,
+          "frontier_judges": 3.6,
+          "judge_repeats": 11.1,
+          "judges": 1.11
         }
       }
     },
@@ -6552,8 +6454,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -6562,18 +6463,18 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 5
+            "sample": 6
           },
           "judge_repeats": null,
           "label": "agent runtime, sessions as files"
         }
       ],
       "estimate": {
-        "usd": 62.8,
+        "usd": 28.42,
         "lines": {
-          "agent": 61.2,
-          "frontier_judges": 0.12,
-          "judges": 1.48
+          "agent": 27.2,
+          "frontier_judges": 0.11,
+          "judges": 1.11
         }
       }
     },
@@ -7108,8 +7009,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7118,7 +7018,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens, shootout slice",
@@ -7126,12 +7026,12 @@
         }
       ],
       "estimate": {
-        "usd": 40.68,
+        "usd": 29.49,
         "lines": {
           "frontier_judges": 0.31,
           "ingest": 6.9,
-          "judges": 1.67,
-          "readers": 31.4,
+          "judges": 1.48,
+          "readers": 20.4,
           "system_queries": 0.4
         }
       }
@@ -7180,8 +7080,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7190,19 +7089,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 22.6,
+        "usd": 11.41,
         "lines": {
           "frontier_judges": 0.31,
           "ingest": 1.15,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     },
@@ -7250,8 +7149,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7260,19 +7158,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 22.6,
+        "usd": 11.41,
         "lines": {
           "frontier_judges": 0.31,
           "ingest": 1.15,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     },
@@ -7314,8 +7212,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7324,18 +7221,18 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 21.45,
+        "usd": 10.26,
         "lines": {
           "frontier_judges": 0.31,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     },
@@ -7377,8 +7274,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7387,19 +7283,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 22.95,
+        "usd": 11.76,
         "lines": {
           "frontier_judges": 0.31,
           "ingest": 1.5,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     },
@@ -7441,8 +7337,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7451,18 +7346,18 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 21.45,
+        "usd": 10.26,
         "lines": {
           "frontier_judges": 0.31,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     },
@@ -7508,8 +7403,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7518,7 +7412,7 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens",
@@ -7526,12 +7420,12 @@
         }
       ],
       "estimate": {
-        "usd": 39.53,
+        "usd": 28.34,
         "lines": {
           "frontier_judges": 0.31,
           "ingest": 18,
-          "judges": 0.74,
-          "readers": 20.4,
+          "judges": 0.56,
+          "readers": 9.4,
           "system_queries": 0.08
         }
       }
@@ -7578,8 +7472,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7588,19 +7481,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 36.45,
+        "usd": 25.26,
         "lines": {
           "frontier_judges": 0.31,
           "ingest": 15,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     },
@@ -7646,8 +7539,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7656,19 +7548,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 36.45,
+        "usd": 25.26,
         "lines": {
           "frontier_judges": 0.31,
           "ingest": 15,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     },
@@ -7708,8 +7600,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7718,18 +7609,18 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 21.45,
+        "usd": 10.26,
         "lines": {
           "frontier_judges": 0.31,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     },
@@ -7769,8 +7660,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7779,19 +7669,19 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 40.95,
+        "usd": 29.76,
         "lines": {
           "frontier_judges": 0.31,
           "ingest": 19.5,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     },
@@ -7831,8 +7721,7 @@
           "readers": [
             "anthropic:claude-opus-5-5",
             "openai:gpt-6.1-sol",
-            "anthropic:claude-sonnet-5-5",
-            "anthropic:claude-fable-5-1"
+            "anthropic:claude-sonnet-5-5"
           ],
           "reader_replicates": {},
           "frontier": {
@@ -7841,23 +7730,23 @@
               "openai:gpt-6.1-sol"
             ],
             "readers": null,
-            "sample": 13
+            "sample": 17
           },
           "judge_repeats": null,
           "label": "component, 8,000 tokens"
         }
       ],
       "estimate": {
-        "usd": 21.45,
+        "usd": 10.26,
         "lines": {
           "frontier_judges": 0.31,
-          "judges": 0.74,
-          "readers": 20.4
+          "judges": 0.56,
+          "readers": 9.4
         }
       }
     }
   ],
-  "total_usd": 8074.11,
+  "total_usd": 5417.59,
   "plan_total_usd": 7710,
   "cap_usd": 8500
 }

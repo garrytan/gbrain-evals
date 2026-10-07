@@ -10,7 +10,7 @@ import { gzipSync } from 'node:zlib';
 import { seededRandom } from '../../../../eval/runner/stats/paired.ts';
 import { answerId, CAMPAIGN_SCHEMA, type AnswerRecord, type CampaignCell, type CampaignManifest, type JudgmentRecord, type RowRecord } from '../../../../eval/runner/scoreboard.ts';
 
-export const READERS = ['claude-opus-5-5', 'gpt-6.1-sol', 'claude-sonnet-5-5', 'claude-fable-5-1'];
+export const READERS = ['claude-opus-5-5', 'gpt-6.1-sol', 'claude-sonnet-5-5'];
 export const INSTRUMENT = 'beam-rubric-synthetic-v1';
 
 export interface SyntheticCell {

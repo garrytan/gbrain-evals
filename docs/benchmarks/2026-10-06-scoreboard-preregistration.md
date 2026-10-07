@@ -120,7 +120,7 @@ and 16,000 tokens:
   its last sentence. Packing stops after a cut and never skips to a smaller, lower-ranked item.
 - **Packing loss** is reported apart from retrieval loss. Fill rate is a diagnostic beside each cell, not a gate.
 - **Coverage.** 8k runs everywhere. The 2k/16k sweep runs on a stratified 100-question S1 subset covering all 10
-  conversations (four readers, seed `q1-sweep`), and on S2b with `claude-sonnet-5-5` as a labeled sensitivity view.
+  conversations (three readers, seed `q1-sweep`), and on S2b with `claude-sonnet-5-5` as a labeled sensitivity view.
 
 gbrain's retrieval request is `query` with `limit: 50` and no `token_budget`; the harness packs from the delivered
 pages.
@@ -140,9 +140,9 @@ Tokens and dollars per question sit beside every accuracy.
 
 ## Readers, judges, repeats
 
-- **Readers:** `anthropic:claude-opus-5-5`, `openai:gpt-6.1-sol`, `anthropic:claude-sonnet-5-5`,
-  `anthropic:claude-fable-5-1` (the newest of each family on 2026-10-06), on every judged component and whole-system
-  row of every set. Reasoning effort `medium`, in the request and the cache key. The prompt is LongMemEval's reading
+- **Readers:** `anthropic:claude-opus-5-5`, `openai:gpt-6.1-sol` and `anthropic:claude-sonnet-5-5` (the newest Opus,
+  GPT and Sonnet on 2026-10-07), on every judged component and whole-system row of every set. Fable is smoke-test
+  only and reads no counted cell (amendment A1). Reasoning effort `medium`, in the request and the cache key. The prompt is LongMemEval's reading
   prompt, byte for byte the starting line's. S4's 500-question gbrain regression uses `claude-sonnet-5-5` only.
 - **Canonical judges, one per benchmark:**
   - LongMemEval and LoCoMo: `gpt-4o-2024-08-06` with LongMemEval's official per-type prompts, the unanswerable prompt
@@ -190,7 +190,7 @@ Tokens and dollars per question sit beside every accuracy.
 
 ## Statistics
 
-- **Estimand.** The per-question mean over the four readers' scores, clustered by conversation on S1 to S3 and by
+- **Estimand.** The per-question mean over the three readers' scores, clustered by conversation on S1 to S3 and by
   question on S4 and S5.
 - **Family 1 (headline, inferential).** S1, 8k component table, service quality: `gbrain-defaults` against every
   other component row. Restricted wild cluster bootstrap-t with Webb weights (`eval/runner/stats/wild-cluster.ts`),
@@ -213,7 +213,7 @@ Tokens and dollars per question sit beside every accuracy.
 
 Each sentence takes the measured numbers in braces and no stronger claim.
 
-- **Holm-adjusted p ≤ 0.05, gbrain ahead:** "On BEAM-10M, with the same four answer models and 8,000 tokens of each
+- **Holm-adjusted p ≤ 0.05, gbrain ahead:** "On BEAM-10M, with the same three answer models and 8,000 tokens of each
   system's own evidence, gbrain answered more questions correctly than {kind} ({a} vs {b}, difference {d} points, 95%
   interval {lo} to {hi})."
 - **Holm-adjusted p ≤ 0.05, gbrain behind:** the same sentence with {kind} first.
@@ -281,9 +281,27 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 
 ## Amendments
 
-None yet.
+**A1 (2026-10-07, before freeze): readers drop from four to three.** Program rule from Garry on 2026-10-07: Opus 5.5
+is the top Anthropic model in counted runs, and Fable is smoke-test only, never in counted cells, practice rounds or
+held-out runs. The readers become `claude-opus-5-5`, `gpt-6.1-sol` and `claude-sonnet-5-5` on every judged row; the
+estimand becomes the three-reader mean; the generated claim sentences say "the same three answer models"; the power
+simulation is rerun with three readers (`power.json`: central minimum detectable difference 16.0 points with
+nine comparisons, 13.6 after the shrink rule, against 15.6 and 13.3 with four readers; Family 1 stays descriptive
+unless dev smokes change the inputs); the cell manifest is re-costed ($8,074 to $5,418 in cells). No counted cell had run and
+no sealed material had been opened, so nothing measured changes. Fable may read only a separately labeled smoke
+cell, which this campaign does not define.
+
+**A2 (2026-10-07): a fresh held-out reserve is being minted.** Under owner custody, the custodian mints a reserve of
+10 BEAM-style conversations of about 1M tokens each with BEAM's public generator at `b2da22e`, before BEAM-10M opens,
+so later decisions have material no one has used. Q1's cells do not use it. It is referenced here only by the SHA-256
+of its hash list: OPEN (relayed by the program owner when minting finishes).
 
 ## Changelog
+
+### 2026-10-07: amendments A1 and A2
+
+Readers drop to Opus 5.5, GPT-6.1 Sol and Sonnet 5.5 (Fable smoke-only, program rule); the fresh held-out reserve is
+recorded.
 
 ### 2026-10-06: shipped-behavior fallbacks, the full-surface cell
 

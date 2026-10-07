@@ -3,14 +3,14 @@
  *
  * Question: with BEAM-10M's ten conversations, about 20 questions each, a
  * Holm family of nine component comparisons (gbrain-defaults against every
- * other 8k component row) and the four-reader mean as the tested estimand,
+ * other 8k component row) and the three-reader mean as the tested estimand,
  * what is the smallest true difference Family 1 detects with 80% power at a
  * family-wise 5%? And does the restricted wild cluster bootstrap-t with Webb
  * weights (eval/runner/stats/wild-cluster.ts) hold its size and coverage at
  * this family, including when clusters are unequal or missing?
  *
  *   bun eval/runner/q1/power.ts [--output <power.json>] [--sims N] [--draws N] [--seed N]
- *     [--dev-strength <json: {"<kind id>": <dev four-reader mean>, ...}>] [--json]
+ *     [--dev-strength <json: {"<kind id>": <dev three-reader mean>, ...}>] [--json]
  *
  * Inputs (dev and public only; no sealed data):
  *   - graded BEAM scores from the starting-line rows of BEAM-1M dev and
@@ -27,9 +27,9 @@
  *   2. Each arm (gbrain-defaults plus m comparators) keeps the base score
  *      with probability rho_arm, otherwise draws its own score from the same
  *      pool: correlated arms.
- *   3. Each of four readers keeps the arm's score with probability
+ *   3. Each of three readers keeps the arm's score with probability
  *      rho_reader, otherwise draws from the pool; the question's value is the
- *      four-reader mean, the scoreboard's estimand.
+ *      three-reader mean, the scoreboard's estimand.
  *   4. Each (arm, conversation) adds u ~ Normal(0, tau_arm^2): some
  *      conversations suit one system.
  * gbrain-defaults' arm is shared by all m comparisons, so the family's tests
@@ -72,7 +72,7 @@ export const DEFAULT_OUTPUT = 'docs/benchmarks/2026-10-06-scoreboard/power.json'
 export const MDD_THRESHOLD_POINTS = 10;
 export const TARGET_POWER = 0.8;
 export const ALPHA = 0.05;
-export const READERS = 4;
+export const READERS = 3;
 export const FAMILY1_SIZE = 9;
 export const SHRUNK_SIZE = 4;
 
@@ -150,7 +150,7 @@ export interface Scenario { name: 'optimistic' | 'central' | 'pessimistic'; tau_
  * Three assumption sets. tau comes from the inputs; rho_arm and rho_reader
  * are stated assumptions until dev smokes give paired cross-system and
  * cross-reader rows (the starting line has one system and one reader).
- * Readers that agree more are the pessimistic case: averaging four readers
+ * Readers that agree more are the pessimistic case: averaging three readers
  * then removes less noise from the estimand.
  */
 export function scenarios(d: DevInputs): Scenario[] {
@@ -283,7 +283,7 @@ export interface PowerDecision {
   full_family: { comparisons: number; mdd_points: number | null; rows_over_threshold: number };
   shrunk_family: { comparisons: number; mdd_points: number | null } | null;
   family1: Family1Plan;
-  /** Comparators kept by the shrink rule, strongest dev four-reader mean first; null until dev smokes supply the means. */
+  /** Comparators kept by the shrink rule, strongest dev three-reader mean first; null until dev smokes supply the means. */
   shrunk_comparators: string[] | null;
   detectable_difference_points: number | null;
   note: string;
@@ -314,7 +314,7 @@ export function decide(results: readonly SimResult[], devMeans: Record<string, n
     shrunk_comparators: family1 === 'shrunk' && devMeans ? strongestDevRows(devMeans) : null,
     detectable_difference_points: used.mdd_points_single,
     note: family1 === 'shrunk' && !devMeans
-      ? 'The four comparators are chosen from the dev smokes\' four-reader means (rerun with --dev-strength) and written into the preregistration before any S1 cell runs.'
+      ? 'The four comparators are chosen from the dev smokes\' three-reader means (rerun with --dev-strength) and written into the preregistration before any S1 cell runs.'
       : 'Comparator rows are exchangeable under these inputs, so one detectable difference applies to every row; rerun when dev smokes give paired cross-system rows.',
   };
 }
@@ -345,7 +345,7 @@ export function runPower(o: SimOptions, devMeans: Record<string, number> | null,
   return {
     schema: 'gbrain-evals/q1-power/v1',
     command: `bun eval/runner/q1/power.ts --sims ${o.sims} --draws ${o.draws} --seed ${o.seed}${devMeans ? ' --dev-strength <file>' : ''}`,
-    method: 'restricted wild cluster bootstrap-t, Webb weights, two-sided, Holm within the family; estimand: per-question four-reader mean, clustered by conversation',
+    method: 'restricted wild cluster bootstrap-t, Webb weights, two-sided, Holm within the family; estimand: per-question three-reader mean, clustered by conversation',
     inputs: {
       sources: d.sources, within_variance: r5(d.within_variance), dev_tau: r5(d.dev_tau), dev_conversation_mean_sd: r5(d.dev_conversation_mean_sd), public_10m_tau: r5(d.public_10m_tau),
       public_10m_conversation_sd: PUBLIC_10M_CONVERSATION_SD,

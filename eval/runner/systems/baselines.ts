@@ -157,8 +157,14 @@ export class PlainHybridSystem implements MemorySystem {
 
 // ─── True full context: reader windows, fit check, cached reading ───
 
-/** The four frontier readers of every Q1 judged row (newest Opus, GPT, Sonnet and Fable; CLAUDE.md "Choose models"). */
-export const FRONTIER_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'anthropic:claude-sonnet-5-5', 'anthropic:claude-fable-5-1'] as const;
+/**
+ * The three frontier readers of every Q1 counted row: the newest Opus, GPT and Sonnet (CLAUDE.md "Choose models").
+ * Fable is smoke-test only (Garry, 2026-10-07): it never reads a counted cell, practice round or held-out run, so it is
+ * not in this list. Its window stays in READER_WINDOWS for labeled smoke cells.
+ */
+export const FRONTIER_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'anthropic:claude-sonnet-5-5'] as const;
+/** Readers allowed only in a labeled smoke cell, never in a counted one. */
+export const SMOKE_ONLY_READERS = ['anthropic:claude-fable-5-1'] as const;
 
 export interface ReaderWindow {
   /** Input plus output tokens per request. */

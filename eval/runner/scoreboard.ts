@@ -9,7 +9,7 @@
  * One derivation chain, recomputed in full by `check`:
  *
  *   campaign.json + per-cell rows.ndjson, answers.ndjson, judgments.ndjson
- *     -> question values per cell (four-reader mean of canonical judge scores)
+ *     -> question values per cell (mean over the three readers of canonical judge scores)
  *     -> pairwise cohorts per comparison (against the scheduled cohort)
  *     -> aggregates and comparisons (restricted wild cluster bootstrap-t for
  *        the headline set, cluster bootstrap for descriptive sets)
@@ -529,7 +529,7 @@ function incompleteSentence(ctx: Ctx, set: CampaignSet, system: string, c: Cohor
 
 function setScope(set: CampaignSet, cmp: Comparison): string {
   const evidence = cmp.arm === 'component' ? `${cmp.budget?.toLocaleString('en-US')} tokens of each system's own evidence` : 'each system at its own default amount of evidence';
-  return `On ${set.label}, with the same four readers and ${evidence}`;
+  return `On ${set.label}, with the same three answer models and ${evidence}`;
 }
 
 function sentenceFor(ctx: Ctx, cmp: Comparison): Comparison {
@@ -736,9 +736,9 @@ function verdictSentence(ctx: Ctx, f1: Comparison[], field: Scoreboard['field'])
   if (ctx.power.family1 === 'descriptive') return `${when}, the component comparison is descriptive: with these conversations it detects only differences of about ${mdd ?? 'more than 30'} points, so no row is ranked.${incompleteField}`;
   const ahead = f1.filter(x => x.outcome === 'gbrain-ahead').length, behind = f1.filter(x => x.outcome === 'gbrain-behind').length;
   const incomplete = f1.filter(x => x.outcome === 'incomplete' || x.outcome === 'not-run').length;
-  if (field.complete && ahead === f1.length) return `${when}, gbrain-defaults beat the field: with the same four readers and 8,000 tokens of evidence it answered more questions correctly than every other component row after Holm correction (detectable difference about ${mdd} points).`;
+  if (field.complete && ahead === f1.length) return `${when}, gbrain-defaults beat the field: with the same three answer models and 8,000 tokens of evidence it answered more questions correctly than every other component row after Holm correction (detectable difference about ${mdd} points).`;
   const rest = f1.length - ahead - behind - incomplete;
-  return `${when}, with the same four readers and 8,000 tokens of evidence, gbrain-defaults led ${ahead} of ${f1.length} component rows and trailed ${behind} after Holm correction; ${rest} could not be told apart (detectable difference about ${mdd} points)${incomplete ? `, and ${incomplete} ${incomplete === 1 ? 'comparison is' : 'comparisons are'} incomplete` : ''}.${incompleteField}`;
+  return `${when}, with the same three answer models and 8,000 tokens of evidence, gbrain-defaults led ${ahead} of ${f1.length} component rows and trailed ${behind} after Holm correction; ${rest} could not be told apart (detectable difference about ${mdd} points)${incomplete ? `, and ${incomplete} ${incomplete === 1 ? 'comparison is' : 'comparisons are'} incomplete` : ''}.${incompleteField}`;
 }
 
 // ─── Layer 6: Markdown ──────────────────────────────────────────────
@@ -750,7 +750,7 @@ const cellText = (s: string) => s.replace(/\|/g, '\\|');
 /** The README block: verdict, six-column headline table, size curve, losses, disclosures, staleness. `base` is the receipt path relative to the target file. */
 export function renderHeadline(sb: Scoreboard, base: string): string {
   const head = sb.sets.find(s => s.role === 'headline')!;
-  const lines = [sb.verdict, '', `| Kind and configuration | ${head.label} accuracy at 8k, four-reader mean | Dollars per month, personal agent | p50 answer latency | Write to queryable, p50 | Receipt |`, '|---|---|---|---|---|---|'];
+  const lines = [sb.verdict, '', `| Kind and configuration | ${head.label} accuracy at 8k, three-reader mean | Dollars per month, personal agent | p50 answer latency | Write to queryable, p50 | Receipt |`, '|---|---|---|---|---|---|'];
   for (const r of sb.headline) lines.push(`| ${cellText(r.label)} | ${cellText(r.accuracy)} | ${money(r.personal_month_usd)} | ${ms(r.latency_p50_ms)} | ${ms(r.write_to_queryable_p50_ms)} | ${r.receipt ? `[cell](${base}/${r.receipt})` : 'none'} |`);
   if (sb.size_curve.sets.length) {
     lines.push('', `| System | ${sb.size_curve.sets.map(s => s.label).join(' | ')} |`, `|---|${sb.size_curve.sets.map(() => '---|').join('')}`);

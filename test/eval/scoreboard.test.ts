@@ -138,10 +138,10 @@ describe('derivation chain and check', () => {
     writeFileSync(readme, `# Title\n\n${README_BEGIN}\nold\n${README_END}\n\nAfter.\n`);
     const { dir } = fresh({ renderTargets: [readme] });
     const text = readFileSync(readme, 'utf8');
-    expect(text).toContain('| Kind and configuration | BEAM-10M accuracy at 8k, four-reader mean |');
+    expect(text).toContain('| Kind and configuration | BEAM-10M accuracy at 8k, three-reader mean |');
     expect(text.endsWith(`${README_END}\n\nAfter.\n`)).toBe(true);
     expect(checkReceipt(dir, {}).messages).toEqual([]);
-    writeFileSync(readme, text.replace('four-reader mean |', 'four-reader mean (edited) |'));
+    writeFileSync(readme, text.replace('three-reader mean |', 'three-reader mean (edited) |'));
     expect(codes(dir)).toContain('SCOREBOARD_STALE');
     rmSync(dir, { recursive: true }); rmSync(tmp, { recursive: true });
   });
@@ -175,12 +175,12 @@ describe('cohorts, estimand and claim rules', () => {
     rmSync(dir, { recursive: true });
   });
 
-  test('the estimand is the per-question four-reader mean, and a missing promised reader is never averaged away', () => {
+  test('the estimand is the per-question three-reader mean, and a missing promised reader is never averaged away', () => {
     const cells = defaultCells().map(c => (c.id === 's1-hybrid-8k' ? { ...c, dropReaders: ['gpt-6.1-sol'] } : c));
     const { dir, sb } = fresh({ cells });
     const gb = sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!;
     expect(Object.keys(gb.per_reader)).toEqual(READERS);
-    const readerMean = READERS.reduce((s, r) => s + gb.per_reader[r]!, 0) / 4;
+    const readerMean = READERS.reduce((s, r) => s + gb.per_reader[r]!, 0) / READERS.length;
     expect(gb.mean!).toBeCloseTo(readerMean, 5);
     const hy = sb.cells.find(c => c.cell_id === 's1-hybrid-8k')!;
     expect(hy.missing_readers).toEqual(['gpt-6.1-sol']);
@@ -211,7 +211,7 @@ describe('cohorts, estimand and claim rules', () => {
     const { dir, sb } = fresh({ draws: 999 });
     const none = sb.comparisons.find(c => c.id === 's1-none-8k')!;
     expect(none.outcome).toBe('gbrain-ahead');
-    expect(none.sentence).toMatch(/^On BEAM-10M, with the same four readers and 8,000 tokens of each system's own evidence, gbrain-defaults answered more questions correctly than `baseline-none`/);
+    expect(none.sentence).toMatch(/^On BEAM-10M, with the same three answer models and 8,000 tokens of each system's own evidence, gbrain-defaults answered more questions correctly than `baseline-none`/);
     const pub = sb.comparisons.find(c => c.id === 's2a-memory-bank-8k')!;
     expect(pub.outcome).toBe('descriptive');
     expect(pub.sentence).toContain('they cannot rank them');

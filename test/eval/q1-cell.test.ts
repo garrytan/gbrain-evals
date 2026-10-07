@@ -126,7 +126,7 @@ describe('keyless end to end: two component cells into a scoreboard receipt', ()
       const dir = join(receipt, 'cells', r.arms[0].cell_id);
       for (const f of ['receipt.json', 'run-config.json', 'rows.ndjson', 'answers.ndjson', 'judgments.ndjson', 'readiness.ndjson']) expect(existsSync(join(dir, f))).toBe(true);
       const answers = ndjson(join(dir, 'answers.ndjson'));
-      expect(answers).toHaveLength(15 * 5);
+      expect(answers).toHaveLength(15 * 4);
       for (const a of answers) expect(answerProblems(a)).toEqual([]);
       for (const j of ndjson(join(dir, 'judgments.ndjson'))) expect(judgmentProblems(j)).toEqual([]);
       for (const row of ndjson(join(dir, 'rows.ndjson'))) expect(rowProblems(row)).toEqual([]);
@@ -228,7 +228,7 @@ describe('whole-system arms through the cell runner', () => {
     expect(res.status).toBe('complete');
     const dir = join(out, 'cells', def.arms[0].cell_id);
     const answers = ndjson(join(dir, 'answers.ndjson'));
-    expect(answers).toHaveLength(15 * 4);
+    expect(answers).toHaveLength(15 * 3);
     const vet = answers.find(a => a.question_id === 'conv-a:q003' && a.reader === READERS[0]);
     expect(vet.outcome).toBe('scored');
     expect(vet.stop_reason).toBe('submitted');
@@ -249,7 +249,7 @@ describe('whole-system arms through the cell runner', () => {
     expect(res.status).toBe('complete');
     const dir = join(out, 'cells', def.arms[0].cell_id);
     const answers = ndjson(join(dir, 'answers.ndjson'));
-    expect(answers).toHaveLength(60);
+    expect(answers).toHaveLength(45);
     expect(answers.every(a => a.outcome === 'does_not_fit' && a.text === '')).toBe(true);
     expect(ndjson(join(dir, 'judgments.ndjson'))).toHaveLength(0);
     expect(calls).toBe(0);
@@ -294,10 +294,10 @@ describe('resume', () => {
     const events = ndjson(join(out, 'runs', def.id, 'realizations.ndjson'));
     expect(events.filter(e => e.event === 'invalidated').map(e => e.conversation).sort()).toEqual(['conv-a', 'conv-b', 'conv-c']);
     const answers = ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
-    expect(answers).toHaveLength(60);
-    expect(new Set(answers.map(a => a.answer_id)).size).toBe(60);
+    expect(answers).toHaveLength(45);
+    expect(new Set(answers.map(a => a.answer_id)).size).toBe(45);
     expect(new Set(answers.map(a => a.realization_id))).toEqual(new Set(['conv-a', 'conv-b', 'conv-c'].map(c => realizationId(def.id, c, 1))));
-    expect(reader.calls).toHaveLength(60);
+    expect(reader.calls).toHaveLength(45);
   });
 
   test('with a restored realization nothing is re-ingested and only missing answers are read', async () => {
@@ -315,7 +315,7 @@ describe('resume', () => {
       const res = await runCell(def, { out, systemUrl: server.url, env: { ...process.env, SHOOTOUT_RESTORED_REALIZATION: 'real-test-0123' }, ...quiet }, { corpus, reader, judge: scriptedJudge() });
       expect(res.status).toBe('complete');
       expect(ingests).toBe(15);
-      expect(reader.calls).toHaveLength((15 - 7) * 4);
+      expect(reader.calls).toHaveLength((15 - 7) * 3);
       const events = ndjson(join(out, 'runs', def.id, 'realizations.ndjson'));
       expect(events.some(e => e.event === 'invalidated')).toBe(false);
     } finally { server.stop(); }
@@ -363,16 +363,16 @@ describe('shards and aggregates', () => {
       const def = cellDef('ext-memory-bank', 'shim', [component({ reader_replicates: {} })]);
       const a = await runCell(def, { out: join(tmp, 'shard0'), systemUrl: server.url, shard: { index: 0, count: 2 }, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
       await runCell(def, { out: join(tmp, 'shard1'), systemUrl: server.url, shard: { index: 1, count: 2 }, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
-      expect(a.arms[0].answers).toBe(10 * 4);
+      expect(a.arms[0].answers).toBe(10 * 3);
       const merged = publishCell(def, def.arms, [join(tmp, 'shard0'), join(tmp, 'shard1')], join(tmp, 'merged'), { instrument: instrumentFor('locomo'), selected: selectCellQuestions(corpus.questions, { kind: 'all' }), invalidReasons: [],
         configs: new Map([[def.arms[0].id, { text: readFileSync(join(tmp, 'shard0', 'cells', def.arms[0].cell_id, 'run-config.json'), 'utf8'), sha: a.arms[0].config_sha256 }]]), capabilities: FAKE_CAPABILITIES, stopped: null, maxAttempts: 3 });
       expect(merged[0].status).toBe('complete');
-      expect(merged[0].answers).toBe(15 * 4);
+      expect(merged[0].answers).toBe(15 * 3);
       expect(readFileSync(join(tmp, 'shard1', 'cells', def.arms[0].cell_id, 'run-config.json'), 'utf8')).toBe(readFileSync(join(tmp, 'shard0', 'cells', def.arms[0].cell_id, 'run-config.json'), 'utf8'));
       const agg = JSON.stringify(cellAggregates(merged));
       expect(agg).not.toContain('conv-a');
       expect(agg).not.toContain('From the history');
-      expect(agg).toContain('"answers":60');
+      expect(agg).toContain('"answers":45');
     } finally { server.stop(); }
   });
 });
@@ -404,9 +404,9 @@ describe('metering through a lease proxy', () => {
       expect(res.status).toBe('complete');
       const readerCalls = provider.filter(p => p.path.startsWith('/harness/'));
       const judgeCalls = provider.filter(p => p.path.startsWith('/judge/'));
-      expect(readerCalls).toHaveLength(2 * 4);
+      expect(readerCalls).toHaveLength(2 * 3);
       expect(judgeCalls.length).toBeGreaterThanOrEqual(2);
-      expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'judgments.ndjson'))).toHaveLength(2 * 4);
+      expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'judgments.ndjson'))).toHaveLength(2 * 3);
       expect(provider.every(p => p.key?.includes('cell-token-test'))).toBe(true);
       const phases = control.filter(c => c.path === '/__proxy/phase').map(c => `${c.body.slot}:${c.body.phase}`);
       expect(phases).toContain('fake:commit');
@@ -562,7 +562,7 @@ describe('the generated cell manifest', () => {
     const s1 = m.cells.filter(c => c.set === 'S1');
     const comp8 = s1.flatMap(c => c.arms.filter(a => a.mode === 'packed' && a.budget === 8000));
     expect(comp8).toHaveLength(10);
-    expect(comp8.every(a => a.reader_replicates[SONNET] === 3 && a.readers.length === 4)).toBe(true);
+    expect(comp8.every(a => a.reader_replicates[SONNET] === 3 && a.readers.length === 3)).toBe(true);
     const sweep = s1.flatMap(c => c.arms.filter(a => a.set === 'S1-sweep'));
     expect(sweep).toHaveLength(20);
     expect(sweep.every(a => a.questions?.kind === 'stratified')).toBe(true);
@@ -571,7 +571,7 @@ describe('the generated cell manifest', () => {
     expect(m.cells.find(c => c.set === 'S3' && c.system === 'ext-temporal-graph' && c.ingest_replicate === 1 && c.configuration === 'recipe')).toBeDefined();
     expect(m.cells.filter(c => c.set === 'S3' && c.ingest_replicate === 2)).toHaveLength(8);
     expect(m.cells.find(c => c.set === 'S2b' && c.configuration === 'common-embedder')).toBeDefined();
-    expect(m.cells.find(c => c.set === 'S4')!.arms.map(a => [a.set, a.readers.length])).toEqual([['S4', 1], ['S4-slice', 4]]);
+    expect(m.cells.find(c => c.set === 'S4')!.arms.map(a => [a.set, a.readers.length])).toEqual([['S4', 1], ['S4-slice', 3]]);
     expect(SETS.S1.exclusions[0].question_id).toBe('10m-1:abstention:0');
     for (const c of m.cells) for (const a of c.arms) for (const r of a.readers) if (r !== 'system-default') expect(READERS).toContain(r);
   });
@@ -585,7 +585,7 @@ describe('the generated cell manifest', () => {
     }
     for (const set of ['S1', 'S2a', 'S2b', 'S3'] as const) {
       const full = m.cells.find(c => c.set === set && c.system === 'gbrain-defaults' && c.configuration === 'full-surface')!;
-      expect(full.arms.map(a => [a.id, a.variant, a.readers.length])).toEqual([['whole-think', 'think', 4]]);
+      expect(full.arms.map(a => [a.id, a.variant, a.readers.length])).toEqual([['whole-think', 'think', 3]]);
       expect(full.launch).toEqual({ env: { GBRAIN_FULL_SURFACE: '1' }, config: 'recipe' });
       expect(full.snapshot_command).toStartWith('GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults');
     }
@@ -614,7 +614,7 @@ describe('the generated cell manifest', () => {
     for (const b of m.blocks) expect(b.cap_usd).toBeCloseTo(b.estimate_usd * 1.5, 1);
     const gb8 = m.cells.find(c => c.id === 's1.baseline-none.baseline')!;
     expect(gb8.estimate.lines.readers).toBeGreaterThan(0);
-    expect(m.prices['anthropic:claude-fable-5-1'].input).toBe(10);
+    expect(Object.keys(m.prices).some(k => k.includes('fable'))).toBe(false);
   });
 
   test('the campaign manifest loads in the shootout campaign loader and the front door plans its waves', () => {
