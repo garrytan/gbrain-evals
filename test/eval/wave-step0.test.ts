@@ -277,7 +277,8 @@ describe('bug ledger', () => {
     const reviewedAgain = ledger.entries.filter(e => e.review?.date === '2026-10-04' && !foundOn20261004.includes(e.id));
     expect(reviewedAgain.filter(e => e.review_history?.at(-1)?.date !== '2026-10-03').map(e => e.id)).toEqual([]);
     const foundOn20261006 = ['N6-2'];
-    const firstWave = ledger.entries.filter(e => !['N7-8', 'N12-9', 'Cat7-1', ...foundOn20261004, ...foundOn20261006].includes(e.id));
+    const foundOn20261007 = ['N1-7'];
+    const firstWave = ledger.entries.filter(e => !['N7-8', 'N12-9', 'Cat7-1', ...foundOn20261004, ...foundOn20261006, ...foundOn20261007].includes(e.id));
     expect(firstWave.filter(e => e.review_history?.[0]?.date !== '2026-10-02').map(e => e.id)).toEqual([]);
     expect(ledger.entries.filter(e => e.status === 'fixed' && !e.fixing_commit).map(e => e.id)).toEqual([]);
   });
