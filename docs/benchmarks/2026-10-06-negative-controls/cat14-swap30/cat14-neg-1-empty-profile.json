@@ -1,0 +1,94 @@
+{
+  "probe_id": "cat14-neg-1-empty-profile",
+  "category": "calibration-empty-profile",
+  "question": "Should I invest in a Seattle-based vertical SaaS startup?",
+  "baseline_answer": "## Answer\n\nThe brain has no information relevant to this question. No pages, takes, or graph data were retrieved, so there is nothing to cite about the specific Seattle-based vertical SaaS startup, its market, financials, team, or your investment criteria, and no prior views of yours on the topic.\n\nThe brain can report what it holds, but it cannot make the investment decision. Nothing retrieved lets me assess whether this investment fits.",
+  "calibrated_answer": "## Answer\n\nThe brain has no pages, takes, or graph data relevant to this question, so no claim about this investment can be supported. Nothing was retrieved about the specific Seattle-based vertical SaaS startup, its founders, metrics, or market. Nothing was retrieved about your investment criteria, past views on vertical SaaS, or views on Seattle-based companies.\n\nThe brain reports what it holds and does not make the decision for you. The missing inputs are listed in the gaps below, and adding them would let a grounded synthesis be produced.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [
+      "CITATIONS_REGEX_FALLBACK"
+    ],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE",
+      "CITATIONS_REGEX_FALLBACK"
+    ]
+  },
+  "win_eligible": false,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, appropriately given the empty calibration profile. Both use detached language about “the brain” rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to assess the investment because relevant information is missing, so their substance is equivalent. B gestures toward gathering missing inputs, but its reference to gaps below is unsupported by the supplied answer and does not make it meaningfully more useful. || Neither answer mentions a bias or supplies a track-record counter-prior, which is appropriate because the profile contains neither. Both acknowledge missing investment information rather than inventing an assessment. Their repeated references to “the brain” and retrieved data feel impersonal rather than conversational, but neither uses clinical statistics jargon. They are substantively equivalent and offer little actionable guidance."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, appropriately given the empty calibration profile. Both use detached language about “the brain” rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to assess the investment because relevant information is missing, so their substance is equivalent. B gestures toward gathering missing inputs, but its reference to gaps below is unsupported by the supplied answer and does not make it meaningfully more useful. || Neither answer mentions a bias or supplies a track-record counter-prior, which is appropriate because the profile contains neither. Both acknowledge missing investment information rather than inventing an assessment. Their repeated references to “the brain” and retrieved data feel impersonal rather than conversational, but neither uses clinical statistics jargon. They are substantively equivalent and offer little actionable guidance."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, appropriately given the empty calibration profile. Both use detached language about “the brain” rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to assess the investment because relevant information is missing, so their substance is equivalent. B gestures toward gathering missing inputs, but its reference to gaps below is unsupported by the supplied answer and does not make it meaningfully more useful. || Neither answer mentions a bias or supplies a track-record counter-prior, which is appropriate because the profile contains neither. Both acknowledge missing investment information rather than inventing an assessment. Their repeated references to “the brain” and retrieved data feel impersonal rather than conversational, but neither uses clinical statistics jargon. They are substantively equivalent and offer little actionable guidance."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, appropriately given the empty calibration profile. Both use detached language about “the brain” rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to assess the investment because relevant information is missing, so their substance is equivalent. B gestures toward gathering missing inputs, but its reference to gaps below is unsupported by the supplied answer and does not make it meaningfully more useful. || Neither answer mentions a bias or supplies a track-record counter-prior, which is appropriate because the profile contains neither. Both acknowledge missing investment information rather than inventing an assessment. Their repeated references to “the brain” and retrieved data feel impersonal rather than conversational, but neither uses clinical statistics jargon. They are substantively equivalent and offer little actionable guidance."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, appropriately given the empty calibration profile. Both use detached language about “the brain” rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to assess the investment because relevant information is missing, so their substance is equivalent. B gestures toward gathering missing inputs, but its reference to gaps below is unsupported by the supplied answer and does not make it meaningfully more useful. || Neither answer mentions a bias or supplies a track-record counter-prior, which is appropriate because the profile contains neither. Both acknowledge missing investment information rather than inventing an assessment. Their repeated references to “the brain” and retrieved data feel impersonal rather than conversational, but neither uses clinical statistics jargon. They are substantively equivalent and offer little actionable guidance."
+    },
+    {
+      "axis": "behaves_like_baseline",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, appropriately given the empty calibration profile. Both use detached language about “the brain” rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to assess the investment because relevant information is missing, so their substance is equivalent. B gestures toward gathering missing inputs, but its reference to gaps below is unsupported by the supplied answer and does not make it meaningfully more useful. || Neither answer mentions a bias or supplies a track-record counter-prior, which is appropriate because the profile contains neither. Both acknowledge missing investment information rather than inventing an assessment. Their repeated references to “the brain” and retrieved data feel impersonal rather than conversational, but neither uses clinical statistics jargon. They are substantively equivalent and offer little actionable guidance."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.8333333333333334,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}

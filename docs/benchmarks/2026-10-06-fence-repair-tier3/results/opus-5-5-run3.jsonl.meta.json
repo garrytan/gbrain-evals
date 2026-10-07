@@ -1,0 +1,26 @@
+{
+  "model": "anthropic:claude-opus-5-5",
+  "model_arg": "anthropic:claude-opus-5-5",
+  "run": 3,
+  "started_at": "2026-10-07T00:29:14.948Z",
+  "gbrain_commit": "171a7e24663640987f8c1e773202aa296d196a89",
+  "bun": "1.4.2",
+  "prompt_version": 1,
+  "system_prompt_sha256": "de1795ee19df61acb36574a1adb09bd1b9a235371deeeac852ed4b38570b5545",
+  "fixtures_sha256": "769f7f04cda52128144383a95b1940228b684b80ed2743b81e7db05784799896",
+  "caps": {
+    "per_page_usd": 0.05,
+    "per_day_usd": 10
+  },
+  "registered_prices": {
+    "openai:gpt-6.1-sol": {
+      "input": 2,
+      "output": 10,
+      "source": "gbrain-evals eval/runner/budget-ledger.ts CHAT_PRICE_OVERRIDES (provider pricing page, checked 2026-10-02)"
+    }
+  },
+  "call_timeout_ms": 90000,
+  "finished_at": "2026-10-07T00:35:35.022Z",
+  "spent_usd": 0.6586999999999998,
+  "stopped": null
+}

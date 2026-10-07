@@ -1,0 +1,78 @@
+{
+  "probe_id": "cat14-pos-2-tactics",
+  "category": "calibration-pattern-confidence-boost",
+  "question": "Founder wants to ship a half-baked v1 in 4 weeks vs polish for 4 months. Which call do I make?",
+  "baseline_answer": "## Answer\n\nThe brain's record leans toward the 4-week ship, but it contains no information about this specific founder or product. It has three of garry's past calls in the tactics domain, all resolved as correct:\n\n- **Shipping fast:** \"Founders who ship v1 in <30 days hit PMF faster\" was resolved correct, with conviction weight 0.8 (recorded 2024-02-10) [cat14/cat14-pos-2-tactics/take-1]. A 4-week v1 falls inside that <30-day window, while a 4-month polish cycle does not.\n- **Cost of polishing:** \"Polish-mode founders miss windows\" was resolved correct, with conviction weight 0.75 (recorded 2024-05-19) [cat14/cat14-pos-2-tactics/take-2]. This is the main risk of the 4-month path.\n- **Velocity:** \"Velocity is the leading indicator of breakout\" was resolved correct, with conviction weight 0.85 (recorded 2024-11-04) [cat14/cat14-pos-2-tactics/take-3]. This is the strongest of the three and also favors the faster path.\n\nTaken together, garry's track record points toward the 4-week v1 over the 4-month polish. All three are generalizations about founders, not an assessment of this case. The brain does not show whether this founder's market has a closing window, or whether a half-baked v1 would damage trust in this category.\n\n## Conflicts\n\nNo contradicting takes appear in the retrieved material. That reflects a one-sided sample, not proof that no counter-evidence exists. See the gaps below.",
+  "calibrated_answer": "## Answer\n\nThe brain's evidence points toward the 4-week ship. It contains no evidence favoring the 4-month polish path.\n\n- **Shipping inside 30 days:** garry's resolved take \"Founders who ship v1 in <30 days hit PMF faster\" was marked correct (conviction weight 0.8, recorded 2024-02-10) [cat14/cat14-pos-2-tactics/take-1]. A 4-week timeline fits inside that window.\n- **Polishing:** garry's resolved take \"Polish-mode founders miss windows\" was marked correct (weight 0.75, recorded 2024-05-19) [cat14/cat14-pos-2-tactics/take-2]. A 4-month polish cycle matches the pattern this take describes.\n- **Velocity as a signal:** \"Velocity is the leading indicator of breakout\" was marked correct (weight 0.85, recorded 2024-11-04) [cat14/cat14-pos-2-tactics/take-3]. Of the three, this take has the highest weight.\n\n**Limits of the evidence:**\n- All three takes concern speed versus polish in general. None defines how rough \"half-baked\" can be, so none addresses a v1 that is too broken to produce useful signal.\n- No takes cover this founder, the product category, or the market.\n- The takes were recorded in 2024, and the current date is 2026-10-06.\n\n## Calibration\n\n- **Prior (default reasoning):** Speed wins in early-stage tactics. Garry's profile shows 8 of 10 early-stage tactics calls held up across the 2024 cohort, and it carries the bias tag `well-calibrated-tactics`. The profile describes his velocity-based gut on shipping speed as trustworthy.\n- **Counter-prior:** The profile lists no hedged domain, so there is no counter-prior from a hedged-domain self. The only counter-position visible in the brain is the \"polish\" side that take-2 resolved against, and it has no supporting takes of its own.\n- **Fit:** This question sits inside the `well-calibrated-tactics` domain, so the track record supports the velocity-first reading. The track record is on early-stage tactics generally. It does not cover cases where the v1 is below a minimum viable quality bar.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the shipping decision to the relevant track record on early-stage tactics and recommend the four-week ship with product-quality caveats. Neither supplies a genuine track-record counter-prior; B labels a section that way but explicitly says none is available. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. B explicitly includes the supplied calibration pattern, but both also rely on specific historical takes not established by the provided profile, and their substantive advice is equivalent. || Both answers invoke the relevant record of successful early-stage, velocity-based tactics, with A explicitly naming the profile tag and B describing the same pattern. Neither force-fits an unrelated bias or supplies a genuine track-record counter-prior; A's labeled counter-prior explicitly says none exists. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Both favor shipping in four weeks while noting product-specific quality risks, so their recommendations are substantively equivalent."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the shipping decision to the relevant track record on early-stage tactics and recommend the four-week ship with product-quality caveats. Neither supplies a genuine track-record counter-prior; B labels a section that way but explicitly says none is available. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. B explicitly includes the supplied calibration pattern, but both also rely on specific historical takes not established by the provided profile, and their substantive advice is equivalent. || Both answers invoke the relevant record of successful early-stage, velocity-based tactics, with A explicitly naming the profile tag and B describing the same pattern. Neither force-fits an unrelated bias or supplies a genuine track-record counter-prior; A's labeled counter-prior explicitly says none exists. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Both favor shipping in four weeks while noting product-specific quality risks, so their recommendations are substantively equivalent."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the shipping decision to the relevant track record on early-stage tactics and recommend the four-week ship with product-quality caveats. Neither supplies a genuine track-record counter-prior; B labels a section that way but explicitly says none is available. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. B explicitly includes the supplied calibration pattern, but both also rely on specific historical takes not established by the provided profile, and their substantive advice is equivalent. || Both answers invoke the relevant record of successful early-stage, velocity-based tactics, with A explicitly naming the profile tag and B describing the same pattern. Neither force-fits an unrelated bias or supplies a genuine track-record counter-prior; A's labeled counter-prior explicitly says none exists. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Both favor shipping in four weeks while noting product-specific quality risks, so their recommendations are substantively equivalent."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers connect the shipping decision to the relevant track record on early-stage tactics and recommend the four-week ship with product-quality caveats. Neither supplies a genuine track-record counter-prior; B labels a section that way but explicitly says none is available. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. B explicitly includes the supplied calibration pattern, but both also rely on specific historical takes not established by the provided profile, and their substantive advice is equivalent. || Both answers invoke the relevant record of successful early-stage, velocity-based tactics, with A explicitly naming the profile tag and B describing the same pattern. Neither force-fits an unrelated bias or supplies a genuine track-record counter-prior; A's labeled counter-prior explicitly says none exists. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Both favor shipping in four weeks while noting product-specific quality risks, so their recommendations are substantively equivalent."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the shipping decision to the relevant track record on early-stage tactics and recommend the four-week ship with product-quality caveats. Neither supplies a genuine track-record counter-prior; B labels a section that way but explicitly says none is available. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. B explicitly includes the supplied calibration pattern, but both also rely on specific historical takes not established by the provided profile, and their substantive advice is equivalent. || Both answers invoke the relevant record of successful early-stage, velocity-based tactics, with A explicitly naming the profile tag and B describing the same pattern. Neither force-fits an unrelated bias or supplies a genuine track-record counter-prior; A's labeled counter-prior explicitly says none exists. Both use report-like language and untranslated conviction weights rather than a consistently conversational voice. Both favor shipping in four weeks while noting product-specific quality risks, so their recommendations are substantively equivalent."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.8,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}

@@ -100,5 +100,7 @@ describe('comparator name guard', () => {
     expect(findNeedles(`tfidf ${maker}r and ${maker}d arrays`)).toEqual([]);
   });
   test('skips the English idiom', () => expect(findNeedles(`but in ${product}, I would`)).toEqual([]));
+  test('skips the "bias" idiom', () => expect(findNeedles(`avoid ${product} bias here`)).toEqual([]));
+  test('still flags the name before other words', () => expect(findNeedles(`the ${product} server`)).toHaveLength(1));
   test('reports line numbers', () => expect(findNeedles(`a\nb\n${product}`)).toEqual([{ needle: 'product', line: 3 }]));
 });

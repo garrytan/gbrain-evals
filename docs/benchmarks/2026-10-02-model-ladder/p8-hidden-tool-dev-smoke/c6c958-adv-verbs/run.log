@@ -1,0 +1,7 @@
+2026-10-05T01:07:29.072Z 20 cells to run (0 already done, order task) in /workspace/gbrain-evals/eval/reports/cat40/h-smoke-c6c958-adv-verbs
+2026-10-05T01:07:29.177Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/p8-h-smoke.sqlite
+2026-10-05T01:08:24.846Z write probe passed on every slot
+2026-10-05T01:08:24.846Z gbrain 0.60.48.0 (6c958d6e246d) ready on 1 slots, surface full
+2026-10-05T01:15:23.253Z 10/20 cells; last gpt-6-luna|c6c958-callfull-adv-verbs|H10|0 success=false $0.003
+2026-10-05T01:23:52.498Z 20/20 cells; last gpt-6-luna|c6c958-callfull-adv-verbs|H20|0 success=false $0.003
+2026-10-05T01:23:52.774Z receipt /workspace/gbrain-evals/eval/reports/cat40/h-smoke-c6c958-adv-verbs/receipt-1791163432774.json

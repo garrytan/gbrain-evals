@@ -157,6 +157,8 @@ export interface Receipt {
   product_package?: ProductIdentity['package'];
   accounting?: RunAccounting;
   cost?: CostSummary | null;
+  /** Execution-start attestation of the run's preregistration (eval/runner/prereg.ts). */
+  preregistration_attestation?: import('./prereg.ts').Attestation;
   latency_ms?: LatencySummary | null;
   delivered_tokens?: DeliveredTokens | null;
   execution?: ExecutionIdentity;

@@ -1,0 +1,39 @@
+{
+  "check": "n1-7-sweep-fences-ontology",
+  "gbrain_version": "0.60.95.0",
+  "pass": false,
+  "failed": [
+    "source_kept_after_first_sweep",
+    "readable_after_rewrite_and_sweep"
+  ],
+  "checks": {
+    "setup_ok": true,
+    "readable_before_sweep": true,
+    "source_kept_after_first_sweep": false,
+    "readable_after_rewrite_and_sweep": false
+  },
+  "observed": {
+    "init": 0,
+    "import": 0,
+    "propose": "{\n  \"action\": \"inserted\",\n  \"factId\": 2,\n  \"supersededId\": null\n}\n",
+    "before": {
+      "code": 0,
+      "location": "Example City",
+      "raw": "[\n  {\n    \"dimension\": \"location\",\n    \"value\": \"Example City\",\n    \"confidence\": 0.9,\n    \"source\": \"manual\",\n    \"valid_from\": \"2026-02-01T00:00:00.000Z\",\n    \"valid_to\": null,\n    \"status\": \"active\",\n    \"fact_id\": 2\n  }\n]\n"
+    },
+    "afterFirst": {
+      "code": 0,
+      "location": "Example City",
+      "raw": "[\n  {\n    \"dimension\": \"location\",\n    \"value\": \"Example City\",\n    \"confidence\": 0.9,\n    \"source\": \"people/alder-example\",\n    \"valid_from\": \"2026-02-01T00:00:00.000Z\",\n    \"valid_to\": null,\n    \"status\": \"active\",\n    \"fact_id\": 2\n  }\n]\n"
+    },
+    "rewrite": {
+      "code": 0,
+      "out": "{\n  \"noop\": false,\n  \"slug\": \"people/alder-example\",\n  \"chunks\": 1,\n  \"status\": \"created_or_updated\",\n  \"revision\": \"4a726a97-94d6-401f-951e-130f1024b65d\",\n  \"source_id\": \"default\",\n  \"auto_links\": {\n    \"errors\": 0,\n    \"created\": 0,\n    \"removed\": 0,\n    \"wanted_count\": 0,\n    \"unresolved_count\": 0\n  },\n  \"persistence\": {\n    \"mode\": \"filesystem\",\n    \"git_state\": \"queued\",\n    \"file_written\": true\n  },\n  \"write_through\": {\n    \"written\": true\n  },\n  \"facts_backstop\": {\n    \"skipped\": \"kind:person\"\n  },\n  \"embedding_state\": \"disabled\",\n  \"outcome\": {\n    \"noop\": false,\n    \"slug\": \"people/alder-example\",\n    \"chunks\": 1,\n    \"status\": \"created_or_updated\",\n    \"revision\": \"4a726a97-94d6-401f-951e-130f1024b65d\",\n    \"source_id\": \"default\",\n    \"auto_links\": {\n      \"errors\": 0,\n      \"created\": 0,\n      \"removed\": 0,\n      \"wanted_count\": 0,\n      \"unresolved_count\": 0\n    },\n    \"persi"
+    },
+    "after": {
+      "code": 0,
+      "location": null,
+      "raw": "[]\n"
+    }
+  }
+}

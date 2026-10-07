@@ -43,13 +43,13 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
 
 /**
  * Both names are also ordinary English. The product name is skipped in the
- * idiom "in/with/of <name>"; the maker name counts only in its organisation
+ * idioms "in/with/of <name>" and "<name> bias"; the maker name counts only in its organisation
  * forms (followed by "io", "-io" or ".io") or as a capitalised standalone word,
  * so "vectorizer" and "vectorized" in ML text are not hits.
  */
 function isProperNoun(bytes: Uint8Array, start: number, end: number, id: Needle['id']): boolean {
   const text = (from: number, to: number) => Buffer.from(bytes.subarray(Math.max(0, from), Math.min(bytes.length, to))).toString('latin1').toLowerCase();
-  if (id === 'product') return !/(^|[^a-z])(in|with|of)\s+$/.test(text(start - 8, start));
+  if (id === 'product') return !/(^|[^a-z])(in|with|of)\s+$/.test(text(start - 8, start)) && !/^\s+bias/.test(text(end, end + 6));
   const after = text(end, end + 3);
   if (/^[-._]?io(?![a-z])/.test(after)) return true;
   const nextIsLetter = /^[a-z]/.test(after);

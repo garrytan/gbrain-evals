@@ -1,0 +1,214 @@
+{
+ "decision_id": "p4-core-heldout-2026-10-06",
+ "cell": "P4 core gate, BEAM-100K sealed, 14 conversations, 56 preference_following and instruction_following questions, A-prime vs C",
+ "builds": {
+  "Aprime": "master 8c9a8e9a4",
+  "C": "gbrain#6015 66956a3ee, memory.core.enabled=true"
+ },
+ "bar": "C - A-prime >= 0 on every model not at ceiling, and neither category's cluster-bootstrap 95% CI entirely below -2.0 points",
+ "verdict": "fail (gpt-6.1-sol -2.38 points; claude-fable-5-1 -2.44 is report-only)",
+ "gated_models": [
+  "claude-sonnet-5-5",
+  "gpt-6.1-sol"
+ ],
+ "report_only_models": [
+  "claude-opus-5-5",
+  "claude-fable-5-1"
+ ],
+ "report_only_note": "claude-opus-5-5 and claude-fable-5-1 finished their remaining cells in a resumed run (26 cells; $196.76); final numbers recorded by the second custodian (gbra49) from P0's vmjobs/p4core-of2 pull, recomputed with P0's core.py, identical to P0's core.json",
+ "bootstrap": "cluster bootstrap over conversations, 10,000 draws, seed 42",
+ "per_model": {
+  "claude-sonnet-5-5": {
+   "n": 56,
+   "clusters": 14,
+   "Aprime": 86.8,
+   "C": 91.4,
+   "delta_pts": 4.64,
+   "ci95": [
+    -0.4,
+    10.7
+   ],
+   "per_category": {
+    "instruction_following": {
+     "n": 28,
+     "clusters": 14,
+     "Aprime": 93.2,
+     "C": 93.9,
+     "delta_pts": 0.71,
+     "ci95": [
+      -5.4,
+      8.2
+     ]
+    },
+    "preference_following": {
+     "n": 28,
+     "clusters": 14,
+     "Aprime": 80.4,
+     "C": 88.9,
+     "delta_pts": 8.57,
+     "ci95": [
+      1.8,
+      17.5
+     ]
+    }
+   },
+   "ceiling": false,
+   "cost": {
+    "Aprime": {
+     "per_question": 0.677,
+     "per_correct": 0.781
+    },
+    "C": {
+     "per_question": 0.759,
+     "per_correct": 0.83
+    }
+   },
+   "gate_model": true,
+   "gate_categories": true
+  },
+  "gpt-6.1-sol": {
+   "n": 56,
+   "clusters": 14,
+   "Aprime": 88.1,
+   "C": 85.7,
+   "delta_pts": -2.38,
+   "ci95": [
+    -5.4,
+    0.3
+   ],
+   "per_category": {
+    "instruction_following": {
+     "n": 28,
+     "clusters": 14,
+     "Aprime": 91.1,
+     "C": 85.7,
+     "delta_pts": -5.36,
+     "ci95": [
+      -14.3,
+      0.0
+     ]
+    },
+    "preference_following": {
+     "n": 28,
+     "clusters": 14,
+     "Aprime": 85.1,
+     "C": 85.7,
+     "delta_pts": 0.6,
+     "ci95": [
+      -8.9,
+      11.3
+     ]
+    }
+   },
+   "ceiling": false,
+   "cost": {
+    "Aprime": {
+     "per_question": 0.282,
+     "per_correct": 0.321
+    },
+    "C": {
+     "per_question": 0.318,
+     "per_correct": 0.371
+    }
+   },
+   "gate_model": false,
+   "gate_categories": true
+  },
+  "claude-opus-5-5": {
+   "n": 56,
+   "clusters": 14,
+   "Aprime": 89.1,
+   "C": 89.4,
+   "delta_pts": 0.27,
+   "ci95": [
+    -5.9,
+    6.5
+   ],
+   "per_category": {
+    "instruction_following": {
+     "n": 28,
+     "clusters": 14,
+     "Aprime": 89.3,
+     "C": 91.2,
+     "delta_pts": 1.96,
+     "ci95": [
+      -4.8,
+      10.7
+     ]
+    },
+    "preference_following": {
+     "n": 28,
+     "clusters": 14,
+     "Aprime": 88.9,
+     "C": 87.5,
+     "delta_pts": -1.43,
+     "ci95": [
+      -10.4,
+      7.5
+     ]
+    }
+   },
+   "ceiling": false,
+   "cost": {
+    "Aprime": {
+     "per_question": 1.089,
+     "per_correct": 1.222
+    },
+    "C": {
+     "per_question": 1.327,
+     "per_correct": 1.485
+    }
+   },
+   "gate_model": true,
+   "gate_categories": true
+  },
+  "claude-fable-5-1": {
+   "n": 56,
+   "clusters": 14,
+   "Aprime": 89.3,
+   "C": 86.8,
+   "delta_pts": -2.44,
+   "ci95": [
+    -8.9,
+    4.2
+   ],
+   "per_category": {
+    "instruction_following": {
+     "n": 28,
+     "clusters": 14,
+     "Aprime": 91.1,
+     "C": 93.2,
+     "delta_pts": 2.14,
+     "ci95": [
+      -2.5,
+      7.9
+     ]
+    },
+    "preference_following": {
+     "n": 28,
+     "clusters": 14,
+     "Aprime": 87.5,
+     "C": 80.5,
+     "delta_pts": -7.02,
+     "ci95": [
+      -20.8,
+      6.5
+     ]
+    }
+   },
+   "ceiling": false,
+   "cost": {
+    "Aprime": {
+     "per_question": 2.415,
+     "per_correct": 2.705
+    },
+    "C": {
+     "per_question": 2.478,
+     "per_correct": 2.854
+    }
+   },
+   "gate_model": false,
+   "gate_categories": true
+  }
+ }
+}

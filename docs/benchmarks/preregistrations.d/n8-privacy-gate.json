@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "w2-n8-privacy-gate",
+      "preregistration": "docs/benchmarks/2026-10-06-n8-privacy-gate-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-06-n8-privacy-gate/**",
+        "docs/benchmarks/2026-10-06-n8-privacy-gate.md"
+      ]
+    }
+  ]
+}

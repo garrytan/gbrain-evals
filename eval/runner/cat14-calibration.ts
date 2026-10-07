@@ -112,6 +112,10 @@ import {
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { UNTRUSTED_DATA_INSTRUCTION, fenceUntrusted, newJudgeNonce } from './judge.ts';
+import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
+import { attestPreregistration } from './prereg.ts';
+import { seededRandom } from './stats/paired.ts';
 
 // ─── Fixture types ──────────────────────────────────────────────────
 
@@ -150,6 +154,8 @@ interface Probe {
   id: string;
   question: string;
   brain_setup: BrainSetup;
+  /** Negative-control arms only: the profile actually seeded; the judge still sees brain_setup's real profile. */
+  seed_profile?: CalibrationProfileSeed;
   expected: ProbeExpected;
   category: string;
   notes: string;
@@ -170,6 +176,36 @@ const OPTIONAL_AXES: AxisName[] = ['behaves_like_baseline', 'voice_must_not_be_c
 /** Axes a probe declares: 5 core always + optional axes when the fixture sets them. */
 function declaredAxes(expected: ProbeExpected): AxisName[] {
   return [...CORE_AXES, ...OPTIONAL_AXES.filter(a => expected[a] !== undefined)];
+}
+
+// ─── Negative-control profile arms (W8) ─────────────────────────────
+
+export type ProfileMode = 'real' | 'none' | 'swap30';
+
+/**
+ * Seed a degraded calibration profile while the judge keeps the real one.
+ * `none` seeds no profile; `swap30` replaces 30% (rounded up) of each
+ * profile's facts (bias tags and pattern statements together) with facts
+ * drawn from other probes' profiles, seeded. `real` leaves probes unchanged.
+ */
+export function degradeProbes(probes: Probe[], mode: ProfileMode, seed = 20261006): Probe[] {
+  if (mode === 'real') return probes;
+  if (mode === 'none') return probes.map(p => ({ ...p, seed_profile: { ...p.brain_setup.calibration_profile, active_bias_tags: [], pattern_statements: [] } }));
+  const rand = seededRandom(seed);
+  return probes.map(p => {
+    const prof = p.brain_setup.calibration_profile;
+    const facts = [...prof.active_bias_tags.map(v => ({ kind: 'tag' as const, v })), ...prof.pattern_statements.map(v => ({ kind: 'pattern' as const, v }))];
+    if (facts.length === 0) return { ...p, seed_profile: prof };
+    const donors = probes.filter(o => o.id !== p.id);
+    const swap = Math.ceil(facts.length * 0.3);
+    const order = facts.map((_, i) => i).sort(() => rand() - 0.5).slice(0, swap);
+    for (const i of order) {
+      const pool = donors.flatMap(o => facts[i]!.kind === 'tag' ? o.brain_setup.calibration_profile.active_bias_tags : o.brain_setup.calibration_profile.pattern_statements)
+        .filter(v => !facts.some(f => f.v === v));
+      if (pool.length) facts[i] = { kind: facts[i]!.kind, v: pool[Math.floor(rand() * pool.length)]! };
+    }
+    return { ...p, seed_profile: { ...prof, active_bias_tags: facts.filter(f => f.kind === 'tag').map(f => f.v), pattern_statements: facts.filter(f => f.kind === 'pattern').map(f => f.v) } };
+  });
 }
 
 // ─── Category subsets (README "Pass thresholds") ────────────────────
@@ -195,8 +231,13 @@ const VOICE_AXIS_MIN = 0.95;
 
 // ─── Models + temperature ───────────────────────────────────────────
 
-const THINK_MODEL = process.env.CAT14_MODEL ?? 'claude-sonnet-4-6';
-const JUDGE_MODEL = process.env.CAT14_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
+function argFlag(name: string): string | undefined {
+  const i = process.argv.indexOf(name);
+  return i >= 0 ? process.argv[i + 1] : undefined;
+}
+/** `--model` / `--judge-model` override the env vars, which override the historical defaults. */
+const THINK_MODEL = anthropicModelId(argFlag('--model') ?? process.env.CAT14_MODEL ?? 'claude-sonnet-4-6');
+const JUDGE_MODEL = argFlag('--judge-model') ?? process.env.CAT14_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
 /** Answers and judge verdicts are both sampled at temperature 0 (finding -12). */
 export const THINK_TEMPERATURE = 0;
 export const JUDGE_TEMPERATURE = 0;
@@ -329,7 +370,7 @@ async function seedEngine(probe: Probe): Promise<{ engine: PGLiteEngine; profile
     console.error = origErr;
   }
 
-  const prof = probe.brain_setup.calibration_profile;
+  const prof = probe.seed_profile ?? probe.brain_setup.calibration_profile;
   const profileSeeded = prof.active_bias_tags.length > 0 || prof.pattern_statements.length > 0;
   if (profileSeeded) {
     // Positional jsonb binds through ::text::jsonb per gbrain's JSONB rule.
@@ -461,7 +502,7 @@ function makeLiveComplete(anthropic: Anthropic): CompleteFn {
     const res = await anthropic.messages.create({
       model,
       max_tokens: params.max_tokens,
-      temperature: THINK_TEMPERATURE,
+      ...(acceptsTemperature(model) ? { temperature: THINK_TEMPERATURE } : {}),
       ...(params.system !== undefined ? { system: params.system } : {}),
       messages: params.messages,
     });
@@ -649,6 +690,7 @@ export function mapJudgeOutputToView(out: JudgeToolOut, calibratedIs: 'A' | 'B')
 }
 
 function makeLiveJudge(anthropic: Anthropic): JudgeFn {
+  const client = judgeClientFor(JUDGE_MODEL, () => anthropic);
   return async (probe, baselineAnswer, calibratedAnswer) => {
     const views: JudgeView[] = [];
     // Both presentation orders, averaged (finding -13). Order 0: calibrated
@@ -662,10 +704,10 @@ function makeLiveJudge(anthropic: Anthropic): JudgeFn {
       let lastErr = 'malformed tool output';
       for (let attempt = 1; attempt <= 2 && !out; attempt++) {
         try {
-          const res = await anthropic.messages.create({
-            model: JUDGE_MODEL,
+          const res = await client.messages.create({
+            model: anthropicModelId(JUDGE_MODEL),
             max_tokens: JUDGE_MAX_TOKENS,
-            temperature: JUDGE_TEMPERATURE,
+            ...(acceptsTemperature(JUDGE_MODEL) ? { temperature: JUDGE_TEMPERATURE } : {}),
             system,
             tools: [JUDGE_TOOL],
             tool_choice: { type: 'tool', name: 'judge_ab' },
@@ -1090,7 +1132,9 @@ async function main(): Promise<void> {
   const hermetic = process.env.CAT14_DRY_RUN === '1' || process.argv.includes('--hermetic');
   const filter = process.env.CAT14_PROBES ?? null;
 
-  const probes = loadProbes();
+  const profileMode = (argFlag('--profile-mode') ?? 'real') as ProfileMode;
+  if (!['real', 'none', 'swap30'].includes(profileMode)) throw new Error(`--profile-mode must be real, none or swap30 (got ${profileMode})`);
+  const probes = degradeProbes(loadProbes(), profileMode);
   const filtered = filter ? probes.filter(p => filter.split(',').includes(p.id)) : probes;
 
   if (filtered.length === 0) {
@@ -1107,6 +1151,11 @@ async function main(): Promise<void> {
   }
 
   ensureStubbedGateway();
+  // The ledger guard goes in before the SDK client exists, so the client's fetch is the guarded one.
+  const budget = budgetOptionsFrom(process.argv.slice(2));
+  const prereg = argFlag('--preregistration');
+  const attestation = !hermetic && prereg ? attestPreregistration(prereg) : null;
+  const paid = !hermetic && budget.budgetUsd !== null ? startPaidRun(CATEGORY, { ...budget, estimateUsd: Number(argFlag('--estimate-usd') ?? 1) }) : null;
   const anthropic = hermetic ? null : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const liveComplete = anthropic ? makeLiveComplete(anthropic) : null;
   const liveJudge = anthropic ? makeLiveJudge(anthropic) : null;
@@ -1147,6 +1196,12 @@ async function main(): Promise<void> {
 
   const summary = aggregate(results, { mode: hermetic ? 'hermetic' : 'live', judgeFailed: judgeFailedCount });
   const accSummary = acc.summary();
+  paid?.guard.uninstall();
+  const runExtras = {
+    profile_mode: profileMode,
+    ...(attestation ? { preregistration_attestation: attestation } : {}),
+    ...(paid ? { cost: receiptCost(paid.run.close()) } : {}),
+  };
   summary.provenance = {
     probe_filter: filter,
     probes_planned: filtered.length,
@@ -1172,8 +1227,9 @@ async function main(): Promise<void> {
       completion_rate: accSummary.completion_rate,
       errors: accSummary.errors,
       publishable: false,
-      resolved_config: resolvedConfig(hermetic, filter),
+      resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) } },
       judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+      ...runExtras,
       data: { summary: summary as unknown as Record<string, unknown> },
     });
     console.error(`[cat14] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap; see receipt errors[]`);
@@ -1192,8 +1248,9 @@ async function main(): Promise<void> {
     completion_rate: accSummary.completion_rate,
     errors: accSummary.errors,
     publishable: accSummary.publishable && !hermetic && !filter,
-    resolved_config: resolvedConfig(hermetic, filter),
+    resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) } },
     judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+    ...runExtras,
     data: { summary: summary as unknown as Record<string, unknown> },
   });
 

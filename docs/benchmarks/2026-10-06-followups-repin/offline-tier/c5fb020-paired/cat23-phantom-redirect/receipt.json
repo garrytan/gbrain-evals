@@ -1,0 +1,155 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat23-phantom-redirect",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 9,
+  "n_scored": 9,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "resolved_config": {
+    "source_id": "default",
+    "resolver": "resolvePhantomCanonical + findPrefixCandidates (deep import; mirrors tryRedirectPhantom decision core)",
+    "embed_transport": "none (noEmbed everywhere; resolver is SQL-only)",
+    "canonicals_seeded": 9,
+    "phantoms_tested": 9
+  },
+  "started_at": "2026-10-07T20:04:09.622Z",
+  "finished_at": "2026-10-07T20:04:12.533Z",
+  "data": {
+    "per_phantom": [
+      {
+        "phantom_slug": "alice",
+        "expected_decision": "redirect",
+        "expected_canonical": "people/alice-okafor",
+        "decision": "redirect",
+        "resolved_canonical": "people/alice-okafor",
+        "prefix_candidates": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "phantom_slug": "bob",
+        "expected_decision": "redirect",
+        "expected_canonical": "people/bob-chen",
+        "decision": "redirect",
+        "resolved_canonical": "people/bob-chen",
+        "prefix_candidates": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "phantom_slug": "carol",
+        "expected_decision": "redirect",
+        "expected_canonical": "people/carol-singh",
+        "decision": "redirect",
+        "resolved_canonical": "people/carol-singh",
+        "prefix_candidates": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "phantom_slug": "erin",
+        "expected_decision": "redirect",
+        "expected_canonical": "people/erin-yu",
+        "decision": "redirect",
+        "resolved_canonical": "people/erin-yu",
+        "prefix_candidates": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "phantom_slug": "acme",
+        "expected_decision": "redirect",
+        "expected_canonical": "companies/acme-ai",
+        "decision": "redirect",
+        "resolved_canonical": "companies/acme-ai",
+        "prefix_candidates": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "phantom_slug": "foundry",
+        "expected_decision": "redirect",
+        "expected_canonical": "companies/foundry-labs",
+        "decision": "redirect",
+        "resolved_canonical": "companies/foundry-labs",
+        "prefix_candidates": 1,
+        "pass": true,
+        "error": null
+      },
+      {
+        "phantom_slug": "dan",
+        "expected_decision": "ambiguous",
+        "expected_canonical": null,
+        "decision": "ambiguous",
+        "resolved_canonical": "people/dan-brown",
+        "prefix_candidates": 2,
+        "pass": true,
+        "error": null
+      },
+      {
+        "phantom_slug": "team",
+        "expected_decision": "no_canonical",
+        "expected_canonical": null,
+        "decision": "no_canonical",
+        "resolved_canonical": null,
+        "prefix_candidates": 0,
+        "pass": true,
+        "error": null
+      },
+      {
+        "phantom_slug": "bob-chen",
+        "expected_decision": "no_canonical",
+        "expected_canonical": null,
+        "decision": "no_canonical",
+        "resolved_canonical": null,
+        "prefix_candidates": 0,
+        "pass": true,
+        "error": null
+      }
+    ],
+    "redirects_correct": 6,
+    "refusals_correct": 3,
+    "resolver_errors": 0
+  },
+  "accounting": {
+    "planned": 9,
+    "attempted": 9,
+    "scored": 9,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "3ab2e7f195883b9afabee81c7cfa45165e11558ec729149a1df405e1f547838b",
+      "files": 4443,
+      "git_head": "bd748cbe5884ec7219e5651b693dcd4b6cd1c478",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}
