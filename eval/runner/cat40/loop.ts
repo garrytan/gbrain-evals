@@ -91,6 +91,12 @@ export interface LoopConfig {
   scripted?: ScriptedModel;
   /** The answer tool; default `SUBMIT_TOOL`. It must be named `submit_answer`. */
   submitTool?: ToolSpec;
+  /**
+   * Reasoning effort: Anthropic `output_config.effort` (as memory-qa/qa.ts sends it) and, on the OpenAI Responses API
+   * this loop calls, `reasoning.effort` (the Responses form of Chat Completions' `reasoning_effort`). Absent, nothing is
+   * added, so Cat 40's requests stay byte-identical.
+   */
+  effort?: string;
 }
 
 /** A scripted model returns the next tool call (or a final submit) given the transcript so far. */
@@ -219,6 +225,7 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
     const res = await postJson(fetchImpl, 'https://api.anthropic.com/v1/messages', headers, {
       model: cfg.model, max_tokens: cfg.maxOutputTokens ?? 8192,
       system: [{ type: 'text', text: cfg.system, cache_control: { type: 'ephemeral' } }], tools: currentTools(), messages,
+      ...(cfg.effort !== undefined ? { output_config: { effort: cfg.effort } } : {}),
     });
     run.model_ms += Date.now() - s;
     const u = (res.usage ?? {}) as Record<string, number>;
@@ -258,7 +265,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
     const s = Date.now();
     const res = await postJson(fetchImpl, 'https://api.openai.com/v1/responses', headers, {
       model: cfg.model, instructions: cfg.system, input, tools: currentTools(), max_output_tokens: cfg.maxOutputTokens ?? 16_000,
-      ...(previous ? { previous_response_id: previous } : {}),
+      ...(previous ? { previous_response_id: previous } : {}), ...(cfg.effort !== undefined ? { reasoning: { effort: cfg.effort } } : {}),
     });
     run.model_ms += Date.now() - s;
     const u = (res.usage ?? {}) as Record<string, unknown>;

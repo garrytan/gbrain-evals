@@ -50,7 +50,11 @@
  *     unsupported) score 0 and stay in the denominator; ingest_degraded keeps
  *     its judged score; harness failures (reader_error, judge_error,
  *     harness_invalid, budget_not_run), a malformed judgment or a missing one
- *     exclude the question from that cell.
+ *     exclude the question from that cell. does_not_fit (not applicable: the
+ *     whole history did not fit the reader's window) is never judged and never
+ *     a failure: the question leaves that cell's denominator, does not count
+ *     against its completeness, and the cell shows "did not fit {reader}'s
+ *     window" with a count per reader.
  *   - A reader's question score is the mean over its promised replicates; the
  *     question value is the mean over the cell's promised readers. A missing
  *     promised reader or replicate excludes the question, never averages the
@@ -77,7 +81,7 @@
  *     ext-agent-runtime, which runs only the LoCoMo slice) to have run on the
  *     headline set.
  *
- * scoreboard.json, schema `gbrain-evals/scoreboard/v1` (interface Scoreboard):
+ * scoreboard.json, schema `gbrain-evals/scoreboard/v2` (interface Scoreboard; v2 adds each cell's `not_applicable`):
  *   schema, generator, campaign {id, hash, campaign_sha256, gbrain, measured, readers},
  *   inputs [{path, sha256}] (every file the derivation read),
  *   statistics {alpha, draws, descriptive_draws, seed, method},
@@ -101,7 +105,7 @@ import { scanTree, secretMessage } from './q1/secret-scan.ts';
 import type { PowerReport } from './q1/power.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
-export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v1';
+export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v2';
 export const CAMPAIGN_SCHEMA = 'gbrain-evals/q1-campaign/v1';
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 export const MAX_TREE_BYTES = 60 * 1024 * 1024;
@@ -113,6 +117,9 @@ export const README_END = '<!-- scoreboard:headline:end -->';
 const FIELD_EXEMPT: Record<string, string> = { 'ext-agent-runtime': 'runs only the LoCoMo slice (plan §4.1)' };
 const PRODUCT_FAILURES = new Set<Outcome>(['retrieval_error', 'unsupported']);
 const HARNESS_FAILURES = new Set<Outcome>(['reader_error', 'judge_error', 'harness_invalid', 'budget_not_run']);
+/** memory-qa/outcomes.ts NOT_APPLICABLE: a whole history that did not fit the reader's window; out of that system's denominator, counted and shown. */
+const NOT_APPLICABLE = new Set<Outcome>(['does_not_fit']);
+export const notApplicableReason = (readers: readonly string[]) => `not applicable: did not fit ${readers.join(', ')}'s window`;
 
 // ─── Shared record schemas (mirror eval/runner/memory-qa/records.ts, lane L4) ───
 
@@ -286,6 +293,8 @@ interface CellData {
   latencies: number[];
   rows: Map<string, RowRecord>;
   problems: string[];
+  /** does_not_fit answers per reader (not applicable: never a judge or harness failure). */
+  notApplicable: Record<string, number>;
 }
 
 const mean = (xs: readonly number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null);
@@ -297,7 +306,7 @@ function cellFiles(receipt: string, id: string) {
 
 function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): CellData {
   const set = campaign.sets.find(s => s.id === cell.set)!;
-  const empty: CellData = { cell, values: new Map(), judgeRuns: [], readerMeans: {}, missingReaders: [], productFailures: 0, harnessFailures: 0, judgeSd: null, latencies: [], rows: new Map(), problems: [] };
+  const empty: CellData = { cell, values: new Map(), judgeRuns: [], readerMeans: {}, missingReaders: [], productFailures: 0, harnessFailures: 0, judgeSd: null, latencies: [], rows: new Map(), problems: [], notApplicable: {} };
   if (cell.status === 'not-run') return empty;
   const files = cellFiles(r.root, cell.cell_id);
   if (!existsSync(files.runConfig)) throw invalid(r.root, `cell ${cell.cell_id} has no run-config.json`, 'the configuration identity is the run-config.json hash');
@@ -327,6 +336,7 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
   const sds: number[] = [];
   const latencies: number[] = [];
   let productFailures = 0, harnessFailures = 0;
+  const notApplicable: Record<string, number> = {};
   const values = new Map<string, QuestionValue>();
   for (const q of set.scheduled) {
     const row = rows.get(q.question_id);
@@ -345,6 +355,7 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
     if (excluded.has(q.question_id)) { done(null, `preregistered: ${excluded.get(q.question_id)}`); continue; }
     const qa = byQuestion.get(q.question_id) ?? [];
     let reason: string | null = null;
+    const unfit: string[] = [];
     const perReader: number[] = [];
     const perReaderRuns: number[][] = judgeRuns.map(() => []);
     for (const reader of cell.readers) {
@@ -353,6 +364,7 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
       for (let rep = 0; rep < reps(reader); rep++) {
         const a = qa.find(x => x.reader === reader && x.replicate === rep);
         if (!a) { reason ??= `missing answer: ${reader} replicate ${rep}`; continue; }
+        if (NOT_APPLICABLE.has(a.outcome)) { notApplicable[reader] = (notApplicable[reader] ?? 0) + 1; if (!unfit.includes(reader)) unfit.push(reader); continue; }
         if (PRODUCT_FAILURES.has(a.outcome)) { productFailures++; scores.push(0); runScores.forEach(x => x.push(0)); continue; }
         if (HARNESS_FAILURES.has(a.outcome)) { harnessFailures++; reason ??= `harness: ${a.outcome} (${reader})`; continue; }
         const js = byAnswer.get(a.answer_id) ?? [];
@@ -366,13 +378,13 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
       }
       if (scores.length === reps(reader)) { const m = mean(scores)!; perReader.push(m); readerScores[reader].push(m); runScores.forEach((x, j) => perReaderRuns[j].push(mean(x)!)); }
     }
-    if (reason || perReader.length !== cell.readers.length) { done(null, reason ?? 'incomplete readers'); continue; }
+    if (reason || perReader.length !== cell.readers.length) { done(null, reason ?? (unfit.length ? notApplicableReason(unfit) : 'incomplete readers')); continue; }
     if (cell.arm === 'component' && new Set(qa.map(a => a.context_sha256)).size > 1) throw invalid(r.root, `cell ${cell.cell_id} question ${q.question_id}: readers read different context bytes`, 'every reader of a component arm reads the same frozen pack (plan §4.3)');
     done(mean(perReader)!, null, perReaderRuns.map(x => mean(x)!));
   }
   return {
     cell, values, judgeRuns, readerMeans: Object.fromEntries(cell.readers.map(x => [x, mean(readerScores[x])])), missingReaders,
-    productFailures, harnessFailures, judgeSd: mean(sds), latencies, rows, problems,
+    productFailures, harnessFailures, judgeSd: mean(sds), latencies, rows, problems, notApplicable,
   };
 }
 
@@ -400,6 +412,8 @@ export interface CellAggregate {
   status: string; not_run_reason: string | null; config_sha256: string; readers: string[]; missing_readers: string[]; complete: boolean;
   scheduled: number; valued: number; mean: number | null; ci95: [number, number] | null; per_reader: Record<string, number | null>;
   product_failures: number; harness_failures: number; judge_sd: number | null; judge_runs: number;
+  /** Answers that did not fit the reader's window (does_not_fit), per reader; their questions leave this cell's denominator. */
+  not_applicable: Record<string, number>;
   recall_all_at_10: number | null; recall_all_at_5: number | null; recall_any_at_10: number | null; ndcg_at_10: number | null;
   fill_rate: number | null; delivered_tokens: Record<string, number>; latency_p50_ms: number | null;
   exclusions: Array<{ question_id: string; reason: string }>;
@@ -645,10 +659,10 @@ export function derive(receipt: string): Scoreboard {
     return {
       cell_id: cell.cell_id, set: cell.set, system: cell.system, arm: cell.arm, budget: cell.budget, configuration: cell.configuration, label: cell.label ?? cell.configuration,
       status: cell.status, not_run_reason: cell.not_run_reason ?? null, config_sha256: cell.config_sha256, readers: cell.readers, missing_readers: d.missingReaders,
-      complete: cell.status === 'complete' && !d.missingReaders.length && valued.length === vals.filter(v => !v.reason?.startsWith('preregistered')).length,
+      complete: cell.status === 'complete' && !d.missingReaders.length && valued.length === vals.filter(v => !v.reason?.startsWith('preregistered') && !v.reason?.startsWith('not applicable')).length,
       scheduled: set.scheduled.length - set.exclusions.length, valued: valued.length, mean: r6n(mean(valued.map(v => v.value!))), ci95: ci ? [r6(ci[0]), r6(ci[1])] : null,
       per_reader: Object.fromEntries(Object.entries(d.readerMeans).map(([k, v]) => [k, r6n(v)])), product_failures: d.productFailures, harness_failures: d.harnessFailures,
-      judge_sd: r6n(d.judgeSd), judge_runs: d.judgeRuns.length,
+      judge_sd: r6n(d.judgeSd), judge_runs: d.judgeRuns.length, not_applicable: Object.fromEntries(cell.readers.filter(x => d.notApplicable[x]).map(x => [x, d.notApplicable[x]])),
       recall_all_at_10: rmean('recall_all_at_10'), recall_all_at_5: rmean('recall_all_at_5'), recall_any_at_10: rmean('recall_any_at_10'), ndcg_at_10: rmean('ndcg_at_10'),
       fill_rate: rmean('fill_rate'), delivered_tokens: Object.fromEntries(Object.keys(tokens).sort().map(k => [k, r6(tokens[k] / tokenCounts[k])])),
       latency_p50_ms: lat === null ? null : r6(lat),
@@ -755,7 +769,7 @@ export function renderReport(sb: Scoreboard): string {
   const out = [`# Scoreboard tables: ${sb.campaign.id}`, '', 'Generated by `bun eval/runner/scoreboard.ts render` from this directory\'s rows, answers and judgments; `bun eval/runner/scoreboard.ts check` regenerates it byte for byte.', '', '## Headline', '', renderHeadline(sb, '.').trimEnd(), ''];
   out.push('## Cells', '', '| Cell | Set | System | Arm | Budget | Accuracy | Scored | Product failures | Harness failures | Judge SD | recall_all@10 | Fill rate | Status |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   const num = (x: number | null, f: (x: number) => string) => (x === null ? 'n/a' : f(x));
-  for (const c of sb.cells) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''} |`);
+  for (const c of sb.cells) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`);
   out.push('', '## Per-reader accuracy', '', `| Cell | ${sb.campaign.readers.join(' | ')} |`, `|---|${sb.campaign.readers.map(() => '---|').join('')}`);
   for (const c of sb.cells.filter(x => x.status !== 'not-run')) out.push(`| \`${c.cell_id}\` | ${sb.campaign.readers.map(r => (r in c.per_reader ? num(c.per_reader[r], pct) : 'not promised')).join(' | ')} |`);
   for (const f of sb.families) {

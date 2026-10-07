@@ -30,6 +30,7 @@ at the proxy is `blocked`.
 | `POST /finish` | `{ "ns", "timeout_s" }` | `{ "ready", "waited_ms", "completeness" }` after the vendor's background work drains |
 | `POST /retrieve` | `{ "ns", "question", "query_time", "policy": { "name", "mode": "vendor-default" \| "fixed-evidence", "settings": {} } }` | `{ "items": [Item], "applied_settings": {}, "truncated": false, "raw": <vendor response, optional> }` |
 | `POST /delete_source` | `{ "ns", "source_id" }` | `{ "status": "deleted" \| "partial" \| "unsupported", "receipt": {} }` |
+| `POST /answer` (optional) | `{ "ns", "question", "query_time", "mode", "model"? }` | the system's own answer (below) |
 
 `event_time` and `query_time` are ISO-8601 strings or `null`. Sessions within one namespace arrive in event-time order,
 one at a time. Different namespaces may be driven in parallel only if the capability record says
@@ -46,6 +47,29 @@ An **Item** is one piece of returned evidence, in the system's own rank order:
 `source_ids` must be ids this namespace ingested; the harness rejects any other. `exact` means every listed source
 contributed this item; `partial` means some did and the list may be incomplete; `unavailable` means the system's public
 API cannot say, and `source_ids` is empty. A shim never queries a vendor database privately to manufacture provenance.
+
+## Own answer (optional)
+
+A system with its own answer endpoint (an answer verb, an agent reply) serves `POST /answer` and advertises it in its
+capability record as `"answer": { "modes": ["…"], "models": { "<mode>": "provider:model" } }`. `modes` lists the
+answer routes the running stack serves (gbrain-defaults: `synthesize`; `think` too when the stack runs with
+`GBRAIN_FULL_SURFACE=1`). `models` names the model each mode answers with when the request carries no `model`, so the
+harness can record the answer under that reader (`own:<model>`); a mode whose model the request picks (gbrain's
+`think`, the frontier reader as `model`) may be absent from it. A system without the route omits `answer`, and the
+harness never emulates one.
+
+The request carries the sanitized question, its date, the mode and, optionally, the reader model. The response:
+
+```json
+{ "answer": "the full answer text", "outcome": "scored | harness_invalid", "degraded": null,
+  "source_ids": ["src-…"], "model": "provider:model or null", "usage": { "input": 0, "output": 0 } , "usd": null,
+  "raw": {} }
+```
+
+`outcome` is `scored` for an answer, also a product-degraded one (`degraded` names how, for example gbrain's
+`extractive_fallback`); `harness_invalid` when the answer path could not run for a reason outside the product (a
+provider refusal through the proxy), which the harness retries under the outcome rules. A mode the stack does not serve
+is the `unsupported` error kind. `source_ids` are the ingested sources the answer cites.
 
 ## Capability record
 
@@ -70,9 +94,12 @@ API cannot say, and `source_ids` is empty. A shim never queries a vendor databas
   "streaming": "disabled | supported",
   "telemetry_off": ["ENV=VALUE"],
   "agent_surface": { "kind": "vendor-mcp | harness-mcp | native-agent | none", "transport": "stdio | http", "version": "…" },
-  "deviations_from_vendor_code": ["…"]
+  "deviations_from_vendor_code": ["…"],
+  "answer": { "modes": ["…"], "models": { "<mode>": "provider:model" } }
 }
 ```
+
+`answer` is present only on a system that serves `POST /answer`.
 
 The active configuration is chosen at container start with `SHIM_CONFIG=recipe|common`; `/capabilities` reports both
 and `/health` reports the active one.

@@ -61,6 +61,14 @@ FULL_SURFACE_CALLS = ("think",)
 PENDING_STATES = {"queued", "running", "recovering"}
 FORBIDDEN_QUERY_KEYS = {"token_budget", "return_unit"}
 QUERY_KNOBS = {"limit", "autocut", "expand"}
+# Evidence-delivery fallbacks that are gbrain's shipped, content-driven behavior (preregistered): `redaction_unmapped`
+# (the secret redactor changed a block's text, src/core/search/evidence-delivery.ts:925) and `no_text_chunks` (a page
+# with no text chunks delivers its hit as a chunk, :609). They are recorded and counted per call, never a degraded read.
+# Every other fallback (fetch_timeout, fetch_failed, row_limit, unsealed_page, anchor_not_located, page_missing, any
+# unknown reason) stays a harness failure. GBRAIN_SHIPPED_FALLBACKS (comma-separated) overrides the set; the capability
+# record shows the set in force beside the preregistered one.
+PREREGISTERED_SHIPPED_BEHAVIOR = ("no_text_chunks", "redaction_unmapped")
+SHIPPED_BEHAVIOR = frozenset(f.strip() for f in os.environ.get("GBRAIN_SHIPPED_FALLBACKS", ",".join(PREREGISTERED_SHIPPED_BEHAVIOR)).split(",") if f.strip())
 ANCHOR_RE = re.compile(r"^\*\*(.+?)\*\*\s*\((\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?\)\s*:\s*(.*)$")
 DATE_HEADING_RE = re.compile(r"^#{1,6}\s*\d{4}-\d{2}-\d{2}\b")
 SLUG_SAFE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
@@ -227,10 +235,10 @@ def tool_payload(result: dict[str, Any]) -> tuple[Any, dict[str, Any], list[Any]
     return body, meta, notices
 
 
-def classify_query_meta(meta: dict[str, Any], resolved_search: dict[str, Any]) -> dict[str, Any]:
+def classify_query_meta(meta: dict[str, Any], resolved_search: dict[str, Any], shipped_behavior: frozenset[str] = SHIPPED_BEHAVIOR) -> dict[str, Any]:
     """Plan contract 4.8.4: a degraded stage, a missing rerank block in a reranked mode, an expansion that did not
     apply, an unavailable vector arm or a delivery fallback is a harness failure (retried after quiesce); a semantic
-    cache hit is shipped behavior and only recorded."""
+    cache hit and a shipped-behavior delivery fallback (SHIPPED_BEHAVIOR) are only recorded."""
     reasons: list[str] = []
     shipped: list[str] = []
     for d in meta.get("degraded") or []:
@@ -250,7 +258,7 @@ def classify_query_meta(meta: dict[str, Any], resolved_search: dict[str, Any]) -
         reasons.append(f"projection:{readiness.get('status')}")
     delivery = meta.get("delivery") or {}
     for f in delivery.get("fallbacks") or []:
-        reasons.append(f"delivery_fallback:{f}")
+        (shipped if f in shipped_behavior else reasons).append(f"delivery_fallback:{f}")
     if delivery and delivery.get("requested_unit") != "auto":
         reasons.append(f"delivery_unit:{delivery.get('requested_unit')}")
     if meta.get("cache") == "hit":
@@ -314,6 +322,7 @@ class GbrainDefaultsAdapter(Adapter):
         self.reference: dict[str, Any] | None = None
         self.reference_error: str | None = None
         self.called_ops: set[str] = set()
+        self.shipped_counts: dict[str, int] = {}
         self.receipts = open(os.path.join(LOGS, "receipts.ndjson"), "a")
         threading.Thread(target=self._boot, daemon=True).start()
 
@@ -597,8 +606,12 @@ class GbrainDefaultsAdapter(Adapter):
 
     def capabilities(self) -> dict[str, Any]:
         out = dict(self.record)
+        out["answer"] = {"modes": ["synthesize", *(["think"] if FULL_SURFACE else [])]}
+        out["shipped_behavior"] = {"delivery_fallbacks": sorted(SHIPPED_BEHAVIOR), "preregistered": list(PREREGISTERED_SHIPPED_BEHAVIOR),
+                                   "configured_by": "GBRAIN_SHIPPED_FALLBACKS", "matches_preregistration": sorted(SHIPPED_BEHAVIOR) == sorted(PREREGISTERED_SHIPPED_BEHAVIOR)}
         if self.reference is not None:
             r = self.reference
+            out["answer"]["models"] = {"synthesize": (r["resolved"].get("model_tasks") or {}).get("models.think")}
             out["resolved"] = {"gbrain_version": r["gbrain_version"], "resolved_sha256": r["resolved_sha256"], "config_sha256": r["config_sha256"],
                                "starter_tools_sha256": r["starter_tools_sha256"], "starter_tools": r["starter_tools"], "first_run_decisions": r["first_run_decisions"], **r["resolved"]}
         return out
@@ -607,7 +620,7 @@ class GbrainDefaultsAdapter(Adapter):
         if self.reference is None:
             return {"ok": False, "reason": self.reference_error or "installing the reference brain"}
         return {"ok": True, "surface": "full" if FULL_SURFACE else "starter", "resolved_sha256": self.reference["resolved_sha256"], "active_ns": self.active,
-                "called_ops": sorted(self.called_ops)}
+                "called_ops": sorted(self.called_ops), "shipped_fallbacks": dict(sorted(self.shipped_counts.items()))}
 
     def stats(self) -> dict[str, Any]:
         """Engine footprint for the stress pilot: the serve process's resident memory (current and peak, from
@@ -709,7 +722,7 @@ class GbrainDefaultsAdapter(Adapter):
             if any(r.startswith("live_serve") for r in gate["reasons"]):
                 raise ShimError("product_error", "doctor ran under a live gbrain serve (details.reason live_serve); its database checks did not run, so the barrier cannot pass")
             return {"ready": ready, "waited_ms": waited, "completeness": "known" if ready else "degraded",
-                    "doctor": gate, "doctor_rounds": len(rounds), "absent_pages": len(absent), "expected_pages": len(expected)}
+                    "doctor": gate, "doctor_rounds": len(rounds), "rounds": rounds, "absent_pages": len(absent), "expected_pages": len(expected)}
 
     def listed_conversation_slugs(self) -> set[str]:
         seen: set[str] = set()
@@ -747,6 +760,9 @@ class GbrainDefaultsAdapter(Adapter):
             rows, meta, notices, ms = self.call("query", args)
             retrieval = meta.get("retrieval") or {}
             verdict = classify_query_meta(retrieval, self.require_reference()["resolved"]["search"])
+            for r in verdict["recorded"]:
+                if r.startswith("delivery_fallback:"):
+                    self.shipped_counts[r] = self.shipped_counts.get(r, 0) + 1
             items = []
             for rank, row in enumerate(rows if isinstance(rows, list) else [], start=1):
                 slug = str(row.get("slug") or "")
@@ -794,8 +810,12 @@ class GbrainDefaultsAdapter(Adapter):
             verdict = classify_synthesis(status, error_code)
             slugs = [s if isinstance(s, str) else s.get("page_slug") for s in body.get("sources") or body.get("citations") or []]
             self.receipt("answer", mode=mode, gbrain_ms=ms, classification=verdict)
+            cost = body.get("cost") if isinstance(body.get("cost"), dict) else {}
+            usage = body.get("usage") if isinstance(body.get("usage"), dict) else {}
             return {"answer": str(body.get("answer") or ""), **verdict, "source_ids": sorted({sources[s] for s in slugs if s in sources}),
-                    "cost": body.get("cost"), "args": args, "gbrain_ms": ms, "notices": notices, "serve_session": self.serve_session,
+                    "model": cost.get("model") or body.get("modelUsed") or None,
+                    "usage": {"input": int(cost.get("input_tokens") or usage.get("input_tokens") or 0), "output": int(cost.get("output_tokens") or usage.get("output_tokens") or 0)},
+                    "usd": cost.get("usd_estimate"), "cost": body.get("cost"), "args": args, "gbrain_ms": ms, "notices": notices, "serve_session": self.serve_session,
                     "raw": {k: body.get(k) for k in ("gaps", "warnings", "pages_gathered", "takes_gathered", "sources", "error") if k in body}}
 
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
@@ -803,8 +823,8 @@ class GbrainDefaultsAdapter(Adapter):
 
 
 def extended_dispatch(adapter: GbrainDefaultsAdapter, method: str, path: str, body: dict[str, Any]) -> tuple[int, dict[str, Any]]:
-    """Protocol v1 plus three gbrain-defaults routes: POST /answer {ns, question, query_time, mode, model} (gbrain's own
-    answer), GET /stats (serve memory and brain size) and POST /restart {ns} (serve restart time)."""
+    """Protocol v1 with its optional POST /answer {ns, question, query_time, mode, model} (gbrain's own answer), plus two
+    gbrain-defaults routes: GET /stats (serve memory and brain size) and POST /restart {ns} (serve restart time)."""
     routes = {("POST", "/answer"), ("GET", "/stats"), ("POST", "/restart")}
     if (method, path) not in routes:
         return dispatch(adapter, method, path, body)

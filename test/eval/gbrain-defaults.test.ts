@@ -64,6 +64,32 @@ describe('degraded query meta is a harness failure (plan contract 4.8.4)', () =>
     expect(v.outcome).toBe('scored');
     expect(v.recorded).toEqual(['semantic_cache_hit', 'vector_pool_underfilled', 'delivery_dropped:over_budget=3']);
   });
+  test('shipped-behavior delivery fallbacks (redaction_unmapped, no_text_chunks) are recorded, never a degraded read', () => {
+    const v = classify({ ...cleanMeta, delivery: { ...cleanMeta.delivery, fallbacks: ['no_text_chunks', 'redaction_unmapped'] } });
+    expect(v.outcome).toBe('scored');
+    expect(v.reasons).toEqual([]);
+    expect(v.recorded).toEqual(['delivery_fallback:no_text_chunks', 'delivery_fallback:redaction_unmapped']);
+  });
+  test('timeout-type and unknown delivery fallbacks stay harness failures beside a shipped one', () => {
+    for (const f of ['fetch_timeout', 'fetch_failed', 'row_limit', 'unsealed_page', 'anchor_not_located', 'page_missing', 'something_new']) {
+      const v = classify({ ...cleanMeta, delivery: { ...cleanMeta.delivery, fallbacks: ['redaction_unmapped', f] } });
+      expect(v.outcome).toBe('harness_invalid');
+      expect(v.reasons).toEqual([`delivery_fallback:${f}`]);
+      expect(v.recorded).toEqual(['delivery_fallback:redaction_unmapped']);
+    }
+  });
+  test('the shipped set is configurable (GBRAIN_SHIPPED_FALLBACKS); a set without a reason makes it a harness failure', () => {
+    const meta = { ...cleanMeta, delivery: { ...cleanMeta.delivery, fallbacks: ['no_text_chunks'] } };
+    const run = (set: string) => {
+      const code = ['import importlib.util, json, sys',
+        `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+        'shim = importlib.util.module_from_spec(spec)', 'spec.loader.exec_module(shim)',
+        'print(json.dumps({"set": sorted(shim.SHIPPED_BEHAVIOR), "v": shim.classify_query_meta(json.loads(sys.argv[1]), json.loads(sys.argv[2]))}))'].join('\n');
+      return JSON.parse(Bun.spawnSync(['python3', '-c', code, JSON.stringify(meta), JSON.stringify(TOKENMAX)], { cwd: ROOT, env: { ...process.env, GBRAIN_SHIPPED_FALLBACKS: set } }).stdout.toString());
+    };
+    expect(run('no_text_chunks,redaction_unmapped')).toMatchObject({ set: ['no_text_chunks', 'redaction_unmapped'], v: { outcome: 'scored' } });
+    expect(run('redaction_unmapped')).toMatchObject({ set: ['redaction_unmapped'], v: { outcome: 'harness_invalid', reasons: ['delivery_fallback:no_text_chunks'] } });
+  });
   test('an empty result has nothing to rerank', () => {
     expect(classify({ ...cleanMeta, returned_count: 0, retrieved_count: 0, crag: { reason: 'zero_results' } }).outcome).toBe('scored');
   });

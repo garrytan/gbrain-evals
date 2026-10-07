@@ -49,8 +49,9 @@ defaults for every first-run question, and the MCP registration gbrain writes (t
 sandboxed container with dummy keys; every provider call goes through the metering proxy. Sessions are written
 through MCP `put_page` as conversation pages with their session date. Reads use only `starter` ops: `query` for the
 component and default-amount rows (its default query expansion is one counted LLM call per question) and
-`synthesize` for gbrain's own answer. A labeled full-surface row runs `think` with each reader as `model` and the
-question date as `reference_date`. No request carries `token_budget`. The resolved configuration (search mode,
+`synthesize` for gbrain's own answer, recorded under the reader `own:<gbrain's resolved model>`. A labeled
+full-surface row runs `think` with each reader as `model` and the question date as `reference_date`, in its own cell on
+a stack started with `GBRAIN_FULL_SURFACE=1`, so every starter row reads a starter-only stack. No request carries `token_budget`. The resolved configuration (search mode,
 reranker, expansion, embedder, internal models) is published beside its hash. OPEN: frozen gbrain commit (gbrain
 master on the freeze date).
 
@@ -247,7 +248,11 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 1,000 pages. A dev stress pilot writes the 11 BEAM-1M dev conversations into one brain.
 
 - **PGLite** is the S1 headline engine if query p95 is under 10 seconds, with no rerank or evidence-fetch fallbacks,
-  and RSS fits the VM.
+  and RSS fits the VM. Two delivery fallbacks are gbrain's shipped, content-driven behavior and do not count:
+  `redaction_unmapped` (gbrain's secret redactor changed a block's text) and `no_text_chunks` (a page with no text
+  chunks). They are recorded per query and reported as counts. Every other fallback (an evidence-fetch timeout or
+  failure, `row_limit`, `unsealed_page`, `anchor_not_located`, any unknown reason) counts, and is a harness failure in
+  every cell.
 - **Otherwise** the S1 row is `gbrain-defaults` on Postgres, following gbrain's own advice, and says so.
 - `pglite_scale` is an allowed S1 doctor warning. OPEN: the pilot's measurements and the resulting engine.
 
@@ -279,6 +284,13 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 None yet.
 
 ## Changelog
+
+### 2026-10-06: shipped-behavior fallbacks, the full-surface cell
+
+Draft edits before freeze, from the keyless full-scale rehearsal (28 of 220 BEAM queries reported
+`redaction_unmapped` and 12 `no_text_chunks`). The engine rule now names the two shipped-behavior delivery fallbacks
+that never count against PGLite and are never a harness failure. `synthesize` answers are recorded under
+`own:<resolved model>`, and `think` runs in its own cell on a full-surface stack.
 
 ### 2026-10-06: draft
 

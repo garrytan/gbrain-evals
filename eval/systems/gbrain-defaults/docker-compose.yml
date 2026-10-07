@@ -8,7 +8,8 @@
 # on both networks: it publishes the shim on 127.0.0.1:${SHIM_HOST_PORT:-8700} and forwards egress:9000 to the
 # metering proxy (PROXY_UPSTREAM, host:port). gbrain reads its provider base URLs from config.json, which the shim
 # writes before `gbrain init` from GBRAIN_PROXY_BASE, so every Voyage, OpenAI and Anthropic call lands on the proxy
-# slot named after the system. The container holds dummy keys; the proxy injects the real ones.
+# slot named after the system. The container holds dummy keys (the cell token, SHOOTOUT_CELL_TOKEN, when the launcher
+# sets one, so a strict proxy admits its calls); the proxy injects the real ones.
 #
 # GBRAIN_SHA pins the gbrain commit baked into the image; GBRAIN_FULL_SURFACE=1 serves the full surface for the
 # labeled `think` row (every other call still uses starter ops). Brains live on the gbrain-data volume, so
@@ -27,9 +28,10 @@ services:
       SHIM_PORT: "8700"
       GBRAIN_PROXY_BASE: http://egress:9000/${PROXY_SLOT:-gbrain-defaults}
       GBRAIN_FULL_SURFACE: ${GBRAIN_FULL_SURFACE:-0}
-      VOYAGE_API_KEY: dummy-key-the-proxy-injects-the-real-one
-      OPENAI_API_KEY: sk-dummy-key-the-proxy-injects-the-real-one
-      ANTHROPIC_API_KEY: sk-ant-dummy-key-the-proxy-injects-the-real-one
+      GBRAIN_SHIPPED_FALLBACKS: ${GBRAIN_SHIPPED_FALLBACKS:-no_text_chunks,redaction_unmapped}
+      VOYAGE_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
+      OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-sk-dummy-key-the-proxy-injects-the-real-one}
+      ANTHROPIC_API_KEY: ${SHOOTOUT_CELL_TOKEN:-sk-ant-dummy-key-the-proxy-injects-the-real-one}
     volumes:
       - gbrain-data:/data
     networks: [sandbox]

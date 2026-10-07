@@ -33,7 +33,8 @@ export type Completeness = 'known' | 'unknown' | 'degraded';
 
 export interface IngestResult { items_created: number; warnings: string[]; errors: string[]; completeness: Completeness; service_ms?: number }
 
-export interface FinishResult { ready: boolean; waited_ms: number; completeness: Completeness; service_ms?: number }
+/** `raw` holds whatever else the system reported about its quiesce barrier (gbrain-defaults: every doctor round). */
+export interface FinishResult { ready: boolean; waited_ms: number; completeness: Completeness; service_ms?: number; raw?: Record<string, unknown> }
 
 /** What a question looks like to a system: its text and the date it is asked. */
 export interface PublicQuestion { text: string; query_time: string | null }
@@ -60,6 +61,36 @@ export interface Item {
 
 export interface RetrieveResult { items: Item[]; applied_settings: Record<string, unknown>; truncated: boolean; raw?: unknown; service_ms?: number }
 
+/** A system's own answer (optional `POST /answer`, PROTOCOL.md "Own answer"): `mode` names the route, `model` the reader when the route takes one. */
+export interface OwnAnswerRequest { mode: string; model?: string | null }
+
+export interface OwnAnswer {
+  /** The full answer text. */
+  text: string;
+  /** `scored` (also a product-degraded answer, named by `degraded`) or `harness_invalid` (retried under the outcome rules). */
+  outcome: 'scored' | 'harness_invalid';
+  degraded: string | null;
+  /** Ingested sources the answer cites. */
+  source_ids: string[];
+  /** The model that answered, as the system reports it. */
+  model: string | null;
+  usage: { input: number; output: number };
+  usd: number | null;
+  service_ms?: number;
+  raw?: Record<string, unknown>;
+}
+
+/** A system that serves its own answer route; `capabilities().answer.modes` lists the modes the running stack serves. */
+export interface OwnAnswerSystem extends MemorySystem {
+  answer(ns: string, question: PublicQuestion, request: OwnAnswerRequest): Promise<OwnAnswer>;
+}
+
+/** The own-answer modes a capability record advertises (none when the system has no answer route). */
+export function answerModes(cap: Pick<CapabilityRecord, 'answer'>): string[] {
+  const modes: unknown = cap.answer?.modes;
+  return Array.isArray(modes) ? modes.filter((m): m is string => typeof m === 'string') : [];
+}
+
 export interface DeleteResult { status: 'deleted' | 'partial' | 'unsupported'; receipt: Record<string, unknown>; service_ms?: number }
 
 export interface CapabilityRecord {
@@ -79,6 +110,8 @@ export interface CapabilityRecord {
   telemetry_off: string[];
   agent_surface: { kind: 'vendor-mcp' | 'harness-mcp' | 'native-agent' | 'none'; transport?: 'stdio' | 'http'; version?: string };
   deviations_from_vendor_code: string[];
+  /** Present when the system serves `POST /answer`: the modes the running stack serves and the model each answers with when the request names none. */
+  answer?: { modes: string[]; models?: Record<string, string | null> };
   [extra: string]: unknown;
 }
 

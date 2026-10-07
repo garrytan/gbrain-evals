@@ -18,6 +18,8 @@ export interface SyntheticCell {
   status?: CampaignCell['status']; not_run_reason?: string; anchor?: boolean;
   /** Question indices whose answers record a harness failure for every reader. */
   harnessFail?: number[];
+  /** Question indices whose answers from these readers record does_not_fit (the history did not fit the reader's window). */
+  doesNotFit?: { questions: number[]; readers: string[] };
   /** Readers whose answers are left out entirely. */
   dropReaders?: string[];
   judgeRuns?: number;
@@ -88,13 +90,14 @@ export function writeSyntheticReceipt(dir: string, o: SyntheticOptions = {}): Ca
         const context = sha(`${c.id}|${q.question_id}`);
         for (const reader of readers) {
           const harness = c.harnessFail?.includes(i);
+          const unfit = !!c.doesNotFit?.questions.includes(i) && c.doesNotFit.readers.includes(reader);
           const a: AnswerRecord = {
             answer_id: answerId(c.id, q.question_id, reader, 0), cell_id: c.id, realization_id: `${c.id}-r1`, question_id: q.question_id, conversation: q.conversation,
             system: c.system, arm: c.arm, reader, replicate: 0, context_sha256: c.arm === 'component' ? context : sha(`${context}|${reader}`), text: `synthetic answer ${q.question_id} ${reader}`,
-            usage: { input: 8000, output: 300, cache_read: 0, cache_write: 0 }, provider_input_tokens: 8100, latency_ms: 2000 + Math.floor(rng() * 1000), outcome: harness ? 'reader_error' : 'scored',
+            usage: { input: 8000, output: 300, cache_read: 0, cache_write: 0 }, provider_input_tokens: 8100, latency_ms: 2000 + Math.floor(rng() * 1000), outcome: harness ? 'reader_error' : unfit ? 'does_not_fit' : 'scored',
           };
           answers.push(a);
-          if (harness) continue;
+          if (harness || unfit) continue;
           const base = Math.min(1, Math.max(0, c.quality + (rng() - 0.5) * 0.6));
           const score = Math.round(base * 4) / 4;
           for (let j = 0; j < (c.judgeRuns ?? 1); j++) {

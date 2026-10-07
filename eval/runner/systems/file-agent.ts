@@ -77,6 +77,8 @@ export interface AnsweringSystem extends MemorySystem {
 }
 
 export const FILE_AGENT_MAX_TURNS = 40;
+/** Reasoning effort on every model call of the loop (the preregistration's reader effort). */
+export const FILE_AGENT_EFFORT = 'medium';
 
 export const PROSE_ANSWER_TOOL: ToolSpec = {
   name: 'submit_answer',
@@ -250,6 +252,8 @@ export interface FileAgentOptions {
   fetchImpl?: typeof fetch;
   /** Keyless mode: a scripted model per question replaces the provider. */
   scripted?: (q: PublicQuestion) => ScriptedModel;
+  /** Reasoning effort on every loop call (default FILE_AGENT_EFFORT). */
+  effort?: string;
 }
 
 export class FileAgentSystem implements AnsweringSystem {
@@ -273,7 +277,7 @@ export class FileAgentSystem implements AnsweringSystem {
       delete: 'native', readiness: 'synchronous: a session is a file once ingested', namespace: 'directory tree per namespace', parallel_namespaces: true,
       retrieval_policies: { 'vendor-default': { supported: false }, 'fixed-evidence': { supported: false } },
       streaming: 'disabled', telemetry_off: [], agent_surface: { kind: 'native-agent' }, deviations_from_vendor_code: [],
-      layout: 'YYYY/MM/DD/<opaque>.md; undated sessions take their batch date', max_turns: this.opts.maxTurns ?? FILE_AGENT_MAX_TURNS,
+      layout: 'YYYY/MM/DD/<opaque>.md; undated sessions take their batch date', max_turns: this.opts.maxTurns ?? FILE_AGENT_MAX_TURNS, effort: this.opts.effort ?? FILE_AGENT_EFFORT,
       grep: { engine: 'ripgrep (Rust regex, linear time)', default_max_results: null, line_truncation: null, limits: this.opts.grepLimits ?? DEFAULT_GREP_LIMITS },
     };
   }
@@ -329,7 +333,7 @@ export class FileAgentSystem implements AnsweringSystem {
     const arm = new FsArm('file-agent', store, { grep: ripgrep(root, this.opts.grepLimits ?? DEFAULT_GREP_LIMITS, e => this.limitEvents.push(e)), write: false });
     const t0 = performance.now();
     const run = await runAgent({ model, system: FILE_AGENT_SYSTEM, user: fileAgentUser(q), arm, maxTurns: this.opts.maxTurns ?? FILE_AGENT_MAX_TURNS, maxToolChars: null,
-      submitTool: PROSE_ANSWER_TOOL, fetchImpl: this.opts.fetchImpl ?? proxiedFetch(), scripted });
+      submitTool: PROSE_ANSWER_TOOL, fetchImpl: this.opts.fetchImpl ?? proxiedFetch(), scripted, effort: this.opts.effort ?? FILE_AGENT_EFFORT });
     const opened: string[] = [];
     for (const t of run.tools) {
       if (t.name !== 'read_file' || t.error) continue;

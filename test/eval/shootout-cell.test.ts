@@ -165,17 +165,19 @@ describe('cell files and parameters', () => {
 });
 
 describe('remote cell', () => {
-  test('starts the lease proxy, hands the cell dummy keys and proxy URLs, and writes the lease summary', async () => {
+  test('starts a strict lease proxy (cell token, no local trust), hands the cell dummy keys, the token and proxy URLs, and writes the lease summary', async () => {
     const out = join(tmp, 'remote-out');
     const port = 23000 + Math.floor(Math.random() * 10000);
     const prev = process.env.OPENAI_API_KEY;
     process.env.OPENAI_API_KEY = 'placeholder-real-key';
     try {
-      const code = await runRemote({ lease_id: 'remote-lease-1', lease_usd: 0.5, max_output_tokens: 64000, out, command: `if [ "$OPENAI_API_KEY" = dummy-key-the-proxy-replaces ]; then k=dummy; else k=NOT-DUMMY; fi; echo "$k $OPENAI_BASE_URL" > "$SHOOTOUT_OUT/seen.txt"; curl -sf "$SHOOTOUT_PROXY/__proxy/status" > "$SHOOTOUT_OUT/status.json"` }, { port });
+      const code = await runRemote({ lease_id: 'remote-lease-1', lease_usd: 0.5, max_output_tokens: 64000, out, command: `if [ "$OPENAI_API_KEY" = dummy-key-the-proxy-replaces ]; then k=dummy; else k=NOT-DUMMY; fi; echo "$k $OPENAI_BASE_URL" > "$SHOOTOUT_OUT/seen.txt"; curl -sf "$SHOOTOUT_PROXY/__proxy/status" > "$SHOOTOUT_OUT/status.json"; printf %s "$SHOOTOUT_CELL_TOKEN" > "$SHOOTOUT_OUT/token.txt"; curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{}' "$SHOOTOUT_PROXY/cell/openai/v1/chat/completions" > "$SHOOTOUT_OUT/local-no-token.txt"` }, { port });
       expect(code).toBe(0);
     } finally { if (prev === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = prev; }
     expect(readFileSync(join(out, 'seen.txt'), 'utf8').trim()).toBe(`dummy http://127.0.0.1:${port}/cell/openai/v1`);
-    expect(JSON.parse(readFileSync(join(out, 'status.json'), 'utf8'))).toMatchObject({ mode: 'lease', run_id: 'remote-lease-1', lease_usd: 0.5, max_output_tokens: 64000 });
+    expect(JSON.parse(readFileSync(join(out, 'status.json'), 'utf8'))).toMatchObject({ mode: 'lease', run_id: 'remote-lease-1', lease_usd: 0.5, max_output_tokens: 64000, cell_token: true, trust_local: false });
+    expect(readFileSync(join(out, 'token.txt'), 'utf8')).toMatch(/^[0-9a-f-]{36}$/);
+    expect(readFileSync(join(out, 'local-no-token.txt'), 'utf8')).toBe('401');
     expect(JSON.parse(readFileSync(join(out, 'lease-summary.json'), 'utf8'))).toMatchObject({ run_id: 'remote-lease-1', lease_usd: 0.5, committed_usd: 0, requests: 0, max_output_tokens: 64000, cell_exit_code: 0 });
     closeLedgers();
     expect(ledgerStatus({ ledgerPath: join(out, 'lease.sqlite'), runId: 'remote-lease-1' }).run!.budget_usd).toBe(0.5);

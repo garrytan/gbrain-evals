@@ -223,6 +223,8 @@ export interface FullContextAnswer {
 
 const TOO_LONG = /prompt is too long|context[_ ]length|context window|maximum context|too many (input )?tokens|input is too long|exceeds the context/i;
 const RETRYABLE = new Set([429, 500, 502, 503, 504, 529]);
+/** The preregistration's reader effort, sent on every whole-history reading unless the caller names another. */
+export const FULL_CONTEXT_EFFORT = 'medium';
 
 /**
  * One whole-history reading. Refuses with `does_not_fit` before any call
@@ -230,12 +232,14 @@ const RETRYABLE = new Set([429, 500, 502, 503, 504, 529]);
  * as too long. Anthropic readers get the history as a `cache_control`
  * prefix; OpenAI readers get the same bytes with `prompt_cache_key` set to
  * the conversation, so its automatic prefix cache routes them together.
- * Request parameters match `ChatClient` (qa.ts) so only caching differs.
+ * Request parameters match `ChatClient` (qa.ts) so only caching differs, reasoning effort included (default
+ * `medium`, OpenAI `reasoning_effort`, Anthropic `output_config.effort`; the effort is part of the prompt-cache key).
  */
-export async function answerFullContext(opts: { reader: string; prompt: string; conversation: string; maxOutputTokens?: number; tokenizer?: FitTokenizer; fetchImpl?: typeof fetch }): Promise<FullContextAnswer> {
+export async function answerFullContext(opts: { reader: string; prompt: string; conversation: string; maxOutputTokens?: number; tokenizer?: FitTokenizer; fetchImpl?: typeof fetch; effort?: string }): Promise<FullContextAnswer> {
   const outputTokens = opts.maxOutputTokens ?? 1024;
+  const effort = opts.effort ?? FULL_CONTEXT_EFFORT;
   const fit = checkFit(opts.reader, opts.prompt, outputTokens, opts.tokenizer);
-  const cache_key = createHash('sha256').update(`full-context\u0000${opts.conversation}`).digest('hex').slice(0, 32);
+  const cache_key = createHash('sha256').update(`full-context\u0000${opts.conversation}\u0000${effort}`).digest('hex').slice(0, 32);
   const empty = { input: 0, output: 0, cache_read: 0, cache_write: 0 };
   if (!fit.fits) return { text: '', outcome: 'does_not_fit', fit, usage: empty, provider_input_tokens: 0, latency_ms: 0, cache_key };
   const [prov, model] = [opts.reader.slice(0, opts.reader.indexOf(':')), opts.reader.slice(opts.reader.indexOf(':') + 1)];
@@ -243,11 +247,11 @@ export async function answerFullContext(opts: { reader: string; prompt: string; 
   const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
   const request: { url: string; headers: Record<string, string>; body: unknown } = prov === 'anthropic'
     ? { url: `${(process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com').replace(/\/$/, '')}/v1/messages`, headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
-      body: { model, max_tokens: outputTokens, temperature: 0, messages: [{ role: 'user', content: [{ type: 'text', text: prefix, cache_control: { type: 'ephemeral' } }, ...(suffix ? [{ type: 'text', text: suffix }] : [])] }] } }
+      body: { model, max_tokens: outputTokens, temperature: 0, output_config: { effort }, messages: [{ role: 'user', content: [{ type: 'text', text: prefix, cache_control: { type: 'ephemeral' } }, ...(suffix ? [{ type: 'text', text: suffix }] : [])] }] } }
     : { url: `${(process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, '')}/chat/completions`, headers: { authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
       body: /^(gpt-[5-9]|o\d)/.test(model)
-        ? { model, messages: [{ role: 'user', content: opts.prompt }], n: 1, max_completion_tokens: Math.max(outputTokens, 2000), prompt_cache_key: cache_key }
-        : { model, messages: [{ role: 'user', content: opts.prompt }], n: 1, temperature: 0, max_tokens: outputTokens, prompt_cache_key: cache_key } };
+        ? { model, messages: [{ role: 'user', content: opts.prompt }], n: 1, max_completion_tokens: Math.max(outputTokens, 2000), reasoning_effort: effort, prompt_cache_key: cache_key }
+        : { model, messages: [{ role: 'user', content: opts.prompt }], n: 1, temperature: 0, max_tokens: outputTokens, reasoning_effort: effort, prompt_cache_key: cache_key } };
   const t0 = performance.now();
   let last = '';
   for (let attempt = 0; attempt < 5; attempt++) {
