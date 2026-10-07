@@ -386,6 +386,26 @@ Aggregates:
 
 - C-gate selection applies Holm to one-sided p-values at a family-wise α of 0.025 (the stricter reading of "family-wise α = 0.05" together with "each test one-sided at α = 0.025").
 
+### G6 size raise from the power simulation (recorded 2026-10-07, before any cell)
+
+The development pilot covered both corpora, three models (Fable 5.1 cells excluded under amendment 4), two ingests per
+arm and 624 answers. `eval/runner/q2/power-sim.ts` (200 simulations per cell) gives:
+
+| Pairs per corpus × ingests | Power, all G6 gates at a true +3 points | Pooled gate alone | Unanswerable gate | No true effect (any gate passing) |
+|---|---|---|---|---|
+| 100 × 3 (preregistered) | 0.65 | 0.82 | 0.77 | 0 |
+| 100 × 5 | 0.84 | 0.89 | 0.93 | 0 |
+| 150 × 3 | 0.875 | 0.91 | 0.95 | 0 |
+| 200 × 3 | 0.935 | 0.94 | 0.99 | 0 |
+
+At a true +5 points, the preregistered size has power 0.99. Ingest-to-ingest variance in the pilot is near zero, so
+question pairs, not ingests, limit power. **The G6 matrix is raised to 150 question pairs per corpus × 3 ingests**
+(the owner's coordinator approved it 2026-10-07). The custodian mints 50 more fresh pairs per corpus under the same
+freshness, overlap and gold-support rules. If amara's distinct items cannot supply 50 more, the custodian reports the
+mix, the power simulation is rerun on it, and the result is recorded here before the new question file is hashed.
+No bar changes. Estimated cost: G6 about $650–930, Q2 program total about $1,200–1,480 (spent so far: development
+pilot $466, minting $23.09), inside the approved $2,100.
+
 ### Builds, runners and models
 
 (appended at the freeze)
