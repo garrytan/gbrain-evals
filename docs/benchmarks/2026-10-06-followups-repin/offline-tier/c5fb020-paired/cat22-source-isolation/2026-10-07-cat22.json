@@ -1,0 +1,124 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat22-source-isolation",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 8,
+  "n_scored": 8,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "resolved_config": {
+    "search_mode": "balanced",
+    "reranker_enabled": false,
+    "pinned_config": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.expansion": "false",
+      "search.autocut": "false"
+    },
+    "embed_transport": "none (provider keys stripped; keyword-only)",
+    "sources": 3,
+    "seeded_pages": {
+      "alpha": 22,
+      "beta": 21,
+      "gamma": 20
+    }
+  },
+  "started_at": "2026-10-07T20:04:07.947Z",
+  "finished_at": "2026-10-07T20:04:11.229Z",
+  "data": {
+    "probes": [
+      {
+        "surface": "hybridSearch",
+        "scope_source": "alpha",
+        "total_results": 20,
+        "expected_results": 20,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "surface": "listPages",
+        "scope_source": "alpha",
+        "total_results": 22,
+        "expected_results": 22,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "surface": "getPage",
+        "scope_source": "alpha",
+        "total_results": 10,
+        "expected_results": 10,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "surface": "listPages-federated",
+        "scope_source": "alpha+beta",
+        "total_results": 43,
+        "expected_results": 43,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      },
+      {
+        "surface": "traverseGraph",
+        "scope_source": "alpha",
+        "total_results": 2,
+        "expected_results": 2,
+        "leaked_results": 0,
+        "missing_source_id": 0,
+        "leak_sample": [],
+        "pass": true,
+        "fail_reason": null
+      }
+    ],
+    "negative_controls": [
+      {
+        "surface": "hybridSearch-unscoped",
+        "total_results": 60,
+        "cross_source_rows": 40,
+        "detected_leak": true
+      },
+      {
+        "surface": "listPages-unscoped",
+        "total_results": 63,
+        "cross_source_rows": 41,
+        "detected_leak": true
+      },
+      {
+        "surface": "traverseGraph-unscoped",
+        "total_results": 3,
+        "cross_source_rows": 1,
+        "detected_leak": true
+      }
+    ],
+    "isolation_clean": true,
+    "controls_detect_leak": true
+  }
+}

@@ -1,0 +1,23 @@
+[budget] cat21-code-retrieval: estimated cost $0.36; ledger /workspace/gbrain-evals/.budget/followups-2026-10.sqlite
+[cat21] corpus: 60 files (12 gold + 48 distractors of 1761 walked)
+[cat21] cell=voyage-code-3...
+  Setting up brain schema (v215)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  210 migration(s) applied
+[cat21]   voyage-code-3: valid=true gold=36/36 top1=32/36 MRR=0.938 R@5=100.0% errors=0
+[cat21] cell=voyage-code-4...
+  Setting up brain schema (v215)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  210 migration(s) applied
+[cat21]   voyage-code-4: valid=true gold=36/36 top1=26/36 MRR=0.820 R@5=94.4% errors=0
+[cat21] cell=openai-default...
+  Setting up brain schema (v215)...
+  210 migration(s) applied
+[cat21]   openai-default: valid=true gold=36/36 top1=32/36 MRR=0.938 R@5=100.0% errors=0
+
+[cat21] ─── Scorecard ───────────────────
+[cat21]   voyage-code-3    valid=true  gold=36/36 top1=32/36  MRR=0.938  R@5=100.0%  ingest=60/60
+[cat21]   voyage-code-4    valid=true  gold=36/36 top1=26/36  MRR=0.820  R@5=94.4%  ingest=60/60
+[cat21]   openai-default   valid=true  gold=36/36 top1=32/36  MRR=0.938  R@5=100.0%  ingest=60/60
+[cat21]   run_status=completed verdict=pass publishable=true
+[cat21]   receipt: /workspace/lane-b/eval/reports/cat21-code-retrieval/receipt.json

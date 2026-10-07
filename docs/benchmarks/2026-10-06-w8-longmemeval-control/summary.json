@@ -1,0 +1,110 @@
+{
+ "kind": "w8",
+ "n": 100,
+ "real_correct": 91,
+ "degraded_correct": 19,
+ "ratio": 0.2087912087912088,
+ "signal_floor_met": true,
+ "control": "pass",
+ "degraded_arm": {
+  "n": 100,
+  "official": 19,
+  "secondary": 0,
+  "judges_agree": 81,
+  "judged_by_both": 100,
+  "reader_errors": {},
+  "max_tokens_finishes": 0,
+  "by_type": {
+   "knowledge-update": {
+    "total": 13,
+    "official": 1,
+    "secondary": 0
+   },
+   "multi-session": {
+    "total": 28,
+    "official": 6,
+    "secondary": 0
+   },
+   "single-session-assistant": {
+    "total": 5,
+    "official": 0,
+    "secondary": 0
+   },
+   "single-session-preference": {
+    "total": 8,
+    "official": 0,
+    "secondary": 0
+   },
+   "single-session-user": {
+    "total": 21,
+    "official": 9,
+    "secondary": 0
+   },
+   "temporal-reasoning": {
+    "total": 25,
+    "official": 3,
+    "secondary": 0
+   }
+  },
+  "usd": 2.24739,
+  "mean_input_tokens": 21733,
+  "mean_output_tokens": 148
+ },
+ "partial_fault": {
+  "n": 50,
+  "real_correct": 47,
+  "fault_correct": 7,
+  "mcnemar": {
+   "losses": 40,
+   "wins": 0,
+   "both_pass": 7,
+   "both_fail": 3,
+   "discordant": 40,
+   "p_two_sided": 1.8189894035458565e-12
+  },
+  "arm": {
+   "n": 50,
+   "official": 7,
+   "secondary": 4,
+   "judges_agree": 47,
+   "judged_by_both": 50,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "knowledge-update": {
+     "total": 5,
+     "official": 1,
+     "secondary": 1
+    },
+    "multi-session": {
+     "total": 14,
+     "official": 3,
+     "secondary": 3
+    },
+    "single-session-assistant": {
+     "total": 1,
+     "official": 0,
+     "secondary": 0
+    },
+    "single-session-preference": {
+     "total": 7,
+     "official": 1,
+     "secondary": 0
+    },
+    "single-session-user": {
+     "total": 10,
+     "official": 2,
+     "secondary": 0
+    },
+    "temporal-reasoning": {
+     "total": 13,
+     "official": 0,
+     "secondary": 0
+    }
+   },
+   "usd": 0.927885,
+   "mean_input_tokens": 17491,
+   "mean_output_tokens": 213
+  }
+ }
+}

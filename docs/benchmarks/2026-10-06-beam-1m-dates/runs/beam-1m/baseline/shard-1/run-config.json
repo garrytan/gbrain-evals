@@ -1,0 +1,8 @@
+{
+  "run_config_hash": "e31f82e5133a0ec4d0ff994b5f82ea9c48192f266b13c9fb70d851e7a2bcdc62",
+  "benchmark": "beam-1m",
+  "shard": {
+    "index": 1,
+    "count": 3
+  }
+}

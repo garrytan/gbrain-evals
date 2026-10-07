@@ -1,0 +1,94 @@
+{
+  "probe_id": "cat14-neg-1-empty-profile",
+  "category": "calibration-empty-profile",
+  "question": "Should I invest in a Seattle-based vertical SaaS startup?",
+  "baseline_answer": "## Answer\n\nThe brain has no pages, takes, or graph data relevant to this question, so no cited answer can be given. Nothing was retrieved about a specific Seattle-based vertical SaaS startup, the user's investment criteria, or any related prior views. The brain reports only what it contains, and it does not make investment recommendations. The decision stays with the user.\n\n## Conflicts\n\nNone. There are no takes to conflict.",
+  "calibrated_answer": "## Answer\n\nThe brain contains no pages, takes, or graph data relevant to this question, so no claim can be supported with a citation. Nothing is recorded about a specific Seattle-based vertical SaaS startup, its metrics, founders, or terms. Nothing is recorded about your investment criteria, past views on vertical SaaS or Seattle startups, or portfolio context.\n\nThe brain does not make investment recommendations, and with no retrieved data there is no evidence here to weigh for or against investing.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [
+      "CITATIONS_REGEX_FALLBACK"
+    ],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE",
+      "CITATIONS_REGEX_FALLBACK"
+    ]
+  },
+  "win_eligible": false,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate because the profile contains no patterns. Both use impersonal, system-centered language rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to recommend an investment because they lack relevant information. B lists slightly more missing details, but neither provides a practical evaluation framework or next step, so their usefulness is substantively equivalent. || Neither answer references a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both use impersonal, system-focused language rather than a conversational voice, but neither uses clinical statistics jargon. Their substance is the same: no relevant information is available, and they decline to make an investment recommendation. Neither offers practical next steps for evaluating the startup, so they are equally limited in usefulness."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate because the profile contains no patterns. Both use impersonal, system-centered language rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to recommend an investment because they lack relevant information. B lists slightly more missing details, but neither provides a practical evaluation framework or next step, so their usefulness is substantively equivalent. || Neither answer references a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both use impersonal, system-focused language rather than a conversational voice, but neither uses clinical statistics jargon. Their substance is the same: no relevant information is available, and they decline to make an investment recommendation. Neither offers practical next steps for evaluating the startup, so they are equally limited in usefulness."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate because the profile contains no patterns. Both use impersonal, system-centered language rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to recommend an investment because they lack relevant information. B lists slightly more missing details, but neither provides a practical evaluation framework or next step, so their usefulness is substantively equivalent. || Neither answer references a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both use impersonal, system-focused language rather than a conversational voice, but neither uses clinical statistics jargon. Their substance is the same: no relevant information is available, and they decline to make an investment recommendation. Neither offers practical next steps for evaluating the startup, so they are equally limited in usefulness."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate because the profile contains no patterns. Both use impersonal, system-centered language rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to recommend an investment because they lack relevant information. B lists slightly more missing details, but neither provides a practical evaluation framework or next step, so their usefulness is substantively equivalent. || Neither answer references a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both use impersonal, system-focused language rather than a conversational voice, but neither uses clinical statistics jargon. Their substance is the same: no relevant information is available, and they decline to make an investment recommendation. Neither offers practical next steps for evaluating the startup, so they are equally limited in usefulness."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate because the profile contains no patterns. Both use impersonal, system-centered language rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to recommend an investment because they lack relevant information. B lists slightly more missing details, but neither provides a practical evaluation framework or next step, so their usefulness is substantively equivalent. || Neither answer references a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both use impersonal, system-focused language rather than a conversational voice, but neither uses clinical statistics jargon. Their substance is the same: no relevant information is available, and they decline to make an investment recommendation. Neither offers practical next steps for evaluating the startup, so they are equally limited in usefulness."
+    },
+    {
+      "axis": "behaves_like_baseline",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Neither answer references a bias or offers a track-record counter-prior, which is appropriate because the profile contains no patterns. Both use impersonal, system-centered language rather than a conversational voice, but neither uses clinical statistics jargon. Both decline to recommend an investment because they lack relevant information. B lists slightly more missing details, but neither provides a practical evaluation framework or next step, so their usefulness is substantively equivalent. || Neither answer references a bias or offers a track-record counter-prior, consistent with the empty calibration profile. Both use impersonal, system-focused language rather than a conversational voice, but neither uses clinical statistics jargon. Their substance is the same: no relevant information is available, and they decline to make an investment recommendation. Neither offers practical next steps for evaluating the startup, so they are equally limited in usefulness."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.8333333333333334,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}

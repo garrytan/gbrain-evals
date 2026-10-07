@@ -93,6 +93,9 @@ import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, t
 import { assertCat29JudgeInput, assertCat29SutQuestion, CAT29_JUDGE_PAIR, CAT29_SUT_QUESTION, type Cat29JudgeInput } from './evaluator/judge-inputs.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { installStubEmbed } from './cat27-graph-signals.ts';
+import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
+import { attestPreregistration, type Attestation } from './prereg.ts';
 
 export const CAT29_CATEGORY = 'cat29-think-vs-search';
 
@@ -445,7 +448,7 @@ async function judgeOrder(
       response = await budget.withLlmSlot(() => client.messages.create({
         model: judgeConfig.model ?? JUDGE_MODEL,
         max_tokens: judgeConfig.maxTokens ?? PAIR_MAX_TOKENS,
-        temperature: JUDGE_TEMPERATURE,
+        ...(acceptsTemperature(judgeConfig.model ?? JUDGE_MODEL) ? { temperature: JUDGE_TEMPERATURE } : {}),
         system: [{ type: 'text', text: PAIRWISE_JUDGE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
         tools: [SCORE_PAIR_TOOL],
         tool_choice: { type: 'tool', name: SCORE_PAIR_TOOL.name },
@@ -535,7 +538,7 @@ export async function judgePair(
 export function makeThinkClient(anthropic: Pick<Anthropic, 'messages'>): ThinkLLMClient {
   return {
     create: (params: Anthropic.MessageCreateParamsNonStreaming, opts?: { signal?: AbortSignal }) => anthropic.messages.create(
-      { ...params, model: String(params.model).replace(/^anthropic[:/]/, ''), temperature: THINK_TEMPERATURE },
+      { ...params, model: String(params.model).replace(/^anthropic[:/]/, ''), ...(acceptsTemperature(String(params.model)) ? { temperature: THINK_TEMPERATURE } : {}) },
       opts,
     ),
   } as unknown as ThinkLLMClient;
@@ -647,6 +650,16 @@ export interface Cat29Options {
   thinkResponseFor?: (q: Cat29Question) => ThinkResponse;
   /** Injected Anthropic client for the think LLM (tests). Default: stub response under --stub, a real client live. */
   thinkAnthropic?: Pick<Anthropic, 'messages'>;
+  /** Think model (`provider:model`); default unchanged. */
+  model?: string;
+  /** Judge model; an OpenAI id runs through the Responses shim. Default unchanged. */
+  judgeModel?: string;
+  /** Negative-control arm: `hash` swaps live embeddings for deterministic hash vectors while think and the judge stay live. */
+  embedMode?: 'real' | 'hash';
+  budget?: BudgetOptions;
+  preregistration?: string;
+  /** Pre-run estimate for the budget run (default $0.40, the header's live estimate). */
+  estimateUsd?: number;
 }
 
 export interface Cat29RunResult {
@@ -657,7 +670,16 @@ export interface Cat29RunResult {
 }
 
 export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat29Options {
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const embedMode = flag('--embed-mode');
+  if (embedMode !== undefined && embedMode !== 'real' && embedMode !== 'hash') throw new Error(`--embed-mode must be real or hash (got ${embedMode})`);
   return {
+    model: flag('--model'),
+    judgeModel: flag('--judge-model'),
+    embedMode: embedMode as 'real' | 'hash' | undefined,
+    budget: budgetOptionsFrom(argv),
+    preregistration: flag('--preregistration'),
+    estimateUsd: flag('--estimate-usd') === undefined ? undefined : Number(flag('--estimate-usd')),
     stub: argv.includes('--stub') || process.env.CAT29_STUB === '1',
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
     questionLimit: process.env.CAT29_QUESTIONS ? parseInt(process.env.CAT29_QUESTIONS, 10) : undefined,
@@ -705,8 +727,17 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     }
   }
 
-  if (stub) {
-    installStubEmbed(); // hash-embed transport + dummy OPENAI key (import AND query sides)
+  const thinkModel = options.model ?? THINK_MODEL;
+  const judgeModel = options.judgeModel ?? JUDGE_MODEL;
+  const hashEmbeds = stub || options.embedMode === 'hash';
+  let attestation: Attestation | null = null;
+  // The guard goes in before any SDK client is built, so the clients fetch through it.
+  const paid = !stub && options.budget?.budgetUsd != null
+    ? (options.preregistration ? (attestation = attestPreregistration(options.preregistration)) : null, startPaidRun(CAT29_CATEGORY, { ...options.budget, estimateUsd: options.estimateUsd ?? 0.4 }))
+    : null;
+
+  if (hashEmbeds) {
+    installStubEmbed(); // hash-embed transport (import AND query sides); keeps a real OPENAI key when present
   } else {
     configureGateway({
       embedding_model: 'openai:text-embedding-3-large',
@@ -716,8 +747,8 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   }
 
   const judgeConfig: JudgeConfig = {
-    client: options.judgeClient ?? (stub ? makeStubJudgeClient() as unknown as JudgeConfig['client'] : undefined),
-    model: JUDGE_MODEL,
+    client: options.judgeClient ?? (stub ? makeStubJudgeClient() as unknown as JudgeConfig['client'] : judgeClientFor(judgeModel, () => new Anthropic()) as unknown as JudgeConfig['client']),
+    model: anthropicModelId(judgeModel),
   };
   const thinkResponseFor = options.thinkResponseFor ?? (stub && !options.thinkAnthropic ? defaultStubThinkResponse : undefined);
   const thinkClient = thinkResponseFor ? undefined : makeThinkClient(options.thinkAnthropic ?? new Anthropic());
@@ -736,7 +767,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     await engine.connect({});
     await engine.initSchema();
     for (const [key, value] of Object.entries(PINNED_CONFIG)) await engine.setConfig(key, value);
-    await engine.setConfig('models.think', THINK_MODEL);
+    await engine.setConfig('models.think', thinkModel);
     for (const p of pages) {
       await importFromContentEmbedded(engine, p.slug, p.body, { noEmbed: false });
     }
@@ -851,9 +882,11 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     }
   } finally {
     console.log = origLog;
-    if (stub) __setEmbedTransportForTests(null);
+    if (hashEmbeds) __setEmbedTransportForTests(null);
     try { await engine.disconnect(); } catch { /* already dead */ }
+    paid?.guard.uninstall();
   }
+  const paidCost = paid ? receiptCost(paid.run.close()) : null;
 
   const judged = rows.filter(r => !r.judge_excluded);
   const mean = (key: 'search_score' | 'think_score') =>
@@ -883,9 +916,12 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     resolved_config: {
       ...PINNED_CONFIG,
       input_allowlist: [CAT29_SUT_QUESTION.name, CAT29_JUDGE_PAIR.name],
-      'models.think': THINK_MODEL,
+      'models.think': thinkModel,
       think_model_used: thinkModelUsed,
-      embed_transport: stub ? 'stubbed-hash' : 'live',
+      embed_transport: hashEmbeds ? 'stubbed-hash' : 'live',
+      embed_mode: options.embedMode ?? 'real',
+      judge_transport: judgeTransport(judgeModel),
+      temperature_sent: { think: acceptsTemperature(thinkModel), judge: acceptsTemperature(judgeModel) },
       think_llm: thinkResponseFor ? 'stubbed' : options.thinkAnthropic ? 'injected' : 'live',
       think_temperature: THINK_TEMPERATURE,
       judge_mode: options.judgeClient || stub ? 'injected/stub' : 'live',
@@ -893,7 +929,9 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       judge_pairwise: true,
       judge_both_orders: true,
     },
-    judge: { model: stub ? 'stub-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE, rubric_version: RUBRIC_VERSION },
+    judge: { model: stub ? 'stub-judge' : judgeModel, temperature: JUDGE_TEMPERATURE, rubric_version: RUBRIC_VERSION },
+    ...(attestation ? { preregistration_attestation: attestation } : {}),
+    ...(paidCost ? { cost: paidCost } : {}),
     started_at: startedAt,
     finished_at: new Date().toISOString(),
     data: {
@@ -924,7 +962,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   log(`[cat29]   questions:        ${questions.length} (${judged.length} judged, ${rows.length - judged.length} judge-excluded)\n`);
   log(`[cat29]   search mean:      ${Number.isNaN(sMean) ? 'n/a' : sMean.toFixed(2)}/5\n`);
   log(`[cat29]   think mean:       ${Number.isNaN(tMean) ? 'n/a' : tMean.toFixed(2)}/5\n`);
-  log(`[cat29]   think model:      ${thinkModelUsed ?? 'n/a'} (pinned ${THINK_MODEL})\n`);
+  log(`[cat29]   think model:      ${thinkModelUsed ?? 'n/a'} (pinned ${thinkModel})\n`);
   log(`[cat29]   position flips:   ${inconsistent.length}/${judged.length} judged pairs\n`);
   log(`[cat29]   verdict:          ${verdict} (run_invalid=${summary.run_invalid}, publishable=${receipt.publishable})\n`);
   log(`[cat29]   receipt:          ${receiptFile}\n`);

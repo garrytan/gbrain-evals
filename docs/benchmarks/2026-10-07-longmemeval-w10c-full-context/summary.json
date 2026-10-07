@@ -1,0 +1,316 @@
+{
+ "kind": "w10c",
+ "ids": 150,
+ "arms": {
+  "gbrain-sonnet55 (w10a rows)": {
+   "n": 150,
+   "official": 139,
+   "secondary": 143,
+   "judges_agree": 146,
+   "judged_by_both": 150,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 9,
+     "official": 8,
+     "secondary": 8
+    },
+    "knowledge-update": {
+     "total": 22,
+     "official": 22,
+     "secondary": 22
+    },
+    "multi-session": {
+     "total": 36,
+     "official": 29,
+     "secondary": 32
+    },
+    "single-session-assistant": {
+     "total": 17,
+     "official": 17,
+     "secondary": 17
+    },
+    "single-session-preference": {
+     "total": 9,
+     "official": 9,
+     "secondary": 9
+    },
+    "single-session-user": {
+     "total": 19,
+     "official": 18,
+     "secondary": 19
+    },
+    "temporal-reasoning": {
+     "total": 38,
+     "official": 36,
+     "secondary": 36
+    }
+   },
+   "usd": 3.493809,
+   "mean_input_tokens": 22242,
+   "mean_output_tokens": 210
+  },
+  "w10c-sol-currentpin": {
+   "n": 150,
+   "official": 137,
+   "secondary": 139,
+   "judges_agree": 146,
+   "judged_by_both": 150,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 9,
+     "official": 8,
+     "secondary": 7
+    },
+    "knowledge-update": {
+     "total": 22,
+     "official": 22,
+     "secondary": 22
+    },
+    "multi-session": {
+     "total": 36,
+     "official": 29,
+     "secondary": 31
+    },
+    "single-session-assistant": {
+     "total": 17,
+     "official": 17,
+     "secondary": 17
+    },
+    "single-session-preference": {
+     "total": 9,
+     "official": 9,
+     "secondary": 9
+    },
+    "single-session-user": {
+     "total": 19,
+     "official": 19,
+     "secondary": 19
+    },
+    "temporal-reasoning": {
+     "total": 38,
+     "official": 33,
+     "secondary": 34
+    }
+   },
+   "usd": 2.154441,
+   "mean_input_tokens": 13794,
+   "mean_output_tokens": 114
+  },
+  "w10c-sonnet55-full": {
+   "n": 150,
+   "official": 144,
+   "secondary": 144,
+   "judges_agree": 146,
+   "judged_by_both": 150,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 9,
+     "official": 8,
+     "secondary": 7
+    },
+    "knowledge-update": {
+     "total": 22,
+     "official": 22,
+     "secondary": 22
+    },
+    "multi-session": {
+     "total": 36,
+     "official": 34,
+     "secondary": 35
+    },
+    "single-session-assistant": {
+     "total": 17,
+     "official": 17,
+     "secondary": 17
+    },
+    "single-session-preference": {
+     "total": 9,
+     "official": 9,
+     "secondary": 9
+    },
+    "single-session-user": {
+     "total": 19,
+     "official": 18,
+     "secondary": 19
+    },
+    "temporal-reasoning": {
+     "total": 38,
+     "official": 36,
+     "secondary": 35
+    }
+   },
+   "usd": 25.914772,
+   "mean_input_tokens": 171596,
+   "mean_output_tokens": 234
+  },
+  "w10c-sol-full": {
+   "n": 150,
+   "official": 141,
+   "secondary": 141,
+   "judges_agree": 150,
+   "judged_by_both": 150,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 9,
+     "official": 7,
+     "secondary": 7
+    },
+    "knowledge-update": {
+     "total": 22,
+     "official": 22,
+     "secondary": 22
+    },
+    "multi-session": {
+     "total": 36,
+     "official": 33,
+     "secondary": 33
+    },
+    "single-session-assistant": {
+     "total": 17,
+     "official": 17,
+     "secondary": 17
+    },
+    "single-session-preference": {
+     "total": 9,
+     "official": 9,
+     "secondary": 9
+    },
+    "single-session-user": {
+     "total": 19,
+     "official": 19,
+     "secondary": 19
+    },
+    "temporal-reasoning": {
+     "total": 38,
+     "official": 34,
+     "secondary": 34
+    }
+   },
+   "usd": 16.089029,
+   "mean_input_tokens": 106683,
+   "mean_output_tokens": 116
+  }
+ },
+ "families": {
+  "noninferiority": {
+   "family_id": "w10c-gbrain-noninferior-to-full-context",
+   "verdict": "pass",
+   "holm_family": [
+    "gbrain-vs-full-sonnet55",
+    "gbrain-vs-full-sol"
+   ],
+   "comparisons": [
+    {
+     "id": "gbrain-vs-full-sonnet55",
+     "status": "pass",
+     "n_pairs": 150,
+     "mean_a": 0.96,
+     "mean_b": 0.9266666666666666,
+     "delta": -0.03333333333333333,
+     "ci95": [
+      -0.07333333333333333,
+      0
+     ],
+     "mcnemar": {
+      "losses": 7,
+      "wins": 2,
+      "both_pass": 137,
+      "both_fail": 4,
+      "discordant": 9,
+      "p_two_sided": 0.1796875
+     },
+     "p_noninferiority": 0.0352964703529647,
+     "p_holm": 0.0352964703529647,
+     "power": "with 150 pairs in 150 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0557; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "gbrain-vs-full-sol",
+     "status": "pass",
+     "n_pairs": 150,
+     "mean_a": 0.94,
+     "mean_b": 0.9133333333333333,
+     "delta": -0.02666666666666667,
+     "ci95": [
+      -0.06,
+      0
+     ],
+     "mcnemar": {
+      "losses": 5,
+      "wins": 1,
+      "both_pass": 136,
+      "both_fail": 8,
+      "discordant": 6,
+      "p_two_sided": 0.21875
+     },
+     "p_noninferiority": 0.006799320067993201,
+     "p_holm": 0.013598640135986401,
+     "power": "with 150 pairs in 150 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0455; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    }
+   ]
+  },
+  "loss": {
+   "family_id": "w10c-full-context-better-beyond-margin",
+   "verdict": "inconclusive",
+   "holm_family": [
+    "full-vs-gbrain-sonnet55",
+    "full-vs-gbrain-sol"
+   ],
+   "comparisons": [
+    {
+     "id": "full-vs-gbrain-sonnet55",
+     "status": "inconclusive",
+     "n_pairs": 150,
+     "mean_a": 0.9266666666666666,
+     "mean_b": 0.96,
+     "delta": 0.03333333333333333,
+     "ci95": [
+      0,
+      0.07333333333333333
+     ],
+     "mcnemar": {
+      "losses": 2,
+      "wins": 7,
+      "both_pass": 137,
+      "both_fail": 4,
+      "discordant": 9,
+      "p_two_sided": 0.1796875
+     },
+     "p_superiority": 0.9648035196480352,
+     "p_holm": 1,
+     "power": "with 150 pairs in 150 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0557; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "full-vs-gbrain-sol",
+     "status": "inconclusive",
+     "n_pairs": 150,
+     "mean_a": 0.9133333333333333,
+     "mean_b": 0.94,
+     "delta": 0.02666666666666667,
+     "ci95": [
+      0,
+      0.06
+     ],
+     "mcnemar": {
+      "losses": 1,
+      "wins": 5,
+      "both_pass": 136,
+      "both_fail": 8,
+      "discordant": 6,
+      "p_two_sided": 0.21875
+     },
+     "p_superiority": 0.9933006699330067,
+     "p_holm": 1,
+     "power": "with 150 pairs in 150 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0455; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    }
+   ]
+  }
+ }
+}

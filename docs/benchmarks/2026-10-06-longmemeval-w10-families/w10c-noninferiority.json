@@ -1,0 +1,30 @@
+{
+ "schema_version": 1,
+ "family_id": "w10c-gbrain-noninferior-to-full-context",
+ "registered_at": "2026-10-06",
+ "description": "W10c primary: gbrain current-pin retrieval (B) non-inferior to the whole history in the prompt (A) at a 7-point margin, same reader, the 150-question stratified subset, official judge, Holm across the two readers.",
+ "alpha": 0.05,
+ "seed": 20261006,
+ "draws": 10000,
+ "id_field": "question_id",
+ "comparisons": [
+  {
+   "id": "gbrain-vs-full-sonnet55",
+   "metric": "correct__sonnet55",
+   "gate": "noninferiority",
+   "direction": "higher",
+   "tolerance": 0.07,
+   "cluster_by": "question_id",
+   "description": "reader claude-sonnet-5-5"
+  },
+  {
+   "id": "gbrain-vs-full-sol",
+   "metric": "correct__sol",
+   "gate": "noninferiority",
+   "direction": "higher",
+   "tolerance": 0.07,
+   "cluster_by": "question_id",
+   "description": "reader gpt-6.1-sol"
+  }
+ ]
+}
