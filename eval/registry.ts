@@ -1229,6 +1229,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'situation-recall-programmatic.ts': { role: 'programmatic driver for Cats 5, 8 and 9', part_of: 'situation-recall' },
   'situation-recall-provenance.ts': { role: 'situation-recall provenance hashing', part_of: 'situation-recall' },
   'situation-recall-regression.ts': { role: 'situation-recall regression comparator', part_of: 'situation-recall' },
+  'shootout-report.ts': { role: 'open-source memory shootout Phase 4 analysis: primary family, pin link, S1, S2 and descriptive tables with the preregistered sentences, from the committed cell results (latest settled attempt per cell)' },
   'shootout-cell.ts': { role: 'open-source memory shootout cells (PLAN.md 2026-10-05): campaign manifest, durable host-ledger leases, Ubicloud launch, settlement; not the embedder-shootout entry shootout-cell' },
   'smoke.ts': { role: 'embedder-shootout pre-flight smoke', part_of: 'shootout-cell' },
   'synthetic-corpus-loader.ts': { role: 'synthetic-v1 corpus loader' },
