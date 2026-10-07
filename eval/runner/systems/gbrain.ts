@@ -111,7 +111,7 @@ abstract class GbrainBrain implements MemorySystem {
     return { status: 'deleted', receipt: { page: 'deleted through BrainEngine.deletePage' } };
   }
 
-  /** Close the brain and open it again from disk, keeping the namespace it holds (lifecycle-lite's restart checkpoint). */
+  /** Close the brain and open it again from disk, keeping the namespace it holds. */
   async restart(): Promise<void> {
     if (!this.storage.databasePath) throw new SystemError('invalid_request', 'restart needs a database path; an in-memory brain would lose its state');
     if (!this.engine) return;
