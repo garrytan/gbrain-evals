@@ -1,0 +1,8 @@
+{
+  "run_id": "cognee-common-locomo-r2-a2-1295319b",
+  "lease_usd": 8,
+  "committed_usd": 1.114903560000001,
+  "requests": 5253,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}
