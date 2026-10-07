@@ -8,6 +8,103 @@ Gbrain has evidence for each stage. Its release configuration finds all labeled 
 
 Those results give engineers useful choices. They do not establish one universal ranking of memory systems. Use [retrieval lessons](retrieval-lessons.md) for the practical conclusions and [settings](settings.md) for the controls behind them.
 
+## Systems in the head-to-head scoreboard
+
+The scoreboard and README describe each external system by kind. This table is the one place that maps a kind id
+(`eval/systems/kinds.json`) to the product, the pinned version and the vendor's own benchmark code. Each product's
+install bundle (Dockerfile, lockfile, compose file, shim and capability record) sits beside this page in
+`docs/comparison-systems/<kind>/`, so a historical install can be rebuilt byte for byte. The harness and the shims
+were first written for the open-source comparison plan (gbrain-evals#73, branch `capy/oss-memory-shootout` at
+`1b7cc28`); its pilot notes stay on that branch.
+
+| Kind id | Product | Pinned package | Vendor benchmark code |
+|---|---|---|---|
+| `ext-extract-first` | Mem0 (open-source) | mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0 | mem0ai/memory-benchmarks@4b61c5d |
+| `ext-memory-bank` | Hindsight | hindsight server 0.10.2 (vectorize-io/hindsight@5fc4ce20917b916240cef27c212c387a177f115b, tag v0.10.2) + hindsight-client==0.10.2 | vectorize-io/agent-memory-benchmark@f618ed7 |
+| `ext-graph-pipeline` | Cognee | cognee==1.6.2 | topoteretes/cognee@ba3631f, cognee/eval_framework/beam/ |
+| `ext-temporal-graph` | Graphiti (open-source; the hosted Zep service is built on it) | graphiti-core==0.30.2 (getzep/graphiti@eaa4128681bc53487138a4bbc22d58336ebe70d2, tag v0.30.2) | getzep/zep-papers@4b7f26c, LoCoMo scripts |
+| `ext-markdown-kb` | Basic Memory | basic-memory==0.23.2 | basicmachines-co/basic-memory@c0bd87c, benchmarks/ |
+| `ext-agent-runtime` | Letta Code | @letta-ai/letta-code@0.34.4 | none for memory QA |
+| `ext-verbatim-session` | MemPalace (raw vector mode and hybrid mode without the LLM reranker) | pinned when its bundle lands | MemPalace/mempalace benchmarks/ (LongMemEval) |
+
+The machine-readable pin table below is what `bun run eval:scoreboard check` validates against the bundles (lockfile
+and capability-record hashes).
+
+```json
+[
+  {
+    "kind": "ext-extract-first",
+    "product": "Mem0 (open-source)",
+    "package": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
+    "image": null,
+    "lock_file": "docs/comparison-systems/ext-extract-first/uv.lock",
+    "lock_sha256": "9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680",
+    "capability_sha256": "0acaff3ad67dc0f43af54a45d13f1ca331acf695c6054c02be8d2659b3aa992f",
+    "vendor_benchmark_code": "mem0ai/memory-benchmarks@4b61c5d"
+  },
+  {
+    "kind": "ext-memory-bank",
+    "product": "Hindsight",
+    "package": "hindsight server 0.10.2 (vectorize-io/hindsight@5fc4ce20917b916240cef27c212c387a177f115b, tag v0.10.2) + hindsight-client==0.10.2",
+    "image": "ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
+    "lock_file": "docs/comparison-systems/ext-memory-bank/uv.lock",
+    "lock_sha256": "f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8",
+    "capability_sha256": "23a033f4b22a8630e7b613172d2b70663613fb65a511c749d720c7ac7938c6fe",
+    "vendor_benchmark_code": "vectorize-io/agent-memory-benchmark@f618ed7"
+  },
+  {
+    "kind": "ext-graph-pipeline",
+    "product": "Cognee",
+    "package": "cognee==1.6.2",
+    "image": "built from docs/comparison-systems/ext-graph-pipeline/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d with uv 0.12.3; the run receipt records the built image id",
+    "lock_file": "docs/comparison-systems/ext-graph-pipeline/uv.lock",
+    "lock_sha256": "59af44d5a70bfa016e888d650259443ba8d0d2f2fd27f4416f9b8e184ef5a0d7",
+    "capability_sha256": "e00e460095fdbc1ce7532b430496d4e8d223c41c5c3e691a457af04edf402a89",
+    "vendor_benchmark_code": "topoteretes/cognee@ba3631f, cognee/eval_framework/beam/"
+  },
+  {
+    "kind": "ext-temporal-graph",
+    "product": "Graphiti (open-source; the hosted Zep service is built on it)",
+    "package": "graphiti-core==0.30.2 (getzep/graphiti@eaa4128681bc53487138a4bbc22d58336ebe70d2, tag v0.30.2)",
+    "image": "shim built from graphiti/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "lock_file": "docs/comparison-systems/ext-temporal-graph/uv.lock",
+    "lock_sha256": "4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13",
+    "capability_sha256": "0ae56345aad00d45e5eae6fa6838d9a19c0dc1be4d647910938a29cd013ec3bb",
+    "vendor_benchmark_code": "getzep/zep-papers@4b7f26c, LoCoMo scripts"
+  },
+  {
+    "kind": "ext-markdown-kb",
+    "product": "Basic Memory",
+    "package": "basic-memory==0.23.2",
+    "image": null,
+    "lock_file": "docs/comparison-systems/ext-markdown-kb/uv.lock",
+    "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
+    "capability_sha256": "4e95f8ef9a892dc78778257ecf1664573414db807844e75378978735adaa5c37",
+    "vendor_benchmark_code": "basicmachines-co/basic-memory@c0bd87c, benchmarks/"
+  },
+  {
+    "kind": "ext-agent-runtime",
+    "product": "Letta Code",
+    "package": "@letta-ai/letta-code@0.34.4",
+    "image": "letta/letta:0.34.4@sha256:8ee7fb697e7f08b121a487b48315d45c64b195c12418264b091371c9e8ab3a5c (Letta Code 0.34.4, OCI label revision f898fda60932b34ddbcfd389ea414515b0a5d272 = letta-ai/letta-code tag v0.34.4; the retired Python server is not in this image)",
+    "lock_file": null,
+    "lock_sha256": null,
+    "capability_sha256": "d55c28c953bedbf9bc4b47a7f97943a9850ce5333b46260ffa429447c86ca72e",
+    "vendor_benchmark_code": "none for memory QA"
+  },
+  {
+    "kind": "ext-verbatim-session",
+    "product": "MemPalace (raw vector mode and hybrid mode without the LLM reranker)",
+    "package": "pinned when its bundle lands",
+    "image": null,
+    "lock_file": null,
+    "lock_sha256": null,
+    "capability_sha256": null,
+    "vendor_benchmark_code": "MemPalace/mempalace benchmarks/ (LongMemEval)"
+  }
+]
+```
+
 ## Four questions hidden inside the word “recall”
 
 | Measure | What a passing result means | A failure it can hide |
@@ -184,6 +281,14 @@ A causal explanation needs a controlled change. If two systems use different mod
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-06: Kind-to-product table and install bundles for the head-to-head scoreboard
+
+Adds "Systems in the head-to-head scoreboard": the kind ids the scoreboard and README use, mapped to products, pinned
+packages and vendor benchmark code, with a machine-readable pin table. The install bundles that had lived under
+`eval/systems/<product>/` on the open-source comparison branch now sit beside this page as
+`docs/comparison-systems/<kind>/`, so product names appear only here (the name guard, `eval/runner/name-guard.ts`,
+enforces it).
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

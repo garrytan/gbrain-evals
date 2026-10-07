@@ -24,7 +24,8 @@ export const PG_EMBED_DIMS = 1536;
 
 export type Embedder = (texts: string[]) => Promise<number[][]>;
 
-export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch = fetch): Embedder {
+/** `baseUrl` defaults to OPENAI_BASE_URL (a shootout cell's metering proxy) or the official endpoint. */
+export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch = fetch, baseUrl = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1'): Embedder {
   // Legacy cache: one JSON object. New entries are appended to a JSONL file beside it (base64 float32), so a
   // 50,000-document corpus neither rewrites a gigabyte of JSON per query nor exceeds the maximum string length.
   const linesPath = cachePath.replace(/\.json$/, '') + '.jsonl';
@@ -39,7 +40,7 @@ export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch 
   }
   const key = (t: string) => createHash('sha256').update(`${PG_EMBED_MODEL}:${PG_EMBED_DIMS}:${t}`).digest('hex');
   const fetchBatch = async (batch: string[]) => {
-    const res = await fetchImpl('https://api.openai.com/v1/embeddings', {
+    const res = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/embeddings`, {
       method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
       body: JSON.stringify({ model: PG_EMBED_MODEL, input: batch.map(t => t.slice(0, 24_000)), dimensions: PG_EMBED_DIMS }),
     });

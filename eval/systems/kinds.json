@@ -1,0 +1,19 @@
+{
+  "schema": "gbrain-evals/system-kinds/v1",
+  "note": "Public ids and descriptions for every memory system the comparison harness runs. Directory names, output ids, test names and published tables use these ids. The page that maps ids to products, versions and sources is docs/comparison-systems.md, and the install bundles live beside it in docs/comparison-systems/<id>/.",
+  "kinds": [
+    { "id": "gbrain-defaults", "description": "gbrain with its shipped defaults, installed and read the documented way", "bundle": "eval/systems/gbrain-defaults" },
+    { "id": "ext-extract-first", "description": "an extract-first memory server (an LLM extracts and updates facts on every write)", "bundle": "docs/comparison-systems/ext-extract-first" },
+    { "id": "ext-memory-bank", "description": "a memory-bank server with background extraction and reflection", "bundle": "docs/comparison-systems/ext-memory-bank" },
+    { "id": "ext-graph-pipeline", "description": "a knowledge-graph pipeline (an LLM builds a graph per document)", "bundle": "docs/comparison-systems/ext-graph-pipeline" },
+    { "id": "ext-temporal-graph", "description": "a temporal knowledge-graph library (bi-temporal edges, LLM extraction per episode)", "bundle": "docs/comparison-systems/ext-temporal-graph" },
+    { "id": "ext-markdown-kb", "description": "a Markdown-file knowledge base (local embedder, no LLM on write)", "bundle": "docs/comparison-systems/ext-markdown-kb" },
+    { "id": "ext-verbatim-session", "description": "a verbatim-session memory system (whole sessions, vector search, LLM rerank off)", "bundle": "docs/comparison-systems/ext-verbatim-session" },
+    { "id": "ext-agent-runtime", "description": "a self-editing agent memory runtime (the agent edits its own memory blocks and files)", "bundle": "docs/comparison-systems/ext-agent-runtime" },
+    { "id": "baseline-full-context", "description": "the whole history in the prompt, where it fits the reader's window", "bundle": null },
+    { "id": "baseline-recency", "description": "the most recent sessions that fit the token budget", "bundle": null },
+    { "id": "baseline-file-agent", "description": "an agent with list, grep and read tools over the same Markdown files", "bundle": null },
+    { "id": "baseline-hybrid", "description": "plain Postgres full-text plus pgvector search with reciprocal-rank fusion", "bundle": null },
+    { "id": "baseline-none", "description": "the question alone, no memory", "bundle": null }
+  ]
+}

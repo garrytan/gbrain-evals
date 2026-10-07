@@ -1,0 +1,50 @@
+# Basic Memory shim on an internal network. The only container with a route out is `proxy`, a TCP relay to the
+# metering proxy (PROXY_UPSTREAM, on the VM host by default). The shim holds a dummy key; the proxy injects the real one.
+# The recipe config makes no provider calls at all; the common config sends embeddings to OPENAI_BASE_URL.
+#
+#   docker compose -f docs/comparison-systems/ext-markdown-kb/docker-compose.yml up -d --build
+#   SHIM_CONFIG=common docker compose -f docs/comparison-systems/ext-markdown-kb/docker-compose.yml up -d
+# The harness reaches the shim at 127.0.0.1:${SHIM_HOST_PORT:-8701}.
+name: shootout-basic-memory
+
+services:
+  shim:
+    build:
+      context: ../../..
+      dockerfile: docs/comparison-systems/ext-markdown-kb/Dockerfile
+    image: shootout/basic-memory:0.23.2
+    environment:
+      SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
+      SHIM_IMAGE: ${SHIM_IMAGE:-}
+      OPENAI_API_KEY: sk-dummy-metering-proxy-injects-the-real-key
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-${PROXY_URL:-http://proxy:8787}/${PROXY_SLOT:-ext-markdown-kb}/openai/v1}
+    volumes:
+      - data:/data
+    networks: [sandbox]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,json,sys; sys.exit(0 if json.load(urllib.request.urlopen('http://127.0.0.1:8700/health'))['ok'] else 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  proxy:
+    image: alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    command: ["TCP-LISTEN:8787,fork,reuseaddr", "TCP:${PROXY_UPSTREAM:-host.docker.internal:8787}"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    networks: [sandbox, egress]
+
+  # Publishes the shim's port to the host without giving the shim itself a route out.
+  ingress:
+    image: alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    command: ["TCP-LISTEN:8700,fork,reuseaddr", "TCP:shim:8700"]
+    ports: ["127.0.0.1:${SHIM_HOST_PORT:-8701}:8700"]
+    networks: [sandbox, egress]
+
+networks:
+  sandbox:
+    internal: true
+  egress: {}
+
+volumes:
+  data: {}

@@ -1,0 +1,66 @@
+# Letta Code 0.34.4 (local backend) on a sealed network: the shim serves the capability record, and the App Server
+# (WebSockets, capability-token auth) is what a native-agent Cat 40 driver connects to. The container's only route
+# out is `egress`, a TCP relay to the metering proxy; `gateway` publishes the shim and App Server ports to the host.
+# The App Server token is written to ./run/token on first start.
+#
+# Metered run:  PROXY_HOSTPORT=host.docker.internal:8787 docker compose up -d --build
+# Keyless run:  PROXY_HOSTPORT=fake-provider:8787 docker compose --profile keyless up -d --build
+name: shootout-letta
+services:
+  letta:
+    build:
+      context: ../../..
+      dockerfile: docs/comparison-systems/ext-agent-runtime/Dockerfile
+    image: shootout-letta:dev
+    environment:
+      SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
+      OPENAI_BASE_URL: http://egress:8787${PROXY_OPENAI_PATH:-/letta/openai/v1}
+      OPENAI_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      ANTHROPIC_BASE_URL: http://egress:8787${PROXY_ANTHROPIC_PATH:-/letta/anthropic}
+      ANTHROPIC_API_KEY: dummy-key-the-proxy-injects-the-real-one
+    volumes:
+      - letta-home:/root/.letta
+      - ./run:/run/letta
+    mem_limit: ${SHIM_MEM_LIMIT:-4g}
+    networks: [sealed]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import json, urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8700/health', timeout=10))['ok']"]
+      interval: 5s
+      retries: 30
+
+  egress:
+    image: alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    command: TCP-LISTEN:8787,fork,reuseaddr TCP:${PROXY_HOSTPORT:-host.docker.internal:8787}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    networks: [sealed, outside]
+
+  gateway:
+    image: alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    command: TCP-LISTEN:8700,fork,reuseaddr TCP:letta:8700
+    ports: ["127.0.0.1:${SHIM_HOST_PORT:-8702}:8700"]
+    networks: [sealed, outside]
+
+  app-server-gateway:
+    image: alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    command: TCP-LISTEN:4500,fork,reuseaddr TCP:letta:4500
+    ports: ["127.0.0.1:${APP_SERVER_HOST_PORT:-4500}:4500"]
+    networks: [sealed, outside]
+
+  fake-provider:
+    profiles: [keyless]
+    image: python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
+    command: python /tests/fake_provider.py
+    environment:
+      FAKE_PROVIDER_LOG: /tests/out/fake_provider_requests.jsonl
+    volumes:
+      - ../ext-graph-pipeline/tests:/tests
+    ports: ["127.0.0.1:${FAKE_PROVIDER_HOST_PORT:-8789}:8787"]
+    networks: [outside]
+
+volumes:
+  letta-home:
+
+networks:
+  sealed:
+    internal: true
+  outside: {}
