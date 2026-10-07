@@ -1182,7 +1182,7 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
     return { provider, model, kind: 'chat', input: maxPrice.prompt, output: maxPrice.completion, inputTokens, maxOutputTokens };
   }
   const price = chatPrice(`${provider}:${model}`);
-  if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; cannot reserve its cost`);
+  if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; cannot reserve its cost. Look up the provider's current list price for ${model} (input, output and cache rates per million tokens) and register it in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts as '${provider}:${model}' with the date you checked, then rerun; never guess a rate`);
   // OpenAI caches automatically; Anthropic writes its cache only where a request sets cache_control.
   const cacheWritePremium = price.cache_write !== undefined && price.cache_write > price.input
     && (provider !== 'anthropic' || JSON.stringify(b).includes('"cache_control"'));

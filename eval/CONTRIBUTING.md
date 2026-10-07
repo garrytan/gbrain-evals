@@ -33,6 +33,10 @@ Submit a batch of at least 20 questions at `eval/external-authors/<handle>/queri
 
 ## Add a search adapter
 
+This section is for BrainBench's in-process retrieval comparison (`multi-adapter.ts`). To add a memory system to the
+head-to-head scoreboard, use [Add a memory system to the scoreboard](#add-a-memory-system-to-the-scoreboard) instead; that
+harness talks to systems over an HTTP shim protocol, not this interface.
+
 An adapter ingests pages once, then returns a ranked list for each question. The current contract lives in [runner/types.ts](runner/types.ts):
 
 ```typescript
@@ -59,6 +63,39 @@ BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter my-adapter --queries r
 ```
 
 Document the model, embedding dimensions, graph behavior, network use and any limits. An adapter name must describe the behavior that actually ran. A missing provider key must not silently turn a reranked comparison into ordinary hybrid search.
+
+## Add a memory system to the scoreboard
+
+The scoreboard runs every system behind a small HTTP service, its shim, inside the system's own pinned container image,
+with every provider call going through the cell's metering proxy. The harness speaks only the
+[shim protocol](systems/PROTOCOL.md), so a system's code never runs inside the harness process. The steps, with an
+example capability record, are in [docs/scoreboard.md](../docs/scoreboard.md#add-a-system). In short:
+
+1. Start from the shim template [systems/_shim/shim.py](systems/_shim/shim.py) and the reference fake system
+   [systems/_fake/fake.py](systems/_fake/fake.py) with its compose file. Keep only a dummy key in the container, point
+   every SDK at `OPENAI_BASE_URL` (and `ANTHROPIC_BASE_URL`, `VOYAGE_BASE_URL`), and turn off telemetry.
+2. Serve a complete capability record from `/capabilities`. `readiness` (for example `synchronous: ...` or
+   `queued: ...`) decides how ingest cost is split, and `retrieval_policies.<mode>.settings` is the only knob map the
+   harness sends.
+3. Pass the keyless conformance suite against the running shim:
+
+   ```sh
+   SHIM_URL=http://127.0.0.1:8700 bun test test/eval/systems-conformance.test.ts
+   ```
+
+4. Rerun on LoCoMo dev with the metering proxy in front of the shim:
+
+   ```sh
+   bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system http://127.0.0.1:8700 \
+     --context native --budget-tokens 8000 --qa reader --provider-proxy http://127.0.0.1:8787 --output eval/reports/scoreboard-dev/<kind>
+   ```
+
+5. Register a kind id in [systems/kinds.json](systems/kinds.json) and the product, version, image digest and lock hash in
+   the pin table of [docs/comparison-systems.md](../docs/comparison-systems.md). Product names appear only there and in
+   the install bundle under `docs/comparison-systems/<kind>/`; `bun eval/runner/name-guard.ts` fails anywhere else.
+
+`bun run eval:scoreboard fixture` runs the whole pipeline on the fake system for $0 and is the quickest check that a
+harness change did not break the wiring.
 
 ## Evaluate a gbrain change
 
@@ -99,6 +136,13 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-06: Add a memory system to the scoreboard
+
+A new "Add a memory system to the scoreboard" section gives the shim template, the capability record, the keyless
+conformance command and the LoCoMo dev rerun command, and links to [docs/scoreboard.md](../docs/scoreboard.md). "Add a
+search adapter" now says it covers BrainBench's in-process retrieval comparison only; it had been the only adapter guide,
+and its in-process interface is not how the scoreboard runs systems.
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

@@ -39,6 +39,7 @@ It searches the committed fictional corpus and writes a receipt under `eval/repo
 | Does a small decision model (Jev) beat gbrain's rules at triage, reranking or spotting contradictions? | `system-one-jev.ts` | `verify` checks the September 30 record offline; `run` replays a slot's matched pair against a gbrain checkout passed with `--gbrain`. |
 | Does gbrain help an agent finish company-knowledge tasks better than grep, a memory tool or Postgres? | `cat40-model-ladder.ts` | Paid agent loop over a 4,000-document fictional company; build gbrain slots with `--build-slots` first; `--scripted` runs the hermetic arms for $0. |
 | Do real agents (Claude Code, Codex) ask before spending or destroying data, and recover from gbrain's errors? | `cat41-agent-operator.ts` | Paid; pinned harnesses in Docker; `cat41/after-pass.sh <gbrain checkout> <commit>` runs a candidate, its gate and the Cat 40 instruction check. |
+| How does gbrain compare with other memory systems on the same conversations, budgets, readers and judges? | `scoreboard-cli.ts` (`bun run eval:scoreboard`) | `fixture` and `check` are $0 and run in CI; `doctor` before any lease; `run --local` for one public cell, Ubicloud cells through the repository runner; see [docs/scoreboard.md](../docs/scoreboard.md). |
 
 Paths in the table are relative to `eval/runner/`. A “Cat” number is simply a historical category identifier.
 
@@ -109,6 +110,12 @@ To reproduce an old result, match both the gbrain-evals revision and the gbrain 
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-06: Scoreboard row in the test table
+
+"Choose the test that answers your question" gained a row for the head-to-head scoreboard's front door,
+`scoreboard-cli.ts` (`bun run eval:scoreboard`): its $0 `fixture` and `check`, the `doctor` preflight, `run --local` and
+Ubicloud cells, with a link to [docs/scoreboard.md](../docs/scoreboard.md).
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

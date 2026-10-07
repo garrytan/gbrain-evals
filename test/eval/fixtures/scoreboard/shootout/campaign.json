@@ -1,0 +1,12 @@
+{
+  "kind": "oss-shootout-campaign",
+  "schema_version": 1,
+  "campaign_id": "shootout-hash-regression",
+  "cap_usd": 25,
+  "ledger": "eval/reports/shootout-hash-regression.sqlite",
+  "parameters": { "lme_s_slice": 100, "agent_cell": true },
+  "cells_from": ["cells-fake.json"],
+  "cells": [
+    { "id": "fake-locomo-common", "system": "fake", "benchmark": "locomo", "config": "common", "lease_usd": 2, "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT\"", "timeout_hours": 6 }
+  ]
+}
