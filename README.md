@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain master [`a865f8f`](https://github.com/garrytan/gbrain/tree/a865f8f8b7c95b9f8c30690702797bafcfef537a) (v0.60.104.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.38 (`VERSION`) |
+| This repository | gbrain-evals v0.10.39 (`VERSION`) |
 
 This repository installs gbrain master `a865f8f`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -242,6 +242,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-07: Version stamp for the fix wave 11 records
+
+gbrain-evals v0.10.39. The repository row names v0.10.39 (was v0.10.38). The release adds two records paired with gbrain fix wave 11, listed in the [docs index](docs/README.md): the relaxed HNSW scan order mirror and the D12 agent smoke. No result row on this page changes, because both measure an unmerged gbrain branch rather than the pin.
 
 ### 2026-10-07: Re-pin to gbrain `a865f8f`; N1-7 fixed
 
