@@ -63,7 +63,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { BudgetRun, initLedger, ledgerStatus } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
-import { refuse, ScoreboardError } from './scoreboard-errors.ts';
+import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 export const REPO_RUNNER = join(REPO_ROOT, 'scripts/ubicloud/ubi-runner.sh');
@@ -707,7 +707,7 @@ export function planWaves(m: CampaignManifest): Wave[] {
 function attemptRows(out: string): number {
   let n = 0;
   const walk = (dir: string) => {
-    for (const e of readdirSync(dir, { withFileTypes: true })) {
+    for (const e of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : 1)) {
       if (e.isDirectory()) { if (!['checkpoint', '.checkpoint-tmp', 'realization'].includes(e.name)) walk(join(dir, e.name)); }
       else if (e.name === 'attempts.ndjson') n += readFileSync(join(dir, e.name), 'utf8').split('\n').filter(Boolean).length;
     }
@@ -721,7 +721,7 @@ function writeCheckpoint(out: string, rows: number) {
   const tmp = join(out, '.checkpoint-tmp');
   rmSync(tmp, { recursive: true, force: true });
   mkdirSync(tmp, { recursive: true });
-  for (const e of readdirSync(out, { withFileTypes: true })) {
+  for (const e of readdirSync(out, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : 1)) {
     if (['checkpoint', '.checkpoint-tmp', 'realization'].includes(e.name) || /^lease\.sqlite/.test(e.name)) continue;
     cpSync(join(out, e.name), join(tmp, e.name), { recursive: true });
   }
@@ -739,7 +739,7 @@ async function takeSnapshot(payload: RemotePayload, out: string, env: Record<str
   const p = Bun.spawn(['bash', '-c', payload.snapshot_command!], { cwd: REPO_ROOT, env: { ...env, SHOOTOUT_SNAPSHOT_DIR: snap }, stdout: 'inherit', stderr: 'inherit' });
   const code = await p.exited;
   const files: RealizationFile[] = [];
-  const walk = (d: string) => { for (const e of readdirSync(d, { withFileTypes: true })) { const abs = join(d, e.name); if (e.isDirectory()) walk(abs); else files.push({ path: relative(snap, abs), sha256: sha256File(abs), bytes: statSync(abs).size }); } };
+  const walk = (d: string) => { for (const e of readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : 1)) { const abs = join(d, e.name); if (e.isDirectory()) walk(abs); else files.push({ path: relative(snap, abs), sha256: sha256File(abs), bytes: statSync(abs).size }); } };
   walk(snap);
   files.sort((a, b) => a.path < b.path ? -1 : 1);
   const id = createHash('sha256').update(JSON.stringify({ cell: payload.cell ?? null, lease_id: payload.lease_id, campaign_sha256: payload.campaign_sha256 ?? null, files })).digest('hex').slice(0, 16);
@@ -778,7 +778,7 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
     if (payload.restore) {
       const dir = resolve(REPO_ROOT, payload.restore.dir);
-      if (existsSync(join(dir, 'checkpoint'))) for (const e of readdirSync(join(dir, 'checkpoint'))) if (e !== 'checkpoint.json') cpSync(join(dir, 'checkpoint', e), join(out, e), { recursive: true });
+      if (existsSync(join(dir, 'checkpoint'))) for (const e of readdirSync(join(dir, 'checkpoint')).sort()) if (e !== 'checkpoint.json') cpSync(join(dir, 'checkpoint', e), join(out, e), { recursive: true });
       env.SHOOTOUT_RESTORE_DIR = join(dir, 'realization', 'snapshot');
       env.SHOOTOUT_RESTORED_REALIZATION = payload.restore.realization_id;
       if (payload.restore.restore_command) {
@@ -894,7 +894,7 @@ if (import.meta.main) {
     else throw new Error(`unknown command ${cmd}`);
   } catch (e) {
     if (e instanceof ScoreboardError) {
-      const { renderMessage, exitCodeOf } = await import('./scoreboard-errors.ts');
+      const { renderMessage, exitCodeOf } = await import('./q1/scoreboard-errors.ts');
       process.stderr.write((argv.includes('--json') ? JSON.stringify(e.op, null, 2) : renderMessage(e.op)) + '\n');
       process.exit(exitCodeOf(e.op));
     }

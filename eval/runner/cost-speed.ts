@@ -42,7 +42,7 @@ import { join, resolve } from 'node:path';
 import { percentile } from './metrics.ts';
 import { priceRequest } from './budget-ledger.ts';
 import type { UsageLine } from './metering-proxy.ts';
-import { refuse, ScoreboardError, renderMessage, exitCodeOf } from './scoreboard-errors.ts';
+import { refuse, ScoreboardError, renderMessage, exitCodeOf } from './q1/scoreboard-errors.ts';
 
 export const WORKLOADS = {
   personal: { messages: 2_000, questions: 300 },

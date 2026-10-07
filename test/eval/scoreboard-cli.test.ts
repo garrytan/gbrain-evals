@@ -14,7 +14,7 @@ import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { doctor, plan, priceProbe, runCells } from '../../eval/runner/scoreboard-cli.ts';
 import { answerId } from '../../eval/runner/scoreboard.ts';
-import { exitCodeOf, ScoreboardError } from '../../eval/runner/scoreboard-errors.ts';
+import { exitCodeOf, ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import type { LaunchContext } from '../../eval/runner/shootout-cell.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');

@@ -28,7 +28,7 @@
  *   dispute                              how a vendor disputes a row
  *
  * Every refusal is an operator message (code, message, why, fix.next with the
- * exact argv, a read-only verify command; eval/runner/scoreboard-errors.ts),
+ * exact argv, a read-only verify command; eval/runner/q1/scoreboard-errors.ts),
  * printed to stderr, as JSON with --json. Exit 0 success, 2 refusal, 3 stop and
  * ask the user, 4 partial (some cells ran; the cap or a block stopped the rest).
  * The operator is usually an AI agent: every message says what to do next.
@@ -47,7 +47,7 @@ import { BudgetRun, closeLedgers, priceRequest } from './budget-ledger.ts';
 import { AdmissionController, DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from './metering-proxy.ts';
 import { Campaign, DEFAULT_ROUTE_CLASSES, isQ1, loadCampaign, planWaves, resolveRunner, ownerTag, ubiRunner, vcpuOf, type LeaseState, type Runner } from './shootout-cell.ts';
 import { costSpeed, loadCell, renderCostSpeed, renderProgress } from './cost-speed.ts';
-import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
+import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './q1/scoreboard-errors.ts';
 import { DATASET_ROOT, filesFor, sha256 } from './memory-qa/corpus.ts';
 import { answerId, type AnswerRecord, type JudgmentRecord } from './scoreboard.ts';
 import type { Outcome } from './memory-qa/outcomes.ts';

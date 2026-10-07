@@ -9,7 +9,7 @@
  * the spend cap stopped the run). The operator is usually an AI agent, so every
  * message says what to do next.
  */
-import { exitCodeFor, renderOperatorMessage, type DecideCode, type OperatorMessage } from './decisions/errors.ts';
+import { exitCodeFor, renderOperatorMessage, type DecideCode, type OperatorMessage } from '../decisions/errors.ts';
 
 export type ScoreboardCode =
   | 'USAGE'
