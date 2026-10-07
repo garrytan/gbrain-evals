@@ -2,6 +2,18 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.38] - 2026-10-07
+
+### The budget-ledger scale test measures the ledger, not the runner's disk
+
+`test/eval/budget-ledger-sqlite.test.ts` "reserve+settle averages under 5 ms on a 200k-entry ledger" turned main's CI red (run 37685939608: a 1k-entry mean of 15.3 ms against a 9.0 ms median, and a 200k-entry mean of 5.5 ms against a 0.6 ms median). Each reserve and each settle is a durable `synchronous = FULL` commit, so every timed pair waits for two fsyncs of the WAL, plus a fsync of the database file at each automatic checkpoint. On GitHub's runner, with the other test shards writing to the same disk, a few of those fsyncs take hundreds of milliseconds. They set the mean, and they have nothing to do with how many entries the ledger holds. In the failing run, the 200k-entry ledger was faster per pair than the 1k-entry one. The test now keeps its scale ledger on tmpfs (`/dev/shm`, where fsync does not wait on a disk) and checkpoints the seeding writes before timing. It runs the same ledger code, and the 5 ms mean bar and the no-growth median check are unchanged.
+
+Evidence, with a stall-injection shim (`LD_PRELOAD` over `fsync` and `fdatasync`, stalling only files on a disk):
+- **The old test fails on stalls alone.** With one in fifty disk fsyncs stalling 200 ms, it failed 3 of 3 runs (200k mean 8.4 to 8.5 ms, median 0.33 to 0.38 ms). With each checkpoint's database-file fsync taking 500 ms, it also failed 3 of 3 (mean 5.4 ms, median 0.3 ms): the CI signature.
+- **The new test ignores stalls.** It passed 3 of 3 under each injection, and 20 of 20 with both injected at once (200k mean about 0.1 ms).
+- **The new test still catches the regressions it guards against.** Making settle find its entry without the id index failed it 3 of 3 (200k mean 56.6 to 57.8 ms). Making reserve sum the run's entries failed it 3 of 3 (33.8 to 36.6 ms).
+- **It holds under load.** The whole test file passed 25 of 25 runs with four CPU-bound processes and two fsync-heavy disk writers running beside it.
+
 ## [0.10.37] - 2026-10-07
 
 ### The October follow-up round: re-pin to gbrain v0.60.104.0, privacy gates, current-model reruns and LongMemEval at the current pin
