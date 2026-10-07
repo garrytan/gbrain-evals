@@ -4584,6 +4584,24 @@
         "/pooled_four_models/decision": "full"
       },
       "note": "Custodian aggregate of P8 section 7 on the sealed Cat 40 world (build 6c958d6e2); per-task rows stay in custody."
+    },
+    {
+      "claim_id": "fence-repair-tier3-2026-10-06",
+      "readme_anchor": "docs/benchmarks/2026-10-06-fence-repair-tier3.md: default claude-opus-4-7 195/198 gate-pass and 8/198 false accepts (fails the 1% bar); gpt-6.1-sol 198/198 and 1/198; claude-fable-5-1 191/198 and 0/198",
+      "artifact_path": "docs/benchmarks/2026-10-06-fence-repair-tier3/verdict.json",
+      "artifact_sha256": "cda8d016e9cc1facfe6f895dc4ff49ef3529c6db4dccbe774ed657be5f24cad4",
+      "expected": {
+        "/models/anthropic:claude-opus-4-7/repaired": 195,
+        "/models/anthropic:claude-opus-4-7/false_accepts": 8,
+        "/models/openai:gpt-6.1-sol/repaired": 198,
+        "/models/openai:gpt-6.1-sol/false_accepts": 1,
+        "/models/anthropic:claude-fable-5-1/false_accepts": 0,
+        "/verdict/default_meets_rule": false,
+        "/verdict/recommended_default_by_rule": "openai:gpt-6.1-sol"
+      },
+      "golden_test": "test/eval/fence-repair-tier3-recount.test.ts: per-model counts recounted from the raw per-fixture rows",
+      "status": "covered",
+      "note": "1,170 fixture runs (5 models x 3 runs x 78 synthetic fences) through gbrain's production Tier 3 path at 171a7e24 (branch capy/6188-t4-eval), preregistered at 27d8fe5. $9.75."
     }
   ]
 }

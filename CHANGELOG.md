@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.36] - 2026-10-06
+
+### Tier 3 fence repair across five models (gbrain #6188, T4)
+
+gbrain repairs malformed facts and takes tables in tiers; Tier 3 sends the rows deterministic rules cannot place to the configured chat model and writes the answer only if it passes seven validation gates. [The report](docs/benchmarks/2026-10-06-fence-repair-tier3.md), [preregistered](docs/benchmarks/2026-10-06-fence-repair-tier3-preregistration.md) before any scored run, ran 78 synthetic fences (66 repairable, 9 adversarial, 3 gate-limited) through gbrain's production Tier 3 path at `171a7e24` (branch `capy/6188-t4-eval`), three runs per model. Gate-pass rates are 96.5% to 100%. The default `claude-opus-4-7` fails the 1% false-accept bar: 8 of 198 repairs passed the gates with a source note in the context column (4.0%). `gpt-6.1-sol` (198/198, 1 false accept, $0.0023 per repair) and `claude-fable-5-1` (191/198, 0, $0.0174) meet the rule; the rule recommends `gpt-6.1-sol`, and Fable 5.1 is the Anthropic model that meets it. On six ambiguous fences that should stay held, `gpt-6.1-sol` wrote a guess in 11 of 18 runs; Opus 5.5 and Fable 5.1 held them by running out of output tokens rather than by declining. The report proposes a deterministic Tier 1 rule for stray empty cells (it reproduces 12 of the 13 repairable extra-cell rows and would remove most measured wrong writes), a layout fix for headerless typed rows, a reasoning allowance in the output budget, and a way for the prompt to decline. Raw per-fixture rows, the scorer summary and `verdict.json` are committed, with a keyless recount test and a receipts-manifest entry. $9.80 in all.
+
 ## [0.10.35] - 2026-10-06
 
 ### P2 held-out records, the P4 core-gate remainder and P6's LongMemEval-M confirmation

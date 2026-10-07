@@ -1,0 +1,289 @@
+{
+  "experiment": "Tier 3 fence repair (gbrain #6188, taste decision T4)",
+  "measured": "2026-10-06 (US Pacific; run timestamps are UTC 2026-10-07)",
+  "preregistration": "docs/benchmarks/2026-10-06-fence-repair-tier3-preregistration.md (commit 27d8fe5)",
+  "gbrain_commit": "171a7e24663640987f8c1e773202aa296d196a89",
+  "gbrain_branch": "capy/6188-t4-eval",
+  "fixtures_sha256": "769f7f04cda52128144383a95b1940228b684b80ed2743b81e7db05784799896",
+  "prompt_version": 1,
+  "system_prompt_sha256": "de1795ee19df61acb36574a1adb09bd1b9a235371deeeac852ed4b38570b5545",
+  "decision_rule": {
+    "min_gate_pass": 0.8,
+    "max_false_accept": 0.01
+  },
+  "models": {
+    "anthropic:claude-opus-4-7": {
+      "runs": 3,
+      "repairable_runs": 198,
+      "repaired": 195,
+      "gate_pass": 0.9848,
+      "gate_pass_wilson95": [
+        0.9564,
+        0.9948
+      ],
+      "false_accepts": 8,
+      "false_accept": 0.0404,
+      "false_accept_wilson95": [
+        0.0206,
+        0.0777
+      ],
+      "false_accept_fixtures": {
+        "f-sg-01": 2,
+        "f-ex-06": 3,
+        "f-mix-01": 3
+      },
+      "byte_identical_repairs": 117,
+      "repairable_held": {
+        "f-nh-03:gate_f": 3
+      },
+      "adversarial_held": 23,
+      "adversarial_runs": 27,
+      "ambiguous_held": 14,
+      "ambiguous_runs": 18,
+      "ambiguous_held_by": {
+        "gate_f": 14
+      },
+      "unrecoverable_held": 9,
+      "unrecoverable_runs": 9,
+      "ambiguous_accepted": {
+        "f-adv-02": 3,
+        "f-adv-01": 1
+      },
+      "gate_limited_accepted": {
+        "f-gl-02": 2
+      },
+      "usd_total": 1.9297,
+      "usd_per_repair": 0.0075,
+      "usd_per_fixture_run": 0.00825,
+      "usd_per_repair_if_unregistered": 0.00745,
+      "calls": 275,
+      "input_tokens": 207432,
+      "output_tokens": 35183,
+      "output_budget_stops": 0,
+      "latency_p50_ms": 1943,
+      "latency_p95_ms": 5028,
+      "meets_rule": false
+    },
+    "anthropic:claude-opus-5-5": {
+      "runs": 3,
+      "repairable_runs": 198,
+      "repaired": 195,
+      "gate_pass": 0.9848,
+      "gate_pass_wilson95": [
+        0.9564,
+        0.9948
+      ],
+      "false_accepts": 3,
+      "false_accept": 0.0152,
+      "false_accept_wilson95": [
+        0.0052,
+        0.0436
+      ],
+      "false_accept_fixtures": {
+        "f-sg-03": 3
+      },
+      "byte_identical_repairs": 165,
+      "repairable_held": {
+        "f-nh-03:llm_truncated": 3
+      },
+      "adversarial_held": 27,
+      "adversarial_runs": 27,
+      "ambiguous_held": 18,
+      "ambiguous_runs": 18,
+      "ambiguous_held_by": {
+        "llm_empty": 10,
+        "llm_truncated": 6,
+        "gate_f": 2
+      },
+      "unrecoverable_held": 9,
+      "unrecoverable_runs": 9,
+      "ambiguous_accepted": {},
+      "gate_limited_accepted": {
+        "f-gl-02": 2
+      },
+      "usd_total": 1.9934,
+      "usd_per_repair": 0.00709,
+      "usd_per_fixture_run": 0.00852,
+      "usd_per_repair_if_unregistered": 0.00704,
+      "calls": 260,
+      "input_tokens": 192185,
+      "output_tokens": 60608,
+      "output_budget_stops": 24,
+      "latency_p50_ms": 3825,
+      "latency_p95_ms": 10939,
+      "meets_rule": false
+    },
+    "anthropic:claude-sonnet-5-5": {
+      "runs": 3,
+      "repairable_runs": 198,
+      "repaired": 195,
+      "gate_pass": 0.9848,
+      "gate_pass_wilson95": [
+        0.9564,
+        0.9948
+      ],
+      "false_accepts": 10,
+      "false_accept": 0.0505,
+      "false_accept_wilson95": [
+        0.0277,
+        0.0905
+      ],
+      "false_accept_fixtures": {
+        "f-sg-03": 2,
+        "f-ex-06": 3,
+        "f-mix-01": 3,
+        "f-ex-03": 2
+      },
+      "byte_identical_repairs": 77,
+      "repairable_held": {
+        "f-nh-03:gate_f": 3
+      },
+      "adversarial_held": 24,
+      "adversarial_runs": 27,
+      "ambiguous_held": 15,
+      "ambiguous_runs": 18,
+      "ambiguous_held_by": {
+        "gate_f": 15
+      },
+      "unrecoverable_held": 9,
+      "unrecoverable_runs": 9,
+      "ambiguous_accepted": {
+        "f-adv-03": 3
+      },
+      "gate_limited_accepted": {
+        "f-gl-02": 1
+      },
+      "usd_total": 0.7687,
+      "usd_per_repair": 0.00292,
+      "usd_per_fixture_run": 0.00329,
+      "usd_per_repair_if_unregistered": 0.00288,
+      "calls": 276,
+      "input_tokens": 206752,
+      "output_tokens": 34250,
+      "output_budget_stops": 0,
+      "latency_p50_ms": 1696,
+      "latency_p95_ms": 3724,
+      "meets_rule": false
+    },
+    "openai:gpt-6.1-sol": {
+      "runs": 3,
+      "repairable_runs": 198,
+      "repaired": 198,
+      "gate_pass": 1,
+      "gate_pass_wilson95": [
+        0.981,
+        1
+      ],
+      "false_accepts": 1,
+      "false_accept": 0.0051,
+      "false_accept_wilson95": [
+        0.0009,
+        0.028
+      ],
+      "false_accept_fixtures": {
+        "f-sg-03": 1
+      },
+      "byte_identical_repairs": 115,
+      "repairable_held": {},
+      "adversarial_held": 16,
+      "adversarial_runs": 27,
+      "ambiguous_held": 7,
+      "ambiguous_runs": 18,
+      "ambiguous_held_by": {
+        "llm_empty": 3,
+        "llm_truncated": 3,
+        "gate_f": 1
+      },
+      "unrecoverable_held": 9,
+      "unrecoverable_runs": 9,
+      "ambiguous_accepted": {
+        "f-adv-02": 2,
+        "f-adv-03": 3,
+        "f-adv-04": 2,
+        "f-adv-05": 3,
+        "f-adv-01": 1
+      },
+      "gate_limited_accepted": {
+        "f-gl-02": 3
+      },
+      "usd_total": 0.683,
+      "usd_per_repair": 0.00233,
+      "usd_per_fixture_run": 0.00292,
+      "usd_per_repair_if_unregistered": 0.0114,
+      "calls": 260,
+      "input_tokens": 136448,
+      "output_tokens": 39769,
+      "output_budget_stops": 6,
+      "latency_p50_ms": 3304,
+      "latency_p95_ms": 11997,
+      "meets_rule": true
+    },
+    "anthropic:claude-fable-5-1": {
+      "runs": 3,
+      "repairable_runs": 198,
+      "repaired": 191,
+      "gate_pass": 0.9646,
+      "gate_pass_wilson95": [
+        0.9288,
+        0.9828
+      ],
+      "false_accepts": 0,
+      "false_accept": 0,
+      "false_accept_wilson95": [
+        0,
+        0.019
+      ],
+      "false_accept_fixtures": {},
+      "byte_identical_repairs": 143,
+      "repairable_held": {
+        "f-nh-03:llm_empty": 2,
+        "f-ex-05:llm_truncated": 1,
+        "f-mix-01:llm_truncated": 2,
+        "f-sg-03:llm_empty": 1,
+        "f-nh-03:llm_truncated": 1
+      },
+      "adversarial_held": 27,
+      "adversarial_runs": 27,
+      "ambiguous_held": 18,
+      "ambiguous_runs": 18,
+      "ambiguous_held_by": {
+        "llm_empty": 14,
+        "gate_f": 3,
+        "llm_truncated": 1
+      },
+      "unrecoverable_held": 9,
+      "unrecoverable_runs": 9,
+      "ambiguous_accepted": {},
+      "gate_limited_accepted": {
+        "f-gl-02": 1
+      },
+      "usd_total": 4.3708,
+      "usd_per_repair": 0.0174,
+      "usd_per_fixture_run": 0.01868,
+      "usd_per_repair_if_unregistered": 0.01735,
+      "calls": 241,
+      "input_tokens": 174710,
+      "output_tokens": 52236,
+      "output_budget_stops": 25,
+      "latency_p50_ms": 5727.5,
+      "latency_p95_ms": 11638,
+      "meets_rule": true
+    }
+  },
+  "verdict": {
+    "default_model": "anthropic:claude-opus-4-7",
+    "default_meets_rule": false,
+    "reason": "false-accept 8/198 (4.0%) exceeds 1%; gate-pass 195/198 (98.5%) passes",
+    "models_meeting_rule": [
+      "openai:gpt-6.1-sol",
+      "anthropic:claude-fable-5-1"
+    ],
+    "recommended_default_by_rule": "openai:gpt-6.1-sol",
+    "note": "Model defaults are key-aware: an install with only an Anthropic key cannot use gpt-6.1-sol; the Anthropic model meeting the rule is claude-fable-5-1. Adversarial fixtures do not enter the rule; gpt-6.1-sol accepted 11 of 18 ambiguous runs."
+  },
+  "spend_usd": {
+    "scored_runs": 9.7456,
+    "setup_run": 0.0106,
+    "gateway_reachability_calls_approx": 0.04
+  }
+}
