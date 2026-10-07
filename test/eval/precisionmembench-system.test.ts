@@ -347,8 +347,8 @@ describe('Phase 5 cells (amendment A4, manifests/cells/pmb.json)', () => {
     expect(common).toBeLessThanOrEqual(10);
   });
 
-  test('A4 adds the cells to the campaign under the hash the preregistration records', () => {
+  test('A4 adds the cells to the campaign; the campaign carries the hash the preregistration records after A7', () => {
     expect(campaign().manifest.cells_from).toContain('cells/pmb.json');
-    expect(campaign().sha256).toBe('bd60fb49c2f46a520b772b18fa84ca8a8cfb769526b3c33ff8c2604ef4662744');
+    expect(campaign().sha256).toBe('dc73da2341d238df4a567fc8c22539986d1a73ee6604fb59fbbd2cd8287ea69f');
   });
 });

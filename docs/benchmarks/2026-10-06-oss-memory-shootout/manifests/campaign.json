@@ -28,7 +28,8 @@
     "cells/full-context-control.json",
     "cells/no-memory-control.json",
     "cells/plain-hybrid-control.json",
-    "cells/pmb.json"
+    "cells/pmb.json",
+    "cells/sealed.json"
   ],
   "cells": []
 }

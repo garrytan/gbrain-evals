@@ -1,5 +1,5 @@
 /**
- * Phase 7 custodian sealed batch (docs/benchmarks/2026-10-06-oss-memory-shootout/phase7-cells.draft.json), keyless:
+ * Phase 7 custodian sealed batch (docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/cells/sealed.json, amendment A5), keyless:
  * the draft cells load in the cell schema and run memory-qa on the sealed splits under the sealed profile; the BEAM
  * selection leaves out the P4 core gate's reserved questions; and two real cell commands (a vendor shim cell against
  * the fake shim, and gbrain-shootout at the pin with hash vectors) run end to end through `runRemote` in sealed mode,
@@ -21,7 +21,7 @@ import { FakeMemorySystem, serveProtocol } from '../../eval/runner/systems/fake.
 import { closeLedgers } from '../../eval/runner/budget-ledger.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
-const DRAFT = join(ROOT, 'docs/benchmarks/2026-10-06-oss-memory-shootout/phase7-cells.draft.json');
+const DRAFT = join(ROOT, 'docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/cells/sealed.json');
 const MANIFESTS = join(ROOT, 'docs/benchmarks/2026-10-06-oss-memory-shootout/manifests');
 const tmp = mkdtempSync(join(tmpdir(), 'sealed-cells-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
@@ -33,7 +33,7 @@ const cells = (): CellSpec[] => {
   return loadCampaign(join(tmp, 'campaign.json')).manifest.cells;
 };
 
-describe('Phase 7 draft cells', () => {
+describe('Phase 7 cells (amendment A5)', () => {
   test('one sealed cell per system and benchmark, each running memory-qa on the sealed split under the sealed profile', () => {
     const all = cells();
     expect(all.map(c => c.id).sort()).toEqual(['basic-memory', 'cognee', 'gbrain-shootout', 'gbrain-shootout-master', 'graphiti', 'hindsight', 'mem0']
@@ -64,11 +64,12 @@ describe('Phase 7 draft cells', () => {
     expect(cells().filter(c => c.benchmark === 'locomo').every(c => !c.command.includes('--categories'))).toBe(true);
   });
 
-  test('every lease names its basis, and the draft sits outside the frozen manifests directory', () => {
-    const draft = JSON.parse(readFileSync(DRAFT, 'utf8')) as { notes: string; cells: Array<{ lease_basis: string; lease_usd: number }> };
-    expect(draft.cells.every(c => c.lease_basis.startsWith('1.5 x estimate'))).toBe(true);
-    expect(draft.notes).toContain(`leases $${draft.cells.reduce((s, c) => s + c.lease_usd, 0)}`);
-    expect(DRAFT.startsWith(MANIFESTS)).toBe(false);
+  test('every lease names its basis; A5 adds the cells to the campaign; every vendor cell waits up to four hours for /finish', () => {
+    const file = JSON.parse(readFileSync(DRAFT, 'utf8')) as { cells: Array<{ lease_basis: string; lease_usd: number; command: string }> };
+    expect(file.cells.every(c => c.lease_basis.startsWith('1.5 x estimate'))).toBe(true);
+    expect(file.cells.reduce((s, c) => s + c.lease_usd, 0)).toBe(299);
+    expect(file.cells.filter(c => c.command.includes('http://127.0.0.1:8700')).every(c => c.command.includes('--finish-timeout-s 14400'))).toBe(true);
+    expect(JSON.parse(readFileSync(join(MANIFESTS, 'campaign.json'), 'utf8')).cells_from).toContain('cells/sealed.json');
   });
 });
 

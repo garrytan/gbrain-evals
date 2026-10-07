@@ -39,8 +39,8 @@ describe('Phase 4 draft manifests', () => {
   });
   test('gbrain runs at the pin and at frozen master; no lease is reserved before the master SHA is filled', () => {
     const master = manifest.cells.filter(c => c.system === 'gbrain-shootout-master');
-    expect(master.map(c => c.id).sort()).toEqual(['gbrain-shootout-master-common-beam-100k', 'gbrain-shootout-master-common-lme-s', 'gbrain-shootout-master-common-locomo-r1', 'gbrain-shootout-master-common-locomo-r2', 'gbrain-shootout-master-common-pmb',
-      'gbrain-shootout-master-recipe-beam-100k', 'gbrain-shootout-master-recipe-locomo-r1', 'gbrain-shootout-master-recipe-locomo-r2']);
+    expect(master.map(c => c.id).sort()).toEqual([
+      'gbrain-shootout-master-common-beam-100k', 'gbrain-shootout-master-common-beam-100k-sealed', 'gbrain-shootout-master-common-lme-s', 'gbrain-shootout-master-common-locomo-r1', 'gbrain-shootout-master-common-locomo-r2', 'gbrain-shootout-master-common-locomo-sealed', 'gbrain-shootout-master-common-pmb', 'gbrain-shootout-master-recipe-beam-100k', 'gbrain-shootout-master-recipe-locomo-r1', 'gbrain-shootout-master-recipe-locomo-r2']);
     const sha = String(manifest.parameters!.gbrain_master_sha);
     expect(sha).toMatch(/^[0-9a-f]{40}$/);
     expect(master.every(c => c.command.includes(`--gbrain "$HOME/gbrain-master@${sha}"`) && c.setup_command!.includes(`checkout -q ${sha}`))).toBe(true);

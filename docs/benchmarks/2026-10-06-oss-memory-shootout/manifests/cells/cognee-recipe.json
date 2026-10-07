@@ -22,8 +22,8 @@
     {
       "id": "cognee-recipe-locomo-r2",
       "benchmark": "locomo",
-      "lease_usd": 2,
-      "lease_basis": "1.5 x eval/systems/cognee/PILOT.md ingest only ($1.15)",
+      "lease_usd": 8,
+      "lease_basis": "amendment A7: the LoCoMo r1 lease, because the metering proxy reserves each chat call at its output bound ($0.053) and Cognee ingests in parallel; the lease settles to measured spend",
       "command": "bash eval/systems/bootstrap.sh up --system cognee --config recipe --timeout 1800 && { bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/retrieval-only.json --ingest-replicate 2 --output \"$SHOOTOUT_OUT/mqa\"; }; s=$?; bash eval/systems/bootstrap.sh down --system cognee; exit $s",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system cognee --datasets locomo,beam-100k,lme-s",
       "vm": {

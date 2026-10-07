@@ -81,6 +81,9 @@ arms file a cell names.
 - Campaign hash after amendment A3: **`c5901391c1516861d666ebdc93e3ca336a1733d354ac6af38d228236eb461ad3`** (64 cells,
   leases $1,140). The ten LoCoMo dev r1 cells that settled before A3 ran under the frozen hash; A3 does not change
   their commands.
+- Campaign hash after amendments A5 and A7: **`dc73da2341d238df4a567fc8c22539986d1a73ee6604fb59fbbd2cd8287ea69f`**
+  (86 cells, leases $1,467.50 planned; leases are reserved one cell at a time against the $1,450 cap and settle to
+  measured spend). A5 adds the 14 sealed cells; A7 changes three Phase 4 cells to rerun them.
 - Campaign hash after amendment A4: **`bd60fb49c2f46a520b772b18fa84ca8a8cfb769526b3c33ff8c2604ef4662744`** (72 cells,
   leases $1,156.50). A4 adds the eight PrecisionMemBench cells and changes no Phase 4 cell.
 
@@ -366,9 +369,17 @@ of 34 structural and 43 search-only cases, and the pairing with Holm in which a 
 leaves the family) were accepted by Garry on 2026-10-06 and are stated under S3. Leases sum to $16.50, about $9.27
 estimated, $7.42 of it Graphiti's recipe. Recorded before any Phase 5 lease.
 
-**A5 (2026-10-06), custodian sealed batch (Phase 7).** Approved by Garry on 2026-10-06. Draft: the cells are in
-`docs/benchmarks/2026-10-06-oss-memory-shootout/phase7-cells.draft.json` and join the campaign only with this amendment.
-Campaign hash after A5: (filled when the cells join the campaign).
+**A5 (2026-10-06, completed 2026-10-07), custodian sealed batch (Phase 7).** Approved by Garry on 2026-10-06. The 14
+cells are in `manifests/cells/sealed.json` and join the campaign with this amendment; the campaign hash after A5 and A7
+is recorded under "Cells and the manifest".
+
+- *Arms.* Garry approved all four arms on 2026-10-07, above the plan's $85 line, within the $1,450 cap. Each cell runs
+  the Phase 4 four-arms file of its benchmark with the main reader; leases sum to $299 (about $196 estimated).
+- *Defaults for the rest, set by the campaign owner on 2026-10-07.* No frontier-reader replay (the contexts never leave
+  custody); no second ingest; sealed aggregates are descriptive only (LoCoMo sealed has 7 clusters, below the
+  10-cluster minimum, and per-question rows never leave custody); a row is identified by its cell id; custody is
+  destroyed with the VM; every vendor cell waits up to four hours for `/finish` (`--finish-timeout-s 14400`), as
+  amendment A3 gives the Mem0 and LongMemEval-S cells.
 
 - *Data.* LoCoMo sealed: conv-26, conv-30, conv-41, conv-42, conv-43, conv-49 and conv-50 (1,399 questions). BEAM-100K
   sealed: the 14 sealed conversations of `eval/decisions/splits/beam-100k.json`, 224 questions. The 56
@@ -396,6 +407,28 @@ Campaign hash after A5: (filled when the cells join the campaign).
   vocabulary values), the custody access log (decision id, purpose, operator, host and time) and the lease summary.
 - *Order.* The batch runs last, after Phases 4 to 6, as one frozen batch.
 
+**A7 (2026-10-07), harness-failure reruns.** Four Phase 4 cells failed for harness reasons and rerun under new leases;
+each failed attempt stays in the record (`results/README.md`). Nothing about measurement, scoring or arms changes.
+
+- `cognee-common-locomo-r2` and `cognee-recipe-locomo-r2`: the $2 leases were smaller than the metering proxy's
+  in-flight reservations while Cognee ingests in parallel (each chat call is reserved at its 32,768-token output bound,
+  $0.053), so 19 and 16 calls were refused and every row was `budget_not_run`. Their leases become $8, the LoCoMo r1
+  lease; a lease settles to measured spend.
+- `basic-memory-common-beam-100k`: one of six conversations hit the runner's 600-second `/finish` default while Basic
+  Memory reindexed. The cell gains `--finish-timeout-s 14400`, the waiting cap A3 gives the other long ingests. Read
+  strictly, section "Outcomes" calls a finish timeout a product failure; the campaign owner treats it as the harness
+  wait cap, as in A3, and both attempts are published.
+- `hindsight-common-lme-s`: after each shard's first haystack, every Hindsight bank create returned HTTP 500 ("could
+  not resize shared memory segment ... No space left on device"). Hindsight builds each new bank's HNSW indexes on its
+  shared `memory_units` table inside the create transaction; once that table passes Postgres's
+  `min_parallel_table_scan_size`, the build runs in parallel and needs a 64 MB shared-memory segment, which Docker's
+  default 64 MB `/dev/shm` for the database container cannot hold. A keyless repro reproduced it at one shard and at
+  eight. The fix is `shm_size: 1g` on the database service in `eval/systems/hindsight/docker-compose.yml` (sha256
+  `4b66e26a…3640a2b` before, `83a36887…b93a812ee` after), which changes no Hindsight setting or code path; with it the
+  eight-shard repro scored every row. The cell command is unchanged.
+
+Recorded on 2026-10-07 before any rerun lease.
+
 ## Changelog
 
 ### 2026-10-06: amendment A5 drafted
@@ -404,6 +437,12 @@ Drafted A5, the custodian sealed batch (Phase 7): LoCoMo sealed and BEAM-100K se
 reserved questions, the five vendor common rows, gbrain-shootout common at the pin as the blind row and at frozen master
 with its fixed label, aggregates only, run last, and the audit list of prior sealed use. The campaign hash is filled
 when the cells join the campaign.
+
+### 2026-10-07: amendments A5 completed and A7
+
+A5's sealed cells join the campaign with all four arms (Garry's choice) and a four-hour `/finish` wait; A7 reruns four
+Phase 4 harness failures (two Cognee leases, Basic Memory's BEAM finish wait, Hindsight's database shared memory).
+Recorded the new campaign hash.
 
 ### 2026-10-06: gbrain master moved
 

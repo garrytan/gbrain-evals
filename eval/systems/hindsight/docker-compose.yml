@@ -14,6 +14,11 @@ x-proxy-openai: &proxy_openai http://egress:9000${PROXY_OPENAI_PATH:-/openai/v1}
 services:
   db:
     image: pgvector/pgvector:0.8.1-pg18@sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c
+    # Docker gives a container 64 MB of /dev/shm. Hindsight builds each new bank's HNSW indexes on the shared
+    # memory_units table inside the bank-create transaction; once that table passes min_parallel_table_scan_size,
+    # the build runs in parallel and asks for a maintenance_work_mem-sized (64 MB) dynamic shared memory segment,
+    # which no longer fits, and every bank create returns HTTP 500 ("could not resize shared memory segment").
+    shm_size: 1g
     environment:
       POSTGRES_USER: hindsight
       POSTGRES_PASSWORD: hindsight
