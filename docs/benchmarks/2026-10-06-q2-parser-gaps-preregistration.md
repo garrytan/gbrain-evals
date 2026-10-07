@@ -413,6 +413,28 @@ mix, the power simulation is rerun on it, and the result is recorded here before
 No bar changes. Estimated cost: G6 about $650–930, Q2 program total about $1,200–1,480 (spent so far: development
 pilot $466, minting $23.09), inside the approved $2,100.
 
+### G6 question set, final mix (recorded 2026-10-07, before G6 ingest)
+
+The 150-pairs-per-corpus raise could not be met for amara, so the final mix is **amara 105 + career 200 pairs**
+(305 pairs, 610 questions, 40 of them unanswerable).
+
+- **Amara.** Pairs 1–90 are byte-identical to the frozen set, in the same order. The 10 pairs drawn from meeting pages
+  and calendar invites were dropped as likely development-exposed: the development question generator draws exactly
+  that item type. 15 new pairs were added. Amara cannot reach 150 pairs under the rule that a temporal answer must be
+  stated in a page body. The 106th candidate failed the overlap rule (an 8-gram run from amara-life-v1), and both of its
+  rephrasings failed gold support.
+- **Career.** The frozen 100 pairs plus 100 new pairs, with 36 new people and 143 new documents (272 documents in all).
+- **Power** (`eval/runner/q2/power-sim.ts`, development pilot, three models, 3 ingests, 200 simulations, per-corpus
+  pairs `amara=105,career=200`): all G6 gates pass with probability 1.00 at a true +3 points and 0.855 at +2; no gate
+  set passes with no true effect (0). The development amara questions sit at ceiling (every model 1.000 in arm A), so
+  career pairs carry almost all of the power; the G6 report calls out any ceiling.
+
+| File | SHA-256 |
+|---|---|
+| `q/q-questions.json` (id `q2-q-v2`) | `805b16ecca2df13943b2c195db27c2a079567870fc77c700f508feb084ebe84c` |
+| `q/career-corpus/career-manifest.json` (v2, 272 documents) | `d5c3720d14b05d904b5c60c1854afcfd7e2ebde836d10262ecdfbc6e24338b4c` |
+| `custody-hashes.txt` (5,214 entries; replaces `1f593208…`; only these two files and the 143 new career documents changed) | `6268035ca9546aa791f5909a339ba13d20adf30368ae799a42c4ffe377e4cc0b` |
+
 ### Builds, runners and models
 
 - **Candidate (frozen Q2 build):** gbrain `4ec7fbbe4221bd353b88cf46292b44153c542bb2` on branch `capy/q2-parser-gaps`
@@ -433,8 +455,7 @@ pilot $466, minting $23.09), inside the approved $2,100.
   a 10% `claude-opus-5-5` audit.
 - **Arm-B guidance:** `eval/data/p5-write-then-answer/guidance-b.md` at the harness commit; its SHA-256 is printed by
   preflight and recorded in each G6 receipt.
-- **Pending before G6 ingest (not before the C-gates):** the SHA-256 of the enlarged `q/q-questions.json` (150 pairs
-  per corpus). The C-gates, G1, G3, G4 and G5 do not read it.
+- **G6 question material:** see "G6 question set, final mix" below.
 
 ## Changelog
 
