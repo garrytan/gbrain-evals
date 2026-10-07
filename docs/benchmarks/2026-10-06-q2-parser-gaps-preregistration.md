@@ -332,6 +332,17 @@ Exceeding the alert needs the owner's decision and never changes a bar. If G1–
    dependency unit with no development wrong closure applies to the joint unit. The family is U1, U25, U34 and U6 (four
    units). Holm runs across these four, and the package order uses them. Every other bar is unchanged.
 
+4. **2026-10-07, G6 model set (owner's evaluation rule; no cell has run).** On 2026-10-07 the owner made Claude Opus 5.5
+   the top Anthropic model in counted runs and limited Claude Fable 5.1 to smoke tests: no paid counted cells, no
+   practice rounds and no held-out runs. G6's models are therefore `claude-sonnet-5-5`, `gpt-6.1-sol` and
+   `claude-opus-5-5`. The matrix becomes 2 corpora × 3 models × 2 arms × 3 independent ingests. "Pooled over models"
+   means pooled over these three, and the per-model bar (lower bound of B − A above −3 points) applies to each of the
+   three. G2's stratum (arm B's ingest brains, "every model and ingest") and its by-model stratification cover the same
+   three models. The immediate-answer cell runs one ingest per model for the three. The development pilot's Fable 5.1
+   cells, finished before the rule, stay in its receipts, but the power simulation and the G6 sizing exclude them. The
+   judge (`gpt-6.1-sol`), the audit judge (`claude-opus-5-5`) and every bar's threshold are unchanged. No other gate
+   names a model set: G1–G4 use the two judges, and G5 and the C-gates make no model calls.
+
 ## Freeze record
 
 Appended before any cell runs: the frozen gbrain build SHA and baseline master SHA; unit commit SHAs and whether U3 and
@@ -381,6 +392,7 @@ Aggregates:
 
 ## Changelog
 
+- 2026-10-07: amendment 4 (G6 models: Sonnet 5.5, GPT-6.1 Sol and Opus 5.5; Fable 5.1 smoke-test only), before the freeze.
 - 2026-10-06: amendment 3 (dependency units U34 and U25 from the development trace), before the freeze.
 - 2026-10-06: amendments 1 and 2 (beam stratum excludes three conversations GBRA-52 opened; concurrent QA-only opening), before the freeze.
 - 2026-10-06: first version, before any material was minted.
