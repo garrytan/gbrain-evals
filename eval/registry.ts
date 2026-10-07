@@ -1201,6 +1201,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'shootout-cell.ts': { role: 'open-source memory comparison cells (the head-to-head scoreboard): campaign manifest, durable host-ledger leases, Ubicloud launch, settlement; not the embedder-shootout entry shootout-cell' },
   'smoke.ts': { role: 'embedder-shootout pre-flight smoke', part_of: 'shootout-cell' },
   'scoreboard.ts': { role: 'head-to-head scoreboard generator: rows, answers and judgments to cohorts, Holm families, scoreboard.json and the README and report tables; check, render, explain (docs/benchmarks/2026-10-06-scoreboard-preregistration.md)' },
+  'judge-repeat.ts': { role: 'repeated judging of fixed answers (zero reader calls) for the head-to-head scoreboard: judge SD and verdict stability' },
   'name-guard.ts': { role: 'ratchet guard: external product names only in docs/comparison-systems.md and its bundles' },
   'scoreboard-cli.ts': { role: 'head-to-head scoreboard front door (bun run eval:scoreboard): check, fixture, explain, doctor, plan, smoke, run, status, judge, render, dispute (docs/scoreboard.md)' },
   'cost-speed.ts': { role: 'head-to-head scoreboard cost and speed columns from rows and proxy usage, and the campaign progress page (--watch)' },
