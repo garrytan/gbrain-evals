@@ -1,0 +1,92 @@
+{
+  "probe_id": "cat14-neg-4-voice",
+  "category": "calibration-voice-stress",
+  "question": "This founder reminds me of three previous ones who didn't make it. Should I write the check?",
+  "baseline_answer": "## Answer\n\nThe brain can't say whether to write the check, and it holds nothing about this founder or the deal. What it does hold is two resolved founder-pattern takes from garry, both marked correct:\n\n- \"This pattern-matched founder type won't make it\" was recorded 2024-04-20 with conviction weight 0.7, and the outcome was correct [cat14/cat14-neg-4-voice/take-1].\n- \"That archetype always plateaus\" was recorded 2024-10-15 with conviction weight 0.75, and the outcome was correct [cat14/cat14-neg-4-voice/take-2].\n\nSo in these two cases, garry's pattern-matching against a founder archetype was right. That is a small sample. The pages don't say which archetype each take covered, whether it is the same one you have in mind now, or how many pattern-matched calls were made and not resolved. The brain therefore doesn't show how reliable this heuristic is overall, or whether it applies to this founder.\n\nThe pages also don't mention the three previous founders you're thinking of, so the brain can't confirm they share a pattern with this one.",
+  "calibrated_answer": "## Answer\n\nThe brain can't say whether to write the check. It holds no information about this founder, the three earlier founders, or the deal. It does hold two resolved calls by garry in the founder-patterns domain, and both bear on how reliable this kind of pattern-matching has been.\n\n- **Resolved call 1:** garry's claim \"This pattern-matched founder type won't make it\" was marked **correct** (conviction weight 0.7, recorded 2024-04-20) [cat14/cat14-neg-4-voice/take-1].\n- **Resolved call 2:** garry's claim \"That archetype always plateaus\" was marked **correct** (conviction weight 0.75, recorded 2024-10-15) [cat14/cat14-neg-4-voice/take-2].\n\nSo on the record available, garry's founder-archetype pattern matches have been right both times they were resolved. Both were fairly high-conviction calls.\n\nThis is a thin basis. It is two data points, and both are negative calls that came true. Nothing in the retrieved pages shows how often a pattern match was wrong, such as a founder who fit the archetype and succeeded. The pages also don't say whether the archetype in those two takes is the same one this founder resembles.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE"
+    ]
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers cite the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's current gut prior with a track-record counter-prior; the record instead supports the gut concern. Both use impersonal language about 'the brain' and unexplained numerical conviction weights rather than a consistently conversational voice. Their substantive guidance is the same: the record offers limited support for pattern matching but cannot settle this investment decision. || Both answers reference the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's gut prior with a track-record counter-prior; instead, both describe supporting evidence and its limitations. Both use impersonal reporting language and untranslated conviction weights rather than a consistently conversational voice. Their substantive advice is equivalent: the record is small and cannot establish whether this founder fits the pattern or whether to invest."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers cite the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's current gut prior with a track-record counter-prior; the record instead supports the gut concern. Both use impersonal language about 'the brain' and unexplained numerical conviction weights rather than a consistently conversational voice. Their substantive guidance is the same: the record offers limited support for pattern matching but cannot settle this investment decision. || Both answers reference the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's gut prior with a track-record counter-prior; instead, both describe supporting evidence and its limitations. Both use impersonal reporting language and untranslated conviction weights rather than a consistently conversational voice. Their substantive advice is equivalent: the record is small and cannot establish whether this founder fits the pattern or whether to invest."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers cite the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's current gut prior with a track-record counter-prior; the record instead supports the gut concern. Both use impersonal language about 'the brain' and unexplained numerical conviction weights rather than a consistently conversational voice. Their substantive guidance is the same: the record offers limited support for pattern matching but cannot settle this investment decision. || Both answers reference the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's gut prior with a track-record counter-prior; instead, both describe supporting evidence and its limitations. Both use impersonal reporting language and untranslated conviction weights rather than a consistently conversational voice. Their substantive advice is equivalent: the record is small and cannot establish whether this founder fits the pattern or whether to invest."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers cite the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's current gut prior with a track-record counter-prior; the record instead supports the gut concern. Both use impersonal language about 'the brain' and unexplained numerical conviction weights rather than a consistently conversational voice. Their substantive guidance is the same: the record offers limited support for pattern matching but cannot settle this investment decision. || Both answers reference the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's gut prior with a track-record counter-prior; instead, both describe supporting evidence and its limitations. Both use impersonal reporting language and untranslated conviction weights rather than a consistently conversational voice. Their substantive advice is equivalent: the record is small and cannot establish whether this founder fits the pattern or whether to invest."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers cite the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's current gut prior with a track-record counter-prior; the record instead supports the gut concern. Both use impersonal language about 'the brain' and unexplained numerical conviction weights rather than a consistently conversational voice. Their substantive guidance is the same: the record offers limited support for pattern matching but cannot settle this investment decision. || Both answers reference the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's gut prior with a track-record counter-prior; instead, both describe supporting evidence and its limitations. Both use impersonal reporting language and untranslated conviction weights rather than a consistently conversational voice. Their substantive advice is equivalent: the record is small and cannot establish whether this founder fits the pattern or whether to invest."
+    },
+    {
+      "axis": "voice_must_not_be_clinical",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers cite the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's current gut prior with a track-record counter-prior; the record instead supports the gut concern. Both use impersonal language about 'the brain' and unexplained numerical conviction weights rather than a consistently conversational voice. Their substantive guidance is the same: the record offers limited support for pattern matching but cannot settle this investment decision. || Both answers reference the relevant track record: the user's founder-archetype judgments were correct in two resolved cases. Neither explicitly pairs the user's gut prior with a track-record counter-prior; instead, both describe supporting evidence and its limitations. Both use impersonal reporting language and untranslated conviction weights rather than a consistently conversational voice. Their substantive advice is equivalent: the record is small and cannot establish whether this founder fits the pattern or whether to invest."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.6666666666666666,
+  "failure_modes": [
+    "voice_conversational",
+    "voice_must_not_be_clinical"
+  ]
+}

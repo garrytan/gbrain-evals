@@ -1,0 +1,173 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat14-calibration",
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "started_at": "2026-10-06T19:05:00.549Z",
+  "finished_at": "2026-10-06T19:10:05.957Z",
+  "hashes": {
+    "probes_jsonl": "e65f3d49a5f6bf9f"
+  },
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 8,
+  "n_scored": 8,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.expansion": "false",
+    "search.cache.enabled": "false",
+    "models.think": "claude-sonnet-5-5",
+    "think_temperature": 0,
+    "judge_model": "openai:gpt-6.1-sol",
+    "judge_temperature": 0,
+    "judge_prompt_version": "cat14-ab-2026-09-28-untrusted-v1",
+    "judge_orders": 2,
+    "embedding_transport": "stubbed deterministic hash-embed (__setEmbedTransportForTests)",
+    "pipeline": "gbrain runThink ('gbrain/think' subpath export), client-injected LLM",
+    "mode": "live",
+    "probe_filter": null,
+    "profile_mode": "swap30",
+    "judge_transport": "OpenAI Responses API through openai-judge-shim: no temperature, reasoning effort low, max_output_tokens at least 8000",
+    "temperature_sent": {
+      "think": false,
+      "judge": false
+    }
+  },
+  "judge": {
+    "model": "openai:gpt-6.1-sol",
+    "temperature": 0
+  },
+  "profile_mode": "swap30",
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-06-negative-controls-preregistration.md",
+    "preregistration_commit": "16d787266a30c390983ea7beca542ba77183201c",
+    "runner_commit": "18b0c68eadff69ce65575fff1f44ff8d235a12e0",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-06T19:05:00.550Z"
+  },
+  "cost": {
+    "usd": 0.316062,
+    "input_tokens": 46926,
+    "output_tokens": 22221,
+    "basis": "budget ledger cat14-calibration-2026-10-06T19-05-00-610Z-7481480e: 32 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 2,
+      "max": 1589.2
+    }
+  },
+  "data": {
+    "summary": {
+      "mode": "live",
+      "total_probes": 8,
+      "scored_probes": 8,
+      "judge_failed": 0,
+      "sut_failed": 0,
+      "win_eligible_n": 6,
+      "win_rate_calibrated": 0.16666666666666666,
+      "win_rate_baseline": 0.8333333333333334,
+      "win_rate_tie": 0,
+      "per_axis": {
+        "mentions_relevant_bias_tag": {
+          "rate": 1,
+          "n": 4,
+          "subset": "positive"
+        },
+        "presents_counter_prior": {
+          "rate": 1,
+          "n": 4,
+          "subset": "positive"
+        },
+        "changes_recommendation_meaningfully": {
+          "rate": 0.75,
+          "n": 8,
+          "subset": "all"
+        },
+        "voice_conversational": {
+          "rate": 0,
+          "n": 8,
+          "subset": "all"
+        },
+        "doesnt_force_fit_irrelevant_bias": {
+          "rate": 0.5,
+          "n": 4,
+          "subset": "negative"
+        },
+        "behaves_like_baseline": {
+          "rate": 1,
+          "n": 1,
+          "subset": "declaring"
+        },
+        "voice_must_not_be_clinical": {
+          "rate": 0,
+          "n": 1,
+          "subset": "declaring"
+        }
+      },
+      "failure_mode_counts": {
+        "changes_recommendation_meaningfully": 2,
+        "voice_conversational": 8,
+        "doesnt_force_fit_irrelevant_bias": 6,
+        "presents_counter_prior": 1,
+        "voice_must_not_be_clinical": 1
+      },
+      "doctor_flags": [
+        "calibration_net_negative"
+      ],
+      "gate": "fail",
+      "gate_reasons": [
+        "win_rate 17% < 60% target (over 6 win-eligible probes)",
+        "doesnt_force_fit_irrelevant_bias 50% < 90% target (negative subset, n=4)",
+        "voice_conversational 0% < 95% target (all subset, n=8)",
+        "voice_must_not_be_clinical 0% < 95% target (declaring subset, n=1)"
+      ],
+      "provenance": {
+        "probe_filter": null,
+        "probes_planned": 8,
+        "probes_in_fixture": 8,
+        "think_model": "claude-sonnet-5-5",
+        "think_temperature": 0,
+        "judge_model": "openai:gpt-6.1-sol",
+        "judge_temperature": 0,
+        "probes_jsonl_sha256_16": "e65f3d49a5f6bf9f",
+        "started_at": "2026-10-06T19:05:00.549Z",
+        "finished_at": "2026-10-06T19:10:05.957Z"
+      }
+    }
+  },
+  "accounting": {
+    "planned": 8,
+    "attempted": 8,
+    "scored": 8,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "3eef1f9a3dd8544008f668411e37903e9b7d9846f4d826caede0c03b4087ad5a",
+      "files": 3647,
+      "git_head": "5e9d79974a2b0d701ce3dcf2cb82d449633b6885",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}

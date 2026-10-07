@@ -1,0 +1,262 @@
+{
+ "kind": "n2-judge-replay-score",
+ "models": [
+  {
+   "model": "openai:gpt-6-luna",
+   "recall_conflicts": {
+    "hits": 150,
+    "n": 150,
+    "lower95": 0.9757074028338919
+   },
+   "false_dated": {
+    "hits": 0,
+    "n": 40,
+    "upper95": 0.08809730287880241
+   },
+   "false_compatible_original": {
+    "hits": 0,
+    "n": 51,
+    "upper95": 0.06977703074953867
+   },
+   "false_compatible_pooled": {
+    "hits": 0,
+    "n": 251,
+    "upper95": 0.014589261072592764
+   },
+   "judge_errors": 5,
+   "truncations": 0,
+   "sample_false_alerts": {
+    "hits": 0,
+    "n": 300
+   },
+   "false_alerts_per_1000_candidates": 0,
+   "passes": true,
+   "failed_rules": [],
+   "cost_usd": 0.156263,
+   "cost_per_1000_judged_pairs": 0.2108812415654521,
+   "wall_ms": 456432,
+   "vs_haiku": {
+    "losses": 0,
+    "wins": 11,
+    "both_pass": 530,
+    "both_fail": 0,
+    "discordant": 11,
+    "p_two_sided": 0.0009765625,
+    "p_holm": 0.0048828125
+   }
+  },
+  {
+   "model": "anthropic:claude-sonnet-5-5",
+   "recall_conflicts": {
+    "hits": 150,
+    "n": 150,
+    "lower95": 0.9757074028338919
+   },
+   "false_dated": {
+    "hits": 0,
+    "n": 40,
+    "upper95": 0.08809730287880241
+   },
+   "false_compatible_original": {
+    "hits": 0,
+    "n": 51,
+    "upper95": 0.06977703074953867
+   },
+   "false_compatible_pooled": {
+    "hits": 0,
+    "n": 251,
+    "upper95": 0.014589261072592764
+   },
+   "judge_errors": 0,
+   "truncations": 0,
+   "sample_false_alerts": {
+    "hits": 0,
+    "n": 300
+   },
+   "false_alerts_per_1000_candidates": 0,
+   "passes": true,
+   "failed_rules": [],
+   "cost_usd": 3.152534,
+   "cost_per_1000_judged_pairs": 4.254431848852901,
+   "wall_ms": 218345,
+   "vs_haiku": {
+    "losses": 0,
+    "wins": 11,
+    "both_pass": 530,
+    "both_fail": 0,
+    "discordant": 11,
+    "p_two_sided": 0.0009765625,
+    "p_holm": 0.0048828125
+   }
+  },
+  {
+   "model": "openai:gpt-6.1-sol",
+   "recall_conflicts": {
+    "hits": 150,
+    "n": 150,
+    "lower95": 0.9757074028338919
+   },
+   "false_dated": {
+    "hits": 0,
+    "n": 40,
+    "upper95": 0.08809730287880241
+   },
+   "false_compatible_original": {
+    "hits": 0,
+    "n": 51,
+    "upper95": 0.06977703074953867
+   },
+   "false_compatible_pooled": {
+    "hits": 0,
+    "n": 251,
+    "upper95": 0.014589261072592764
+   },
+   "judge_errors": 0,
+   "truncations": 0,
+   "sample_false_alerts": {
+    "hits": 0,
+    "n": 300
+   },
+   "false_alerts_per_1000_candidates": 0,
+   "passes": true,
+   "failed_rules": [],
+   "cost_usd": 1.992142,
+   "cost_per_1000_judged_pairs": 2.688450742240216,
+   "wall_ms": 333290,
+   "vs_haiku": {
+    "losses": 0,
+    "wins": 11,
+    "both_pass": 530,
+    "both_fail": 0,
+    "discordant": 11,
+    "p_two_sided": 0.0009765625,
+    "p_holm": 0.0048828125
+   }
+  },
+  {
+   "model": "anthropic:claude-opus-5-5",
+   "recall_conflicts": {
+    "hits": 150,
+    "n": 150,
+    "lower95": 0.9757074028338919
+   },
+   "false_dated": {
+    "hits": 0,
+    "n": 40,
+    "upper95": 0.08809730287880241
+   },
+   "false_compatible_original": {
+    "hits": 0,
+    "n": 51,
+    "upper95": 0.06977703074953867
+   },
+   "false_compatible_pooled": {
+    "hits": 0,
+    "n": 251,
+    "upper95": 0.014589261072592764
+   },
+   "judge_errors": 0,
+   "truncations": 0,
+   "sample_false_alerts": {
+    "hits": 0,
+    "n": 300
+   },
+   "false_alerts_per_1000_candidates": 0,
+   "passes": true,
+   "failed_rules": [],
+   "cost_usd": 6.035788,
+   "cost_per_1000_judged_pairs": 8.145462887989204,
+   "wall_ms": 259052,
+   "vs_haiku": {
+    "losses": 0,
+    "wins": 11,
+    "both_pass": 530,
+    "both_fail": 0,
+    "discordant": 11,
+    "p_two_sided": 0.0009765625,
+    "p_holm": 0.0048828125
+   }
+  },
+  {
+   "model": "anthropic:claude-fable-5-1",
+   "recall_conflicts": {
+    "hits": 150,
+    "n": 150,
+    "lower95": 0.9757074028338919
+   },
+   "false_dated": {
+    "hits": 0,
+    "n": 40,
+    "upper95": 0.08809730287880241
+   },
+   "false_compatible_original": {
+    "hits": 0,
+    "n": 51,
+    "upper95": 0.06977703074953867
+   },
+   "false_compatible_pooled": {
+    "hits": 0,
+    "n": 251,
+    "upper95": 0.014589261072592764
+   },
+   "judge_errors": 0,
+   "truncations": 0,
+   "sample_false_alerts": {
+    "hits": 0,
+    "n": 300
+   },
+   "false_alerts_per_1000_candidates": 0,
+   "passes": true,
+   "failed_rules": [],
+   "cost_usd": 14.18692,
+   "cost_per_1000_judged_pairs": 19.145641025641027,
+   "wall_ms": 565276,
+   "vs_haiku": {
+    "losses": 0,
+    "wins": 11,
+    "both_pass": 530,
+    "both_fail": 0,
+    "discordant": 11,
+    "p_two_sided": 0.0009765625,
+    "p_holm": 0.0048828125
+   }
+  }
+ ],
+ "haiku": {
+  "model": "anthropic:claude-haiku-4-5 (2026-10-03 receipt)",
+  "recall_conflicts": {
+   "hits": 149,
+   "n": 150,
+   "lower95": 0.9634168322594201
+  },
+  "false_dated": {
+   "hits": 0,
+   "n": 40,
+   "upper95": 0.08809730287880241
+  },
+  "false_compatible_original": {
+   "hits": 6,
+   "n": 51,
+   "upper95": 0.23867604726407465
+  },
+  "false_compatible_pooled": null,
+  "judge_errors": 0,
+  "truncations": 0,
+  "sample_false_alerts": {
+   "hits": 4,
+   "n": 300
+  },
+  "false_alerts_per_1000_candidates": 14.37313432835821,
+  "passes": false,
+  "failed_rules": [
+   "compatible-negative false-contradiction upper 95% bound 0.239 not under 0.10"
+  ],
+  "full_population_unplanted_alerts": 38
+ },
+ "unplanted_alert_union_in_sample": [
+  "20261001:i044:companies/cormora-example|notes/n2-i044-a",
+  "20261001:i086:companies/ivovane-example|notes/n2-i086-b",
+  "20261001:i107:companies/brenmora-example|notes/n2-i107-a",
+  "20261001:i179:companies/pelzarra-example|notes/n2-i179-a"
+ ]
+}

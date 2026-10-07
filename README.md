@@ -12,12 +12,11 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain master [`739e5cc`](https://github.com/garrytan/gbrain/tree/739e5cc89ca43b9b9351f0f203c7b12a7c0c571c) (v0.60.46.0), declared as `gbrain` in `package.json` |
-| Newer gbrain builds also measured | v0.60.49.0 (`b9ee931`), v0.60.60.0 (multi-relation planner) and v0.60.62.0 (`51f865d78`, entity recall). Results from them say so. |
+| Pinned product | gbrain master [`a865f8f`](https://github.com/garrytan/gbrain/tree/a865f8f8b7c95b9f8c30690702797bafcfef537a) (v0.60.104.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.24 (`VERSION`) |
+| This repository | gbrain-evals v0.10.37 (`VERSION`) |
 
-This repository installs gbrain master `739e5cc`. Some results below were measured at earlier commits; each names
+This repository installs gbrain master `a865f8f`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
 the installed modes.
 
@@ -47,28 +46,36 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | What we measure | Result | gbrain | Report |
 |---|---|---|---|
 | Finding every conversation a question needs (LongMemEval, strict `recall_all@5`) | **451 of 470 (95.96%)** | `109b992` | [Recount](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md) |
-| Answer accuracy on LongMemEval, house reader with reranker | **453 of 500 (90.6%)** | v0.59.13.0 | [Re-run](docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
-| Answer accuracy with a frontier reader (`gpt-5.4`) on gbrain's retrieval | **447 of 500 (89.4%)** | v0.59.13.0 retrieval | [Frontier reader](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md#2-a-frontier-reader-on-gbrains-retrieval) |
+| Answer accuracy on LongMemEval, release retrieval, benchmark notes reader (`claude-sonnet-5-5`, official `gpt-4o` judge) | **468 of 500 (93.6%)** | `c5fb0201` | [Current pin](docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) |
+| Best reader on the same retrieval (`claude-opus-5-5`, frozen 2026-09-29 retrieval) | **474 of 500 (94.8%)**, above Sonnet 4.6's 453 after Holm | `a7cb37b` retrieval | [Reader replay](docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
 | Whole-conversation delivery against bare chunks, sealed held-out set | **192 vs 132 of 200** (+60/−0) | `d44296c` | [Sealed decision](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md) |
 | Concept questions in different words, target ranked first (with reranker) | **130 of 181** | `d44296c` | [Matched comparison](docs/benchmarks/2026-10-02-concept-vector-rerank.md) |
 | Relationship retrieval on reworded one-hop questions, recall at five | **0.411 → 0.537**, 19 better, 0 worse | `3a284ae` | [N9](docs/benchmarks/2026-10-01-n9-multi-hop.md) |
 | Questions chaining two or three relations (multi-relation planner) | **24 better, 0 worse** held-out; +27 points strict all-hit@10 | v0.60.60.0 | [Held-out program](docs/benchmarks/2026-10-05-heldout-program.md) |
+| Meeting attendance from a documented `## Attendees` list | **132 of 132** attendees stored, 0 false; "who attended" recall at five 32% → 80% | `c5fb0201` | [Attendance world](docs/benchmarks/2026-10-06-attendance-world.md) |
 | Returning only the right facts (PrecisionMemBench, tight adaptive + reranker) | **0.586 precision**, 0.825 recall | `2efaaf8f` | [Refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
 | Serving the new value after an update | **388 of 388** probes, never stale | `739e5cc` | [N1](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements | `739e5cc` | [N5](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
-| Private pages reaching agent callers or remote callers | **0** (N6, N8) | `739e5cc` | [N6](docs/benchmarks/2026-09-30-n6-visibility-fuzz.md), [N8](docs/benchmarks/2026-10-01-n8-proactive-recall.md) |
-| Keeping speaker and time across chat export formats | **27 of 27** formats | `739e5cc` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md) |
-| Finding contradicting notes | **149 of 150** conflicts | `739e5cc` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md) |
+| Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller); proactive recall gated in CI | `a865f8f` (Postgres over HTTP: `c5fb0201`) | [N6 on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md), [N8 gate](docs/benchmarks/2026-10-06-n8-privacy-gate.md) |
+| Keeping speaker and time across chat export formats | **28 of 28** formats | `a865f8f` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-06-followups-repin.md) |
+| Finding contradicting notes | **149 of 150** conflicts with the default judge model | `739e5cc` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md) |
+| Contradiction judge on current models | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models (Opus 5.5 the top Anthropic one); cheapest passing model $0.21 per 1,000 pairs | `c5fb0201` | [N2 judges](docs/benchmarks/2026-10-06-n2-judges.md) |
+| Attributing someone else's claim to the page holder (takes classifier) | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5); the classifier is not yet graduated | `c5fb0201` | [Takes-bootstrap](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
 | Real agents (Claude Code, Codex) spending or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | v0.60.46.0 | [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) |
 | Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
 | Managed Postgres catch-up 57 ms from the database (10,000-file backlog) | **152.8 pages/min** steady, about **1.2 h** for the backlog (was 3.4 pages/min, about 49 h) | v0.60.73.0 | [Catch-up](docs/benchmarks/2026-10-05-managed-sync-catchup.md) |
 | Malformed facts/takes tables repaired by a model without a wrong cell (held-out set, model tier only) | **96.0%** repaired, **0** wrong cells (gpt-6.1-sol and claude-opus-5-5, the measured defaults); every other case held | v0.60.102.0 ([`5b58910`](https://github.com/garrytan/gbrain/commit/5b5891069)) | [Fence repair Tier 3](docs/benchmarks/2026-10-06-fence-repair-tier3.md) |
-| Useful material kept when a session becomes a memory page | **88.1%** judged; 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
+| Useful material kept when a session becomes a memory page | **88.1%** judged (judge calibration awaiting a person's review); 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 
-All 28 reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `739e5cc`, and moving to
-that pin cost no category any accuracy ([re-pin report](docs/benchmarks/2026-10-04-operator-wave-repin.md)). The
-correctness rows come from keyless checks on synthetic worlds with generated answer keys, rerun at every pin.
+All 28 earlier reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `a865f8f`. N1-7, the
+gbrain bug the move to `c5fb0201` brought (acknowledged ontology observations lost after a maintenance sweep and a page
+rewrite), is fixed in this pin by gbrain #6265: its repro and the N1 CI slice pass, also on one loaded core
+([re-pin report](docs/benchmarks/2026-10-06-followups-repin.md)). Rows marked `c5fb0201` were measured in the October
+round at the previous pin (the paid runs, the attendance world and the Postgres-over-HTTP privacy cells). Of these only
+the Postgres privacy cells write ontology observations, the data N1-7 lost; the same fuzz in process was rerun at
+`a865f8f` with 0 leaks. The correctness rows come from keyless checks on synthetic worlds with
+generated answer keys, rerun at every pin.
 
 Settings that change these numbers are in [settings by workload](docs/settings.md). Two matter most: keep autocut off
 for questions that need several conversations (451 against 384 of 470), and leave query expansion off, since it adds
@@ -95,6 +102,8 @@ Many headline LongMemEval "R@5" scores of 95% to 100% count a question as found 
 appears; on that looser metric gbrain finds at least one for 470 of 470. Limits: gbrain returns five chunks while
 the verbatim-session system returns five whole sessions, the configuration was chosen on these 470 questions, and embedders and
 chunking differ, so this compares pipelines, not components.
+
+**Retrieval or the whole history: within 7 points at a seventh of the recurring cost.** On 150 LongMemEval-S questions with the same reader, gbrain's retrieval answered 139 against 144 with the whole ~115,000-token history pasted in (Sonnet 5.5), and 137 against 141 (GPT-6.1 Sol). Both stay within the preregistered 7-point margin, which is not the same as equal: the gap is in questions that need several conversations. gbrain's recurring cost per question is $0.024 against $0.173 with Sonnet 5.5, plus a one-time $0.015 to index each history. [Full-context comparison](docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md).
 
 **Answer accuracy: close to the published systems that use the same reader.** With `gpt-5.4` as the reader,
 gbrain's retrieval answers 89.4%; a temporal knowledge-graph service publishes 90.2% and a database-backed memory
@@ -233,6 +242,18 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-07: Re-pin to gbrain `a865f8f`; N1-7 fixed
+
+gbrain-evals v0.10.37. The pin moves from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0), which contains gbrain's fix for N1-7. The ledger sentence now says N1-7 is fixed (was: one open gbrain bug). The privacy and chat-format rows name `a865f8f`, where their keyless checks were rerun; the paid rows, the attendance world and the Postgres-over-HTTP privacy cells stay at `c5fb0201`, named as such.
+
+### 2026-10-07: LongMemEval answers at the current pin, the full-context comparison, Fable smoke-only
+
+gbrain-evals v0.10.37. The LongMemEval answer row moves from 453 of 500 (Sonnet 4.6 house reader, v0.59.13.0) to 468 of 500 at `c5fb0201` with the Sonnet 5.5 benchmark notes reader; against the same reader on the old retrieval that is "no change shown" (462, p = 0.08), so the move reflects the reader and the current pin. The `gpt-5.4` frontier-reader row (447 of 500) is replaced by the best current reader on the same frozen retrieval, Opus 5.5 at 474. "How gbrain compares" gains the matched-reader full-context comparison. Takes and contradiction-judge rows count Opus 5.5 as the top Anthropic model; Fable 5.1 results are smoke-only under Garry's 2026-10-07 rule.
+
+### 2026-10-06: Re-pin to gbrain `c5fb0201` and the October follow-up round
+
+gbrain-evals v0.10.37. The pin moves from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), which contains every held-out-program plan, so the "newer builds also measured" row is gone. Results rows: privacy now covers Postgres over real HTTP and the N8 gate at `c5fb0201` (was N6 and N8 at `739e5cc`); chat formats 28 of 28 (was 27 of 27); new rows for attendance from documented lists, the contradiction judge on current models and the takes classifier on frontier models; the Cat 35 row says its judge calibration awaits a person's review; the ledger sentence names the October 6 re-pin and the open N1-7 bug it found. Reasons and receipts: the [round plan](docs/plans/2026-10-06-followups-round/PLAN.md) and its reports.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.

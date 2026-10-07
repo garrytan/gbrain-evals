@@ -1,0 +1,81 @@
+{
+  "probe_id": "cat14-pos-3-macro",
+  "category": "calibration-pattern-relevant",
+  "question": "AI valuations are at all-time highs. Should we pull our AI investment activity for 6 months?",
+  "baseline_answer": "## Answer\n\nThe brain has no direct data on whether to pause AI investment for 6 months, and it does not hold current valuation data or fund-level context. It does hold garry's track record on macro-timing calls about an AI downturn, and every one of those calls was resolved as incorrect:\n\n- \"AI hype cycle peaks by Q3 2024\" was incorrect. It was recorded 2024-01-15 at conviction weight 0.85. [cat14/cat14-pos-3-macro/take-1]\n- \"AI valuations correct by year-end 2024\" was incorrect. It was recorded 2024-04-10 at conviction weight 0.8. [cat14/cat14-pos-3-macro/take-2]\n- \"The bubble pops in 2025\" was incorrect. It was recorded 2024-07-30 at conviction weight 0.85. [cat14/cat14-pos-3-macro/take-3]\n\nThe pattern is that three high-conviction (0.8–0.85) calls that AI valuations would turn were each wrong on timing. A pause now would rest on the same kind of market-timing reasoning, since \"valuations are at all-time highs\" is the premise. The brain does not show whether the current situation differs from those earlier calls. It also does not say whether a pause would have been the right action in those cases.\n\nThe brain reports this track record only. The decision is the user's.",
+  "calibrated_answer": "## Answer\n\nThe brain reports on this question but does not make the decision. It contains no data on the current state of your AI investment activity, portfolio exposure, or present valuation levels, so it cannot say whether a 6-month pause is warranted.\n\nWhat the brain does hold is a macro-timing track record that bears on how the question is framed:\n\n- Garry's call that the \"AI hype cycle peaks by Q3 2024\" resolved incorrect (conviction 0.85, recorded 2024-01-15) [cat14/cat14-pos-3-macro/take-1].\n- The call that \"AI valuations correct by year-end 2024\" resolved incorrect (conviction 0.8, recorded 2024-04-10) [cat14/cat14-pos-3-macro/take-2].\n- The call that \"The bubble pops in 2025\" resolved incorrect (conviction 0.85, recorded 2024-07-30) [cat14/cat14-pos-3-macro/take-3].\n\nThe current premise, that valuations are at all-time highs, is stated in the question and is not backed by any page in the brain.\n\n## Calibration\n\n- **Your prior (default reasoning):** valuations at all-time highs signal froth, so pulling back for 6 months is prudent. This is the same reasoning behind the three earlier calls: peak, correction, and pop. All three were high-conviction (0.8–0.85) and all resolved incorrect [cat14/cat14-pos-3-macro/take-1][cat14/cat14-pos-3-macro/take-2][cat14/cat14-pos-3-macro/take-3].\n- **Counter-prior (from your hedged-domain self):** the calibration profile says your macro-timing prior is consistently early by 12-18 months. If that holds, valuations are high, so step back [unverified] may carry a systematic timing error. Elevated valuations may persist longer than your instinct suggests, and a pause could mean sitting out further appreciation.\n- **Active bias tag:** this fits the *over-confident-macro-timing* pattern. A 6-month pause is itself a macro-timing bet, since it implies a view that conditions will be better after the window.\n- **Track record:** three high-conviction macro-timing calls in 2024 were all missed [cat14/cat14-pos-3-macro/take-1][cat14/cat14-pos-3-macro/take-2][cat14/cat14-pos-3-macro/take-3].\n\nBoth priors are shown here without substituting one for the other. The brain does not show whether the early-by-12-18-months pattern has continued since the last recorded take on 2024-07-30.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "QUOTE_NOT_IN_EVIDENCE"
+    ]
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the high-valuations rationale for pausing to the user's relevant history of missed macro-timing calls, without force-fitting another bias. B is more useful because it includes the specific 12–18-month early-timing pattern and explains how a pause could miss further appreciation. Both use impersonal 'brain' language and untranslated numerical conviction scores rather than a consistently conversational voice. Their recommendations do not meaningfully differ: neither endorses a pause, and both leave the decision to the user. || Both answers connect the proposed pause to the relevant macro-timing bias and contrast the high-valuation intuition with previously missed timing calls. Neither force-fits an unrelated bias, but both use impersonal 'brain' language and untranslated numerical conviction weights rather than a conversational voice. A is more useful because it includes the specific 12–18-month early-timing pattern and explains how a six-month pause could miss continued appreciation. Their substantive stance remains the same: question the timing rationale without deciding whether to pause."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the high-valuations rationale for pausing to the user's relevant history of missed macro-timing calls, without force-fitting another bias. B is more useful because it includes the specific 12–18-month early-timing pattern and explains how a pause could miss further appreciation. Both use impersonal 'brain' language and untranslated numerical conviction scores rather than a consistently conversational voice. Their recommendations do not meaningfully differ: neither endorses a pause, and both leave the decision to the user. || Both answers connect the proposed pause to the relevant macro-timing bias and contrast the high-valuation intuition with previously missed timing calls. Neither force-fits an unrelated bias, but both use impersonal 'brain' language and untranslated numerical conviction weights rather than a conversational voice. A is more useful because it includes the specific 12–18-month early-timing pattern and explains how a six-month pause could miss continued appreciation. Their substantive stance remains the same: question the timing rationale without deciding whether to pause."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers connect the high-valuations rationale for pausing to the user's relevant history of missed macro-timing calls, without force-fitting another bias. B is more useful because it includes the specific 12–18-month early-timing pattern and explains how a pause could miss further appreciation. Both use impersonal 'brain' language and untranslated numerical conviction scores rather than a consistently conversational voice. Their recommendations do not meaningfully differ: neither endorses a pause, and both leave the decision to the user. || Both answers connect the proposed pause to the relevant macro-timing bias and contrast the high-valuation intuition with previously missed timing calls. Neither force-fits an unrelated bias, but both use impersonal 'brain' language and untranslated numerical conviction weights rather than a conversational voice. A is more useful because it includes the specific 12–18-month early-timing pattern and explains how a six-month pause could miss continued appreciation. Their substantive stance remains the same: question the timing rationale without deciding whether to pause."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers connect the high-valuations rationale for pausing to the user's relevant history of missed macro-timing calls, without force-fitting another bias. B is more useful because it includes the specific 12–18-month early-timing pattern and explains how a pause could miss further appreciation. Both use impersonal 'brain' language and untranslated numerical conviction scores rather than a consistently conversational voice. Their recommendations do not meaningfully differ: neither endorses a pause, and both leave the decision to the user. || Both answers connect the proposed pause to the relevant macro-timing bias and contrast the high-valuation intuition with previously missed timing calls. Neither force-fits an unrelated bias, but both use impersonal 'brain' language and untranslated numerical conviction weights rather than a conversational voice. A is more useful because it includes the specific 12–18-month early-timing pattern and explains how a six-month pause could miss continued appreciation. Their substantive stance remains the same: question the timing rationale without deciding whether to pause."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the high-valuations rationale for pausing to the user's relevant history of missed macro-timing calls, without force-fitting another bias. B is more useful because it includes the specific 12–18-month early-timing pattern and explains how a pause could miss further appreciation. Both use impersonal 'brain' language and untranslated numerical conviction scores rather than a consistently conversational voice. Their recommendations do not meaningfully differ: neither endorses a pause, and both leave the decision to the user. || Both answers connect the proposed pause to the relevant macro-timing bias and contrast the high-valuation intuition with previously missed timing calls. Neither force-fits an unrelated bias, but both use impersonal 'brain' language and untranslated numerical conviction weights rather than a conversational voice. A is more useful because it includes the specific 12–18-month early-timing pattern and explains how a six-month pause could miss continued appreciation. Their substantive stance remains the same: question the timing rationale without deciding whether to pause."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "changes_recommendation_meaningfully",
+    "voice_conversational"
+  ]
+}

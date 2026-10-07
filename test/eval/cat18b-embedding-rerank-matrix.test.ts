@@ -21,6 +21,8 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import {
   CELLS,
+  LEGACY_CELLS,
+  dataEgress,
   PINNED_BASE,
   rerankAxisConfig,
   makeOverlapRerankTransport,
@@ -56,12 +58,26 @@ const OPENAI_PAIR: ProviderSpec[] = CELLS.filter(c => c.embedder === 'openai:tex
 
 describe('reranker axis config', () => {
   test('supported matrix names the Voyage reranker in every reranked cell', () => {
-    expect(CELLS).toEqual([
-      { name: 'openai-1536', embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: null },
-      { name: 'openai-1536+rerank', embedder: 'openai:text-embedding-3-large', embed_dim: 1536, reranker: 'voyage:rerank-2.5' },
-      { name: 'voyage-1024', embedder: 'voyage:voyage-3-large', embed_dim: 1024, reranker: null },
-      { name: 'voyage-1024+rerank', embedder: 'voyage:voyage-3-large', embed_dim: 1024, reranker: 'voyage:rerank-2.5' },
+    expect(CELLS.map(c => [c.name, c.embedder, c.embed_dim])).toEqual([
+      ['voyage-4', 'voyage:voyage-4', 1024], ['voyage-4+rerank', 'voyage:voyage-4', 1024],
+      ['voyage-4-large', 'voyage:voyage-4-large', 1024], ['voyage-4-large+rerank', 'voyage:voyage-4-large', 1024],
+      ['openai-1536', 'openai:text-embedding-3-large', 1536], ['openai-1536+rerank', 'openai:text-embedding-3-large', 1536],
+      ['qwen3-local', 'ollama:qwen3-embedding:8b', 4096], ['qwen3-local+rerank', 'ollama:qwen3-embedding:8b', 4096],
     ]);
+    for (const c of CELLS) expect(c.reranker).toBe(c.name.endsWith('+rerank') ? 'voyage:rerank-2.5' : null);
+  });
+
+  test('the September voyage-3-large cells stay selectable by name', () => {
+    expect(LEGACY_CELLS.map(c => c.name)).toEqual(['voyage-1024', 'voyage-1024+rerank']);
+    expect(optionsFromEnv(['--cells', 'voyage-1024,voyage-4']).cells!.map(c => c.name)).toEqual(['voyage-1024', 'voyage-4']);
+  });
+
+  test('data egress labels never call a reranked local cell local', () => {
+    const byName = (n: string) => CELLS.find(c => c.name === n)!;
+    expect(dataEgress(byName('qwen3-local'))).toMatch(/^local embedding: no text leaves/);
+    expect(dataEgress(byName('qwen3-local+rerank'))).toMatch(/^local embedding, hosted reranking/);
+    expect(dataEgress(byName('voyage-4'))).toMatch(/^hosted embedding/);
+    expect(dataEgress(byName('voyage-4+rerank'))).toBe('hosted embedding, hosted reranking');
   });
 
   test('unknown cells are refused rather than silently dropped from the comparison', () => {

@@ -203,7 +203,7 @@ describe('N6 promotion gate rejects the fake systems', () => {
     const signal = answers.filter((a, i) => controlSeen(a.twinResponse, ledger.classes[i].twin_markers, [ledger.classes[i].twin.slug])).length;
     const metrics = {
       content_leak_probes: scans.filter(s => s.content).length, existence_leak_probes: scans.filter(s => s.existence).length,
-      oracle_probes: 0, gate_bypasses: 0, sealed_chunk_violations: 0, content_reachable_coverage: signal / answers.length,
+      oracle_probes: 0, gate_bypasses: 0, sealed_chunk_violations: 0, content_reachable_coverage: signal / answers.length, named_window_probes_with_signal: signal,
     };
     const leakFree = metrics.content_leak_probes === 0 && metrics.existence_leak_probes === 0;
     const outcome = evaluatePromotion(rules, { verdict: leakFree ? 'pass' : 'fail', data: { metrics } });
@@ -213,8 +213,8 @@ describe('N6 promotion gate rejects the fake systems', () => {
   test('honest passes the gate; every fake fails it, refusals through the coverage floor', () => {
     const results = assertScorerRejectsFakeSystems({ category: 'N6', probes: ledger.classes, space, score });
     const failed = Object.fromEntries(results.map(r => [r.system, r.detail]));
-    expect(failed.empty).toBe('content-reachable-coverage');
-    expect(failed['always-refuse']).toBe('content-reachable-coverage');
+    expect(failed.empty).toBe('content-reachable-coverage, named-window-signal');
+    expect(failed['always-refuse']).toBe('content-reachable-coverage, named-window-signal');
     expect(failed['always-positive']).toContain('no-content-leak');
     expect(failed.stale).toContain('no-content-leak');
     expect(failed['wrong-source']).toContain('no-existence-leak');

@@ -1,0 +1,19 @@
+{
+  "model": "anthropic:claude-fable-5-1",
+  "cases": 123,
+  "predictions": 123,
+  "aborted": false,
+  "estimate_usd": 2.34127,
+  "ceiling_usd": 12.79627,
+  "max_usd": 5.01,
+  "spent_usd": 1.5383700000000002,
+  "price_used": {
+    "input": 10,
+    "output": 50,
+    "cache_read": 0.25,
+    "cache_write": 12.5
+  },
+  "price_source": "gbrain canonicalLookup",
+  "case_errors": [],
+  "wall_ms": 636374
+}

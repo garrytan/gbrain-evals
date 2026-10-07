@@ -1,0 +1,33 @@
+[budget] cat20-brainstorm: estimated cost $7.00; ledger /workspace/gbrain-evals/.budget/followups-2026-10.sqlite
+  Setting up brain schema (v215)...
+  210 migration(s) applied
+[cat20] seeded 165 pages
+[cat20] q1: "What is a non-obvious next-step product for an inference-pla..."
+[cat20]   [brainstorm] cap: $2.00 (--max-usd; remove it with --max-usd off)
+[cat20]   [brainstorm] estimated cost: $0.52 (4×6 = 24 crosses × 3 ideas + judge)
+[cat20]   [brainstorm] calibration cold-start, judging without bias context.
+[cat20]   [brainstorm] actual cost: $0.36 (estimated $0.52) — in=33339 out=29333 tokens
+[cat20]   idea judges: 288 judgments, 9 errors
+[cat20]   ideas=72 passing=0 graded=all_raw grounding=1.00
+[cat20] q2: "How could a fund focused on early ML differentiate from comp..."
+[cat20]   [brainstorm] cap: $2.00 (--max-usd; remove it with --max-usd off)
+[cat20]   [brainstorm] estimated cost: $0.52 (4×6 = 24 crosses × 3 ideas + judge)
+[cat20]   [brainstorm] calibration cold-start, judging without bias context.
+[cat20]   [brainstorm] actual cost: $0.38 (estimated $0.52) — in=36122 out=30295 tokens
+[cat20]   idea judges: 288 judgments, 15 errors
+[cat20]   ideas=72 passing=0 graded=all_raw grounding=1.00
+[cat20] q3: "What is an unexplored research direction that combines agent..."
+[cat20]   [brainstorm] cap: $2.00 (--max-usd; remove it with --max-usd off)
+[cat20]   [brainstorm] estimated cost: $0.52 (4×6 = 24 crosses × 3 ideas + judge)
+[cat20]   [brainstorm] calibration cold-start, judging without bias context.
+[cat20]   [brainstorm] actual cost: $0.41 (estimated $0.52) — in=35096 out=33668 tokens
+[cat20]   idea judges: 288 judgments, 0 errors
+[cat20]   ideas=72 passing=0 graded=all_raw grounding=0.99
+
+[cat20] ─── Scorecard ───────────────────
+[cat20]       ideas=72 passing= 0 grounding=1.00 What is a non-obvious next-step product for an i...
+[cat20]       ideas=72 passing= 0 grounding=1.00 How could a fund focused on early ML differentia...
+[cat20]       ideas=72 passing= 0 grounding=0.99 What is an unexplored research direction that co...
+[cat20]   mean grounding: 1.00 (gate >= 0.5)
+[cat20]   run_status=completed verdict=pass publishable=true
+[cat20]   receipt: /workspace/lane-b/eval/reports/cat20-brainstorm/receipt.json
