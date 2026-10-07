@@ -1,7 +1,8 @@
-# Preregistration: open-source memory shootout, update and forget (lifecycle-lite) (draft, 2026-10-06)
+# Preregistration: open-source memory shootout, update and forget (lifecycle-lite) (frozen, 2026-10-06)
 
-**Status: Draft.** Report-only, with no inferential family. Nothing here is frozen, and no counted cell may run until a
-freezing commit records the code hashes and the campaign hash. Garry decided the first draft's open questions on
+**Status: Frozen on 2026-10-06, approved by Garry on 2026-10-06**, before any counted cell was reserved. Report-only,
+with no inferential family. The code is gbrain-evals `2eb2faa` and the campaign hash is `c6be1367…a474c70f` (see "Code
+identity at freeze" and "Cells and the campaign"). Garry decided the first draft's open questions on
 2026-10-06 (see "Decisions"): the reader-judged answer is the update headline, as-of probes stay report-only, the
 survivor floor is 1.0, leases are 1.15 times the estimates, and the Mem0 cell waits up to four hours for `/finish`.
 The campaign is written (`2026-10-06-oss-memory-shootout-lifecycle-lite/manifests/`), and every vendor shim passed a
@@ -399,13 +400,28 @@ Garry accepted the first draft's defaults with these choices:
    it misses, and items carrying both values, are counted and named), five seeds, and a restart through `docker compose
    restart`.
 
-## Still open at freeze
+## Code identity at freeze
 
-- Code identity: record the runner, generator, scorer and fake hashes and the gbrain-evals commit in the freezing
-  commit.
-- The cap leaves no room for a rerun (see "Budget").
+The counted cells run gbrain-evals commit `2eb2faa06a464bfef6b5d30dc98473ed32aeaa14`, with these files:
+
+| File | sha256 |
+|---|---|
+| `eval/runner/lifecycle-lite.ts` | `c26539340293c19f82856966744cd7cba868ac0ab81f1cec886594a2908c5bf0` |
+| `eval/runner/lifecycle-lite/run.ts` | `29136e8ec35e27774b55eaf47ddef02d0cc7a260545783f44ccf800fd7d96500` |
+| `eval/runner/lifecycle-lite/score.ts` | `7cfeaa9925c8d864ab01fec27c31407d3bcf6833c8c2df51d63be70dfa0e38cc` |
+| `eval/runner/lifecycle-lite/fakes.ts` | `ca895ad84d9f5777a8007935c27d6c963ebb11a350a927791c7e61b2e36d2b1d` |
+| `eval/generators/lifecycle-lite-gen.ts` | `13e67a8f8449009808d7a897a940a05c8606d28335ed1e61983ce0432aab90e4` |
+| `eval/systems/bootstrap.sh` | `b84e45df0eb6520541fbc5670bc5fb5ef9fb8daaa23f1a8482dc7423786ed0e3` |
+| `eval/systems/restart_check.sh` | `bba92c4796315899edbffdd4693fe6e4b9c9df18506f86b1e7fbcbdd1d42c19c` |
+
+The cap equals the sum of the leases, so a harness failure that needs a new lease needs a cap amendment first.
 
 ## Changelog
+
+### 2026-10-06: frozen
+
+Frozen with Garry's approval on 2026-10-06 after the keyless restart check passed on every vendor shim: recorded the
+code commit `2eb2faa`, the file hashes and the campaign hash `c6be1367`. No counted cell had been reserved.
 
 ### 2026-10-06: decisions applied, campaign written, restart check
 
