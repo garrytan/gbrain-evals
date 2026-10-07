@@ -1,0 +1,282 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-100k",
+  "split": "dev",
+  "started_at": "2026-10-06T22:44:14.723Z",
+  "finished_at": "2026-10-07T01:05:50.176Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "BEAM 100k",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "cognee",
+    "lease_id": "cognee-common-beam-100k-a1-6cd08e90",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 6,
+    "sessions": 486,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 2.0980890599999995,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 510
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "88e239d3cbdebf93b571f24293ac83325b9b57841810c7b86ced82eff737d547",
+  "cell_run_config_hash": "d5a6f2ad5a67d4c4fc2a4e430c98bae6fc3575eb25e9e9fc43f6d5727c28fed5",
+  "arm": {
+    "id": "fixed-evidence.native.b8000.main",
+    "policy": "fixed-evidence",
+    "context": "native",
+    "budget_tokens": 8000,
+    "reader": {
+      "id": "main",
+      "model": "openai:gpt-4.1-mini",
+      "slice": null
+    }
+  },
+  "retrieval_path": "MemorySystem.retrieve (http:http://127.0.0.1:8700, policy cognee:fixed-evidence), one retrieval per question and policy shared by every arm",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 6,
+    "questions_expected": 120,
+    "reader_slice": null
+  },
+  "counts": {
+    "rows": 120,
+    "scored": 108,
+    "errors": 0,
+    "abstention": 12
+  },
+  "summary": {
+    "recall_all_at_5": 0.5370370370370371,
+    "recall_any_at_5": 0.8796296296296297,
+    "recall_all_at_10": 0.6296296296296297,
+    "ndcg_at_10": 0.5847716041530501,
+    "latency_p50_ms": 1171.7,
+    "latency_p95_ms": 1371.5,
+    "qa_score": 0.5690079365079366,
+    "qa_rows": 120,
+    "qa_errors": 0,
+    "qa_service_score": 0.5690079365079366,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "reader": "openai:gpt-4.1-mini",
+    "judge": "openai:gpt-4.1-mini",
+    "runs": 1,
+    "context": "native",
+    "budget_tokens": 8000,
+    "reader_prompt": "native memory-item reading prompt (shootout-render-v1, approx-chars-div-4)",
+    "judge_prompts": "per-rubric-item yes/no",
+    "contexts_file": "../../contexts.ndjson"
+  },
+  "system": {
+    "name": "http:http://127.0.0.1:8700",
+    "capability_system": "cognee",
+    "capabilities": {
+      "protocol": 1,
+      "system": "cognee",
+      "versions": {
+        "package": "cognee==1.6.2",
+        "lock_sha256": "59af44d5a70bfa016e888d650259443ba8d0d2f2fd27f4416f9b8e184ef5a0d7",
+        "image": "built from eval/systems/cognee/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d with uv 0.12.3; the run receipt records the built image id",
+        "vendor_benchmark_code": "topoteretes/cognee@ba3631f2ed363a6ea50d649c34c56885af6b36fe (tag v1.6.2): cognee/eval_framework/beam/local_ingest.py, preprocessing/preprocess.py (format_turn_pair), report_artifacts/100k_fixed/beam_hybrid_completion_20_20_qa_v1_config.json"
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": "openai/gpt-5.6-luna",
+            "small": null,
+            "summarization": "openai/gpt-5.6-luna",
+            "embedder": "openai/text-embedding-3-large",
+            "dims": 3072,
+            "reranker": null
+          },
+          "notes": "cognee 1.6.2 defaults (infrastructure/llm/config.py llm_model, embeddings/config.py DEFAULT_EMBEDDING_MODEL; dims derived by litellm). LLM_EXTRACTION_MODEL, LLM_SUMMARIZATION_MODEL and LLM_QUERY_MODEL stay unset, so every stage uses the base model. GRAPH_EXTRACTOR=llm pins LLM extraction; without it a missing key would select the local GLiNER demo extractor and fastembed BAAI/bge-small-en-v1.5."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": "openai/gpt-4.1-mini",
+            "summarization": "openai/gpt-4.1-mini",
+            "embedder": "openai/text-embedding-3-large",
+            "dims": 1536
+          },
+          "unsettable": [],
+          "notes": "LLM_MODEL, EMBEDDING_MODEL and EMBEDDING_DIMENSIONS set by shim.py; cognee forwards dimensions to the embeddings API (LiteLLMEmbeddingEngine)."
+        }
+      },
+      "time": "in-text",
+      "time_notes": "Each turn-pair item carries 'Time anchor: <event_time>' in its text, as cognee's BEAM preprocessing does. temporal_cognify stays off, as in cognee's BEAM ingestion. cognee.search takes no query date, so query_time is ignored and applied_settings says so. A null event_time (allowed by the protocol) is written as 'Time anchor: unknown'; cognee never substitutes the ingest time, because dates live only in the text.",
+      "provenance": {
+        "status": "partial",
+        "mechanism": "Chunk items carry payload.document_id, which is the cognee Data id. The shim pins each session's Data id (uuid5 of namespace and source id) through DataItem.data_id and labels it with the source id, so a chunk maps to exactly one session (exact). Entity and fact items come from the merged graph and carry no source; they are returned with provenance unavailable. The map is rebuilt from cognee.datasets.list_data labels (public API) after a restart."
+      },
+      "delete": "native",
+      "delete_notes": "cognee.forget(data_id, dataset) removes the Data row and its chunks and chunk vectors; after it no chunk from the deleted session returns. In the keyless check (canned extraction), graph entities shared with a surviving session stayed and their edge text still quoted the deleted session; in the metered smoke (real extraction) no entity or fact mentioned the deleted fact. lifecycle-lite should score entity and fact items as well as chunks.",
+      "readiness": "synchronous: /ingest runs cognee.add then cognee.cognify(run_in_background=False) for that session, as cognee's BEAM local_ingest does, so /finish has nothing to wait for. A failed pipeline raises (raise_on_error=True) and becomes a product_error.",
+      "namespace": "dataset (one cognee dataset per namespace, named by the opaque ns id; ENABLE_BACKEND_ACCESS_CONTROL is on by default, so each dataset gets its own graph and vector store)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "top_k": 15,
+          "maps_to": "cognee.search(query_type=HYBRID_COMPLETION, only_context=True, verbose=True, datasets=[ns]). search top_k 15 caps each hybrid lane at min(15, DEFAULT_HYBRID_LANE_TOP_K=10): 10 chunks, 10 entities with up to 10 edges each, 10 facts. HYBRID_COMPLETION is recall()'s fallback type (ROUTER_FALLBACK_TYPE) and the retriever cognee selected for its reported BEAM configuration. The type is pinned (auto_route off) so the item shape is deterministic."
+        },
+        "fixed-evidence": {
+          "top_k": 15,
+          "chunks_top_k": 20,
+          "entities_top_k": 20,
+          "maps_to": "cognee.search(query_type=HYBRID_COMPLETION, only_context=True, verbose=True, datasets=[ns]). 20 chunks, 20 entities (cognee's reported BEAM 100K configuration hybrid_completion_20_20_qa_v1), 10 facts; the harness packs the returned items to the 8,000-token budget. Why: the largest documented hybrid setting; the harness truncates to the shared budget"
+        }
+      },
+      "retrieval_notes": {
+        "settable": [
+          "top_k",
+          "chunks_top_k",
+          "entities_top_k",
+          "facts_top_k",
+          "max_edges_per_entity"
+        ],
+        "item_order": "chunks (cognee rank), then entities, then facts, the order cognee renders them into its own context string (raw.context)",
+        "descriptive_keys": [
+          "maps_to"
+        ]
+      },
+      "streaming": "disabled",
+      "telemetry_off": [
+        "TELEMETRY_DISABLED=1",
+        "LITELLM_LOCAL_MODEL_COST_MAP=True",
+        "HF_HUB_OFFLINE=1"
+      ],
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "stdio",
+        "version": "cognee-mcp 0.5.6 (not built in this lane; Phase 8)"
+      },
+      "deviations_from_vendor_code": [
+        "Session documents are added as JSON text through DataItem (with a pinned data_id and the source id as label) instead of a JSON file on disk; JsonListChunker reads the same JSON list either way.",
+        "Turns are paired in arrival order (1-2, 3-4, ...) and labelled by speaker; cognee's BEAM code pairs user and assistant turns. LoCoMo has two named speakers and no assistant.",
+        "The item header keeps Session/Turn/Time anchor but the session number is the ingestion order inside the namespace, not a dataset session id.",
+        "No BEAM turn compression, no session distillation and no global context index: they are BEAM-specific additions in local_ingest.py, not part of add + cognify, and the reported 100K retrieval did not query the global index.",
+        "cognee.search with verbose=True is used instead of cognee.recall: for only_context completion types recall returns one rendered prompt string, while search(verbose=True) returns the same retrieval as separate ranked chunks, entities and facts with chunk document ids.",
+        "No per-question-type answer prompts: the harness's fixed reader answers.",
+        "AMB's cognee provider (vectorize-io/agent-memory-benchmark@f618ed7) ingests all documents then cognifies once and retrieves CHUNKS top 50 with fastembed; this shim follows cognee's own BEAM code instead because it exercises the graph."
+      ]
+    },
+    "identity": {
+      "system": "cognee",
+      "config": "common",
+      "versions": {
+        "package": "cognee==1.6.2",
+        "lock_sha256": "59af44d5a70bfa016e888d650259443ba8d0d2f2fd27f4416f9b8e184ef5a0d7",
+        "image": "built from eval/systems/cognee/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d with uv 0.12.3; the run receipt records the built image id",
+        "vendor_benchmark_code": "topoteretes/cognee@ba3631f2ed363a6ea50d649c34c56885af6b36fe (tag v1.6.2): cognee/eval_framework/beam/local_ingest.py, preprocessing/preprocess.py (format_turn_pair), report_artifacts/100k_fixed/beam_hybrid_completion_20_20_qa_v1_config.json"
+      },
+      "health": {
+        "ok": true,
+        "config": "common",
+        "resolved": {
+          "llm_model": "openai/gpt-4.1-mini",
+          "llm_endpoint": "http://egress:8787/cognee/openai/v1",
+          "structured_output_framework": "litellm_native",
+          "embedding_model": "openai/text-embedding-3-large",
+          "embedding_dimensions": 1536,
+          "embedding_endpoint": "http://egress:8787/cognee/openai/v1",
+          "graph_extractor": "llm"
+        }
+      }
+    }
+  },
+  "context": "native",
+  "policy": {
+    "name": "cognee:fixed-evidence",
+    "mode": "fixed-evidence",
+    "settings": {
+      "top_k": 15,
+      "chunks_top_k": 20,
+      "entities_top_k": 20
+    },
+    "settings_source": "flattened"
+  },
+  "manifest_sha256": "19e5340710a77c078b7403e6b9d94f8236b8eb81bf24971bee4e661b36a8a76d",
+  "outcomes": {
+    "scored": 120,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 120,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "rows_file": "rows.ndjson",
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-hybrid-control-beam-100k-a1-e0acab13",
+  "lease_usd": 6,
+  "committed_usd": 2.7792252700000057,
+  "requests": 2364,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

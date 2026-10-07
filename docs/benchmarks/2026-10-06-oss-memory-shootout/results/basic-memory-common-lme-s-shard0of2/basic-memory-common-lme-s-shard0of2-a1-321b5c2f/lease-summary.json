@@ -1,0 +1,8 @@
+{
+  "run_id": "basic-memory-common-lme-s-shard0of2-a1-321b5c2f",
+  "lease_usd": 21,
+  "committed_usd": 7.402788820000094,
+  "requests": 36849,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "hindsight-recipe-locomo-r1-a1-80808a9e",
+  "lease_usd": 11,
+  "committed_usd": 6.020805500000005,
+  "requests": 4724,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

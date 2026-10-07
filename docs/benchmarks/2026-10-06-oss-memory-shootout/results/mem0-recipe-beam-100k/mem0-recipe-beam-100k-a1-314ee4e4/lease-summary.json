@@ -1,0 +1,8 @@
+{
+  "run_id": "mem0-recipe-beam-100k-a1-314ee4e4",
+  "lease_usd": 9,
+  "committed_usd": 8.45005914,
+  "requests": 4981,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

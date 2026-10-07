@@ -1,0 +1,8 @@
+{
+  "run_id": "cognee-common-lme-s-shard2of3-a1-2bdca2ba",
+  "lease_usd": 36,
+  "committed_usd": 22.65763532000071,
+  "requests": 32796,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

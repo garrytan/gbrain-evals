@@ -1,0 +1,753 @@
+{
+  "kind": "precisionmembench-system",
+  "schema_version": 1,
+  "benchmark": "precisionmembench",
+  "contract": "PrecisionMemBench upstream contract",
+  "started_at": "2026-10-07T20:56:31.465Z",
+  "finished_at": "2026-10-07T21:00:02.989Z",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "780d3013398692c1a7e4cf007f74497deab45bc8e49638d91e0e747970b4a212",
+  "upstream": {
+    "repo": "tenurehq/precisionmembench",
+    "commit": "c9689ca63d83f8979b235fd2c0a6ddf2d28ca850",
+    "fixture_sha256": {
+      "fixtures/beliefs.seed.json": "35659b3b9a581b644fc6746e1b4e902c3e7b56c0973b546bf7b0816a69e3de98",
+      "fixtures/retrieval.cases.json": "09e99f0852280538abe34b03570f65583fdb10df3c554b7150f0f665d5db709c"
+    },
+    "scorer_sha256": {
+      "scorer/baseAdapter.ts": "0aa2bf9ec4544b548e8bd6ffbf47a23a2fa78eb236b3a60c9b46593d80c35356",
+      "scorer/belief.ts": "c3a992066d452cd6b80865640782c31d201a14e1f3fde44cd25953c0d6459353",
+      "scorer/buildRetrievalReport.ts": "809c77fccbf0e3b3001a2c396f4c6dc515d4f1f19b293373c8abca9239fcfa9b",
+      "scorer/runCases.ts": "e0e9c7bfcff2999955989e27127698cc9f4ed57284dbd9d3b87d2bbc46e61958",
+      "providers.config.json": "3b5a7fef80f5272f9b0f8d67c9a96249ee30ade34b28fcb77a44b34e7204a8eb"
+    }
+  },
+  "evaluator": "vendored BaseAdapter.buildContext and scoreCases, unchanged: persona, pinned facts, open questions, relation expansion and the budget come from the shared evaluator; only searchText calls the system (eval/precisionmembench/systemAdapter.ts)",
+  "ingestion": {
+    "unit": "one session per belief, one user turn with upstream's /add text (BaseAdapter.beliefToText)",
+    "superseded": "seeded live; no supersession field crosses",
+    "event_time": "synthetic and disclosed: 2026-05-29T00:00:00 plus one minute per fixture index (arrival order), never the belief's own dates",
+    "query_time": "the namespace's last event time",
+    "namespaces": "one per (user, scope) a case searches: that user's beliefs of that scope plus the user's universal beliefs; a belief no searched namespace holds gets its owner's own namespace"
+  },
+  "belief_mapping": "distinct cited sources in first-appearance order over items in rank order, whole items, cut at the case limit (maxBeliefs, default 20); one source is one belief of that namespace; items with provenance unavailable cite nothing; a retrieval whose items all lack provenance is not measurable",
+  "families": {
+    "search-only": "every category the vendored scorer does not list as structural (the S3 headline)",
+    "structural": "the scorer's STRUCTURAL_CATEGORIES, reported separately"
+  },
+  "selection": {
+    "cases_expected": 77,
+    "full_case_count": 77,
+    "limit": null,
+    "partial": false
+  },
+  "system": {
+    "name": "http:http://127.0.0.1:8700",
+    "capability_system": "mem0",
+    "identity": {
+      "system": "mem0",
+      "config": "common",
+      "versions": {
+        "package": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
+        "lock_sha256": "9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680",
+        "image": null,
+        "vendor_benchmark_code": "mem0ai/memory-benchmarks@4b61c5d31b9c668a12b4f5e78064248a02c82d2b, benchmarks/locomo/run.py (ingest_conversation, session_to_chunks, process_question), benchmarks/longmemeval/run.py and benchmarks/beam/run.py (CHUNK_SIZE), benchmarks/common/mem0_client.py",
+        "backend": "qdrant/qdrant:v1.19.2@sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad (server, matching qdrant-client 1.19.1 in uv.lock)",
+        "resolved_dependencies": "uv.lock resolved 2026-10-05 with exclude-newer and no prereleases: qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1, posthog 7.62.1. pip install mem0ai resolves the same way; mem0's poetry.lock is not used by its hatch build."
+      },
+      "health": {
+        "ok": true,
+        "config": "common",
+        "extraction": "gpt-4.1-mini",
+        "embedder": "text-embedding-3-large",
+        "dims": 1536,
+        "chunk_turns": 1
+      }
+    },
+    "capabilities": {
+      "protocol": 1,
+      "system": "mem0",
+      "versions": {
+        "package": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
+        "lock_sha256": "9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680",
+        "image": null,
+        "vendor_benchmark_code": "mem0ai/memory-benchmarks@4b61c5d31b9c668a12b4f5e78064248a02c82d2b, benchmarks/locomo/run.py (ingest_conversation, session_to_chunks, process_question), benchmarks/longmemeval/run.py and benchmarks/beam/run.py (CHUNK_SIZE), benchmarks/common/mem0_client.py",
+        "backend": "qdrant/qdrant:v1.19.2@sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad (server, matching qdrant-client 1.19.1 in uv.lock)",
+        "resolved_dependencies": "uv.lock resolved 2026-10-05 with exclude-newer and no prereleases: qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1, posthog 7.62.1. pip install mem0ai resolves the same way; mem0's poetry.lock is not used by its hatch build."
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": "gpt-5-mini",
+            "small": null,
+            "embedder": "text-embedding-3-small",
+            "dims": 1536,
+            "reranker": null
+          },
+          "notes": "documented self-hosted install: Memory.from_config with the OpenAI LLM and embedder left at SDK defaults (llms/openai.py sets gpt-5-mini, embeddings/openai.py sets text-embedding-3-small), Qdrant server, mem0ai[nlp] with en_core_web_sm for entity extraction and BM25 lemmatization, fastembed for Qdrant BM25 sparse vectors (docs/migration/oss-v2-to-v3.mdx). One LLM call per add (the v3 additive pipeline), no update or delete calls. No reranker is configured and search(rerank=False) is the default. Note: memory-benchmarks' own OSS server defaults to gpt-4o-mini (docker/mem0/main.py LLM_MODEL); the SDK default is gpt-5-mini, which this record follows as the plan does. The recipe sets is_reasoning_model=True on the LLM config: mem0 2.2.1's reasoning-model list (llms/base.py _is_reasoning_model) matches only the exact name gpt-5, so with its own default gpt-5-mini it sends temperature=0.1, which OpenAI rejects with HTTP 400 on every extraction call (seen in the 2026-10-05 metered smoke). is_reasoning_model is mem0's documented override for this; it drops temperature and max_tokens."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": "gpt-4.1-mini",
+            "embedder": "text-embedding-3-large",
+            "dims": 1536,
+            "reranker": null
+          },
+          "unsettable": [],
+          "notes": "embedder embedding_dims=1536 makes mem0 send `dimensions` to the API (embeddings/openai.py)."
+        }
+      },
+      "time": "in-text",
+      "time_notes": "Memory.add raises ValueError for any non-null timestamp in OSS 2.2.1 (main.py:818, 'Platform-only temporal parameter'), and Memory.search raises for any non-null reference_date (main.py:1447). The shim puts a system message 'This conversation took place at 1:56 pm on 8 May, 2023.' at the head of every add call. The extraction prompt's '## Observation Date' section, which the prompt calls the only temporal anchor, is always the wall-clock date in OSS (configs/prompts.py _resolve_dates), so relative dates may still resolve against today. The session's ISO date is also stored in memory metadata (session_date) and returned as valid_from.",
+      "provenance": {
+        "status": "partial",
+        "mechanism": "metadata={'source_id', 'session_date'} on every add; mem0 copies it into each memory it creates and returns it from search. Each memory cites the session whose add created it. The extractor also reads the scope's last 10 raw messages and its 10 nearest existing memories, and a later restatement of the same fact is dropped by hash dedup rather than cited, so the list can be incomplete."
+      },
+      "delete": "public-api-composition",
+      "delete_notes": "get_all(filters={user_id, source_id}) then delete(memory_id) for each. Mem0 deletes memories, not sources. The history store keeps the scope's 10 most recent raw messages (fed to later extraction calls as context) and each memory's change log; neither is searchable.",
+      "readiness": "queued: /ingest validates the session and queues it on the namespace's single worker, returning completeness `unknown` at once, because one session of synchronous Memory.add calls can outlast the harness's 600-second request deadline (gpt-5-mini takes about 16 s per call; a 30-turn LoCoMo session at one turn per call is about 8 minutes). /finish waits until the queue drains (bounded by timeout_s, else ready=false) and reports `known`, or `degraded` when any add raised (mem0 falls back to per-record inserts and raises only when none persisted, main.py:1055-1076), with counts in its receipt. A budget refusal stops the namespace's remaining chunks and /finish returns the budget error. /reset cancels queued sessions; one already running finishes into the retired user_id, which nothing reads.",
+      "namespace": "user_id (filters={'user_id': ...} on search and get_all). /reset moves the namespace to a fresh user_id (<ns>.g<n>) after delete_all, because delete_all leaves the scope's recent raw messages in the history store.",
+      "parallel_namespaces": true,
+      "parallel_notes": "memory-benchmarks drives one Memory instance from 10 concurrent workers across conversations (FastAPI threadpool, sync endpoints); the shim serializes calls within a namespace.",
+      "ingest_chunking": {
+        "env": "MEM0_CHUNK_TURNS",
+        "default": 2,
+        "vendor_values": {
+          "locomo": 1,
+          "longmemeval": 2,
+          "beam": 2
+        },
+        "notes": "set per cell at container start; each chunk is one add call and one extraction LLM call"
+      },
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 20
+          },
+          "maps_to": "Memory.search(query, top_k=20, filters={'user_id'}, threshold=0.1, rerank=False): the SDK defaults (main.py:1397-1400). Hybrid scoring (semantic + BM25 + entity boost) is always on when spaCy and fastembed are installed."
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 200
+          },
+          "maps_to": "same call with top_k=200, the largest cutoff memory-benchmarks evaluates (--top-k 200, cutoffs 10,20,50,200), so the harness can pack 8,000 tokens of short memories"
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [
+        "MEM0_TELEMETRY=false",
+        "HF_HUB_OFFLINE=1",
+        "HF_HUB_DISABLE_TELEMETRY=1",
+        "QDRANT__TELEMETRY_DISABLED=true"
+      ],
+      "agent_surface": {
+        "kind": "harness-mcp",
+        "transport": "stdio",
+        "version": "not built yet: a harness MCP wrapper over this image's mem0ai 2.2.1 SDK (add, search, get_all, delete), because OpenMemory, mem0's own MCP server, is being sunset"
+      },
+      "deviations_from_vendor_code": [
+        "memory-benchmarks talks to its own FastAPI server (docker/mem0/main.py) built from mem0's feat/v3-pipeline branch; the shim calls the pinned mem0ai 2.2.1 SDK in process, with the same Qdrant backend. That server passes user_id to search() as a keyword, which 2.2.1 rejects; the shim uses filters={'user_id'}.",
+        "The session date goes into the messages as a system line. memory-benchmarks sends timestamp=<epoch> to its OSS server, whose AddRequest model has no timestamp field, so in the vendor's own OSS runs the date never reaches mem0.",
+        "Messages keep the harness's role and render content as 'Speaker: text', as session_to_chunks does; when a role is neither user nor assistant the first speaker becomes user and others assistant, the vendor's mapping. Image captions are not sent because the sanitized sessions carry text only.",
+        "metadata={'source_id', 'session_date'} is added to every add call for provenance and delete; the vendor sends no metadata.",
+        "user_id is the opaque namespace plus a reset generation, not locomo_<conv>_<run_id>.",
+        "Extraction model: the recipe uses the SDK default gpt-5-mini; memory-benchmarks' server defaults to gpt-4o-mini.",
+        "Search runs once per question at the policy's top_k; the vendor searches once at top_k=200 and slices cutoffs.",
+        "Recipe LLM config sets is_reasoning_model=True, mem0's documented override; without it every gpt-5-mini extraction call fails with HTTP 400 (temperature 0.1 unsupported)."
+      ],
+      "proxy_refusals": "HTTP 402 from the metering proxy maps to the protocol's budget error, HTTP 403 (route outside the allowlist or leak tripwire) to invalid_request",
+      "resolved": {
+        "config": "common",
+        "extraction": "gpt-4.1-mini",
+        "embedder": "text-embedding-3-large",
+        "dims": 1536,
+        "chunk_turns": 1
+      }
+    }
+  },
+  "policy": {
+    "name": "mem0:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "k": 20
+    },
+    "settings_source": "settings"
+  },
+  "product": null,
+  "overlay": null,
+  "gbrain_config": null,
+  "embedding": null,
+  "fidelity": null,
+  "cost": null,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "mem0",
+    "lease_id": "mem0-common-pmb-a1-9b3647c9",
+    "retry_upstream_5xx": true
+  },
+  "sanitizer": {
+    "forbidden_markers": 146
+  },
+  "ingest": {
+    "namespaces": 6,
+    "sessions": 50,
+    "failed_sessions": 0,
+    "degraded_namespaces": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "usd": 0.0636,
+    "requests": 210
+  },
+  "namespaces": [
+    {
+      "ns": "ns-91f4c705875cfcc6",
+      "user": "other-user",
+      "scope": "domain:code",
+      "beliefs": 1,
+      "searched": false,
+      "ingest": {
+        "ns": "ns-91f4c705875cfcc6",
+        "sessions": 1,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.00105515,
+          "requests": 6,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 4
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-3649e243bf042f40",
+      "user": "test-user",
+      "scope": "domain:code",
+      "beliefs": 27,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-3649e243bf042f40",
+        "sessions": 27,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.036622040000000015,
+          "requests": 110,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 108
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-9d76708b0782f750",
+      "user": "test-user",
+      "scope": "domain:hobby",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-9d76708b0782f750",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.005511620000000001,
+          "requests": 22,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 20
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-1e124b53ab4d9919",
+      "user": "test-user",
+      "scope": "domain:writing",
+      "beliefs": 12,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-1e124b53ab4d9919",
+        "sessions": 12,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.01464739,
+          "requests": 50,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 48
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-da87ac37ca61d472",
+      "user": "brand-new-user",
+      "scope": "domain:code",
+      "beliefs": 0,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-da87ac37ca61d472",
+        "sessions": 0,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "skipped",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0,
+          "requests": 0,
+          "unpriced": 0
+        }
+      }
+    },
+    {
+      "ns": "ns-9836524c60827d2a",
+      "user": "test-user",
+      "scope": "user:universal",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-9836524c60827d2a",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.00573773,
+          "requests": 22,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 20
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    }
+  ],
+  "costs": {
+    "ingest_usd": 0.0636,
+    "retrieval_usd": 0.0001,
+    "total_usd": 0.0637,
+    "source": "metering proxy"
+  },
+  "latency": {
+    "system_calls": 72,
+    "p50_ms": 827.5999999999999,
+    "p95_ms": 1117.5500000000002
+  },
+  "outcomes": {
+    "scored": 77,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 77,
+  "comparison_complete": true,
+  "summary": {
+    "search-only": {
+      "cases": 43,
+      "counted": 43,
+      "harness_failures": 0,
+      "passed": 3,
+      "mean_precision": 0.0827,
+      "n_precision": 40,
+      "mean_recall": 1,
+      "n_recall": 34,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "structural": {
+      "cases": 34,
+      "counted": 34,
+      "harness_failures": 0,
+      "passed": 6,
+      "mean_precision": 0.0253,
+      "n_precision": 29,
+      "mean_recall": 0.9444,
+      "n_recall": 9,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "all": {
+      "cases": 77,
+      "counted": 77,
+      "harness_failures": 0,
+      "passed": 9,
+      "mean_precision": 0.0586,
+      "n_precision": 69,
+      "mean_recall": 0.9884,
+      "n_recall": 43,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "categories": [
+      {
+        "category": "Type routing and open questions",
+        "family": "structural",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0093,
+        "n_precision": 6,
+        "mean_recall": 1,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Alias resolution",
+        "family": "search-only",
+        "cases": 23,
+        "counted": 23,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.1052,
+        "n_precision": 23,
+        "mean_recall": 1,
+        "n_recall": 22,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Scope disambiguation",
+        "family": "structural",
+        "cases": 12,
+        "counted": 12,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0241,
+        "n_precision": 12,
+        "mean_recall": 0.875,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Supersession chain exclusion",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0,
+        "n_precision": 3,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Design boundary cases",
+        "family": "search-only",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 2,
+        "mean_precision": 0.0139,
+        "n_precision": 4,
+        "mean_recall": 1,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cross-user isolation",
+        "family": "structural",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0,
+        "n_precision": 1,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Persona prelude content",
+        "family": "structural",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0,
+        "n_precision": 3,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Ranking stability",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0.0833,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Fuzzy matching and prefix guards",
+        "family": "search-only",
+        "cases": 7,
+        "counted": 7,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0397,
+        "n_precision": 7,
+        "mean_recall": 1,
+        "n_recall": 5,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cold start behavior",
+        "family": "search-only",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": null,
+        "n_precision": 0,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Budget eviction and capacity",
+        "family": "structural",
+        "cases": 5,
+        "counted": 5,
+        "harness_failures": 0,
+        "passed": 3,
+        "mean_precision": 0.1111,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Counter-signal retrieval",
+        "family": "search-only",
+        "cases": 2,
+        "counted": 2,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0556,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Relation expansion",
+        "family": "search-only",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.1111,
+        "n_precision": 4,
+        "mean_recall": 1,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      }
+    ],
+    "upstream": {
+      "meanLatencyMs": 751.74,
+      "p50LatencyMs": 829.71,
+      "p95LatencyMs": 1163.32,
+      "caseCount": 77,
+      "meanPrecision": 0.0586,
+      "meanRecall": 0.9884,
+      "totalPassed": 9,
+      "totalCases": 77,
+      "passRate": 0.1169,
+      "activeRetrievalPasses": 0,
+      "passTypes": {
+        "activeRetrieval": 0,
+        "structural": 6,
+        "triviallyEmpty": 3
+      },
+      "categories": [
+        {
+          "category": "Alias resolution",
+          "caseCount": 23,
+          "passed": 0,
+          "failed": 23,
+          "meanPrecision": 0.1052,
+          "meanRecall": 1
+        },
+        {
+          "category": "Scope disambiguation",
+          "caseCount": 12,
+          "passed": 0,
+          "failed": 12,
+          "meanPrecision": 0.0241,
+          "meanRecall": 0.875
+        },
+        {
+          "category": "Fuzzy matching and prefix guards",
+          "caseCount": 7,
+          "passed": 0,
+          "failed": 7,
+          "meanPrecision": 0.0397,
+          "meanRecall": 1
+        },
+        {
+          "category": "Type routing and open questions",
+          "caseCount": 6,
+          "passed": 0,
+          "failed": 6,
+          "meanPrecision": 0.0093,
+          "meanRecall": 1
+        },
+        {
+          "category": "Design boundary cases",
+          "caseCount": 6,
+          "passed": 2,
+          "failed": 4,
+          "meanPrecision": 0.0139,
+          "meanRecall": 1
+        },
+        {
+          "category": "Budget eviction and capacity",
+          "caseCount": 5,
+          "passed": 3,
+          "failed": 2,
+          "meanPrecision": 0.1111,
+          "meanRecall": 1
+        },
+        {
+          "category": "Persona prelude content",
+          "caseCount": 4,
+          "passed": 1,
+          "failed": 3,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Relation expansion",
+          "caseCount": 4,
+          "passed": 0,
+          "failed": 4,
+          "meanPrecision": 0.1111,
+          "meanRecall": 1
+        },
+        {
+          "category": "Supersession chain exclusion",
+          "caseCount": 3,
+          "passed": 0,
+          "failed": 3,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Ranking stability",
+          "caseCount": 3,
+          "passed": 1,
+          "failed": 2,
+          "meanPrecision": 0.0833,
+          "meanRecall": 1
+        },
+        {
+          "category": "Counter-signal retrieval",
+          "caseCount": 2,
+          "passed": 0,
+          "failed": 2,
+          "meanPrecision": 0.0556,
+          "meanRecall": 1
+        },
+        {
+          "category": "Cross-user isolation",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Cold start behavior",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": null,
+          "meanRecall": null
+        }
+      ]
+    }
+  },
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson",
+    "report": "report.json"
+  }
+}
