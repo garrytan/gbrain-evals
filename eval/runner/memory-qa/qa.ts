@@ -18,6 +18,14 @@
  *           repeats the planted misleading answer (`qa_trap`);
  *   beam    each rubric item judged yes/no; the score is the fraction met.
  *
+ * `judgeResponse` above is the decision kit's frozen judging path. Q1 judges
+ * through `judgeAnswer`: the benchmark's registered instrument
+ * (instruments.ts), with a malformed or empty judgment retried as a fresh
+ * call and finally recorded as a judge failure, never as a "no".
+ *
+ * Reasoning effort (`effort`) is part of the request and of the cache key,
+ * so answers at one effort never reuse another's cache.
+ *
  * Replicates: `replicate` enters every cache key, so ten replicates are ten
  * provider calls, never ten copies of one cached response. Answers and
  * rubrics stay on the evaluator side; the system under test only sees the
@@ -31,13 +39,15 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { officialJudgePrompt } from '../evidence-delivery/calls.ts';
 import type { MemoryQuestion, Session } from './corpus.ts';
+import type { Instrument, JudgeCall } from './instruments.ts';
+import { rawSha256, type JudgmentRecord } from './records.ts';
 
 export const READER_TEMPLATE = 'I will give you several history chats between you and a user. Please answer the question based on the relevant chat history. Answer the question step by step: first extract all the relevant information, and then reason over the information to get the answer.\n\n\nHistory Chats:\n\n{history}\n\nCurrent Date: {date}\nQuestion: {question}\nAnswer (step by step):';
 
 export const DEFAULT_READER: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', custody: 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-mini', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-500k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
 export const DEFAULT_JUDGE: Record<string, string> = { 'lme-s': 'openai:gpt-4o-2024-08-06', custody: 'openai:gpt-4o-2024-08-06', locomo: 'openai:gpt-4o-2024-08-06', 'beam-100k': 'openai:gpt-4.1-mini', 'beam-500k': 'openai:gpt-4.1-mini', 'beam-1m': 'openai:gpt-4.1-mini', fixture: 'openai:gpt-4o-mini' };
 
-export interface ChatResult { text: string; input_tokens: number; output_tokens: number; cached: boolean }
+export interface ChatResult { text: string; input_tokens: number; output_tokens: number; cache_read_tokens?: number; cache_write_tokens?: number; cached: boolean }
 
 /** Approximate token count used for packing (4 characters per token). */
 export const approxTokens = (s: string) => Math.ceil(s.length / 4);
@@ -113,13 +123,38 @@ export function repeatsTrap(response: string, trap: string | undefined): boolean
   return t.length > 3 && norm(response).includes(t);
 }
 
-export class ChatClient {
+/** Chat options. `effort`, `system` and `attempt` enter the cache key only when set, so earlier caches stay valid. */
+export interface ChatOptions {
+  maxTokens: number;
+  replicate: number;
+  /** 0 by default; null sends no temperature (a judge that accepts only its default). */
+  temperature?: number | null;
+  /** Reasoning effort, sent as OpenAI `reasoning_effort` or Anthropic `output_config.effort`. */
+  effort?: string;
+  /** A system message (BEAM's equivalence judge sends one). */
+  system?: string;
+  /** Retry of a malformed judgment: a fresh call, never the cached malformed reply. */
+  attempt?: number;
+}
+
+export interface ChatLike { chat(model: string, prompt: string, opts: ChatOptions): Promise<ChatResult> }
+
+/** The cache key of one call. */
+export function chatCacheKey(model: string, prompt: string, opts: ChatOptions): string {
+  const [provider, name] = model.includes(':') ? [model.slice(0, model.indexOf(':')), model.slice(model.indexOf(':') + 1)] : ['openai', model];
+  return createHash('sha256').update(JSON.stringify({ provider, name, prompt, maxTokens: opts.maxTokens, temperature: opts.temperature === null ? 'default' : opts.temperature ?? 0, replicate: opts.replicate,
+    ...(opts.effort !== undefined ? { effort: opts.effort } : {}), ...(opts.system !== undefined ? { system: opts.system } : {}), ...(opts.attempt ? { attempt: opts.attempt } : {}) })).digest('hex');
+}
+
+/** OpenAI's GPT-5-and-later reasoning models take only their default temperature. */
+export const defaultTemperatureOnly = (model: string) => /^(?:openai:)?(gpt-[5-9]|o\d)/.test(model);
+
+export class ChatClient implements ChatLike {
   constructor(private cacheDir: string) { mkdirSync(cacheDir, { recursive: true }); }
 
-  async chat(model: string, prompt: string, opts: { maxTokens: number; replicate: number; temperature?: number }): Promise<ChatResult> {
+  async chat(model: string, prompt: string, opts: ChatOptions): Promise<ChatResult> {
     const [provider, name] = model.includes(':') ? [model.slice(0, model.indexOf(':')), model.slice(model.indexOf(':') + 1)] : ['openai', model];
-    const key = createHash('sha256').update(JSON.stringify({ provider, name, prompt, maxTokens: opts.maxTokens, temperature: opts.temperature ?? 0, replicate: opts.replicate })).digest('hex');
-    const path = join(this.cacheDir, `${key}.json`);
+    const path = join(this.cacheDir, `${chatCacheKey(model, prompt, opts)}.json`);
     if (existsSync(path)) return { ...JSON.parse(readFileSync(path, 'utf8')), cached: true };
     let lastError: unknown = null;
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -138,29 +173,34 @@ export class ChatClient {
   }
 }
 
-async function openaiChat(model: string, prompt: string, opts: { maxTokens: number; temperature?: number }): Promise<Omit<ChatResult, 'cached'>> {
+async function openaiChat(model: string, prompt: string, opts: ChatOptions): Promise<Omit<ChatResult, 'cached'>> {
+  const messages = [...(opts.system !== undefined ? [{ role: 'system', content: opts.system }] : []), { role: 'user', content: prompt }];
+  const effort = opts.effort !== undefined ? { reasoning_effort: opts.effort } : {};
   const res = await fetch(`${(process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, '')}/chat/completions`, {
     method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     // GPT-5 and later reasoning models take max_completion_tokens and only their default temperature.
-    body: JSON.stringify(/^(gpt-[5-9]|o\d)/.test(model)
-      ? { model, messages: [{ role: 'user', content: prompt }], n: 1, max_completion_tokens: Math.max(opts.maxTokens, 2000) }
-      : { model, messages: [{ role: 'user', content: prompt }], n: 1, temperature: opts.temperature ?? 0, max_tokens: opts.maxTokens }),
+    body: JSON.stringify(defaultTemperatureOnly(model)
+      ? { model, messages, n: 1, max_completion_tokens: Math.max(opts.maxTokens, 2000), ...effort }
+      : { model, messages, n: 1, ...(opts.temperature === null ? {} : { temperature: opts.temperature ?? 0 }), max_tokens: opts.maxTokens, ...effort }),
     signal: AbortSignal.timeout(300_000),
   });
   const json = await res.json() as any;
   if (!res.ok) throw Object.assign(new Error(`openai ${res.status}: ${JSON.stringify(json?.error ?? json).slice(0, 300)}`), { status: res.status });
-  return { text: String(json.choices?.[0]?.message?.content ?? ''), input_tokens: json.usage?.prompt_tokens ?? 0, output_tokens: json.usage?.completion_tokens ?? 0 };
+  return { text: String(json.choices?.[0]?.message?.content ?? ''), input_tokens: json.usage?.prompt_tokens ?? 0, output_tokens: json.usage?.completion_tokens ?? 0,
+    cache_read_tokens: json.usage?.prompt_tokens_details?.cached_tokens ?? 0, cache_write_tokens: 0 };
 }
 
-async function anthropicChat(model: string, prompt: string, opts: { maxTokens: number; temperature?: number }): Promise<Omit<ChatResult, 'cached'>> {
+async function anthropicChat(model: string, prompt: string, opts: ChatOptions): Promise<Omit<ChatResult, 'cached'>> {
   const res = await fetch(`${(process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com').replace(/\/$/, '')}/v1/messages`, {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: opts.maxTokens, temperature: opts.temperature ?? 0, messages: [{ role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model, max_tokens: opts.maxTokens, ...(opts.temperature === null ? {} : { temperature: opts.temperature ?? 0 }), ...(opts.system !== undefined ? { system: opts.system } : {}),
+      ...(opts.effort !== undefined ? { output_config: { effort: opts.effort } } : {}), messages: [{ role: 'user', content: prompt }] }),
     signal: AbortSignal.timeout(300_000),
   });
   const json = await res.json() as any;
   if (!res.ok) throw Object.assign(new Error(`anthropic ${res.status}: ${JSON.stringify(json?.error ?? json).slice(0, 300)}`), { status: res.status });
-  return { text: (json.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join(''), input_tokens: json.usage?.input_tokens ?? 0, output_tokens: json.usage?.output_tokens ?? 0 };
+  return { text: (json.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join(''), input_tokens: json.usage?.input_tokens ?? 0, output_tokens: json.usage?.output_tokens ?? 0,
+    cache_read_tokens: json.usage?.cache_read_input_tokens ?? 0, cache_write_tokens: json.usage?.cache_creation_input_tokens ?? 0 };
 }
 
 export interface QaOutcome {
@@ -181,4 +221,48 @@ export async function judgeResponse(client: ChatClient, benchmark: string, judge
   let yes = 0;
   for (const p of prompts) if (judgeYes((await client.chat(judgeModel, p, { maxTokens: 10, replicate })).text)) yes++;
   return yes / prompts.length;
+}
+
+/** A judge call whose output stayed malformed through every attempt. */
+export class MalformedJudgment extends Error {
+  constructor(readonly raws: string[], reason: string) { super(`malformed judgment after ${raws.length} attempt(s): ${reason}`); this.name = 'MalformedJudgment'; }
+}
+
+/** The temperature a judge is sent: the instrument's, or null for a judge that accepts only its default. */
+export const judgeTemperature = (judge: string, instrument: Pick<Instrument, 'temperature'>): number | null => defaultTemperatureOnly(judge) ? null : instrument.temperature;
+
+/**
+ * Judge one fixed answer with a registered instrument. Each judge call is
+ * retried as a fresh call (`attempt` in the cache key) while its output is
+ * malformed; after `maxAttempts` the judgment is a `judge_error` with a null
+ * score. Provider errors propagate, so the caller records nothing and a
+ * restart retries the call.
+ */
+export async function judgeAnswer(client: ChatLike, instrument: Instrument, q: MemoryQuestion, response: string,
+  opts: { judge?: string; judgeReplicate: number; maxAttempts?: number }): Promise<Omit<JudgmentRecord, 'answer_id'>> {
+  const judge = opts.judge ?? instrument.canonical_judge;
+  const temperature = judgeTemperature(judge, instrument);
+  const maxAttempts = opts.maxAttempts ?? 3;
+  const raw: string[] = [];
+  const ask = async (call: JudgeCall) => {
+    const tries: string[] = [];
+    let reason = '';
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const res = await client.chat(judge, call.prompt, { maxTokens: call.max_tokens, replicate: opts.judgeReplicate, temperature, ...(call.system !== undefined ? { system: call.system } : {}), ...(attempt ? { attempt } : {}) });
+      tries.push(res.text);
+      const parsed = call.parse(res.text);
+      if (parsed.ok) { raw.push(res.text); return { raw: res.text, value: parsed.value }; }
+      reason = parsed.reason;
+    }
+    raw.push(...tries);
+    throw new MalformedJudgment(tries, reason);
+  };
+  const base = { instrument_id: instrument.id, instrument_sha256: instrument.sha256, judge, judge_replicate: opts.judgeReplicate, temperature };
+  try {
+    const r = await instrument.score(q, response, ask);
+    return { ...base, score: r.score, parse_ok: true, raw_sha256: rawSha256(raw), outcome: 'scored', raw, ...(r.detail ? { detail: r.detail } : {}) };
+  } catch (e) {
+    if (!(e instanceof MalformedJudgment)) throw e;
+    return { ...base, score: null, parse_ok: false, raw_sha256: rawSha256(raw), outcome: 'judge_error', raw, detail: { error: e.message } };
+  }
 }
