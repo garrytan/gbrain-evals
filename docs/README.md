@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.38, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
+gbrain-evals v0.10.39, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -175,7 +175,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-10-07: Fix wave 11 rows
 
-gbrain-evals v0.10.38. The retrieval table gained a row for the October 7 mirror of gbrain fix wave 11's W6.3 measurement: relaxed HNSW scan order raises recall@10 at a 50% source filter by 2.1 points (1024-d) and 1.7 points (1536-d) at unchanged latency, so it ships default-on. The memory table gained a row for the preregistered D12 agent smoke: the wave's reordered MCP instructions and shorter put_page description pass, with most cells at the ceiling and put_page never called. The opening line names v0.10.38 instead of v0.10.37.
+gbrain-evals v0.10.39. The retrieval table gained a row for the October 7 mirror of gbrain fix wave 11's W6.3 measurement: relaxed HNSW scan order raises recall@10 at a 50% source filter by 2.1 points (1024-d) and 1.7 points (1536-d) at unchanged latency, so it ships default-on. The memory table gained a row for the preregistered D12 agent smoke: the wave's reordered MCP instructions and shorter put_page description pass, with most cells at the ceiling and put_page never called. The opening line names v0.10.39 instead of v0.10.38.
 
 ### 2026-10-07: Re-pin to `a865f8f`
 
