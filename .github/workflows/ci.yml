@@ -91,3 +91,37 @@ jobs:
       # test/eval/ plus the unit tests colocated under eval/.
       - name: Unit + integration tests (shard ${{ matrix.shard }}/4)
         run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/
+
+  # The head-to-head scoreboard's $0 fixture (docs/scoreboard.md): the reference
+  # fake system end to end through the shim, the metering proxy in lease mode,
+  # the native packer, a keyless fake provider as reader and judge, the shared
+  # answer records, cost and speed, and the generator's render and check on the
+  # synthetic receipt. No keys, no Docker. judge-repeat is stubbed by name until
+  # eval/runner/judge-repeat.ts lands; drop it from --stub then.
+  scoreboard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Scoreboard fixture ($0)
+        run: timeout 300 bun run eval:scoreboard fixture --stub judge-repeat --json
+
+  # Secret scan of published receipts: every receipts/ directory and every
+  # scoreboard receipt tree under docs/benchmarks/. gitleaks is pinned by
+  # version and sha256; findings are redacted in the log.
+  receipt-secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: gitleaks on docs/benchmarks/**/receipts and scoreboard receipts
+        run: bash scripts/scan-receipts.sh

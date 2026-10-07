@@ -1,0 +1,10 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "fake",
+  "config": "recipe",
+  "cells": [
+    { "id": "fake-lme-s-{{lme_s_slice}}", "lease_usd": 5, "lease_scale": { "param": "lme_s_slice", "base": 100 }, "command": "bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_slice}} --output \"$SHOOTOUT_OUT\"", "setup_command": "bash eval/systems/bootstrap.sh setup --system fake" },
+    { "id": "fake-agent", "lease_usd": 1, "when": "agent_cell", "command": "true" }
+  ]
+}
