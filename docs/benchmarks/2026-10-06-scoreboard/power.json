@@ -1,0 +1,3402 @@
+{
+  "schema": "gbrain-evals/q1-power/v1",
+  "command": "bun eval/runner/q1/power.ts --sims 1000 --draws 1999 --seed 20261006",
+  "method": "restricted wild cluster bootstrap-t, Webb weights, two-sided, Holm within the family; estimand: per-question four-reader mean, clustered by conversation",
+  "inputs": {
+    "sources": [
+      {
+        "path": "docs/benchmarks/2026-10-05-heldout-program/starting-line/beam-1m-qa-master/shard-0/rows.ndjson.gz",
+        "sha256": "961ad15994a23b858b6b7feb7db038373e37b02b752f36f08122258ab02195f2",
+        "rows": 120
+      },
+      {
+        "path": "docs/benchmarks/2026-10-05-heldout-program/starting-line/beam-1m-qa-master/shard-1/rows.ndjson.gz",
+        "sha256": "ea6e17d0b62f2ab277984175a2733e9e11e956226b67c7deebdfa7c3bb6fcc0d",
+        "rows": 100
+      },
+      {
+        "path": "docs/benchmarks/2026-10-05-heldout-program/starting-line/beam-100k-qa-master/shard-0/rows.ndjson.gz",
+        "sha256": "b369ebfd4188ed6e84aa381377e801f6d48da8f93e3fb93bb47610a03e38f3c6",
+        "rows": 120
+      }
+    ],
+    "within_variance": 0.14748,
+    "dev_tau": 0.0416,
+    "dev_conversation_mean_sd": 0.09542,
+    "public_10m_tau": 0,
+    "public_10m_conversation_sd": 0.0732,
+    "pools": {
+      "abstention": {
+        "n": 34,
+        "mean": 0.14706
+      },
+      "contradiction_resolution": {
+        "n": 34,
+        "mean": 0.63235
+      },
+      "event_ordering": {
+        "n": 34,
+        "mean": 0.5807
+      },
+      "information_extraction": {
+        "n": 34,
+        "mean": 0.69044
+      },
+      "instruction_following": {
+        "n": 34,
+        "mean": 0.7402
+      },
+      "knowledge_update": {
+        "n": 34,
+        "mean": 0.41176
+      },
+      "multi_session_reasoning": {
+        "n": 34,
+        "mean": 0.64482
+      },
+      "preference_following": {
+        "n": 34,
+        "mean": 0.83578
+      },
+      "summarization": {
+        "n": 34,
+        "mean": 0.37466
+      },
+      "temporal_reasoning": {
+        "n": 34,
+        "mean": 0.4951
+      }
+    }
+  },
+  "options": {
+    "sims": 1000,
+    "draws": 1999,
+    "seed": 20261006,
+    "deltas_points": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "alpha": 0.05,
+    "target_power": 0.8,
+    "readers": 4,
+    "weights": "webb"
+  },
+  "scenarios": [
+    {
+      "name": "optimistic",
+      "tau_arm": 0,
+      "rho_arm": 0.5,
+      "rho_reader": 0.5,
+      "source": "tau: public BEAM-10M per-conversation SD 0.0732 minus the question-sampling part at 20 questions (dev within-conversation variance); arms agree on 50% of questions; readers keep the arm's score 50% of the time"
+    },
+    {
+      "name": "central",
+      "tau_arm": 0.0416,
+      "rho_arm": 0.35,
+      "rho_reader": 0.7,
+      "source": "tau: BEAM-1M dev between-conversation spread beyond question sampling, all of it treated as specific to one system; arms agree on 35%; readers keep the arm's score 70% of the time"
+    },
+    {
+      "name": "pessimistic",
+      "tau_arm": 0.0732,
+      "rho_arm": 0.2,
+      "rho_reader": 0.9,
+      "source": "tau: the whole public BEAM-10M per-conversation SD 0.0732 treated as system-specific; arms agree on 20%; readers keep the arm's score 90% of the time"
+    }
+  ],
+  "designs": [
+    {
+      "id": "balanced",
+      "label": "10 conversations x 20 questions, Holm over 9",
+      "sizes": [
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "comparisons": 9,
+      "drop_clusters": 0,
+      "drop_question_share": 0
+    },
+    {
+      "id": "unequal",
+      "label": "10 conversations of 10 to 30 questions (200 total), Holm over 9",
+      "sizes": [
+        10,
+        12,
+        14,
+        16,
+        18,
+        22,
+        24,
+        26,
+        28,
+        30
+      ],
+      "comparisons": 9,
+      "drop_clusters": 0,
+      "drop_question_share": 0
+    },
+    {
+      "id": "missing",
+      "label": "9 of 10 conversations retained and 5% of the rest missing per comparison, Holm over 9",
+      "sizes": [
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "comparisons": 9,
+      "drop_clusters": 1,
+      "drop_question_share": 0.05
+    },
+    {
+      "id": "shrunk",
+      "label": "10 conversations x 20 questions, Holm over 4 (the shrink rule)",
+      "sizes": [
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "comparisons": 4,
+      "drop_clusters": 0,
+      "drop_question_share": 0
+    }
+  ],
+  "results": [
+    {
+      "design": "balanced",
+      "scenario": "optimistic",
+      "comparisons": 9,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.049,
+      "coverage": 0.9486,
+      "diff_sd": 0.3104,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.01
+        },
+        {
+          "delta_points": 1,
+          "power": 0.014
+        },
+        {
+          "delta_points": 2,
+          "power": 0.024
+        },
+        {
+          "delta_points": 3,
+          "power": 0.043
+        },
+        {
+          "delta_points": 4,
+          "power": 0.088
+        },
+        {
+          "delta_points": 5,
+          "power": 0.177
+        },
+        {
+          "delta_points": 6,
+          "power": 0.26
+        },
+        {
+          "delta_points": 7,
+          "power": 0.398
+        },
+        {
+          "delta_points": 8,
+          "power": 0.538
+        },
+        {
+          "delta_points": 9,
+          "power": 0.675
+        },
+        {
+          "delta_points": 10,
+          "power": 0.774
+        },
+        {
+          "delta_points": 11,
+          "power": 0.856
+        },
+        {
+          "delta_points": 12,
+          "power": 0.905
+        },
+        {
+          "delta_points": 13,
+          "power": 0.948
+        },
+        {
+          "delta_points": 14,
+          "power": 0.974
+        },
+        {
+          "delta_points": 15,
+          "power": 0.988
+        },
+        {
+          "delta_points": 16,
+          "power": 0.994
+        },
+        {
+          "delta_points": 17,
+          "power": 0.998
+        },
+        {
+          "delta_points": 18,
+          "power": 0.999
+        },
+        {
+          "delta_points": 19,
+          "power": 0.999
+        },
+        {
+          "delta_points": 20,
+          "power": 0.999
+        },
+        {
+          "delta_points": 21,
+          "power": 0.999
+        },
+        {
+          "delta_points": 22,
+          "power": 1
+        },
+        {
+          "delta_points": 23,
+          "power": 1
+        },
+        {
+          "delta_points": 24,
+          "power": 1
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.006
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0107
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0259
+        },
+        {
+          "delta_points": 3,
+          "power": 0.0583
+        },
+        {
+          "delta_points": 4,
+          "power": 0.1177
+        },
+        {
+          "delta_points": 5,
+          "power": 0.214
+        },
+        {
+          "delta_points": 6,
+          "power": 0.3647
+        },
+        {
+          "delta_points": 7,
+          "power": 0.539
+        },
+        {
+          "delta_points": 8,
+          "power": 0.7131
+        },
+        {
+          "delta_points": 9,
+          "power": 0.8509
+        },
+        {
+          "delta_points": 10,
+          "power": 0.9303
+        },
+        {
+          "delta_points": 11,
+          "power": 0.9729
+        },
+        {
+          "delta_points": 12,
+          "power": 0.991
+        },
+        {
+          "delta_points": 13,
+          "power": 0.998
+        },
+        {
+          "delta_points": 14,
+          "power": 0.9994
+        },
+        {
+          "delta_points": 15,
+          "power": 1
+        },
+        {
+          "delta_points": 16,
+          "power": 1
+        },
+        {
+          "delta_points": 17,
+          "power": 1
+        },
+        {
+          "delta_points": 18,
+          "power": 1
+        },
+        {
+          "delta_points": 19,
+          "power": 1
+        },
+        {
+          "delta_points": 20,
+          "power": 1
+        },
+        {
+          "delta_points": 21,
+          "power": 1
+        },
+        {
+          "delta_points": 22,
+          "power": 1
+        },
+        {
+          "delta_points": 23,
+          "power": 1
+        },
+        {
+          "delta_points": 24,
+          "power": 1
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "mdd_points_single": 10.32,
+      "mdd_points_all": 8.63
+    },
+    {
+      "design": "balanced",
+      "scenario": "central",
+      "comparisons": 9,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.055,
+      "coverage": 0.9439,
+      "diff_sd": 0.3823,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.01
+        },
+        {
+          "delta_points": 1,
+          "power": 0.009
+        },
+        {
+          "delta_points": 2,
+          "power": 0.014
+        },
+        {
+          "delta_points": 3,
+          "power": 0.021
+        },
+        {
+          "delta_points": 4,
+          "power": 0.038
+        },
+        {
+          "delta_points": 5,
+          "power": 0.064
+        },
+        {
+          "delta_points": 6,
+          "power": 0.093
+        },
+        {
+          "delta_points": 7,
+          "power": 0.143
+        },
+        {
+          "delta_points": 8,
+          "power": 0.205
+        },
+        {
+          "delta_points": 9,
+          "power": 0.269
+        },
+        {
+          "delta_points": 10,
+          "power": 0.344
+        },
+        {
+          "delta_points": 11,
+          "power": 0.448
+        },
+        {
+          "delta_points": 12,
+          "power": 0.542
+        },
+        {
+          "delta_points": 13,
+          "power": 0.627
+        },
+        {
+          "delta_points": 14,
+          "power": 0.702
+        },
+        {
+          "delta_points": 15,
+          "power": 0.759
+        },
+        {
+          "delta_points": 16,
+          "power": 0.824
+        },
+        {
+          "delta_points": 17,
+          "power": 0.88
+        },
+        {
+          "delta_points": 18,
+          "power": 0.921
+        },
+        {
+          "delta_points": 19,
+          "power": 0.947
+        },
+        {
+          "delta_points": 20,
+          "power": 0.971
+        },
+        {
+          "delta_points": 21,
+          "power": 0.983
+        },
+        {
+          "delta_points": 22,
+          "power": 0.992
+        },
+        {
+          "delta_points": 23,
+          "power": 0.994
+        },
+        {
+          "delta_points": 24,
+          "power": 0.996
+        },
+        {
+          "delta_points": 25,
+          "power": 0.996
+        },
+        {
+          "delta_points": 26,
+          "power": 0.997
+        },
+        {
+          "delta_points": 27,
+          "power": 0.998
+        },
+        {
+          "delta_points": 28,
+          "power": 0.999
+        },
+        {
+          "delta_points": 29,
+          "power": 0.999
+        },
+        {
+          "delta_points": 30,
+          "power": 0.999
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0073
+        },
+        {
+          "delta_points": 1,
+          "power": 0.008
+        },
+        {
+          "delta_points": 2,
+          "power": 0.013
+        },
+        {
+          "delta_points": 3,
+          "power": 0.0246
+        },
+        {
+          "delta_points": 4,
+          "power": 0.0441
+        },
+        {
+          "delta_points": 5,
+          "power": 0.0766
+        },
+        {
+          "delta_points": 6,
+          "power": 0.1269
+        },
+        {
+          "delta_points": 7,
+          "power": 0.192
+        },
+        {
+          "delta_points": 8,
+          "power": 0.2751
+        },
+        {
+          "delta_points": 9,
+          "power": 0.3694
+        },
+        {
+          "delta_points": 10,
+          "power": 0.4818
+        },
+        {
+          "delta_points": 11,
+          "power": 0.5966
+        },
+        {
+          "delta_points": 12,
+          "power": 0.7044
+        },
+        {
+          "delta_points": 13,
+          "power": 0.8004
+        },
+        {
+          "delta_points": 14,
+          "power": 0.876
+        },
+        {
+          "delta_points": 15,
+          "power": 0.9302
+        },
+        {
+          "delta_points": 16,
+          "power": 0.9618
+        },
+        {
+          "delta_points": 17,
+          "power": 0.9811
+        },
+        {
+          "delta_points": 18,
+          "power": 0.9928
+        },
+        {
+          "delta_points": 19,
+          "power": 0.9961
+        },
+        {
+          "delta_points": 20,
+          "power": 0.9989
+        },
+        {
+          "delta_points": 21,
+          "power": 0.9999
+        },
+        {
+          "delta_points": 22,
+          "power": 1
+        },
+        {
+          "delta_points": 23,
+          "power": 1
+        },
+        {
+          "delta_points": 24,
+          "power": 1
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "mdd_points_single": 15.63,
+      "mdd_points_all": 13
+    },
+    {
+      "design": "balanced",
+      "scenario": "pessimistic",
+      "comparisons": 9,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.049,
+      "coverage": 0.9456,
+      "diff_sd": 0.4719,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.008
+        },
+        {
+          "delta_points": 1,
+          "power": 0.014
+        },
+        {
+          "delta_points": 2,
+          "power": 0.015
+        },
+        {
+          "delta_points": 3,
+          "power": 0.016
+        },
+        {
+          "delta_points": 4,
+          "power": 0.024
+        },
+        {
+          "delta_points": 5,
+          "power": 0.031
+        },
+        {
+          "delta_points": 6,
+          "power": 0.041
+        },
+        {
+          "delta_points": 7,
+          "power": 0.053
+        },
+        {
+          "delta_points": 8,
+          "power": 0.079
+        },
+        {
+          "delta_points": 9,
+          "power": 0.101
+        },
+        {
+          "delta_points": 10,
+          "power": 0.145
+        },
+        {
+          "delta_points": 11,
+          "power": 0.197
+        },
+        {
+          "delta_points": 12,
+          "power": 0.243
+        },
+        {
+          "delta_points": 13,
+          "power": 0.295
+        },
+        {
+          "delta_points": 14,
+          "power": 0.355
+        },
+        {
+          "delta_points": 15,
+          "power": 0.421
+        },
+        {
+          "delta_points": 16,
+          "power": 0.489
+        },
+        {
+          "delta_points": 17,
+          "power": 0.544
+        },
+        {
+          "delta_points": 18,
+          "power": 0.597
+        },
+        {
+          "delta_points": 19,
+          "power": 0.65
+        },
+        {
+          "delta_points": 20,
+          "power": 0.709
+        },
+        {
+          "delta_points": 21,
+          "power": 0.76
+        },
+        {
+          "delta_points": 22,
+          "power": 0.81
+        },
+        {
+          "delta_points": 23,
+          "power": 0.854
+        },
+        {
+          "delta_points": 24,
+          "power": 0.879
+        },
+        {
+          "delta_points": 25,
+          "power": 0.908
+        },
+        {
+          "delta_points": 26,
+          "power": 0.936
+        },
+        {
+          "delta_points": 27,
+          "power": 0.949
+        },
+        {
+          "delta_points": 28,
+          "power": 0.964
+        },
+        {
+          "delta_points": 29,
+          "power": 0.981
+        },
+        {
+          "delta_points": 30,
+          "power": 0.988
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0059
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0071
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0111
+        },
+        {
+          "delta_points": 3,
+          "power": 0.0164
+        },
+        {
+          "delta_points": 4,
+          "power": 0.0266
+        },
+        {
+          "delta_points": 5,
+          "power": 0.0376
+        },
+        {
+          "delta_points": 6,
+          "power": 0.0567
+        },
+        {
+          "delta_points": 7,
+          "power": 0.08
+        },
+        {
+          "delta_points": 8,
+          "power": 0.111
+        },
+        {
+          "delta_points": 9,
+          "power": 0.1503
+        },
+        {
+          "delta_points": 10,
+          "power": 0.1984
+        },
+        {
+          "delta_points": 11,
+          "power": 0.2622
+        },
+        {
+          "delta_points": 12,
+          "power": 0.3293
+        },
+        {
+          "delta_points": 13,
+          "power": 0.4069
+        },
+        {
+          "delta_points": 14,
+          "power": 0.4919
+        },
+        {
+          "delta_points": 15,
+          "power": 0.5712
+        },
+        {
+          "delta_points": 16,
+          "power": 0.65
+        },
+        {
+          "delta_points": 17,
+          "power": 0.7286
+        },
+        {
+          "delta_points": 18,
+          "power": 0.7922
+        },
+        {
+          "delta_points": 19,
+          "power": 0.8472
+        },
+        {
+          "delta_points": 20,
+          "power": 0.8897
+        },
+        {
+          "delta_points": 21,
+          "power": 0.9228
+        },
+        {
+          "delta_points": 22,
+          "power": 0.9522
+        },
+        {
+          "delta_points": 23,
+          "power": 0.968
+        },
+        {
+          "delta_points": 24,
+          "power": 0.9818
+        },
+        {
+          "delta_points": 25,
+          "power": 0.9922
+        },
+        {
+          "delta_points": 26,
+          "power": 0.9952
+        },
+        {
+          "delta_points": 27,
+          "power": 0.9972
+        },
+        {
+          "delta_points": 28,
+          "power": 0.998
+        },
+        {
+          "delta_points": 29,
+          "power": 0.999
+        },
+        {
+          "delta_points": 30,
+          "power": 0.9996
+        }
+      ],
+      "mdd_points_single": 21.8,
+      "mdd_points_all": 18.14
+    },
+    {
+      "design": "unequal",
+      "scenario": "optimistic",
+      "comparisons": 9,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.058,
+      "coverage": 0.9442,
+      "diff_sd": 0.3081,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.012
+        },
+        {
+          "delta_points": 1,
+          "power": 0.012
+        },
+        {
+          "delta_points": 2,
+          "power": 0.024
+        },
+        {
+          "delta_points": 3,
+          "power": 0.052
+        },
+        {
+          "delta_points": 4,
+          "power": 0.101
+        },
+        {
+          "delta_points": 5,
+          "power": 0.173
+        },
+        {
+          "delta_points": 6,
+          "power": 0.259
+        },
+        {
+          "delta_points": 7,
+          "power": 0.378
+        },
+        {
+          "delta_points": 8,
+          "power": 0.506
+        },
+        {
+          "delta_points": 9,
+          "power": 0.645
+        },
+        {
+          "delta_points": 10,
+          "power": 0.733
+        },
+        {
+          "delta_points": 11,
+          "power": 0.828
+        },
+        {
+          "delta_points": 12,
+          "power": 0.889
+        },
+        {
+          "delta_points": 13,
+          "power": 0.93
+        },
+        {
+          "delta_points": 14,
+          "power": 0.957
+        },
+        {
+          "delta_points": 15,
+          "power": 0.98
+        },
+        {
+          "delta_points": 16,
+          "power": 0.989
+        },
+        {
+          "delta_points": 17,
+          "power": 0.996
+        },
+        {
+          "delta_points": 18,
+          "power": 1
+        },
+        {
+          "delta_points": 19,
+          "power": 1
+        },
+        {
+          "delta_points": 20,
+          "power": 1
+        },
+        {
+          "delta_points": 21,
+          "power": 1
+        },
+        {
+          "delta_points": 22,
+          "power": 1
+        },
+        {
+          "delta_points": 23,
+          "power": 1
+        },
+        {
+          "delta_points": 24,
+          "power": 1
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0081
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0127
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0266
+        },
+        {
+          "delta_points": 3,
+          "power": 0.0562
+        },
+        {
+          "delta_points": 4,
+          "power": 0.1167
+        },
+        {
+          "delta_points": 5,
+          "power": 0.2119
+        },
+        {
+          "delta_points": 6,
+          "power": 0.345
+        },
+        {
+          "delta_points": 7,
+          "power": 0.5142
+        },
+        {
+          "delta_points": 8,
+          "power": 0.6783
+        },
+        {
+          "delta_points": 9,
+          "power": 0.8186
+        },
+        {
+          "delta_points": 10,
+          "power": 0.9071
+        },
+        {
+          "delta_points": 11,
+          "power": 0.9646
+        },
+        {
+          "delta_points": 12,
+          "power": 0.9877
+        },
+        {
+          "delta_points": 13,
+          "power": 0.9968
+        },
+        {
+          "delta_points": 14,
+          "power": 0.9999
+        },
+        {
+          "delta_points": 15,
+          "power": 1
+        },
+        {
+          "delta_points": 16,
+          "power": 1
+        },
+        {
+          "delta_points": 17,
+          "power": 1
+        },
+        {
+          "delta_points": 18,
+          "power": 1
+        },
+        {
+          "delta_points": 19,
+          "power": 1
+        },
+        {
+          "delta_points": 20,
+          "power": 1
+        },
+        {
+          "delta_points": 21,
+          "power": 1
+        },
+        {
+          "delta_points": 22,
+          "power": 1
+        },
+        {
+          "delta_points": 23,
+          "power": 1
+        },
+        {
+          "delta_points": 24,
+          "power": 1
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "mdd_points_single": 10.71,
+      "mdd_points_all": 8.87
+    },
+    {
+      "design": "unequal",
+      "scenario": "central",
+      "comparisons": 9,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.046,
+      "coverage": 0.9482,
+      "diff_sd": 0.3802,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.002
+        },
+        {
+          "delta_points": 1,
+          "power": 0.004
+        },
+        {
+          "delta_points": 2,
+          "power": 0.01
+        },
+        {
+          "delta_points": 3,
+          "power": 0.02
+        },
+        {
+          "delta_points": 4,
+          "power": 0.038
+        },
+        {
+          "delta_points": 5,
+          "power": 0.064
+        },
+        {
+          "delta_points": 6,
+          "power": 0.094
+        },
+        {
+          "delta_points": 7,
+          "power": 0.149
+        },
+        {
+          "delta_points": 8,
+          "power": 0.199
+        },
+        {
+          "delta_points": 9,
+          "power": 0.272
+        },
+        {
+          "delta_points": 10,
+          "power": 0.339
+        },
+        {
+          "delta_points": 11,
+          "power": 0.412
+        },
+        {
+          "delta_points": 12,
+          "power": 0.514
+        },
+        {
+          "delta_points": 13,
+          "power": 0.588
+        },
+        {
+          "delta_points": 14,
+          "power": 0.664
+        },
+        {
+          "delta_points": 15,
+          "power": 0.733
+        },
+        {
+          "delta_points": 16,
+          "power": 0.791
+        },
+        {
+          "delta_points": 17,
+          "power": 0.85
+        },
+        {
+          "delta_points": 18,
+          "power": 0.892
+        },
+        {
+          "delta_points": 19,
+          "power": 0.921
+        },
+        {
+          "delta_points": 20,
+          "power": 0.946
+        },
+        {
+          "delta_points": 21,
+          "power": 0.955
+        },
+        {
+          "delta_points": 22,
+          "power": 0.974
+        },
+        {
+          "delta_points": 23,
+          "power": 0.982
+        },
+        {
+          "delta_points": 24,
+          "power": 0.99
+        },
+        {
+          "delta_points": 25,
+          "power": 0.995
+        },
+        {
+          "delta_points": 26,
+          "power": 0.996
+        },
+        {
+          "delta_points": 27,
+          "power": 0.996
+        },
+        {
+          "delta_points": 28,
+          "power": 0.997
+        },
+        {
+          "delta_points": 29,
+          "power": 0.997
+        },
+        {
+          "delta_points": 30,
+          "power": 0.997
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.006
+        },
+        {
+          "delta_points": 1,
+          "power": 0.008
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0142
+        },
+        {
+          "delta_points": 3,
+          "power": 0.026
+        },
+        {
+          "delta_points": 4,
+          "power": 0.0453
+        },
+        {
+          "delta_points": 5,
+          "power": 0.076
+        },
+        {
+          "delta_points": 6,
+          "power": 0.1156
+        },
+        {
+          "delta_points": 7,
+          "power": 0.178
+        },
+        {
+          "delta_points": 8,
+          "power": 0.2599
+        },
+        {
+          "delta_points": 9,
+          "power": 0.3532
+        },
+        {
+          "delta_points": 10,
+          "power": 0.4601
+        },
+        {
+          "delta_points": 11,
+          "power": 0.5783
+        },
+        {
+          "delta_points": 12,
+          "power": 0.6852
+        },
+        {
+          "delta_points": 13,
+          "power": 0.7847
+        },
+        {
+          "delta_points": 14,
+          "power": 0.8636
+        },
+        {
+          "delta_points": 15,
+          "power": 0.9154
+        },
+        {
+          "delta_points": 16,
+          "power": 0.9531
+        },
+        {
+          "delta_points": 17,
+          "power": 0.9744
+        },
+        {
+          "delta_points": 18,
+          "power": 0.9842
+        },
+        {
+          "delta_points": 19,
+          "power": 0.9923
+        },
+        {
+          "delta_points": 20,
+          "power": 0.9967
+        },
+        {
+          "delta_points": 21,
+          "power": 0.9987
+        },
+        {
+          "delta_points": 22,
+          "power": 0.9993
+        },
+        {
+          "delta_points": 23,
+          "power": 0.9999
+        },
+        {
+          "delta_points": 24,
+          "power": 0.9999
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "mdd_points_single": 16.15,
+      "mdd_points_all": 13.19
+    },
+    {
+      "design": "unequal",
+      "scenario": "pessimistic",
+      "comparisons": 9,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.061,
+      "coverage": 0.9377,
+      "diff_sd": 0.4687,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.008
+        },
+        {
+          "delta_points": 1,
+          "power": 0.009
+        },
+        {
+          "delta_points": 2,
+          "power": 0.008
+        },
+        {
+          "delta_points": 3,
+          "power": 0.011
+        },
+        {
+          "delta_points": 4,
+          "power": 0.019
+        },
+        {
+          "delta_points": 5,
+          "power": 0.031
+        },
+        {
+          "delta_points": 6,
+          "power": 0.044
+        },
+        {
+          "delta_points": 7,
+          "power": 0.06
+        },
+        {
+          "delta_points": 8,
+          "power": 0.084
+        },
+        {
+          "delta_points": 9,
+          "power": 0.121
+        },
+        {
+          "delta_points": 10,
+          "power": 0.154
+        },
+        {
+          "delta_points": 11,
+          "power": 0.206
+        },
+        {
+          "delta_points": 12,
+          "power": 0.245
+        },
+        {
+          "delta_points": 13,
+          "power": 0.291
+        },
+        {
+          "delta_points": 14,
+          "power": 0.349
+        },
+        {
+          "delta_points": 15,
+          "power": 0.404
+        },
+        {
+          "delta_points": 16,
+          "power": 0.453
+        },
+        {
+          "delta_points": 17,
+          "power": 0.517
+        },
+        {
+          "delta_points": 18,
+          "power": 0.571
+        },
+        {
+          "delta_points": 19,
+          "power": 0.645
+        },
+        {
+          "delta_points": 20,
+          "power": 0.692
+        },
+        {
+          "delta_points": 21,
+          "power": 0.741
+        },
+        {
+          "delta_points": 22,
+          "power": 0.792
+        },
+        {
+          "delta_points": 23,
+          "power": 0.826
+        },
+        {
+          "delta_points": 24,
+          "power": 0.857
+        },
+        {
+          "delta_points": 25,
+          "power": 0.887
+        },
+        {
+          "delta_points": 26,
+          "power": 0.907
+        },
+        {
+          "delta_points": 27,
+          "power": 0.927
+        },
+        {
+          "delta_points": 28,
+          "power": 0.941
+        },
+        {
+          "delta_points": 29,
+          "power": 0.951
+        },
+        {
+          "delta_points": 30,
+          "power": 0.967
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0083
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0091
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0107
+        },
+        {
+          "delta_points": 3,
+          "power": 0.0151
+        },
+        {
+          "delta_points": 4,
+          "power": 0.0256
+        },
+        {
+          "delta_points": 5,
+          "power": 0.0376
+        },
+        {
+          "delta_points": 6,
+          "power": 0.0534
+        },
+        {
+          "delta_points": 7,
+          "power": 0.0757
+        },
+        {
+          "delta_points": 8,
+          "power": 0.1074
+        },
+        {
+          "delta_points": 9,
+          "power": 0.1463
+        },
+        {
+          "delta_points": 10,
+          "power": 0.1904
+        },
+        {
+          "delta_points": 11,
+          "power": 0.2441
+        },
+        {
+          "delta_points": 12,
+          "power": 0.3057
+        },
+        {
+          "delta_points": 13,
+          "power": 0.3787
+        },
+        {
+          "delta_points": 14,
+          "power": 0.4552
+        },
+        {
+          "delta_points": 15,
+          "power": 0.5316
+        },
+        {
+          "delta_points": 16,
+          "power": 0.597
+        },
+        {
+          "delta_points": 17,
+          "power": 0.6711
+        },
+        {
+          "delta_points": 18,
+          "power": 0.7398
+        },
+        {
+          "delta_points": 19,
+          "power": 0.7974
+        },
+        {
+          "delta_points": 20,
+          "power": 0.845
+        },
+        {
+          "delta_points": 21,
+          "power": 0.8868
+        },
+        {
+          "delta_points": 22,
+          "power": 0.9227
+        },
+        {
+          "delta_points": 23,
+          "power": 0.9449
+        },
+        {
+          "delta_points": 24,
+          "power": 0.9644
+        },
+        {
+          "delta_points": 25,
+          "power": 0.9763
+        },
+        {
+          "delta_points": 26,
+          "power": 0.9869
+        },
+        {
+          "delta_points": 27,
+          "power": 0.9932
+        },
+        {
+          "delta_points": 28,
+          "power": 0.9961
+        },
+        {
+          "delta_points": 29,
+          "power": 0.9969
+        },
+        {
+          "delta_points": 30,
+          "power": 0.9989
+        }
+      ],
+      "mdd_points_single": 22.24,
+      "mdd_points_all": 19.05
+    },
+    {
+      "design": "missing",
+      "scenario": "optimistic",
+      "comparisons": 9,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.043,
+      "coverage": 0.9509,
+      "diff_sd": 0.3104,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.005
+        },
+        {
+          "delta_points": 1,
+          "power": 0.006
+        },
+        {
+          "delta_points": 2,
+          "power": 0.019
+        },
+        {
+          "delta_points": 3,
+          "power": 0.045
+        },
+        {
+          "delta_points": 4,
+          "power": 0.09
+        },
+        {
+          "delta_points": 5,
+          "power": 0.134
+        },
+        {
+          "delta_points": 6,
+          "power": 0.203
+        },
+        {
+          "delta_points": 7,
+          "power": 0.303
+        },
+        {
+          "delta_points": 8,
+          "power": 0.414
+        },
+        {
+          "delta_points": 9,
+          "power": 0.541
+        },
+        {
+          "delta_points": 10,
+          "power": 0.661
+        },
+        {
+          "delta_points": 11,
+          "power": 0.744
+        },
+        {
+          "delta_points": 12,
+          "power": 0.822
+        },
+        {
+          "delta_points": 13,
+          "power": 0.881
+        },
+        {
+          "delta_points": 14,
+          "power": 0.923
+        },
+        {
+          "delta_points": 15,
+          "power": 0.953
+        },
+        {
+          "delta_points": 16,
+          "power": 0.977
+        },
+        {
+          "delta_points": 17,
+          "power": 0.991
+        },
+        {
+          "delta_points": 18,
+          "power": 0.991
+        },
+        {
+          "delta_points": 19,
+          "power": 0.995
+        },
+        {
+          "delta_points": 20,
+          "power": 0.998
+        },
+        {
+          "delta_points": 21,
+          "power": 0.999
+        },
+        {
+          "delta_points": 22,
+          "power": 0.999
+        },
+        {
+          "delta_points": 23,
+          "power": 0.999
+        },
+        {
+          "delta_points": 24,
+          "power": 0.999
+        },
+        {
+          "delta_points": 25,
+          "power": 0.999
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0057
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0087
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0202
+        },
+        {
+          "delta_points": 3,
+          "power": 0.0449
+        },
+        {
+          "delta_points": 4,
+          "power": 0.0898
+        },
+        {
+          "delta_points": 5,
+          "power": 0.1624
+        },
+        {
+          "delta_points": 6,
+          "power": 0.2704
+        },
+        {
+          "delta_points": 7,
+          "power": 0.4097
+        },
+        {
+          "delta_points": 8,
+          "power": 0.5611
+        },
+        {
+          "delta_points": 9,
+          "power": 0.7168
+        },
+        {
+          "delta_points": 10,
+          "power": 0.8374
+        },
+        {
+          "delta_points": 11,
+          "power": 0.9228
+        },
+        {
+          "delta_points": 12,
+          "power": 0.9654
+        },
+        {
+          "delta_points": 13,
+          "power": 0.9872
+        },
+        {
+          "delta_points": 14,
+          "power": 0.9947
+        },
+        {
+          "delta_points": 15,
+          "power": 0.999
+        },
+        {
+          "delta_points": 16,
+          "power": 1
+        },
+        {
+          "delta_points": 17,
+          "power": 1
+        },
+        {
+          "delta_points": 18,
+          "power": 1
+        },
+        {
+          "delta_points": 19,
+          "power": 1
+        },
+        {
+          "delta_points": 20,
+          "power": 1
+        },
+        {
+          "delta_points": 21,
+          "power": 1
+        },
+        {
+          "delta_points": 22,
+          "power": 1
+        },
+        {
+          "delta_points": 23,
+          "power": 1
+        },
+        {
+          "delta_points": 24,
+          "power": 1
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "mdd_points_single": 11.72,
+      "mdd_points_all": 9.69
+    },
+    {
+      "design": "missing",
+      "scenario": "central",
+      "comparisons": 9,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.046,
+      "coverage": 0.9481,
+      "diff_sd": 0.3831,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.003
+        },
+        {
+          "delta_points": 1,
+          "power": 0.005
+        },
+        {
+          "delta_points": 2,
+          "power": 0.012
+        },
+        {
+          "delta_points": 3,
+          "power": 0.025
+        },
+        {
+          "delta_points": 4,
+          "power": 0.049
+        },
+        {
+          "delta_points": 5,
+          "power": 0.07
+        },
+        {
+          "delta_points": 6,
+          "power": 0.09
+        },
+        {
+          "delta_points": 7,
+          "power": 0.113
+        },
+        {
+          "delta_points": 8,
+          "power": 0.157
+        },
+        {
+          "delta_points": 9,
+          "power": 0.21
+        },
+        {
+          "delta_points": 10,
+          "power": 0.28
+        },
+        {
+          "delta_points": 11,
+          "power": 0.358
+        },
+        {
+          "delta_points": 12,
+          "power": 0.435
+        },
+        {
+          "delta_points": 13,
+          "power": 0.509
+        },
+        {
+          "delta_points": 14,
+          "power": 0.585
+        },
+        {
+          "delta_points": 15,
+          "power": 0.662
+        },
+        {
+          "delta_points": 16,
+          "power": 0.728
+        },
+        {
+          "delta_points": 17,
+          "power": 0.784
+        },
+        {
+          "delta_points": 18,
+          "power": 0.836
+        },
+        {
+          "delta_points": 19,
+          "power": 0.876
+        },
+        {
+          "delta_points": 20,
+          "power": 0.908
+        },
+        {
+          "delta_points": 21,
+          "power": 0.932
+        },
+        {
+          "delta_points": 22,
+          "power": 0.956
+        },
+        {
+          "delta_points": 23,
+          "power": 0.969
+        },
+        {
+          "delta_points": 24,
+          "power": 0.983
+        },
+        {
+          "delta_points": 25,
+          "power": 0.989
+        },
+        {
+          "delta_points": 26,
+          "power": 0.99
+        },
+        {
+          "delta_points": 27,
+          "power": 0.993
+        },
+        {
+          "delta_points": 28,
+          "power": 0.996
+        },
+        {
+          "delta_points": 29,
+          "power": 0.998
+        },
+        {
+          "delta_points": 30,
+          "power": 0.998
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0058
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0073
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0122
+        },
+        {
+          "delta_points": 3,
+          "power": 0.0233
+        },
+        {
+          "delta_points": 4,
+          "power": 0.0408
+        },
+        {
+          "delta_points": 5,
+          "power": 0.0658
+        },
+        {
+          "delta_points": 6,
+          "power": 0.1009
+        },
+        {
+          "delta_points": 7,
+          "power": 0.148
+        },
+        {
+          "delta_points": 8,
+          "power": 0.2199
+        },
+        {
+          "delta_points": 9,
+          "power": 0.2943
+        },
+        {
+          "delta_points": 10,
+          "power": 0.3993
+        },
+        {
+          "delta_points": 11,
+          "power": 0.4992
+        },
+        {
+          "delta_points": 12,
+          "power": 0.6067
+        },
+        {
+          "delta_points": 13,
+          "power": 0.7041
+        },
+        {
+          "delta_points": 14,
+          "power": 0.7911
+        },
+        {
+          "delta_points": 15,
+          "power": 0.8607
+        },
+        {
+          "delta_points": 16,
+          "power": 0.9122
+        },
+        {
+          "delta_points": 17,
+          "power": 0.9492
+        },
+        {
+          "delta_points": 18,
+          "power": 0.9694
+        },
+        {
+          "delta_points": 19,
+          "power": 0.9848
+        },
+        {
+          "delta_points": 20,
+          "power": 0.9904
+        },
+        {
+          "delta_points": 21,
+          "power": 0.9946
+        },
+        {
+          "delta_points": 22,
+          "power": 0.9967
+        },
+        {
+          "delta_points": 23,
+          "power": 0.9982
+        },
+        {
+          "delta_points": 24,
+          "power": 0.9996
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "mdd_points_single": 17.31,
+      "mdd_points_all": 14.13
+    },
+    {
+      "design": "missing",
+      "scenario": "pessimistic",
+      "comparisons": 9,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.043,
+      "coverage": 0.9504,
+      "diff_sd": 0.4712,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.004
+        },
+        {
+          "delta_points": 1,
+          "power": 0.007
+        },
+        {
+          "delta_points": 2,
+          "power": 0.009
+        },
+        {
+          "delta_points": 3,
+          "power": 0.012
+        },
+        {
+          "delta_points": 4,
+          "power": 0.021
+        },
+        {
+          "delta_points": 5,
+          "power": 0.027
+        },
+        {
+          "delta_points": 6,
+          "power": 0.036
+        },
+        {
+          "delta_points": 7,
+          "power": 0.046
+        },
+        {
+          "delta_points": 8,
+          "power": 0.068
+        },
+        {
+          "delta_points": 9,
+          "power": 0.084
+        },
+        {
+          "delta_points": 10,
+          "power": 0.111
+        },
+        {
+          "delta_points": 11,
+          "power": 0.14
+        },
+        {
+          "delta_points": 12,
+          "power": 0.171
+        },
+        {
+          "delta_points": 13,
+          "power": 0.199
+        },
+        {
+          "delta_points": 14,
+          "power": 0.247
+        },
+        {
+          "delta_points": 15,
+          "power": 0.286
+        },
+        {
+          "delta_points": 16,
+          "power": 0.354
+        },
+        {
+          "delta_points": 17,
+          "power": 0.407
+        },
+        {
+          "delta_points": 18,
+          "power": 0.47
+        },
+        {
+          "delta_points": 19,
+          "power": 0.515
+        },
+        {
+          "delta_points": 20,
+          "power": 0.568
+        },
+        {
+          "delta_points": 21,
+          "power": 0.619
+        },
+        {
+          "delta_points": 22,
+          "power": 0.674
+        },
+        {
+          "delta_points": 23,
+          "power": 0.723
+        },
+        {
+          "delta_points": 24,
+          "power": 0.773
+        },
+        {
+          "delta_points": 25,
+          "power": 0.803
+        },
+        {
+          "delta_points": 26,
+          "power": 0.839
+        },
+        {
+          "delta_points": 27,
+          "power": 0.862
+        },
+        {
+          "delta_points": 28,
+          "power": 0.892
+        },
+        {
+          "delta_points": 29,
+          "power": 0.918
+        },
+        {
+          "delta_points": 30,
+          "power": 0.942
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0052
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0064
+        },
+        {
+          "delta_points": 2,
+          "power": 0.009
+        },
+        {
+          "delta_points": 3,
+          "power": 0.013
+        },
+        {
+          "delta_points": 4,
+          "power": 0.02
+        },
+        {
+          "delta_points": 5,
+          "power": 0.0279
+        },
+        {
+          "delta_points": 6,
+          "power": 0.0421
+        },
+        {
+          "delta_points": 7,
+          "power": 0.0592
+        },
+        {
+          "delta_points": 8,
+          "power": 0.0783
+        },
+        {
+          "delta_points": 9,
+          "power": 0.1097
+        },
+        {
+          "delta_points": 10,
+          "power": 0.1488
+        },
+        {
+          "delta_points": 11,
+          "power": 0.196
+        },
+        {
+          "delta_points": 12,
+          "power": 0.2467
+        },
+        {
+          "delta_points": 13,
+          "power": 0.3001
+        },
+        {
+          "delta_points": 14,
+          "power": 0.3752
+        },
+        {
+          "delta_points": 15,
+          "power": 0.4517
+        },
+        {
+          "delta_points": 16,
+          "power": 0.5282
+        },
+        {
+          "delta_points": 17,
+          "power": 0.5963
+        },
+        {
+          "delta_points": 18,
+          "power": 0.6713
+        },
+        {
+          "delta_points": 19,
+          "power": 0.7397
+        },
+        {
+          "delta_points": 20,
+          "power": 0.7982
+        },
+        {
+          "delta_points": 21,
+          "power": 0.847
+        },
+        {
+          "delta_points": 22,
+          "power": 0.892
+        },
+        {
+          "delta_points": 23,
+          "power": 0.9284
+        },
+        {
+          "delta_points": 24,
+          "power": 0.9528
+        },
+        {
+          "delta_points": 25,
+          "power": 0.9709
+        },
+        {
+          "delta_points": 26,
+          "power": 0.9827
+        },
+        {
+          "delta_points": 27,
+          "power": 0.9912
+        },
+        {
+          "delta_points": 28,
+          "power": 0.9938
+        },
+        {
+          "delta_points": 29,
+          "power": 0.9968
+        },
+        {
+          "delta_points": 30,
+          "power": 0.9981
+        }
+      ],
+      "mdd_points_single": 24.9,
+      "mdd_points_all": 20.04
+    },
+    {
+      "design": "shrunk",
+      "scenario": "optimistic",
+      "comparisons": 4,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.05,
+      "coverage": 0.9465,
+      "diff_sd": 0.3098,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.019
+        },
+        {
+          "delta_points": 1,
+          "power": 0.025
+        },
+        {
+          "delta_points": 2,
+          "power": 0.051
+        },
+        {
+          "delta_points": 3,
+          "power": 0.105
+        },
+        {
+          "delta_points": 4,
+          "power": 0.182
+        },
+        {
+          "delta_points": 5,
+          "power": 0.291
+        },
+        {
+          "delta_points": 6,
+          "power": 0.421
+        },
+        {
+          "delta_points": 7,
+          "power": 0.555
+        },
+        {
+          "delta_points": 8,
+          "power": 0.693
+        },
+        {
+          "delta_points": 9,
+          "power": 0.792
+        },
+        {
+          "delta_points": 10,
+          "power": 0.877
+        },
+        {
+          "delta_points": 11,
+          "power": 0.94
+        },
+        {
+          "delta_points": 12,
+          "power": 0.971
+        },
+        {
+          "delta_points": 13,
+          "power": 0.986
+        },
+        {
+          "delta_points": 14,
+          "power": 0.996
+        },
+        {
+          "delta_points": 15,
+          "power": 0.999
+        },
+        {
+          "delta_points": 16,
+          "power": 1
+        },
+        {
+          "delta_points": 17,
+          "power": 1
+        },
+        {
+          "delta_points": 18,
+          "power": 1
+        },
+        {
+          "delta_points": 19,
+          "power": 1
+        },
+        {
+          "delta_points": 20,
+          "power": 1
+        },
+        {
+          "delta_points": 21,
+          "power": 1
+        },
+        {
+          "delta_points": 22,
+          "power": 1
+        },
+        {
+          "delta_points": 23,
+          "power": 1
+        },
+        {
+          "delta_points": 24,
+          "power": 1
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0155
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0227
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0532
+        },
+        {
+          "delta_points": 3,
+          "power": 0.1138
+        },
+        {
+          "delta_points": 4,
+          "power": 0.2107
+        },
+        {
+          "delta_points": 5,
+          "power": 0.35
+        },
+        {
+          "delta_points": 6,
+          "power": 0.5032
+        },
+        {
+          "delta_points": 7,
+          "power": 0.6645
+        },
+        {
+          "delta_points": 8,
+          "power": 0.8145
+        },
+        {
+          "delta_points": 9,
+          "power": 0.903
+        },
+        {
+          "delta_points": 10,
+          "power": 0.9595
+        },
+        {
+          "delta_points": 11,
+          "power": 0.9852
+        },
+        {
+          "delta_points": 12,
+          "power": 0.9962
+        },
+        {
+          "delta_points": 13,
+          "power": 0.9992
+        },
+        {
+          "delta_points": 14,
+          "power": 1
+        },
+        {
+          "delta_points": 15,
+          "power": 1
+        },
+        {
+          "delta_points": 16,
+          "power": 1
+        },
+        {
+          "delta_points": 17,
+          "power": 1
+        },
+        {
+          "delta_points": 18,
+          "power": 1
+        },
+        {
+          "delta_points": 19,
+          "power": 1
+        },
+        {
+          "delta_points": 20,
+          "power": 1
+        },
+        {
+          "delta_points": 21,
+          "power": 1
+        },
+        {
+          "delta_points": 22,
+          "power": 1
+        },
+        {
+          "delta_points": 23,
+          "power": 1
+        },
+        {
+          "delta_points": 24,
+          "power": 1
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "mdd_points_single": 9.09,
+      "mdd_points_all": 7.9
+    },
+    {
+      "design": "shrunk",
+      "scenario": "central",
+      "comparisons": 4,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.052,
+      "coverage": 0.951,
+      "diff_sd": 0.3822,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.016
+        },
+        {
+          "delta_points": 1,
+          "power": 0.017
+        },
+        {
+          "delta_points": 2,
+          "power": 0.021
+        },
+        {
+          "delta_points": 3,
+          "power": 0.039
+        },
+        {
+          "delta_points": 4,
+          "power": 0.067
+        },
+        {
+          "delta_points": 5,
+          "power": 0.11
+        },
+        {
+          "delta_points": 6,
+          "power": 0.162
+        },
+        {
+          "delta_points": 7,
+          "power": 0.244
+        },
+        {
+          "delta_points": 8,
+          "power": 0.328
+        },
+        {
+          "delta_points": 9,
+          "power": 0.418
+        },
+        {
+          "delta_points": 10,
+          "power": 0.513
+        },
+        {
+          "delta_points": 11,
+          "power": 0.619
+        },
+        {
+          "delta_points": 12,
+          "power": 0.699
+        },
+        {
+          "delta_points": 13,
+          "power": 0.777
+        },
+        {
+          "delta_points": 14,
+          "power": 0.859
+        },
+        {
+          "delta_points": 15,
+          "power": 0.908
+        },
+        {
+          "delta_points": 16,
+          "power": 0.941
+        },
+        {
+          "delta_points": 17,
+          "power": 0.969
+        },
+        {
+          "delta_points": 18,
+          "power": 0.983
+        },
+        {
+          "delta_points": 19,
+          "power": 0.994
+        },
+        {
+          "delta_points": 20,
+          "power": 0.996
+        },
+        {
+          "delta_points": 21,
+          "power": 0.998
+        },
+        {
+          "delta_points": 22,
+          "power": 0.998
+        },
+        {
+          "delta_points": 23,
+          "power": 0.998
+        },
+        {
+          "delta_points": 24,
+          "power": 0.999
+        },
+        {
+          "delta_points": 25,
+          "power": 0.999
+        },
+        {
+          "delta_points": 26,
+          "power": 0.999
+        },
+        {
+          "delta_points": 27,
+          "power": 0.999
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0147
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0168
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0265
+        },
+        {
+          "delta_points": 3,
+          "power": 0.045
+        },
+        {
+          "delta_points": 4,
+          "power": 0.0808
+        },
+        {
+          "delta_points": 5,
+          "power": 0.134
+        },
+        {
+          "delta_points": 6,
+          "power": 0.1975
+        },
+        {
+          "delta_points": 7,
+          "power": 0.2983
+        },
+        {
+          "delta_points": 8,
+          "power": 0.4052
+        },
+        {
+          "delta_points": 9,
+          "power": 0.5138
+        },
+        {
+          "delta_points": 10,
+          "power": 0.627
+        },
+        {
+          "delta_points": 11,
+          "power": 0.7345
+        },
+        {
+          "delta_points": 12,
+          "power": 0.8267
+        },
+        {
+          "delta_points": 13,
+          "power": 0.891
+        },
+        {
+          "delta_points": 14,
+          "power": 0.9383
+        },
+        {
+          "delta_points": 15,
+          "power": 0.9728
+        },
+        {
+          "delta_points": 16,
+          "power": 0.9868
+        },
+        {
+          "delta_points": 17,
+          "power": 0.9958
+        },
+        {
+          "delta_points": 18,
+          "power": 0.9982
+        },
+        {
+          "delta_points": 19,
+          "power": 0.9988
+        },
+        {
+          "delta_points": 20,
+          "power": 0.9992
+        },
+        {
+          "delta_points": 21,
+          "power": 0.9998
+        },
+        {
+          "delta_points": 22,
+          "power": 1
+        },
+        {
+          "delta_points": 23,
+          "power": 1
+        },
+        {
+          "delta_points": 24,
+          "power": 1
+        },
+        {
+          "delta_points": 25,
+          "power": 1
+        },
+        {
+          "delta_points": 26,
+          "power": 1
+        },
+        {
+          "delta_points": 27,
+          "power": 1
+        },
+        {
+          "delta_points": 28,
+          "power": 1
+        },
+        {
+          "delta_points": 29,
+          "power": 1
+        },
+        {
+          "delta_points": 30,
+          "power": 1
+        }
+      ],
+      "mdd_points_single": 13.28,
+      "mdd_points_all": 11.71
+    },
+    {
+      "design": "shrunk",
+      "scenario": "pessimistic",
+      "comparisons": 4,
+      "sims": 1000,
+      "draws": 1999,
+      "fwer": 0.051,
+      "coverage": 0.9475,
+      "diff_sd": 0.4718,
+      "power_single": [
+        {
+          "delta_points": 0,
+          "power": 0.014
+        },
+        {
+          "delta_points": 1,
+          "power": 0.014
+        },
+        {
+          "delta_points": 2,
+          "power": 0.023
+        },
+        {
+          "delta_points": 3,
+          "power": 0.032
+        },
+        {
+          "delta_points": 4,
+          "power": 0.039
+        },
+        {
+          "delta_points": 5,
+          "power": 0.057
+        },
+        {
+          "delta_points": 6,
+          "power": 0.082
+        },
+        {
+          "delta_points": 7,
+          "power": 0.111
+        },
+        {
+          "delta_points": 8,
+          "power": 0.146
+        },
+        {
+          "delta_points": 9,
+          "power": 0.187
+        },
+        {
+          "delta_points": 10,
+          "power": 0.242
+        },
+        {
+          "delta_points": 11,
+          "power": 0.293
+        },
+        {
+          "delta_points": 12,
+          "power": 0.359
+        },
+        {
+          "delta_points": 13,
+          "power": 0.426
+        },
+        {
+          "delta_points": 14,
+          "power": 0.495
+        },
+        {
+          "delta_points": 15,
+          "power": 0.571
+        },
+        {
+          "delta_points": 16,
+          "power": 0.626
+        },
+        {
+          "delta_points": 17,
+          "power": 0.696
+        },
+        {
+          "delta_points": 18,
+          "power": 0.749
+        },
+        {
+          "delta_points": 19,
+          "power": 0.811
+        },
+        {
+          "delta_points": 20,
+          "power": 0.857
+        },
+        {
+          "delta_points": 21,
+          "power": 0.895
+        },
+        {
+          "delta_points": 22,
+          "power": 0.919
+        },
+        {
+          "delta_points": 23,
+          "power": 0.942
+        },
+        {
+          "delta_points": 24,
+          "power": 0.956
+        },
+        {
+          "delta_points": 25,
+          "power": 0.964
+        },
+        {
+          "delta_points": 26,
+          "power": 0.972
+        },
+        {
+          "delta_points": 27,
+          "power": 0.984
+        },
+        {
+          "delta_points": 28,
+          "power": 0.987
+        },
+        {
+          "delta_points": 29,
+          "power": 0.992
+        },
+        {
+          "delta_points": 30,
+          "power": 0.996
+        }
+      ],
+      "power_all": [
+        {
+          "delta_points": 0,
+          "power": 0.0147
+        },
+        {
+          "delta_points": 1,
+          "power": 0.0165
+        },
+        {
+          "delta_points": 2,
+          "power": 0.0217
+        },
+        {
+          "delta_points": 3,
+          "power": 0.03
+        },
+        {
+          "delta_points": 4,
+          "power": 0.0447
+        },
+        {
+          "delta_points": 5,
+          "power": 0.068
+        },
+        {
+          "delta_points": 6,
+          "power": 0.0958
+        },
+        {
+          "delta_points": 7,
+          "power": 0.1343
+        },
+        {
+          "delta_points": 8,
+          "power": 0.1832
+        },
+        {
+          "delta_points": 9,
+          "power": 0.2477
+        },
+        {
+          "delta_points": 10,
+          "power": 0.3065
+        },
+        {
+          "delta_points": 11,
+          "power": 0.3825
+        },
+        {
+          "delta_points": 12,
+          "power": 0.4575
+        },
+        {
+          "delta_points": 13,
+          "power": 0.547
+        },
+        {
+          "delta_points": 14,
+          "power": 0.6285
+        },
+        {
+          "delta_points": 15,
+          "power": 0.7145
+        },
+        {
+          "delta_points": 16,
+          "power": 0.781
+        },
+        {
+          "delta_points": 17,
+          "power": 0.8303
+        },
+        {
+          "delta_points": 18,
+          "power": 0.882
+        },
+        {
+          "delta_points": 19,
+          "power": 0.9155
+        },
+        {
+          "delta_points": 20,
+          "power": 0.9443
+        },
+        {
+          "delta_points": 21,
+          "power": 0.9635
+        },
+        {
+          "delta_points": 22,
+          "power": 0.977
+        },
+        {
+          "delta_points": 23,
+          "power": 0.9892
+        },
+        {
+          "delta_points": 24,
+          "power": 0.9925
+        },
+        {
+          "delta_points": 25,
+          "power": 0.996
+        },
+        {
+          "delta_points": 26,
+          "power": 0.9988
+        },
+        {
+          "delta_points": 27,
+          "power": 0.9992
+        },
+        {
+          "delta_points": 28,
+          "power": 0.9998
+        },
+        {
+          "delta_points": 29,
+          "power": 0.9998
+        },
+        {
+          "delta_points": 30,
+          "power": 0.9998
+        }
+      ],
+      "mdd_points_single": 18.82,
+      "mdd_points_all": 16.39
+    }
+  ],
+  "decision": {
+    "rule": "If the central scenario's single-effect minimum detectable difference on the balanced design exceeds 10 points for most of the 9 rows, Family 1 shrinks to gbrain-defaults against the 4 strongest dev rows; if the shrunk family's still exceeds 10 points, S1 is published descriptively with its detectable difference and no superiority claim.",
+    "threshold_points": 10,
+    "scenario": "central",
+    "full_family": {
+      "comparisons": 9,
+      "mdd_points": 15.63,
+      "rows_over_threshold": 9
+    },
+    "shrunk_family": {
+      "comparisons": 4,
+      "mdd_points": 13.28
+    },
+    "family1": "descriptive",
+    "shrunk_comparators": null,
+    "detectable_difference_points": 13.28,
+    "note": "Comparator rows are exchangeable under these inputs, so one detectable difference applies to every row; rerun when dev smokes give paired cross-system rows."
+  }
+}
