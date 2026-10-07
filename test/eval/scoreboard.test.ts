@@ -27,6 +27,37 @@ function fresh(o: SyntheticOptions = {}): { dir: string; sb: Scoreboard } {
 const codes = (dir: string, env: Record<string, string> = {}) => checkReceipt(dir, env).messages.map(m => m.code);
 const editJson = (path: string, f: (x: CampaignManifest) => void) => { const x = JSON.parse(readFileSync(path, 'utf8')); f(x); writeFileSync(path, JSON.stringify(x, null, 2) + '\n'); };
 
+describe('does_not_fit is not applicable', () => {
+  test('a history that did not fit a reader\'s window leaves that cell\'s denominator, is counted and shown, never a judge error', () => {
+    const cells = defaultCells().map(c => (c.id === 's2a-full-context' ? { ...c, doesNotFit: { questions: [0, 1, 2, 3, 4, 5, 6], readers: ['claude-opus-5-5'] } } : c));
+    const { dir, sb } = fresh({ cells });
+    const fc = sb.cells.find(c => c.cell_id === 's2a-full-context')!;
+    expect(fc.harness_failures).toBe(0);
+    expect(fc.product_failures).toBe(0);
+    expect(fc.not_applicable).toEqual({ 'claude-opus-5-5': 7 });
+    expect(fc.valued).toBe(fc.scheduled - 7);
+    expect(fc.complete).toBe(true);
+    expect(fc.exclusions).toHaveLength(7);
+    expect(fc.exclusions.every(e => e.reason === "not applicable: did not fit claude-opus-5-5's window")).toBe(true);
+    expect(readFileSync(join(dir, 'scoreboard.md'), 'utf8')).toContain("complete; 7 did not fit claude-opus-5-5's window");
+    expect(sb.cells.find(c => c.cell_id === 's2a-gbrain-8k')!.not_applicable).toEqual({});
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    const plain = fresh().sb.cells.find(c => c.cell_id === 's2a-full-context')!;
+    expect(plain.valued).toBe(plain.scheduled);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a harness failure on the same question still reads as the harness failure', () => {
+    const cells = defaultCells().map(c => (c.id === 's2a-full-context' ? { ...c, harnessFail: [0], doesNotFit: { questions: [0, 1], readers: ['claude-opus-5-5'] } } : c));
+    const { dir, sb } = fresh({ cells });
+    const fc = sb.cells.find(c => c.cell_id === 's2a-full-context')!;
+    expect(fc.exclusions.find(e => e.question_id.endsWith(':q0'))!.reason).toStartWith('harness: reader_error');
+    expect(fc.exclusions.find(e => e.question_id.endsWith(':q1'))!.reason).toBe("not applicable: did not fit claude-opus-5-5's window");
+    expect(fc.complete).toBe(false);
+    rmSync(dir, { recursive: true });
+  });
+});
+
 describe('derivation chain and check', () => {
   test('a rendered receipt checks clean, and rendering twice is byte-identical', () => {
     const { dir } = fresh();

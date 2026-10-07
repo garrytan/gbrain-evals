@@ -15,7 +15,7 @@
  *                    preregistered exclusions still run and are reported apart
  *     system         a kind id from eval/systems/kinds.json; `runner` says whether it is a
  *                    protocol v1 shim (one VM per conversation shard) or in process
- *     configuration  shipped-defaults | recipe | common | common-embedder | baseline
+ *     configuration  shipped-defaults | full-surface | recipe | common | common-embedder | baseline
  *     arms[]         ArmDefinition: mode (packed, native-default, own-answer, agent,
  *                    full-context, retrieval-only), policy, budget, readers and replicates,
  *                    the frontier-judge scope and the judge-repeat scope
@@ -101,6 +101,12 @@ export interface CellDefinition {
   /** VM units: conversations per launch (a shim cell on S1 launches one VM per conversation). */
   shards: number;
   expected_hours: number;
+  /** Shim cells: the stack's bootstrap environment and config (`GBRAIN_FULL_SURFACE=1` for gbrain's full-surface cell). */
+  launch?: { env: Record<string, string>; config: 'recipe' | 'common' };
+  /** Shim cells: tar the stack's named volumes into the realization once ingest is complete (the launcher sets SHOOTOUT_SNAPSHOT_DIR). */
+  snapshot_command?: string;
+  /** Shim cells: load that snapshot into a fresh stack before a resumed cell runs (the launcher sets SHOOTOUT_RESTORE_DIR). */
+  restore_command?: string;
   arms: ArmDefinition[];
   estimate: CellEstimate;
 }
@@ -164,7 +170,7 @@ export const ASSUMPTIONS = {
     'ext-extract-first:common': 1.9, 'ext-extract-first:recipe': 1.9, 'ext-memory-bank:recipe': 1.4, 'ext-memory-bank:common': 1.4,
     'ext-graph-pipeline:recipe': 1.4, 'ext-graph-pipeline:common': 1.4, 'ext-temporal-graph:common': 12, 'ext-temporal-graph:recipe': 12,
     'ext-markdown-kb:recipe': 0.1, 'ext-markdown-kb:common': 0.1, 'ext-verbatim-session:recipe': 0.1, 'ext-verbatim-session:common': 0.1,
-    'gbrain-defaults:shipped-defaults': 0.12, 'gbrain-defaults:common-embedder': 0.13, 'baseline-hybrid:baseline': 0.13,
+    'gbrain-defaults:shipped-defaults': 0.12, 'gbrain-defaults:full-surface': 0.12, 'gbrain-defaults:common-embedder': 0.13, 'baseline-hybrid:baseline': 0.13,
   } as Record<string, number>,
   /** gbrain's default query expansion: one counted call per retrieval (claude-haiku-4-5, 300 tokens in, 100 out). */
   gbrain_expansion: { model: 'anthropic:claude-haiku-4-5', input: 300, output: 100 },
@@ -286,11 +292,30 @@ function makeCell(set: SetId, system: string, configuration: string, armSpecs: A
     };
   });
   const shards = runner === 'shim' && set === 'S1' ? s.conversations : 1;
+  const launch = runner === 'shim' ? shimLaunch(system, configuration) : null;
   const hours = Math.max(1, Math.ceil(ASSUMPTIONS.hours_per_mtok[runner] * s.corpus_tokens / 1e6 / shards));
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
     ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}` },
-    shards, expected_hours: Math.min(48, hours), arms };
+    shards, expected_hours: Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
   return { ...base, estimate: estimateCell(base) };
+}
+
+/** How a shim cell's stack starts: bootstrap.sh --config and any environment the configuration needs. */
+export function shimLaunch(system: string, configuration: string): NonNullable<CellDefinition['launch']> {
+  return { env: configuration === 'full-surface' ? { GBRAIN_FULL_SURFACE: '1' } : {}, config: configuration === 'common' || configuration === 'common-embedder' ? 'common' : 'recipe' };
+}
+
+/** `KEY=value ` for a launch environment, in key order. */
+export const launchPrefix = (launch: NonNullable<CellDefinition['launch']>) => Object.entries(launch.env).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => `${k}=${v} `).join('');
+
+/** A shim cell's launch record and its snapshot and restore commands (eval/systems/bootstrap.sh snapshot | restore). */
+function shimCommands(system: string, launch: NonNullable<CellDefinition['launch']>) {
+  const pre = launchPrefix(launch);
+  return {
+    launch,
+    snapshot_command: `${pre}bash eval/systems/bootstrap.sh snapshot --system ${system} --out "$SHOOTOUT_SNAPSHOT_DIR/${system}.tar"`,
+    restore_command: `${pre}bash eval/systems/bootstrap.sh restore --system ${system} --config ${launch.config} --from "$SHOOTOUT_RESTORE_DIR/${system}.tar"`,
+  };
 }
 
 const b8 = (extra: Partial<ArmSpec> = {}): ArmSpec => ({ id: 'component-b8000', mode: 'packed', budget: 8000, label: 'component, 8,000 tokens', ...extra });
@@ -305,6 +330,9 @@ export function generateCells(): CellDefinition[] {
   const sweep = (readers: string[], set: SetId, questions: Selection | null, frontier: ArmDefinition['frontier']): ArmSpec[] => [2000, 16000].map(b => ({ id: `component-b${b}`, mode: 'packed' as const, budget: b, set, questions, readers, frontier, label: `component, ${b.toLocaleString('en-US')} tokens (sweep)` }));
 
   const think: ArmSpec = { id: 'whole-think', mode: 'own-answer', variant: 'think', label: 'gbrain think (full surface, each reader)', frontier: everyRow, judge_repeats: repeatsAll };
+  const synthesize: ArmSpec = { id: 'whole-synthesize', mode: 'own-answer', variant: 'synthesize', readers: ['system-default'], label: 'gbrain synthesize (own answer, starter surface)' };
+  /** `think` is a full-surface op, so it runs in its own cell on a stack started with GBRAIN_FULL_SURFACE=1; every starter-surface row keeps a starter-only stack. */
+  const fullSurface = (set: SetId) => makeCell(set, 'gbrain-defaults', 'full-surface', [think]);
 
   // S1, BEAM-10M: the headline.
   const s1Sweep = SETS['S1-sweep'].selection;
@@ -314,9 +342,9 @@ export function generateCells(): CellDefinition[] {
       ...sweep(READERS, 'S1-sweep', s1Sweep, sonnetRows),
     ];
     if (system !== 'baseline-recency' && system !== 'baseline-none') arms.push({ id: 'whole-default', mode: 'native-default', label: 'whole system, own default amount', frontier: sonnetRows, ...(system === 'gbrain-defaults' ? { anchor: true } : {}) });
-    if (system === 'gbrain-defaults') arms.push(
-      { id: 'whole-synthesize', mode: 'own-answer', variant: 'synthesize', readers: ['system-default'], label: 'gbrain synthesize (own answer, starter surface)' }, think);
+    if (system === 'gbrain-defaults') arms.push(synthesize);
     cells.push(makeCell('S1', system, headlineConfig(system, 'beam'), arms));
+    if (system === 'gbrain-defaults') cells.push(fullSurface('S1'));
   }
   cells.push(makeCell('S1', 'baseline-full-context', 'baseline', [{ id: 'whole-full-context', mode: 'full-context', label: 'whole history, where it fits', frontier: sonnetRows }]));
   cells.push(makeCell('S1', 'baseline-file-agent', 'baseline', [{ id: 'whole-agent', mode: 'agent', label: 'file agent, uncapped grep, 40 turns', frontier: everyRow, judge_repeats: repeatsAll }]));
@@ -327,8 +355,9 @@ export function generateCells(): CellDefinition[] {
     for (const system of ['gbrain-defaults', ...EXT_BEAM, ...PASSIVE_BASELINES]) {
       const arms: ArmSpec[] = [b8({ judge_repeats: repeatsSonnet, ...(system === 'gbrain-defaults' ? { anchor: true } : {}) })];
       if (set === 'S2b') arms.push(...sweep([SONNET], set, null, null));
-      if (system === 'gbrain-defaults') arms.push(think);
+      if (system === 'gbrain-defaults' && set !== 'S3') arms.push(synthesize);
       out.push(makeCell(set, system, headlineConfig(system, family), arms));
+      if (system === 'gbrain-defaults') out.push(fullSurface(set));
     }
     if (set === 'S2b') out.push(makeCell(set, 'gbrain-defaults', 'common-embedder', [b8({ label: 'component diagnostic, text-embedding-3-large at 1,536 dimensions' })]));
     if (set === 'S2a' || set === 'S3') for (const system of EXT_BEAM.filter(s => headlineConfig(s, family) !== 'common')) out.push(makeCell(set, system, 'common', [b8({ label: 'component, 8,000 tokens, common configuration (diagnostic)' })]));

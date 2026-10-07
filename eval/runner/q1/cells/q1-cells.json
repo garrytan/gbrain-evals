@@ -75,6 +75,7 @@
       "ext-verbatim-session:recipe": 0.1,
       "ext-verbatim-session:common": 0.1,
       "gbrain-defaults:shipped-defaults": 0.12,
+      "gbrain-defaults:full-surface": 0.12,
       "gbrain-defaults:common-embedder": 0.13,
       "baseline-hybrid:baseline": 0.13
     },
@@ -304,29 +305,29 @@
       "id": "T1",
       "label": "T1 S1 headline (complete)",
       "plan_usd": 3995,
-      "estimate_usd": 4141.2,
-      "cap_usd": 6211.8
+      "estimate_usd": 4154.4,
+      "cap_usd": 6231.6
     },
     {
       "id": "T2-S2a",
       "label": "T2 S2a BEAM-100K",
       "plan_usd": 585,
-      "estimate_usd": 751.62,
-      "cap_usd": 1127.43
+      "estimate_usd": 773.05,
+      "cap_usd": 1159.58
     },
     {
       "id": "T2-S2b",
       "label": "T2 S2b BEAM-1M",
       "plan_usd": 1720,
-      "estimate_usd": 1711.49,
-      "cap_usd": 2567.24
+      "estimate_usd": 1750.69,
+      "cap_usd": 2626.04
     },
     {
       "id": "T2-S3",
       "label": "T2 S3 LoCoMo",
       "plan_usd": 730,
-      "estimate_usd": 1047.93,
-      "cap_usd": 1571.9
+      "estimate_usd": 1047.96,
+      "cap_usd": 1571.94
     },
     {
       "id": "T2-S4-S5",
@@ -365,6 +366,12 @@
       },
       "shards": 10,
       "expected_hours": 44,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -518,10 +525,61 @@
           "frontier": null,
           "judge_repeats": null,
           "label": "gbrain synthesize (own answer, starter surface)"
+        }
+      ],
+      "estimate": {
+        "usd": 255.72,
+        "lines": {
+          "frontier_judges": 12.96,
+          "ingest": 13.2,
+          "judge_repeats": 2.74,
+          "judges": 4.1,
+          "own_answer": 30,
+          "readers": 192.4,
+          "system_queries": 0.32
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s1.gbrain-defaults.full-surface",
+      "set": "S1",
+      "block": "T1",
+      "benchmark": "beam-10m",
+      "split": "sealed",
+      "selection": {
+        "kind": "all"
+      },
+      "exclusions": [
+        {
+          "question_id": "10m-1:abstention:0",
+          "reason": "exposed in another thread's audit (eval/decisions/splits/beam-10m.json exclusions); run and reported apart, never in the confirmatory cohort"
+        }
+      ],
+      "system": "gbrain-defaults",
+      "configuration": "full-surface",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-10m",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s1"
+      },
+      "shards": 10,
+      "expected_hours": 44,
+      "launch": {
+        "env": {
+          "GBRAIN_FULL_SURFACE": "1"
         },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
         {
           "id": "whole-think",
-          "cell_id": "s1.gbrain-defaults.shipped-defaults.whole-think",
+          "cell_id": "s1.gbrain-defaults.full-surface.whole-think",
           "set": "S1",
           "arm": "whole-system",
           "mode": "own-answer",
@@ -552,15 +610,13 @@
         }
       ],
       "estimate": {
-        "usd": 432.64,
+        "usd": 190.12,
         "lines": {
-          "frontier_judges": 30.24,
+          "frontier_judges": 17.28,
           "ingest": 13.2,
-          "judge_repeats": 13.68,
-          "judges": 5.2,
-          "own_answer": 177.6,
-          "readers": 192.4,
-          "system_queries": 0.32
+          "judge_repeats": 10.94,
+          "judges": 1.09,
+          "own_answer": 147.6
         }
       }
     },
@@ -592,6 +648,12 @@
       },
       "shards": 10,
       "expected_hours": 44,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -766,6 +828,12 @@
       },
       "shards": 10,
       "expected_hours": 44,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -940,6 +1008,12 @@
       },
       "shards": 10,
       "expected_hours": 44,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -1114,6 +1188,12 @@
       },
       "shards": 10,
       "expected_hours": 44,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -1288,6 +1368,12 @@
       },
       "shards": 10,
       "expected_hours": 44,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -1462,6 +1548,12 @@
       },
       "shards": 10,
       "expected_hours": 44,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -2232,6 +2324,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -2315,8 +2413,74 @@
           "label": "component, 16,000 tokens (sweep)"
         },
         {
+          "id": "whole-synthesize",
+          "cell_id": "s2b.gbrain-defaults.shipped-defaults.whole-synthesize",
+          "set": "S2b",
+          "arm": "whole-system",
+          "mode": "own-answer",
+          "policy": null,
+          "budget": null,
+          "variant": "synthesize",
+          "questions": null,
+          "readers": [
+            "system-default"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "gbrain synthesize (own answer, starter surface)"
+        }
+      ],
+      "estimate": {
+        "usd": 105.78,
+        "lines": {
+          "frontier_judges": 0.65,
+          "ingest": 2.88,
+          "judge_repeats": 3.28,
+          "judges": 2.3,
+          "own_answer": 36,
+          "readers": 60.48,
+          "system_queries": 0.19
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b.gbrain-defaults.full-surface",
+      "set": "S2b",
+      "block": "T2-S2b",
+      "benchmark": "beam-1m",
+      "split": "sealed",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 10,
+        "seed": "q1-beam-1m"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "full-surface",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s2b"
+      },
+      "shards": 1,
+      "expected_hours": 48,
+      "launch": {
+        "env": {
+          "GBRAIN_FULL_SURFACE": "1"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
           "id": "whole-think",
-          "cell_id": "s2b.gbrain-defaults.shipped-defaults.whole-think",
+          "cell_id": "s2b.gbrain-defaults.full-surface.whole-think",
           "set": "S2b",
           "arm": "whole-system",
           "mode": "own-answer",
@@ -2347,15 +2511,13 @@
         }
       ],
       "estimate": {
-        "usd": 255.84,
+        "usd": 189.26,
         "lines": {
-          "frontier_judges": 21.38,
+          "frontier_judges": 20.74,
           "ingest": 2.88,
-          "judge_repeats": 16.42,
-          "judges": 3.28,
-          "own_answer": 151.2,
-          "readers": 60.48,
-          "system_queries": 0.19
+          "judge_repeats": 13.13,
+          "judges": 1.31,
+          "own_answer": 151.2
         }
       }
     },
@@ -2384,6 +2546,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -2502,6 +2670,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -2620,6 +2794,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -2738,6 +2918,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -2856,6 +3042,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -2974,6 +3166,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -3444,6 +3642,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config common --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -3638,6 +3842,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -3673,8 +3883,74 @@
           "anchor": true
         },
         {
+          "id": "whole-synthesize",
+          "cell_id": "s2a.gbrain-defaults.shipped-defaults.whole-synthesize",
+          "set": "S2a",
+          "arm": "whole-system",
+          "mode": "own-answer",
+          "policy": null,
+          "budget": null,
+          "variant": "synthesize",
+          "questions": null,
+          "readers": [
+            "system-default"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "gbrain synthesize (own answer, starter surface)"
+        }
+      ],
+      "estimate": {
+        "usd": 53.22,
+        "lines": {
+          "frontier_judges": 0.43,
+          "ingest": 0.24,
+          "judge_repeats": 1.92,
+          "judges": 0.96,
+          "own_answer": 21,
+          "readers": 28.56,
+          "system_queries": 0.11
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2a.gbrain-defaults.full-surface",
+      "set": "S2a",
+      "block": "T2-S2a",
+      "benchmark": "beam-100k",
+      "split": "sealed",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 10,
+        "seed": "q1-beam-100k"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "full-surface",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-100k",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s2a"
+      },
+      "shards": 1,
+      "expected_hours": 8,
+      "launch": {
+        "env": {
+          "GBRAIN_FULL_SURFACE": "1"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
           "id": "whole-think",
-          "cell_id": "s2a.gbrain-defaults.shipped-defaults.whole-think",
+          "cell_id": "s2a.gbrain-defaults.full-surface.whole-think",
           "set": "S2a",
           "arm": "whole-system",
           "mode": "own-answer",
@@ -3705,15 +3981,13 @@
         }
       ],
       "estimate": {
-        "usd": 118.07,
+        "usd": 86.28,
         "lines": {
-          "frontier_judges": 12.53,
+          "frontier_judges": 12.1,
           "ingest": 0.24,
-          "judge_repeats": 9.58,
-          "judges": 1.53,
-          "own_answer": 65.52,
-          "readers": 28.56,
-          "system_queries": 0.11
+          "judge_repeats": 7.66,
+          "judges": 0.77,
+          "own_answer": 65.52
         }
       }
     },
@@ -3742,6 +4016,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -3812,6 +4092,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -3882,6 +4168,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -3952,6 +4244,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -4022,6 +4320,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -4092,6 +4396,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -4370,6 +4680,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -4434,6 +4750,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -4498,6 +4820,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -4562,6 +4890,12 @@
       },
       "shards": 1,
       "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -4760,6 +5094,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -4793,10 +5133,61 @@
           },
           "label": "component, 8,000 tokens",
           "anchor": true
+        }
+      ],
+      "estimate": {
+        "usd": 46.29,
+        "lines": {
+          "frontier_judges": 0.12,
+          "ingest": 0.03,
+          "judge_repeats": 3.7,
+          "judges": 1.48,
+          "readers": 40.8,
+          "system_queries": 0.16
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3.gbrain-defaults.full-surface",
+      "set": "S3",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "all",
+      "selection": {
+        "kind": "stratified",
+        "limit": 200,
+        "stratify": "category",
+        "seed": "q1-locomo",
+        "min": {
+          "adversarial": 40
+        }
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "full-surface",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3"
+      },
+      "shards": 1,
+      "expected_hours": 2,
+      "launch": {
+        "env": {
+          "GBRAIN_FULL_SURFACE": "1"
         },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
         {
           "id": "whole-think",
-          "cell_id": "s3.gbrain-defaults.shipped-defaults.whole-think",
+          "cell_id": "s3.gbrain-defaults.full-surface.whole-think",
           "set": "S3",
           "arm": "whole-system",
           "mode": "own-answer",
@@ -4827,15 +5218,13 @@
         }
       ],
       "estimate": {
-        "usd": 157.37,
+        "usd": 111.11,
         "lines": {
-          "frontier_judges": 4.92,
+          "frontier_judges": 4.8,
           "ingest": 0.03,
-          "judge_repeats": 18.5,
-          "judges": 2.96,
-          "own_answer": 90,
-          "readers": 40.8,
-          "system_queries": 0.16
+          "judge_repeats": 14.8,
+          "judges": 1.48,
+          "own_answer": 90
         }
       }
     },
@@ -4868,6 +5257,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -4942,6 +5337,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5016,6 +5417,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5090,6 +5497,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5164,6 +5577,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5238,6 +5657,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5532,6 +5957,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5600,6 +6031,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5668,6 +6105,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5736,6 +6179,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5804,6 +6253,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -5872,6 +6327,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -6145,6 +6606,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "retrieval-only",
@@ -6199,6 +6666,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
       "arms": [
         {
           "id": "retrieval-only",
@@ -6252,6 +6725,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
       "arms": [
         {
           "id": "retrieval-only",
@@ -6305,6 +6784,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
       "arms": [
         {
           "id": "retrieval-only",
@@ -6358,6 +6843,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
       "arms": [
         {
           "id": "retrieval-only",
@@ -6411,6 +6902,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
       "arms": [
         {
           "id": "retrieval-only",
@@ -6464,6 +6961,12 @@
       },
       "shards": 1,
       "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
       "arms": [
         {
           "id": "retrieval-only",
@@ -6564,6 +7067,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -6652,6 +7161,12 @@
       },
       "shards": 1,
       "expected_hours": 46,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -6716,6 +7231,12 @@
       },
       "shards": 1,
       "expected_hours": 46,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -6968,6 +7489,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -7032,6 +7559,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -7094,6 +7627,12 @@
       },
       "shards": 1,
       "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
       "arms": [
         {
           "id": "component-b8000",
@@ -7318,7 +7857,7 @@
       }
     }
   ],
-  "total_usd": 8000.25,
+  "total_usd": 8074.11,
   "plan_total_usd": 7710,
   "cap_usd": 8500
 }

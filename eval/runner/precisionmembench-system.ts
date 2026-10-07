@@ -359,7 +359,7 @@ export async function runPmb(a: PmbArgs): Promise<{ receipt: Record<string, unkn
 
   if (a.providerProxy) {
     if (!/^https?:\/\/[^/]+$/.test(a.providerProxy)) throw new Error('--provider-proxy must look like http://host:port');
-    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = 'dummy-key-the-proxy-replaces';
+    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = process.env.SHOOTOUT_CELL_TOKEN || 'dummy-key-the-proxy-replaces';
     process.env.OPENAI_BASE_URL = `${a.providerProxy}/harness/openai/v1`;
     process.env.ANTHROPIC_BASE_URL = `${a.providerProxy}/harness/anthropic`;
   }

@@ -33,6 +33,7 @@ function standIn() {
     const res = await fetch(`${fake.url}${path}`, { method: req.method, headers: { 'content-type': 'application/json' }, body: req.method === 'POST' ? await req.text() : undefined, keepalive: false });
     const json = await res.json() as Record<string, unknown>;
     if (path === '/capabilities') json.system = 'gbrain-defaults';
+    if (path === '/finish') Object.assign(json, { doctor_rounds: 2, rounds: [{ clean: false, reasons: ['embeddings:99% coverage, 3 missing'] }, { clean: true, reasons: [] }], expected_pages: 9 });
     return Response.json(json, { status: res.status });
   } });
   return { url: `http://127.0.0.1:${server.port}`, hits, stop: () => { server.stop(true); fake.stop(); } };
@@ -102,6 +103,20 @@ describe('split guard and engine rule', () => {
     expect(engineRule([...fast, { ...q(1), ok: false, service_ms: null }], 4_000_000, 16).engine).toBe('postgres');
     expect(engineRule(fast, null, 16).engine).toBe('postgres');
   });
+
+  test('shipped-behavior delivery fallbacks are counted, never held against PGLite; timeout-type ones are', () => {
+    const fast = Array.from({ length: 20 }, (_, i) => q(400 + i));
+    const shipped = [...fast, q(500, [], ['redaction_unmapped']), q(510, [], ['no_text_chunks']), q(520, [], ['no_text_chunks', 'redaction_unmapped'])];
+    const r = engineRule(shipped, 4_000_000, 16);
+    expect(r).toMatchObject({ engine: 'pglite', delivery_fallback_queries: 0, shipped_fallback_queries: 3, shipped_fallbacks: { redaction_unmapped: 2, no_text_chunks: 2 } });
+    expect(r.checks.no_delivery_fallbacks).toBe(true);
+    for (const f of ['fetch_timeout', 'row_limit', 'unsealed_page', 'anchor_not_located', 'unknown_reason']) {
+      expect(engineRule([...fast, q(500, [], ['redaction_unmapped', f])], 4_000_000, 16)).toMatchObject({ engine: 'postgres', delivery_fallback_queries: 1, shipped_fallbacks: { redaction_unmapped: 1 } });
+    }
+    expect(engineRule([...fast, q(500, ['delivery_fallback:redaction_unmapped'])], 4_000_000, 16)).toMatchObject({ engine: 'pglite', shipped_fallbacks: { redaction_unmapped: 1 } });
+    expect(engineRule([...fast, q(500, ['delivery_unit:chunk'])], 4_000_000, 16)).toMatchObject({ engine: 'postgres', delivery_fallback_queries: 1 });
+    expect(engineRule([...fast, q(500, ['rerank_missing'], ['redaction_unmapped'])], 4_000_000, 16)).toMatchObject({ engine: 'postgres', rerank_fallback_queries: 1, delivery_fallback_queries: 0 });
+  });
 });
 
 describe('the pilot flow (stand-in shim, fixture corpus)', () => {
@@ -119,6 +134,8 @@ describe('the pilot flow (stand-in shim, fixture corpus)', () => {
       expect(receipt.corpus).toMatchObject({ split: 'dev', conversations: corpus.conversations.length, sessions: plan.length });
       expect(receipt.ingest).toMatchObject({ committed_total: plan.length, failed_total: 0, sessions_written_this_run: plan.length, sessions_resumed: 0 });
       expect(receipt.finish.ready).toBe(true);
+      expect(receipt.finish.rounds).toEqual([{ clean: false, reasons: ['embeddings:99% coverage, 3 missing'] }, { clean: true, reasons: [] }]);
+      expect(receipt.finish).toMatchObject({ doctor_rounds: 2, expected_pages: 9 });
       expect(receipt.restart.restart_ms).toBe(812.5);
       expect(receipt.footprint).toMatchObject({ peak_serve_rss_kb: 250_000, brain_bytes: 1_000_000 });
       expect(receipt.queries.n).toBe(corpus.questions.length);

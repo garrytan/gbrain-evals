@@ -18,6 +18,14 @@
 #          container file systems are kept. Waits for GET /health as `up` does. lifecycle-lite's restart checkpoint
 #          runs it as its --restart-cmd.
 #   down   --system NAME      Stop the stack and remove its volumes.
+#   snapshot --system NAME --out TAR [--port 8700] [--timeout 900]
+#          Stop the stack, tar every named volume of its compose project into TAR (one <volume>.tar per volume plus
+#          volumes.json), write TAR.sha256, start the stack again and wait for GET /health. A Q1 shim cell's
+#          snapshot_command runs it with --out "$SHOOTOUT_SNAPSHOT_DIR/<system>.tar" once ingest is complete.
+#   restore --system NAME --from TAR [--config recipe|common] [--port 8700] [--timeout 900]
+#          Check TAR against TAR.sha256 when present, create the stack without starting it, replace every named
+#          volume's contents with the snapshot's, then start the stack and wait for GET /health. A Q1 shim cell's
+#          restore_command runs it with --from "$SHOOTOUT_RESTORE_DIR/<system>.tar" before the cell command.
 #
 # A counted cell command therefore looks like:
 #   bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && \
@@ -36,7 +44,7 @@ die() { echo "bootstrap: $*" >&2; exit 1; }
 log() { echo "bootstrap: $*" >&2; }
 
 cmd=${1:-}; shift || true
-SYSTEM="" CONFIG=recipe PORT="" PROXY_PORT=8787 TIMEOUT=900 DATASETS="" LEASE_ID="" LEASE_USD="" MAX_OUT="" OUT=""
+SYSTEM="" CONFIG=recipe PORT="" PROXY_PORT=8787 TIMEOUT=900 DATASETS="" LEASE_ID="" LEASE_USD="" MAX_OUT="" OUT="" FROM=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --system) SYSTEM=$2; shift 2 ;;
@@ -49,6 +57,7 @@ while [ $# -gt 0 ]; do
     --lease-usd) LEASE_USD=$2; shift 2 ;;
     --max-output-tokens) MAX_OUT=$2; shift 2 ;;
     --out) OUT=$2; shift 2 ;;
+    --from) FROM=$2; shift 2 ;;
     *) die "unknown argument $1" ;;
   esac
 done
@@ -88,8 +97,24 @@ wait_healthy() {
   curl -sf "http://127.0.0.1:$SHIM_HOST_PORT/health"; echo
 }
 
-# Compose interpolates the caller's environment: never let the cell's own base URLs or keys reach a container.
+# Compose interpolates the caller's environment: never let the cell's own base URLs or keys reach a container. The cell
+# token (SHOOTOUT_CELL_TOKEN, set by the launcher) does pass: the stacks present it as their dummy provider key, so the
+# strict lease proxy admits their calls.
 compose() { env -u OPENAI_BASE_URL -u ANTHROPIC_BASE_URL -u VOYAGE_BASE_URL -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u VOYAGE_API_KEY bash -c 'if docker info >/dev/null 2>&1; then exec docker compose "$@"; else exec sudo -E docker compose "$@"; fi' compose "$@"; }
+dock() { if docker info >/dev/null 2>&1; then docker "$@"; else sudo docker "$@"; fi; }
+
+# The image that tars volumes: the pinned egress relay image every stack already pulls (busybox tar).
+SNAPSHOT_IMAGE=${SNAPSHOT_IMAGE:-alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e}
+
+# "<volume key> <docker volume name>" for every named volume of the stack's compose project.
+stack_volumes() {
+  local f=$1 project key
+  project=$(compose -f "$f" config --format json | python3 -c 'import json,sys; print(json.load(sys.stdin)["name"])')
+  for key in $(compose -f "$f" config --volumes); do
+    echo "$key $(dock volume ls -q --filter "label=com.docker.compose.project=$project" --filter "label=com.docker.compose.volume=$key" | head -1)"
+  done
+}
+sha_of() { sha256sum "$1" | cut -d' ' -f1; }
 
 case "$cmd" in
   setup)
@@ -159,8 +184,55 @@ case "$cmd" in
     compose -f "$f" down -v
     ;;
 
+  snapshot)
+    [ -n "$OUT" ] || die "snapshot needs --out <tar>"
+    f=$(compose_file)
+    compose_env
+    work=$(mktemp -d)
+    # A failed snapshot still starts the stack again, so the cell's remaining questions see a running system.
+    trap 'rc=$?; rm -rf "$work"; [ $rc -eq 0 ] || compose -f "$f" start >/dev/null 2>&1 || true' EXIT
+    log "stopping $SYSTEM to snapshot its volumes"
+    compose -f "$f" stop
+    echo '{"system": "'"$SYSTEM"'", "volumes": [' > "$work/volumes.json"
+    sep=""
+    while read -r key vol; do
+      [ -n "$vol" ] || die "volume $key of $SYSTEM does not exist (is the stack up?)"
+      dock run --rm --network none -v "$vol:/v:ro" -v "$work:/out" --entrypoint tar "$SNAPSHOT_IMAGE" -C /v -cf "/out/$key.tar" .
+      printf '%s{"key": "%s", "sha256": "%s"}' "$sep" "$key" "$(sha_of "$work/$key.tar")" >> "$work/volumes.json"
+      sep=", "
+    done < <(stack_volumes "$f")
+    echo ']}' >> "$work/volumes.json"
+    mkdir -p "$(dirname "$OUT")"
+    tar -C "$work" -cf "$OUT" .
+    sha_of "$OUT" > "$OUT.sha256"
+    log "snapshot $OUT sha256 $(cat "$OUT.sha256")"
+    compose -f "$f" start
+    wait_healthy "$f"
+    ;;
+
+  restore)
+    [ -n "$FROM" ] && [ -f "$FROM" ] || die "restore needs --from <tar> naming an existing snapshot"
+    f=$(compose_file)
+    compose_env
+    if [ -f "$FROM.sha256" ] && [ "$(sha_of "$FROM")" != "$(cat "$FROM.sha256")" ]; then die "$FROM does not match $FROM.sha256; the snapshot is damaged"; fi
+    work=$(mktemp -d)
+    trap 'rm -rf "$work"' EXIT
+    tar -C "$work" -xf "$FROM"
+    [ -f "$work/volumes.json" ] || die "$FROM is not a bootstrap.sh snapshot (no volumes.json)"
+    compose -f "$f" up --no-start
+    compose -f "$f" stop
+    while read -r key vol; do
+      [ -f "$work/$key.tar" ] || die "the snapshot has no volume $key"
+      [ "$(sha_of "$work/$key.tar")" = "$(python3 -c 'import json,sys; print(next(v["sha256"] for v in json.load(open(sys.argv[1]))["volumes"] if v["key"] == sys.argv[2]))' "$work/volumes.json" "$key")" ] || die "volume $key does not match its recorded sha256"
+      dock run --rm --network none -v "$vol:/v" -v "$work:/in:ro" --entrypoint sh "$SNAPSHOT_IMAGE" -c "find /v -mindepth 1 -delete && tar -C /v -xf /in/$key.tar"
+    done < <(stack_volumes "$f")
+    log "restored $SYSTEM from $FROM; starting it"
+    compose -f "$f" up -d
+    wait_healthy "$f"
+    ;;
+
   *)
-    sed -n '2,31p' "$0" >&2
+    sed -n '2,37p' "$0" >&2
     exit 2
     ;;
 esac

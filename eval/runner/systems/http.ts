@@ -14,7 +14,7 @@
  * /finish and `--ingest-timeout-s` for each /ingest.
  */
 import { findLeaks, NS_RE, SanitizerLeakError, SRC_RE } from './sanitize.ts';
-import { checkItem, ERROR_KINDS, SystemError, type CapabilityRecord, type DeleteResult, type ErrorKind, type FinishResult, type IngestResult, type MemorySystem, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from './types.ts';
+import { checkItem, ERROR_KINDS, SystemError, type CapabilityRecord, type DeleteResult, type ErrorKind, type FinishResult, type IngestResult, type MemorySystem, type OwnAnswer, type OwnAnswerRequest, type OwnAnswerSystem, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from './types.ts';
 
 type Send = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
@@ -33,7 +33,7 @@ export interface HttpSystemOptions {
 
 const COMPLETENESS = ['known', 'unknown', 'degraded'];
 
-export class HttpMemorySystem implements MemorySystem {
+export class HttpMemorySystem implements OwnAnswerSystem {
   readonly name: string;
   private base: string;
   constructor(baseUrl: string, private options: HttpSystemOptions = {}) {
@@ -88,13 +88,27 @@ export class HttpMemorySystem implements MemorySystem {
   async finishIngest(ns: string, timeoutS = 600): Promise<FinishResult> {
     const r = await this.call('POST', '/finish', { ns: this.ns(ns), timeout_s: timeoutS }, (timeoutS + 60) * 1000);
     if (!COMPLETENESS.includes(r.completeness)) throw new SystemError('product_error', 'finish must report completeness');
-    return { ready: r.ready === true, waited_ms: Number(r.waited_ms ?? 0), completeness: r.completeness, service_ms: r.service_ms };
+    const { ready, waited_ms, completeness, service_ms, ...rest } = r;
+    return { ready: ready === true, waited_ms: Number(waited_ms ?? 0), completeness, service_ms, ...(Object.keys(rest).length ? { raw: rest } : {}) };
   }
 
   async retrieve(ns: string, question: PublicQuestion, policy: RetrievalPolicy): Promise<RetrieveResult> {
     const r = await this.call('POST', '/retrieve', { ns: this.ns(ns), question: question.text, query_time: question.query_time, policy });
     if (!Array.isArray(r.items)) throw new SystemError('product_error', 'retrieve must return items');
     return { items: r.items.map((i: unknown, k: number) => checkItem(i, k)), applied_settings: r.applied_settings ?? {}, truncated: r.truncated === true, raw: r.raw, service_ms: r.service_ms };
+  }
+
+  /** The system's own answer (optional `POST /answer`); a stack that does not serve the mode answers `unsupported`. */
+  async answer(ns: string, question: PublicQuestion, request: OwnAnswerRequest): Promise<OwnAnswer> {
+    const r = await this.call('POST', '/answer', { ns: this.ns(ns), question: question.text, query_time: question.query_time, mode: request.mode, ...(request.model ? { model: request.model } : {}) });
+    if (typeof r.answer !== 'string') throw new SystemError('product_error', 'answer must return the answer text');
+    if (r.outcome !== 'scored' && r.outcome !== 'harness_invalid') throw new SystemError('product_error', 'answer must report outcome scored or harness_invalid');
+    const sources = Array.isArray(r.source_ids) ? r.source_ids.filter((s: unknown): s is string => typeof s === 'string') : [];
+    if (sources.some((s: string) => !SRC_RE.test(s))) throw new SystemError('product_error', 'answer source_ids must be opaque source ids');
+    const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : 0);
+    const { answer, outcome, degraded, source_ids: _s, model, usage, usd, service_ms, ...raw } = r;
+    return { text: answer, outcome, degraded: typeof degraded === 'string' ? degraded : null, source_ids: sources, model: typeof model === 'string' ? model : null,
+      usage: { input: n(usage?.input), output: n(usage?.output) }, usd: typeof usd === 'number' ? usd : null, service_ms, raw };
   }
 
   async deleteSource(ns: string, sourceId: string): Promise<DeleteResult> {

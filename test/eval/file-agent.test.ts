@@ -316,6 +316,10 @@ describe('true full context', () => {
     expect(a1).toMatchObject({ outcome: 'scored', text: 'answer', usage: { input: 20, output: 5, cache_read: 0, cache_write: 900 }, provider_input_tokens: 920 });
     expect(a2.usage.cache_read).toBe(900);
     expect(a1.cache_key).toBe(a2.cache_key);
+    expect(bodies.every(b => b.output_config?.effort === 'medium' && b.reasoning_effort === undefined)).toBe(true);
+    const high = await answerFullContext({ reader: 'anthropic:claude-sonnet-5-5', prompt, conversation: conv.id, fetchImpl, effort: 'high' });
+    expect(bodies[2].output_config).toEqual({ effort: 'high' });
+    expect(high.cache_key).not.toBe(a1.cache_key);
     expect(splitForCache('no marker')).toEqual({ prefix: 'no marker', suffix: '' });
   });
 
@@ -334,6 +338,33 @@ describe('true full context', () => {
     expect(bodies[0].prompt_cache_key).not.toBe(bodies[2].prompt_cache_key);
     expect(bodies[0].prompt_cache_key).not.toContain(conv.id);
     expect(a.usage).toEqual({ input: 104, output: 7, cache_read: 896, cache_write: 0 });
+    expect(bodies.every(b => b.reasoning_effort === 'medium' && b.output_config === undefined)).toBe(true);
+  });
+
+  test('reasoning effort on the agent loop: medium on every file-agent call; Cat 40 without effort sends neither field', async () => {
+    const bodies: Array<{ url: string; body: any }> = [];
+    const fetchImpl = (async (url: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body));
+      bodies.push({ url: String(url), body });
+      return new Response(JSON.stringify(String(url).includes('anthropic')
+        ? { content: [{ type: 'tool_use', id: 't1', name: 'submit_answer', input: { answer: 'done' } }], usage: { input_tokens: 10, output_tokens: 2 } }
+        : { id: 'r1', output: [{ type: 'function_call', call_id: 'c1', name: 'submit_answer', arguments: JSON.stringify({ answer: 'done' }) }], usage: { input_tokens: 10, output_tokens: 2 } }));
+    }) as unknown as typeof fetch;
+    const sys = new FileAgentSystem({ workDir: join(tmp, 'effort'), fetchImpl });
+    const ns = 'ns-00000000000000e1';
+    await sys.ingestSession(ns, { source_id: 'src-00000000000000e1', turns: [{ role: 'user', speaker: 'User', content: 'hello' }] }, '2026-01-02T00:00:00Z');
+    for (const reader of ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol']) await sys.answer(ns, { text: 'q?', query_time: null }, { reader, replicate: 0 });
+    expect(bodies.find(b => b.url.includes('anthropic'))!.body.output_config).toEqual({ effort: 'medium' });
+    expect(bodies.find(b => b.url.includes('openai'))!.body.reasoning).toEqual({ effort: 'medium' });
+    expect((await sys.capabilities()).effort).toBe('medium');
+    bodies.length = 0;
+    const arm = new FsArm('fs', new FileStore(new Map([['a.md', 'x']])));
+    for (const model of ['claude-opus-5-5', 'gpt-6.1-sol']) await runAgent({ model, system: 's', user: 'u', arm, fetchImpl });
+    expect(bodies).toHaveLength(2);
+    for (const b of bodies) { expect(b.body.output_config).toBeUndefined(); expect(b.body.reasoning).toBeUndefined(); expect(b.body.reasoning_effort).toBeUndefined(); }
+    expect(Object.keys(bodies[0].body)).toEqual(['model', 'max_tokens', 'system', 'tools', 'messages']);
+    expect(Object.keys(bodies[1].body)).toEqual(['model', 'instructions', 'input', 'tools', 'max_output_tokens']);
+    await sys.close();
   });
 
   test('public ids: the shootout full-context system is unchanged; Q1 modes name the kinds', async () => {

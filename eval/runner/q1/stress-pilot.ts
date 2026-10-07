@@ -6,11 +6,13 @@
  * shim, then measures what the preregistered S1 engine rule needs: ingest wall time (and per 1,000 messages), serve
  * memory (current and peak RSS) and brain size on disk as the brain grows, the quiesce barrier's wait, serve restart
  * time on the full brain, and retrieval-only `query` latency (shim service_ms and gbrain's own time, p50/p95) on the
- * dev questions with every rerank and evidence-delivery fallback counted. No reader runs.
+ * dev questions with every rerank and evidence-delivery fallback counted. No reader runs. The receipt's `finish`
+ * carries every doctor round of the quiesce barrier (`rounds`).
  *
- * Engine rule: PGLite is the S1 headline engine if query p95 is under 10 seconds with no rerank or delivery
- * fallbacks and peak RSS fits the VM; otherwise S1 runs gbrain-defaults on Postgres, per gbrain's own pglite_scale
- * advice, and says so. The receipt states which.
+ * Engine rule: PGLite is the S1 headline engine if query p95 is under 10 seconds with no rerank or timeout-type
+ * delivery fallbacks and peak RSS fits the VM; otherwise S1 runs gbrain-defaults on Postgres, per gbrain's own
+ * pglite_scale advice, and says so. The receipt states which. Shipped-behavior delivery fallbacks
+ * (SHIPPED_DELIVERY_FALLBACKS: `redaction_unmapped`, `no_text_chunks`) are content-driven and reported as counts.
  *
  * It spends money (embeddings, gbrain's write-time and query-time model calls, all through the metering proxy), so it
  * refuses without `--paid --budget-run-id <id>` naming an open ledger run with money left (eval/runner/paid-arm.ts).
@@ -157,25 +159,43 @@ export interface QueryRecord {
   outcome: string | null; reasons: string[]; recorded: string[]; delivery_fallbacks: string[]; dropped_reasons: Record<string, number>; usd?: number;
 }
 
-/** The preregistered S1 engine rule from the pilot's measurements. */
+/**
+ * Delivery fallbacks that are gbrain's shipped, content-driven behavior (preregistered; the gbrain-defaults shim's
+ * SHIPPED_BEHAVIOR): the secret redactor changed a block's text (`redaction_unmapped`) or a page has no text chunks
+ * (`no_text_chunks`). The engine rule reports them as counts and never holds them against PGLite.
+ */
+export const SHIPPED_DELIVERY_FALLBACKS: readonly string[] = ['no_text_chunks', 'redaction_unmapped'];
+
+/** A query's delivery fallbacks split into shipped behavior and the timeout-type rest (the reasons the shim classified count too). */
+export function deliveryFallbacks(q: Pick<QueryRecord, 'delivery_fallbacks' | 'reasons'>): { shipped: string[]; timeout: string[] } {
+  const all = [...new Set([...q.delivery_fallbacks, ...q.reasons.filter(r => r.startsWith('delivery_fallback:')).map(r => r.slice('delivery_fallback:'.length))])].sort();
+  const timeout = [...all.filter(f => !SHIPPED_DELIVERY_FALLBACKS.includes(f)), ...q.reasons.filter(r => r.startsWith('delivery_') && !r.startsWith('delivery_fallback:'))];
+  return { shipped: all.filter(f => SHIPPED_DELIVERY_FALLBACKS.includes(f)), timeout };
+}
+
+/** The preregistered S1 engine rule from the pilot's measurements: only timeout-type fallbacks count against PGLite. */
 export function engineRule(queries: readonly QueryRecord[], peakRssKb: number | null, vmMemoryGib: number) {
   const ms = queries.filter(q => q.ok && q.service_ms !== null).map(q => q.service_ms!);
   const p95 = percentile(ms, 95);
   const rerankFallbacks = queries.filter(q => q.reasons.some(r => /rerank/.test(r))).length;
-  const deliveryFallbacks = queries.filter(q => q.delivery_fallbacks.length > 0 || q.reasons.some(r => r.startsWith('delivery_'))).length;
+  const split = queries.map(deliveryFallbacks);
+  const timeoutFallbacks = split.filter(f => f.timeout.length > 0).length;
+  const shipped: Record<string, number> = Object.fromEntries(SHIPPED_DELIVERY_FALLBACKS.map(f => [f, 0]));
+  for (const f of split) for (const x of f.shipped) shipped[x]++;
   const failed = queries.filter(q => !q.ok).length;
   const rssLimitKb = vmMemoryGib * 1024 * 1024;
   const checks = {
     query_p95_under_10s: p95 !== null && p95 < P95_LIMIT_MS,
     no_rerank_fallbacks: rerankFallbacks === 0,
-    no_delivery_fallbacks: deliveryFallbacks === 0,
+    no_delivery_fallbacks: timeoutFallbacks === 0,
     no_failed_queries: failed === 0,
     rss_fits_vm: peakRssKb !== null && peakRssKb < rssLimitKb,
   };
   const pglite = Object.values(checks).every(Boolean);
   return {
-    checks, query_p95_ms: p95, rerank_fallback_queries: rerankFallbacks, delivery_fallback_queries: deliveryFallbacks, failed_queries: failed,
-    peak_rss_kb: peakRssKb, rss_limit_kb: rssLimitKb, engine: pglite ? 'pglite' : 'postgres',
+    checks, query_p95_ms: p95, rerank_fallback_queries: rerankFallbacks, delivery_fallback_queries: timeoutFallbacks,
+    shipped_fallback_queries: split.filter(f => f.shipped.length > 0).length, shipped_fallbacks: shipped, shipped_behavior: [...SHIPPED_DELIVERY_FALLBACKS],
+    failed_queries: failed, peak_rss_kb: peakRssKb, rss_limit_kb: rssLimitKb, engine: pglite ? 'pglite' : 'postgres',
     verdict: pglite ? 'PGLite is the S1 headline engine for gbrain-defaults.'
       : 'S1 runs "gbrain-defaults (Postgres, per gbrain\'s own pglite_scale advice)" and the row says so.',
   };
@@ -307,7 +327,7 @@ export async function runStressPilot(a: PilotArgs & { system: string; output: st
   const allWrites = readLines(ingestLog);
   const receipt = {
     kind: 'q1-stress-pilot', schema_version: 1, created_at: new Date().toISOString(),
-    system: { url: a.system, system: cap.system, resolved: (cap as Record<string, unknown>).resolved ?? null, health },
+    system: { url: a.system, system: cap.system, resolved: (cap as Record<string, unknown>).resolved ?? null, shipped_behavior: (cap as Record<string, unknown>).shipped_behavior ?? null, health },
     corpus: { benchmark: corpus.benchmark, split: 'dev', exposure: 'E3', conversation_ids: corpus.conversations.map(c => c.id), source: corpus.source, ...counts },
     namespace: ns,
     ingest: {
@@ -316,7 +336,7 @@ export async function runStressPilot(a: PilotArgs & { system: string; output: st
       ms_per_1000_messages: counts.messages && written ? Math.round((ingestWallMs / plan.filter(s => !done.has(s.input.source_id)).reduce((n, s) => n + s.input.turns.length, 0)) * 1000) : null,
       service_ms_p50: percentile(ingestServiceMs, 50), service_ms_p95: percentile(ingestServiceMs, 95), cost: costOf(ingest.meter),
     },
-    finish: { ...fin.value, cost: costOf(fin.meter) },
+    finish: (({ raw, ...f }) => ({ ...f, ...(raw ?? {}), cost: costOf(fin.meter) }))(fin.value!),
     restart: restart ? { restart_ms: restart.restart_ms ?? null, serve_session: restart.serve_session ?? null } : null,
     footprint: { peak_serve_rss_kb: peakRss, final_serve_rss_kb: lastFoot.serve_rss_kb ?? null, brain_bytes: lastFoot.brain_bytes ?? null, samples: footprint.length },
     queries: {

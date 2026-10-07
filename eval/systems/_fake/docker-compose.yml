@@ -4,8 +4,8 @@
 #
 #   bash eval/systems/bootstrap.sh up --system _fake      (the shim on 127.0.0.1:${SHIM_HOST_PORT:-8700})
 #
-# The shim keeps its store in /tmp inside its container (SHIM_STATE_FILE), so `bootstrap.sh restart` keeps state the
-# way a vendor stack's volumes do, and `down` removes it.
+# The shim keeps its store on the fake-data volume (SHIM_STATE_FILE), so `bootstrap.sh restart` keeps state the way a
+# vendor stack's volumes do, `snapshot` and `restore` carry it, and `down` removes it.
 name: shootout-fake
 
 services:
@@ -15,12 +15,13 @@ services:
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
       SHIM_PORT: "8700"
-      SHIM_STATE_FILE: /tmp/fake-state.json
-      OPENAI_API_KEY: sk-dummy-metering-proxy-injects-the-real-key
+      SHIM_STATE_FILE: /data/fake-state.json
+      OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-sk-dummy-metering-proxy-injects-the-real-key}
       OPENAI_BASE_URL: http://egress:8787/fake/openai/v1
     volumes:
       - ../_shim:/app/_shim:ro
       - ../_fake:/app/_fake:ro
+      - fake-data:/data
     networks: [sandbox]
 
   egress:
@@ -34,6 +35,9 @@ services:
     command: ["TCP-LISTEN:8700,fork,reuseaddr", "TCP:shim:8700"]
     ports: ["127.0.0.1:${SHIM_HOST_PORT:-8700}:8700"]
     networks: [sandbox, egress]
+
+volumes:
+  fake-data: {}
 
 networks:
   sandbox:

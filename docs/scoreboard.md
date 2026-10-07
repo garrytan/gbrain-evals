@@ -69,17 +69,19 @@ cells launch only with `--sealed` from the custodian's host, where dataset cache
   the hash stored when the campaign started, and name the changed files. A change that affects execution after the
   freeze needs a new campaign identity (`q1-scoreboard-<suffix>`) recorded in the preregistration.
 - **Metering.** Every provider call leaves through the cell's metering proxy, which holds the only real keys. A request
-  that does not present the cell's token is refused unless it comes from the cell's own machine (loopback or a Docker
-  bridge). Each request has a stable id, the slot it arrived on, the brain and phase the harness bound, and a bucket;
+  that does not present the cell's token is refused, wherever it comes from: the runners present the token as their
+  provider key and the compose stacks as their dummy key (`${SHOOTOUT_CELL_TOKEN:-dummy}`). Each request has a stable id, the slot it arrived on, the brain and phase the harness bound, and a bucket;
   calls nobody bound land in an explicit unattributed-background bucket. Output is capped per route (extraction 4,096
   tokens, readers 2,048, judges 1,024, configurable in the manifest). Billed dollars and dollars charged at a reservation
   because no usage came back are reported separately. Cells on one provider key share its requests-per-minute,
   tokens-per-minute and concurrency limits, and a provider's `retry-after` pauses every cell on that key. A 429 counts
   as provider trouble and is retried like a 5xx.
 - **Resume.** The VM checkpoints a cell's rows every 20 attempts and the launcher pulls them, so a lost VM costs at most
-  one pull interval of rows. After ingest the cell's `snapshot_command` writes the system's store into
-  `$SHOOTOUT_SNAPSHOT_DIR`; the VM records an immutable ingest realization id over the snapshot's bytes and the launcher
-  pulls it. `bun eval/runner/shootout-cell.ts resume` reruns a lost cell's query phase from that snapshot, or repeats the
+  one pull interval of rows. After ingest a shim cell's `snapshot_command` (`bash eval/systems/bootstrap.sh snapshot`)
+  stops the stack, tars its named volumes into `$SHOOTOUT_SNAPSHOT_DIR` with a sha256 and starts it again, while the
+  cell's questions wait; the VM records an immutable ingest realization id over the snapshot's bytes and the launcher
+  pulls it. The `restore_command` (`bootstrap.sh restore`) loads that tar into a fresh stack from
+  `$SHOOTOUT_RESTORE_DIR`. `bun eval/runner/shootout-cell.ts resume` reruns a lost cell's query phase from that snapshot, or repeats the
   whole conversation when the cell has no `restore_command`. A conversation is never partly re-ingested. The lost VM's
   lease is closed with `abandon`, which charges its full reservation against the cap and says so.
 - **Spend.** The campaign cap and each block's cap (1.5 times its estimate) stop new leases. Hitting either is a partial
@@ -179,6 +181,13 @@ preregistration.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-06: Strict cell token, store snapshots
+
+Metering: a request without the cell's token is now refused even from the cell's own machine (it was admitted from
+loopback or a Docker bridge); the stacks present the token as their dummy key. Resume: shim cells now snapshot and
+restore their stores with `bootstrap.sh snapshot` and `restore` (named volumes, sha256), and questions wait for the
+snapshot.
 
 ### 2026-10-06: Page created
 

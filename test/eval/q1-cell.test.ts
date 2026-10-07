@@ -322,6 +322,40 @@ describe('resume', () => {
   });
 });
 
+describe('store snapshot handshake', () => {
+  test('a shim cell waits for the launcher\'s realization after ingest-complete before any question; no snapshot in time refuses', async () => {
+    const fake = new FakeMemorySystem();
+    const events: string[] = [];
+    const retrieve = fake.retrieve.bind(fake);
+    fake.retrieve = async (ns, q, p) => { if (!events.includes('retrieve-after-ingest') && events.includes('ingest-complete')) events.push('retrieve-after-ingest'); return retrieve(ns, q, p); };
+    const server = serveProtocol(fake);
+    try {
+      const def = cellDef('ext-verbatim-session', 'shim', [component({ reader_replicates: {} })]);
+      const out = join(tmp, 'snap');
+      const shootoutOut = join(tmp, 'snap-vm');
+      mkdirSync(shootoutOut, { recursive: true });
+      const env = { ...process.env, SHOOTOUT_OUT: shootoutOut, SHOOTOUT_SNAPSHOT_DIR: join(shootoutOut, 'realization', 'snapshot') };
+      const launcher = (async () => {
+        while (!existsSync(join(shootoutOut, 'ingest-complete'))) await Bun.sleep(5);
+        events.push('ingest-complete');
+        await Bun.sleep(200);
+        mkdirSync(join(shootoutOut, 'realization'), { recursive: true });
+        events.push('realization');
+        writeFileSync(join(shootoutOut, 'realization', 'realization.json'), '{}');
+      })();
+      const res = await runCell(def, { out, systemUrl: server.url, env, probeIntervalMs: 5, probeTimeoutMs: 2000 }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      await launcher;
+      expect(res.status).toBe('complete');
+      expect(events).toEqual(['ingest-complete', 'realization', 'retrieve-after-ingest']);
+      const late = join(tmp, 'snap-late');
+      mkdirSync(late, { recursive: true });
+      const err = await runCell(def, { out: join(tmp, 'snap-late-out'), systemUrl: server.url, env: { ...process.env, SHOOTOUT_OUT: late, SHOOTOUT_SNAPSHOT_DIR: join(late, 'realization', 'snapshot') }, snapshotTimeoutMs: 50, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() }).catch(e => e) as ScoreboardError;
+      expect(err.op.code).toBe('NOT_YET_AVAILABLE');
+      expect(err.op.message).toContain('no store snapshot');
+    } finally { server.stop(); }
+  });
+});
+
 describe('shards and aggregates', () => {
   test('two conversation shards merge into one scoreboard cell; aggregates carry no ids or text', async () => {
     const server = serveProtocol(new FakeMemorySystem());
@@ -425,6 +459,95 @@ describe('custody and the paid guard', () => {
   });
 });
 
+describe('own-answer arms through the answer route (POST /answer)', () => {
+  /** A stand-in gbrain-defaults stack: the fake system over protocol v1 plus /answer, answering with the fixture's reference. */
+  function answerStack(opts: { modes: string[]; model?: string; reportModel?: string; degraded?: string | null }) {
+    const fake = serveProtocol(new FakeMemorySystem());
+    const requests: Array<Record<string, any>> = [];
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', idleTimeout: 0, fetch: async req => {
+      const path = new URL(req.url).pathname;
+      if (path === '/answer') {
+        const body = await req.json() as Record<string, any>;
+        requests.push(body);
+        if (!opts.modes.includes(body.mode)) return Response.json({ error: { kind: 'unsupported', message: `${body.mode} is not served` }, service_ms: 0.1 }, { status: 501 });
+        const q = byText.get(body.question);
+        const text = q && !q.abstention ? `It was ${q.answer}.` : 'The history does not say.';
+        return Response.json({ answer: text, outcome: 'scored', degraded: opts.degraded ?? null, source_ids: [], model: body.model ?? opts.reportModel ?? opts.model, usage: { input: 900, output: 40 }, usd: 0.0055, service_ms: 812.4 });
+      }
+      const res = await fetch(`${fake.url}${path}`, { method: req.method, headers: { 'content-type': 'application/json' }, body: req.method === 'POST' ? await req.text() : undefined, keepalive: false });
+      const json = await res.json() as Record<string, unknown>;
+      if (path === '/capabilities') Object.assign(json, { system: 'gbrain-defaults', answer: { modes: opts.modes, ...(opts.model ? { models: { synthesize: opts.model } } : {}) } });
+      return Response.json(json, { status: res.status });
+    } });
+    return { url: `http://127.0.0.1:${server.port}`, requests, stop: () => { server.stop(true); fake.stop(); } };
+  }
+  const synth = { id: 'whole-synthesize', mode: 'own-answer' as const, variant: 'synthesize' as const, readers: ['system-default'] };
+  const think = { id: 'whole-think', mode: 'own-answer' as const, variant: 'think' as const };
+  const OWN = 'own:anthropic:claude-opus-4-7';
+
+  test('synthesize records gbrain\'s own model as the reader; think reads with each frontier reader as model; both are judged', async () => {
+    const stack = answerStack({ modes: ['synthesize', 'think'], model: 'anthropic:claude-opus-4-7' });
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [synth, think], { configuration: 'full-surface' });
+      const out = join(tmp, 'own-answer');
+      const res = await runCell(def, { out, systemUrl: stack.url, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      expect(res.status).toBe('complete');
+      const synthAnswers = ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+      expect(synthAnswers).toHaveLength(corpus.questions.length);
+      for (const a of synthAnswers) expect(answerProblems(a)).toEqual([]);
+      expect(synthAnswers.every(a => a.reader === OWN && a.effort === null && a.outcome === 'scored' && a.usd === 0.0055 && a.usage.input === 900)).toBe(true);
+      const vet = corpus.questions.find(q => !q.abstention)!;
+      expect(synthAnswers.find(a => a.question_id === vet.id).text).toBe(`It was ${vet.answer}.`);
+      const thinkAnswers = ndjson(join(out, 'cells', def.arms[1].cell_id, 'answers.ndjson'));
+      expect(thinkAnswers).toHaveLength(corpus.questions.length * READERS.length);
+      expect(new Set(thinkAnswers.map(a => a.reader))).toEqual(new Set(READERS));
+      expect(stack.requests.filter(r => r.mode === 'synthesize').every(r => r.model === undefined)).toBe(true);
+      expect(new Set(stack.requests.filter(r => r.mode === 'think').map(r => r.model))).toEqual(new Set(READERS));
+      expect(stack.requests.every(r => /^ns-[0-9a-f]{16}$/.test(r.ns))).toBe(true);
+      const judgments = ndjson(join(out, 'cells', def.arms[0].cell_id, 'judgments.ndjson'));
+      expect(judgments).toHaveLength(synthAnswers.length);
+      const receipt = JSON.parse(readFileSync(join(out, 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8'));
+      expect(receipt.readers).toEqual([OWN]);
+      expect(res.arms[0].readers).toEqual([OWN]);
+      expect(scoreboardCampaignCell(def, def.arms[0], res.arms[0]).readers).toEqual([OWN]);
+      const before = stack.requests.length;
+      await runCell(def, { out, systemUrl: stack.url, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      expect(stack.requests.length).toBe(before);
+    } finally { stack.stop(); }
+  });
+
+  test('a starter-only stack refuses think and names GBRAIN_FULL_SURFACE=1; synthesize without a resolved model refuses', async () => {
+    const starter = answerStack({ modes: ['synthesize'], model: 'anthropic:claude-opus-4-7' });
+    const unresolved = answerStack({ modes: ['synthesize'] });
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [component(), synth, think], { configuration: 'shipped-defaults' });
+      const err = await runCell(def, { out: join(tmp, 'own-starter'), systemUrl: starter.url, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() }).catch(e => e) as ScoreboardError;
+      expect(err.op.code).toBe('NOT_YET_AVAILABLE');
+      expect(err.op.message).toContain('whole-think needs answer mode think');
+      expect(err.op.fix.argv?.join(' ')).toContain('GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults');
+      const err2 = await runCell(cellDef('gbrain-defaults', 'shim', [synth], { configuration: 'shipped-defaults' }), { out: join(tmp, 'own-unresolved'), systemUrl: unresolved.url, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() }).catch(e => e) as ScoreboardError;
+      expect(err2.op.code).toBe('NOT_YET_AVAILABLE');
+      expect(err2.op.message).toContain('answer.models.synthesize');
+      expect(starter.requests).toEqual([]);
+    } finally { starter.stop(); unresolved.stop(); }
+  });
+
+  test('an extractive fallback is scored with its stop reason; an answer from another model than the resolved one is a harness failure', async () => {
+    const degraded = answerStack({ modes: ['synthesize'], model: 'anthropic:claude-opus-4-7', degraded: 'extractive_fallback' });
+    const drift = answerStack({ modes: ['synthesize'], model: 'anthropic:claude-opus-4-7', reportModel: 'anthropic:claude-sonnet-4-6' });
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [synth], { configuration: 'shipped-defaults' });
+      await runCell(def, { out: join(tmp, 'own-degraded'), systemUrl: degraded.url, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      const a = ndjson(join(tmp, 'own-degraded', 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+      expect(a.every(x => x.outcome === 'scored' && x.stop_reason === 'extractive_fallback')).toBe(true);
+      await runCell(def, { out: join(tmp, 'own-drift'), systemUrl: drift.url, maxAttempts: 2, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      const b = ndjson(join(tmp, 'own-drift', 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+      expect(b.every(x => x.outcome === 'harness_invalid')).toBe(true);
+      expect(ndjson(join(tmp, 'own-drift', 'cells', def.arms[0].cell_id, 'judgments.ndjson'))).toEqual([]);
+    } finally { degraded.stop(); drift.stop(); }
+  });
+});
+
 describe('the generated cell manifest', () => {
   const m = loadManifest();
   const kinds = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
@@ -451,6 +574,39 @@ describe('the generated cell manifest', () => {
     expect(m.cells.find(c => c.set === 'S4')!.arms.map(a => [a.set, a.readers.length])).toEqual([['S4', 1], ['S4-slice', 4]]);
     expect(SETS.S1.exclusions[0].question_id).toBe('10m-1:abstention:0');
     for (const c of m.cells) for (const a of c.arms) for (const r of a.readers) if (r !== 'system-default') expect(READERS).toContain(r);
+  });
+
+  test('own-answer arms: synthesize in the S1 and S2 starter cells, think in full-surface cells started with GBRAIN_FULL_SURFACE=1', () => {
+    for (const set of ['S1', 'S2a', 'S2b'] as const) {
+      const starter = m.cells.find(c => c.set === set && c.system === 'gbrain-defaults' && c.configuration === 'shipped-defaults')!;
+      expect(starter.arms.find(a => a.id === 'whole-synthesize')).toMatchObject({ mode: 'own-answer', variant: 'synthesize', readers: ['system-default'] });
+      expect(starter.arms.some(a => a.variant === 'think')).toBe(false);
+      expect(starter.launch).toEqual({ env: {}, config: 'recipe' });
+    }
+    for (const set of ['S1', 'S2a', 'S2b', 'S3'] as const) {
+      const full = m.cells.find(c => c.set === set && c.system === 'gbrain-defaults' && c.configuration === 'full-surface')!;
+      expect(full.arms.map(a => [a.id, a.variant, a.readers.length])).toEqual([['whole-think', 'think', 4]]);
+      expect(full.launch).toEqual({ env: { GBRAIN_FULL_SURFACE: '1' }, config: 'recipe' });
+      expect(full.snapshot_command).toStartWith('GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults');
+    }
+    expect(m.cells.filter(c => c.arms.some(a => a.variant === 'think') && c.configuration !== 'full-surface')).toEqual([]);
+  });
+
+  test('every shim cell carries snapshot and restore commands on the launcher\'s directories; the campaign cells pass them through', () => {
+    const shims = m.cells.filter(c => c.runner === 'shim');
+    expect(shims.length).toBeGreaterThan(20);
+    for (const c of shims) {
+      expect(c.snapshot_command).toContain(`bash eval/systems/bootstrap.sh snapshot --system ${c.system} --out "$SHOOTOUT_SNAPSHOT_DIR/${c.system}.tar"`);
+      expect(c.restore_command).toContain(`bash eval/systems/bootstrap.sh restore --system ${c.system} --config ${c.launch!.config} --from "$SHOOTOUT_RESTORE_DIR/${c.system}.tar"`);
+    }
+    expect(m.cells.filter(c => c.runner === 'in-process' && (c.snapshot_command || c.restore_command))).toEqual([]);
+    const specs = campaignCells(m);
+    for (const spec of specs) {
+      const c = m.cells.find(x => spec.id === x.id || spec.id.startsWith(`${x.id}.c`))!;
+      expect([spec.id, spec.snapshot_command, spec.restore_command]).toEqual([spec.id, c.snapshot_command, c.restore_command]);
+    }
+    const full = specs.find(x => x.id === 's2b.gbrain-defaults.full-surface')!;
+    expect(full.command).toStartWith('GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && ');
   });
 
   test('estimates come from ledger prices and stay under the cap; blocks carry 1.5x hard caps', () => {

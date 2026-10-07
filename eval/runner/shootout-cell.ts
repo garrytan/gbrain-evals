@@ -749,7 +749,12 @@ async function takeSnapshot(payload: RemotePayload, out: string, env: Record<str
   return r;
 }
 
-/** On the VM: start the lease proxy, run the cell command against it, write the lease summary beside the cell's output. */
+/**
+ * On the VM: start the lease proxy, run the cell command against it, write the lease summary beside the cell's output.
+ * The proxy is strict: provider routes admit only callers presenting this cell's token (SHOOTOUT_CELL_TOKEN, in the
+ * command's, snapshot's and restore's environment); the runners present it as their provider key and the compose
+ * stacks as their dummy key (`${SHOOTOUT_CELL_TOKEN:-dummy}`), so nothing on the VM is trusted for being local.
+ */
 export async function runRemote(payload: RemotePayload, opts: { port?: number; pollMs?: number } = {}): Promise<number> {
   const out = resolve(payload.out);
   mkdirSync(out, { recursive: true });
@@ -763,7 +768,7 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
   for (const [prov, lim] of Object.entries(payload.admission ?? {})) extra.push('--admission', `${prov}=${Object.entries(lim!).map(([k, v]) => `${k}:${v}`).join(',')}`);
   const proxy = Bun.spawn([process.execPath, join(REPO_ROOT, 'eval/runner/metering-proxy.ts'), '--listen', `0.0.0.0:${port}`, '--budget-ledger', ledger, '--lease-usd', String(payload.lease_usd),
     '--run-id', payload.lease_id, '--usage-log', join(out, 'usage.ndjson'), ...(payload.max_output_tokens ? ['--max-output-tokens', String(payload.max_output_tokens)] : []), '--control-token', controlToken,
-    '--trust-local', ...extra], { stdout: 'inherit', stderr: 'inherit', env: { ...process.env, SHOOTOUT_CELL_TOKEN: cellToken } });
+    ...extra], { stdout: 'inherit', stderr: 'inherit', env: { ...process.env, SHOOTOUT_CELL_TOKEN: cellToken } });
   let code: number | null = null;
   let timedOut = false;
   let checkpointRows = 0;

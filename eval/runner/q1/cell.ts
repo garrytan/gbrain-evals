@@ -67,7 +67,7 @@
  * counts, means and timings).
  */
 import { createHash } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { budgetOptionsFrom, startPaidRun } from '../budget-ledger.ts';
@@ -93,8 +93,8 @@ import { FILE_AGENT_SYSTEM, FileAgentSystem, type AnsweringSystem } from '../sys
 import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render.ts';
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
-import { passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
-import { definitionProblems, loadManifest, MANIFEST_PATH, SETS, type ArmDefinition, type CellDefinition, type Manifest, type Selection } from './cells/definitions.ts';
+import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
+import { definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, SETS, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type Selection } from './cells/definitions.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -193,6 +193,8 @@ export interface CellOptions {
   probeIntervalMs?: number;
   /** Keyless baseline-hybrid: hash vectors instead of OpenAI embeddings. */
   embed?: 'hash' | 'real';
+  /** How long questions wait for the launcher's store snapshot after ingest (default 4 hours); the snapshot stops the stack. */
+  snapshotTimeoutMs?: number;
   /** Test hook: stop (as if killed) after this many questions have been processed. */
   stopAfterQuestions?: number;
   env?: Record<string, string | undefined>;
@@ -209,7 +211,7 @@ export interface CellDeps {
   fitTokenizer?: (reader: string) => FitTokenizer;
 }
 
-export interface ArmResult { cell_id: string; dir: string; status: 'complete' | 'partial' | 'invalid'; config_sha256: string; answers: number; judgments: number; rows: number }
+export interface ArmResult { cell_id: string; dir: string; status: 'complete' | 'partial' | 'invalid'; config_sha256: string; answers: number; judgments: number; rows: number; readers: string[] }
 export interface CellResult { cell: string; out: string; status: 'complete' | 'partial' | 'invalid'; arms: ArmResult[]; stopped: string | null; invalid_reasons: string[] }
 
 // ─── Staging ─────────────────────────────────────────────────────────
@@ -333,13 +335,29 @@ export function systemFor(def: CellDefinition, opts: CellOptions, sanitizer: San
     case 'baseline-none': return new NoMemorySystem();
     case 'baseline-hybrid': return new PlainHybridSystem(opts.embed === 'hash' ? async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS))
       : cachedOpenAIEmbedder(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
-    case 'baseline-file-agent': return new FileAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'file-agent') });
+    case 'baseline-file-agent': return new FileAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'file-agent'), effort: def.effort });
     case 'ext-agent-runtime': return new AgentRuntimeSystem();
     default: throw refuse({ code: 'NOT_YET_AVAILABLE', message: `no in-process system for ${def.system}`, why: 'only harness controls and answering systems run in process', fix: { next: 'report', user_message: `check ${def.id}'s runner in eval/runner/q1/cells/definitions.ts` } });
   }
 }
 
 const isAnswering = (s: MemorySystem): s is AnsweringSystem => typeof (s as Partial<AnsweringSystem>).answer === 'function';
+
+/** The model a system's own-answer mode answers with when the request names none (capabilities `answer.models`). */
+const ownModel = (cap: CapabilityRecord, mode: string): string | null => {
+  const m: unknown = cap.answer?.models?.[mode];
+  return typeof m === 'string' && m ? m : null;
+};
+
+/**
+ * The readers an arm's answers are recorded under. An own-answer arm's `system-default` reader is the system's own
+ * configured model, recorded as `own:<resolved model>` (gbrain `synthesize`: gbrain's `models.think`); every other
+ * reader (gbrain `think` with each frontier reader as `model`) is itself.
+ */
+export function armReaders(arm: ArmDefinition, cap: CapabilityRecord): string[] {
+  if (arm.mode !== 'own-answer') return arm.readers;
+  return arm.readers.map(r => (r === 'system-default' ? `own:${ownModel(cap, arm.variant!) ?? 'unresolved'}` : r));
+}
 
 // ─── Run config ──────────────────────────────────────────────────────
 
@@ -381,6 +399,21 @@ const PROVENANCE_ORDER = ['exact', 'partial', 'unavailable'] as const;
 const weakest = (items: readonly Item[]): Q1Row['provenance_status'] => items.length ? PROVENANCE_ORDER[Math.max(...items.map(i => PROVENANCE_ORDER.indexOf(i.provenance_status)))] : 'none';
 
 // ─── The run ─────────────────────────────────────────────────────────
+
+/**
+ * The launcher (shootout-cell.ts runRemote) snapshots a shim cell's store when ingest-complete appears, and the snapshot
+ * stops the stack (bootstrap.sh snapshot). Questions wait for its realization record, written after the snapshot
+ * command exits and the stack is healthy again, so no retrieval meets a stopped system. A failed snapshot is recorded
+ * by the launcher and the cell goes on; a snapshot that never finishes is refused.
+ */
+async function awaitSnapshot(path: string, since: number, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!(existsSync(path) && statSync(path).mtimeMs >= since - 1000)) {
+    if (Date.now() > deadline) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `no store snapshot at ${path} within ${Math.round(timeoutMs / 60_000)} minutes of ingest-complete`,
+      why: 'a shim cell\'s questions run only after the launcher has snapshotted the ingested store (the snapshot stops the stack)', fix: { next: 'report', user_message: 'check the snapshot command in the cell log (bash eval/systems/bootstrap.sh snapshot)' } });
+    await Bun.sleep(2000);
+  }
+}
 
 export async function runCell(def: CellDefinition, opts: CellOptions, deps: CellDeps = {}): Promise<CellResult> {
   const env = opts.env ?? process.env;
@@ -430,13 +463,23 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const capabilities = await system.capabilities();
   const slot = def.runner === 'shim' ? capabilities.system : def.system;
   const policyFor = (mode: RetrievalPolicy['mode']): RetrievalPolicy => ({ name: `${capabilities.system}:${mode}`, mode, settings: policyKnobs(capabilities.retrieval_policies?.[mode]).settings });
-  const needsAnswer = arms.some(a => a.mode === 'own-answer' || a.mode === 'agent');
-  if (needsAnswer && !isAnswering(system)) {
-    const runnable = arms.filter(a => a.mode !== 'own-answer' && a.mode !== 'agent').map(a => a.id);
-    throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id}: arms ${arms.filter(a => a.mode === 'own-answer' || a.mode === 'agent').map(a => a.id).join(', ')} need the system's own answer route, and ${def.system} exposes none here (protocol v1 has no answer route)`,
-      why: 'own-answer arms (gbrain synthesize and think, an external system\'s answer endpoint) are scored only through the system\'s own route, never emulated',
-      fix: runnable.length ? { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--arms', runnable.join(',')], user_message: 'run the other arms now; the own-answer arms wait for the answer route in the system\'s shim' } : { next: 'report', user_message: 'the cell waits for an answer route in the system\'s shim' } });
+  const ownArms = arms.filter(a => a.mode === 'own-answer');
+  const agentArms = arms.filter(a => a.mode === 'agent');
+  const modes = answerModes(capabilities);
+  const unserved = ownArms.filter(a => typeof (system as Partial<OwnAnswerSystem>).answer !== 'function' || !modes.includes(a.variant!) || (a.readers.includes('system-default') && !ownModel(capabilities, a.variant!)));
+  const noAgent = def.runner === 'shim' || !isAnswering(system) ? agentArms : [];
+  if (unserved.length || noAgent.length) {
+    const blocked = [...unserved, ...noAgent];
+    const runnable = arms.filter(a => !blocked.includes(a)).map(a => a.id);
+    const think = unserved.some(a => a.variant === 'think') && !modes.includes('think') && modes.includes('synthesize');
+    const why = unserved.map(a => !modes.includes(a.variant!) ? `${a.id} needs answer mode ${a.variant} (the stack serves ${modes.length ? modes.join(', ') : 'no answer route'})` : `${a.id} records gbrain's own model, and capabilities answer.models.${a.variant} names none`)
+      .concat(noAgent.map(a => `${a.id} needs an in-process answering system`));
+    throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id}: ${why.join('; ')}`,
+      why: 'own-answer arms (gbrain synthesize and think, an external system\'s answer endpoint) are scored only through the system\'s own route (POST /answer, advertised in capabilities answer.modes), never emulated',
+      fix: think ? { next: 'run', argv: ['bash', '-c', `GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system ${def.system}`], user_message: `think is a full-surface op: restart the stack with GBRAIN_FULL_SURFACE=1, then rerun ${def.id}`, verify: ['curl', '-s', 'http://127.0.0.1:8700/capabilities'] }
+        : runnable.length ? { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--arms', runnable.join(',')], user_message: 'run the other arms now; the blocked arms wait for the system\'s answer route' } : { next: 'report', user_message: 'the cell waits for an answer route in the system\'s shim' } });
   }
+  const readersOf = new Map(arms.map(a => [a.id, armReaders(a, capabilities)]));
   const chat = deps.reader ?? deps.judge ?? new ChatClient(custody ? join(out, 'cache', 'qa') : env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
   const reader = onSlot(deps.reader ?? chat, meter, 'harness');
   const judge = onSlot(deps.judge ?? chat, meter, 'judge');
@@ -467,7 +510,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       }
       for (const a of arms) {
         if (!armQs.get(a.id)!.has(q.id) || a.mode === 'retrieval-only') continue;
-        for (const r of a.readers) for (let rep = 0; rep < (a.reader_replicates[r] ?? 1); rep++) {
+        for (const r of readersOf.get(a.id)!) for (let rep = 0; rep < (a.reader_replicates[r] ?? 1); rep++) {
           if (answers.has(answerId(a.cell_id, q.id, r, rep))) continue;
           any = true;
           if (a.mode === 'agent' || a.mode === 'own-answer' || a.mode === 'full-context') store = true;
@@ -505,7 +548,12 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       if (ingest === 'stopped') break;
       realizations.set(convId, rid); live.add(rid);
     }
-    if (!stopped) writeFileSync(join(env.SHOOTOUT_OUT ? resolve(env.SHOOTOUT_OUT) : out, 'ingest-complete'), JSON.stringify({ cell: def.id, realizations: Object.fromEntries(realizations), at: new Date().toISOString() }) + '\n');
+    if (!stopped) {
+      const shootoutOut = env.SHOOTOUT_OUT ? resolve(env.SHOOTOUT_OUT) : out;
+      const marked = Date.now();
+      writeFileSync(join(shootoutOut, 'ingest-complete'), JSON.stringify({ cell: def.id, realizations: Object.fromEntries(realizations), at: new Date().toISOString() }) + '\n');
+      if (env.SHOOTOUT_SNAPSHOT_DIR && !restored && def.runner === 'shim') await awaitSnapshot(join(shootoutOut, 'realization', 'realization.json'), marked, opts.snapshotTimeoutMs ?? 4 * 3_600_000);
+    }
 
     // ─── Phase 2: questions ───
     for (const convId of convIds) {
@@ -677,7 +725,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       return s.has(qid);
     };
 
-    const identity = (arm: ArmDefinition, q: MemoryQuestion, readerId: string, replicate: number, context: string) => ({ cell_id: arm.cell_id, realization_id: rid, question_id: q.id, conversation: q.conversation, system: def.system, arm: arm.arm, reader: readerId, replicate, effort: def.effort, context_sha256: context });
+    const identity = (arm: ArmDefinition, q: MemoryQuestion, readerId: string, replicate: number, context: string) => ({ cell_id: arm.cell_id, realization_id: rid, question_id: q.id, conversation: q.conversation, system: def.system, arm: arm.arm, reader: readerId, replicate, effort: arm.mode === 'own-answer' ? null : def.effort, context_sha256: context });
     const zero = { input: 0, output: 0, cache_read: 0, cache_write: 0 };
 
     const rowFor = (arm: ArmDefinition, q: MemoryQuestion, r: StagedRetrieval | null, pack: PackedContext | null, extra: Partial<Q1Row> = {}): Q1Row => {
@@ -738,14 +786,14 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     };
 
     const readStore = async (arm: ArmDefinition, q: MemoryQuestion): Promise<Partial<Q1Row>> => {
-      const extra: Partial<Q1Row> & { evidence_opened?: Record<string, number | null>; fit?: Record<string, unknown> } = {};
+      const extra: Partial<Q1Row> & { evidence_opened?: Record<string, number | null>; fit?: Record<string, unknown>; own_answer?: Record<string, unknown> } = {};
       let pack: PackedContext | null = null;
       if (arm.mode === 'full-context') {
         const all = await system.retrieve(ns, { text: q.question, query_time: null }, policyFor('vendor-default'));
         pack = packContext('rehydrated', q, all.items, { budgetTokens: null, sessionOf, fallbackDate, counter: counters.get(arm.id)! });
         Object.assign(extra, { delivered_tokens: pack.delivered, recall_measurable: false });
       }
-      for (const rd of arm.readers) for (let rep = 0; rep < (arm.reader_replicates[rd] ?? 1); rep++) {
+      for (const rd of readersOf.get(arm.id)!) for (let rep = 0; rep < (arm.reader_replicates[rd] ?? 1); rep++) {
         if (stopped) return extra;
         const ctx = pack ? pack.context_sha256 : sha256(`${arm.mode}|${ns}|${q.id}|${rd}`);
         const id = identity(arm, q, rd, rep, ctx);
@@ -753,11 +801,35 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         if (answers.has(aid)) continue;
         if (!isLive) continue;
         if (arm.mode === 'full-context') {
-          const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => answerFullContext({ reader: rd, prompt: pack!.prompt, conversation: ns, maxOutputTokens: READER_MAX_TOKENS, tokenizer: fitTokenizer(rd), ...(deps.fullContextFetch ? { fetchImpl: deps.fullContextFetch } : {}) }));
+          const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => answerFullContext({ reader: rd, prompt: pack!.prompt, conversation: ns, maxOutputTokens: READER_MAX_TOKENS, effort: def.effort, tokenizer: fitTokenizer(rd), ...(deps.fullContextFetch ? { fetchImpl: deps.fullContextFetch } : {}) }));
           const a = res.value;
           if (!a) { appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: 0, provider_input_tokens: null }), String((res.error as Error)?.message)); continue; }
           extra.fit = { ...(extra.fit ?? {}), [rd]: { fits: a.fit.fits, prompt_tokens: a.fit.prompt_tokens, max_input_tokens: a.fit.max_input_tokens, tokenizer: a.fit.tokenizer } };
           appendAnswer(answerRecord(id, { text: a.text, outcome: a.outcome === 'scored' && degraded ? 'ingest_degraded' : a.outcome, usage: a.usage, latency_ms: Math.round(a.latency_ms), provider_input_tokens: a.provider_input_tokens || null }), a.error);
+          continue;
+        }
+        if (arm.mode === 'own-answer') {
+          const pq = sanitizer.question(q, lastEventTime);
+          const own = rd.startsWith('own:') ? rd.slice(4) : null;
+          const t0 = performance.now();
+          await meter.phase(slot, 'query');
+          const res = await meter.around(slot, `own:${aid.slice(0, 16)}`, 'reader', () => (system as OwnAnswerSystem).answer(ns, pq, { mode: arm.variant!, model: own ? null : rd }));
+          await meter.phase(slot, null);
+          if (res.error !== undefined) {
+            if (res.error instanceof SanitizerLeakError) invalidReasons.push(`sanitizer tripwire during an own answer: ${res.error.message}`);
+            const f = failureRow({ id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length }, res.error);
+            if (f.outcome === 'budget_not_run') stopped = `budget: ${String(f.error).slice(0, 200)}`;
+            appendAnswer(answerRecord(id, { text: '', outcome: f.outcome!, usage: zero, latency_ms: Math.round(performance.now() - t0), provider_input_tokens: null }), String(f.error));
+            continue;
+          }
+          const a = res.value!;
+          const drift = own && a.model && a.model !== own ? `answered with ${a.model}, not the resolved ${own}` : null;
+          const cited = a.source_ids.filter(s => ingested.has(s));
+          const gold = new Set(q.gold.map(g => sanitizer.source(q.conversation, g)));
+          extra.own_answer = { ...(extra.own_answer ?? {}), [rd]: { degraded: a.degraded, model: a.model, cited: cited.length, cited_gold: gold.size ? cited.filter(s => gold.has(s)).length / gold.size : null } };
+          const outcome = drift || a.outcome === 'harness_invalid' ? 'harness_invalid' as const : degraded ? 'ingest_degraded' as const : 'scored' as const;
+          appendAnswer(answerRecord(id, { text: a.text, outcome, usage: { ...zero, input: a.usage.input, output: a.usage.output }, latency_ms: Math.round(a.service_ms ?? performance.now() - t0), provider_input_tokens: null,
+            ...(a.degraded ? { stop_reason: a.degraded } : {}), ...(a.usd !== null ? { usd: a.usd } : {}) }), drift ?? (a.outcome === 'harness_invalid' ? 'the system classified its answer path as a harness failure' : undefined));
           continue;
         }
         const pq = sanitizer.question(q, lastEventTime);
@@ -837,7 +909,8 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
     const qs = new Set((arm.questions ? selectCellQuestions(ctx.selected, arm.questions) : ctx.selected).map(q => q.id));
     const byOrder = (a: { id?: string; question_id?: string }, b: { id?: string; question_id?: string }) => (qOrder.get(a.id ?? a.question_id!) ?? 0) - (qOrder.get(b.id ?? b.question_id!) ?? 0);
     const rows = staged.flatMap(s => [...s.rows.values()].filter(r => r.cell_id === arm.cell_id && qs.has(r.id))).sort(byOrder);
-    const readerOrder = (r: string) => arm.readers.indexOf(r);
+    const readers = armReaders(arm, ctx.capabilities);
+    const readerOrder = (r: string) => readers.indexOf(r);
     const answers = staged.flatMap(s => s.answers.filter(a => a.cell_id === arm.cell_id && qs.has(a.question_id))).sort((a, b) => byOrder(a, b) || readerOrder(a.reader) - readerOrder(b.reader) || a.replicate - b.replicate);
     const ids = new Set(answers.map(a => a.answer_id));
     const aOrder = new Map(answers.map((a, i) => [a.answer_id, i]));
@@ -847,7 +920,7 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
     writeAtomic(join(dir, 'answers.ndjson'), nd(answers));
     writeAtomic(join(dir, 'judgments.ndjson'), nd(judgments));
     writeAtomic(join(dir, 'readiness.ndjson'), nd(found.map(ms => ({ write_start_to_queryable_ms: ms }))));
-    const promised = arm.readers.reduce((s, r) => s + (arm.reader_replicates[r] ?? 1), 0) * qs.size;
+    const promised = readers.reduce((s, r) => s + (arm.reader_replicates[r] ?? 1), 0) * qs.size;
     const canonical = new Set(judgments.filter(j => j.instrument_id === ctx.instrument.id && j.judge_replicate === 0).map(j => j.answer_id));
     const unjudged = answers.filter(a => JUDGED.has(a.outcome) && !canonical.has(a.answer_id)).length;
     const outcomes: Record<string, number> = {};
@@ -861,11 +934,11 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
       set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block,
       system: { kind: def.system, configuration: def.configuration, runner: def.runner, capability_system: ctx.capabilities.system, versions: ctx.capabilities.versions, capabilities: ctx.capabilities },
       arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, variant: arm.variant ?? null, label: arm.label },
-      readers: arm.readers, reader_replicates: arm.reader_replicates, effort: def.effort,
+      readers, reader_replicates: arm.reader_replicates, effort: arm.mode === 'own-answer' ? null : def.effort,
       instrument: { id: ctx.instrument.id, sha256: ctx.instrument.sha256, judge: ctx.instrument.canonical_judge }, frontier: arm.frontier ? { ...arm.frontier, instrument_ids: arm.frontier.judges.map(j => frontierInstrumentId(ctx.instrument.id, j)) } : null,
       selection: { questions: qs.size, conversations: new Set(rows.map(r => r.conversation)).size, scheduled_sha256: sha256([...qs].join('\n')) },
       counts: { rows: rows.length, answers: answers.length, answers_promised: promised, judgments: judgments.length, unjudged, outcomes },
-      per_reader_mean: Object.fromEntries(arm.readers.map(r => [r, scores(r)])),
+      per_reader_mean: Object.fromEntries(readers.map(r => [r, scores(r)])),
       realizations: staged.map(s => ({ conversation: s.conv, realization_id: s.rid, attempts: s.attempts, restored_from: s.restored_from ?? null, degraded: s.ingest?.degraded ?? null })).sort((a, b) => (a.conversation < b.conversation ? -1 : 1)),
       ingest: {
         conversations: ingests.length, messages: ingests.reduce((s, x) => s + x.messages, 0), ingested_tokens: ingests.reduce((s, x) => s + x.ingested_tokens, 0),
@@ -880,7 +953,7 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
       files: { rows: 'rows.ndjson', answers: 'answers.ndjson', judgments: 'judgments.ndjson', run_config: 'run-config.json', readiness: 'readiness.ndjson', contexts: `../../runs/${def.id}/contexts.ndjson` },
     };
     writeAtomic(join(dir, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
-    return { cell_id: arm.cell_id, dir, status, config_sha256: config?.sha ?? '', answers: answers.length, judgments: judgments.length, rows: rows.length };
+    return { cell_id: arm.cell_id, dir, status, config_sha256: config?.sha ?? '', answers: answers.length, judgments: judgments.length, rows: rows.length, readers };
   });
 }
 
@@ -899,9 +972,9 @@ export function cellAggregates(results: ArmResult[]): Record<string, unknown> {
 }
 
 /** A campaign.json cell entry for a published arm (eval/runner/scoreboard.ts CampaignCell). */
-export function scoreboardCampaignCell(def: CellDefinition, arm: ArmDefinition, result: Pick<ArmResult, 'status' | 'config_sha256'>) {
+export function scoreboardCampaignCell(def: CellDefinition, arm: ArmDefinition, result: Pick<ArmResult, 'status' | 'config_sha256'> & Partial<Pick<ArmResult, 'readers'>>) {
   return { cell_id: arm.cell_id, set: arm.set, system: def.system, arm: arm.arm === 'diagnostic' ? 'component' as const : arm.arm, budget: arm.budget, configuration: def.configuration, label: arm.label,
-    ...(arm.anchor ? { anchor: true } : {}), status: result.status === 'invalid' ? 'invalid' as const : 'complete' as const, readers: arm.readers,
+    ...(arm.anchor ? { anchor: true } : {}), status: result.status === 'invalid' ? 'invalid' as const : 'complete' as const, readers: result.readers ?? arm.readers,
     ...(Object.keys(arm.reader_replicates).length ? { reader_replicates: arm.reader_replicates } : {}), canonical_instrument: def.canonical_instrument, config_sha256: result.config_sha256 };
 }
 
@@ -925,8 +998,8 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
   const spec = (c: CellDefinition, i: number, smoke: boolean): CellSpec => {
     const id = `${c.id}${c.shards > 1 ? `.c${i}` : ''}${smoke ? '.smoke' : ''}`;
     const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(smoke ? ['--limit', '20'] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
-    const config = c.configuration === 'common' || c.configuration === 'common-embedder' ? 'common' : 'recipe';
-    const command = c.runner === 'shim' ? `bash eval/systems/bootstrap.sh up --system ${c.system} --config ${config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}; exit $rc` : run;
+    const launch = c.launch ?? shimLaunch(c.system, c.configuration);
+    const command = c.runner === 'shim' ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}; exit $rc` : run;
     const lease = Math.max(0.01, Math.ceil((smoke ? c.estimate.usd * 20 / SETS[c.set].questions : c.estimate.usd / c.shards) * 100) / 100);
     return {
       id, system: c.system, benchmark: c.benchmark, config: c.configuration, lease_usd: lease, command,
@@ -934,6 +1007,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
       vm: { size: `standard-${VM_VCPU}` }, timeout_hours: smoke ? 6 : Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
       ...(smoke ? { smoke: true } : {}), providers: c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'],
       expected_hours: smoke ? 1 : c.expected_hours, wave: c.block === 'T1' ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
+      ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(c.restore_command ? { restore_command: c.restore_command } : {}),
     };
   };
   const out: CellSpec[] = [];

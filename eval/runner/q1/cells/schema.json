@@ -15,7 +15,7 @@
     "selection": { "$ref": "#/$defs/selection" },
     "exclusions": { "type": "array", "items": { "type": "object", "required": ["question_id", "reason"], "properties": { "question_id": { "type": "string" }, "reason": { "type": "string" } } }, "description": "Preregistered exclusions: they run and are reported apart, never in a confirmatory cohort." },
     "system": { "type": "string", "description": "A kind id from eval/systems/kinds.json." },
-    "configuration": { "enum": ["shipped-defaults", "recipe", "common", "common-embedder", "baseline"] },
+    "configuration": { "enum": ["shipped-defaults", "full-surface", "recipe", "common", "common-embedder", "baseline"], "description": "full-surface: gbrain-defaults on a stack started with GBRAIN_FULL_SURFACE=1, for the labeled think row; every other gbrain row reads a starter-only stack." },
     "runner": { "enum": ["shim", "in-process"], "description": "shim: a protocol v1 system at --system-url (one VM per conversation shard on S1); in-process: a harness control or answering system." },
     "ingest_replicate": { "type": "integer", "minimum": 1, "description": "2 for the disclosed second LoCoMo ingest." },
     "effort": { "const": "medium" },
@@ -23,6 +23,9 @@
     "probes": { "type": "object", "required": ["sample", "seed"], "properties": { "sample": { "type": "integer", "minimum": 0 }, "seed": { "type": "string" } }, "description": "Write-start-to-queryable probes: the last session plus `sample` sessions per conversation." },
     "shards": { "type": "integer", "minimum": 1, "description": "VM launch units (conversation shards)." },
     "expected_hours": { "type": "number", "minimum": 0 },
+    "launch": { "type": "object", "required": ["env", "config"], "properties": { "env": { "type": "object", "additionalProperties": { "type": "string" } }, "config": { "enum": ["recipe", "common"] } }, "description": "Shim cells: the environment and bootstrap.sh --config the stack starts with." },
+    "snapshot_command": { "type": "string", "description": "Shim cells: bootstrap.sh snapshot into $SHOOTOUT_SNAPSHOT_DIR once ingest is complete; the launcher records the realization over its bytes." },
+    "restore_command": { "type": "string", "description": "Shim cells: bootstrap.sh restore from $SHOOTOUT_RESTORE_DIR before a resumed cell's command." },
     "arms": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/arm" } },
     "estimate": { "type": "object", "required": ["usd", "lines"], "properties": { "usd": { "type": "number" }, "lines": { "type": "object", "additionalProperties": { "type": "number" } } }, "description": "Planned dollars from budget-ledger.ts prices and the manifest's stated assumptions." }
   },
