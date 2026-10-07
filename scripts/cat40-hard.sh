@@ -260,7 +260,10 @@ case "$CMD" in
           print_only || complete "$REPORTS/$PREV" || stop HARD_CELLS_INCOMPLETE "batch $PREV is incomplete" "rerun $0 step $PREV to resume it first"
         fi
         budget_decision
-        CAL=(); for p in "$REPORTS"/calibration/round-*/cells/attempts.jsonl "$REPORTS"/calibration/round-*/freeze-check/attempts.jsonl "$REPORTS"/smoke/cells/attempts.jsonl "$REPORTS"/cells-50k/attempts.jsonl; do [[ -f "$p" ]] && CAL+=("$p"); done
+        # Cost basis for the held-out batches: the frozen round (the one with a freeze check) and the 50k cells
+        # already run. Earlier rounds asked smaller questions and would understate the cost per cell.
+        FROZEN_DIR="$(dirname "$(ls -d "$REPORTS"/calibration/round-*/freeze-check 2>/dev/null | sort -V | tail -1)")"
+        CAL=(); for p in "$FROZEN_DIR"/cells/attempts.jsonl "$FROZEN_DIR"/freeze-check/attempts.jsonl "$REPORTS"/cells-50k-smoke/attempts.jsonl "$REPORTS"/cells-50k/attempts.jsonl; do [[ -f "$p" ]] && CAL+=("$p"); done
         M="$(measured ${CAL[@]+"${CAL[@]}"})"
         case "$STEP" in
           cells-50k) REF="$(gbrain_ref)"; ARMS=(--models "$MODELS" --arms gbrain,fs --gbrain-label "$GBRAIN_LABEL" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" --slots 5) ;;

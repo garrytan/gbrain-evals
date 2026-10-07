@@ -224,7 +224,7 @@ if (import.meta.main) {
       const views = measured.length ? canonicalCells(readRecords(measured)).attempts : undefined;
       const worldBytes = flag('--world') ? statSync(flag('--world')!).size : undefined;
       const done = flag('--done') && existsSync(flag('--done')!) ? canonicalCells(readRecords([flag('--done')!])).attempts : undefined;
-      const p = project(plan, { basis: loadCostBasis(), measured: views, worldBytes, done, measuredScale: (flag('--measured-scale') ?? 'v1') as 'v1' | 'large' });
+      const p = project(plan, { basis: loadCostBasis(), measured: views, worldBytes, done, measuredScale: flag('--measured-scale') as 'v1' | 'large' | undefined });
       console.log(JSON.stringify(p, null, 2));
     } else if (cmd === 'roster') {
       console.log(JSON.stringify(checkRoster(loadRoster()), null, 2));
