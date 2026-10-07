@@ -1,0 +1,21 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "5b5891069413b28b2fe3a50675116d67d5a1e145",
+  "slot_commit": "5b5891069413b28b2fe3a50675116d67d5a1e145",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain",
+  "flags": {
+    "--build-slots": true,
+    "--gbrain": "/workspace/gbrain@5b5891069413b28b2fe3a50675116d67d5a1e145",
+    "--gbrain-root": "~/.capy/work/cat40/gbrain-master",
+    "--slots": "4",
+    "--slot-build-allowance-usd": "1",
+    "--budget-ledger": ".budget/w11-d12-smoke.sqlite",
+    "--out": "eval/reports/cat40/w11-d12/slots-master-b"
+  },
+  "budget_run_id": "cat40-slot-build-2026-10-07T15-14-26-544Z-84ab1e4d"
+}
