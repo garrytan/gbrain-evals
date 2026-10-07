@@ -849,7 +849,7 @@ export function checkPinTable(root = ROOT): ScoreboardMessage[] {
       else if (sha256(readFileSync(cap)) !== p.capability_sha256) bad(`pin entry ${p.kind}: capability.json sha256 is ${sha256(readFileSync(cap))}, the table records ${p.capability_sha256}`, 'a changed capability record needs its new hash in the pin table and a changelog entry');
     } else if (existsSync(cap)) bad(`pin entry ${p.kind} has no capability_sha256 but its bundle has capability.json`, 'record the capability hash');
   }
-  const bundles = existsSync(join(root, 'docs/comparison-systems')) ? readdirSync(join(root, 'docs/comparison-systems'), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name) : [];
+  const bundles = existsSync(join(root, 'docs/comparison-systems')) ? readdirSync(join(root, 'docs/comparison-systems'), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name).sort() : [];
   for (const b of bundles) if (!seen.has(b)) bad(`bundle docs/comparison-systems/${b}/ has no pin table entry`, 'add its pin entry');
   for (const k of kinds.values()) if (k.id.startsWith('ext-') && !seen.has(k.id)) bad(`kind ${k.id} has no pin table entry`, 'add its pin entry (package "pinned when its bundle lands" until then)');
   return out;
@@ -858,7 +858,7 @@ export function checkPinTable(root = ROOT): ScoreboardMessage[] {
 /** Every committed file of a receipt; local release-asset downloads are not part of the tree budget. */
 function treeSize(dir: string, receipt = dir): Array<{ path: string; bytes: number }> {
   const out: Array<{ path: string; bytes: number }> = [];
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
+  for (const e of readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
     const p = join(dir, e.name);
     if (e.isDirectory()) { if (p !== join(receipt, 'release-assets')) out.push(...treeSize(p, receipt)); }
     else if (e.isFile()) out.push({ path: p, bytes: statSync(p).size });
@@ -891,8 +891,9 @@ export function checkAssets(receipt: string, campaign: CampaignManifest): { mess
 
 export function findReceipts(root = ROOT): string[] {
   const dir = join(root, 'docs/benchmarks');
-  return readdirSync(dir, { withFileTypes: true }).filter(e => e.isDirectory() && existsSync(join(dir, e.name, 'campaign.json'))).map(e => join(dir, e.name))
-    .filter(d => { try { return (JSON.parse(readFileSync(join(d, 'campaign.json'), 'utf8')) as { schema?: string }).schema === CAMPAIGN_SCHEMA; } catch { return false; } }).sort();
+  const dirs = readdirSync(dir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => join(dir, e.name)).sort();
+  return dirs.filter(d => existsSync(join(d, 'campaign.json')))
+    .filter(d => { try { return (JSON.parse(readFileSync(join(d, 'campaign.json'), 'utf8')) as { schema?: string }).schema === CAMPAIGN_SCHEMA; } catch { return false; } });
 }
 
 export interface CheckResult { receipt: string; ok: boolean; messages: ScoreboardMessage[]; notes: string[] }
