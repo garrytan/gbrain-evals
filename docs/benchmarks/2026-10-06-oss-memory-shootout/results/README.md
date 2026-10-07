@@ -29,4 +29,5 @@ Every other directory here is a complete cell.
 
 ## Changelog
 
+- 2026-10-07: Seven more cells (LongMemEval-S controls and gbrain rows, Graphiti recipe LoCoMo r2); plain-hybrid LongMemEval-S has one degraded haystack (4 of 400 rows, under the 5% threshold).
 - 2026-10-06: First ten LoCoMo dev r1 cells and the Mem0 r1 harness failure.

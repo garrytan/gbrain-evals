@@ -1,0 +1,8 @@
+{
+  "run_id": "graphiti-recipe-locomo-r2-a1-a217baf6",
+  "lease_usd": 22,
+  "committed_usd": 12.98810334000019,
+  "requests": 177328,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}
