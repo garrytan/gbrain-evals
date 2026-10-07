@@ -1,0 +1,68 @@
+# gbrain-defaults: gbrain's shipped defaults behind the comparison shim (eval/systems/PROTOCOL.md).
+#
+#   Metered:  bash eval/systems/bootstrap.sh up --system gbrain-defaults      (proxy on the host, PROXY_UPSTREAM)
+#   Keyless:  PROXY_UPSTREAM=fake-upstream:8787 docker compose -f eval/systems/gbrain-defaults/docker-compose.yml \
+#               --profile keyless up -d --build
+#
+# The shim container sits on `sandbox`, a Docker network with no route out. The `egress` relay is the only container
+# on both networks: it publishes the shim on 127.0.0.1:${SHIM_HOST_PORT:-8700} and forwards egress:9000 to the
+# metering proxy (PROXY_UPSTREAM, host:port). gbrain reads its provider base URLs from config.json, which the shim
+# writes before `gbrain init` from GBRAIN_PROXY_BASE, so every Voyage, OpenAI and Anthropic call lands on the proxy
+# slot named after the system. The container holds dummy keys; the proxy injects the real ones.
+#
+# GBRAIN_SHA pins the gbrain commit baked into the image; GBRAIN_FULL_SURFACE=1 serves the full surface for the
+# labeled `think` row (every other call still uses starter ops). Brains live on the gbrain-data volume, so
+# `bootstrap.sh restart` keeps them and `down` removes them.
+name: gbrain-defaults
+
+services:
+  shim:
+    build:
+      context: ../../..
+      dockerfile: eval/systems/gbrain-defaults/Dockerfile
+      args:
+        GBRAIN_SHA: ${GBRAIN_SHA:-c5fb0201d1960a0a5a81c35d77718311b03154b7}
+    environment:
+      SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
+      SHIM_PORT: "8700"
+      GBRAIN_PROXY_BASE: http://egress:9000/${PROXY_SLOT:-gbrain-defaults}
+      GBRAIN_FULL_SURFACE: ${GBRAIN_FULL_SURFACE:-0}
+      VOYAGE_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      OPENAI_API_KEY: sk-dummy-key-the-proxy-injects-the-real-one
+      ANTHROPIC_API_KEY: sk-ant-dummy-key-the-proxy-injects-the-real-one
+    volumes:
+      - gbrain-data:/data
+    networks: [sandbox]
+
+  egress:
+    image: alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        socat TCP-LISTEN:8700,fork,reuseaddr TCP:shim:8700 &
+        exec socat TCP-LISTEN:9000,fork,reuseaddr TCP:$${PROXY_UPSTREAM}
+    environment:
+      PROXY_UPSTREAM: ${PROXY_UPSTREAM:-host.docker.internal:8787}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["127.0.0.1:${SHIM_HOST_PORT:-8700}:8700"]
+    networks: [sandbox, outside]
+
+  # Keyless stand-in for the proxy (profile keyless): the shared fake provider plus the Voyage and Anthropic shapes
+  # gbrain calls. It answers canned text; its scores say nothing about memory quality.
+  fake-upstream:
+    profiles: [keyless]
+    image: python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
+    command: ["python", "/app/gbrain-defaults/fake_upstream.py", "--port", "8787", "--log", "/tmp/fake-upstream.jsonl"]
+    environment:
+      FAKE_UPSTREAM_FAIL: ${FAKE_UPSTREAM_FAIL:-}
+    volumes:
+      - ../_shim:/app/_shim:ro
+      - .:/app/gbrain-defaults:ro
+    networks: [outside]
+
+volumes:
+  gbrain-data: {}
+
+networks:
+  sandbox: { internal: true }
+  outside: {}
