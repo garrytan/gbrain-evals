@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.40] - 2026-10-06
+## [0.10.40] - 2026-10-07
 
 ### Cat 40 Hard result: gbrain trails plain files by 11.3 points on the 55,000-document company
 
