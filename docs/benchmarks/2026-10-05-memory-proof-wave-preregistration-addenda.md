@@ -14,3 +14,12 @@ Only counts and a row hash were committed: `eval/harness-provider/ledger/inputs.
 ## LongMemEval-M dropped from ledger line 8 (October 6, 2026)
 
 The harness pin does not load LongMemEval-M. Line 8 keeps only the extra frontier points on sealed BEAM.
+
+## Eval model rule: Fable is smoke-test only (October 7, 2026)
+
+Garry ruled that Opus 5.5 is the top Anthropic model in counted runs, and that Fable runs only in small smoke tests. No counted cell this wave still has to run uses Fable:
+
+- The sealed primary and its validation use `gemini-3.8-flash` as the reader and `gemini-3.5-flash` as the judge.
+- The secondary rows (LongMemEval-S, LoCoMo10, PersonaMem, LifeBench) and the extra sealed frontier points (ledger line 8) use `gemini-3.8-flash`.
+
+The only Fable reader in the plan was the B-suite frontier sweep (ledger line 4, a quarter of questions across Opus 5.5, gpt-6-astra and Fable 5.1). That sweep has already run and stays as recorded. No gate's model set changes, and nothing is saved in the remaining cells.
