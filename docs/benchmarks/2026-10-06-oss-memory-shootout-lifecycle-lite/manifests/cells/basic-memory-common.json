@@ -1,0 +1,23 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "basic-memory",
+  "config": "common",
+  "notes": "Draft (Phase 6, lifecycle-lite). Five seeded histories, one namespace each; the restart goes through bootstrap.sh restart, which keeps volumes.",
+  "cells": [
+    {
+      "id": "basic-memory-common-lifecycle-lite",
+      "benchmark": "lifecycle-lite",
+      "lease_usd": 0.65,
+      "lease_basis": "1.15 x estimate $0.56: ingest $0.0033 per LoCoMo conversation of embeddings (PILOT.md), about $0.01 for 335 short sessions; query embeddings under $0.01; reader gpt-4o-mini and judge gpt-4o-2024-08-06 at $0.0027 per probe (LoCoMo native, PILOT.md) x 205 final-checkpoint probes: $0.55",
+      "command": "bash eval/systems/bootstrap.sh up --system basic-memory --config common --timeout 1800 && { bun eval/runner/lifecycle-lite.ts --system http://127.0.0.1:8700 --seeds 1,2,3,4,5 --policy fixed-evidence --qa reader --restart --restart-cmd \"bash eval/systems/bootstrap.sh restart --system basic-memory --timeout 1800\" --output \"$SHOOTOUT_OUT/lifecycle-lite\"; }; s=$?; bash eval/systems/bootstrap.sh down --system basic-memory; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system basic-memory",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    }
+  ]
+}

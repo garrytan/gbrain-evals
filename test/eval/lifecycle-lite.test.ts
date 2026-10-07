@@ -13,9 +13,9 @@ import { join, resolve } from 'node:path';
 import { generateN1World } from '../../eval/generators/n1-knowledge-update-gen.ts';
 import { generateN5World } from '../../eval/generators/n5-forget-residue-gen.ts';
 import { CANARY_LEXICON, generateLifecycleLiteWorld, LIFECYCLE_LITE_SEEDS, matchesAny, sanitizerCorpus, type LiteProbe } from '../../eval/generators/lifecycle-lite-gen.ts';
-import { EXPECTED_FAILURE, HonestReferenceSystem, mutationFake, MUTATION_FAKES } from '../../eval/runner/lifecycle-lite/fakes.ts';
+import { EXPECTED_FAILURE, HonestReferenceSystem, mutationFake, MUTATION_FAKES, scriptedReaderJudge } from '../../eval/runner/lifecycle-lite/fakes.ts';
 import { expectedIds, runLifecycleLite } from '../../eval/runner/lifecycle-lite/run.ts';
-import { activeAt, liteChecks, liteMetrics, scoreProbe, type LiteChecks, type LiteMetrics, type LiteRow } from '../../eval/runner/lifecycle-lite/score.ts';
+import { activeAt, HEADLINE_CHECKS, LIFECYCLE_LITE_CHECKS, liteChecks, liteMetrics, scoreProbe, type LiteChecks, type LiteMetrics, type LiteRow } from '../../eval/runner/lifecycle-lite/score.ts';
 import { FakeMemorySystem, serveProtocol } from '../../eval/runner/systems/fake.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
 import { findLeaks, forbiddenMarkers } from '../../eval/runner/systems/sanitize.ts';
@@ -145,10 +145,11 @@ describe('lifecycle-lite scorer', () => {
   });
 });
 
-/** Run the real runner over one system on two seeds, with or without a restart. */
-async function gate(system: HonestReferenceSystem | FakeMemorySystem | HttpMemorySystem, restart: (() => Promise<void>) | null, label: string) {
+/** Run the real runner over one system on two seeds, with or without a restart, with the keyless scripted reader and judge unless `reader` is false. */
+async function gate(system: HonestReferenceSystem | FakeMemorySystem | HttpMemorySystem, restart: (() => Promise<void>) | null, label: string, reader = true) {
   const worlds = [1, 2].map(seed => generateLifecycleLiteWorld({ seed }));
-  const { receipt } = await runLifecycleLite({ system, worlds, output: fresh(label), restart: restart ? { run: restart, how: 'test' } : null, log: () => {} });
+  const qa = reader ? { reader: 'scripted', judge: 'scripted', budgetTokens: 8000, chat: scriptedReaderJudge() } : null;
+  const { receipt } = await runLifecycleLite({ system, worlds, output: fresh(label), restart: restart ? { run: restart, how: 'test' } : null, qa, log: () => {} });
   return { checks: receipt.checks as LiteChecks, metrics: receipt.metrics as LiteMetrics, receipt };
 }
 
@@ -156,18 +157,33 @@ describe('lifecycle-lite phase gate: the mutation suite rejects every fake', () 
   test('the honest reference passes every check, restart included', async () => {
     const s = new HonestReferenceSystem();
     const { checks, metrics } = await gate(s, () => s.restart(), 'honest');
-    expect(checks).toEqual({ update: 'pass', asof: 'pass', forget: 'pass', survivors: 'pass', restart: 'pass', overall: 'pass', failed: [] });
+    expect(checks).toEqual({ update: 'pass', update_retrieval: 'pass', asof: 'pass', forget: 'pass', survivors: 'pass', restart: 'pass', overall: 'pass', failed: [], report_only_failed: [] });
     expect([metrics.forget.signal, metrics.survivors.witnessed, s.restarts]).toEqual([20, 38, 2]);
+    expect([metrics.reader.update.correct, metrics.reader.asof.correct, metrics.reader.forget.not_affirmed, metrics.reader.survivors.confirmed]).toEqual([24, 24, 20, 14]);
+    expect(LIFECYCLE_LITE_CHECKS.survivor_floor).toBe(1);
   });
 
   for (const kind of MUTATION_FAKES) {
     test(`${kind} fails, on ${EXPECTED_FAILURE[kind].join(' and ')}`, async () => {
       const s = mutationFake(kind);
       const { checks } = await gate(s, () => s.restart(), kind);
-      expect(checks.overall).toBe('fail');
       for (const check of EXPECTED_FAILURE[kind]) expect([kind, check, checks[check] === 'pass']).toEqual([kind, check, false]);
+      const headline = EXPECTED_FAILURE[kind].some(c => (HEADLINE_CHECKS as readonly string[]).includes(c));
+      expect([kind, checks.overall]).toEqual([kind, headline ? 'fail' : 'pass']);
+      if (!headline) expect(checks.report_only_failed.length).toBeGreaterThan(0);
     });
   }
+
+  test('serves-both: the reader still answers with the new value, so only the retrieval check reports it', async () => {
+    const s = mutationFake('serves-both');
+    const { checks, metrics } = await gate(s, () => s.restart(), 'serves-both-reader');
+    expect([checks.update, checks.update_retrieval, metrics.reader.update.correct, metrics.update.stale_active]).toEqual(['pass', 'fail', 24, 24]);
+  });
+
+  test('without the reader the headline update check is not run and stays out of the verdict', async () => {
+    const { checks, metrics } = await gate(new HonestReferenceSystem(), null, 'no-reader', false);
+    expect([checks.update, checks.overall, metrics.reader.ran]).toEqual(['not_run', 'pass', false]);
+  });
 
   test('without a restart checkpoint, forgets-on-restart is not caught (so the counted run keeps the restart)', async () => {
     const { checks } = await gate(mutationFake('forgets-on-restart'), null, 'no-restart');
@@ -191,8 +207,9 @@ describe('lifecycle-lite end to end (keyless)', () => {
     const out = (receipt.files as Record<string, string>);
     expect(receipt.run_status).toBe('complete');
     expect(Object.values(out).length).toBeGreaterThan(5);
-    expect([checks.update, checks.forget, checks.survivors, checks.restart]).toEqual(['fail', 'pass', 'pass', 'not_run']);
+    expect([checks.update_retrieval, checks.forget, checks.survivors, checks.restart]).toEqual(['fail', 'pass', 'pass', 'not_run']);
     expect(metrics.update.stale_active).toBeGreaterThan(0);
+    expect(metrics.reader.update.correct).toBeGreaterThan(metrics.update.correct);
   });
 
   test('a resumed run with every row final skips the seeds; a changed configuration is refused', async () => {
@@ -235,11 +252,12 @@ describe('lifecycle-lite end to end (keyless)', () => {
       await start(port, null);
       const out = fresh('cli');
       const cli = (args: string[]) => Bun.spawn([process.execPath, 'eval/runner/lifecycle-lite.ts', ...args], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
-      const p = cli(['--system', `http://127.0.0.1:${port}`, '--seeds', '1,2', '--output', out]);
+      const p = cli(['--system', `http://127.0.0.1:${port}`, '--seeds', '1,2', '--qa', 'scripted', '--output', out]);
       const [err, code] = await Promise.all([new Response(p.stderr).text(), p.exited]);
       expect(code, err).toBe(0);
       const receipt = JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8'));
       expect([receipt.kind, receipt.run_status, receipt.system.capabilities.system, receipt.report_only]).toEqual(['lifecycle-lite', 'complete', 'fake', true]);
+      expect([receipt.metrics.reader.ran, receipt.qa.reader, receipt.metrics.reader.update.probes]).toEqual([true, 'scripted-lexical-reader', 24]);
       expect(readFileSync(join(out, 'rows.ndjson'), 'utf8').trim().split('\n')).toHaveLength(2 * expectedIds(generateLifecycleLiteWorld({ seed: 1 }), false).length);
       expect(err).toContain('lifecycle-lite complete (report-only)');
       const refuse = async (args: string[], why: RegExp) => { const r = cli([...args, '--output', fresh('refuse')]); const [e, c] = await Promise.all([new Response(r.stderr).text(), r.exited]); expect([c, why.test(e)], e).toEqual([2, true]); };
@@ -269,4 +287,21 @@ describe('lifecycle-lite end to end (keyless)', () => {
       expect(existsSync(join(out, 'forget-cases.ndjson'))).toBe(true);
     } finally { proxy.stop(true); }
   }, 300_000);
+});
+
+describe('lifecycle-lite campaign (Phase 6 manifests)', () => {
+  test('loads, has one cell per system with the reader and the restart on, and a cap equal to its leases', async () => {
+    const { loadCampaign } = await import('../../eval/runner/shootout-cell.ts');
+    const { manifest } = loadCampaign(join(ROOT, 'docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/manifests/campaign.json'));
+    expect(manifest.campaign_id).toBe('oss-memory-shootout-p2-lifecycle-lite');
+    expect(manifest.ledger.startsWith('.budget/')).toBe(true);
+    expect(manifest.cells.map(c => c.system).sort()).toEqual(['basic-memory', 'cognee', 'gbrain-shootout', 'gbrain-shootout-master', 'graphiti', 'hindsight', 'mem0']);
+    expect(Math.round(manifest.cells.reduce((n, c) => n + c.lease_usd, 0) * 100) / 100).toBe(manifest.cap_usd);
+    for (const c of manifest.cells) {
+      expect([c.id, c.command.includes('eval/runner/lifecycle-lite.ts'), c.command.includes('--qa reader'), c.command.includes('--restart'), c.command.includes('--seeds 1,2,3,4,5'), c.config]).toEqual([c.id, true, true, true, true, 'common']);
+      if (!c.system.startsWith('gbrain')) expect([c.id, c.command.includes(`bootstrap.sh restart --system ${c.system}`), c.command.includes(`bootstrap.sh down --system ${c.system}`)]).toEqual([c.id, true, true]);
+    }
+    expect(manifest.cells.find(c => c.system === 'mem0')!.command).toContain('--finish-timeout-s 14400');
+    expect(manifest.cells.find(c => c.system === 'gbrain-shootout-master')!.command).toContain('@c5fb0201d1960a0a5a81c35d77718311b03154b7');
+  });
 });

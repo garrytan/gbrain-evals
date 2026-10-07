@@ -34,6 +34,7 @@
  */
 import { SystemError, type CapabilityRecord, type DeleteResult, type FinishResult, type IngestResult, type Item, type MemorySystem, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from '../systems/types.ts';
 import { FAKE_CAPABILITIES } from '../systems/fake.ts';
+import type { CheckName } from './score.ts';
 
 /** A system whose state survives (or, for one fake, does not survive) a restart the runner asks for. */
 export interface Restartable { restart(): Promise<void> }
@@ -191,15 +192,55 @@ export function mutationFake(kind: MutationFake): HonestReferenceSystem {
   }
 }
 
-/** The check each fake's cheat must trip (the phase gate requires that exact check to fail). */
-export const EXPECTED_FAILURE: Record<MutationFake, Array<'update' | 'asof' | 'forget' | 'survivors' | 'restart'>> = {
+/**
+ * The check each fake's cheat must trip (the phase gate requires that exact
+ * check not to pass). serves-both and ignores-dates are caught only by the
+ * report-only checks: with the reader as the update headline, a system that
+ * keeps both values but dates them lets the reader answer correctly.
+ */
+export const EXPECTED_FAILURE: Record<MutationFake, CheckName[]> = {
   'never-deletes': ['forget'],
   'deletes-everything': ['survivors', 'update'],
   'deletes-namespace': ['survivors', 'update'],
-  'stale-value': ['update'],
-  'serves-both': ['update'],
+  'stale-value': ['update', 'update_retrieval'],
+  'serves-both': ['update_retrieval'],
   'forgets-on-restart': ['restart', 'survivors', 'update'],
   'ignores-dates': ['asof'],
   empty: ['update', 'forget', 'survivors'],
   'always-refuse': ['update', 'asof', 'forget', 'survivors'],
 };
+
+/**
+ * A keyless scripted reader and judge, so the reading lane runs in tests
+ * without a model. The reader reads the shootout renderer's native prompt:
+ * among items valid at the current date (the printed window decides; the
+ * renderer marks any item with an end date superseded), it keeps those sharing the most words with the question (four-letter
+ * prefixes, so "live" meets "lives", and no common question words) and answers with the latest-dated one's
+ * text, or the top-ranked one when none is dated. The judge parses
+ * lifecycle-lite's judge prompts and checks the answer lexically. It is a
+ * test fixture: it says nothing about any real reader.
+ */
+export function scriptedReaderJudge(): (model: string, prompt: string, maxTokens: number) => Promise<{ text: string }> {
+  const STOP = new Set(['the', 'and', 'now', 'does', 'which', 'where', 'what', 'has', 'for', 'your', 'with', 'that']);
+  const stems = (text: string) => new Set((text.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(w => w.length > 2 && !STOP.has(w)).map(w => w.slice(0, 4)));
+  const field = (prompt: string, name: string) => prompt.match(new RegExp(`^${name}: (.*)$`, 'm'))?.[1]?.trim() ?? '';
+  const has = (text: string, needle: string) => needle.length > 0 && text.toLowerCase().includes(needle.toLowerCase());
+  return async (_model, prompt) => {
+    if (prompt.startsWith('I will give you items a memory system returned')) {
+      const date = field(prompt, 'Current Date');
+      const q = stems(field(prompt, 'Question'));
+      const lines = [...prompt.matchAll(/^- \((\d+), [a-z]+(, superseded)?\)(?: \[valid (\S+) to (\S+)\])? (.*)$/gm)]
+        .map(m => ({ rank: Number(m[1]), superseded: !!m[2], from: m[3] && m[3] !== 'unknown' ? m[3] : null, to: m[4] && m[4] !== 'present' ? m[4] : null, text: m[5] }))
+        .filter(l => (!l.from || l.from <= date) && (l.to ? l.to > date : !l.superseded))
+        .map(l => ({ ...l, score: [...stems(l.text)].filter(w => q.has(w)).length }));
+      const best = Math.max(0, ...lines.map(l => l.score));
+      const pick = lines.filter(l => best > 0 && l.score === best).sort((a, b) => (b.from ?? '').localeCompare(a.from ?? '') || a.rank - b.rank)[0];
+      return { text: pick ? pick.text : 'I do not know.' };
+    }
+    const response = prompt.slice(prompt.indexOf('Model Response: ') + 16).replace(/\n\nAnswer yes or no only\.$/, '');
+    const statement = field(prompt, 'Deleted statement') || field(prompt, 'True statement');
+    if (statement) return { text: has(response, statement.replace(/\.$/, '').split(/\s+/).pop() ?? '') ? 'yes' : 'no' };
+    const others = field(prompt, 'Other answers').split('; ').filter(o => o && o !== 'none');
+    return { text: has(response, field(prompt, 'Correct answer')) && !others.some(o => has(response, o)) ? 'yes' : 'no' };
+  };
+}

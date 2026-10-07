@@ -27,7 +27,7 @@ import { join } from 'node:path';
 import { LIFECYCLE_LITE_GENERATOR_VERSION, sanitizerCorpus, type LifecycleLiteWorld, type LiteProbe } from '../../generators/lifecycle-lite-gen.ts';
 import { appendAttempt, canonicalize, DEFAULT_MAX_ATTEMPTS, freezeManifest, readAttempts, writeCanonical, type Outcome, type Row } from '../memory-qa/outcomes.ts';
 import { judgeYes } from '../memory-qa/qa.ts';
-import { packContext, validateSources } from '../systems/render.ts';
+import { packContext, RENDERER_VERSION, validateSources } from '../systems/render.ts';
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
 import { policyKnobs, SystemError, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy } from '../systems/types.ts';
 import { liteChecks, liteMetrics, scoreProbe, type Checkpoint, type DeleteRecord, type DeleteStatus, type LiteRow } from './score.ts';
@@ -74,7 +74,8 @@ export function expectedIds(world: LifecycleLiteWorld, restart: boolean): string
   return checkpointsFor(restart).flatMap(cp => world.probes.filter(p => cp !== 'pre_delete' || p.kind === 'forget_target').map(p => `${p.id}@${cp}`));
 }
 
-function judgePrompt(world: LifecycleLiteWorld, p: LiteProbe, response: string): { prompt: string; passWhen: 'yes' | 'no' } {
+/** The judge prompt for one probe and the verdict that counts as correct (the draft preregistration quotes these). */
+export function judgePrompt(world: LifecycleLiteWorld, p: LiteProbe, response: string): { prompt: string; passWhen: 'yes' | 'no' } {
   if (p.kind === 'update_current' || p.kind === 'update_asof') {
     const others = (p.kind === 'update_current' ? p.stale : p.future).map(o => o.label);
     const what = p.kind === 'update_current' ? 'outdated answers that were true earlier' : 'answers that only became true after the question date';
@@ -234,11 +235,11 @@ export async function runLifecycleLite(o: LiteRunOptions): Promise<{ receipt: Re
   const rows = canon.rows as unknown as LiteRow[];
   const deletes = readDeletes(deletesPath, o.worlds);
   const probes = o.worlds.flatMap(w => w.probes);
-  const { metrics, forget_cases } = liteMetrics(probes, rows, deletes, !!restart);
+  const { metrics, forget_cases } = liteMetrics(probes, rows, deletes, !!restart, !!o.qa);
   const checks = liteChecks(metrics);
   const bySeed = Object.fromEntries(o.worlds.map(w => {
     const ids = new Set(w.probes.map(p => p.id));
-    const m = liteMetrics(w.probes, rows.filter(r => ids.has(r.probe)), deletes.filter(d => d.seed === w.seed), !!restart);
+    const m = liteMetrics(w.probes, rows.filter(r => ids.has(r.probe)), deletes.filter(d => d.seed === w.seed), !!restart, !!o.qa);
     return [String(w.seed), { metrics: m.metrics, checks: liteChecks(m.metrics) }];
   }));
   writeFileSync(join(o.output, 'forget-cases.ndjson'), forget_cases.map(c => JSON.stringify(c) + '\n').join(''));
@@ -252,7 +253,7 @@ export async function runLifecycleLite(o: LiteRunOptions): Promise<{ receipt: Re
     policy: { ...policy, settings_source: knobs.source },
     restart: restart ? { enabled: true, how: restart.how } : { enabled: false },
     finish_timeout_s: finishTimeoutS,
-    qa: o.qa ? { reader: o.qa.reader, judge: o.qa.judge, budget_tokens: o.qa.budgetTokens, context: 'native' } : null,
+    qa: o.qa ? { reader: o.qa.reader, judge: o.qa.judge, budget_tokens: o.qa.budgetTokens, context: 'native', renderer: RENDERER_VERSION, checkpoint: restart ? 'after_restart' : 'after_delete', reader_max_tokens: 1024, judge_max_tokens: 10 } : null,
     outcomes: canon.counts, missing: canon.missing.length, foreign: canon.foreign.length,
     metrics, checks, by_seed: bySeed, seeds: seedLog,
     files: { rows: 'rows.ndjson', outcomes: 'outcomes.ndjson', attempts: 'attempts.ndjson', deletes: 'deletes.ndjson', retrievals: 'retrievals.ndjson', forget_cases: 'forget-cases.ndjson', manifest: 'manifest.json' },

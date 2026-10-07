@@ -15,6 +15,7 @@ Routes (any path prefix, so `/openai/v1/...` and `/<slot>/openai/v1/...` both wo
   POST .../embeddings        hashed bag-of-words vectors; `dimensions` is honored, else the model's native size.
   POST .../messages          an Anthropic-style text answer.
   GET  .../models            a short model list.   GET /_stats   request counts by route and model.
+  GET  /__proxy/status       answers like the metering proxy's status route, so `bootstrap.sh up` accepts it as the proxy.
 
 Every request is appended to the log (one JSON line: route, model, dimensions, schema name, response format, whether
 the credential is the container's dummy, a body hash), never the body or the credential itself.
@@ -265,6 +266,8 @@ def make_handler(log_path: str | None) -> type[BaseHTTPRequestHandler]:
             if path.startswith("/_stats"):
                 with LOCK:
                     return self._send(200, dict(STATS))
+            if path == "/__proxy/status":
+                return self._send(200, {"ok": True, "run_id": "fake-provider", "fake_provider": True})
             if re.search(r"/models(/[^/]+)?/?$", path):
                 return self._send(200, {"object": "list", "data": [{"id": m, "object": "model"} for m in ("gpt-4.1-mini", "gpt-5-mini", "text-embedding-3-large")]})
             self._send(404, {"error": {"message": f"no route {path}"}})

@@ -135,7 +135,8 @@ case "$cmd" in
     f=$(compose_file)
     compose_env
     if [ -n "${SHOOTOUT_PROXY:-}" ]; then PROXY_PORT=${SHOOTOUT_PROXY##*:}; compose_env; fi
-    curl -sf "http://127.0.0.1:$PROXY_PORT/__proxy/status" >/dev/null || die "no metering proxy on port $PROXY_PORT; start one with: bash eval/systems/bootstrap.sh proxy --lease-id ... --lease-usd ..."
+    # BOOTSTRAP_PROXY_CHECK=off is for keyless checks only, where a vendor's own fake provider stands on the proxy port.
+    [ "${BOOTSTRAP_PROXY_CHECK:-on}" = off ] || curl -sf "http://127.0.0.1:$PROXY_PORT/__proxy/status" >/dev/null || die "no metering proxy on port $PROXY_PORT; start one with: bash eval/systems/bootstrap.sh proxy --lease-id ... --lease-usd ..."
     log "starting $SYSTEM ($CONFIG) with the shim on 127.0.0.1:$SHIM_HOST_PORT"
     compose -f "$f" up -d
     wait_healthy "$f"

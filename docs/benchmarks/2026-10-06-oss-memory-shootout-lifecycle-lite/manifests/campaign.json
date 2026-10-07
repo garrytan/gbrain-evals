@@ -1,0 +1,20 @@
+{
+  "kind": "oss-shootout-campaign",
+  "schema_version": 1,
+  "campaign_id": "oss-memory-shootout-p2-lifecycle-lite",
+  "cap_usd": 24.37,
+  "ledger": ".budget/oss-memory-shootout-p2-lifecycle-lite.sqlite",
+  "parameters": {
+    "gbrain_master_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
+  },
+  "cells_from": [
+    "cells/basic-memory-common.json",
+    "cells/mem0-common.json",
+    "cells/graphiti-common.json",
+    "cells/hindsight-common.json",
+    "cells/cognee-common.json",
+    "cells/gbrain-shootout-common.json",
+    "cells/gbrain-shootout-master-common.json"
+  ],
+  "cells": []
+}

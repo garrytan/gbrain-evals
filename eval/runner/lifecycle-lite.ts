@@ -9,7 +9,7 @@
  *     [--finish-timeout-s 600] [--ingest-timeout-s 3600]
  *     [--gbrain <checkout>@<ref>] [--embed hash|real] [--embedding-model openai:text-embedding-3-large]
  *     [--embedding-dims 1536] [--config key=value]... [--provider-proxy <metering proxy URL>]
- *     [--qa reader [--reader openai:gpt-4o-mini] [--judge openai:gpt-4o-2024-08-06] [--budget-tokens 8000]]
+ *     [--qa reader|scripted [--reader openai:gpt-4o-mini] [--judge openai:gpt-4o-2024-08-06] [--budget-tokens 8000]]
  *     [--paid --budget-run-id <id>] --output <dir>
  *
  * The seeded histories come from eval/generators/lifecycle-lite-gen.ts (N1
@@ -42,7 +42,7 @@ import { importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTes
 import { DECIDE_OFF, enterHermeticEnv, type HermeticEnv } from './hermetic-env.ts';
 import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
 import { DEFAULT_QA, runLifecycleLite, type Chat } from './lifecycle-lite/run.ts';
-import { HonestReferenceSystem, isRestartable, mutationFake, MUTATION_FAKES, type MutationFake } from './lifecycle-lite/fakes.ts';
+import { HonestReferenceSystem, isRestartable, mutationFake, MUTATION_FAKES, scriptedReaderJudge, type MutationFake } from './lifecycle-lite/fakes.ts';
 import { LIFECYCLE_LITE_CHECKS } from './lifecycle-lite/score.ts';
 import { hashEmbed } from './memory-qa/run.ts';
 import { ChatClient } from './memory-qa/qa.ts';
@@ -69,7 +69,7 @@ export interface LiteCliArgs {
   embeddingDims: number;
   config: Record<string, string>;
   providerProxy: string | null;
-  qa: { reader: string; judge: string; budgetTokens: number } | null;
+  qa: { mode: 'reader' | 'scripted'; reader: string; judge: string; budgetTokens: number } | null;
   paid: boolean;
   output: string;
   argv: string[];
@@ -88,7 +88,7 @@ export function parseLiteArgs(argv: string[], env: Record<string, string | undef
   const embed = (one('--embed') ?? 'hash') as 'hash' | 'real';
   if (embed !== 'hash' && embed !== 'real') throw new Error('--embed must be hash or real');
   const qaMode = one('--qa');
-  if (qaMode !== undefined && qaMode !== 'reader') throw new Error('--qa takes reader (the reading lane is off by default)');
+  if (qaMode !== undefined && qaMode !== 'reader' && qaMode !== 'scripted') throw new Error('--qa takes reader (the counted runs) or scripted (a keyless lexical stand-in for tests)');
   const seeds = (one('--seeds') ?? LIFECYCLE_LITE_SEEDS.join(',')).split(',').map(s => Number(s.trim()));
   if (!seeds.length || seeds.some(s => !Number.isInteger(s) || s < 1)) throw new Error('--seeds takes positive integers, comma separated');
   return {
@@ -97,7 +97,8 @@ export function parseLiteArgs(argv: string[], env: Record<string, string | undef
     finishTimeoutS: Number(one('--finish-timeout-s') ?? 600), ingestTimeoutS: Number(one('--ingest-timeout-s') ?? 3600),
     gbrain: one('--gbrain') ?? null, embed, embeddingModel: one('--embedding-model') ?? 'openai:text-embedding-3-large', embeddingDims: Number(one('--embedding-dims') ?? 1536),
     config: pairs('--config'), providerProxy: one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? null,
-    qa: qaMode ? { reader: one('--reader') ?? DEFAULT_QA.reader, judge: one('--judge') ?? DEFAULT_QA.judge, budgetTokens: Number(one('--budget-tokens') ?? DEFAULT_QA.budgetTokens) } : null,
+    qa: qaMode === 'scripted' ? { mode: 'scripted', reader: 'scripted-lexical-reader', judge: 'scripted-lexical-judge', budgetTokens: Number(one('--budget-tokens') ?? DEFAULT_QA.budgetTokens) }
+      : qaMode ? { mode: 'reader', reader: one('--reader') ?? DEFAULT_QA.reader, judge: one('--judge') ?? DEFAULT_QA.judge, budgetTokens: Number(one('--budget-tokens') ?? DEFAULT_QA.budgetTokens) } : null,
     paid: argv.includes('--paid'), output, argv,
   };
 }
@@ -151,12 +152,12 @@ export async function mainLifecycleLite(argv: string[]): Promise<number> {
   if (a.system.startsWith('mutation:') && !MUTATION_FAKES.includes(a.system.slice(9) as MutationFake)) throw new Error(`mutation fakes: ${MUTATION_FAKES.join(', ')}`);
   if (a.providerProxy && !/^https?:\/\/[^/]+$/.test(a.providerProxy)) throw new Error('--provider-proxy must look like http://host:port');
 
-  const spends = (inProcessGbrain || a.qa !== null) && !a.providerProxy;
+  const spends = (inProcessGbrain || a.qa?.mode === 'reader') && !a.providerProxy;
   let hermetic: HermeticEnv | null = null;
   let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
   if (spends) {
     const worldsN = a.seeds.length;
-    const estimate = Math.max(0.05, Math.round(((inProcessGbrain ? 0.05 : 0) + (a.qa ? 41 * 0.004 : 0)) * worldsN * 100) / 100);
+    const estimate = Math.max(0.05, Math.round(((inProcessGbrain ? 0.14 : 0) + (a.qa?.mode === 'reader' ? 41 * 0.0027 : 0)) * worldsN * 100) / 100);
     requirePaidArm(argv, { arm: 'lifecycle-lite', estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath });
     paid = startPaidRun('lifecycle-lite', { ...budgetOptionsFrom(argv), estimateUsd: estimate });
   } else {
@@ -208,22 +209,22 @@ export async function mainLifecycleLite(argv: string[]): Promise<number> {
       if (a.restart && isRestartable(s)) restart = { how: 'in-process test fixture', run: () => s.restart() };
     } else throw new Error(`unknown --system ${a.system}`);
 
-    const chat: Chat | null = a.qa ? (() => {
+    const chat: Chat | null = a.qa?.mode === 'scripted' ? scriptedReaderJudge() : a.qa ? (() => {
       const client = new ChatClient(process.env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
       return (model, prompt, maxTokens) => client.chat(model, prompt, { maxTokens, replicate: 0 });
     })() : null;
     const { receipt } = await runLifecycleLite({
       system, worlds, output: a.output, policyMode: a.policy, policySettings: a.policySettings, restart, finishTimeoutS: a.finishTimeoutS,
       identity: { ...identity, hermetic: hermetic ? { decide: DECIDE_OFF } : null, metering: a.providerProxy ? { mode: 'lease-proxy', proxy: a.providerProxy, lease_id: process.env.SHOOTOUT_LEASE_ID ?? null } : { mode: paid ? 'budget-ledger' : 'none' } },
-      qa: a.qa && chat ? { ...a.qa, chat } : null,
+      qa: a.qa && chat ? { reader: a.qa.reader, judge: a.qa.judge, budgetTokens: a.qa.budgetTokens, chat } : null,
     });
     const m = receipt.metrics as import('./lifecycle-lite/score.ts').LiteMetrics;
     const c = receipt.checks as import('./lifecycle-lite/score.ts').LiteChecks;
     const pct = (x: number | null) => (x === null ? 'n/a' : `${(x * 100).toFixed(1)}%`);
     const out = [
       `lifecycle-lite ${receipt.run_status} (report-only): overall ${c.overall}${c.failed.length ? ` (${c.failed.join(', ')})` : ''}`,
-      `  update     ${c.update}: ${m.update.correct} of ${m.update.probes} current-value probes correct; new value served ${m.update.gold_served}, a stale value active ${m.update.stale_active} (final checkpoint ${m.final_checkpoint})`,
-      `  as-of      ${c.asof}: ${m.asof.correct} of ${m.asof.probes} dated probes correct; a later value active ${m.asof.future_active}`,
+      `  update     ${c.update}: ${m.reader.ran ? `the reader answered ${m.reader.update.correct} of ${m.reader.update.probes} current-value probes correctly (as of the given date: ${m.reader.asof.correct} of ${m.reader.asof.probes})` : 'reader off (--qa reader)'} (final checkpoint ${m.final_checkpoint})`,
+      `  report-only: update retrieval ${c.update_retrieval}: ${m.update.correct} of ${m.update.probes} with the new value served and no earlier value active (new value served ${m.update.gold_served}, an earlier value still active ${m.update.stale_active}); as-of ${c.asof}: ${m.asof.correct} of ${m.asof.probes}, a later value active ${m.asof.future_active}`,
       `  forget     ${c.forget}: ${m.forget.forgotten} of ${m.forget.signal} witnessed delete targets gone (${m.forget.no_signal} never surfaced, not scored); deletes ${JSON.stringify(m.forget.deletes)}`,
       `  survivors  ${c.survivors}: retention ${pct(m.survivors.retention)} of ${m.survivors.witnessed} witnessed (floor ${pct(LIFECYCLE_LITE_CHECKS.survivor_floor)})`,
       `  restart    ${c.restart}: ${m.restart.ran ? `${m.restart.lost} lost, ${m.restart.reactivated} reactivated` : 'not run'}`,

@@ -16,10 +16,17 @@
  * delete), `after_delete` (after every delete and a second quiescence wait)
  * and `after_restart` (after the system restarted with its state kept).
  *
- *   update correct   at the final checkpoint the final value is in an active
- *                    item and no earlier current value is.
+ *   update (headline) with the reader on, the fixed reader's answer to each
+ *                    current-value probe at the final checkpoint, judged
+ *                    against the ledger: the final value, and no earlier
+ *                    value presented as current.
+ *   update retrieval at the final checkpoint the final value is in an active
+ *                    item and no earlier current value is. Reported beside
+ *                    the headline as a design choice (a system that keeps
+ *                    every session as written still serves the old one),
+ *                    never counted in the overall verdict.
  *   as-of correct    the value current at the earlier date is in an item
- *                    active then, and no later value is.
+ *                    active then, and no later value is (report-only).
  *   forgotten        a delete target present at `witness` and at
  *                    `pre_delete` (signal) that is in no item at any later
  *                    checkpoint. A target the system never surfaced is
@@ -42,8 +49,8 @@ export type Checkpoint = typeof CHECKPOINTS[number];
 
 /** Draft parameters of the preregistration; open until it is frozen. */
 export const LIFECYCLE_LITE_CHECKS = {
-  /** Survivors witnessed before the deletes that must still be present at every later checkpoint. */
-  survivor_floor: 0.9,
+  /** Share of the survivors witnessed before the deletes that must still be present at every later checkpoint (decided 2026-10-06). */
+  survivor_floor: 1.0,
 } as const;
 
 export type DeleteStatus = 'deleted' | 'partial' | 'unsupported' | 'error';
@@ -77,6 +84,8 @@ export interface LiteRow {
   /** Update probes: correct; canary probes: present. Null for a failed retrieval. */
   pass: boolean | null;
   matched?: MatchedItem[];
+  /** With the reader: the judge's verdict on the reader's answer (true is a correct answer, a deleted claim not affirmed, a survivor confirmed). */
+  qa_pass?: boolean;
   error?: string;
   error_kind?: string;
 }
@@ -145,17 +154,24 @@ export interface LiteMetrics {
   forget: { targets: number; deletes: Record<DeleteStatus, number>; signal: number; no_signal: number; lost_before_delete: number; forgotten: number; residue_after_delete: number; residue_after_restart: number; reactivated: number; forget_rate: number | null; unsupported: boolean };
   survivors: { witnessed: number; canaries_witnessed: number; values_witnessed: number; kept_after_delete: number; kept_after_restart: number | null; retention: number | null };
   restart: { ran: boolean; lost: number; reactivated: number };
+  /** The fixed reader and judge at the final checkpoint; denominators match the retrieval measures above (a failed retrieval is a wrong answer). */
+  reader: { ran: boolean; update: { probes: number; correct: number; correct_rate: number | null }; asof: { probes: number; correct: number; correct_rate: number | null };
+    forget: { targets: number; not_affirmed: number }; survivors: { canaries: number; confirmed: number } };
   rows: { total: number; harness_failures: number; product_failures: number; ingest_degraded: number };
 }
 
 export type CheckStatus = 'pass' | 'fail' | 'no_signal' | 'unsupported' | 'not_run' | 'incomplete';
-export interface LiteChecks { update: CheckStatus; asof: CheckStatus; forget: CheckStatus; survivors: CheckStatus; restart: CheckStatus; overall: 'pass' | 'fail' | 'incomplete'; failed: string[] }
+/** Checks in the overall verdict, and the report-only ones beside them. */
+export const HEADLINE_CHECKS = ['update', 'forget', 'survivors', 'restart'] as const;
+export const REPORT_ONLY_CHECKS = ['update_retrieval', 'asof'] as const;
+export type CheckName = typeof HEADLINE_CHECKS[number] | typeof REPORT_ONLY_CHECKS[number];
+export type LiteChecks = Record<CheckName, CheckStatus> & { overall: 'pass' | 'fail' | 'incomplete'; failed: string[]; report_only_failed: string[] };
 
 const rate = (n: number, d: number) => (d ? n / d : null);
 const key = (probe: string, cp: Checkpoint) => `${probe}@${cp}`;
 
 /** Per-case and aggregate metrics over every seed's rows (one row per probe and checkpoint) and delete records. */
-export function liteMetrics(probes: readonly LiteProbe[], rows: readonly LiteRow[], deletes: readonly DeleteRecord[], restartRan: boolean): { metrics: LiteMetrics; forget_cases: ForgetCase[] } {
+export function liteMetrics(probes: readonly LiteProbe[], rows: readonly LiteRow[], deletes: readonly DeleteRecord[], restartRan: boolean, readerRan = false): { metrics: LiteMetrics; forget_cases: ForgetCase[] } {
   const byId = new Map(rows.map(r => [r.id, r]));
   const at = (p: string, cp: Checkpoint) => byId.get(key(p, cp));
   const harness = (r: LiteRow | undefined) => !!r && HARNESS_FAILURES.has(r.outcome);
@@ -195,6 +211,11 @@ export function liteMetrics(probes: readonly LiteProbe[], rows: readonly LiteRow
   for (const d of deletes) deleteCounts[d.status]++;
   const signalCases = forget_cases.filter(c => c.signal && c.delete_status !== 'unsupported');
   const forgotten = forget_cases.filter(c => c.forgotten === true).length;
+  const qa = (r: LiteRow | undefined) => r?.qa_pass === true;
+  const finalRows = (kind: LiteProbe['kind'], ids?: Set<string>) => probes.filter(p => p.kind === kind && (!ids || ids.has(p.id))).map(p => at(p.id, finalCp)).filter((r): r is LiteRow => !!r && !harness(r));
+  const readerUpd = finalRows('update_current'), readerAsof = finalRows('update_asof');
+  const readerForget = finalRows('forget_target', new Set(signalCases.map(c => c.probe)));
+  const readerSurv = finalRows('survivor', new Set(witnessed.filter(p => p.kind === 'survivor').map(p => p.id)));
   const metrics: LiteMetrics = {
     final_checkpoint: finalCp,
     update: {
@@ -215,25 +236,41 @@ export function liteMetrics(probes: readonly LiteProbe[], rows: readonly LiteRow
       kept_after_delete: keptAfterDelete, kept_after_restart: keptAfterRestart, retention,
     },
     restart: { ran: restartRan, lost, reactivated: signalCases.filter(c => c.reactivated).length },
+    reader: {
+      ran: readerRan,
+      update: { probes: readerUpd.length, correct: readerUpd.filter(qa).length, correct_rate: readerRan ? rate(readerUpd.filter(qa).length, readerUpd.length) : null },
+      asof: { probes: readerAsof.length, correct: readerAsof.filter(qa).length, correct_rate: readerRan ? rate(readerAsof.filter(qa).length, readerAsof.length) : null },
+      forget: { targets: readerForget.length, not_affirmed: readerForget.filter(qa).length },
+      survivors: { canaries: readerSurv.length, confirmed: readerSurv.filter(qa).length },
+    },
     rows: { total: rows.length, harness_failures: rows.filter(r => HARNESS_FAILURES.has(r.outcome)).length, product_failures: rows.filter(r => r.outcome === 'retrieval_error' || r.outcome === 'unsupported').length, ingest_degraded: rows.filter(r => r.outcome === 'ingest_degraded').length },
   };
   return { metrics, forget_cases };
 }
 
 /**
- * The report-only contract checks. Any harness failure makes the run
- * incomplete; product failures count as misses. A system that cannot
- * delete is reported `unsupported` for forget and never passes overall.
+ * The contract checks, all report-only (the category gates nothing). The
+ * overall verdict covers the headline checks: the reader-judged update, and
+ * forget, survivors and restart on retrieval. The retrieval-level update
+ * check and the as-of check are reported beside them and never change the
+ * overall verdict. A check that did not run (no reader, no restart) is left
+ * out of it. Any harness failure makes the run incomplete; product failures
+ * count as misses. A system that cannot delete is `unsupported` for forget
+ * and never passes overall.
  */
 export function liteChecks(m: LiteMetrics): LiteChecks {
   const incomplete = m.rows.harness_failures > 0;
   const status = (pass: boolean): CheckStatus => (incomplete ? 'incomplete' : pass ? 'pass' : 'fail');
-  const update = m.update.probes === 0 ? (incomplete ? 'incomplete' : 'no_signal') : status(m.update.correct === m.update.probes);
-  const asof = m.asof.probes === 0 ? (incomplete ? 'incomplete' : 'no_signal') : status(m.asof.correct === m.asof.probes);
-  const forget: CheckStatus = m.forget.unsupported ? 'unsupported' : m.forget.signal === 0 ? (incomplete ? 'incomplete' : 'no_signal') : status(m.forget.forgotten === m.forget.signal);
-  const survivors: CheckStatus = m.survivors.witnessed === 0 ? (incomplete ? 'incomplete' : 'no_signal') : status((m.survivors.retention ?? 0) >= LIFECYCLE_LITE_CHECKS.survivor_floor);
-  const restart: CheckStatus = !m.restart.ran ? 'not_run' : status(m.restart.lost === 0 && m.restart.reactivated === 0);
-  const all = { update, asof, forget, survivors, restart };
-  const failed = Object.entries(all).filter(([k, v]) => v !== 'pass' && !(k === 'restart' && v === 'not_run')).map(([k, v]) => `${k}:${v}`);
-  return { ...all, overall: incomplete ? 'incomplete' : failed.length ? 'fail' : 'pass', failed };
+  const noSignal = (): CheckStatus => (incomplete ? 'incomplete' : 'no_signal');
+  const checks: Record<CheckName, CheckStatus> = {
+    update: !m.reader.ran ? 'not_run' : m.reader.update.probes === 0 ? noSignal() : status(m.reader.update.correct === m.reader.update.probes),
+    forget: m.forget.unsupported ? 'unsupported' : m.forget.signal === 0 ? noSignal() : status(m.forget.forgotten === m.forget.signal),
+    survivors: m.survivors.witnessed === 0 ? noSignal() : status((m.survivors.retention ?? 0) >= LIFECYCLE_LITE_CHECKS.survivor_floor),
+    restart: !m.restart.ran ? 'not_run' : status(m.restart.lost === 0 && m.restart.reactivated === 0),
+    update_retrieval: m.update.probes === 0 ? noSignal() : status(m.update.correct === m.update.probes),
+    asof: m.asof.probes === 0 ? noSignal() : status(m.asof.correct === m.asof.probes),
+  };
+  const failing = (names: readonly CheckName[]) => names.filter(k => checks[k] !== 'pass' && checks[k] !== 'not_run').map(k => `${k}:${checks[k]}`);
+  const failed = failing(HEADLINE_CHECKS);
+  return { ...checks, overall: incomplete ? 'incomplete' : failed.length ? 'fail' : 'pass', failed, report_only_failed: failing(REPORT_ONLY_CHECKS) };
 }
