@@ -1,0 +1,9 @@
+2026-10-07T15:14:26.507Z building gbrain slots
+2026-10-07T15:14:26.543Z [budget] cat40-slot-build: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/w11-d12-smoke.sqlite
+2026-10-07T15:18:42.874Z built slot0 in 254s, $0.0959 (3977 provider requests; ledger allowance charged $0.0959); mention coverage complete, 0 pending
+2026-10-07T15:22:55.757Z built slot1 in 253s, $0.0959 (3976 provider requests; ledger allowance charged $0.0959); mention coverage complete, 0 pending
+2026-10-07T15:27:15.052Z built slot2 in 259s, $0.0959 (3976 provider requests; ledger allowance charged $0.0959); mention coverage complete, 0 pending
+2026-10-07T15:31:49.711Z built slot3 in 275s, $0.0959 (3977 provider requests; ledger allowance charged $0.0959); mention coverage complete, 0 pending
+2026-10-07T15:34:09.991Z write probe passed on every slot
+2026-10-07T15:34:09.991Z gbrain 0.60.102.0 (5b5891069413) ready on 4 slots, surface starter
+2026-10-07T15:34:10.268Z receipt /workspace/gbrain-evals/eval/reports/cat40/w11-d12/slots-master-b/receipt-1791387250267.json
