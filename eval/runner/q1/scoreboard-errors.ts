@@ -33,7 +33,8 @@ export type ScoreboardCode =
   | 'DOCKER_MISSING'
   | 'FIXTURE_FAILED'
   | 'RESUME_REFUSED'
-  | 'INPUT_MISSING';
+  | 'INPUT_MISSING'
+  | 'PAID_FLAGS_MISSING';
 
 export interface ScoreboardMessage extends Omit<OperatorMessage, 'code'> {
   code: ScoreboardCode;

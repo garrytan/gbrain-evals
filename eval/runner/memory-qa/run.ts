@@ -386,7 +386,7 @@ export async function readinessProbe(system: MemorySystem, ns: string, last: Ses
 }
 
 /** A system's retrieval failure as a row: its kind decides whether it is a product miss, a harness failure or a budget stop. */
-function failureRow(base: MemoryQaRow, e: unknown): MemoryQaRow {
+export function failureRow(base: MemoryQaRow, e: unknown): MemoryQaRow {
   if (e instanceof SanitizerLeakError) return { ...base, error: e.message, error_origin: 'harness', outcome: 'harness_invalid' };
   const kind = e instanceof SystemError ? e.kind : /budget|BudgetExceeded/i.test(String((e as Error).message)) ? 'budget' : 'product_error';
   if (kind === 'budget') return { ...base, error: errorText(e), error_origin: 'harness', error_kind: kind, outcome: 'budget_not_run' };
@@ -443,7 +443,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   // The shootout recipe runs gbrain's own search defaults, which call paid providers (the reranker) even with hash vectors.
   if (a.providerProxy) {
     if (!/^https?:\/\/[^/]+$/.test(a.providerProxy)) throw new Error('--provider-proxy must look like http://host:port');
-    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = 'dummy-key-the-proxy-replaces';
+    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = process.env.SHOOTOUT_CELL_TOKEN || 'dummy-key-the-proxy-replaces';
     process.env.OPENAI_BASE_URL = `${a.providerProxy}/harness/openai/v1`;
     process.env.ANTHROPIC_BASE_URL = `${a.providerProxy}/harness/anthropic`;
   }
