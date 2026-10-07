@@ -1,0 +1,214 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "adversarial",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 22,
+  "n_scored": 22,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "cases": 22
+  },
+  "started_at": "2026-10-07T20:03:56.005Z",
+  "finished_at": "2026-10-07T20:03:58.899Z",
+  "data": {
+    "results": [
+      {
+        "name": "empty compiled_truth",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "whitespace only",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "newlines only",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "50K char page",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "100K char page",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "CJK content",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "Arabic RTL",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "Cyrillic",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "emoji-heavy",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "mixed scripts",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "slug inside code fence",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "inline code with slug",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "false-positive substring",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "slug with dots",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "slug with leading number",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "slug max length",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "invalid date in timeline",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "timeline with no dates",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "deeply nested lists",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "long blockquote chain",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "100 refs in one page",
+        "ops_attempted": 6,
+        "ops_succeeded": 6,
+        "crashes": [],
+        "silent_corruption": []
+      },
+      {
+        "name": "same entity 50 times",
+        "ops_attempted": 7,
+        "ops_succeeded": 7,
+        "crashes": [],
+        "silent_corruption": []
+      }
+    ],
+    "total_link_candidates": 108
+  },
+  "accounting": {
+    "planned": 22,
+    "attempted": 22,
+    "scored": 22,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "3ab2e7f195883b9afabee81c7cfa45165e11558ec729149a1df405e1f547838b",
+      "files": 4443,
+      "git_head": "bd748cbe5884ec7219e5651b693dcd4b6cd1c478",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}

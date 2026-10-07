@@ -1,0 +1,165 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat35-transcript-distill",
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "started_at": "2026-10-06T19:24:15.556Z",
+  "finished_at": "2026-10-06T19:26:59.320Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 67,
+  "n_scored": 67,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "resolved_config": {
+    "mode": "b-pre-validity",
+    "lanes": [
+      "dream"
+    ],
+    "transcripts": 8,
+    "corpus_sha": "5fce384e57839be4d9adc231849718463af5235061b698576f63ff587cd22eef",
+    "judge_prompt_version": "2026-09-28-v2",
+    "input_allowlist": [
+      "cat35.sut.source@1",
+      "cat35.judge.coverage@1",
+      "cat35.judge.leak@1",
+      "cat35.judge.usability@1"
+    ],
+    "transcript_mode": "half",
+    "control_inputs": {
+      "coding-reflection-01": {
+        "chars": 2684,
+        "of_chars": 5606,
+        "sha256": "cedb9f178c69553cc241ca12818df90553bcfe21d1685f2b41152dd824920f55"
+      },
+      "coding-reflection-02": {
+        "chars": 2113,
+        "of_chars": 4644,
+        "sha256": "cc6a9664a5eb10509cf6c61709cbad2d699cdea099bd841878d2685cf1179d6d"
+      },
+      "emotional-processing-01": {
+        "chars": 1897,
+        "of_chars": 3881,
+        "sha256": "bf6fd87a9f01248ab97dcebab25e8822afa4efa0123087657d9e5aefab3d1a87"
+      },
+      "emotional-processing-02": {
+        "chars": 2856,
+        "of_chars": 6418,
+        "sha256": "ab13b1c596b39e2f51c92233c70af4b9abade8192e6697fb033b6fe77b45c9de"
+      },
+      "people-deal-01": {
+        "chars": 2289,
+        "of_chars": 4674,
+        "sha256": "f6ede4ff1528d773d27fa86847fbe78942e0a2198f8d6a49290a9379265fc4b8"
+      },
+      "people-deal-02": {
+        "chars": 2873,
+        "of_chars": 6425,
+        "sha256": "a5db91a68ac4b53a40911a19356111cdc3cee44661113fe55847cd48be222176"
+      },
+      "startup-ideation-01": {
+        "chars": 2854,
+        "of_chars": 6165,
+        "sha256": "b3edb2646ccba87b84b07542975d59a4abcd486774abb9319200fc454e897a2b"
+      },
+      "startup-ideation-02": {
+        "chars": 2572,
+        "of_chars": 5387,
+        "sha256": "5df8ad21b25ff6d932c9016dd7a4bd2cff6f8ffe9abb85b68ddbb11956ad7656"
+      }
+    },
+    "judge_transport": "OpenAI Responses API through openai-judge-shim: no temperature, reasoning effort low, max_output_tokens at least 8000",
+    "dream_model": "anthropic:claude-sonnet-5-5",
+    "triage_model": "anthropic:claude-sonnet-5-5",
+    "facts_model": "anthropic:claude-sonnet-5-5",
+    "max_turns": 8,
+    "triage_threshold": 0.5,
+    "subagent_timeout_ms": 600000,
+    "dream_concurrency": 2,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-10-06-192415-cat35-bpre.json"
+  },
+  "judge": {
+    "model": "openai:gpt-6.1-sol",
+    "temperature": 0,
+    "rubric_version": "2026-09-28-v2"
+  },
+  "data": {
+    "coverage_by_lane": {
+      "dream": {
+        "macro": 0.24131944444444442,
+        "micro": 0.23880597014925373,
+        "strict": 0.208955223880597,
+        "partial_rate": 0.05970149253731343,
+        "ci_lo": 0.109375,
+        "ci_hi": 0.3784722222222222,
+        "n_items": 67,
+        "judge_failed_excluded": 0,
+        "joint_macro": 0.23437499999999997,
+        "joint_ci_lo": 0.10416666666666666,
+        "joint_ci_hi": 0.36458333333333337,
+        "joint_n_items": 67,
+        "joint_excluded": 0
+      }
+    },
+    "gates": {
+      "verbatim_coverage": null,
+      "judge_failed_rate": true,
+      "dream_emission": true
+    },
+    "judge_failed_rate": 0,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-10-06-192415-cat35-bpre.json"
+  },
+  "cost": {
+    "usd": 0.234801,
+    "input_tokens": 71127,
+    "output_tokens": 12471,
+    "basis": "budget ledger cat35-transcript-distill-2026-10-06T19-24-15-674Z-c1502189: 55 paid requests, 1 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0.000093,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 3989.1
+    }
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-06-negative-controls-preregistration.md",
+    "preregistration_commit": "16d787266a30c390983ea7beca542ba77183201c",
+    "runner_commit": "b57c6ccb5b7f7ca1bf31ac80266a132de210c16c",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-06T19:24:15.572Z"
+  },
+  "delivered_tokens": {
+    "tokens": 71127,
+    "basis": "provider-reported input tokens of every paid request (judges, fact extraction, dream synthesis and subagents), from the budget ledger"
+  },
+  "accounting": {
+    "planned": 67,
+    "attempted": 67,
+    "scored": 67,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "d1ffefbeccb60c39c0e581c3c7ec2ca762d57d98ac12dfc9a385e2f113210955",
+      "files": 3651,
+      "git_head": "b57c6ccb5b7f7ca1bf31ac80266a132de210c16c",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}

@@ -417,9 +417,19 @@ async function withClock<T>(ms: number | (() => number), fn: () => Promise<T>): 
   try { return await fn(); } finally { Date.now = real; }
 }
 
-async function rankOrder(sut: Sut, clock: number | (() => number), source = RANK_SOURCE_ID): Promise<string[]> {
-  const res = await withClock(clock, () => sut.op('open_loops', { source_id: source, limit: 50, include_context: false }, false, source)) as { groups: Array<{ counterparty: string }> };
+async function rankOrder(sut: Sut, clock: number | (() => number), source = RANK_SOURCE_ID, asOf?: string): Promise<string[]> {
+  const res = await withClock(clock, () => sut.op('open_loops', { source_id: source, limit: 50, include_context: false, ...(asOf ? { as_of: asOf } : {}) }, false, source)) as { groups: Array<{ counterparty: string }> };
   return res.groups.map(g => g.counterparty);
+}
+
+/** Order with `as_of` pinned to nowMs, read at wall clock nowMs and two days later; null when the build refuses as_of. */
+async function pinnedOrders(sut: Sut, nowMs: number): Promise<{ at_now: string[]; two_days_later: string[] } | null> {
+  const asOf = new Date(nowMs).toISOString();
+  try {
+    return { at_now: await rankOrder(sut, nowMs, RANK_SOURCE_ID, asOf), two_days_later: await rankOrder(sut, nowMs + 2 * 86_400_000, RANK_SOURCE_ID, asOf) };
+  } catch {
+    return null;
+  }
 }
 
 async function rankingChecks(sut: Sut, nowMs: number): Promise<Record<string, unknown>> {
@@ -443,6 +453,7 @@ async function rankingChecks(sut: Sut, nowMs: number): Promise<Record<string, un
   // A ticking clock: Date.now advances 1 ms per call, as it may inside one sort.
   let tick = nowMs;
   const ticking = await rankOrder(sut, () => tick++);
+  const pinned = await pinnedOrders(sut, nowMs);
   return {
     fixtures: 'a: one commitment due in 8 days, opened now; b: one loop, opened 10 days ago, no due date; c: two loops; d: one loop (c and d otherwise equal, opened 30 days ago)',
     order_at_now: atNow,
@@ -455,6 +466,8 @@ async function rankingChecks(sut: Sut, nowMs: number): Promise<Record<string, un
     more_loops_rank_higher: idx(atNow, 'c-rank@example.org') < idx(atNow, 'd-rank@example.org'),
     ticking_clock_order: ticking,
     ticking_clock_matches_fixed: JSON.stringify(ticking) === JSON.stringify(atNow),
+    as_of_pinned_order: pinned,
+    as_of_pins_order: pinned !== null && JSON.stringify(pinned.at_now) === JSON.stringify(pinned.two_days_later),
   };
 }
 
@@ -796,7 +809,7 @@ export function n7Findings(r: N7RunResult, gbrainSha: string): BugEntry[] {
       status: 'open',
     });
   }
-  out.push({
+  if ((r.store?.ack_closed ?? 0) > 0) out.push({
     id: 'N7-2', category: 'open-loops-email', classification: 'feature-gap', gbrain_sha: gbrainSha,
     contract: 'docs/guides/open-loops.md: "a reply lands -> the loop closes itself (closed_by: reply_detected)"; close semantics: "Thread loops close deterministically when a reply lands." Any reply is documented to close; acknowledgements are not distinguished.',
     surface: 'src/core/google/loop-detect.ts detectThreadLoop (turn flip is the only close signal)',
@@ -823,8 +836,8 @@ export function n7Findings(r: N7RunResult, gbrainSha: string): BugEntry[] {
     actual: 'No Slack or calendar loop source exists; calendar notices neither open nor close loops by design.',
     status: 'open',
   });
-  const rk = r.ranking as { order_changes_with_clock_alone?: boolean; same_clock_same_order?: boolean; a_before_b_at_now?: boolean; a_before_b_two_days_later?: boolean } | null;
-  if (rk?.order_changes_with_clock_alone) {
+  const rk = r.ranking as { order_changes_with_clock_alone?: boolean; same_clock_same_order?: boolean; a_before_b_at_now?: boolean; a_before_b_two_days_later?: boolean; as_of_pins_order?: boolean } | null;
+  if (rk?.order_changes_with_clock_alone && !rk.as_of_pins_order) {
     out.push({
       id: 'N7-5', category: 'open-loops-email', classification: 'feature-gap', gbrain_sha: gbrainSha,
       contract: 'docs/guides/open-loops.md Ranking: "Deterministic - same data, same order." Due-date proximity and loop age are relative to the current time by design, and no operation parameter pins that time.',

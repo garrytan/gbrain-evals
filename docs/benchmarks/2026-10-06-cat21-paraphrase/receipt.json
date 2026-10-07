@@ -1,0 +1,1073 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat21-code-retrieval",
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "started_at": "2026-10-06T18:17:36.962Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 108,
+  "n_scored": 108,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "search_mode": "balanced",
+    "reranker_enabled": false,
+    "pinned_config": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.expansion": "false",
+      "search.autocut": "false",
+      "search.tokenBudget": "1000000"
+    },
+    "embed_transport": "live",
+    "max_file_chars": 36000,
+    "distractors": 48,
+    "exclude_gold": false,
+    "chunk_fetch_limit": 30,
+    "min_mrr_gate": 0.5,
+    "min_mrr_gate_mode": "live-quality",
+    "cells": {
+      "voyage-code-3": {
+        "embedder": "voyage:voyage-code-3",
+        "dim": 1024
+      },
+      "voyage-code-4": {
+        "embedder": "voyage:voyage-code-4",
+        "dim": 1024
+      },
+      "openai-default": {
+        "embedder": "openai:text-embedding-3-large",
+        "dim": 1536
+      }
+    },
+    "corpus": "gbrain-src-core",
+    "split": "both",
+    "queries": [
+      {
+        "id": "q01",
+        "expected_file": "think/index.ts",
+        "split": "named"
+      },
+      {
+        "id": "q02",
+        "expected_file": "pglite-engine.ts",
+        "split": "named"
+      },
+      {
+        "id": "q03",
+        "expected_file": "search/hybrid.ts",
+        "split": "named"
+      },
+      {
+        "id": "q04",
+        "expected_file": "import-file.ts",
+        "split": "named"
+      },
+      {
+        "id": "q05",
+        "expected_file": "link-extraction.ts",
+        "split": "named"
+      },
+      {
+        "id": "q06",
+        "expected_file": "search/embedding-column.ts",
+        "split": "named"
+      },
+      {
+        "id": "q07",
+        "expected_file": "search/graph-signals.ts",
+        "split": "named"
+      },
+      {
+        "id": "q08",
+        "expected_file": "brainstorm/orchestrator.ts",
+        "split": "named"
+      },
+      {
+        "id": "q09",
+        "expected_file": "ai/gateway.ts",
+        "split": "named"
+      },
+      {
+        "id": "q10",
+        "expected_file": "entities/resolve.ts",
+        "split": "named"
+      },
+      {
+        "id": "q11",
+        "expected_file": "brain-score-recommendations.ts",
+        "split": "named"
+      },
+      {
+        "id": "q12",
+        "expected_file": "minions/queue.ts",
+        "split": "named"
+      },
+      {
+        "id": "p01a",
+        "expected_file": "think/index.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p01b",
+        "expected_file": "think/index.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p02a",
+        "expected_file": "pglite-engine.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p02b",
+        "expected_file": "pglite-engine.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p03a",
+        "expected_file": "search/hybrid.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p03b",
+        "expected_file": "search/hybrid.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p04a",
+        "expected_file": "import-file.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p04b",
+        "expected_file": "import-file.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p05a",
+        "expected_file": "link-extraction.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p05b",
+        "expected_file": "link-extraction.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p06a",
+        "expected_file": "search/embedding-column.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p06b",
+        "expected_file": "search/embedding-column.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p07a",
+        "expected_file": "search/graph-signals.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p07b",
+        "expected_file": "search/graph-signals.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p08a",
+        "expected_file": "brainstorm/orchestrator.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p08b",
+        "expected_file": "brainstorm/orchestrator.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p09a",
+        "expected_file": "ai/gateway.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p09b",
+        "expected_file": "ai/gateway.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p10a",
+        "expected_file": "entities/resolve.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p10b",
+        "expected_file": "entities/resolve.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p11a",
+        "expected_file": "brain-score-recommendations.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p11b",
+        "expected_file": "brain-score-recommendations.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p12a",
+        "expected_file": "minions/queue.ts",
+        "split": "paraphrase"
+      },
+      {
+        "id": "p12b",
+        "expected_file": "minions/queue.ts",
+        "split": "paraphrase"
+      }
+    ]
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-06-cat21-paraphrase-preregistration.md",
+    "preregistration_commit": "594bd14af57c4623caa160388962d0769b0891a7",
+    "runner_commit": "594bd14af57c4623caa160388962d0769b0891a7",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-06T18:17:36.963Z"
+  },
+  "cost": {
+    "usd": 0.150296,
+    "input_tokens": 1048047,
+    "output_tokens": 0,
+    "basis": "budget ledger cat21-code-retrieval-2026-10-06T18-17-37-031Z-c49f3993: 298 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 149,
+      "max": 1964.1
+    }
+  },
+  "finished_at": "2026-10-06T18:21:10.328Z",
+  "data": {
+    "cells": [
+      {
+        "cell": "voyage-code-3",
+        "embedder": "voyage:voyage-code-3",
+        "dim": 1024,
+        "files_planned": 60,
+        "files_ok": 60,
+        "files_failed": 0,
+        "first_ingest_error": null,
+        "gold_present": 36,
+        "gold_missing": [],
+        "queries_total": 36,
+        "queries_scored": 36,
+        "query_errors": 0,
+        "degraded_queries": 0,
+        "rerank_scored_queries": 0,
+        "top1_hits": 32,
+        "mrr": 0.9375,
+        "recall_at_5": 1,
+        "mean_query_ms": 286.1111111111111,
+        "p50_query_ms": 269,
+        "ingest_ms": 99268,
+        "valid": true,
+        "invalid_reasons": [],
+        "per_query": [
+          {
+            "id": "q01",
+            "rank": 1,
+            "top1": true,
+            "ms": 576
+          },
+          {
+            "id": "q02",
+            "rank": 1,
+            "top1": true,
+            "ms": 331
+          },
+          {
+            "id": "q03",
+            "rank": 2,
+            "top1": false,
+            "ms": 223
+          },
+          {
+            "id": "q04",
+            "rank": 1,
+            "top1": true,
+            "ms": 223
+          },
+          {
+            "id": "q05",
+            "rank": 1,
+            "top1": true,
+            "ms": 242
+          },
+          {
+            "id": "q06",
+            "rank": 1,
+            "top1": true,
+            "ms": 240
+          },
+          {
+            "id": "q07",
+            "rank": 1,
+            "top1": true,
+            "ms": 238
+          },
+          {
+            "id": "q08",
+            "rank": 1,
+            "top1": true,
+            "ms": 235
+          },
+          {
+            "id": "q09",
+            "rank": 1,
+            "top1": true,
+            "ms": 323
+          },
+          {
+            "id": "q10",
+            "rank": 1,
+            "top1": true,
+            "ms": 241
+          },
+          {
+            "id": "q11",
+            "rank": 1,
+            "top1": true,
+            "ms": 261
+          },
+          {
+            "id": "q12",
+            "rank": 1,
+            "top1": true,
+            "ms": 247
+          },
+          {
+            "id": "p01a",
+            "rank": 1,
+            "top1": true,
+            "ms": 322
+          },
+          {
+            "id": "p01b",
+            "rank": 1,
+            "top1": true,
+            "ms": 380
+          },
+          {
+            "id": "p02a",
+            "rank": 2,
+            "top1": false,
+            "ms": 395
+          },
+          {
+            "id": "p02b",
+            "rank": 2,
+            "top1": false,
+            "ms": 284
+          },
+          {
+            "id": "p03a",
+            "rank": 1,
+            "top1": true,
+            "ms": 263
+          },
+          {
+            "id": "p03b",
+            "rank": 4,
+            "top1": false,
+            "ms": 290
+          },
+          {
+            "id": "p04a",
+            "rank": 1,
+            "top1": true,
+            "ms": 305
+          },
+          {
+            "id": "p04b",
+            "rank": 1,
+            "top1": true,
+            "ms": 234
+          },
+          {
+            "id": "p05a",
+            "rank": 1,
+            "top1": true,
+            "ms": 259
+          },
+          {
+            "id": "p05b",
+            "rank": 1,
+            "top1": true,
+            "ms": 261
+          },
+          {
+            "id": "p06a",
+            "rank": 1,
+            "top1": true,
+            "ms": 326
+          },
+          {
+            "id": "p06b",
+            "rank": 1,
+            "top1": true,
+            "ms": 313
+          },
+          {
+            "id": "p07a",
+            "rank": 1,
+            "top1": true,
+            "ms": 266
+          },
+          {
+            "id": "p07b",
+            "rank": 1,
+            "top1": true,
+            "ms": 251
+          },
+          {
+            "id": "p08a",
+            "rank": 1,
+            "top1": true,
+            "ms": 280
+          },
+          {
+            "id": "p08b",
+            "rank": 1,
+            "top1": true,
+            "ms": 283
+          },
+          {
+            "id": "p09a",
+            "rank": 1,
+            "top1": true,
+            "ms": 264
+          },
+          {
+            "id": "p09b",
+            "rank": 1,
+            "top1": true,
+            "ms": 324
+          },
+          {
+            "id": "p10a",
+            "rank": 1,
+            "top1": true,
+            "ms": 269
+          },
+          {
+            "id": "p10b",
+            "rank": 1,
+            "top1": true,
+            "ms": 251
+          },
+          {
+            "id": "p11a",
+            "rank": 1,
+            "top1": true,
+            "ms": 272
+          },
+          {
+            "id": "p11b",
+            "rank": 1,
+            "top1": true,
+            "ms": 269
+          },
+          {
+            "id": "p12a",
+            "rank": 1,
+            "top1": true,
+            "ms": 283
+          },
+          {
+            "id": "p12b",
+            "rank": 1,
+            "top1": true,
+            "ms": 276
+          }
+        ],
+        "splits": {
+          "named": {
+            "queries": 12,
+            "scored": 12,
+            "top1_hits": 11,
+            "mrr": 0.9583333333333334,
+            "recall_at_5": 1
+          },
+          "paraphrase": {
+            "queries": 24,
+            "scored": 24,
+            "top1_hits": 21,
+            "mrr": 0.9270833333333334,
+            "recall_at_5": 1
+          }
+        }
+      },
+      {
+        "cell": "voyage-code-4",
+        "embedder": "voyage:voyage-code-4",
+        "dim": 1024,
+        "files_planned": 60,
+        "files_ok": 60,
+        "files_failed": 0,
+        "first_ingest_error": null,
+        "gold_present": 36,
+        "gold_missing": [],
+        "queries_total": 36,
+        "queries_scored": 36,
+        "query_errors": 0,
+        "degraded_queries": 0,
+        "rerank_scored_queries": 0,
+        "top1_hits": 26,
+        "mrr": 0.8201178451178451,
+        "recall_at_5": 0.9444444444444444,
+        "mean_query_ms": 271.72222222222223,
+        "p50_query_ms": 255,
+        "ingest_ms": 26676,
+        "valid": true,
+        "invalid_reasons": [],
+        "per_query": [
+          {
+            "id": "q01",
+            "rank": 1,
+            "top1": true,
+            "ms": 248
+          },
+          {
+            "id": "q02",
+            "rank": 1,
+            "top1": true,
+            "ms": 255
+          },
+          {
+            "id": "q03",
+            "rank": 2,
+            "top1": false,
+            "ms": 255
+          },
+          {
+            "id": "q04",
+            "rank": 1,
+            "top1": true,
+            "ms": 198
+          },
+          {
+            "id": "q05",
+            "rank": 1,
+            "top1": true,
+            "ms": 229
+          },
+          {
+            "id": "q06",
+            "rank": 1,
+            "top1": true,
+            "ms": 247
+          },
+          {
+            "id": "q07",
+            "rank": 1,
+            "top1": true,
+            "ms": 232
+          },
+          {
+            "id": "q08",
+            "rank": 1,
+            "top1": true,
+            "ms": 222
+          },
+          {
+            "id": "q09",
+            "rank": 1,
+            "top1": true,
+            "ms": 232
+          },
+          {
+            "id": "q10",
+            "rank": 1,
+            "top1": true,
+            "ms": 227
+          },
+          {
+            "id": "q11",
+            "rank": 1,
+            "top1": true,
+            "ms": 269
+          },
+          {
+            "id": "q12",
+            "rank": 1,
+            "top1": true,
+            "ms": 223
+          },
+          {
+            "id": "p01a",
+            "rank": 1,
+            "top1": true,
+            "ms": 332
+          },
+          {
+            "id": "p01b",
+            "rank": 1,
+            "top1": true,
+            "ms": 280
+          },
+          {
+            "id": "p02a",
+            "rank": 11,
+            "top1": false,
+            "ms": 280
+          },
+          {
+            "id": "p02b",
+            "rank": 3,
+            "top1": false,
+            "ms": 323
+          },
+          {
+            "id": "p03a",
+            "rank": 1,
+            "top1": true,
+            "ms": 244
+          },
+          {
+            "id": "p03b",
+            "rank": 15,
+            "top1": false,
+            "ms": 262
+          },
+          {
+            "id": "p04a",
+            "rank": 1,
+            "top1": true,
+            "ms": 294
+          },
+          {
+            "id": "p04b",
+            "rank": 2,
+            "top1": false,
+            "ms": 248
+          },
+          {
+            "id": "p05a",
+            "rank": 1,
+            "top1": true,
+            "ms": 226
+          },
+          {
+            "id": "p05b",
+            "rank": 1,
+            "top1": true,
+            "ms": 203
+          },
+          {
+            "id": "p06a",
+            "rank": 1,
+            "top1": true,
+            "ms": 367
+          },
+          {
+            "id": "p06b",
+            "rank": 1,
+            "top1": true,
+            "ms": 266
+          },
+          {
+            "id": "p07a",
+            "rank": 2,
+            "top1": false,
+            "ms": 270
+          },
+          {
+            "id": "p07b",
+            "rank": 2,
+            "top1": false,
+            "ms": 260
+          },
+          {
+            "id": "p08a",
+            "rank": 1,
+            "top1": true,
+            "ms": 503
+          },
+          {
+            "id": "p08b",
+            "rank": 1,
+            "top1": true,
+            "ms": 272
+          },
+          {
+            "id": "p09a",
+            "rank": 1,
+            "top1": true,
+            "ms": 293
+          },
+          {
+            "id": "p09b",
+            "rank": 2,
+            "top1": false,
+            "ms": 252
+          },
+          {
+            "id": "p10a",
+            "rank": 1,
+            "top1": true,
+            "ms": 284
+          },
+          {
+            "id": "p10b",
+            "rank": 1,
+            "top1": true,
+            "ms": 247
+          },
+          {
+            "id": "p11a",
+            "rank": 1,
+            "top1": true,
+            "ms": 253
+          },
+          {
+            "id": "p11b",
+            "rank": 5,
+            "top1": false,
+            "ms": 230
+          },
+          {
+            "id": "p12a",
+            "rank": 1,
+            "top1": true,
+            "ms": 261
+          },
+          {
+            "id": "p12b",
+            "rank": 3,
+            "top1": false,
+            "ms": 495
+          }
+        ],
+        "splits": {
+          "named": {
+            "queries": 12,
+            "scored": 12,
+            "top1_hits": 11,
+            "mrr": 0.9583333333333334,
+            "recall_at_5": 1
+          },
+          "paraphrase": {
+            "queries": 24,
+            "scored": 24,
+            "top1_hits": 15,
+            "mrr": 0.751010101010101,
+            "recall_at_5": 0.9166666666666666
+          }
+        }
+      },
+      {
+        "cell": "openai-default",
+        "embedder": "openai:text-embedding-3-large",
+        "dim": 1536,
+        "files_planned": 60,
+        "files_ok": 60,
+        "files_failed": 0,
+        "first_ingest_error": null,
+        "gold_present": 36,
+        "gold_missing": [],
+        "queries_total": 36,
+        "queries_scored": 36,
+        "query_errors": 0,
+        "degraded_queries": 0,
+        "rerank_scored_queries": 0,
+        "top1_hits": 32,
+        "mrr": 0.9375,
+        "recall_at_5": 1,
+        "mean_query_ms": 385.02777777777777,
+        "p50_query_ms": 374.5,
+        "ingest_ms": 44650,
+        "valid": true,
+        "invalid_reasons": [],
+        "per_query": [
+          {
+            "id": "q01",
+            "rank": 1,
+            "top1": true,
+            "ms": 436
+          },
+          {
+            "id": "q02",
+            "rank": 1,
+            "top1": true,
+            "ms": 382
+          },
+          {
+            "id": "q03",
+            "rank": 1,
+            "top1": true,
+            "ms": 363
+          },
+          {
+            "id": "q04",
+            "rank": 1,
+            "top1": true,
+            "ms": 313
+          },
+          {
+            "id": "q05",
+            "rank": 1,
+            "top1": true,
+            "ms": 298
+          },
+          {
+            "id": "q06",
+            "rank": 1,
+            "top1": true,
+            "ms": 318
+          },
+          {
+            "id": "q07",
+            "rank": 1,
+            "top1": true,
+            "ms": 311
+          },
+          {
+            "id": "q08",
+            "rank": 1,
+            "top1": true,
+            "ms": 335
+          },
+          {
+            "id": "q09",
+            "rank": 1,
+            "top1": true,
+            "ms": 305
+          },
+          {
+            "id": "q10",
+            "rank": 1,
+            "top1": true,
+            "ms": 331
+          },
+          {
+            "id": "q11",
+            "rank": 1,
+            "top1": true,
+            "ms": 286
+          },
+          {
+            "id": "q12",
+            "rank": 1,
+            "top1": true,
+            "ms": 332
+          },
+          {
+            "id": "p01a",
+            "rank": 1,
+            "top1": true,
+            "ms": 419
+          },
+          {
+            "id": "p01b",
+            "rank": 1,
+            "top1": true,
+            "ms": 369
+          },
+          {
+            "id": "p02a",
+            "rank": 2,
+            "top1": false,
+            "ms": 432
+          },
+          {
+            "id": "p02b",
+            "rank": 2,
+            "top1": false,
+            "ms": 406
+          },
+          {
+            "id": "p03a",
+            "rank": 1,
+            "top1": true,
+            "ms": 378
+          },
+          {
+            "id": "p03b",
+            "rank": 4,
+            "top1": false,
+            "ms": 430
+          },
+          {
+            "id": "p04a",
+            "rank": 1,
+            "top1": true,
+            "ms": 466
+          },
+          {
+            "id": "p04b",
+            "rank": 1,
+            "top1": true,
+            "ms": 448
+          },
+          {
+            "id": "p05a",
+            "rank": 1,
+            "top1": true,
+            "ms": 372
+          },
+          {
+            "id": "p05b",
+            "rank": 1,
+            "top1": true,
+            "ms": 339
+          },
+          {
+            "id": "p06a",
+            "rank": 1,
+            "top1": true,
+            "ms": 340
+          },
+          {
+            "id": "p06b",
+            "rank": 1,
+            "top1": true,
+            "ms": 366
+          },
+          {
+            "id": "p07a",
+            "rank": 2,
+            "top1": false,
+            "ms": 467
+          },
+          {
+            "id": "p07b",
+            "rank": 1,
+            "top1": true,
+            "ms": 377
+          },
+          {
+            "id": "p08a",
+            "rank": 1,
+            "top1": true,
+            "ms": 446
+          },
+          {
+            "id": "p08b",
+            "rank": 1,
+            "top1": true,
+            "ms": 512
+          },
+          {
+            "id": "p09a",
+            "rank": 1,
+            "top1": true,
+            "ms": 359
+          },
+          {
+            "id": "p09b",
+            "rank": 1,
+            "top1": true,
+            "ms": 508
+          },
+          {
+            "id": "p10a",
+            "rank": 1,
+            "top1": true,
+            "ms": 371
+          },
+          {
+            "id": "p10b",
+            "rank": 1,
+            "top1": true,
+            "ms": 421
+          },
+          {
+            "id": "p11a",
+            "rank": 1,
+            "top1": true,
+            "ms": 349
+          },
+          {
+            "id": "p11b",
+            "rank": 1,
+            "top1": true,
+            "ms": 395
+          },
+          {
+            "id": "p12a",
+            "rank": 1,
+            "top1": true,
+            "ms": 451
+          },
+          {
+            "id": "p12b",
+            "rank": 1,
+            "top1": true,
+            "ms": 430
+          }
+        ],
+        "splits": {
+          "named": {
+            "queries": 12,
+            "scored": 12,
+            "top1_hits": 12,
+            "mrr": 1,
+            "recall_at_5": 1
+          },
+          "paraphrase": {
+            "queries": 24,
+            "scored": 24,
+            "top1_hits": 20,
+            "mrr": 0.90625,
+            "recall_at_5": 1
+          }
+        }
+      }
+    ],
+    "comparison": {
+      "valid": true,
+      "over_cells": [
+        "voyage-code-3",
+        "voyage-code-4",
+        "openai-default"
+      ],
+      "best_by_mrr": "voyage-code-3",
+      "note": null
+    },
+    "verdict_reasons": [
+      "all 3 cells valid with MRR >= 0.5"
+    ],
+    "queries": 36,
+    "infra_error_rate": 0
+  },
+  "accounting": {
+    "planned": 108,
+    "attempted": 108,
+    "scored": 108,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "77ca5ff39e28af6287e6246853d6cfbadf11852886517de11a18238e4816bdf1",
+      "files": 3596,
+      "git_head": "ad5f9f45939001568d70e3900a8ffc1e5c83e8db",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}

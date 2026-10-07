@@ -1,0 +1,5962 @@
+{
+ "kind": "n2-judge-replay",
+ "model": "anthropic:claude-sonnet-5-5",
+ "prompt_version": "4",
+ "gbrain": "node_modules/gbrain (the round pin)",
+ "preregistration_attestation": {
+  "preregistration": "docs/benchmarks/2026-10-06-n2-judges-preregistration.md",
+  "preregistration_commit": "dfa2b5b38bb0014657f2abd1b4bd949a301515bb",
+  "runner_commit": "18bae26e0922a561e0e0aa5994a80b82eda61620",
+  "worktree_clean_for_preregistration": true,
+  "on_origin": true,
+  "attested_at": "2026-10-06T19:06:39.495Z"
+ },
+ "concurrency": 6,
+ "wall_ms": 218345,
+ "judged": 741,
+ "errors": 0,
+ "cost": {
+  "usd": 3.152534,
+  "input_tokens": 1172232,
+  "output_tokens": 80807,
+  "basis": "budget ledger n2-judge-replay-anthropic-claude-sonnet-5-5-2026-10-06T19-06-39-583Z-4f837717: 741 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+  "program_cap_usd": 297,
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+   "p50": 0,
+   "p99": 2,
+   "max": 155.7
+  }
+ },
+ "results": [
+  {
+   "id": "20261001:i001:companies/lundlex-example|companies/lunvane-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1599,
+   "output_tokens": 116,
+   "ms": 1346
+  },
+  {
+   "id": "20261001:i001:notes/n2-i001-a|notes/n2-i001-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1553,
+   "output_tokens": 101,
+   "ms": 1429
+  },
+  {
+   "id": "20261001:i002:notes/n2-i002-a|notes/n2-i002-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1553,
+   "output_tokens": 115,
+   "ms": 1419
+  },
+  {
+   "id": "20261001:i003:companies/lundlex-example|notes/n2-i003-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 106,
+   "ms": 1391
+  },
+  {
+   "id": "20261001:i003:notes/n2-i003-a|notes/n2-i003-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1568,
+   "output_tokens": 114,
+   "ms": 4226
+  },
+  {
+   "id": "20261001:i004:notes/n2-i004-a|notes/n2-i004-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1562,
+   "output_tokens": 113,
+   "ms": 1387
+  },
+  {
+   "id": "20261001:i005:companies/cortessa-example|notes/n2-i005-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 108,
+   "ms": 1342
+  },
+  {
+   "id": "20261001:i005:notes/n2-i005-a|notes/n2-i005-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 119,
+   "ms": 1455
+  },
+  {
+   "id": "20261001:i006:companies/ruvdlex-example|notes/n2-i006-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1602,
+   "output_tokens": 121,
+   "ms": 1558
+  },
+  {
+   "id": "20261001:i006:notes/n2-i006-a|notes/n2-i006-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 112,
+   "ms": 1999
+  },
+  {
+   "id": "20261001:i007:companies/cortessa-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1599,
+   "output_tokens": 107,
+   "ms": 1415
+  },
+  {
+   "id": "20261001:i007:companies/talzarra-example|notes/n2-i007-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 107,
+   "ms": 2972
+  },
+  {
+   "id": "20261001:i007:notes/n2-i007-a|notes/n2-i007-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 115,
+   "ms": 1247
+  },
+  {
+   "id": "20261001:i008:notes/n2-i008-a|notes/n2-i008-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1542,
+   "output_tokens": 99,
+   "ms": 1337
+  },
+  {
+   "id": "20261001:i009:companies/ivotrix-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1607,
+   "output_tokens": 100,
+   "ms": 1298
+  },
+  {
+   "id": "20261001:i009:notes/n2-i009-a|notes/n2-i009-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 101,
+   "ms": 1287
+  },
+  {
+   "id": "20261001:i010:companies/ivoford-example|notes/n2-i010-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 118,
+   "ms": 1750
+  },
+  {
+   "id": "20261001:i010:notes/n2-i010-a|notes/n2-i010-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1566,
+   "output_tokens": 112,
+   "ms": 1399
+  },
+  {
+   "id": "20261001:i011:companies/jarnmora-example|notes/n2-i011-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 108,
+   "ms": 1381
+  },
+  {
+   "id": "20261001:i011:companies/lundlex-example|notes/n2-i011-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 108,
+   "ms": 8086
+  },
+  {
+   "id": "20261001:i011:notes/n2-i011-a|notes/n2-i011-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1547,
+   "output_tokens": 114,
+   "ms": 1746
+  },
+  {
+   "id": "20261001:i012:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 118,
+   "ms": 1981
+  },
+  {
+   "id": "20261001:i012:companies/cortessa-example|notes/n2-i012-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 103,
+   "ms": 1398
+  },
+  {
+   "id": "20261001:i012:companies/lunvane-example|notes/n2-i012-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 105,
+   "ms": 1508
+  },
+  {
+   "id": "20261001:i012:companies/lunvane-example|notes/n2-i012-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 108,
+   "ms": 1406
+  },
+  {
+   "id": "20261001:i012:notes/n2-i012-a|notes/n2-i012-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 116,
+   "ms": 1274
+  },
+  {
+   "id": "20261001:i013:notes/n2-i013-a|notes/n2-i013-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1560,
+   "output_tokens": 113,
+   "ms": 5313
+  },
+  {
+   "id": "20261001:i014:notes/n2-i014-a|notes/n2-i014-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1563,
+   "output_tokens": 115,
+   "ms": 2070
+  },
+  {
+   "id": "20261001:i015:notes/n2-i015-a|notes/n2-i015-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1569,
+   "output_tokens": 107,
+   "ms": 2213
+  },
+  {
+   "id": "20261001:i016:companies/jarntrix-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1612,
+   "output_tokens": 100,
+   "ms": 1292
+  },
+  {
+   "id": "20261001:i016:companies/jarntrix-example|notes/n2-i016-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 116,
+   "ms": 1514
+  },
+  {
+   "id": "20261001:i016:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1601,
+   "output_tokens": 60,
+   "ms": 1489
+  },
+  {
+   "id": "20261001:i016:companies/lundlex-example|notes/n2-i016-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 108,
+   "ms": 1604
+  },
+  {
+   "id": "20261001:i016:notes/n2-i016-a|notes/n2-i016-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1563,
+   "output_tokens": 110,
+   "ms": 1314
+  },
+  {
+   "id": "20261001:i017:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 116,
+   "ms": 1630
+  },
+  {
+   "id": "20261001:i017:notes/n2-i017-a|notes/n2-i017-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1551,
+   "output_tokens": 111,
+   "ms": 1446
+  },
+  {
+   "id": "20261001:i018:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 122,
+   "ms": 1851
+  },
+  {
+   "id": "20261001:i018:companies/gralquay-example|notes/n2-i018-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 109,
+   "ms": 1419
+  },
+  {
+   "id": "20261001:i018:notes/n2-i018-a|notes/n2-i018-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 101,
+   "ms": 1679
+  },
+  {
+   "id": "20261001:i019:notes/n2-i019-a|notes/n2-i019-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 115,
+   "ms": 1530
+  },
+  {
+   "id": "20261001:i020:notes/n2-i020-a|notes/n2-i020-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1555,
+   "output_tokens": 113,
+   "ms": 1602
+  },
+  {
+   "id": "20261001:i021:notes/n2-i021-a|notes/n2-i021-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 120,
+   "ms": 2466
+  },
+  {
+   "id": "20261001:i022:notes/n2-i022-a|notes/n2-i022-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 100,
+   "ms": 1399
+  },
+  {
+   "id": "20261001:i023:companies/corwick-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 83,
+   "ms": 1287
+  },
+  {
+   "id": "20261001:i023:notes/n2-i023-a|notes/n2-i023-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1550,
+   "output_tokens": 114,
+   "ms": 1960
+  },
+  {
+   "id": "20261001:i024:notes/n2-i024-a|notes/n2-i024-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 96,
+   "ms": 1694
+  },
+  {
+   "id": "20261001:i025:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 121,
+   "ms": 1637
+  },
+  {
+   "id": "20261001:i025:companies/gralquay-example|notes/n2-i025-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 107,
+   "ms": 1303
+  },
+  {
+   "id": "20261001:i025:companies/jarnmora-example|notes/n2-i025-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 112,
+   "ms": 1385
+  },
+  {
+   "id": "20261001:i025:notes/n2-i025-a|notes/n2-i025-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 115,
+   "ms": 1244
+  },
+  {
+   "id": "20261001:i026:companies/lunvane-example|notes/n2-i026-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 114,
+   "ms": 1542
+  },
+  {
+   "id": "20261001:i026:companies/ruvdlex-example|notes/n2-i026-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1598,
+   "output_tokens": 122,
+   "ms": 1380
+  },
+  {
+   "id": "20261001:i026:notes/n2-i026-a|notes/n2-i026-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 128,
+   "ms": 1461
+  },
+  {
+   "id": "20261001:i027:companies/lundlex-example|notes/n2-i027-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1595,
+   "output_tokens": 114,
+   "ms": 1598
+  },
+  {
+   "id": "20261001:i027:companies/ruvmora-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1606,
+   "output_tokens": 124,
+   "ms": 1505
+  },
+  {
+   "id": "20261001:i027:companies/talzarra-example|notes/n2-i027-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 93,
+   "ms": 1574
+  },
+  {
+   "id": "20261001:i027:notes/n2-i027-a|notes/n2-i027-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 110,
+   "ms": 1192
+  },
+  {
+   "id": "20261001:i028:companies/quildela-example|notes/n2-i028-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 60,
+   "ms": 1550
+  },
+  {
+   "id": "20261001:i028:notes/n2-i028-a|notes/n2-i028-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1568,
+   "output_tokens": 122,
+   "ms": 1434
+  },
+  {
+   "id": "20261001:i029:notes/n2-i029-a|notes/n2-i029-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1549,
+   "output_tokens": 113,
+   "ms": 1256
+  },
+  {
+   "id": "20261001:i030:companies/talzarra-example|notes/n2-i030-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 96,
+   "ms": 1435
+  },
+  {
+   "id": "20261001:i030:notes/n2-i030-a|notes/n2-i030-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 96,
+   "ms": 1882
+  },
+  {
+   "id": "20261001:i031:companies/lundlex-example|notes/n2-i031-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 108,
+   "ms": 1380
+  },
+  {
+   "id": "20261001:i031:notes/n2-i031-a|notes/n2-i031-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1558,
+   "output_tokens": 110,
+   "ms": 1565
+  },
+  {
+   "id": "20261001:i032:notes/n2-i032-a|notes/n2-i032-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1548,
+   "output_tokens": 120,
+   "ms": 2051
+  },
+  {
+   "id": "20261001:i033:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 119,
+   "ms": 3094
+  },
+  {
+   "id": "20261001:i033:companies/lunvane-example|notes/n2-i033-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1601,
+   "output_tokens": 112,
+   "ms": 1411
+  },
+  {
+   "id": "20261001:i033:notes/n2-i033-a|notes/n2-i033-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 101,
+   "ms": 1361
+  },
+  {
+   "id": "20261001:i034:companies/lundlex-example|notes/n2-i034-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 125,
+   "ms": 1448
+  },
+  {
+   "id": "20261001:i034:notes/n2-i034-a|notes/n2-i034-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 116,
+   "ms": 1508
+  },
+  {
+   "id": "20261001:i035:notes/n2-i035-a|notes/n2-i035-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1565,
+   "output_tokens": 125,
+   "ms": 1648
+  },
+  {
+   "id": "20261001:i036:companies/nimtrix-example|notes/n2-i036-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 60,
+   "ms": 1102
+  },
+  {
+   "id": "20261001:i036:notes/n2-i036-a|notes/n2-i036-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 99,
+   "ms": 1260
+  },
+  {
+   "id": "20261001:i037:notes/n2-i037-a|notes/n2-i037-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 121,
+   "ms": 1342
+  },
+  {
+   "id": "20261001:i038:notes/n2-i038-a|notes/n2-i038-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1556,
+   "output_tokens": 112,
+   "ms": 1312
+  },
+  {
+   "id": "20261001:i039:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 114,
+   "ms": 3248
+  },
+  {
+   "id": "20261001:i039:companies/gralquay-example|notes/n2-i039-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 100,
+   "ms": 1306
+  },
+  {
+   "id": "20261001:i039:notes/n2-i039-a|notes/n2-i039-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 112,
+   "ms": 1353
+  },
+  {
+   "id": "20261001:i040:companies/lunvane-example|notes/n2-i040-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 103,
+   "ms": 1393
+  },
+  {
+   "id": "20261001:i040:companies/ruvdlex-example|notes/n2-i040-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1599,
+   "output_tokens": 125,
+   "ms": 1600
+  },
+  {
+   "id": "20261001:i040:notes/n2-i040-a|notes/n2-i040-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 118,
+   "ms": 4007
+  },
+  {
+   "id": "20261001:i041:notes/n2-i041-a|notes/n2-i041-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1553,
+   "output_tokens": 113,
+   "ms": 2191
+  },
+  {
+   "id": "20261001:i042:companies/cortrix-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1599,
+   "output_tokens": 95,
+   "ms": 1497
+  },
+  {
+   "id": "20261001:i042:notes/n2-i042-a|notes/n2-i042-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 118,
+   "ms": 1361
+  },
+  {
+   "id": "20261001:i043:companies/vexford-example|notes/n2-i043-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1568,
+   "output_tokens": 98,
+   "ms": 1385
+  },
+  {
+   "id": "20261001:i043:notes/n2-i043-a|notes/n2-i043-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1554,
+   "output_tokens": 110,
+   "ms": 1357
+  },
+  {
+   "id": "20261001:i044:companies/cormora-example|notes/n2-i044-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 60,
+   "ms": 1377
+  },
+  {
+   "id": "20261001:i044:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1599,
+   "output_tokens": 60,
+   "ms": 1057
+  },
+  {
+   "id": "20261001:i044:companies/talzarra-example|notes/n2-i044-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 122,
+   "ms": 1465
+  },
+  {
+   "id": "20261001:i044:notes/n2-i044-a|notes/n2-i044-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1551,
+   "output_tokens": 115,
+   "ms": 1395
+  },
+  {
+   "id": "20261001:i045:notes/n2-i045-a|notes/n2-i045-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 114,
+   "ms": 2064
+  },
+  {
+   "id": "20261001:i046:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 122,
+   "ms": 2592
+  },
+  {
+   "id": "20261001:i046:companies/jarnmora-example|notes/n2-i046-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 112,
+   "ms": 1364
+  },
+  {
+   "id": "20261001:i046:companies/jarnmora-example|notes/n2-i046-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 101,
+   "ms": 1424
+  },
+  {
+   "id": "20261001:i046:notes/n2-i046-a|notes/n2-i046-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 115,
+   "ms": 1393
+  },
+  {
+   "id": "20261001:i047:notes/n2-i047-a|notes/n2-i047-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1564,
+   "output_tokens": 118,
+   "ms": 1527
+  },
+  {
+   "id": "20261001:i048:notes/n2-i048-a|notes/n2-i048-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 110,
+   "ms": 1481
+  },
+  {
+   "id": "20261001:i049:companies/talzarra-example|notes/n2-i049-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 121,
+   "ms": 1553
+  },
+  {
+   "id": "20261001:i049:notes/n2-i049-a|notes/n2-i049-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 128,
+   "ms": 1682
+  },
+  {
+   "id": "20261001:i050:companies/talzarra-example|notes/n2-i050-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1568,
+   "output_tokens": 105,
+   "ms": 1400
+  },
+  {
+   "id": "20261001:i050:notes/n2-i050-a|notes/n2-i050-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1540,
+   "output_tokens": 102,
+   "ms": 1459
+  },
+  {
+   "id": "20261001:i051:notes/n2-i051-a|notes/n2-i051-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 111,
+   "ms": 1337
+  },
+  {
+   "id": "20261001:i052:notes/n2-i052-a|notes/n2-i052-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1563,
+   "output_tokens": 112,
+   "ms": 1882
+  },
+  {
+   "id": "20261001:i053:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1604,
+   "output_tokens": 123,
+   "ms": 1709
+  },
+  {
+   "id": "20261001:i053:notes/n2-i053-a|notes/n2-i053-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1553,
+   "output_tokens": 119,
+   "ms": 2888
+  },
+  {
+   "id": "20261001:i054:notes/n2-i054-a|notes/n2-i054-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 116,
+   "ms": 1415
+  },
+  {
+   "id": "20261001:i055:companies/lundlex-example|notes/n2-i055-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 124,
+   "ms": 5958
+  },
+  {
+   "id": "20261001:i055:notes/n2-i055-a|notes/n2-i055-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1555,
+   "output_tokens": 109,
+   "ms": 1280
+  },
+  {
+   "id": "20261001:i056:notes/n2-i056-a|notes/n2-i056-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1563,
+   "output_tokens": 123,
+   "ms": 1559
+  },
+  {
+   "id": "20261001:i057:notes/n2-i057-a|notes/n2-i057-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 111,
+   "ms": 1374
+  },
+  {
+   "id": "20261001:i058:notes/n2-i058-a|notes/n2-i058-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1564,
+   "output_tokens": 118,
+   "ms": 2081
+  },
+  {
+   "id": "20261001:i059:companies/ivoford-example|notes/n2-i059-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1566,
+   "output_tokens": 102,
+   "ms": 1365
+  },
+  {
+   "id": "20261001:i059:companies/lundlex-example|notes/n2-i059-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1569,
+   "output_tokens": 116,
+   "ms": 1664
+  },
+  {
+   "id": "20261001:i059:notes/n2-i059-a|notes/n2-i059-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1539,
+   "output_tokens": 119,
+   "ms": 2053
+  },
+  {
+   "id": "20261001:i060:notes/n2-i060-a|notes/n2-i060-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 97,
+   "ms": 1276
+  },
+  {
+   "id": "20261001:i061:notes/n2-i061-a|notes/n2-i061-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 118,
+   "ms": 1981
+  },
+  {
+   "id": "20261001:i062:companies/lundlex-example|notes/n2-i062-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 105,
+   "ms": 1229
+  },
+  {
+   "id": "20261001:i062:companies/lundlex-example|notes/n2-i062-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 114,
+   "ms": 1785
+  },
+  {
+   "id": "20261001:i062:notes/n2-i062-a|notes/n2-i062-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1564,
+   "output_tokens": 104,
+   "ms": 1652
+  },
+  {
+   "id": "20261001:i063:companies/lundlex-example|notes/n2-i063-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1595,
+   "output_tokens": 108,
+   "ms": 1752
+  },
+  {
+   "id": "20261001:i063:companies/talzarra-example|notes/n2-i063-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 98,
+   "ms": 1670
+  },
+  {
+   "id": "20261001:i063:notes/n2-i063-a|notes/n2-i063-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 120,
+   "ms": 1488
+  },
+  {
+   "id": "20261001:i064:companies/lundlex-example|companies/quildlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 60,
+   "ms": 1098
+  },
+  {
+   "id": "20261001:i064:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1595,
+   "output_tokens": 135,
+   "ms": 2017
+  },
+  {
+   "id": "20261001:i064:companies/talzarra-example|notes/n2-i064-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 101,
+   "ms": 2091
+  },
+  {
+   "id": "20261001:i064:notes/n2-i064-a|notes/n2-i064-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1552,
+   "output_tokens": 121,
+   "ms": 1495
+  },
+  {
+   "id": "20261001:i065:companies/lundlex-example|companies/nimdela-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 99,
+   "ms": 1412
+  },
+  {
+   "id": "20261001:i065:companies/lundlex-example|notes/n2-i065-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 107,
+   "ms": 1402
+  },
+  {
+   "id": "20261001:i065:notes/n2-i065-a|notes/n2-i065-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1557,
+   "output_tokens": 117,
+   "ms": 1979
+  },
+  {
+   "id": "20261001:i066:companies/ivoford-example|notes/n2-i066-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 119,
+   "ms": 1445
+  },
+  {
+   "id": "20261001:i066:companies/talzarra-example|notes/n2-i066-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 97,
+   "ms": 2133
+  },
+  {
+   "id": "20261001:i066:notes/n2-i066-a|notes/n2-i066-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1569,
+   "output_tokens": 107,
+   "ms": 1798
+  },
+  {
+   "id": "20261001:i067:notes/n2-i067-a|notes/n2-i067-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 119,
+   "ms": 1943
+  },
+  {
+   "id": "20261001:i068:companies/cortessa-example|notes/n2-i068-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 108,
+   "ms": 5048
+  },
+  {
+   "id": "20261001:i068:companies/ruvdlex-example|notes/n2-i068-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 133,
+   "ms": 1348
+  },
+  {
+   "id": "20261001:i068:notes/n2-i068-a|notes/n2-i068-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1562,
+   "output_tokens": 106,
+   "ms": 1387
+  },
+  {
+   "id": "20261001:i069:companies/lundlex-example|companies/pelmund-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 60,
+   "ms": 1707
+  },
+  {
+   "id": "20261001:i069:notes/n2-i069-a|notes/n2-i069-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 115,
+   "ms": 1376
+  },
+  {
+   "id": "20261001:i070:companies/lundlex-example|notes/n2-i070-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 60,
+   "ms": 1563
+  },
+  {
+   "id": "20261001:i070:companies/talzarra-example|notes/n2-i070-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 118,
+   "ms": 2048
+  },
+  {
+   "id": "20261001:i070:notes/n2-i070-a|notes/n2-i070-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 116,
+   "ms": 1703
+  },
+  {
+   "id": "20261001:i071:notes/n2-i071-a|notes/n2-i071-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1545,
+   "output_tokens": 113,
+   "ms": 1470
+  },
+  {
+   "id": "20261001:i072:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1601,
+   "output_tokens": 107,
+   "ms": 1433
+  },
+  {
+   "id": "20261001:i072:companies/sabzarra-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1605,
+   "output_tokens": 98,
+   "ms": 1319
+  },
+  {
+   "id": "20261001:i072:notes/n2-i072-a|notes/n2-i072-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 113,
+   "ms": 1658
+  },
+  {
+   "id": "20261001:i073:companies/ivoford-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 111,
+   "ms": 1786
+  },
+  {
+   "id": "20261001:i073:notes/n2-i073-a|notes/n2-i073-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1545,
+   "output_tokens": 108,
+   "ms": 1258
+  },
+  {
+   "id": "20261001:i074:companies/jarnmora-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1605,
+   "output_tokens": 129,
+   "ms": 1755
+  },
+  {
+   "id": "20261001:i074:companies/lundlex-example|notes/n2-i074-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 97,
+   "ms": 1924
+  },
+  {
+   "id": "20261001:i074:notes/n2-i074-a|notes/n2-i074-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1556,
+   "output_tokens": 106,
+   "ms": 1571
+  },
+  {
+   "id": "20261001:i075:notes/n2-i075-a|notes/n2-i075-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 98,
+   "ms": 1358
+  },
+  {
+   "id": "20261001:i076:companies/orvmora-example|notes/n2-i076-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 112,
+   "ms": 1727
+  },
+  {
+   "id": "20261001:i076:notes/n2-i076-a|notes/n2-i076-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1565,
+   "output_tokens": 112,
+   "ms": 2039
+  },
+  {
+   "id": "20261001:i077:notes/n2-i077-a|notes/n2-i077-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1566,
+   "output_tokens": 117,
+   "ms": 1405
+  },
+  {
+   "id": "20261001:i078:notes/n2-i078-a|notes/n2-i078-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1569,
+   "output_tokens": 108,
+   "ms": 1848
+  },
+  {
+   "id": "20261001:i079:companies/lundlex-example|notes/n2-i079-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 106,
+   "ms": 1384
+  },
+  {
+   "id": "20261001:i079:companies/sabvane-example|notes/n2-i079-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 109,
+   "ms": 1790
+  },
+  {
+   "id": "20261001:i079:notes/n2-i079-a|notes/n2-i079-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 109,
+   "ms": 1356
+  },
+  {
+   "id": "20261001:i080:companies/lundlex-example|notes/n2-i080-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 96,
+   "ms": 1470
+  },
+  {
+   "id": "20261001:i080:notes/n2-i080-a|notes/n2-i080-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1551,
+   "output_tokens": 126,
+   "ms": 1770
+  },
+  {
+   "id": "20261001:i081:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1604,
+   "output_tokens": 128,
+   "ms": 1554
+  },
+  {
+   "id": "20261001:i081:companies/gralquay-example|notes/n2-i081-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 110,
+   "ms": 1423
+  },
+  {
+   "id": "20261001:i081:notes/n2-i081-a|notes/n2-i081-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 98,
+   "ms": 1419
+  },
+  {
+   "id": "20261001:i082:companies/cortessa-example|notes/n2-i082-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 109,
+   "ms": 1417
+  },
+  {
+   "id": "20261001:i082:companies/lunvane-example|notes/n2-i082-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 112,
+   "ms": 1843
+  },
+  {
+   "id": "20261001:i082:notes/n2-i082-a|notes/n2-i082-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 119,
+   "ms": 1258
+  },
+  {
+   "id": "20261001:i083:notes/n2-i083-a|notes/n2-i083-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1560,
+   "output_tokens": 104,
+   "ms": 1367
+  },
+  {
+   "id": "20261001:i084:notes/n2-i084-a|notes/n2-i084-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 120,
+   "ms": 1341
+  },
+  {
+   "id": "20261001:i085:companies/ivotessa-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1604,
+   "output_tokens": 96,
+   "ms": 1284
+  },
+  {
+   "id": "20261001:i085:companies/talzarra-example|notes/n2-i085-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 112,
+   "ms": 1343
+  },
+  {
+   "id": "20261001:i085:notes/n2-i085-a|notes/n2-i085-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 103,
+   "ms": 1867
+  },
+  {
+   "id": "20261001:i086:companies/ivovane-example|notes/n2-i086-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 126,
+   "ms": 2051
+  },
+  {
+   "id": "20261001:i086:companies/lundlex-example|notes/n2-i086-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 106,
+   "ms": 1668
+  },
+  {
+   "id": "20261001:i086:companies/talzarra-example|notes/n2-i086-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 121,
+   "ms": 2861
+  },
+  {
+   "id": "20261001:i086:notes/n2-i086-a|notes/n2-i086-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1556,
+   "output_tokens": 124,
+   "ms": 1759
+  },
+  {
+   "id": "20261001:i087:companies/ivoford-example|notes/n2-i087-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 105,
+   "ms": 2018
+  },
+  {
+   "id": "20261001:i087:companies/talzarra-example|notes/n2-i087-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 105,
+   "ms": 1931
+  },
+  {
+   "id": "20261001:i087:notes/n2-i087-a|notes/n2-i087-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 113,
+   "ms": 1299
+  },
+  {
+   "id": "20261001:i088:notes/n2-i088-a|notes/n2-i088-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1553,
+   "output_tokens": 120,
+   "ms": 1392
+  },
+  {
+   "id": "20261001:i089:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 119,
+   "ms": 2978
+  },
+  {
+   "id": "20261001:i089:companies/cortessa-example|notes/n2-i089-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 106,
+   "ms": 1300
+  },
+  {
+   "id": "20261001:i089:notes/n2-i089-a|notes/n2-i089-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 119,
+   "ms": 1505
+  },
+  {
+   "id": "20261001:i090:companies/fentessa-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 101,
+   "ms": 1516
+  },
+  {
+   "id": "20261001:i090:companies/lundlex-example|notes/n2-i090-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 105,
+   "ms": 1327
+  },
+  {
+   "id": "20261001:i090:notes/n2-i090-a|notes/n2-i090-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 117,
+   "ms": 1442
+  },
+  {
+   "id": "20261001:i091:companies/lundlex-example|companies/sabquay-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 95,
+   "ms": 2154
+  },
+  {
+   "id": "20261001:i091:companies/sabquay-example|notes/n2-i091-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 60,
+   "ms": 1830
+  },
+  {
+   "id": "20261001:i091:notes/n2-i091-a|notes/n2-i091-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 118,
+   "ms": 1356
+  },
+  {
+   "id": "20261001:i092:companies/ivoquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1607,
+   "output_tokens": 60,
+   "ms": 1105
+  },
+  {
+   "id": "20261001:i092:companies/talzarra-example|notes/n2-i092-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 97,
+   "ms": 1508
+  },
+  {
+   "id": "20261001:i092:notes/n2-i092-a|notes/n2-i092-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1555,
+   "output_tokens": 116,
+   "ms": 1302
+  },
+  {
+   "id": "20261001:i093:companies/lundlex-example|companies/nimnix-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1602,
+   "output_tokens": 60,
+   "ms": 1028
+  },
+  {
+   "id": "20261001:i093:companies/nimnix-example|notes/n2-i093-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 113,
+   "ms": 2353
+  },
+  {
+   "id": "20261001:i093:notes/n2-i093-a|notes/n2-i093-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 108,
+   "ms": 1415
+  },
+  {
+   "id": "20261001:i094:companies/lundlex-example|notes/n2-i094-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 106,
+   "ms": 1669
+  },
+  {
+   "id": "20261001:i094:companies/lundlex-example|notes/n2-i094-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 96,
+   "ms": 2152
+  },
+  {
+   "id": "20261001:i094:notes/n2-i094-a|notes/n2-i094-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1569,
+   "output_tokens": 111,
+   "ms": 1241
+  },
+  {
+   "id": "20261001:i095:companies/gralquay-example|notes/n2-i095-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 113,
+   "ms": 2330
+  },
+  {
+   "id": "20261001:i095:companies/lundlex-example|notes/n2-i095-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 111,
+   "ms": 1448
+  },
+  {
+   "id": "20261001:i095:notes/n2-i095-a|notes/n2-i095-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1550,
+   "output_tokens": 117,
+   "ms": 2015
+  },
+  {
+   "id": "20261001:i096:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 119,
+   "ms": 1767
+  },
+  {
+   "id": "20261001:i096:notes/n2-i096-a|notes/n2-i096-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 115,
+   "ms": 1591
+  },
+  {
+   "id": "20261001:i097:companies/lundlex-example|notes/n2-i097-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 116,
+   "ms": 1398
+  },
+  {
+   "id": "20261001:i097:notes/n2-i097-a|notes/n2-i097-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 113,
+   "ms": 1324
+  },
+  {
+   "id": "20261001:i098:companies/lundlex-example|companies/orvwick-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 60,
+   "ms": 1866
+  },
+  {
+   "id": "20261001:i098:notes/n2-i098-a|notes/n2-i098-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1563,
+   "output_tokens": 109,
+   "ms": 1330
+  },
+  {
+   "id": "20261001:i099:companies/lundlex-example|notes/n2-i099-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 107,
+   "ms": 1395
+  },
+  {
+   "id": "20261001:i099:notes/n2-i099-a|notes/n2-i099-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 113,
+   "ms": 1440
+  },
+  {
+   "id": "20261001:i100:companies/kelquay-example|notes/n2-i100-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 117,
+   "ms": 1608
+  },
+  {
+   "id": "20261001:i100:companies/talzarra-example|notes/n2-i100-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 119,
+   "ms": 1536
+  },
+  {
+   "id": "20261001:i100:notes/n2-i100-a|notes/n2-i100-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 117,
+   "ms": 1468
+  },
+  {
+   "id": "20261001:i101:notes/n2-i101-a|notes/n2-i101-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1540,
+   "output_tokens": 106,
+   "ms": 1918
+  },
+  {
+   "id": "20261001:i102:companies/gralquay-example|notes/n2-i102-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 109,
+   "ms": 1387
+  },
+  {
+   "id": "20261001:i102:notes/n2-i102-a|notes/n2-i102-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 113,
+   "ms": 1432
+  },
+  {
+   "id": "20261001:i103:notes/n2-i103-a|notes/n2-i103-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 118,
+   "ms": 1515
+  },
+  {
+   "id": "20261001:i104:companies/jarnloom-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1607,
+   "output_tokens": 109,
+   "ms": 1628
+  },
+  {
+   "id": "20261001:i104:companies/jarnloom-example|notes/n2-i104-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 118,
+   "ms": 1891
+  },
+  {
+   "id": "20261001:i104:companies/talzarra-example|notes/n2-i104-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 124,
+   "ms": 2048
+  },
+  {
+   "id": "20261001:i104:notes/n2-i104-a|notes/n2-i104-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 119,
+   "ms": 5392
+  },
+  {
+   "id": "20261001:i105:notes/n2-i105-a|notes/n2-i105-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 101,
+   "ms": 1253
+  },
+  {
+   "id": "20261001:i106:notes/n2-i106-a|notes/n2-i106-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1556,
+   "output_tokens": 110,
+   "ms": 1490
+  },
+  {
+   "id": "20261001:i107:companies/brenmora-example|notes/n2-i107-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 119,
+   "ms": 1770
+  },
+  {
+   "id": "20261001:i107:notes/n2-i107-a|notes/n2-i107-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1554,
+   "output_tokens": 117,
+   "ms": 1408
+  },
+  {
+   "id": "20261001:i108:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 115,
+   "ms": 1676
+  },
+  {
+   "id": "20261001:i108:notes/n2-i108-a|notes/n2-i108-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 107,
+   "ms": 1705
+  },
+  {
+   "id": "20261001:i109:companies/lundlex-example|notes/n2-i109-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 100,
+   "ms": 1216
+  },
+  {
+   "id": "20261001:i109:notes/n2-i109-a|notes/n2-i109-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1550,
+   "output_tokens": 111,
+   "ms": 1666
+  },
+  {
+   "id": "20261001:i110:notes/n2-i110-a|notes/n2-i110-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1560,
+   "output_tokens": 119,
+   "ms": 1506
+  },
+  {
+   "id": "20261001:i111:companies/ruvtessa-example|notes/n2-i111-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1607,
+   "output_tokens": 108,
+   "ms": 1508
+  },
+  {
+   "id": "20261001:i111:notes/n2-i111-a|notes/n2-i111-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 111,
+   "ms": 1382
+  },
+  {
+   "id": "20261001:i112:companies/talzarra-example|notes/n2-i112-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 107,
+   "ms": 1971
+  },
+  {
+   "id": "20261001:i112:notes/n2-i112-a|notes/n2-i112-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1566,
+   "output_tokens": 114,
+   "ms": 1713
+  },
+  {
+   "id": "20261001:i113:notes/n2-i113-a|notes/n2-i113-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1555,
+   "output_tokens": 114,
+   "ms": 1671
+  },
+  {
+   "id": "20261001:i114:companies/talzarra-example|notes/n2-i114-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 107,
+   "ms": 2113
+  },
+  {
+   "id": "20261001:i114:notes/n2-i114-a|notes/n2-i114-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 109,
+   "ms": 2349
+  },
+  {
+   "id": "20261001:i115:notes/n2-i115-a|notes/n2-i115-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1554,
+   "output_tokens": 108,
+   "ms": 1494
+  },
+  {
+   "id": "20261001:i116:companies/gralquay-example|notes/n2-i116-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 107,
+   "ms": 1505
+  },
+  {
+   "id": "20261001:i116:notes/n2-i116-a|notes/n2-i116-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1538,
+   "output_tokens": 116,
+   "ms": 1388
+  },
+  {
+   "id": "20261001:i117:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 141,
+   "ms": 1784
+  },
+  {
+   "id": "20261001:i117:notes/n2-i117-a|notes/n2-i117-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 118,
+   "ms": 2047
+  },
+  {
+   "id": "20261001:i118:notes/n2-i118-a|notes/n2-i118-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1564,
+   "output_tokens": 113,
+   "ms": 1345
+  },
+  {
+   "id": "20261001:i119:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 115,
+   "ms": 2348
+  },
+  {
+   "id": "20261001:i119:notes/n2-i119-a|notes/n2-i119-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 116,
+   "ms": 2033
+  },
+  {
+   "id": "20261001:i120:notes/n2-i120-a|notes/n2-i120-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 94,
+   "ms": 1300
+  },
+  {
+   "id": "20261001:i121:companies/ostnix-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 99,
+   "ms": 4374
+  },
+  {
+   "id": "20261001:i121:companies/talzarra-example|notes/n2-i121-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 107,
+   "ms": 1419
+  },
+  {
+   "id": "20261001:i121:notes/n2-i121-a|notes/n2-i121-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1566,
+   "output_tokens": 113,
+   "ms": 3122
+  },
+  {
+   "id": "20261001:i122:notes/n2-i122-a|notes/n2-i122-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1545,
+   "output_tokens": 118,
+   "ms": 1415
+  },
+  {
+   "id": "20261001:i123:notes/n2-i123-a|notes/n2-i123-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 110,
+   "ms": 1352
+  },
+  {
+   "id": "20261001:i124:notes/n2-i124-a|notes/n2-i124-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 118,
+   "ms": 1461
+  },
+  {
+   "id": "20261001:i125:companies/lundlex-example|notes/n2-i125-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 107,
+   "ms": 1477
+  },
+  {
+   "id": "20261001:i125:notes/n2-i125-a|notes/n2-i125-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 121,
+   "ms": 1854
+  },
+  {
+   "id": "20261001:i126:companies/ruvmund-example|notes/n2-i126-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1601,
+   "output_tokens": 109,
+   "ms": 1316
+  },
+  {
+   "id": "20261001:i126:companies/talzarra-example|notes/n2-i126-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 107,
+   "ms": 1765
+  },
+  {
+   "id": "20261001:i126:notes/n2-i126-a|notes/n2-i126-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 113,
+   "ms": 1578
+  },
+  {
+   "id": "20261001:i127:notes/n2-i127-a|notes/n2-i127-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1557,
+   "output_tokens": 113,
+   "ms": 1966
+  },
+  {
+   "id": "20261001:i128:companies/drasorn-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1606,
+   "output_tokens": 110,
+   "ms": 1371
+  },
+  {
+   "id": "20261001:i128:notes/n2-i128-a|notes/n2-i128-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1557,
+   "output_tokens": 116,
+   "ms": 2038
+  },
+  {
+   "id": "20261001:i129:companies/ivoford-example|notes/n2-i129-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 99,
+   "ms": 1487
+  },
+  {
+   "id": "20261001:i129:companies/talzarra-example|notes/n2-i129-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 105,
+   "ms": 1607
+  },
+  {
+   "id": "20261001:i129:notes/n2-i129-a|notes/n2-i129-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 111,
+   "ms": 1408
+  },
+  {
+   "id": "20261001:i130:notes/n2-i130-a|notes/n2-i130-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 115,
+   "ms": 1401
+  },
+  {
+   "id": "20261001:i131:notes/n2-i131-a|notes/n2-i131-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 137,
+   "ms": 1590
+  },
+  {
+   "id": "20261001:i132:companies/talzarra-example|notes/n2-i132-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 130,
+   "ms": 1458
+  },
+  {
+   "id": "20261001:i132:notes/n2-i132-a|notes/n2-i132-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 109,
+   "ms": 1297
+  },
+  {
+   "id": "20261001:i133:companies/lundlex-example|notes/n2-i133-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 97,
+   "ms": 1208
+  },
+  {
+   "id": "20261001:i133:companies/talzarra-example|notes/n2-i133-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 60,
+   "ms": 1176
+  },
+  {
+   "id": "20261001:i133:notes/n2-i133-a|notes/n2-i133-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1568,
+   "output_tokens": 113,
+   "ms": 2112
+  },
+  {
+   "id": "20261001:i134:companies/talzarra-example|notes/n2-i134-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 117,
+   "ms": 1596
+  },
+  {
+   "id": "20261001:i134:notes/n2-i134-a|notes/n2-i134-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1541,
+   "output_tokens": 113,
+   "ms": 1338
+  },
+  {
+   "id": "20261001:i135:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 108,
+   "ms": 1616
+  },
+  {
+   "id": "20261001:i135:companies/vexnix-example|notes/n2-i135-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 126,
+   "ms": 1712
+  },
+  {
+   "id": "20261001:i135:notes/n2-i135-a|notes/n2-i135-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 100,
+   "ms": 1319
+  },
+  {
+   "id": "20261001:i136:companies/lundlex-example|notes/n2-i136-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 97,
+   "ms": 1373
+  },
+  {
+   "id": "20261001:i136:companies/lundlex-example|notes/n2-i136-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 110,
+   "ms": 1396
+  },
+  {
+   "id": "20261001:i136:notes/n2-i136-a|notes/n2-i136-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1556,
+   "output_tokens": 115,
+   "ms": 1472
+  },
+  {
+   "id": "20261001:i137:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1602,
+   "output_tokens": 120,
+   "ms": 1631
+  },
+  {
+   "id": "20261001:i137:notes/n2-i137-a|notes/n2-i137-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1551,
+   "output_tokens": 122,
+   "ms": 1972
+  },
+  {
+   "id": "20261001:i138:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1616,
+   "output_tokens": 122,
+   "ms": 2078
+  },
+  {
+   "id": "20261001:i138:companies/ruvdlex-example|notes/n2-i138-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1604,
+   "output_tokens": 112,
+   "ms": 1570
+  },
+  {
+   "id": "20261001:i138:notes/n2-i138-a|notes/n2-i138-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 119,
+   "ms": 2092
+  },
+  {
+   "id": "20261001:i139:notes/n2-i139-a|notes/n2-i139-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1566,
+   "output_tokens": 114,
+   "ms": 2581
+  },
+  {
+   "id": "20261001:i140:companies/lundlex-example|companies/morquay-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1595,
+   "output_tokens": 94,
+   "ms": 2170
+  },
+  {
+   "id": "20261001:i140:notes/n2-i140-a|notes/n2-i140-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1553,
+   "output_tokens": 106,
+   "ms": 1539
+  },
+  {
+   "id": "20261001:i141:companies/lundlex-example|notes/n2-i141-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 99,
+   "ms": 1480
+  },
+  {
+   "id": "20261001:i141:companies/talzarra-example|notes/n2-i141-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 98,
+   "ms": 11963
+  },
+  {
+   "id": "20261001:i141:notes/n2-i141-a|notes/n2-i141-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1563,
+   "output_tokens": 95,
+   "ms": 1302
+  },
+  {
+   "id": "20261001:i142:companies/talzarra-example|notes/n2-i142-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 106,
+   "ms": 2302
+  },
+  {
+   "id": "20261001:i142:notes/n2-i142-a|notes/n2-i142-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 116,
+   "ms": 1416
+  },
+  {
+   "id": "20261001:i143:companies/ivoford-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 109,
+   "ms": 1425
+  },
+  {
+   "id": "20261001:i143:notes/n2-i143-a|notes/n2-i143-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1547,
+   "output_tokens": 115,
+   "ms": 1307
+  },
+  {
+   "id": "20261001:i144:companies/jarnmora-example|notes/n2-i144-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 110,
+   "ms": 1339
+  },
+  {
+   "id": "20261001:i144:notes/n2-i144-a|notes/n2-i144-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 113,
+   "ms": 1361
+  },
+  {
+   "id": "20261001:i145:companies/lunvane-example|notes/n2-i145-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 120,
+   "ms": 1407
+  },
+  {
+   "id": "20261001:i145:notes/n2-i145-a|notes/n2-i145-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 114,
+   "ms": 1678
+  },
+  {
+   "id": "20261001:i146:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1599,
+   "output_tokens": 105,
+   "ms": 1382
+  },
+  {
+   "id": "20261001:i146:notes/n2-i146-a|notes/n2-i146-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1562,
+   "output_tokens": 104,
+   "ms": 1313
+  },
+  {
+   "id": "20261001:i147:companies/lundlex-example|notes/n2-i147-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 102,
+   "ms": 1572
+  },
+  {
+   "id": "20261001:i147:notes/n2-i147-a|notes/n2-i147-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 119,
+   "ms": 1420
+  },
+  {
+   "id": "20261001:i148:notes/n2-i148-a|notes/n2-i148-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1543,
+   "output_tokens": 111,
+   "ms": 1492
+  },
+  {
+   "id": "20261001:i149:companies/dradlex-example|notes/n2-i149-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 106,
+   "ms": 2105
+  },
+  {
+   "id": "20261001:i149:companies/lundlex-example|notes/n2-i149-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 106,
+   "ms": 1208
+  },
+  {
+   "id": "20261001:i149:notes/n2-i149-a|notes/n2-i149-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1558,
+   "output_tokens": 125,
+   "ms": 10984
+  },
+  {
+   "id": "20261001:i150:companies/lundlex-example|notes/n2-i150-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 104,
+   "ms": 1365
+  },
+  {
+   "id": "20261001:i150:notes/n2-i150-a|notes/n2-i150-b",
+   "verdict": "contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 112,
+   "ms": 1443
+  },
+  {
+   "id": "20261001:i151:companies/lundlex-example|notes/n2-i151-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 121,
+   "ms": 1389
+  },
+  {
+   "id": "20261001:i151:notes/n2-i151-a|notes/n2-i151-b",
+   "verdict": "temporal_evolution",
+   "error": null,
+   "input_tokens": 1555,
+   "output_tokens": 103,
+   "ms": 1426
+  },
+  {
+   "id": "20261001:i153:companies/ivoford-example|notes/n2-i153-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 107,
+   "ms": 1383
+  },
+  {
+   "id": "20261001:i153:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 104,
+   "ms": 1568
+  },
+  {
+   "id": "20261001:i153:notes/n2-i153-a|notes/n2-i153-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1558,
+   "output_tokens": 109,
+   "ms": 4299
+  },
+  {
+   "id": "20261001:i154:companies/gralquay-example|companies/jarnmora-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1610,
+   "output_tokens": 133,
+   "ms": 1649
+  },
+  {
+   "id": "20261001:i154:companies/jarnmora-example|notes/n2-i154-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 111,
+   "ms": 1218
+  },
+  {
+   "id": "20261001:i154:notes/n2-i154-a|notes/n2-i154-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1565,
+   "output_tokens": 122,
+   "ms": 1502
+  },
+  {
+   "id": "20261001:i155:companies/cortessa-example|notes/n2-i155-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 123,
+   "ms": 1471
+  },
+  {
+   "id": "20261001:i156:companies/lundlex-example|companies/quilpellow-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1602,
+   "output_tokens": 110,
+   "ms": 1755
+  },
+  {
+   "id": "20261001:i156:companies/talzarra-example|notes/n2-i156-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 101,
+   "ms": 1373
+  },
+  {
+   "id": "20261001:i156:notes/n2-i156-a|notes/n2-i156-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1557,
+   "output_tokens": 104,
+   "ms": 1479
+  },
+  {
+   "id": "20261001:i157:companies/graldlex-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1599,
+   "output_tokens": 107,
+   "ms": 1350
+  },
+  {
+   "id": "20261001:i157:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 114,
+   "ms": 1566
+  },
+  {
+   "id": "20261001:i157:companies/talzarra-example|notes/n2-i157-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 108,
+   "ms": 1531
+  },
+  {
+   "id": "20261001:i157:notes/n2-i157-a|notes/n2-i157-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 121,
+   "ms": 1490
+  },
+  {
+   "id": "20261001:i159:notes/n2-i159-a|notes/n2-i159-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1557,
+   "output_tokens": 109,
+   "ms": 1355
+  },
+  {
+   "id": "20261001:i160:companies/ivoford-example|notes/n2-i160-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 107,
+   "ms": 1910
+  },
+  {
+   "id": "20261001:i160:companies/lundlex-example|notes/n2-i160-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 107,
+   "ms": 1591
+  },
+  {
+   "id": "20261001:i160:notes/n2-i160-a|notes/n2-i160-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1556,
+   "output_tokens": 239,
+   "ms": 3005
+  },
+  {
+   "id": "20261001:i161:companies/jarnmora-example|notes/n2-i161-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 101,
+   "ms": 1367
+  },
+  {
+   "id": "20261001:i162:notes/n2-i162-a|notes/n2-i162-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1558,
+   "output_tokens": 120,
+   "ms": 1466
+  },
+  {
+   "id": "20261001:i163:companies/pelpellow-example|notes/n2-i163-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 128,
+   "ms": 1529
+  },
+  {
+   "id": "20261001:i163:notes/n2-i163-a|notes/n2-i163-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 96,
+   "ms": 1326
+  },
+  {
+   "id": "20261001:i165:companies/cortessa-example|notes/n2-i165-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 130,
+   "ms": 1747
+  },
+  {
+   "id": "20261001:i165:companies/lunvane-example|notes/n2-i165-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 134,
+   "ms": 1540
+  },
+  {
+   "id": "20261001:i165:notes/n2-i165-a|notes/n2-i165-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 368,
+   "ms": 4021
+  },
+  {
+   "id": "20261001:i166:companies/talzarra-example|notes/n2-i166-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 107,
+   "ms": 2011
+  },
+  {
+   "id": "20261001:i166:notes/n2-i166-a|notes/n2-i166-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 121,
+   "ms": 2063
+  },
+  {
+   "id": "20261001:i167:companies/lundlex-example|notes/n2-i167-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 108,
+   "ms": 1935
+  },
+  {
+   "id": "20261001:i167:companies/talzarra-example|notes/n2-i167-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 108,
+   "ms": 1431
+  },
+  {
+   "id": "20261001:i168:notes/n2-i168-a|notes/n2-i168-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1552,
+   "output_tokens": 93,
+   "ms": 1976
+  },
+  {
+   "id": "20261001:i169:notes/n2-i169-a|notes/n2-i169-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 117,
+   "ms": 1367
+  },
+  {
+   "id": "20261001:i170:companies/lundlex-example|notes/n2-i170-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 128,
+   "ms": 1739
+  },
+  {
+   "id": "20261001:i171:companies/jarnquay-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1608,
+   "output_tokens": 122,
+   "ms": 1481
+  },
+  {
+   "id": "20261001:i171:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 134,
+   "ms": 1872
+  },
+  {
+   "id": "20261001:i171:notes/n2-i171-a|notes/n2-i171-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 104,
+   "ms": 1398
+  },
+  {
+   "id": "20261001:i172:companies/sabloom-example|notes/n2-i172-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 60,
+   "ms": 1084
+  },
+  {
+   "id": "20261001:i172:companies/talzarra-example|notes/n2-i172-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 126,
+   "ms": 1499
+  },
+  {
+   "id": "20261001:i172:notes/n2-i172-a|notes/n2-i172-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1560,
+   "output_tokens": 234,
+   "ms": 2629
+  },
+  {
+   "id": "20261001:i174:companies/gralquay-example|companies/jarnmora-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1609,
+   "output_tokens": 123,
+   "ms": 2838
+  },
+  {
+   "id": "20261001:i174:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 104,
+   "ms": 1494
+  },
+  {
+   "id": "20261001:i174:notes/n2-i174-a|notes/n2-i174-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1562,
+   "output_tokens": 99,
+   "ms": 1624
+  },
+  {
+   "id": "20261001:i175:companies/lundlex-example|notes/n2-i175-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 110,
+   "ms": 1496
+  },
+  {
+   "id": "20261001:i175:notes/n2-i175-a|notes/n2-i175-b",
+   "verdict": "temporal_evolution",
+   "error": null,
+   "input_tokens": 1551,
+   "output_tokens": 114,
+   "ms": 1476
+  },
+  {
+   "id": "20261001:i176:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 127,
+   "ms": 1784
+  },
+  {
+   "id": "20261001:i177:companies/lundlex-example|notes/n2-i177-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 106,
+   "ms": 1851
+  },
+  {
+   "id": "20261001:i177:companies/talzarra-example|notes/n2-i177-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 106,
+   "ms": 1409
+  },
+  {
+   "id": "20261001:i177:notes/n2-i177-a|notes/n2-i177-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 221,
+   "ms": 2054
+  },
+  {
+   "id": "20261001:i178:companies/brenloom-example|notes/n2-i178-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 100,
+   "ms": 1451
+  },
+  {
+   "id": "20261001:i178:companies/lundlex-example|notes/n2-i178-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 106,
+   "ms": 1365
+  },
+  {
+   "id": "20261001:i178:companies/talzarra-example|notes/n2-i178-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 107,
+   "ms": 1482
+  },
+  {
+   "id": "20261001:i178:notes/n2-i178-a|notes/n2-i178-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 119,
+   "ms": 1391
+  },
+  {
+   "id": "20261001:i179:companies/pelzarra-example|notes/n2-i179-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 119,
+   "ms": 2727
+  },
+  {
+   "id": "20261001:i180:companies/cortessa-example|notes/n2-i180-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 112,
+   "ms": 1526
+  },
+  {
+   "id": "20261001:i180:notes/n2-i180-a|notes/n2-i180-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 328,
+   "ms": 3519
+  },
+  {
+   "id": "20261001:i181:companies/ivoford-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 112,
+   "ms": 2318
+  },
+  {
+   "id": "20261001:i181:companies/ivoford-example|notes/n2-i181-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 100,
+   "ms": 2125
+  },
+  {
+   "id": "20261001:i181:companies/ivoford-example|notes/n2-i181-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 115,
+   "ms": 1516
+  },
+  {
+   "id": "20261001:i181:companies/lundlex-example|notes/n2-i181-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 99,
+   "ms": 1395
+  },
+  {
+   "id": "20261001:i181:notes/n2-i181-a|notes/n2-i181-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1557,
+   "output_tokens": 246,
+   "ms": 2585
+  },
+  {
+   "id": "20261001:i182:companies/jarnmora-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 147,
+   "ms": 2036
+  },
+  {
+   "id": "20261001:i182:companies/jarnmora-example|notes/n2-i182-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 98,
+   "ms": 1404
+  },
+  {
+   "id": "20261001:i183:companies/lundlex-example|notes/n2-i183-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 107,
+   "ms": 1302
+  },
+  {
+   "id": "20261001:i183:companies/lundlex-example|notes/n2-i183-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 95,
+   "ms": 11438
+  },
+  {
+   "id": "20261001:i183:notes/n2-i183-a|notes/n2-i183-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1554,
+   "output_tokens": 104,
+   "ms": 1400
+  },
+  {
+   "id": "20261001:i184:notes/n2-i184-a|notes/n2-i184-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 130,
+   "ms": 1447
+  },
+  {
+   "id": "20261001:i186:companies/kelsorn-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1606,
+   "output_tokens": 109,
+   "ms": 2255
+  },
+  {
+   "id": "20261001:i186:notes/n2-i186-a|notes/n2-i186-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 102,
+   "ms": 1413
+  },
+  {
+   "id": "20261001:i187:notes/n2-i187-a|notes/n2-i187-b",
+   "verdict": "temporal_evolution",
+   "error": null,
+   "input_tokens": 1557,
+   "output_tokens": 114,
+   "ms": 1332
+  },
+  {
+   "id": "20261001:i189:companies/gralquay-example|companies/jarnmora-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1611,
+   "output_tokens": 117,
+   "ms": 1662
+  },
+  {
+   "id": "20261001:i189:companies/jarnmora-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1606,
+   "output_tokens": 115,
+   "ms": 2347
+  },
+  {
+   "id": "20261001:i189:notes/n2-i189-a|notes/n2-i189-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 106,
+   "ms": 1429
+  },
+  {
+   "id": "20261001:i190:companies/cortessa-example|notes/n2-i190-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 106,
+   "ms": 1437
+  },
+  {
+   "id": "20261001:i190:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 115,
+   "ms": 1458
+  },
+  {
+   "id": "20261001:i190:notes/n2-i190-a|notes/n2-i190-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 128,
+   "ms": 2002
+  },
+  {
+   "id": "20261001:i192:companies/huxford-example|notes/n2-i192-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 116,
+   "ms": 1667
+  },
+  {
+   "id": "20261001:i192:companies/talzarra-example|notes/n2-i192-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 105,
+   "ms": 1358
+  },
+  {
+   "id": "20261001:i192:notes/n2-i192-a|notes/n2-i192-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1560,
+   "output_tokens": 107,
+   "ms": 1273
+  },
+  {
+   "id": "20261001:i193:notes/n2-i193-a|notes/n2-i193-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1563,
+   "output_tokens": 123,
+   "ms": 1523
+  },
+  {
+   "id": "20261001:i194:companies/lundlex-example|companies/pelmora-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 99,
+   "ms": 1587
+  },
+  {
+   "id": "20261001:i194:companies/pelmora-example|notes/n2-i194-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 123,
+   "ms": 1779
+  },
+  {
+   "id": "20261001:i195:notes/n2-i195-a|notes/n2-i195-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 117,
+   "ms": 1399
+  },
+  {
+   "id": "20261001:i196:notes/n2-i196-a|notes/n2-i196-b",
+   "verdict": "temporal_evolution",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 115,
+   "ms": 2030
+  },
+  {
+   "id": "20261001:i198:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1595,
+   "output_tokens": 116,
+   "ms": 1529
+  },
+  {
+   "id": "20261001:i198:notes/n2-i198-a|notes/n2-i198-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1555,
+   "output_tokens": 361,
+   "ms": 3689
+  },
+  {
+   "id": "20261001:i199:companies/jarnnix-example|notes/n2-i199-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 113,
+   "ms": 1499
+  },
+  {
+   "id": "20261001:i199:notes/n2-i199-a|notes/n2-i199-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 121,
+   "ms": 1363
+  },
+  {
+   "id": "20261001:i200:companies/talbarth-example|notes/n2-i200-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 105,
+   "ms": 1522
+  },
+  {
+   "id": "20261001:i201:companies/quiltessa-example|notes/n2-i201-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 60,
+   "ms": 1213
+  },
+  {
+   "id": "20261001:i201:companies/talzarra-example|notes/n2-i201-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 99,
+   "ms": 1399
+  },
+  {
+   "id": "20261001:i201:notes/n2-i201-a|notes/n2-i201-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 182,
+   "ms": 2078
+  },
+  {
+   "id": "20261001:i202:notes/n2-i202-a|notes/n2-i202-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1555,
+   "output_tokens": 254,
+   "ms": 2833
+  },
+  {
+   "id": "20261001:i203:companies/gralquay-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 133,
+   "ms": 1619
+  },
+  {
+   "id": "20261001:i203:companies/gralquay-example|notes/n2-i203-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 126,
+   "ms": 1515
+  },
+  {
+   "id": "20261001:i204:notes/n2-i204-a|notes/n2-i204-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1555,
+   "output_tokens": 109,
+   "ms": 1259
+  },
+  {
+   "id": "20261001:i205:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1598,
+   "output_tokens": 119,
+   "ms": 1559
+  },
+  {
+   "id": "20261001:i205:companies/sabbarth-example|notes/n2-i205-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 122,
+   "ms": 1483
+  },
+  {
+   "id": "20261001:i205:notes/n2-i205-a|notes/n2-i205-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 122,
+   "ms": 1894
+  },
+  {
+   "id": "20261001:i206:companies/ivowick-example|notes/n2-i206-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 111,
+   "ms": 2041
+  },
+  {
+   "id": "20261001:i206:companies/lundlex-example|notes/n2-i206-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 108,
+   "ms": 1611
+  },
+  {
+   "id": "20261001:i206:companies/talzarra-example|notes/n2-i206-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 108,
+   "ms": 1463
+  },
+  {
+   "id": "20261001:i207:companies/talzarra-example|notes/n2-i207-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 106,
+   "ms": 1392
+  },
+  {
+   "id": "20261001:i207:notes/n2-i207-a|notes/n2-i207-b",
+   "verdict": "temporal_regression",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 107,
+   "ms": 1210
+  },
+  {
+   "id": "20261001:i208:companies/ostford-example|notes/n2-i208-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 120,
+   "ms": 1655
+  },
+  {
+   "id": "20261001:i208:notes/n2-i208-a|notes/n2-i208-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 102,
+   "ms": 1278
+  },
+  {
+   "id": "20261001:i209:companies/ivoford-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 123,
+   "ms": 2015
+  },
+  {
+   "id": "20261001:i209:companies/ivoford-example|notes/n2-i209-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 113,
+   "ms": 1648
+  },
+  {
+   "id": "20261001:i209:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 123,
+   "ms": 1629
+  },
+  {
+   "id": "20261001:i209:companies/lundlex-example|notes/n2-i209-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 96,
+   "ms": 1465
+  },
+  {
+   "id": "20261001:i209:companies/talzarra-example|notes/n2-i209-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 89,
+   "ms": 1384
+  },
+  {
+   "id": "20261001:i210:companies/cortessa-example|companies/lunvane-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1609,
+   "output_tokens": 117,
+   "ms": 1544
+  },
+  {
+   "id": "20261001:i210:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 107,
+   "ms": 1726
+  },
+  {
+   "id": "20261001:i210:companies/cortessa-example|notes/n2-i210-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 95,
+   "ms": 1293
+  },
+  {
+   "id": "20261001:i210:companies/lunvane-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 134,
+   "ms": 1501
+  },
+  {
+   "id": "20261001:i210:notes/n2-i210-a|notes/n2-i210-b",
+   "verdict": "temporal_supersession",
+   "error": null,
+   "input_tokens": 1569,
+   "output_tokens": 286,
+   "ms": 2667
+  },
+  {
+   "id": "20261001:i211:companies/ostmora-example|notes/n2-i211-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 107,
+   "ms": 1459
+  },
+  {
+   "id": "20261001:i211:companies/ostmora-example|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 117,
+   "ms": 1987
+  },
+  {
+   "id": "20261001:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 129,
+   "ms": 1593
+  },
+  {
+   "id": "20261001:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 131,
+   "ms": 1584
+  },
+  {
+   "id": "20261001:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1611,
+   "output_tokens": 113,
+   "ms": 1440
+  },
+  {
+   "id": "20261001:i214:companies/dradela-example|companies/lunvane-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1599,
+   "output_tokens": 60,
+   "ms": 1341
+  },
+  {
+   "id": "20261001:i214:companies/talzarra-example|notes/n2-i214-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 60,
+   "ms": 1190
+  },
+  {
+   "id": "20261001:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 125,
+   "ms": 1493
+  },
+  {
+   "id": "20261001:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 110,
+   "ms": 4468
+  },
+  {
+   "id": "20261001:i216:companies/lunvane-example|companies/ostquay-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1605,
+   "output_tokens": 60,
+   "ms": 1085
+  },
+  {
+   "id": "20261001:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 135,
+   "ms": 1726
+  },
+  {
+   "id": "20261001:i217:companies/talzarra-example|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1595,
+   "output_tokens": 60,
+   "ms": 1102
+  },
+  {
+   "id": "20261001:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 115,
+   "ms": 1737
+  },
+  {
+   "id": "20261001:i218:companies/huxtessa-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1605,
+   "output_tokens": 111,
+   "ms": 2013
+  },
+  {
+   "id": "20261001:i218:companies/huxtessa-example|notes/n2-i218-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1610,
+   "output_tokens": 60,
+   "ms": 1963
+  },
+  {
+   "id": "20261001:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1606,
+   "output_tokens": 138,
+   "ms": 1652
+  },
+  {
+   "id": "20261001:i219:companies/dramund-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 96,
+   "ms": 2042
+  },
+  {
+   "id": "20261001:i219:companies/dramund-example|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 113,
+   "ms": 1465
+  },
+  {
+   "id": "20261001:i219:companies/talzarra-example|notes/n2-i219-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 126,
+   "ms": 2747
+  },
+  {
+   "id": "20261001:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 124,
+   "ms": 1386
+  },
+  {
+   "id": "20261001:i220:companies/lunvane-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 104,
+   "ms": 1325
+  },
+  {
+   "id": "20261001:i220:companies/talzarra-example|notes/n2-i220-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1598,
+   "output_tokens": 122,
+   "ms": 1760
+  },
+  {
+   "id": "20261001:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 117,
+   "ms": 1973
+  },
+  {
+   "id": "20261001:i221:companies/talzarra-example|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 114,
+   "ms": 1531
+  },
+  {
+   "id": "20261001:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 131,
+   "ms": 2362
+  },
+  {
+   "id": "20261001:i222:companies/lunvane-example|notes/n2-i222-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 127,
+   "ms": 1803
+  },
+  {
+   "id": "20261001:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 116,
+   "ms": 1398
+  },
+  {
+   "id": "20261001:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1605,
+   "output_tokens": 123,
+   "ms": 1545
+  },
+  {
+   "id": "20261001:i224:companies/lunvane-example|notes/n2-i224-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 60,
+   "ms": 1057
+  },
+  {
+   "id": "20261001:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 126,
+   "ms": 1435
+  },
+  {
+   "id": "20261001:i225:companies/ivomund-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1602,
+   "output_tokens": 60,
+   "ms": 5198
+  },
+  {
+   "id": "20261001:i225:companies/lunvane-example|notes/n2-i225-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 60,
+   "ms": 1359
+  },
+  {
+   "id": "20261001:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 117,
+   "ms": 1463
+  },
+  {
+   "id": "20261001:i226:companies/talzarra-example|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 108,
+   "ms": 1371
+  },
+  {
+   "id": "20261001:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1566,
+   "output_tokens": 60,
+   "ms": 1219
+  },
+  {
+   "id": "20261001:i227:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1601,
+   "output_tokens": 108,
+   "ms": 1900
+  },
+  {
+   "id": "20261001:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 60,
+   "ms": 1504
+  },
+  {
+   "id": "20261001:i228:companies/ivoford-example|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 97,
+   "ms": 1527
+  },
+  {
+   "id": "20261001:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 104,
+   "ms": 1439
+  },
+  {
+   "id": "20261001:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1556,
+   "output_tokens": 90,
+   "ms": 1551
+  },
+  {
+   "id": "20261001:i230:companies/cortessa-example|companies/ruvdlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1618,
+   "output_tokens": 124,
+   "ms": 2837
+  },
+  {
+   "id": "20261001:i230:companies/cortessa-example|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1598,
+   "output_tokens": 129,
+   "ms": 1847
+  },
+  {
+   "id": "20261001:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 45,
+   "ms": 983
+  },
+  {
+   "id": "20261001:i231:companies/lundlex-example|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 101,
+   "ms": 2509
+  },
+  {
+   "id": "20261001:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 60,
+   "ms": 1163
+  },
+  {
+   "id": "20261001:i232:companies/osttessa-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 60,
+   "ms": 1472
+  },
+  {
+   "id": "20261001:i232:companies/talzarra-example|notes/n2-i232-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 97,
+   "ms": 1295
+  },
+  {
+   "id": "20261001:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 60,
+   "ms": 1074
+  },
+  {
+   "id": "20261001:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 60,
+   "ms": 1112
+  },
+  {
+   "id": "20261001:i234:companies/brenbarth-example|notes/n2-i234-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 125,
+   "ms": 1538
+  },
+  {
+   "id": "20261001:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 60,
+   "ms": 1116
+  },
+  {
+   "id": "20261001:i235:companies/ivoford-example|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 101,
+   "ms": 1648
+  },
+  {
+   "id": "20261001:i235:companies/lundlex-example|notes/n2-i235-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 97,
+   "ms": 1377
+  },
+  {
+   "id": "20261001:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1565,
+   "output_tokens": 60,
+   "ms": 1108
+  },
+  {
+   "id": "20261001:i236:companies/gralquay-example|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 111,
+   "ms": 2475
+  },
+  {
+   "id": "20261001:i236:companies/jarnmora-example|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 118,
+   "ms": 2016
+  },
+  {
+   "id": "20261001:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1562,
+   "output_tokens": 45,
+   "ms": 982
+  },
+  {
+   "id": "20261001:i237:companies/cortessa-example|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 127,
+   "ms": 1758
+  },
+  {
+   "id": "20261001:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 60,
+   "ms": 1521
+  },
+  {
+   "id": "20261001:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 60,
+   "ms": 1180
+  },
+  {
+   "id": "20261001:i239:companies/brensorn-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 100,
+   "ms": 1400
+  },
+  {
+   "id": "20261001:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 60,
+   "ms": 1098
+  },
+  {
+   "id": "20261001:i240:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 127,
+   "ms": 1721
+  },
+  {
+   "id": "20261001:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 60,
+   "ms": 12292
+  },
+  {
+   "id": "20261001:i241:companies/cordela-labs-example|companies/sabford-freight-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1617,
+   "output_tokens": 148,
+   "ms": 1596
+  },
+  {
+   "id": "20261001:i241:companies/cordela-labs-example|notes/n2-i241-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 108,
+   "ms": 1643
+  },
+  {
+   "id": "20261001:i241:companies/sabford-labs-example|companies/talnix-labs-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1620,
+   "output_tokens": 127,
+   "ms": 1805
+  },
+  {
+   "id": "20261001:i241:companies/sabford-labs-example|notes/n2-i241-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 60,
+   "ms": 1255
+  },
+  {
+   "id": "20261001:i241:companies/talnix-labs-example|notes/n2-i241-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 108,
+   "ms": 1327
+  },
+  {
+   "id": "20261001:i242:companies/kelloom-robotics-example|companies/taltrix-health-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1642,
+   "output_tokens": 113,
+   "ms": 1449
+  },
+  {
+   "id": "20261001:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 141,
+   "ms": 1780
+  },
+  {
+   "id": "20261001:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 108,
+   "ms": 1294
+  },
+  {
+   "id": "20261001:i245:companies/kelloom-robotics-example|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1621,
+   "output_tokens": 119,
+   "ms": 1344
+  },
+  {
+   "id": "20261001:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 139,
+   "ms": 1744
+  },
+  {
+   "id": "20261001:i247:companies/vexdela-analytics-example|notes/n2-i247-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1618,
+   "output_tokens": 60,
+   "ms": 1374
+  },
+  {
+   "id": "20261001:i250:companies/lundlex-example|companies/mortessa-health-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1613,
+   "output_tokens": 118,
+   "ms": 1710
+  },
+  {
+   "id": "20261001:i250:companies/lundlex-example|notes/n2-i250-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 106,
+   "ms": 9951
+  },
+  {
+   "id": "20261001:i250:notes/n2-i250-a|notes/n2-i250-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 105,
+   "ms": 1594
+  },
+  {
+   "id": "20261001:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 113,
+   "ms": 1614
+  },
+  {
+   "id": "20261001:i252:companies/huxmund-freight-example|companies/talnix-freight-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1641,
+   "output_tokens": 141,
+   "ms": 1620
+  },
+  {
+   "id": "20261001:i252:companies/huxzarra-freight-example|companies/talnix-freight-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1636,
+   "output_tokens": 124,
+   "ms": 1563
+  },
+  {
+   "id": "20261001:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1598,
+   "output_tokens": 120,
+   "ms": 1411
+  },
+  {
+   "id": "20261001:i255:companies/huxzarra-analytics-example|companies/vexdela-analytics-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1643,
+   "output_tokens": 112,
+   "ms": 1387
+  },
+  {
+   "id": "20261001:i255:companies/huxzarra-analytics-example|notes/n2-i255-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1612,
+   "output_tokens": 115,
+   "ms": 1470
+  },
+  {
+   "id": "20261001:i256:companies/talzarra-example|notes/n2-i256-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1595,
+   "output_tokens": 129,
+   "ms": 1560
+  },
+  {
+   "id": "20261001:i256:companies/talzarra-example|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 60,
+   "ms": 2132
+  },
+  {
+   "id": "20261001:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 118,
+   "ms": 1618
+  },
+  {
+   "id": "20261001:i257:companies/fendela-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 60,
+   "ms": 1527
+  },
+  {
+   "id": "20261001:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 115,
+   "ms": 1362
+  },
+  {
+   "id": "20261001:i258:companies/lundlex-example|notes/n2-i258-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 140,
+   "ms": 2083
+  },
+  {
+   "id": "20261001:i258:companies/taldela-example|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 112,
+   "ms": 1365
+  },
+  {
+   "id": "20261001:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 117,
+   "ms": 1378
+  },
+  {
+   "id": "20261001:i259:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 45,
+   "ms": 1436
+  },
+  {
+   "id": "20261001:i259:companies/ruvtrix-example|notes/n2-i259-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1609,
+   "output_tokens": 128,
+   "ms": 1507
+  },
+  {
+   "id": "20261001:i259:companies/talzarra-example|notes/n2-i259-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 127,
+   "ms": 1481
+  },
+  {
+   "id": "20261001:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 117,
+   "ms": 1854
+  },
+  {
+   "id": "20261001:i260:companies/lunmund-example|notes/n2-i260-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 138,
+   "ms": 1449
+  },
+  {
+   "id": "20261001:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 114,
+   "ms": 2912
+  },
+  {
+   "id": "20261001:i261:companies/lundlex-example|companies/ruvpellow-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1616,
+   "output_tokens": 60,
+   "ms": 1087
+  },
+  {
+   "id": "20261001:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 118,
+   "ms": 1628
+  },
+  {
+   "id": "20261001:i262:companies/kelbarth-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1606,
+   "output_tokens": 60,
+   "ms": 1086
+  },
+  {
+   "id": "20261001:i262:companies/talzarra-example|notes/n2-i262-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 121,
+   "ms": 1380
+  },
+  {
+   "id": "20261001:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 116,
+   "ms": 2037
+  },
+  {
+   "id": "20261001:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 115,
+   "ms": 2090
+  },
+  {
+   "id": "20261001:i264:companies/gralloom-example|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 112,
+   "ms": 1397
+  },
+  {
+   "id": "20261001:i264:companies/lundlex-example|companies/talzarra-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1598,
+   "output_tokens": 107,
+   "ms": 1957
+  },
+  {
+   "id": "20261001:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 114,
+   "ms": 1284
+  },
+  {
+   "id": "20261001:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 114,
+   "ms": 1478
+  },
+  {
+   "id": "20261001:i266:companies/talzarra-example|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 110,
+   "ms": 1424
+  },
+  {
+   "id": "20261001:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 111,
+   "ms": 2185
+  },
+  {
+   "id": "20261001:i267:companies/talzarra-example|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 102,
+   "ms": 1308
+  },
+  {
+   "id": "20261001:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 113,
+   "ms": 1630
+  },
+  {
+   "id": "20261001:i268:companies/talzarra-example|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 110,
+   "ms": 1978
+  },
+  {
+   "id": "20261001:i268:notes/n2-i268-a|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 116,
+   "ms": 2613
+  },
+  {
+   "id": "20261001:i269:companies/dravane-example|companies/lundlex-example",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 100,
+   "ms": 1408
+  },
+  {
+   "id": "20261001:i269:companies/dravane-example|notes/n2-i269-a",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 124,
+   "ms": 1423
+  },
+  {
+   "id": "20261001:i269:companies/lundlex-example|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 122,
+   "ms": 1468
+  },
+  {
+   "id": "20261001:i269:notes/n2-i269-a|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 110,
+   "ms": 1536
+  },
+  {
+   "id": "20261001:i270:companies/lundlex-example|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 99,
+   "ms": 1325
+  },
+  {
+   "id": "20261001:i270:notes/n2-i270-a|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 114,
+   "ms": 2077
+  },
+  {
+   "id": "20261011:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 119,
+   "ms": 1368
+  },
+  {
+   "id": "20261011:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 120,
+   "ms": 2103
+  },
+  {
+   "id": "20261011:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1607,
+   "output_tokens": 124,
+   "ms": 1482
+  },
+  {
+   "id": "20261011:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1598,
+   "output_tokens": 123,
+   "ms": 1687
+  },
+  {
+   "id": "20261011:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 127,
+   "ms": 1518
+  },
+  {
+   "id": "20261011:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 135,
+   "ms": 1409
+  },
+  {
+   "id": "20261011:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 131,
+   "ms": 1480
+  },
+  {
+   "id": "20261011:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1605,
+   "output_tokens": 122,
+   "ms": 1627
+  },
+  {
+   "id": "20261011:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 125,
+   "ms": 1650
+  },
+  {
+   "id": "20261011:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 126,
+   "ms": 1497
+  },
+  {
+   "id": "20261011:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 130,
+   "ms": 2051
+  },
+  {
+   "id": "20261011:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 97,
+   "ms": 1393
+  },
+  {
+   "id": "20261011:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1614,
+   "output_tokens": 124,
+   "ms": 1894
+  },
+  {
+   "id": "20261011:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 124,
+   "ms": 1530
+  },
+  {
+   "id": "20261011:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 118,
+   "ms": 1643
+  },
+  {
+   "id": "20261011:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 60,
+   "ms": 1669
+  },
+  {
+   "id": "20261011:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 60,
+   "ms": 1306
+  },
+  {
+   "id": "20261011:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1557,
+   "output_tokens": 60,
+   "ms": 1173
+  },
+  {
+   "id": "20261011:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 60,
+   "ms": 1207
+  },
+  {
+   "id": "20261011:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 60,
+   "ms": 1081
+  },
+  {
+   "id": "20261011:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 60,
+   "ms": 1026
+  },
+  {
+   "id": "20261011:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 60,
+   "ms": 1904
+  },
+  {
+   "id": "20261011:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 45,
+   "ms": 1210
+  },
+  {
+   "id": "20261011:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 60,
+   "ms": 1118
+  },
+  {
+   "id": "20261011:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1562,
+   "output_tokens": 60,
+   "ms": 1078
+  },
+  {
+   "id": "20261011:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1568,
+   "output_tokens": 60,
+   "ms": 1111
+  },
+  {
+   "id": "20261011:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 45,
+   "ms": 2175
+  },
+  {
+   "id": "20261011:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 60,
+   "ms": 1405
+  },
+  {
+   "id": "20261011:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 60,
+   "ms": 1305
+  },
+  {
+   "id": "20261011:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1566,
+   "output_tokens": 60,
+   "ms": 1475
+  },
+  {
+   "id": "20261011:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 119,
+   "ms": 1525
+  },
+  {
+   "id": "20261011:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 132,
+   "ms": 1489
+  },
+  {
+   "id": "20261011:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 131,
+   "ms": 1778
+  },
+  {
+   "id": "20261011:i250:notes/n2-i250-a|notes/n2-i250-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 113,
+   "ms": 1605
+  },
+  {
+   "id": "20261011:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 120,
+   "ms": 1522
+  },
+  {
+   "id": "20261011:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 103,
+   "ms": 1502
+  },
+  {
+   "id": "20261011:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 117,
+   "ms": 1457
+  },
+  {
+   "id": "20261011:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 115,
+   "ms": 1323
+  },
+  {
+   "id": "20261011:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 118,
+   "ms": 2050
+  },
+  {
+   "id": "20261011:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 115,
+   "ms": 1429
+  },
+  {
+   "id": "20261011:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 116,
+   "ms": 1394
+  },
+  {
+   "id": "20261011:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 127,
+   "ms": 1579
+  },
+  {
+   "id": "20261011:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 115,
+   "ms": 1808
+  },
+  {
+   "id": "20261011:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 123,
+   "ms": 1536
+  },
+  {
+   "id": "20261011:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 113,
+   "ms": 1320
+  },
+  {
+   "id": "20261011:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1568,
+   "output_tokens": 129,
+   "ms": 1408
+  },
+  {
+   "id": "20261011:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 115,
+   "ms": 1250
+  },
+  {
+   "id": "20261011:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 115,
+   "ms": 1828
+  },
+  {
+   "id": "20261011:i268:notes/n2-i268-a|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 116,
+   "ms": 1586
+  },
+  {
+   "id": "20261011:i269:notes/n2-i269-a|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 115,
+   "ms": 1434
+  },
+  {
+   "id": "20261011:i270:notes/n2-i270-a|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 115,
+   "ms": 1497
+  },
+  {
+   "id": "20261012:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 122,
+   "ms": 3230
+  },
+  {
+   "id": "20261012:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 103,
+   "ms": 1521
+  },
+  {
+   "id": "20261012:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1607,
+   "output_tokens": 123,
+   "ms": 2792
+  },
+  {
+   "id": "20261012:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 126,
+   "ms": 1463
+  },
+  {
+   "id": "20261012:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1602,
+   "output_tokens": 124,
+   "ms": 1534
+  },
+  {
+   "id": "20261012:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 130,
+   "ms": 10237
+  },
+  {
+   "id": "20261012:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 122,
+   "ms": 1594
+  },
+  {
+   "id": "20261012:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1602,
+   "output_tokens": 123,
+   "ms": 2231
+  },
+  {
+   "id": "20261012:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 122,
+   "ms": 1440
+  },
+  {
+   "id": "20261012:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 122,
+   "ms": 1534
+  },
+  {
+   "id": "20261012:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 106,
+   "ms": 1401
+  },
+  {
+   "id": "20261012:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1585,
+   "output_tokens": 100,
+   "ms": 1316
+  },
+  {
+   "id": "20261012:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1607,
+   "output_tokens": 119,
+   "ms": 2102
+  },
+  {
+   "id": "20261012:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1602,
+   "output_tokens": 125,
+   "ms": 1381
+  },
+  {
+   "id": "20261012:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 116,
+   "ms": 1500
+  },
+  {
+   "id": "20261012:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1562,
+   "output_tokens": 45,
+   "ms": 1073
+  },
+  {
+   "id": "20261012:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 60,
+   "ms": 1022
+  },
+  {
+   "id": "20261012:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1568,
+   "output_tokens": 60,
+   "ms": 1151
+  },
+  {
+   "id": "20261012:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1568,
+   "output_tokens": 60,
+   "ms": 1077
+  },
+  {
+   "id": "20261012:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 60,
+   "ms": 1280
+  },
+  {
+   "id": "20261012:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 60,
+   "ms": 4496
+  },
+  {
+   "id": "20261012:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 60,
+   "ms": 1053
+  },
+  {
+   "id": "20261012:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 60,
+   "ms": 1159
+  },
+  {
+   "id": "20261012:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 60,
+   "ms": 1708
+  },
+  {
+   "id": "20261012:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1569,
+   "output_tokens": 60,
+   "ms": 1155
+  },
+  {
+   "id": "20261012:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1565,
+   "output_tokens": 60,
+   "ms": 1309
+  },
+  {
+   "id": "20261012:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 60,
+   "ms": 1657
+  },
+  {
+   "id": "20261012:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 60,
+   "ms": 1118
+  },
+  {
+   "id": "20261012:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 65,
+   "ms": 1181
+  },
+  {
+   "id": "20261012:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 60,
+   "ms": 1149
+  },
+  {
+   "id": "20261012:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 117,
+   "ms": 1580
+  },
+  {
+   "id": "20261012:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 133,
+   "ms": 1440
+  },
+  {
+   "id": "20261012:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 130,
+   "ms": 1569
+  },
+  {
+   "id": "20261012:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1564,
+   "output_tokens": 116,
+   "ms": 1381
+  },
+  {
+   "id": "20261012:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 128,
+   "ms": 1746
+  },
+  {
+   "id": "20261012:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 117,
+   "ms": 1478
+  },
+  {
+   "id": "20261012:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1594,
+   "output_tokens": 118,
+   "ms": 1463
+  },
+  {
+   "id": "20261012:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 113,
+   "ms": 1550
+  },
+  {
+   "id": "20261012:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 114,
+   "ms": 1417
+  },
+  {
+   "id": "20261012:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1574,
+   "output_tokens": 117,
+   "ms": 2029
+  },
+  {
+   "id": "20261012:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1571,
+   "output_tokens": 131,
+   "ms": 1468
+  },
+  {
+   "id": "20261012:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 129,
+   "ms": 2014
+  },
+  {
+   "id": "20261012:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 117,
+   "ms": 2055
+  },
+  {
+   "id": "20261012:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 129,
+   "ms": 1380
+  },
+  {
+   "id": "20261012:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 119,
+   "ms": 1377
+  },
+  {
+   "id": "20261012:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 113,
+   "ms": 1515
+  },
+  {
+   "id": "20261012:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 113,
+   "ms": 1479
+  },
+  {
+   "id": "20261012:i268:notes/n2-i268-a|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 121,
+   "ms": 1263
+  },
+  {
+   "id": "20261012:i269:notes/n2-i269-a|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 116,
+   "ms": 1639
+  },
+  {
+   "id": "20261012:i270:notes/n2-i270-a|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 131,
+   "ms": 1553
+  },
+  {
+   "id": "20261013:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 148,
+   "ms": 1620
+  },
+  {
+   "id": "20261013:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 111,
+   "ms": 1434
+  },
+  {
+   "id": "20261013:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1604,
+   "output_tokens": 126,
+   "ms": 1432
+  },
+  {
+   "id": "20261013:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 127,
+   "ms": 1537
+  },
+  {
+   "id": "20261013:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 112,
+   "ms": 1452
+  },
+  {
+   "id": "20261013:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 152,
+   "ms": 2110
+  },
+  {
+   "id": "20261013:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 115,
+   "ms": 1524
+  },
+  {
+   "id": "20261013:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1609,
+   "output_tokens": 109,
+   "ms": 1465
+  },
+  {
+   "id": "20261013:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 124,
+   "ms": 2106
+  },
+  {
+   "id": "20261013:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1598,
+   "output_tokens": 120,
+   "ms": 1452
+  },
+  {
+   "id": "20261013:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 133,
+   "ms": 1481
+  },
+  {
+   "id": "20261013:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 128,
+   "ms": 1394
+  },
+  {
+   "id": "20261013:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1604,
+   "output_tokens": 126,
+   "ms": 2036
+  },
+  {
+   "id": "20261013:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1596,
+   "output_tokens": 124,
+   "ms": 1629
+  },
+  {
+   "id": "20261013:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1601,
+   "output_tokens": 116,
+   "ms": 1277
+  },
+  {
+   "id": "20261013:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1556,
+   "output_tokens": 60,
+   "ms": 1144
+  },
+  {
+   "id": "20261013:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 60,
+   "ms": 1007
+  },
+  {
+   "id": "20261013:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1554,
+   "output_tokens": 60,
+   "ms": 1074
+  },
+  {
+   "id": "20261013:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 60,
+   "ms": 1088
+  },
+  {
+   "id": "20261013:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 65,
+   "ms": 1230
+  },
+  {
+   "id": "20261013:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 60,
+   "ms": 1269
+  },
+  {
+   "id": "20261013:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 65,
+   "ms": 1083
+  },
+  {
+   "id": "20261013:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 60,
+   "ms": 1741
+  },
+  {
+   "id": "20261013:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 60,
+   "ms": 1212
+  },
+  {
+   "id": "20261013:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1567,
+   "output_tokens": 60,
+   "ms": 1671
+  },
+  {
+   "id": "20261013:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1562,
+   "output_tokens": 60,
+   "ms": 1292
+  },
+  {
+   "id": "20261013:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 60,
+   "ms": 1268
+  },
+  {
+   "id": "20261013:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 60,
+   "ms": 1654
+  },
+  {
+   "id": "20261013:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 92,
+   "ms": 1234
+  },
+  {
+   "id": "20261013:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 60,
+   "ms": 6149
+  },
+  {
+   "id": "20261013:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 104,
+   "ms": 2010
+  },
+  {
+   "id": "20261013:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 132,
+   "ms": 1326
+  },
+  {
+   "id": "20261013:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 129,
+   "ms": 1541
+  },
+  {
+   "id": "20261013:i250:notes/n2-i250-a|notes/n2-i250-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 107,
+   "ms": 1501
+  },
+  {
+   "id": "20261013:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 111,
+   "ms": 1446
+  },
+  {
+   "id": "20261013:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1595,
+   "output_tokens": 125,
+   "ms": 1511
+  },
+  {
+   "id": "20261013:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1591,
+   "output_tokens": 116,
+   "ms": 1591
+  },
+  {
+   "id": "20261013:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 102,
+   "ms": 1601
+  },
+  {
+   "id": "20261013:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 112,
+   "ms": 1538
+  },
+  {
+   "id": "20261013:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 117,
+   "ms": 1433
+  },
+  {
+   "id": "20261013:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 115,
+   "ms": 5395
+  },
+  {
+   "id": "20261013:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 119,
+   "ms": 2027
+  },
+  {
+   "id": "20261013:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 113,
+   "ms": 1370
+  },
+  {
+   "id": "20261013:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 106,
+   "ms": 1295
+  },
+  {
+   "id": "20261013:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 117,
+   "ms": 1660
+  },
+  {
+   "id": "20261013:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 117,
+   "ms": 1895
+  },
+  {
+   "id": "20261013:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 114,
+   "ms": 1339
+  },
+  {
+   "id": "20261013:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 136,
+   "ms": 1637
+  },
+  {
+   "id": "20261013:i268:notes/n2-i268-a|notes/n2-i268-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 117,
+   "ms": 2125
+  },
+  {
+   "id": "20261013:i269:notes/n2-i269-a|notes/n2-i269-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 115,
+   "ms": 1425
+  },
+  {
+   "id": "20261013:i270:notes/n2-i270-a|notes/n2-i270-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 98,
+   "ms": 1607
+  },
+  {
+   "id": "20261014:i211:notes/n2-i211-a|notes/n2-i211-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1595,
+   "output_tokens": 133,
+   "ms": 1472
+  },
+  {
+   "id": "20261014:i212:notes/n2-i212-a|notes/n2-i212-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 126,
+   "ms": 1636
+  },
+  {
+   "id": "20261014:i213:notes/n2-i213-a|notes/n2-i213-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1603,
+   "output_tokens": 124,
+   "ms": 1676
+  },
+  {
+   "id": "20261014:i214:notes/n2-i214-a|notes/n2-i214-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1597,
+   "output_tokens": 126,
+   "ms": 1502
+  },
+  {
+   "id": "20261014:i215:notes/n2-i215-a|notes/n2-i215-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1592,
+   "output_tokens": 126,
+   "ms": 2326
+  },
+  {
+   "id": "20261014:i216:notes/n2-i216-a|notes/n2-i216-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 125,
+   "ms": 1386
+  },
+  {
+   "id": "20261014:i217:notes/n2-i217-a|notes/n2-i217-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 124,
+   "ms": 1649
+  },
+  {
+   "id": "20261014:i218:notes/n2-i218-a|notes/n2-i218-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1602,
+   "output_tokens": 124,
+   "ms": 1475
+  },
+  {
+   "id": "20261014:i219:notes/n2-i219-a|notes/n2-i219-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 123,
+   "ms": 1627
+  },
+  {
+   "id": "20261014:i220:notes/n2-i220-a|notes/n2-i220-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1598,
+   "output_tokens": 125,
+   "ms": 1415
+  },
+  {
+   "id": "20261014:i221:notes/n2-i221-a|notes/n2-i221-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1587,
+   "output_tokens": 122,
+   "ms": 2456
+  },
+  {
+   "id": "20261014:i222:notes/n2-i222-a|notes/n2-i222-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 112,
+   "ms": 2387
+  },
+  {
+   "id": "20261014:i223:notes/n2-i223-a|notes/n2-i223-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 304,
+   "ms": 3142
+  },
+  {
+   "id": "20261014:i224:notes/n2-i224-a|notes/n2-i224-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 124,
+   "ms": 1531
+  },
+  {
+   "id": "20261014:i225:notes/n2-i225-a|notes/n2-i225-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1600,
+   "output_tokens": 114,
+   "ms": 1347
+  },
+  {
+   "id": "20261014:i226:notes/n2-i226-a|notes/n2-i226-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 60,
+   "ms": 1151
+  },
+  {
+   "id": "20261014:i227:notes/n2-i227-a|notes/n2-i227-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1570,
+   "output_tokens": 60,
+   "ms": 1295
+  },
+  {
+   "id": "20261014:i228:notes/n2-i228-a|notes/n2-i228-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1565,
+   "output_tokens": 60,
+   "ms": 1124
+  },
+  {
+   "id": "20261014:i229:notes/n2-i229-a|notes/n2-i229-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1563,
+   "output_tokens": 60,
+   "ms": 1163
+  },
+  {
+   "id": "20261014:i230:notes/n2-i230-a|notes/n2-i230-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 60,
+   "ms": 1118
+  },
+  {
+   "id": "20261014:i231:notes/n2-i231-a|notes/n2-i231-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 60,
+   "ms": 1723
+  },
+  {
+   "id": "20261014:i232:notes/n2-i232-a|notes/n2-i232-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 60,
+   "ms": 10172
+  },
+  {
+   "id": "20261014:i233:notes/n2-i233-a|notes/n2-i233-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1569,
+   "output_tokens": 60,
+   "ms": 1268
+  },
+  {
+   "id": "20261014:i234:notes/n2-i234-a|notes/n2-i234-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 60,
+   "ms": 1052
+  },
+  {
+   "id": "20261014:i235:notes/n2-i235-a|notes/n2-i235-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1559,
+   "output_tokens": 93,
+   "ms": 1279
+  },
+  {
+   "id": "20261014:i236:notes/n2-i236-a|notes/n2-i236-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1561,
+   "output_tokens": 60,
+   "ms": 1106
+  },
+  {
+   "id": "20261014:i237:notes/n2-i237-a|notes/n2-i237-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 60,
+   "ms": 1329
+  },
+  {
+   "id": "20261014:i238:notes/n2-i238-a|notes/n2-i238-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1573,
+   "output_tokens": 79,
+   "ms": 1466
+  },
+  {
+   "id": "20261014:i239:notes/n2-i239-a|notes/n2-i239-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1575,
+   "output_tokens": 60,
+   "ms": 1717
+  },
+  {
+   "id": "20261014:i240:notes/n2-i240-a|notes/n2-i240-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1569,
+   "output_tokens": 60,
+   "ms": 1184
+  },
+  {
+   "id": "20261014:i243:notes/n2-i243-a|notes/n2-i243-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1576,
+   "output_tokens": 117,
+   "ms": 1745
+  },
+  {
+   "id": "20261014:i244:notes/n2-i244-a|notes/n2-i244-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1583,
+   "output_tokens": 120,
+   "ms": 3170
+  },
+  {
+   "id": "20261014:i245:notes/n2-i245-a|notes/n2-i245-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1593,
+   "output_tokens": 117,
+   "ms": 1433
+  },
+  {
+   "id": "20261014:i250:notes/n2-i250-a|notes/n2-i250-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1577,
+   "output_tokens": 110,
+   "ms": 1682
+  },
+  {
+   "id": "20261014:i251:notes/n2-i251-a|notes/n2-i251-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1572,
+   "output_tokens": 117,
+   "ms": 2282
+  },
+  {
+   "id": "20261014:i252:notes/n2-i252-a|notes/n2-i252-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1586,
+   "output_tokens": 128,
+   "ms": 2208
+  },
+  {
+   "id": "20261014:i256:notes/n2-i256-a|notes/n2-i256-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1589,
+   "output_tokens": 117,
+   "ms": 1541
+  },
+  {
+   "id": "20261014:i257:notes/n2-i257-a|notes/n2-i257-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1578,
+   "output_tokens": 112,
+   "ms": 1469
+  },
+  {
+   "id": "20261014:i258:notes/n2-i258-a|notes/n2-i258-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1580,
+   "output_tokens": 112,
+   "ms": 1538
+  },
+  {
+   "id": "20261014:i259:notes/n2-i259-a|notes/n2-i259-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1584,
+   "output_tokens": 118,
+   "ms": 1436
+  },
+  {
+   "id": "20261014:i260:notes/n2-i260-a|notes/n2-i260-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1588,
+   "output_tokens": 114,
+   "ms": 1355
+  },
+  {
+   "id": "20261014:i261:notes/n2-i261-a|notes/n2-i261-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1579,
+   "output_tokens": 112,
+   "ms": 1541
+  },
+  {
+   "id": "20261014:i262:notes/n2-i262-a|notes/n2-i262-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 117,
+   "ms": 1413
+  },
+  {
+   "id": "20261014:i263:notes/n2-i263-a|notes/n2-i263-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 118,
+   "ms": 1304
+  },
+  {
+   "id": "20261014:i264:notes/n2-i264-a|notes/n2-i264-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1590,
+   "output_tokens": 116,
+   "ms": 1422
+  },
+  {
+   "id": "20261014:i265:notes/n2-i265-a|notes/n2-i265-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1581,
+   "output_tokens": 115,
+   "ms": 1330
+  },
+  {
+   "id": "20261014:i266:notes/n2-i266-a|notes/n2-i266-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 115,
+   "ms": 1471
+  },
+  {
+   "id": "20261014:i267:notes/n2-i267-a|notes/n2-i267-b",
+   "verdict": "no_contradiction",
+   "error": null,
+   "input_tokens": 1582,
+   "output_tokens": 113,
+   "ms": 1417
+  }
+ ]
+}

@@ -1,0 +1,222 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat34-brainbench-memory",
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "started_at": "2026-10-06T18:13:07.523Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 12,
+  "n_scored": 12,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "gbrain_repo": "node_modules/gbrain",
+    "sut_gbrain_version": "0.60.95.0",
+    "harness_sha": "615560956ab9deee098cb2a0801fc4be606c56f2",
+    "cmd": [
+      "bun",
+      "src/cli.ts",
+      "eval",
+      "brainbench",
+      "--harness",
+      "all",
+      "--suite",
+      "all",
+      "--json",
+      "--out",
+      "eval/reports/cat34-brainbench-memory/result-muwzyczn-1zq.json"
+    ],
+    "include_holdout": false,
+    "llm": false,
+    "env_keys_stripped": [],
+    "search_mode": "subprocess-owned (BrainBench hermetic PGLite)",
+    "reranker_enabled": false,
+    "result_nonce": "muwzyczn-1zq"
+  },
+  "hashes": {
+    "fixtures": "509fd20d7cda693350030393b6d54154e2685516d30f017ca219bd25e92c0e57"
+  },
+  "finished_at": "2026-10-06T18:13:32.698Z",
+  "data": {
+    "subprocess_exit": 0,
+    "cells": [
+      {
+        "cell": "openclaw/know-to-ask",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 149,
+        "metrics": {
+          "know_to_ask_failure_rate": 0,
+          "false_fire_rate": 0,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 44.2617
+        }
+      },
+      {
+        "cell": "openclaw/push",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 96,
+        "metrics": {
+          "push_precision": 1,
+          "push_recall": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 58.4206
+        }
+      },
+      {
+        "cell": "openclaw/write-back",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 58,
+        "metrics": {
+          "write_back_fidelity": 1,
+          "provenance_accuracy": 1
+        }
+      },
+      {
+        "cell": "openclaw/continuity",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 12,
+        "metrics": {
+          "continuity_rate": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 75.3333
+        }
+      },
+      {
+        "cell": "claude-code/know-to-ask",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 149,
+        "metrics": {
+          "know_to_ask_failure_rate": 0,
+          "false_fire_rate": 0,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 37.8389
+        }
+      },
+      {
+        "cell": "claude-code/push",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 96,
+        "metrics": {
+          "push_precision": 1,
+          "push_recall": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 50.1963
+        }
+      },
+      {
+        "cell": "claude-code/write-back",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 58,
+        "metrics": {
+          "write_back_fidelity": 1,
+          "provenance_accuracy": 1
+        }
+      },
+      {
+        "cell": "claude-code/continuity",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 12,
+        "metrics": {
+          "continuity_rate": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 59.9167
+        }
+      },
+      {
+        "cell": "codex/know-to-ask",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 149,
+        "metrics": {
+          "know_to_ask_failure_rate": 0,
+          "false_fire_rate": 0,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 45.2215
+        }
+      },
+      {
+        "cell": "codex/push",
+        "seam": "contract",
+        "gold_failed": 43,
+        "gold_total": 96,
+        "metrics": {
+          "push_precision": 1,
+          "push_recall": 0.5521,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 54.6449
+        }
+      },
+      {
+        "cell": "codex/write-back",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 58,
+        "metrics": {
+          "write_back_fidelity": 1,
+          "provenance_accuracy": 1
+        }
+      },
+      {
+        "cell": "codex/continuity",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 12,
+        "metrics": {
+          "continuity_rate": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 150.9167
+        }
+      }
+    ],
+    "seed_failures": [],
+    "missing_suites": [],
+    "gate": "production-seam cells gate the verdict; contract-seam cells are informational",
+    "informational_failures": [
+      {
+        "cell": "codex/push",
+        "seam": "contract",
+        "gold_failed": 43,
+        "gold_total": 96
+      }
+    ],
+    "result_artifact": "eval/reports/cat34-brainbench-memory/result.json"
+  },
+  "accounting": {
+    "planned": 12,
+    "attempted": 12,
+    "scored": 12,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "cost": null,
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "51a844e41a15021d2c8f1cbfbaf4298d4657239b9c28420608bdf358e63608d2",
+      "files": 3588,
+      "git_head": "615560956ab9deee098cb2a0801fc4be606c56f2",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "decision_id": "beam-1m-dates-2026-10-06",
+  "plan": "P0",
+  "stage": "dev",
+  "eligible_for_default": false,
+  "eligibility_note": "Dev verdicts come from development data and never set a default. A held-out verdict comes from the custodian after a committed preregistration.",
+  "verdict_type": "quality",
+  "overall": "inconclusive",
+  "decided_at": "2026-10-06T19:53:16.798Z",
+  "sources": [
+    {
+      "source": "beam-1m",
+      "verdict": "inconclusive",
+      "arms": {
+        "baseline": {
+          "package": "gbrain",
+          "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+          "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+          "version": "0.60.48.0",
+          "package_sha256": "fab1c3142270c58c8357f2298bb3f7bf9b59a1062f5954684e95bd1d1cc11c01",
+          "loaded_git_head": "6622a119e40ea09a7719233046aca24741863ed2"
+        },
+        "candidate": {
+          "package": "gbrain",
+          "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+          "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+          "version": "0.60.95.0",
+          "package_sha256": "d463f36620585760ae2f9c1ca3602b89961ae5a5a28b3be879d61dcf8c6fa9e5",
+          "loaded_git_head": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
+        }
+      },
+      "family": {
+        "family_id": "beam-1m-dates-2026-10-06:beam-1m",
+        "verdict": "inconclusive",
+        "reasons": [
+          "recall-all-5: inconclusive"
+        ],
+        "alpha": 0.05,
+        "holm_family": [
+          "recall-all-5",
+          "recall-any-5"
+        ],
+        "comparisons": [
+          {
+            "id": "recall-all-5",
+            "metric": "recall_all_at_5",
+            "gate": "superiority",
+            "status": "inconclusive",
+            "reasons": [
+              "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here",
+              "an improvement larger than 0 is not shown (Holm p = 1.0000 > 0.05); this is not evidence of a loss"
+            ],
+            "n_pairs": 194,
+            "n_clusters": 11,
+            "n_excluded": 26,
+            "stats": {
+              "n_pairs": 194,
+              "n_clusters": 11,
+              "mean_a": 0.18556701030927836,
+              "mean_b": 0.18556701030927836,
+              "delta": 0,
+              "se_cluster": 0,
+              "se_iid": 0,
+              "design_effect": null,
+              "effective_n": null,
+              "ci95": [
+                0,
+                0
+              ],
+              "p_two_sided": 1,
+              "p_greater": 1,
+              "p_less": 1,
+              "p_method": "degenerate"
+            },
+            "mcnemar": {
+              "losses": 0,
+              "wins": 0,
+              "both_pass": 36,
+              "both_fail": 158,
+              "discordant": 0,
+              "p_two_sided": 1
+            },
+            "power": {
+              "alpha": 0.05,
+              "power": 0.8,
+              "mde": null,
+              "min_one_sided_discordant": 6,
+              "note": "no paired variation was observed, so the detectable effect cannot be estimated from this data; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+            },
+            "direction": "higher",
+            "p_holm": 1,
+            "min_effect": 0,
+            "p_superiority": 1
+          },
+          {
+            "id": "recall-any-5",
+            "metric": "recall_any_at_5",
+            "gate": "noninferiority",
+            "status": "pass",
+            "reasons": [
+              "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+            ],
+            "n_pairs": 194,
+            "n_clusters": 11,
+            "n_excluded": 26,
+            "stats": {
+              "n_pairs": 194,
+              "n_clusters": 11,
+              "mean_a": 0.7061855670103093,
+              "mean_b": 0.7061855670103093,
+              "delta": 0,
+              "se_cluster": 0,
+              "se_iid": 0,
+              "design_effect": null,
+              "effective_n": null,
+              "ci95": [
+                0,
+                0
+              ],
+              "p_two_sided": 1,
+              "p_greater": 1,
+              "p_less": 1,
+              "p_method": "degenerate"
+            },
+            "mcnemar": {
+              "losses": 0,
+              "wins": 0,
+              "both_pass": 137,
+              "both_fail": 57,
+              "discordant": 0,
+              "p_two_sided": 1
+            },
+            "power": {
+              "alpha": 0.05,
+              "power": 0.8,
+              "mde": null,
+              "min_one_sided_discordant": 6,
+              "note": "no paired variation was observed, so the detectable effect cannot be estimated from this data; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+            },
+            "direction": "higher",
+            "p_holm": 0,
+            "tolerance": 0.01,
+            "p_noninferiority": 0
+          },
+          {
+            "id": "ndcg-10",
+            "metric": "ndcg_at_10",
+            "gate": "exploratory",
+            "status": "report_only",
+            "reasons": [],
+            "n_pairs": 194,
+            "n_clusters": 11,
+            "n_excluded": 26,
+            "stats": {
+              "n_pairs": 194,
+              "n_clusters": 11,
+              "mean_a": 0.44042411154081895,
+              "mean_b": 0.44045006178246493,
+              "delta": 0.000025950241645955206,
+              "se_cluster": 0.00002589840799075394,
+              "se_iid": 0.000025950241645955196,
+              "design_effect": 0.9960091401849303,
+              "effective_n": 194.7773290152536,
+              "ci95": [
+                0,
+                0.00007825409656966803
+              ],
+              "p_two_sided": 1,
+              "p_greater": 0.5,
+              "p_less": 1,
+              "p_method": "exact-sign-flip"
+            },
+            "power": {
+              "alpha": 0.05,
+              "power": 0.8,
+              "mde": 0.00007255659701856044,
+              "min_one_sided_discordant": null,
+              "note": "with 194 pairs in 11 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0001; the observed delta is below that size, so a null result here is not evidence of no effect"
+            },
+            "direction": "higher"
+          },
+          {
+            "id": "latency",
+            "metric": "latency_ms",
+            "gate": "exploratory",
+            "status": "report_only",
+            "reasons": [],
+            "n_pairs": 198,
+            "n_clusters": 11,
+            "n_excluded": 22,
+            "stats": {
+              "n_pairs": 198,
+              "n_clusters": 11,
+              "mean_a": 516.0919191919189,
+              "mean_b": 224.8434343434343,
+              "delta": -291.2484848484849,
+              "se_cluster": 37.61782634866136,
+              "se_iid": 26.835878590036142,
+              "design_effect": 1.964969247422626,
+              "effective_n": 100.7649357666584,
+              "ci95": [
+                -358.1515151515151,
+                -215.7090909090909
+              ],
+              "p_two_sided": 0.001953125,
+              "p_greater": 0.99951171875,
+              "p_less": 0.0009765625,
+              "p_method": "exact-sign-flip"
+            },
+            "power": {
+              "alpha": 0.05,
+              "power": 0.8,
+              "mde": 105.38954626355587,
+              "min_one_sided_discordant": null,
+              "note": "with 198 pairs in 11 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 105.3895; the observed delta is at least that size; clustering inflates variance by 1.96x (effective n about 100.8 of 198)"
+            },
+            "direction": "lower"
+          }
+        ]
+      }
+    }
+  ]
+}
