@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "w11-review",
+      "preregistration": "docs/benchmarks/2026-10-06-w11-review-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-06-w11-review/results/**"
+      ]
+    }
+  ]
+}

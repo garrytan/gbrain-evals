@@ -1,0 +1,79 @@
+{
+  "probe_id": "cat14-pos-4-hiring",
+  "category": "calibration-pattern-confidence-boost",
+  "question": "Should I hire a COO who was great at a slower-paced company?",
+  "baseline_answer": "## Answer\n\nThe brain has no direct verdict on this exact COO question, and it can't tell the user what to do. It does hold two resolved hiring takes from garry that bear on the pattern of hiring a polished or senior operator from a different pace or stage:\n\n- garry's claim that a \"polished operator was wrong-stage for early team\" was resolved as correct (conviction weight 0.7, recorded 2024-04-12) [cat14/cat14-pos-4-hiring/take-1].\n- garry's claim that an \"executive couldn't adapt to startup velocity\" was resolved as correct (conviction weight 0.75, recorded 2024-08-20) [cat14/cat14-pos-4-hiring/take-2].\n\nBoth past calls went the same way: the concern about stage or pace mismatch proved right. Neither page says the person was a COO or came from a slower-paced company, so the fit to this question is an inference. The pages also don't give the reasoning, the company context, or any counterexample where a hire from a slower company worked out.",
+  "calibrated_answer": "## Answer\n\nThe brain has no direct data on this specific COO candidate, so it cannot say whether to hire. It does hold two relevant resolved takes on stage-fit in executive hiring, both by garry:\n\n- Garry called a polished operator \"wrong-stage for early team\". The outcome was marked correct, with conviction weight 0.7, recorded 2024-04-12 [cat14/cat14-pos-4-hiring/take-1].\n- Garry called an executive someone who \"couldn't adapt to startup velocity\". The outcome was marked correct, with conviction weight 0.75, recorded 2024-08-20 [cat14/cat14-pos-4-hiring/take-2].\n\nBoth past cases match the pattern in the question: a strong executive from a different pace or stage who did not fit a startup environment. They are precedent for the concern. They are not evidence about this candidate.\n\n## Calibration\n\n- **Prior (default reasoning):** A COO who excelled at a slower-paced company may not adapt to startup velocity. This follows garry's own earlier stage-fit calls [cat14/cat14-pos-4-hiring/take-1] [cat14/cat14-pos-4-hiring/take-2].\n- **Counter-prior:** The brain has no hedged-domain data that argues against this prior. The calibration profile shows no hedging in this domain, only a sharp track record. The counter-prior is therefore the generic possibility that this candidate differs from the two earlier cases. Nothing in the brain supports or refutes that possibility.\n- **Track record:** The calibration profile says garry's stage-fit reads on executive hires are sharp, and that both 2024 wrong-stage calls came true within 6 months. The active bias tag is well-calibrated-tactics. The sample is only two cases, so it is a small base for generalizing.\n\nThe brain does not show how this candidate behaves in a fast-moving setting, so it cannot settle the question.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers identify the relevant stage-fit track record, but neither offers a genuine track-record counter-prior; B's labeled counter-prior is only a generic possibility. Both use impersonal language and untranslated conviction weights rather than a conversational voice. B also introduces the unsupported and mismatched tag 'well-calibrated-tactics,' whereas A stays with the relevant evidence and more carefully limits its applicability. Their substantive conclusions are the same, but A is more useful because it avoids B's misleading calibration framing. || Both answers reference the relevant track record of accurate stage-fit concerns, without importing an unrelated profile pattern. Neither supplies a track-record counter-prior, and both use impersonal language and untranslated conviction weights rather than a friend-like voice. Their practical conclusions are equivalent: past concerns proved right, but the candidate-specific evidence is missing. B is more useful because it distinguishes inference from evidence more carefully, while A incorrectly labels the active tag and adds an unsupported discussion of hedging."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers identify the relevant stage-fit track record, but neither offers a genuine track-record counter-prior; B's labeled counter-prior is only a generic possibility. Both use impersonal language and untranslated conviction weights rather than a conversational voice. B also introduces the unsupported and mismatched tag 'well-calibrated-tactics,' whereas A stays with the relevant evidence and more carefully limits its applicability. Their substantive conclusions are the same, but A is more useful because it avoids B's misleading calibration framing. || Both answers reference the relevant track record of accurate stage-fit concerns, without importing an unrelated profile pattern. Neither supplies a track-record counter-prior, and both use impersonal language and untranslated conviction weights rather than a friend-like voice. Their practical conclusions are equivalent: past concerns proved right, but the candidate-specific evidence is missing. B is more useful because it distinguishes inference from evidence more carefully, while A incorrectly labels the active tag and adds an unsupported discussion of hedging."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers identify the relevant stage-fit track record, but neither offers a genuine track-record counter-prior; B's labeled counter-prior is only a generic possibility. Both use impersonal language and untranslated conviction weights rather than a conversational voice. B also introduces the unsupported and mismatched tag 'well-calibrated-tactics,' whereas A stays with the relevant evidence and more carefully limits its applicability. Their substantive conclusions are the same, but A is more useful because it avoids B's misleading calibration framing. || Both answers reference the relevant track record of accurate stage-fit concerns, without importing an unrelated profile pattern. Neither supplies a track-record counter-prior, and both use impersonal language and untranslated conviction weights rather than a friend-like voice. Their practical conclusions are equivalent: past concerns proved right, but the candidate-specific evidence is missing. B is more useful because it distinguishes inference from evidence more carefully, while A incorrectly labels the active tag and adds an unsupported discussion of hedging."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers identify the relevant stage-fit track record, but neither offers a genuine track-record counter-prior; B's labeled counter-prior is only a generic possibility. Both use impersonal language and untranslated conviction weights rather than a conversational voice. B also introduces the unsupported and mismatched tag 'well-calibrated-tactics,' whereas A stays with the relevant evidence and more carefully limits its applicability. Their substantive conclusions are the same, but A is more useful because it avoids B's misleading calibration framing. || Both answers reference the relevant track record of accurate stage-fit concerns, without importing an unrelated profile pattern. Neither supplies a track-record counter-prior, and both use impersonal language and untranslated conviction weights rather than a friend-like voice. Their practical conclusions are equivalent: past concerns proved right, but the candidate-specific evidence is missing. B is more useful because it distinguishes inference from evidence more carefully, while A incorrectly labels the active tag and adds an unsupported discussion of hedging."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        true
+      ],
+      "score": 0.5,
+      "outcome": "split",
+      "rationale": "Both answers identify the relevant stage-fit track record, but neither offers a genuine track-record counter-prior; B's labeled counter-prior is only a generic possibility. Both use impersonal language and untranslated conviction weights rather than a conversational voice. B also introduces the unsupported and mismatched tag 'well-calibrated-tactics,' whereas A stays with the relevant evidence and more carefully limits its applicability. Their substantive conclusions are the same, but A is more useful because it avoids B's misleading calibration framing. || Both answers reference the relevant track record of accurate stage-fit concerns, without importing an unrelated profile pattern. Neither supplies a track-record counter-prior, and both use impersonal language and untranslated conviction weights rather than a friend-like voice. Their practical conclusions are equivalent: past concerns proved right, but the candidate-specific evidence is missing. B is more useful because it distinguishes inference from evidence more carefully, while A incorrectly labels the active tag and adds an unsupported discussion of hedging."
+    }
+  ],
+  "win_score": 0,
+  "win_overall": "baseline",
+  "per_axis_pass_rate": 0.7,
+  "failure_modes": [
+    "voice_conversational",
+    "doesnt_force_fit_irrelevant_bias"
+  ]
+}

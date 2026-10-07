@@ -1,0 +1,2059 @@
+{
+ "schema_version": 1,
+ "arm_id": "w8-lme-swap",
+ "workstream": "W8-LME",
+ "model": "claude-sonnet-5-5",
+ "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w8-lme-swap.json",
+ "manifest_sha256": "cb2de7349f853f4194615d55a47394310f1c663ba7e270589bfded05da25032b",
+ "summary": {
+  "arm_id": "w8-lme-swap",
+  "denominator": 100,
+  "correct_official": 19,
+  "correct_secondary": 0,
+  "judge_agreement": 81,
+  "reader_errors": {},
+  "judge_errors": {
+   "official": 0,
+   "secondary": 0
+  },
+  "finish_counts": {
+   "stop": 100
+  },
+  "max_tokens_finishes": 0,
+  "by_type": {
+   "single-session-user": {
+    "total": 21,
+    "official": 9,
+    "secondary": 0
+   },
+   "knowledge-update": {
+    "total": 13,
+    "official": 1,
+    "secondary": 0
+   },
+   "temporal-reasoning": {
+    "total": 25,
+    "official": 3,
+    "secondary": 0
+   },
+   "multi-session": {
+    "total": 28,
+    "official": 6,
+    "secondary": 0
+   },
+   "single-session-preference": {
+    "total": 8,
+    "official": 0,
+    "secondary": 0
+   },
+   "single-session-assistant": {
+    "total": 5,
+    "official": 0,
+    "secondary": 0
+   }
+  },
+  "usd": 2.247390000000001,
+  "list_usd": 4.494780000000002
+ },
+ "intents": [
+  {
+   "intent_id": "i2baaa9895b",
+   "arm_id": "w8-lme-swap",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5-5",
+   "pilot": false,
+   "request_set_hash": "7095e308b793208a7fc2679ba447cce8f4b1462ed88cf3e15d711722bc941c9c",
+   "items": [
+    {
+     "question_id": "001be529",
+     "custom_id": "i2baaa9895b-001be529",
+     "input_tokens": 16868,
+     "worst_list_usd": 0.074696
+    },
+    {
+     "question_id": "07741c44",
+     "custom_id": "i2baaa9895b-07741c44",
+     "input_tokens": 20139,
+     "worst_list_usd": 0.081238
+    },
+    {
+     "question_id": "08f4fc43",
+     "custom_id": "i2baaa9895b-08f4fc43",
+     "input_tokens": 17409,
+     "worst_list_usd": 0.075778
+    },
+    {
+     "question_id": "099778bb",
+     "custom_id": "i2baaa9895b-099778bb",
+     "input_tokens": 23904,
+     "worst_list_usd": 0.088768
+    },
+    {
+     "question_id": "09d032c9",
+     "custom_id": "i2baaa9895b-09d032c9",
+     "input_tokens": 21688,
+     "worst_list_usd": 0.084336
+    },
+    {
+     "question_id": "129d1232",
+     "custom_id": "i2baaa9895b-129d1232",
+     "input_tokens": 24298,
+     "worst_list_usd": 0.089556
+    },
+    {
+     "question_id": "195a1a1b",
+     "custom_id": "i2baaa9895b-195a1a1b",
+     "input_tokens": 27676,
+     "worst_list_usd": 0.096312
+    },
+    {
+     "question_id": "1e043500",
+     "custom_id": "i2baaa9895b-1e043500",
+     "input_tokens": 22369,
+     "worst_list_usd": 0.085698
+    },
+    {
+     "question_id": "2318644b",
+     "custom_id": "i2baaa9895b-2318644b",
+     "input_tokens": 23046,
+     "worst_list_usd": 0.087052
+    },
+    {
+     "question_id": "25e5aa4f",
+     "custom_id": "i2baaa9895b-25e5aa4f",
+     "input_tokens": 19039,
+     "worst_list_usd": 0.079038
+    },
+    {
+     "question_id": "2788b940",
+     "custom_id": "i2baaa9895b-2788b940",
+     "input_tokens": 16045,
+     "worst_list_usd": 0.07305
+    },
+    {
+     "question_id": "2c63a862",
+     "custom_id": "i2baaa9895b-2c63a862",
+     "input_tokens": 20001,
+     "worst_list_usd": 0.080962
+    },
+    {
+     "question_id": "2ce6a0f2",
+     "custom_id": "i2baaa9895b-2ce6a0f2",
+     "input_tokens": 25587,
+     "worst_list_usd": 0.092134
+    },
+    {
+     "question_id": "2e6d26dc",
+     "custom_id": "i2baaa9895b-2e6d26dc",
+     "input_tokens": 21326,
+     "worst_list_usd": 0.083612
+    },
+    {
+     "question_id": "2ebe6c92",
+     "custom_id": "i2baaa9895b-2ebe6c92",
+     "input_tokens": 20742,
+     "worst_list_usd": 0.082444
+    },
+    {
+     "question_id": "35a27287",
+     "custom_id": "i2baaa9895b-35a27287",
+     "input_tokens": 26052,
+     "worst_list_usd": 0.093064
+    },
+    {
+     "question_id": "36580ce8",
+     "custom_id": "i2baaa9895b-36580ce8",
+     "input_tokens": 21304,
+     "worst_list_usd": 0.083568
+    },
+    {
+     "question_id": "37f165cf",
+     "custom_id": "i2baaa9895b-37f165cf",
+     "input_tokens": 26216,
+     "worst_list_usd": 0.093392
+    },
+    {
+     "question_id": "38146c39",
+     "custom_id": "i2baaa9895b-38146c39",
+     "input_tokens": 19432,
+     "worst_list_usd": 0.079824
+    },
+    {
+     "question_id": "3c1045c8",
+     "custom_id": "i2baaa9895b-3c1045c8",
+     "input_tokens": 18882,
+     "worst_list_usd": 0.078724
+    },
+    {
+     "question_id": "3fdac837",
+     "custom_id": "i2baaa9895b-3fdac837",
+     "input_tokens": 22420,
+     "worst_list_usd": 0.0858
+    },
+    {
+     "question_id": "3fe836c9",
+     "custom_id": "i2baaa9895b-3fe836c9",
+     "input_tokens": 22676,
+     "worst_list_usd": 0.086312
+    },
+    {
+     "question_id": "4100d0a0",
+     "custom_id": "i2baaa9895b-4100d0a0",
+     "input_tokens": 23674,
+     "worst_list_usd": 0.088308
+    },
+    {
+     "question_id": "4388e9dd",
+     "custom_id": "i2baaa9895b-4388e9dd",
+     "input_tokens": 21075,
+     "worst_list_usd": 0.08311
+    },
+    {
+     "question_id": "4d6b87c8",
+     "custom_id": "i2baaa9895b-4d6b87c8",
+     "input_tokens": 26902,
+     "worst_list_usd": 0.094764
+    },
+    {
+     "question_id": "4fd1909e",
+     "custom_id": "i2baaa9895b-4fd1909e",
+     "input_tokens": 22568,
+     "worst_list_usd": 0.086096
+    },
+    {
+     "question_id": "51a45a95",
+     "custom_id": "i2baaa9895b-51a45a95",
+     "input_tokens": 22831,
+     "worst_list_usd": 0.086622
+    },
+    {
+     "question_id": "545bd2b5",
+     "custom_id": "i2baaa9895b-545bd2b5",
+     "input_tokens": 23587,
+     "worst_list_usd": 0.088134
+    },
+    {
+     "question_id": "5831f84d",
+     "custom_id": "i2baaa9895b-5831f84d",
+     "input_tokens": 22917,
+     "worst_list_usd": 0.086794
+    },
+    {
+     "question_id": "5a4f22c0",
+     "custom_id": "i2baaa9895b-5a4f22c0",
+     "input_tokens": 26517,
+     "worst_list_usd": 0.093994
+    },
+    {
+     "question_id": "60159905",
+     "custom_id": "i2baaa9895b-60159905",
+     "input_tokens": 18293,
+     "worst_list_usd": 0.077546
+    },
+    {
+     "question_id": "60bf93ed",
+     "custom_id": "i2baaa9895b-60bf93ed",
+     "input_tokens": 18301,
+     "worst_list_usd": 0.077562
+    },
+    {
+     "question_id": "66f24dbb",
+     "custom_id": "i2baaa9895b-66f24dbb",
+     "input_tokens": 26164,
+     "worst_list_usd": 0.093288
+    },
+    {
+     "question_id": "6a1eabeb",
+     "custom_id": "i2baaa9895b-6a1eabeb",
+     "input_tokens": 18939,
+     "worst_list_usd": 0.078838
+    },
+    {
+     "question_id": "6ae235be",
+     "custom_id": "i2baaa9895b-6ae235be",
+     "input_tokens": 32499,
+     "worst_list_usd": 0.105958
+    },
+    {
+     "question_id": "6b168ec8",
+     "custom_id": "i2baaa9895b-6b168ec8",
+     "input_tokens": 19270,
+     "worst_list_usd": 0.0795
+    },
+    {
+     "question_id": "6d550036",
+     "custom_id": "i2baaa9895b-6d550036",
+     "input_tokens": 22128,
+     "worst_list_usd": 0.085216
+    },
+    {
+     "question_id": "6e984302",
+     "custom_id": "i2baaa9895b-6e984302",
+     "input_tokens": 21274,
+     "worst_list_usd": 0.083508
+    },
+    {
+     "question_id": "6f9b354f",
+     "custom_id": "i2baaa9895b-6f9b354f",
+     "input_tokens": 23165,
+     "worst_list_usd": 0.08729
+    },
+    {
+     "question_id": "7024f17c",
+     "custom_id": "i2baaa9895b-7024f17c",
+     "input_tokens": 19342,
+     "worst_list_usd": 0.079644
+    },
+    {
+     "question_id": "7405e8b1",
+     "custom_id": "i2baaa9895b-7405e8b1",
+     "input_tokens": 16435,
+     "worst_list_usd": 0.07383
+    },
+    {
+     "question_id": "76d63226",
+     "custom_id": "i2baaa9895b-76d63226",
+     "input_tokens": 19273,
+     "worst_list_usd": 0.079506
+    },
+    {
+     "question_id": "7a8d0b71",
+     "custom_id": "i2baaa9895b-7a8d0b71",
+     "input_tokens": 26655,
+     "worst_list_usd": 0.09427
+    },
+    {
+     "question_id": "852ce960",
+     "custom_id": "i2baaa9895b-852ce960",
+     "input_tokens": 22630,
+     "worst_list_usd": 0.08622
+    },
+    {
+     "question_id": "8550ddae",
+     "custom_id": "i2baaa9895b-8550ddae",
+     "input_tokens": 20858,
+     "worst_list_usd": 0.082676
+    },
+    {
+     "question_id": "86f00804",
+     "custom_id": "i2baaa9895b-86f00804",
+     "input_tokens": 20332,
+     "worst_list_usd": 0.081624
+    },
+    {
+     "question_id": "89941a93",
+     "custom_id": "i2baaa9895b-89941a93",
+     "input_tokens": 23472,
+     "worst_list_usd": 0.087904
+    },
+    {
+     "question_id": "8a2466db",
+     "custom_id": "i2baaa9895b-8a2466db",
+     "input_tokens": 25785,
+     "worst_list_usd": 0.09253
+    },
+    {
+     "question_id": "8b9d4367",
+     "custom_id": "i2baaa9895b-8b9d4367",
+     "input_tokens": 22055,
+     "worst_list_usd": 0.08507
+    },
+    {
+     "question_id": "8c18457d",
+     "custom_id": "i2baaa9895b-8c18457d",
+     "input_tokens": 23071,
+     "worst_list_usd": 0.087102
+    },
+    {
+     "question_id": "91b15a6e",
+     "custom_id": "i2baaa9895b-91b15a6e",
+     "input_tokens": 26842,
+     "worst_list_usd": 0.094644
+    },
+    {
+     "question_id": "9a707b81",
+     "custom_id": "i2baaa9895b-9a707b81",
+     "input_tokens": 19471,
+     "worst_list_usd": 0.079902
+    },
+    {
+     "question_id": "9bbe84a2",
+     "custom_id": "i2baaa9895b-9bbe84a2",
+     "input_tokens": 9795,
+     "worst_list_usd": 0.06055
+    },
+    {
+     "question_id": "a89d7624",
+     "custom_id": "i2baaa9895b-a89d7624",
+     "input_tokens": 19499,
+     "worst_list_usd": 0.079958
+    },
+    {
+     "question_id": "afdc33df",
+     "custom_id": "i2baaa9895b-afdc33df",
+     "input_tokens": 22779,
+     "worst_list_usd": 0.086518
+    },
+    {
+     "question_id": "b29f3365",
+     "custom_id": "i2baaa9895b-b29f3365",
+     "input_tokens": 21897,
+     "worst_list_usd": 0.084754
+    },
+    {
+     "question_id": "b759caee",
+     "custom_id": "i2baaa9895b-b759caee",
+     "input_tokens": 25746,
+     "worst_list_usd": 0.092452
+    },
+    {
+     "question_id": "b86304ba",
+     "custom_id": "i2baaa9895b-b86304ba",
+     "input_tokens": 12108,
+     "worst_list_usd": 0.065176
+    },
+    {
+     "question_id": "b9cfe692",
+     "custom_id": "i2baaa9895b-b9cfe692",
+     "input_tokens": 17607,
+     "worst_list_usd": 0.076174
+    },
+    {
+     "question_id": "bc149d6b",
+     "custom_id": "i2baaa9895b-bc149d6b",
+     "input_tokens": 19846,
+     "worst_list_usd": 0.080652
+    },
+    {
+     "question_id": "c14c00dd",
+     "custom_id": "i2baaa9895b-c14c00dd",
+     "input_tokens": 24041,
+     "worst_list_usd": 0.089042
+    },
+    {
+     "question_id": "c19f7a0b",
+     "custom_id": "i2baaa9895b-c19f7a0b",
+     "input_tokens": 18209,
+     "worst_list_usd": 0.077378
+    },
+    {
+     "question_id": "c5e8278d",
+     "custom_id": "i2baaa9895b-c5e8278d",
+     "input_tokens": 25925,
+     "worst_list_usd": 0.09281
+    },
+    {
+     "question_id": "c6853660",
+     "custom_id": "i2baaa9895b-c6853660",
+     "input_tokens": 24776,
+     "worst_list_usd": 0.090512
+    },
+    {
+     "question_id": "c8c3f81d",
+     "custom_id": "i2baaa9895b-c8c3f81d",
+     "input_tokens": 21184,
+     "worst_list_usd": 0.083328
+    },
+    {
+     "question_id": "c960da58",
+     "custom_id": "i2baaa9895b-c960da58",
+     "input_tokens": 18451,
+     "worst_list_usd": 0.077862
+    },
+    {
+     "question_id": "cc6d1ec1",
+     "custom_id": "i2baaa9895b-cc6d1ec1",
+     "input_tokens": 22444,
+     "worst_list_usd": 0.085848
+    },
+    {
+     "question_id": "cf22b7bf",
+     "custom_id": "i2baaa9895b-cf22b7bf",
+     "input_tokens": 19684,
+     "worst_list_usd": 0.080328
+    },
+    {
+     "question_id": "d3ab962e",
+     "custom_id": "i2baaa9895b-d3ab962e",
+     "input_tokens": 21509,
+     "worst_list_usd": 0.083978
+    },
+    {
+     "question_id": "d7c942c3",
+     "custom_id": "i2baaa9895b-d7c942c3",
+     "input_tokens": 27951,
+     "worst_list_usd": 0.096862
+    },
+    {
+     "question_id": "d851d5ba",
+     "custom_id": "i2baaa9895b-d851d5ba",
+     "input_tokens": 23630,
+     "worst_list_usd": 0.08822
+    },
+    {
+     "question_id": "dad224aa",
+     "custom_id": "i2baaa9895b-dad224aa",
+     "input_tokens": 22168,
+     "worst_list_usd": 0.085296
+    },
+    {
+     "question_id": "e25c3b8d",
+     "custom_id": "i2baaa9895b-e25c3b8d",
+     "input_tokens": 23553,
+     "worst_list_usd": 0.088066
+    },
+    {
+     "question_id": "e493bb7c",
+     "custom_id": "i2baaa9895b-e493bb7c",
+     "input_tokens": 19916,
+     "worst_list_usd": 0.080792
+    },
+    {
+     "question_id": "e4e14d04",
+     "custom_id": "i2baaa9895b-e4e14d04",
+     "input_tokens": 21454,
+     "worst_list_usd": 0.083868
+    },
+    {
+     "question_id": "e831120c",
+     "custom_id": "i2baaa9895b-e831120c",
+     "input_tokens": 21926,
+     "worst_list_usd": 0.084812
+    },
+    {
+     "question_id": "eeda8a6d",
+     "custom_id": "i2baaa9895b-eeda8a6d",
+     "input_tokens": 23420,
+     "worst_list_usd": 0.0878
+    },
+    {
+     "question_id": "f0853d11",
+     "custom_id": "i2baaa9895b-f0853d11",
+     "input_tokens": 14000,
+     "worst_list_usd": 0.06896
+    },
+    {
+     "question_id": "f0e564bc",
+     "custom_id": "i2baaa9895b-f0e564bc",
+     "input_tokens": 22295,
+     "worst_list_usd": 0.08555
+    },
+    {
+     "question_id": "faba32e5",
+     "custom_id": "i2baaa9895b-faba32e5",
+     "input_tokens": 26616,
+     "worst_list_usd": 0.094192
+    },
+    {
+     "question_id": "fca70973",
+     "custom_id": "i2baaa9895b-fca70973",
+     "input_tokens": 19401,
+     "worst_list_usd": 0.079762
+    },
+    {
+     "question_id": "gpt4_0a05b494",
+     "custom_id": "i2baaa9895b-gpt4_0a05b494",
+     "input_tokens": 18514,
+     "worst_list_usd": 0.077988
+    },
+    {
+     "question_id": "gpt4_18c2b244",
+     "custom_id": "i2baaa9895b-gpt4_18c2b244",
+     "input_tokens": 23675,
+     "worst_list_usd": 0.08831
+    },
+    {
+     "question_id": "gpt4_1a1dc16d",
+     "custom_id": "i2baaa9895b-gpt4_1a1dc16d",
+     "input_tokens": 31112,
+     "worst_list_usd": 0.103184
+    },
+    {
+     "question_id": "gpt4_2c50253f",
+     "custom_id": "i2baaa9895b-gpt4_2c50253f",
+     "input_tokens": 23186,
+     "worst_list_usd": 0.087332
+    },
+    {
+     "question_id": "gpt4_2f56ae70",
+     "custom_id": "i2baaa9895b-gpt4_2f56ae70",
+     "input_tokens": 22324,
+     "worst_list_usd": 0.085608
+    },
+    {
+     "question_id": "gpt4_372c3eed",
+     "custom_id": "i2baaa9895b-gpt4_372c3eed",
+     "input_tokens": 22341,
+     "worst_list_usd": 0.085642
+    },
+    {
+     "question_id": "gpt4_385a5000",
+     "custom_id": "i2baaa9895b-gpt4_385a5000",
+     "input_tokens": 20379,
+     "worst_list_usd": 0.081718
+    },
+    {
+     "question_id": "gpt4_4929293b",
+     "custom_id": "i2baaa9895b-gpt4_4929293b",
+     "input_tokens": 21831,
+     "worst_list_usd": 0.084622
+    },
+    {
+     "question_id": "gpt4_4ef30696",
+     "custom_id": "i2baaa9895b-gpt4_4ef30696",
+     "input_tokens": 24948,
+     "worst_list_usd": 0.090856
+    },
+    {
+     "question_id": "gpt4_5438fa52",
+     "custom_id": "i2baaa9895b-gpt4_5438fa52",
+     "input_tokens": 23856,
+     "worst_list_usd": 0.088672
+    },
+    {
+     "question_id": "gpt4_7abb270c",
+     "custom_id": "i2baaa9895b-gpt4_7abb270c",
+     "input_tokens": 23921,
+     "worst_list_usd": 0.088802
+    },
+    {
+     "question_id": "gpt4_7ddcf75f",
+     "custom_id": "i2baaa9895b-gpt4_7ddcf75f",
+     "input_tokens": 15331,
+     "worst_list_usd": 0.071622
+    },
+    {
+     "question_id": "gpt4_a56e767c",
+     "custom_id": "i2baaa9895b-gpt4_a56e767c",
+     "input_tokens": 20073,
+     "worst_list_usd": 0.081106
+    },
+    {
+     "question_id": "gpt4_ab202e7f",
+     "custom_id": "i2baaa9895b-gpt4_ab202e7f",
+     "input_tokens": 21037,
+     "worst_list_usd": 0.083034
+    },
+    {
+     "question_id": "gpt4_b5700ca0",
+     "custom_id": "i2baaa9895b-gpt4_b5700ca0",
+     "input_tokens": 22222,
+     "worst_list_usd": 0.085404
+    },
+    {
+     "question_id": "gpt4_c27434e8",
+     "custom_id": "i2baaa9895b-gpt4_c27434e8",
+     "input_tokens": 24715,
+     "worst_list_usd": 0.09039
+    },
+    {
+     "question_id": "gpt4_d12ceb0e",
+     "custom_id": "i2baaa9895b-gpt4_d12ceb0e",
+     "input_tokens": 19826,
+     "worst_list_usd": 0.080612
+    },
+    {
+     "question_id": "gpt4_d84a3211",
+     "custom_id": "i2baaa9895b-gpt4_d84a3211",
+     "input_tokens": 11770,
+     "worst_list_usd": 0.0645
+    },
+    {
+     "question_id": "gpt4_fa19884c",
+     "custom_id": "i2baaa9895b-gpt4_fa19884c",
+     "input_tokens": 18550,
+     "worst_list_usd": 0.07806
+    }
+   ],
+   "factor": 0.5,
+   "price": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5-5",
+    "kind": "chat",
+    "input": 2,
+    "output": 10,
+    "cache_read": 0.2,
+    "cache_write": 2.5,
+    "cacheWritePremium": false,
+    "inputTokens": 16762,
+    "maxOutputTokens": 4096
+   },
+   "budget_run_id": "w8-lme-batch-2026-10-06T21-05-53-870Z-950bdbe2",
+   "reservation_id": "78daca97-62b3-4379-830d-67086543a810",
+   "reserved_usd": 4.222885,
+   "file_handle": null,
+   "state": "settled",
+   "batch_id": "msgbatch_0139a1yzBJSN3oMsnNof8xBQ",
+   "created_at": 1791320754071,
+   "sending_at": 1791320754075,
+   "submitted_at": 1791320754902,
+   "ended_at": 1791320996528,
+   "settled_at": 1791320996634,
+   "settled_usd": 2.247390000000001,
+   "note": "ended"
+  },
+  {
+   "intent_id": "ied90899b2e",
+   "arm_id": "w8-lme-swap--official",
+   "provider": "openai",
+   "model": "gpt-4o-2024-08-06",
+   "pilot": false,
+   "request_set_hash": "0746a3028b4c6ffc4326eae99c6b9821d125e507be969449fcc49a5535ef4e3e",
+   "items": [
+    {
+     "question_id": "001be529",
+     "custom_id": "ied90899b2e-001be529",
+     "input_tokens": 238,
+     "worst_list_usd": 0.000695
+    },
+    {
+     "question_id": "07741c44",
+     "custom_id": "ied90899b2e-07741c44",
+     "input_tokens": 222,
+     "worst_list_usd": 0.000655
+    },
+    {
+     "question_id": "08f4fc43",
+     "custom_id": "ied90899b2e-08f4fc43",
+     "input_tokens": 366,
+     "worst_list_usd": 0.001015
+    },
+    {
+     "question_id": "099778bb",
+     "custom_id": "ied90899b2e-099778bb",
+     "input_tokens": 245,
+     "worst_list_usd": 0.0007125
+    },
+    {
+     "question_id": "09d032c9",
+     "custom_id": "ied90899b2e-09d032c9",
+     "input_tokens": 547,
+     "worst_list_usd": 0.0014675
+    },
+    {
+     "question_id": "129d1232",
+     "custom_id": "ied90899b2e-129d1232",
+     "input_tokens": 288,
+     "worst_list_usd": 0.00082
+    },
+    {
+     "question_id": "195a1a1b",
+     "custom_id": "ied90899b2e-195a1a1b",
+     "input_tokens": 609,
+     "worst_list_usd": 0.0016225
+    },
+    {
+     "question_id": "1e043500",
+     "custom_id": "ied90899b2e-1e043500",
+     "input_tokens": 237,
+     "worst_list_usd": 0.0006925
+    },
+    {
+     "question_id": "2318644b",
+     "custom_id": "ied90899b2e-2318644b",
+     "input_tokens": 254,
+     "worst_list_usd": 0.000735
+    },
+    {
+     "question_id": "25e5aa4f",
+     "custom_id": "ied90899b2e-25e5aa4f",
+     "input_tokens": 254,
+     "worst_list_usd": 0.000735
+    },
+    {
+     "question_id": "2788b940",
+     "custom_id": "ied90899b2e-2788b940",
+     "input_tokens": 251,
+     "worst_list_usd": 0.0007275
+    },
+    {
+     "question_id": "2c63a862",
+     "custom_id": "ied90899b2e-2c63a862",
+     "input_tokens": 350,
+     "worst_list_usd": 0.000975
+    },
+    {
+     "question_id": "2ce6a0f2",
+     "custom_id": "ied90899b2e-2ce6a0f2",
+     "input_tokens": 335,
+     "worst_list_usd": 0.0009375
+    },
+    {
+     "question_id": "2e6d26dc",
+     "custom_id": "ied90899b2e-2e6d26dc",
+     "input_tokens": 246,
+     "worst_list_usd": 0.000715
+    },
+    {
+     "question_id": "2ebe6c92",
+     "custom_id": "ied90899b2e-2ebe6c92",
+     "input_tokens": 498,
+     "worst_list_usd": 0.001345
+    },
+    {
+     "question_id": "35a27287",
+     "custom_id": "ied90899b2e-35a27287",
+     "input_tokens": 423,
+     "worst_list_usd": 0.0011575
+    },
+    {
+     "question_id": "36580ce8",
+     "custom_id": "ied90899b2e-36580ce8",
+     "input_tokens": 248,
+     "worst_list_usd": 0.00072
+    },
+    {
+     "question_id": "37f165cf",
+     "custom_id": "ied90899b2e-37f165cf",
+     "input_tokens": 269,
+     "worst_list_usd": 0.0007725
+    },
+    {
+     "question_id": "38146c39",
+     "custom_id": "ied90899b2e-38146c39",
+     "input_tokens": 445,
+     "worst_list_usd": 0.0012125
+    },
+    {
+     "question_id": "3c1045c8",
+     "custom_id": "ied90899b2e-3c1045c8",
+     "input_tokens": 279,
+     "worst_list_usd": 0.0007975
+    },
+    {
+     "question_id": "3fdac837",
+     "custom_id": "ied90899b2e-3fdac837",
+     "input_tokens": 274,
+     "worst_list_usd": 0.000785
+    },
+    {
+     "question_id": "3fe836c9",
+     "custom_id": "ied90899b2e-3fe836c9",
+     "input_tokens": 252,
+     "worst_list_usd": 0.00073
+    },
+    {
+     "question_id": "4100d0a0",
+     "custom_id": "ied90899b2e-4100d0a0",
+     "input_tokens": 242,
+     "worst_list_usd": 0.000705
+    },
+    {
+     "question_id": "4388e9dd",
+     "custom_id": "ied90899b2e-4388e9dd",
+     "input_tokens": 294,
+     "worst_list_usd": 0.000835
+    },
+    {
+     "question_id": "4d6b87c8",
+     "custom_id": "ied90899b2e-4d6b87c8",
+     "input_tokens": 238,
+     "worst_list_usd": 0.000695
+    },
+    {
+     "question_id": "4fd1909e",
+     "custom_id": "ied90899b2e-4fd1909e",
+     "input_tokens": 236,
+     "worst_list_usd": 0.00069
+    },
+    {
+     "question_id": "51a45a95",
+     "custom_id": "ied90899b2e-51a45a95",
+     "input_tokens": 259,
+     "worst_list_usd": 0.0007475
+    },
+    {
+     "question_id": "545bd2b5",
+     "custom_id": "ied90899b2e-545bd2b5",
+     "input_tokens": 238,
+     "worst_list_usd": 0.000695
+    },
+    {
+     "question_id": "5831f84d",
+     "custom_id": "ied90899b2e-5831f84d",
+     "input_tokens": 227,
+     "worst_list_usd": 0.0006675
+    },
+    {
+     "question_id": "5a4f22c0",
+     "custom_id": "ied90899b2e-5a4f22c0",
+     "input_tokens": 230,
+     "worst_list_usd": 0.000675
+    },
+    {
+     "question_id": "60159905",
+     "custom_id": "ied90899b2e-60159905",
+     "input_tokens": 303,
+     "worst_list_usd": 0.0008575
+    },
+    {
+     "question_id": "60bf93ed",
+     "custom_id": "ied90899b2e-60bf93ed",
+     "input_tokens": 271,
+     "worst_list_usd": 0.0007775
+    },
+    {
+     "question_id": "66f24dbb",
+     "custom_id": "ied90899b2e-66f24dbb",
+     "input_tokens": 261,
+     "worst_list_usd": 0.0007525
+    },
+    {
+     "question_id": "6a1eabeb",
+     "custom_id": "ied90899b2e-6a1eabeb",
+     "input_tokens": 241,
+     "worst_list_usd": 0.0007025
+    },
+    {
+     "question_id": "6ae235be",
+     "custom_id": "ied90899b2e-6ae235be",
+     "input_tokens": 308,
+     "worst_list_usd": 0.00087
+    },
+    {
+     "question_id": "6b168ec8",
+     "custom_id": "ied90899b2e-6b168ec8",
+     "input_tokens": 239,
+     "worst_list_usd": 0.0006975
+    },
+    {
+     "question_id": "6d550036",
+     "custom_id": "ied90899b2e-6d550036",
+     "input_tokens": 255,
+     "worst_list_usd": 0.0007375
+    },
+    {
+     "question_id": "6e984302",
+     "custom_id": "ied90899b2e-6e984302",
+     "input_tokens": 361,
+     "worst_list_usd": 0.0010025
+    },
+    {
+     "question_id": "6f9b354f",
+     "custom_id": "ied90899b2e-6f9b354f",
+     "input_tokens": 254,
+     "worst_list_usd": 0.000735
+    },
+    {
+     "question_id": "7024f17c",
+     "custom_id": "ied90899b2e-7024f17c",
+     "input_tokens": 491,
+     "worst_list_usd": 0.0013275
+    },
+    {
+     "question_id": "7405e8b1",
+     "custom_id": "ied90899b2e-7405e8b1",
+     "input_tokens": 257,
+     "worst_list_usd": 0.0007425
+    },
+    {
+     "question_id": "76d63226",
+     "custom_id": "ied90899b2e-76d63226",
+     "input_tokens": 240,
+     "worst_list_usd": 0.0007
+    },
+    {
+     "question_id": "7a8d0b71",
+     "custom_id": "ied90899b2e-7a8d0b71",
+     "input_tokens": 326,
+     "worst_list_usd": 0.000915
+    },
+    {
+     "question_id": "852ce960",
+     "custom_id": "ied90899b2e-852ce960",
+     "input_tokens": 230,
+     "worst_list_usd": 0.000675
+    },
+    {
+     "question_id": "8550ddae",
+     "custom_id": "ied90899b2e-8550ddae",
+     "input_tokens": 266,
+     "worst_list_usd": 0.000765
+    },
+    {
+     "question_id": "86f00804",
+     "custom_id": "ied90899b2e-86f00804",
+     "input_tokens": 255,
+     "worst_list_usd": 0.0007375
+    },
+    {
+     "question_id": "89941a93",
+     "custom_id": "ied90899b2e-89941a93",
+     "input_tokens": 229,
+     "worst_list_usd": 0.0006725
+    },
+    {
+     "question_id": "8a2466db",
+     "custom_id": "ied90899b2e-8a2466db",
+     "input_tokens": 415,
+     "worst_list_usd": 0.0011375
+    },
+    {
+     "question_id": "8b9d4367",
+     "custom_id": "ied90899b2e-8b9d4367",
+     "input_tokens": 291,
+     "worst_list_usd": 0.0008275
+    },
+    {
+     "question_id": "8c18457d",
+     "custom_id": "ied90899b2e-8c18457d",
+     "input_tokens": 365,
+     "worst_list_usd": 0.0010125
+    },
+    {
+     "question_id": "91b15a6e",
+     "custom_id": "ied90899b2e-91b15a6e",
+     "input_tokens": 299,
+     "worst_list_usd": 0.0008475
+    },
+    {
+     "question_id": "9a707b81",
+     "custom_id": "ied90899b2e-9a707b81",
+     "input_tokens": 349,
+     "worst_list_usd": 0.0009725
+    },
+    {
+     "question_id": "9bbe84a2",
+     "custom_id": "ied90899b2e-9bbe84a2",
+     "input_tokens": 237,
+     "worst_list_usd": 0.0006925
+    },
+    {
+     "question_id": "a89d7624",
+     "custom_id": "ied90899b2e-a89d7624",
+     "input_tokens": 434,
+     "worst_list_usd": 0.001185
+    },
+    {
+     "question_id": "afdc33df",
+     "custom_id": "ied90899b2e-afdc33df",
+     "input_tokens": 556,
+     "worst_list_usd": 0.00149
+    },
+    {
+     "question_id": "b29f3365",
+     "custom_id": "ied90899b2e-b29f3365",
+     "input_tokens": 338,
+     "worst_list_usd": 0.000945
+    },
+    {
+     "question_id": "b759caee",
+     "custom_id": "ied90899b2e-b759caee",
+     "input_tokens": 311,
+     "worst_list_usd": 0.0008775
+    },
+    {
+     "question_id": "b86304ba",
+     "custom_id": "ied90899b2e-b86304ba",
+     "input_tokens": 283,
+     "worst_list_usd": 0.0008075
+    },
+    {
+     "question_id": "b9cfe692",
+     "custom_id": "ied90899b2e-b9cfe692",
+     "input_tokens": 339,
+     "worst_list_usd": 0.0009475
+    },
+    {
+     "question_id": "bc149d6b",
+     "custom_id": "ied90899b2e-bc149d6b",
+     "input_tokens": 252,
+     "worst_list_usd": 0.00073
+    },
+    {
+     "question_id": "c14c00dd",
+     "custom_id": "ied90899b2e-c14c00dd",
+     "input_tokens": 238,
+     "worst_list_usd": 0.000695
+    },
+    {
+     "question_id": "c19f7a0b",
+     "custom_id": "ied90899b2e-c19f7a0b",
+     "input_tokens": 279,
+     "worst_list_usd": 0.0007975
+    },
+    {
+     "question_id": "c5e8278d",
+     "custom_id": "ied90899b2e-c5e8278d",
+     "input_tokens": 250,
+     "worst_list_usd": 0.000725
+    },
+    {
+     "question_id": "c6853660",
+     "custom_id": "ied90899b2e-c6853660",
+     "input_tokens": 246,
+     "worst_list_usd": 0.000715
+    },
+    {
+     "question_id": "c8c3f81d",
+     "custom_id": "ied90899b2e-c8c3f81d",
+     "input_tokens": 244,
+     "worst_list_usd": 0.00071
+    },
+    {
+     "question_id": "c960da58",
+     "custom_id": "ied90899b2e-c960da58",
+     "input_tokens": 333,
+     "worst_list_usd": 0.0009325
+    },
+    {
+     "question_id": "cc6d1ec1",
+     "custom_id": "ied90899b2e-cc6d1ec1",
+     "input_tokens": 325,
+     "worst_list_usd": 0.0009125
+    },
+    {
+     "question_id": "cf22b7bf",
+     "custom_id": "ied90899b2e-cf22b7bf",
+     "input_tokens": 255,
+     "worst_list_usd": 0.0007375
+    },
+    {
+     "question_id": "d3ab962e",
+     "custom_id": "ied90899b2e-d3ab962e",
+     "input_tokens": 313,
+     "worst_list_usd": 0.0008825
+    },
+    {
+     "question_id": "d7c942c3",
+     "custom_id": "ied90899b2e-d7c942c3",
+     "input_tokens": 240,
+     "worst_list_usd": 0.0007
+    },
+    {
+     "question_id": "d851d5ba",
+     "custom_id": "ied90899b2e-d851d5ba",
+     "input_tokens": 248,
+     "worst_list_usd": 0.00072
+    },
+    {
+     "question_id": "dad224aa",
+     "custom_id": "ied90899b2e-dad224aa",
+     "input_tokens": 262,
+     "worst_list_usd": 0.000755
+    },
+    {
+     "question_id": "e25c3b8d",
+     "custom_id": "ied90899b2e-e25c3b8d",
+     "input_tokens": 271,
+     "worst_list_usd": 0.0007775
+    },
+    {
+     "question_id": "e493bb7c",
+     "custom_id": "ied90899b2e-e493bb7c",
+     "input_tokens": 255,
+     "worst_list_usd": 0.0007375
+    },
+    {
+     "question_id": "e4e14d04",
+     "custom_id": "ied90899b2e-e4e14d04",
+     "input_tokens": 314,
+     "worst_list_usd": 0.000885
+    },
+    {
+     "question_id": "e831120c",
+     "custom_id": "ied90899b2e-e831120c",
+     "input_tokens": 266,
+     "worst_list_usd": 0.000765
+    },
+    {
+     "question_id": "eeda8a6d",
+     "custom_id": "ied90899b2e-eeda8a6d",
+     "input_tokens": 247,
+     "worst_list_usd": 0.0007175
+    },
+    {
+     "question_id": "f0853d11",
+     "custom_id": "ied90899b2e-f0853d11",
+     "input_tokens": 358,
+     "worst_list_usd": 0.000995
+    },
+    {
+     "question_id": "f0e564bc",
+     "custom_id": "ied90899b2e-f0e564bc",
+     "input_tokens": 280,
+     "worst_list_usd": 0.0008
+    },
+    {
+     "question_id": "faba32e5",
+     "custom_id": "ied90899b2e-faba32e5",
+     "input_tokens": 250,
+     "worst_list_usd": 0.000725
+    },
+    {
+     "question_id": "fca70973",
+     "custom_id": "ied90899b2e-fca70973",
+     "input_tokens": 507,
+     "worst_list_usd": 0.0013675
+    },
+    {
+     "question_id": "gpt4_0a05b494",
+     "custom_id": "ied90899b2e-gpt4_0a05b494",
+     "input_tokens": 327,
+     "worst_list_usd": 0.0009175
+    },
+    {
+     "question_id": "gpt4_18c2b244",
+     "custom_id": "ied90899b2e-gpt4_18c2b244",
+     "input_tokens": 451,
+     "worst_list_usd": 0.0012275
+    },
+    {
+     "question_id": "gpt4_1a1dc16d",
+     "custom_id": "ied90899b2e-gpt4_1a1dc16d",
+     "input_tokens": 302,
+     "worst_list_usd": 0.000855
+    },
+    {
+     "question_id": "gpt4_2c50253f",
+     "custom_id": "ied90899b2e-gpt4_2c50253f",
+     "input_tokens": 343,
+     "worst_list_usd": 0.0009575
+    },
+    {
+     "question_id": "gpt4_2f56ae70",
+     "custom_id": "ied90899b2e-gpt4_2f56ae70",
+     "input_tokens": 318,
+     "worst_list_usd": 0.000895
+    },
+    {
+     "question_id": "gpt4_372c3eed",
+     "custom_id": "ied90899b2e-gpt4_372c3eed",
+     "input_tokens": 273,
+     "worst_list_usd": 0.0007825
+    },
+    {
+     "question_id": "gpt4_385a5000",
+     "custom_id": "ied90899b2e-gpt4_385a5000",
+     "input_tokens": 302,
+     "worst_list_usd": 0.000855
+    },
+    {
+     "question_id": "gpt4_4929293b",
+     "custom_id": "ied90899b2e-gpt4_4929293b",
+     "input_tokens": 400,
+     "worst_list_usd": 0.0011
+    },
+    {
+     "question_id": "gpt4_4ef30696",
+     "custom_id": "ied90899b2e-gpt4_4ef30696",
+     "input_tokens": 366,
+     "worst_list_usd": 0.001015
+    },
+    {
+     "question_id": "gpt4_5438fa52",
+     "custom_id": "ied90899b2e-gpt4_5438fa52",
+     "input_tokens": 342,
+     "worst_list_usd": 0.000955
+    },
+    {
+     "question_id": "gpt4_7abb270c",
+     "custom_id": "ied90899b2e-gpt4_7abb270c",
+     "input_tokens": 364,
+     "worst_list_usd": 0.00101
+    },
+    {
+     "question_id": "gpt4_7ddcf75f",
+     "custom_id": "ied90899b2e-gpt4_7ddcf75f",
+     "input_tokens": 359,
+     "worst_list_usd": 0.0009975
+    },
+    {
+     "question_id": "gpt4_a56e767c",
+     "custom_id": "ied90899b2e-gpt4_a56e767c",
+     "input_tokens": 250,
+     "worst_list_usd": 0.000725
+    },
+    {
+     "question_id": "gpt4_ab202e7f",
+     "custom_id": "ied90899b2e-gpt4_ab202e7f",
+     "input_tokens": 270,
+     "worst_list_usd": 0.000775
+    },
+    {
+     "question_id": "gpt4_b5700ca0",
+     "custom_id": "ied90899b2e-gpt4_b5700ca0",
+     "input_tokens": 362,
+     "worst_list_usd": 0.001005
+    },
+    {
+     "question_id": "gpt4_c27434e8",
+     "custom_id": "ied90899b2e-gpt4_c27434e8",
+     "input_tokens": 324,
+     "worst_list_usd": 0.00091
+    },
+    {
+     "question_id": "gpt4_d12ceb0e",
+     "custom_id": "ied90899b2e-gpt4_d12ceb0e",
+     "input_tokens": 286,
+     "worst_list_usd": 0.000815
+    },
+    {
+     "question_id": "gpt4_d84a3211",
+     "custom_id": "ied90899b2e-gpt4_d84a3211",
+     "input_tokens": 272,
+     "worst_list_usd": 0.00078
+    },
+    {
+     "question_id": "gpt4_fa19884c",
+     "custom_id": "ied90899b2e-gpt4_fa19884c",
+     "input_tokens": 350,
+     "worst_list_usd": 0.000975
+    }
+   ],
+   "factor": 0.5,
+   "price": {
+    "provider": "openai",
+    "model": "gpt-4o-2024-08-06",
+    "kind": "chat",
+    "input": 2.5,
+    "output": 10,
+    "cacheWritePremium": false,
+    "inputTokens": 294,
+    "maxOutputTokens": 10
+   },
+   "budget_run_id": "w8-lme-batch-2026-10-06T21-05-53-870Z-950bdbe2",
+   "reservation_id": "792c4a7e-97ec-4693-8837-5cad100000c8",
+   "reserved_usd": 0.04324000000000001,
+   "file_handle": "file-BeoFFQv7JBXf7xjRAAbXN1",
+   "state": "settled",
+   "batch_id": "batch_6ac563aa09b08190bf5070d99884b285",
+   "created_at": 1791321001461,
+   "sending_at": 1791321001827,
+   "submitted_at": 1791321002163,
+   "ended_at": 1791321184095,
+   "settled_at": 1791321184214,
+   "settled_usd": 0.0306,
+   "note": "completed"
+  },
+  {
+   "intent_id": "if33f4e2d5c",
+   "arm_id": "w8-lme-swap--secondary",
+   "provider": "openai",
+   "model": "gpt-6.1-sol",
+   "pilot": false,
+   "request_set_hash": "061a30a7ba217ca2a94af74b7f64bc187a1c4d1f7df1eb4154f657e8128d5af7",
+   "items": [
+    {
+     "question_id": "001be529",
+     "custom_id": "if33f4e2d5c-001be529",
+     "input_tokens": 237,
+     "worst_list_usd": 0.0205925
+    },
+    {
+     "question_id": "07741c44",
+     "custom_id": "if33f4e2d5c-07741c44",
+     "input_tokens": 221,
+     "worst_list_usd": 0.0205525
+    },
+    {
+     "question_id": "08f4fc43",
+     "custom_id": "if33f4e2d5c-08f4fc43",
+     "input_tokens": 365,
+     "worst_list_usd": 0.0209125
+    },
+    {
+     "question_id": "099778bb",
+     "custom_id": "if33f4e2d5c-099778bb",
+     "input_tokens": 244,
+     "worst_list_usd": 0.02061
+    },
+    {
+     "question_id": "09d032c9",
+     "custom_id": "if33f4e2d5c-09d032c9",
+     "input_tokens": 546,
+     "worst_list_usd": 0.021365
+    },
+    {
+     "question_id": "129d1232",
+     "custom_id": "if33f4e2d5c-129d1232",
+     "input_tokens": 287,
+     "worst_list_usd": 0.0207175
+    },
+    {
+     "question_id": "195a1a1b",
+     "custom_id": "if33f4e2d5c-195a1a1b",
+     "input_tokens": 608,
+     "worst_list_usd": 0.02152
+    },
+    {
+     "question_id": "1e043500",
+     "custom_id": "if33f4e2d5c-1e043500",
+     "input_tokens": 236,
+     "worst_list_usd": 0.02059
+    },
+    {
+     "question_id": "2318644b",
+     "custom_id": "if33f4e2d5c-2318644b",
+     "input_tokens": 253,
+     "worst_list_usd": 0.0206325
+    },
+    {
+     "question_id": "25e5aa4f",
+     "custom_id": "if33f4e2d5c-25e5aa4f",
+     "input_tokens": 253,
+     "worst_list_usd": 0.0206325
+    },
+    {
+     "question_id": "2788b940",
+     "custom_id": "if33f4e2d5c-2788b940",
+     "input_tokens": 250,
+     "worst_list_usd": 0.020625
+    },
+    {
+     "question_id": "2c63a862",
+     "custom_id": "if33f4e2d5c-2c63a862",
+     "input_tokens": 349,
+     "worst_list_usd": 0.0208725
+    },
+    {
+     "question_id": "2ce6a0f2",
+     "custom_id": "if33f4e2d5c-2ce6a0f2",
+     "input_tokens": 334,
+     "worst_list_usd": 0.020835
+    },
+    {
+     "question_id": "2e6d26dc",
+     "custom_id": "if33f4e2d5c-2e6d26dc",
+     "input_tokens": 245,
+     "worst_list_usd": 0.0206125
+    },
+    {
+     "question_id": "2ebe6c92",
+     "custom_id": "if33f4e2d5c-2ebe6c92",
+     "input_tokens": 497,
+     "worst_list_usd": 0.0212425
+    },
+    {
+     "question_id": "35a27287",
+     "custom_id": "if33f4e2d5c-35a27287",
+     "input_tokens": 422,
+     "worst_list_usd": 0.021055
+    },
+    {
+     "question_id": "36580ce8",
+     "custom_id": "if33f4e2d5c-36580ce8",
+     "input_tokens": 247,
+     "worst_list_usd": 0.0206175
+    },
+    {
+     "question_id": "37f165cf",
+     "custom_id": "if33f4e2d5c-37f165cf",
+     "input_tokens": 268,
+     "worst_list_usd": 0.02067
+    },
+    {
+     "question_id": "38146c39",
+     "custom_id": "if33f4e2d5c-38146c39",
+     "input_tokens": 444,
+     "worst_list_usd": 0.02111
+    },
+    {
+     "question_id": "3c1045c8",
+     "custom_id": "if33f4e2d5c-3c1045c8",
+     "input_tokens": 278,
+     "worst_list_usd": 0.020695
+    },
+    {
+     "question_id": "3fdac837",
+     "custom_id": "if33f4e2d5c-3fdac837",
+     "input_tokens": 273,
+     "worst_list_usd": 0.0206825
+    },
+    {
+     "question_id": "3fe836c9",
+     "custom_id": "if33f4e2d5c-3fe836c9",
+     "input_tokens": 251,
+     "worst_list_usd": 0.0206275
+    },
+    {
+     "question_id": "4100d0a0",
+     "custom_id": "if33f4e2d5c-4100d0a0",
+     "input_tokens": 241,
+     "worst_list_usd": 0.0206025
+    },
+    {
+     "question_id": "4388e9dd",
+     "custom_id": "if33f4e2d5c-4388e9dd",
+     "input_tokens": 293,
+     "worst_list_usd": 0.0207325
+    },
+    {
+     "question_id": "4d6b87c8",
+     "custom_id": "if33f4e2d5c-4d6b87c8",
+     "input_tokens": 237,
+     "worst_list_usd": 0.0205925
+    },
+    {
+     "question_id": "4fd1909e",
+     "custom_id": "if33f4e2d5c-4fd1909e",
+     "input_tokens": 235,
+     "worst_list_usd": 0.0205875
+    },
+    {
+     "question_id": "51a45a95",
+     "custom_id": "if33f4e2d5c-51a45a95",
+     "input_tokens": 258,
+     "worst_list_usd": 0.020645
+    },
+    {
+     "question_id": "545bd2b5",
+     "custom_id": "if33f4e2d5c-545bd2b5",
+     "input_tokens": 237,
+     "worst_list_usd": 0.0205925
+    },
+    {
+     "question_id": "5831f84d",
+     "custom_id": "if33f4e2d5c-5831f84d",
+     "input_tokens": 226,
+     "worst_list_usd": 0.020565
+    },
+    {
+     "question_id": "5a4f22c0",
+     "custom_id": "if33f4e2d5c-5a4f22c0",
+     "input_tokens": 229,
+     "worst_list_usd": 0.0205725
+    },
+    {
+     "question_id": "60159905",
+     "custom_id": "if33f4e2d5c-60159905",
+     "input_tokens": 302,
+     "worst_list_usd": 0.020755
+    },
+    {
+     "question_id": "60bf93ed",
+     "custom_id": "if33f4e2d5c-60bf93ed",
+     "input_tokens": 270,
+     "worst_list_usd": 0.020675
+    },
+    {
+     "question_id": "66f24dbb",
+     "custom_id": "if33f4e2d5c-66f24dbb",
+     "input_tokens": 260,
+     "worst_list_usd": 0.02065
+    },
+    {
+     "question_id": "6a1eabeb",
+     "custom_id": "if33f4e2d5c-6a1eabeb",
+     "input_tokens": 240,
+     "worst_list_usd": 0.0206
+    },
+    {
+     "question_id": "6ae235be",
+     "custom_id": "if33f4e2d5c-6ae235be",
+     "input_tokens": 307,
+     "worst_list_usd": 0.0207675
+    },
+    {
+     "question_id": "6b168ec8",
+     "custom_id": "if33f4e2d5c-6b168ec8",
+     "input_tokens": 238,
+     "worst_list_usd": 0.020595
+    },
+    {
+     "question_id": "6d550036",
+     "custom_id": "if33f4e2d5c-6d550036",
+     "input_tokens": 254,
+     "worst_list_usd": 0.020635
+    },
+    {
+     "question_id": "6e984302",
+     "custom_id": "if33f4e2d5c-6e984302",
+     "input_tokens": 360,
+     "worst_list_usd": 0.0209
+    },
+    {
+     "question_id": "6f9b354f",
+     "custom_id": "if33f4e2d5c-6f9b354f",
+     "input_tokens": 253,
+     "worst_list_usd": 0.0206325
+    },
+    {
+     "question_id": "7024f17c",
+     "custom_id": "if33f4e2d5c-7024f17c",
+     "input_tokens": 490,
+     "worst_list_usd": 0.021225
+    },
+    {
+     "question_id": "7405e8b1",
+     "custom_id": "if33f4e2d5c-7405e8b1",
+     "input_tokens": 256,
+     "worst_list_usd": 0.02064
+    },
+    {
+     "question_id": "76d63226",
+     "custom_id": "if33f4e2d5c-76d63226",
+     "input_tokens": 239,
+     "worst_list_usd": 0.0205975
+    },
+    {
+     "question_id": "7a8d0b71",
+     "custom_id": "if33f4e2d5c-7a8d0b71",
+     "input_tokens": 325,
+     "worst_list_usd": 0.0208125
+    },
+    {
+     "question_id": "852ce960",
+     "custom_id": "if33f4e2d5c-852ce960",
+     "input_tokens": 229,
+     "worst_list_usd": 0.0205725
+    },
+    {
+     "question_id": "8550ddae",
+     "custom_id": "if33f4e2d5c-8550ddae",
+     "input_tokens": 265,
+     "worst_list_usd": 0.0206625
+    },
+    {
+     "question_id": "86f00804",
+     "custom_id": "if33f4e2d5c-86f00804",
+     "input_tokens": 254,
+     "worst_list_usd": 0.020635
+    },
+    {
+     "question_id": "89941a93",
+     "custom_id": "if33f4e2d5c-89941a93",
+     "input_tokens": 228,
+     "worst_list_usd": 0.02057
+    },
+    {
+     "question_id": "8a2466db",
+     "custom_id": "if33f4e2d5c-8a2466db",
+     "input_tokens": 414,
+     "worst_list_usd": 0.021035
+    },
+    {
+     "question_id": "8b9d4367",
+     "custom_id": "if33f4e2d5c-8b9d4367",
+     "input_tokens": 290,
+     "worst_list_usd": 0.020725
+    },
+    {
+     "question_id": "8c18457d",
+     "custom_id": "if33f4e2d5c-8c18457d",
+     "input_tokens": 364,
+     "worst_list_usd": 0.02091
+    },
+    {
+     "question_id": "91b15a6e",
+     "custom_id": "if33f4e2d5c-91b15a6e",
+     "input_tokens": 298,
+     "worst_list_usd": 0.020745
+    },
+    {
+     "question_id": "9a707b81",
+     "custom_id": "if33f4e2d5c-9a707b81",
+     "input_tokens": 348,
+     "worst_list_usd": 0.02087
+    },
+    {
+     "question_id": "9bbe84a2",
+     "custom_id": "if33f4e2d5c-9bbe84a2",
+     "input_tokens": 236,
+     "worst_list_usd": 0.02059
+    },
+    {
+     "question_id": "a89d7624",
+     "custom_id": "if33f4e2d5c-a89d7624",
+     "input_tokens": 433,
+     "worst_list_usd": 0.0210825
+    },
+    {
+     "question_id": "afdc33df",
+     "custom_id": "if33f4e2d5c-afdc33df",
+     "input_tokens": 555,
+     "worst_list_usd": 0.0213875
+    },
+    {
+     "question_id": "b29f3365",
+     "custom_id": "if33f4e2d5c-b29f3365",
+     "input_tokens": 337,
+     "worst_list_usd": 0.0208425
+    },
+    {
+     "question_id": "b759caee",
+     "custom_id": "if33f4e2d5c-b759caee",
+     "input_tokens": 310,
+     "worst_list_usd": 0.020775
+    },
+    {
+     "question_id": "b86304ba",
+     "custom_id": "if33f4e2d5c-b86304ba",
+     "input_tokens": 282,
+     "worst_list_usd": 0.020705
+    },
+    {
+     "question_id": "b9cfe692",
+     "custom_id": "if33f4e2d5c-b9cfe692",
+     "input_tokens": 338,
+     "worst_list_usd": 0.020845
+    },
+    {
+     "question_id": "bc149d6b",
+     "custom_id": "if33f4e2d5c-bc149d6b",
+     "input_tokens": 251,
+     "worst_list_usd": 0.0206275
+    },
+    {
+     "question_id": "c14c00dd",
+     "custom_id": "if33f4e2d5c-c14c00dd",
+     "input_tokens": 237,
+     "worst_list_usd": 0.0205925
+    },
+    {
+     "question_id": "c19f7a0b",
+     "custom_id": "if33f4e2d5c-c19f7a0b",
+     "input_tokens": 278,
+     "worst_list_usd": 0.020695
+    },
+    {
+     "question_id": "c5e8278d",
+     "custom_id": "if33f4e2d5c-c5e8278d",
+     "input_tokens": 249,
+     "worst_list_usd": 0.0206225
+    },
+    {
+     "question_id": "c6853660",
+     "custom_id": "if33f4e2d5c-c6853660",
+     "input_tokens": 245,
+     "worst_list_usd": 0.0206125
+    },
+    {
+     "question_id": "c8c3f81d",
+     "custom_id": "if33f4e2d5c-c8c3f81d",
+     "input_tokens": 243,
+     "worst_list_usd": 0.0206075
+    },
+    {
+     "question_id": "c960da58",
+     "custom_id": "if33f4e2d5c-c960da58",
+     "input_tokens": 332,
+     "worst_list_usd": 0.02083
+    },
+    {
+     "question_id": "cc6d1ec1",
+     "custom_id": "if33f4e2d5c-cc6d1ec1",
+     "input_tokens": 324,
+     "worst_list_usd": 0.02081
+    },
+    {
+     "question_id": "cf22b7bf",
+     "custom_id": "if33f4e2d5c-cf22b7bf",
+     "input_tokens": 254,
+     "worst_list_usd": 0.020635
+    },
+    {
+     "question_id": "d3ab962e",
+     "custom_id": "if33f4e2d5c-d3ab962e",
+     "input_tokens": 312,
+     "worst_list_usd": 0.02078
+    },
+    {
+     "question_id": "d7c942c3",
+     "custom_id": "if33f4e2d5c-d7c942c3",
+     "input_tokens": 239,
+     "worst_list_usd": 0.0205975
+    },
+    {
+     "question_id": "d851d5ba",
+     "custom_id": "if33f4e2d5c-d851d5ba",
+     "input_tokens": 247,
+     "worst_list_usd": 0.0206175
+    },
+    {
+     "question_id": "dad224aa",
+     "custom_id": "if33f4e2d5c-dad224aa",
+     "input_tokens": 261,
+     "worst_list_usd": 0.0206525
+    },
+    {
+     "question_id": "e25c3b8d",
+     "custom_id": "if33f4e2d5c-e25c3b8d",
+     "input_tokens": 270,
+     "worst_list_usd": 0.020675
+    },
+    {
+     "question_id": "e493bb7c",
+     "custom_id": "if33f4e2d5c-e493bb7c",
+     "input_tokens": 254,
+     "worst_list_usd": 0.020635
+    },
+    {
+     "question_id": "e4e14d04",
+     "custom_id": "if33f4e2d5c-e4e14d04",
+     "input_tokens": 313,
+     "worst_list_usd": 0.0207825
+    },
+    {
+     "question_id": "e831120c",
+     "custom_id": "if33f4e2d5c-e831120c",
+     "input_tokens": 265,
+     "worst_list_usd": 0.0206625
+    },
+    {
+     "question_id": "eeda8a6d",
+     "custom_id": "if33f4e2d5c-eeda8a6d",
+     "input_tokens": 246,
+     "worst_list_usd": 0.020615
+    },
+    {
+     "question_id": "f0853d11",
+     "custom_id": "if33f4e2d5c-f0853d11",
+     "input_tokens": 357,
+     "worst_list_usd": 0.0208925
+    },
+    {
+     "question_id": "f0e564bc",
+     "custom_id": "if33f4e2d5c-f0e564bc",
+     "input_tokens": 279,
+     "worst_list_usd": 0.0206975
+    },
+    {
+     "question_id": "faba32e5",
+     "custom_id": "if33f4e2d5c-faba32e5",
+     "input_tokens": 249,
+     "worst_list_usd": 0.0206225
+    },
+    {
+     "question_id": "fca70973",
+     "custom_id": "if33f4e2d5c-fca70973",
+     "input_tokens": 506,
+     "worst_list_usd": 0.021265
+    },
+    {
+     "question_id": "gpt4_0a05b494",
+     "custom_id": "if33f4e2d5c-gpt4_0a05b494",
+     "input_tokens": 326,
+     "worst_list_usd": 0.020815
+    },
+    {
+     "question_id": "gpt4_18c2b244",
+     "custom_id": "if33f4e2d5c-gpt4_18c2b244",
+     "input_tokens": 450,
+     "worst_list_usd": 0.021125
+    },
+    {
+     "question_id": "gpt4_1a1dc16d",
+     "custom_id": "if33f4e2d5c-gpt4_1a1dc16d",
+     "input_tokens": 301,
+     "worst_list_usd": 0.0207525
+    },
+    {
+     "question_id": "gpt4_2c50253f",
+     "custom_id": "if33f4e2d5c-gpt4_2c50253f",
+     "input_tokens": 342,
+     "worst_list_usd": 0.020855
+    },
+    {
+     "question_id": "gpt4_2f56ae70",
+     "custom_id": "if33f4e2d5c-gpt4_2f56ae70",
+     "input_tokens": 317,
+     "worst_list_usd": 0.0207925
+    },
+    {
+     "question_id": "gpt4_372c3eed",
+     "custom_id": "if33f4e2d5c-gpt4_372c3eed",
+     "input_tokens": 272,
+     "worst_list_usd": 0.02068
+    },
+    {
+     "question_id": "gpt4_385a5000",
+     "custom_id": "if33f4e2d5c-gpt4_385a5000",
+     "input_tokens": 301,
+     "worst_list_usd": 0.0207525
+    },
+    {
+     "question_id": "gpt4_4929293b",
+     "custom_id": "if33f4e2d5c-gpt4_4929293b",
+     "input_tokens": 399,
+     "worst_list_usd": 0.0209975
+    },
+    {
+     "question_id": "gpt4_4ef30696",
+     "custom_id": "if33f4e2d5c-gpt4_4ef30696",
+     "input_tokens": 365,
+     "worst_list_usd": 0.0209125
+    },
+    {
+     "question_id": "gpt4_5438fa52",
+     "custom_id": "if33f4e2d5c-gpt4_5438fa52",
+     "input_tokens": 341,
+     "worst_list_usd": 0.0208525
+    },
+    {
+     "question_id": "gpt4_7abb270c",
+     "custom_id": "if33f4e2d5c-gpt4_7abb270c",
+     "input_tokens": 363,
+     "worst_list_usd": 0.0209075
+    },
+    {
+     "question_id": "gpt4_7ddcf75f",
+     "custom_id": "if33f4e2d5c-gpt4_7ddcf75f",
+     "input_tokens": 358,
+     "worst_list_usd": 0.020895
+    },
+    {
+     "question_id": "gpt4_a56e767c",
+     "custom_id": "if33f4e2d5c-gpt4_a56e767c",
+     "input_tokens": 249,
+     "worst_list_usd": 0.0206225
+    },
+    {
+     "question_id": "gpt4_ab202e7f",
+     "custom_id": "if33f4e2d5c-gpt4_ab202e7f",
+     "input_tokens": 269,
+     "worst_list_usd": 0.0206725
+    },
+    {
+     "question_id": "gpt4_b5700ca0",
+     "custom_id": "if33f4e2d5c-gpt4_b5700ca0",
+     "input_tokens": 361,
+     "worst_list_usd": 0.0209025
+    },
+    {
+     "question_id": "gpt4_c27434e8",
+     "custom_id": "if33f4e2d5c-gpt4_c27434e8",
+     "input_tokens": 323,
+     "worst_list_usd": 0.0208075
+    },
+    {
+     "question_id": "gpt4_d12ceb0e",
+     "custom_id": "if33f4e2d5c-gpt4_d12ceb0e",
+     "input_tokens": 285,
+     "worst_list_usd": 0.0207125
+    },
+    {
+     "question_id": "gpt4_d84a3211",
+     "custom_id": "if33f4e2d5c-gpt4_d84a3211",
+     "input_tokens": 271,
+     "worst_list_usd": 0.0206775
+    },
+    {
+     "question_id": "gpt4_fa19884c",
+     "custom_id": "if33f4e2d5c-gpt4_fa19884c",
+     "input_tokens": 349,
+     "worst_list_usd": 0.0208725
+    }
+   ],
+   "factor": 0.5,
+   "price": {
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "kind": "chat",
+    "input": 2,
+    "output": 10,
+    "cache_read": 0.1,
+    "cache_write": 2.5,
+    "cacheWritePremium": true,
+    "inputTokens": 294,
+    "maxOutputTokens": 2000
+   },
+   "budget_run_id": "w8-lme-batch-2026-10-06T21-05-53-870Z-950bdbe2",
+   "reservation_id": "f1538bf1-1901-4446-bec5-c8d1be7356bd",
+   "reserved_usd": 1.0381150000000001,
+   "file_handle": "file-YBD3H6qSd95jSV9NnWwV75",
+   "state": "settled",
+   "batch_id": "batch_6ac586b8a30c8190aa7ba5edd4d4375c",
+   "created_at": 1791329975835,
+   "sending_at": 1791329976421,
+   "submitted_at": 1791329976813,
+   "ended_at": 1791330219367,
+   "settled_at": 1791330219496,
+   "settled_usd": 0.025815999999999985,
+   "note": "completed"
+  }
+ ],
+ "factors": [
+  {
+   "factor": 0.5,
+   "confirmed": true,
+   "evidence": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5-5",
+    "factor": 0.5,
+    "confirmed": true,
+    "documented": {
+     "factor": 0.5,
+     "source": "https://platform.claude.com/docs/en/build-with-claude/batch-processing (Message Batches are billed at 50% of standard API prices)"
+    },
+    "checks": {
+     "batch_id": "msgbatch_01TBdKNcRJvsoPaQZ3cuRvD2",
+     "batch_status": "ended",
+     "succeeded": 10,
+     "results": 10,
+     "service_tiers": [
+      "batch"
+     ],
+     "response_models": [
+      "claude-sonnet-5-5"
+     ]
+    },
+    "basis": "documented 0.5 batch factor confirmed by the provider's own accounting of the pilot (every message billed at service_tier \"batch\"); no invoice read: this key cannot read either provider's billing API"
+   }
+  },
+  {
+   "factor": 0.5,
+   "confirmed": true,
+   "evidence": {
+    "provider": "openai",
+    "model": "gpt-4o-2024-08-06",
+    "factor": 0.5,
+    "confirmed": true,
+    "documented": {
+     "factor": 0.5,
+     "source": "https://platform.openai.com/docs/guides/batch (Batch API: 50% lower cost than synchronous requests)"
+    },
+    "checks": {
+     "batch_id": "batch_6ac540f2d2548190a3a543155daf7517",
+     "batch_status": "completed",
+     "succeeded": 10,
+     "results": 10,
+     "rows_input_tokens": 2778,
+     "rows_output_tokens": 16,
+     "batch_input_tokens": 2778,
+     "batch_output_tokens": 16,
+     "response_models": [
+      "gpt-4o-2024-08-06"
+     ]
+    },
+    "basis": "documented 0.5 batch factor confirmed by the provider's own accounting of the pilot (batch-object usage equals the rows' usage); no invoice read: this key cannot read either provider's billing API"
+   }
+  },
+  {
+   "factor": 0.5,
+   "confirmed": true,
+   "evidence": {
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "factor": 0.5,
+    "confirmed": true,
+    "documented": {
+     "factor": 0.5,
+     "source": "https://platform.openai.com/docs/guides/batch (Batch API: 50% lower cost than synchronous requests)"
+    },
+    "checks": {
+     "batch_id": "batch_6ac542cf5d6481909a02108795f7ed30",
+     "batch_status": "completed",
+     "succeeded": 10,
+     "results": 10,
+     "rows_input_tokens": 2768,
+     "rows_output_tokens": 40,
+     "batch_input_tokens": 2768,
+     "batch_output_tokens": 40,
+     "response_models": [
+      "gpt-6.1-sol"
+     ]
+    },
+    "basis": "documented 0.5 batch factor confirmed by the provider's own accounting of the pilot (batch-object usage equals the rows' usage); no invoice read: this key cannot read either provider's billing API"
+   }
+  }
+ ],
+ "preregistration_attestation": {
+  "preregistration": "docs/benchmarks/2026-10-06-w8-longmemeval-control-preregistration.md",
+  "preregistration_commit": "8d21790e5037325638a83f2becb768209902c4a1",
+  "runner_commit": "a66e219faa58138587e0de765e202dfcafe647bd",
+  "worktree_clean_for_preregistration": true,
+  "on_origin": true,
+  "attested_at": "2026-10-06T21:05:53.751Z"
+ }
+}

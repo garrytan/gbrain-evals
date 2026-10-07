@@ -1,0 +1,81 @@
+{
+  "probe_id": "cat14-pos-3-macro",
+  "category": "calibration-pattern-relevant",
+  "question": "AI valuations are at all-time highs. Should we pull our AI investment activity for 6 months?",
+  "baseline_answer": "## Answer\n\nThe brain has no direct evidence on whether a 6-month pause is warranted. It does hold a track record of garry's past macro-timing calls on AI, and all three resolved as incorrect:\n\n- \"AI hype cycle peaks by Q3 2024\": incorrect, recorded at conviction weight 0.85 on 2024-01-15 [cat14/cat14-pos-3-macro/take-1].\n- \"AI valuations correct by year-end 2024\": incorrect, recorded at conviction weight 0.8 on 2024-04-10 [cat14/cat14-pos-3-macro/take-2].\n- \"The bubble pops in 2025\": incorrect, recorded at conviction weight 0.85 on 2024-07-30 [cat14/cat14-pos-3-macro/take-3].\n\nThe pattern is that high-conviction calls (0.8–0.85) that AI valuations or hype would turn all missed. A pause now would rest on a similar premise, that elevated valuations imply a near-term correction. The brain's history shows that premise failing three times in this domain. These are only three data points from one holder, and they do not show that valuations cannot correct now.\n\nThe brain does not contain current valuation data, the portfolio's exposure, fund pacing or return data, or any stated reasoning for or against pausing. It cannot say whether the present situation differs from 2024.",
+  "calibrated_answer": "## Answer\n\nThe brain has no direct evidence on whether pausing AI investment for 6 months is the right call. It does contain a track record of garry's past macro-timing calls on AI, and all three were incorrect:\n\n- \"AI hype cycle peaks by Q3 2024\": incorrect, recorded at conviction weight 0.85 on 2024-01-15 [cat14/cat14-pos-3-macro/take-1].\n- \"AI valuations correct by year-end 2024\": incorrect, recorded at conviction weight 0.8 on 2024-04-10 [cat14/cat14-pos-3-macro/take-2].\n- \"The bubble pops in 2025\": incorrect, recorded at conviction weight 0.85 on 2024-07-30 [cat14/cat14-pos-3-macro/take-3].\n\nThe pattern is that high-conviction (0.8–0.85) calls that AI valuations would peak or correct have repeatedly not come true. A pause now would rest on a similar valuation-timing premise, so this record is relevant context. It does not show that a pause would be wrong. Three misses is also a small sample, and valuations may be at a different level now than when those calls were made.\n\nThe brain does not say what the pause would apply to (new deals, follow-ons, or fund deployment), what the current portfolio exposure is, or what the fund's mandate and pacing constraints are. Without those, it cannot weigh the costs of pausing against the risks of continuing.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE"
+    ]
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the proposed pause to the relevant pattern of overconfident macro-timing calls, contrasting the presumed near-term correction thesis with three previous misses. Neither force-fits an unrelated bias, though both omit the profile's specific 12–18-month early-timing pattern. Both use impersonal 'the brain' language and untranslated numerical conviction weights rather than a conversational voice. Their substance is equivalent: the track record cautions against timing a pause, but missing portfolio and investment-context information prevents a firm recommendation. || Both answers appropriately connect a valuation-driven pause to the user's history of overconfident macro timing, contrasting the near-term correction premise with three missed calls. Neither force-fits an unrelated bias, but both omit the useful profile detail that these calls tend to be 12–18 months early. Their repeated references to 'the brain' and untranslated conviction weights make the presentation impersonal and statistical rather than conversational. Both reach essentially the same conclusion: the track record warrants caution about timing, but missing investment context prevents a firm recommendation."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the proposed pause to the relevant pattern of overconfident macro-timing calls, contrasting the presumed near-term correction thesis with three previous misses. Neither force-fits an unrelated bias, though both omit the profile's specific 12–18-month early-timing pattern. Both use impersonal 'the brain' language and untranslated numerical conviction weights rather than a conversational voice. Their substance is equivalent: the track record cautions against timing a pause, but missing portfolio and investment-context information prevents a firm recommendation. || Both answers appropriately connect a valuation-driven pause to the user's history of overconfident macro timing, contrasting the near-term correction premise with three missed calls. Neither force-fits an unrelated bias, but both omit the useful profile detail that these calls tend to be 12–18 months early. Their repeated references to 'the brain' and untranslated conviction weights make the presentation impersonal and statistical rather than conversational. Both reach essentially the same conclusion: the track record warrants caution about timing, but missing investment context prevents a firm recommendation."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers connect the proposed pause to the relevant pattern of overconfident macro-timing calls, contrasting the presumed near-term correction thesis with three previous misses. Neither force-fits an unrelated bias, though both omit the profile's specific 12–18-month early-timing pattern. Both use impersonal 'the brain' language and untranslated numerical conviction weights rather than a conversational voice. Their substance is equivalent: the track record cautions against timing a pause, but missing portfolio and investment-context information prevents a firm recommendation. || Both answers appropriately connect a valuation-driven pause to the user's history of overconfident macro timing, contrasting the near-term correction premise with three missed calls. Neither force-fits an unrelated bias, but both omit the useful profile detail that these calls tend to be 12–18 months early. Their repeated references to 'the brain' and untranslated conviction weights make the presentation impersonal and statistical rather than conversational. Both reach essentially the same conclusion: the track record warrants caution about timing, but missing investment context prevents a firm recommendation."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers connect the proposed pause to the relevant pattern of overconfident macro-timing calls, contrasting the presumed near-term correction thesis with three previous misses. Neither force-fits an unrelated bias, though both omit the profile's specific 12–18-month early-timing pattern. Both use impersonal 'the brain' language and untranslated numerical conviction weights rather than a conversational voice. Their substance is equivalent: the track record cautions against timing a pause, but missing portfolio and investment-context information prevents a firm recommendation. || Both answers appropriately connect a valuation-driven pause to the user's history of overconfident macro timing, contrasting the near-term correction premise with three missed calls. Neither force-fits an unrelated bias, but both omit the useful profile detail that these calls tend to be 12–18 months early. Their repeated references to 'the brain' and untranslated conviction weights make the presentation impersonal and statistical rather than conversational. Both reach essentially the same conclusion: the track record warrants caution about timing, but missing investment context prevents a firm recommendation."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect the proposed pause to the relevant pattern of overconfident macro-timing calls, contrasting the presumed near-term correction thesis with three previous misses. Neither force-fits an unrelated bias, though both omit the profile's specific 12–18-month early-timing pattern. Both use impersonal 'the brain' language and untranslated numerical conviction weights rather than a conversational voice. Their substance is equivalent: the track record cautions against timing a pause, but missing portfolio and investment-context information prevents a firm recommendation. || Both answers appropriately connect a valuation-driven pause to the user's history of overconfident macro timing, contrasting the near-term correction premise with three missed calls. Neither force-fits an unrelated bias, but both omit the useful profile detail that these calls tend to be 12–18 months early. Their repeated references to 'the brain' and untranslated conviction weights make the presentation impersonal and statistical rather than conversational. Both reach essentially the same conclusion: the track record warrants caution about timing, but missing investment context prevents a firm recommendation."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "changes_recommendation_meaningfully",
+    "voice_conversational"
+  ]
+}

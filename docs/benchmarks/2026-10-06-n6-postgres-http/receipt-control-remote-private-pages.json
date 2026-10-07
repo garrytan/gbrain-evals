@@ -1,0 +1,1433 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "no model and no paid request: provider keys removed from every process"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "no model and no paid request: provider keys removed from every process"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n6-postgres-http",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 2289,
+  "n_scored": 2289,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "execution": {
+    "source_tree": {
+      "sha256": "7fe04b8f3a82e1b377466d83dc75e2ab2dfea1cee3f8f81e419e47ae6ed76754",
+      "files": 3591,
+      "git_head": "aeeb10c4820b6f6454c4e3b255175d25202285ba",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  },
+  "resolved_config": {
+    "engine": "postgres",
+    "postgres_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "postgres_image": "pgvector/pgvector@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a",
+    "bind": "127.0.0.1",
+    "transport": "gbrain serve --http --bind 127.0.0.1 (separate process), GBRAIN_POOL_SIZE=8, rate limits raised (GBRAIN_HTTP_RATE_LIMIT_IP and _TOKEN = 100000000) so the probe load is not throttled",
+    "negative_control": "server started with GBRAIN_REMOTE_PRIVATE_PAGES=1 (operator escape hatch): remote callers see private pages, so the run must fail",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "seed": 20260930,
+    "generator_version": "n6-visibility-v2",
+    "concurrency": 8,
+    "only": [
+      "get_page",
+      "search",
+      "list_pages"
+    ],
+    "principals": {
+      "none": "no Authorization header",
+      "invalid-token": "a well-formed bearer token the server never issued",
+      "expired-token": "client_credentials token from a client with --token-ttl 60, used after expires_in (60s) plus 5 s",
+      "scoped": "OAuth client_credentials, scope read, source alpha",
+      "owner": "OAuth client_credentials, scopes read write admin, source alpha, federated read alpha,beta"
+    },
+    "trusted_control": "dispatchToolCall in process (remote: false, source alpha) on the same Postgres database, run before the probe phases",
+    "phases": [
+      "notice-warmup",
+      "warm-owner",
+      "interleaved",
+      "scoped-again"
+    ],
+    "operator": [
+      {
+        "step": "init",
+        "code": 0,
+        "ms": 2334
+      },
+      {
+        "step": "sources-add:alpha",
+        "code": 0,
+        "ms": 828
+      },
+      {
+        "step": "sources-add:beta",
+        "code": 0,
+        "ms": 833
+      },
+      {
+        "step": "register-client:scoped",
+        "code": 0,
+        "ms": 800
+      },
+      {
+        "step": "register-client:owner",
+        "code": 0,
+        "ms": 815
+      },
+      {
+        "step": "register-client:expiring",
+        "code": 0,
+        "ms": 751
+      }
+    ],
+    "mcp_session_modes": [
+      "stateless"
+    ],
+    "gbrain_overlay": null
+  },
+  "hashes": {
+    "ledger_sha256": "81eeeb6fe1674633b4ba3cd2868d9f7ad4ba998886bdfe8915c2e8d69eacb69c"
+  },
+  "started_at": "2026-10-06T19:03:41.686Z",
+  "finished_at": "2026-10-06T19:05:09.354Z",
+  "data": {
+    "verdict": {
+      "pass": false,
+      "failures": [
+        "470 leaking probes or refusals carrying a canary"
+      ],
+      "leaks": 470,
+      "oracles": 0,
+      "accepted": 0,
+      "mandatory_cells": 15,
+      "mandatory_covered": 15,
+      "missing_mandatory": [],
+      "harness_error_rate": 0
+    },
+    "metrics": {
+      "ops": 3,
+      "mandatory_ops": 31,
+      "calls": 2289,
+      "harness_errors": 0,
+      "probes": 890,
+      "probes_exposed": 796,
+      "probes_with_signal": 614,
+      "leaks": 470,
+      "oracles": 0,
+      "refused_calls": 15,
+      "refusal_calls": 15,
+      "pool": {
+        "samples": 29,
+        "max_server_connections": 8,
+        "max_active": 2,
+        "condition_met": true
+      },
+      "phase_ms": {
+        "warm-owner": 5570,
+        "interleaved": 7060,
+        "scoped-again": 2778
+      }
+    },
+    "controls": {
+      "owner_reads_beta_only_page": true,
+      "expiring_token_valid_before_expiry": true,
+      "presence": [
+        {
+          "name": "every ledger page stored in its source",
+          "pass": true,
+          "detail": "19/19"
+        },
+        {
+          "name": "held take row indexed",
+          "pass": true,
+          "detail": "1 row(s)"
+        },
+        {
+          "name": "private fact row indexed",
+          "pass": true,
+          "detail": "1 row(s)"
+        },
+        {
+          "name": "private page timeline indexed",
+          "pass": true,
+          "detail": "1 entr(ies)"
+        },
+        {
+          "name": "private page links to the public hub",
+          "pass": true,
+          "detail": "1 link(s)"
+        },
+        {
+          "name": "local get_page reads private_page markers",
+          "pass": true,
+          "detail": "3/3 markers"
+        },
+        {
+          "name": "local get_page reads private_take markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_page reads private_fact markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_page reads derived_atom markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_page reads foreign_source markers",
+          "pass": true,
+          "detail": "1/2 markers"
+        },
+        {
+          "name": "local ontology_get reads private_ontology markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_raw_data reads private_raw_data markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        },
+        {
+          "name": "local get_page reads private_orphan markers",
+          "pass": true,
+          "detail": "1/1 markers"
+        }
+      ]
+    },
+    "cells": [
+      {
+        "principal": "none",
+        "op": "get_page",
+        "mandatory": true,
+        "probes": 1,
+        "signal": 1,
+        "signal_by_phase": {},
+        "leaks": 0,
+        "oracles": 0,
+        "errors": 0,
+        "refusals": 1,
+        "accepted": 0,
+        "covered": true,
+        "status": "Complete"
+      },
+      {
+        "principal": "none",
+        "op": "search",
+        "mandatory": true,
+        "probes": 1,
+        "signal": 1,
+        "signal_by_phase": {},
+        "leaks": 0,
+        "oracles": 0,
+        "errors": 0,
+        "refusals": 1,
+        "accepted": 0,
+        "covered": true,
+        "status": "Complete"
+      },
+      {
+        "principal": "none",
+        "op": "list_pages",
+        "mandatory": true,
+        "probes": 1,
+        "signal": 1,
+        "signal_by_phase": {},
+        "leaks": 0,
+        "oracles": 0,
+        "errors": 0,
+        "refusals": 1,
+        "accepted": 0,
+        "covered": true,
+        "status": "Complete"
+      },
+      {
+        "principal": "invalid-token",
+        "op": "get_page",
+        "mandatory": true,
+        "probes": 1,
+        "signal": 1,
+        "signal_by_phase": {},
+        "leaks": 0,
+        "oracles": 0,
+        "errors": 0,
+        "refusals": 1,
+        "accepted": 0,
+        "covered": true,
+        "status": "Complete"
+      },
+      {
+        "principal": "invalid-token",
+        "op": "search",
+        "mandatory": true,
+        "probes": 1,
+        "signal": 1,
+        "signal_by_phase": {},
+        "leaks": 0,
+        "oracles": 0,
+        "errors": 0,
+        "refusals": 1,
+        "accepted": 0,
+        "covered": true,
+        "status": "Complete"
+      },
+      {
+        "principal": "invalid-token",
+        "op": "list_pages",
+        "mandatory": true,
+        "probes": 1,
+        "signal": 1,
+        "signal_by_phase": {},
+        "leaks": 0,
+        "oracles": 0,
+        "errors": 0,
+        "refusals": 1,
+        "accepted": 0,
+        "covered": true,
+        "status": "Complete"
+      },
+      {
+        "principal": "expired-token",
+        "op": "get_page",
+        "mandatory": true,
+        "probes": 1,
+        "signal": 1,
+        "signal_by_phase": {},
+        "leaks": 0,
+        "oracles": 0,
+        "errors": 0,
+        "refusals": 1,
+        "accepted": 0,
+        "covered": true,
+        "status": "Complete"
+      },
+      {
+        "principal": "expired-token",
+        "op": "search",
+        "mandatory": true,
+        "probes": 1,
+        "signal": 1,
+        "signal_by_phase": {},
+        "leaks": 0,
+        "oracles": 0,
+        "errors": 0,
+        "refusals": 1,
+        "accepted": 0,
+        "covered": true,
+        "status": "Complete"
+      },
+      {
+        "principal": "expired-token",
+        "op": "list_pages",
+        "mandatory": true,
+        "probes": 1,
+        "signal": 1,
+        "signal_by_phase": {},
+        "leaks": 0,
+        "oracles": 0,
+        "errors": 0,
+        "refusals": 1,
+        "accepted": 0,
+        "covered": true,
+        "status": "Complete"
+      },
+      {
+        "principal": "scoped",
+        "op": "get_page",
+        "mandatory": true,
+        "probes": 35,
+        "signal": 30,
+        "signal_by_phase": {
+          "interleaved": 15,
+          "scoped-again": 15
+        },
+        "leaks": 16,
+        "oracles": 0,
+        "errors": 0,
+        "covered": true,
+        "status": "Failed"
+      },
+      {
+        "principal": "scoped",
+        "op": "search",
+        "mandatory": true,
+        "probes": 243,
+        "signal": 182,
+        "signal_by_phase": {
+          "interleaved": 91,
+          "scoped-again": 91
+        },
+        "leaks": 121,
+        "oracles": 0,
+        "errors": 0,
+        "covered": true,
+        "status": "Failed"
+      },
+      {
+        "principal": "scoped",
+        "op": "list_pages",
+        "mandatory": true,
+        "probes": 99,
+        "signal": 98,
+        "signal_by_phase": {
+          "interleaved": 49,
+          "scoped-again": 49
+        },
+        "leaks": 99,
+        "oracles": 0,
+        "errors": 0,
+        "covered": true,
+        "status": "Failed"
+      },
+      {
+        "principal": "owner",
+        "op": "get_page",
+        "mandatory": true,
+        "probes": 49,
+        "signal": 28,
+        "signal_by_phase": {
+          "warm-owner": 14,
+          "interleaved": 14
+        },
+        "leaks": 16,
+        "oracles": 0,
+        "errors": 0,
+        "covered": true,
+        "status": "Failed"
+      },
+      {
+        "principal": "owner",
+        "op": "search",
+        "mandatory": true,
+        "probes": 257,
+        "signal": 180,
+        "signal_by_phase": {
+          "warm-owner": 90,
+          "interleaved": 90
+        },
+        "leaks": 121,
+        "oracles": 0,
+        "errors": 0,
+        "covered": true,
+        "status": "Failed"
+      },
+      {
+        "principal": "owner",
+        "op": "list_pages",
+        "mandatory": true,
+        "probes": 113,
+        "signal": 96,
+        "signal_by_phase": {
+          "warm-owner": 48,
+          "interleaved": 48
+        },
+        "leaks": 97,
+        "oracles": 0,
+        "errors": 0,
+        "covered": true,
+        "status": "Failed"
+      }
+    ],
+    "optional_cells": [
+      {
+        "op": "get_active_schema_pack",
+        "surface": "schema-pack",
+        "status": "Not covered"
+      },
+      {
+        "op": "list_schema_packs",
+        "surface": "schema-pack",
+        "status": "Not covered"
+      },
+      {
+        "op": "schema_stats",
+        "surface": "schema-pack",
+        "status": "Not covered"
+      },
+      {
+        "op": "schema_lint",
+        "surface": "schema-pack",
+        "status": "Not covered"
+      },
+      {
+        "op": "schema_graph",
+        "surface": "schema-pack",
+        "status": "Not covered"
+      },
+      {
+        "op": "schema_explain_type",
+        "surface": "schema-pack",
+        "status": "Not covered"
+      },
+      {
+        "op": "schema_review_orphans",
+        "surface": "schema-pack",
+        "status": "Not covered"
+      },
+      {
+        "op": "takes_scorecard",
+        "surface": "aggregate",
+        "status": "Not covered"
+      },
+      {
+        "op": "takes_calibration",
+        "surface": "aggregate",
+        "status": "Not covered"
+      },
+      {
+        "op": "get_calibration_profile",
+        "surface": "aggregate",
+        "status": "Not covered"
+      },
+      {
+        "op": "find_anomalies",
+        "surface": "aggregate",
+        "status": "Not covered"
+      },
+      {
+        "op": "find_experts",
+        "surface": "aggregate",
+        "status": "Not covered"
+      },
+      {
+        "op": "open_loops",
+        "surface": "open-loop",
+        "status": "Not covered"
+      }
+    ],
+    "missing_ops": [],
+    "unsupported_ops": {},
+    "handshake": [
+      {
+        "principal": "none",
+        "op": "(initialize)",
+        "http_status": 401,
+        "refused": true,
+        "canary": null,
+        "detail": "{\"error\":\"invalid_token\",\"error_description\":\"Missing Authorization header\"}"
+      },
+      {
+        "principal": "none",
+        "op": "(tools/list)",
+        "http_status": 401,
+        "refused": true,
+        "canary": null,
+        "detail": "{\"error\":\"invalid_token\",\"error_description\":\"Missing Authorization header\"}"
+      },
+      {
+        "principal": "invalid-token",
+        "op": "(initialize)",
+        "http_status": 401,
+        "refused": true,
+        "canary": null,
+        "detail": "{\"error\":\"invalid_token\",\"error_description\":\"Invalid token\"}"
+      },
+      {
+        "principal": "invalid-token",
+        "op": "(tools/list)",
+        "http_status": 401,
+        "refused": true,
+        "canary": null,
+        "detail": "{\"error\":\"invalid_token\",\"error_description\":\"Invalid token\"}"
+      },
+      {
+        "principal": "expired-token",
+        "op": "(initialize)",
+        "http_status": 401,
+        "refused": true,
+        "canary": null,
+        "detail": "{\"error\":\"invalid_token\",\"error_description\":\"Token expired\"}"
+      },
+      {
+        "principal": "expired-token",
+        "op": "(tools/list)",
+        "http_status": 401,
+        "refused": true,
+        "canary": null,
+        "detail": "{\"error\":\"invalid_token\",\"error_description\":\"Token expired\"}"
+      }
+    ],
+    "refusals": [],
+    "refusal_status_codes": {
+      "401": 15
+    },
+    "findings": [
+      {
+        "probe": "owner:get_page:private_page:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "owner:get_page:private_page:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "owner:get_page:derived_atom:base:warm-owner",
+        "evidence": "marker zxtokamivagiq: {\"id\":5,\"slug\":\"atoms/fosisuziq\",\"type\":\"atom\",\"title\":\"Atom zxtokamivagiq\",\"compiled_truth\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes/hub-suxuq"
+      },
+      {
+        "probe": "owner:get_page:derived_atom:source_id=__all__:warm-owner",
+        "evidence": "marker zxtokamivagiq: {\"id\":5,\"slug\":\"atoms/fosisuziq\",\"type\":\"atom\",\"title\":\"Atom zxtokamivagiq\",\"compiled_truth\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes/hub-suxuq"
+      },
+      {
+        "probe": "owner:get_page:private_raw_data:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "owner:get_page:private_orphan:source_id=__all__:warm-owner",
+        "evidence": "marker zxjatazokojuq: {\"id\":18,\"slug\":\"notes/zihehogoq\",\"type\":\"note\",\"title\":\"Orphan zxjatazokojuq\",\"compiled_truth\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"timeline\":\"\",\"frontm"
+      },
+      {
+        "probe": "owner:get_page:private_orphan:base:warm-owner",
+        "evidence": "marker zxjatazokojuq: {\"id\":18,\"slug\":\"notes/zihehogoq\",\"type\":\"note\",\"title\":\"Orphan zxjatazokojuq\",\"compiled_truth\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"timeline\":\"\",\"frontm"
+      },
+      {
+        "probe": "owner:get_page:private_raw_data:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=chunk:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=window:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:salience=on:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=auto:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=section:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=page:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:salience=off:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:salience=strong:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:recency=off:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:recency=on:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:fields=full:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"page_id\":2,\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:fields=lean:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:recency=strong:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=chunk:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:base:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=window:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=section:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=auto:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=page:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:salience=off:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:salience=on:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:salience=strong:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:recency=off:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:fields=lean:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:recency=strong:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:recency=on:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:fields=full:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"page_id\":5,\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:source_id=__all__:warm-owner",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:private_orphan:base:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=chunk:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=window:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=section:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=page:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=auto:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:salience=off:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:salience=on:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:salience=strong:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:recency=off:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:recency=on:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:recency=strong:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:hub:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:return_unit=chunk:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_orphan:fields=full:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"page_id\":18,\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_sour"
+      },
+      {
+        "probe": "owner:search:private_orphan:fields=lean:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:source_id=__all__:warm-owner",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:hub:return_unit=window:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:return_unit=section:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:return_unit=page:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:return_unit=auto:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:salience=strong:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:salience=on:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:salience=off:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:recency=off:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:recency=on:warm-owner",
+        "evidence": "marker zxkapewezeteq: e_safety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL3hlZG90aWdpcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:recency=strong:warm-owner",
+        "evidence": "marker zxkapewezeteq: e_safety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL3hlZG90aWdpcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:fields=lean:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: fety\":\"unknown\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:hub:fields=full:warm-owner",
+        "evidence": "marker zxkapewezeteq: wn\",\"id\":\"gbrain-page:v1:WyJhbHBoYSIsIm5vdGVzL2ZpbGxlci1tZWdlcSJd\"},{\"slug\":\"notes/guwahusoq\",\"page_id\":2,\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:list_pages:private_page:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"}]"
+      },
+      {
+        "probe": "owner:list_pages:private_page:sort=updated_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"}]"
+      },
+      {
+        "probe": "owner:list_pages:private_page:sort=updated_asc:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"}]"
+      },
+      {
+        "probe": "owner:list_pages:private_page:sort=created_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"}]"
+      },
+      {
+        "probe": "owner:list_pages:private_page:sort=slug:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"}]"
+      },
+      {
+        "probe": "owner:list_pages:private_page:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"}]"
+      },
+      {
+        "probe": "owner:list_pages:private_take:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_take:sort=updated_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_take:sort=created_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_take:sort=updated_asc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.182421Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/xe"
+      },
+      {
+        "probe": "owner:list_pages:private_take:sort=slug:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:04:00.801556Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_fact:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_take:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_fact:sort=updated_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_fact:sort=updated_asc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.182421Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/xe"
+      },
+      {
+        "probe": "owner:list_pages:private_fact:sort=created_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_fact:sort=slug:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:04:00.801556Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_fact:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:derived_atom:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:derived_atom:sort=updated_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:derived_atom:sort=created_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:derived_atom:sort=updated_asc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.182421Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/xe"
+      },
+      {
+        "probe": "owner:list_pages:derived_atom:sort=slug:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:04:00.801556Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_ontology:sort=updated_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_ontology:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:derived_atom:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_ontology:sort=updated_asc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.182421Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/xe"
+      },
+      {
+        "probe": "owner:list_pages:private_ontology:sort=created_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_ontology:sort=slug:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:04:00.801556Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_ontology:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_raw_data:sort=updated_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_raw_data:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_raw_data:sort=updated_asc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.182421Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/xe"
+      },
+      {
+        "probe": "owner:list_pages:private_raw_data:sort=created_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_raw_data:sort=slug:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:04:00.801556Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_orphan:sort=updated_asc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.182421Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/xe"
+      },
+      {
+        "probe": "owner:list_pages:private_orphan:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_raw_data:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_orphan:sort=updated_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_orphan:sort=created_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_orphan:sort=slug:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:04:00.801556Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:hub:sort=created_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:hub:base:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:hub:sort=updated_asc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.182421Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/xe"
+      },
+      {
+        "probe": "owner:list_pages:hub:sort=updated_desc:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:private_orphan:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:hub:sort=slug:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:04:00.801556Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "owner:list_pages:hub:source_id=__all__:warm-owner",
+        "evidence": "marker zxkapewezeteq: pdated_at_iso\":\"2026-10-06T19:03:57.875492Z\"},{\"slug\":\"notes/guwahusoq\",\"source_id\":\"alpha\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"updated_at\":\"2026-10-06T19:03:57.533Z\",\"updated_at_iso\":\"2026-10-06T19:03:57.533040Z\"},{\"slug\":\"notes/hu"
+      },
+      {
+        "probe": "scoped:get_page:private_page:source_id=__all__:interleaved",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "scoped:get_page:private_page:base:interleaved",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "owner:get_page:private_page:source_id=__all__:interleaved",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "owner:get_page:private_page:base:interleaved",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "scoped:get_page:derived_atom:base:interleaved",
+        "evidence": "marker zxtokamivagiq: {\"id\":5,\"slug\":\"atoms/fosisuziq\",\"type\":\"atom\",\"title\":\"Atom zxtokamivagiq\",\"compiled_truth\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes/hub-suxuq"
+      },
+      {
+        "probe": "owner:get_page:derived_atom:base:interleaved",
+        "evidence": "marker zxtokamivagiq: {\"id\":5,\"slug\":\"atoms/fosisuziq\",\"type\":\"atom\",\"title\":\"Atom zxtokamivagiq\",\"compiled_truth\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes/hub-suxuq"
+      },
+      {
+        "probe": "scoped:get_page:derived_atom:source_id=__all__:interleaved",
+        "evidence": "marker zxtokamivagiq: {\"id\":5,\"slug\":\"atoms/fosisuziq\",\"type\":\"atom\",\"title\":\"Atom zxtokamivagiq\",\"compiled_truth\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes/hub-suxuq"
+      },
+      {
+        "probe": "owner:get_page:derived_atom:source_id=__all__:interleaved",
+        "evidence": "marker zxtokamivagiq: {\"id\":5,\"slug\":\"atoms/fosisuziq\",\"type\":\"atom\",\"title\":\"Atom zxtokamivagiq\",\"compiled_truth\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes/hub-suxuq"
+      },
+      {
+        "probe": "owner:get_page:private_raw_data:base:interleaved",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "owner:get_page:private_raw_data:source_id=__all__:interleaved",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "scoped:get_page:private_raw_data:base:interleaved",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "owner:get_page:private_orphan:base:interleaved",
+        "evidence": "marker zxjatazokojuq: {\"id\":18,\"slug\":\"notes/zihehogoq\",\"type\":\"note\",\"title\":\"Orphan zxjatazokojuq\",\"compiled_truth\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"timeline\":\"\",\"frontm"
+      },
+      {
+        "probe": "owner:get_page:private_orphan:source_id=__all__:interleaved",
+        "evidence": "marker zxjatazokojuq: {\"id\":18,\"slug\":\"notes/zihehogoq\",\"type\":\"note\",\"title\":\"Orphan zxjatazokojuq\",\"compiled_truth\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"timeline\":\"\",\"frontm"
+      },
+      {
+        "probe": "scoped:get_page:private_raw_data:source_id=__all__:interleaved",
+        "evidence": "marker zxkapewezeteq: {\"id\":2,\"slug\":\"notes/guwahusoq\",\"type\":\"note\",\"title\":\"Note zxkapewezeteq\",\"compiled_truth\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-suxuq]].\",\""
+      },
+      {
+        "probe": "scoped:get_page:private_orphan:base:interleaved",
+        "evidence": "marker zxjatazokojuq: {\"id\":18,\"slug\":\"notes/zihehogoq\",\"type\":\"note\",\"title\":\"Orphan zxjatazokojuq\",\"compiled_truth\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"timeline\":\"\",\"frontm"
+      },
+      {
+        "probe": "scoped:get_page:private_orphan:source_id=__all__:interleaved",
+        "evidence": "marker zxjatazokojuq: {\"id\":18,\"slug\":\"notes/zihehogoq\",\"type\":\"note\",\"title\":\"Orphan zxjatazokojuq\",\"compiled_truth\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"timeline\":\"\",\"frontm"
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=chunk:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:return_unit=chunk:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:base:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:base:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=section:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=window:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=page:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:return_unit=window:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:return_unit=section:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:return_unit=auto:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:return_unit=auto:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:return_unit=page:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:salience=off:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:salience=on:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:salience=strong:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:salience=off:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:recency=off:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:salience=on:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:salience=strong:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:recency=strong:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:recency=on:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:recency=off:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:fields=lean:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:recency=on:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:fields=full:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"page_id\":2,\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:recency=strong:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:fields=lean:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:private_page:source_id=__all__:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:fields=full:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"page_id\":2,\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "scoped:search:private_page:source_id=__all__:interleaved",
+        "evidence": "marker zxkapewezeteq: [{\"slug\":\"notes/guwahusoq\",\"title\":\"Note zxkapewezeteq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nPlanning memo zxkapewezeteq for the offsite. See [[notes/hub-s"
+      },
+      {
+        "probe": "owner:search:derived_atom:base:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=chunk:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=window:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:base:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=section:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:return_unit=chunk:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:return_unit=window:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=page:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:return_unit=section:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:return_unit=auto:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:salience=off:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:return_unit=page:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:salience=on:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:return_unit=auto:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:salience=strong:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:salience=off:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:recency=off:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:salience=on:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:recency=on:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:recency=strong:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:salience=strong:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:recency=off:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:fields=lean:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:recency=on:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:fields=full:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"page_id\":5,\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:recency=strong:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:fields=lean:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:derived_atom:source_id=__all__:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:fields=full:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"page_id\":5,\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "scoped:search:derived_atom:source_id=__all__:interleaved",
+        "evidence": "marker zxtokamivagiq: [{\"slug\":\"atoms/fosisuziq\",\"title\":\"Atom zxtokamivagiq\",\"type\":\"atom\",\"chunk_text\":\"Revised once.\\nExtracted claim zxtokamivagiq from a conversation. See [[notes"
+      },
+      {
+        "probe": "owner:search:private_orphan:base:interleaved",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=chunk:interleaved",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=window:interleaved",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=section:interleaved",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=page:interleaved",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:return_unit=auto:interleaved",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:salience=off:interleaved",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      },
+      {
+        "probe": "owner:search:private_orphan:salience=on:interleaved",
+        "evidence": "marker zxjatazokojuq: [{\"slug\":\"notes/zihehogoq\",\"title\":\"Orphan zxjatazokojuq\",\"type\":\"note\",\"chunk_text\":\"Revised once.\\nLoose thought zxjatazokojuq, not linked anywhere.\",\"chunk_id\":"
+      }
+    ],
+    "harness_error_samples": [],
+    "no_signal_by_cell": {},
+    "server_log_tail": [
+      "[gbrain-serve] dispatch op=list_pages args_sha256=7c4186dc51a091df",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=38fc0503ee294389",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=f66a1cc8f86c42fa",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=384a7d20911ed221",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=02e7575e1ebd4eb9",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=384a7d20911ed221",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=02e7575e1ebd4eb9",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=84195482e5dd8e69",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=687a8d162f9a4f4b",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=f66a1cc8f86c42fa",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=7c4186dc51a091df",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=687a8d162f9a4f4b",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=02e7575e1ebd4eb9",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=384a7d20911ed221",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=84195482e5dd8e69",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=687a8d162f9a4f4b",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=02e7575e1ebd4eb9",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=f66a1cc8f86c42fa",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=7c4186dc51a091df",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=687a8d162f9a4f4b",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=384a7d20911ed221",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=84195482e5dd8e69",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=f66a1cc8f86c42fa",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=02e7575e1ebd4eb9",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=38fc0503ee294389",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=384a7d20911ed221",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=7c4186dc51a091df",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=687a8d162f9a4f4b",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=84195482e5dd8e69",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=02e7575e1ebd4eb9",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=f66a1cc8f86c42fa",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=687a8d162f9a4f4b",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=84195482e5dd8e69",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=38fc0503ee294389",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=f66a1cc8f86c42fa",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=7c4186dc51a091df",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=7c4186dc51a091df",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=84195482e5dd8e69",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=f66a1cc8f86c42fa",
+      "[gbrain-serve] dispatch op=list_pages args_sha256=7c4186dc51a091df"
+    ]
+  },
+  "accounting": {
+    "planned": 2289,
+    "attempted": 2289,
+    "scored": 2289,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

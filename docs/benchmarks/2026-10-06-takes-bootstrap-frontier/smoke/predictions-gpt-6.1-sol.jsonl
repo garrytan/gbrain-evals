@@ -1,0 +1,3 @@
+{"id":"take-plain-v1","claims":[{"claim":"Acme Example is the strongest team in the batch.","kind":"take","weight":0.9},{"claim":"Acme Example is right to prioritize distribution over features.","kind":"take","weight":0.8}]}
+{"id":"take-plain-v2","claims":[{"claim":"Widget Co is the strongest team in the batch.","kind":"take","weight":0.9},{"claim":"Widget Co's focus on distribution over features is the right strategy.","kind":"take","weight":0.85}]}
+{"id":"take-plain-v3","claims":[{"claim":"Gadget Example is the strongest team in the batch.","kind":"take","weight":0.9},{"claim":"Gadget Example is right to prioritize distribution over features.","kind":"take","weight":0.8}]}

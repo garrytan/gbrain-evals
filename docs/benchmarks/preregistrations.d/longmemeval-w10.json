@@ -1,0 +1,9 @@
+{
+ "schema_version": 1,
+ "experiments": [
+  { "id": "w10a-longmemeval-current-pin", "preregistration": "docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md", "results": ["docs/benchmarks/2026-10-*-longmemeval-w10a-current-pin.md", "docs/benchmarks/2026-10-*-longmemeval-w10a-current-pin/*"] },
+  { "id": "w10b-longmemeval-reader-replay", "preregistration": "docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md", "results": ["docs/benchmarks/2026-10-*-longmemeval-w10b-reader-replay.md", "docs/benchmarks/2026-10-*-longmemeval-w10b-reader-replay/*"] },
+  { "id": "w10c-longmemeval-full-context", "preregistration": "docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md", "results": ["docs/benchmarks/2026-10-*-longmemeval-w10c-full-context.md", "docs/benchmarks/2026-10-*-longmemeval-w10c-full-context/*"] },
+  { "id": "w8-longmemeval-control", "preregistration": "docs/benchmarks/2026-10-06-w8-longmemeval-control-preregistration.md", "results": ["docs/benchmarks/2026-10-*-w8-longmemeval-control.md", "docs/benchmarks/2026-10-*-w8-longmemeval-control/*"] }
+ ]
+}

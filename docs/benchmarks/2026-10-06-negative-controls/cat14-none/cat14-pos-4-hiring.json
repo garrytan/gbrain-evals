@@ -1,0 +1,80 @@
+{
+  "probe_id": "cat14-pos-4-hiring",
+  "category": "calibration-pattern-confidence-boost",
+  "question": "Should I hire a COO who was great at a slower-paced company?",
+  "baseline_answer": "## Answer\n\nThe brain has no direct verdict on this specific COO, and it won't tell you whether to hire. It does hold two resolved hiring takes from garry that bear on the pattern of a strong operator from a slower-paced setting.\n\n- garry called a polished operator \"wrong-stage for early team\". The outcome was correct, with conviction weight 0.7, recorded 2024-04-12 [cat14/cat14-pos-4-hiring/take-1].\n- garry called an executive someone who \"couldn't adapt to startup velocity\". The outcome was correct, with conviction weight 0.75, recorded 2024-08-20 [cat14/cat14-pos-4-hiring/take-2].\n\nBoth cases ended with the concern being borne out. In both, the mismatch was between the person's prior environment or polish and the pace or stage of the new company. That is a pattern in garry's past judgments, not a rule, and the pages don't say how many similar hires worked out.\n\nThe pages don't say whether the executives in these takes were COOs, or how slow their previous companies were. They also don't give the current company's stage, so the pattern can't be matched to your situation.",
+  "calibrated_answer": "## Answer\n\nThe brain has no direct ruling on this exact question, and it contains no take about a COO specifically. It does hold two resolved hiring calls by garry that bear on the pattern of an operator from a slower-paced environment.\n\n- garry judged that a polished operator was wrong-stage for an early team. That call was recorded as correct, with conviction weight 0.7 (2024-04-12) [cat14/cat14-pos-4-hiring/take-1].\n- garry judged that an executive couldn't adapt to startup velocity. That call was recorded as correct, with conviction weight 0.75 (2024-08-20) [cat14/cat14-pos-4-hiring/take-2].\n\nBoth resolved as correct, so the brain's record leans toward skepticism when a strong track record comes from a different pace or stage. The excerpts don't say what the earlier companies were, what the roles were, or what signals drove those judgments. Whether they apply to a COO depends on that missing context.\n\nNo `<takes>` rows matched, so there are no other holders' views or counter-examples to weigh against these two.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE"
+    ]
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both use impersonal database language and untranslated conviction weights rather than a consistently conversational voice. B states the skeptical implication more directly, but both offer essentially the same evidence and contextual caveats, so their substantive guidance is equivalent. || Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both sound like database reports rather than a friend, and their untranslated conviction weights introduce clinical-style numerical jargon. Their substantive guidance is equivalent: past pace mismatches warrant caution, but missing context prevents a confident hiring recommendation."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both use impersonal database language and untranslated conviction weights rather than a consistently conversational voice. B states the skeptical implication more directly, but both offer essentially the same evidence and contextual caveats, so their substantive guidance is equivalent. || Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both sound like database reports rather than a friend, and their untranslated conviction weights introduce clinical-style numerical jargon. Their substantive guidance is equivalent: past pace mismatches warrant caution, but missing context prevents a confident hiring recommendation."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both use impersonal database language and untranslated conviction weights rather than a consistently conversational voice. B states the skeptical implication more directly, but both offer essentially the same evidence and contextual caveats, so their substantive guidance is equivalent. || Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both sound like database reports rather than a friend, and their untranslated conviction weights introduce clinical-style numerical jargon. Their substantive guidance is equivalent: past pace mismatches warrant caution, but missing context prevents a confident hiring recommendation."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both use impersonal database language and untranslated conviction weights rather than a consistently conversational voice. B states the skeptical implication more directly, but both offer essentially the same evidence and contextual caveats, so their substantive guidance is equivalent. || Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both sound like database reports rather than a friend, and their untranslated conviction weights introduce clinical-style numerical jargon. Their substantive guidance is equivalent: past pace mismatches warrant caution, but missing context prevents a confident hiring recommendation."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both use impersonal database language and untranslated conviction weights rather than a consistently conversational voice. B states the skeptical implication more directly, but both offer essentially the same evidence and contextual caveats, so their substantive guidance is equivalent. || Both answers reference the relevant track record of accurate executive stage-fit judgments, without forcing in an unrelated bias. Neither explicitly names the user's gut prior alongside a track-record counter-prior. Both sound like database reports rather than a friend, and their untranslated conviction weights introduce clinical-style numerical jargon. Their substantive guidance is equivalent: past pace mismatches warrant caution, but missing context prevents a confident hiring recommendation."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.8,
+  "failure_modes": [
+    "voice_conversational"
+  ]
+}

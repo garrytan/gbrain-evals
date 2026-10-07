@@ -1,0 +1,41 @@
+{
+ "started": "2026-10-06T18:28:37.395Z",
+ "finished": "2026-10-06T21:35:58.092Z",
+ "args": [
+  "~/.capy/work/lane-c/data/longmemeval_s_cleaned.json",
+  "--top-k",
+  "5",
+  "--no-trajectory",
+  "--mode",
+  "balanced",
+  "--reranker",
+  "on",
+  "--autocut",
+  "off",
+  "--model",
+  "anthropic:claude-sonnet-5-5",
+  "--reader-mode",
+  "notes",
+  "--reader-max-tokens",
+  "1024",
+  "--yes",
+  "--embed-cache",
+  "~/.capy/work/lane-c/embed-cache.sqlite",
+  "--output",
+  "~/.capy/work/lane-c/w10/w10a-capture/rows.ndjson",
+  "--resume-from",
+  "~/.capy/work/lane-c/w10/w10a-capture/rows.ndjson"
+ ],
+ "exit": 0,
+ "preregistration_attestation": {
+  "preregistration": "docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md",
+  "preregistration_commit": "8d21790e5037325638a83f2becb768209902c4a1",
+  "runner_commit": "8d21790e5037325638a83f2becb768209902c4a1",
+  "worktree_clean_for_preregistration": true,
+  "on_origin": true,
+  "attested_at": "2026-10-06T18:27:40.432Z"
+ },
+ "budget_run": "w10a-batch-2026-10-06T18-27-40-743Z-7ba71661",
+ "retrieval_spend_usd": 7.903166900000013,
+ "retrieval_requests": 24851
+}

@@ -1,0 +1,6987 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "a4-abstention",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 240,
+  "n_scored": 240,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.104.0",
+  "gbrain_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+  "execution": {
+    "source_tree": {
+      "sha256": "dd3dc10647cb6c6e9acbe8569461ae032c50c888a8f083c9df6be5367e376c62",
+      "files": 4443,
+      "git_head": "7cfca650a171fe44080c33e1a23d788ee8a72c4f",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "declared_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "version": "0.60.104.0",
+      "package_sha256": "99add9ef401b69dc23b807aa66889af7aa836ec136896322f1ab5ff67fb83ef0",
+      "loaded_git_head": null
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "caller": "operation handlers with OperationContext { remote: false, sourceId: default }",
+    "search_path": "query operation, expand=false, limit=5; no embedding gateway (keyword only); search.crag_escalation and search.crag_think at defaults (off)",
+    "seed": 20261001,
+    "generator_version": "a4-abstention-gen/1.0.0",
+    "ledger_sha256": "5e3447b8f48142a0b651f13fb0b03da4bb0a1e838ae97551e3b7e01af7725395",
+    "answerer": "not run (hermetic)",
+    "s4_on": "not run (pass --s4-on with the paid arm and a TypeSafe key)",
+    "entrypoints": [
+      "operations: put_page, query (response meta retrieval.crag via emitResponseMeta)",
+      "src/core/search/crag.ts gradeRetrievalConfidence (S4 reducer input, ignoreDecideEvidence)",
+      "src/core/ai/decide/protection.ts isProtectedResult (S4 identity-hit input)",
+      "src/eval/longmemeval/reader.ts READER_NOTES_SYSTEM_TEXT, buildReaderUserText (paid answerer)",
+      "src/eval/longmemeval/sanitize.ts renderChatBlock (paid answerer)",
+      "src/core/ai/gateway.ts chat (paid answerer)"
+    ],
+    "gbrain_overlay": null,
+    "paid": null,
+    "verdict_rule": "verdict = the preregistered quality thresholds (crag meta on every call; answerable evidence floor 0.80); every other metric lives in data and never changes the verdict"
+  },
+  "hashes": {
+    "ledger_sha256": "5e3447b8f48142a0b651f13fb0b03da4bb0a1e838ae97551e3b7e01af7725395"
+  },
+  "started_at": "2026-10-07T20:06:21.907Z",
+  "finished_at": "2026-10-07T20:06:40.833Z",
+  "data": {
+    "crag": {
+      "calls": 240,
+      "meta_coverage": 1,
+      "answerable_evidence_rate": 1,
+      "by_class": {
+        "answerable_profile": {
+          "strong": 0,
+          "moderate": 50,
+          "weak": 10,
+          "missing": 0
+        },
+        "answerable_note": {
+          "strong": 0,
+          "moderate": 50,
+          "weak": 10,
+          "missing": 0
+        },
+        "missing_attribute": {
+          "strong": 0,
+          "moderate": 0,
+          "weak": 50,
+          "missing": 0
+        },
+        "sibling_attribute": {
+          "strong": 0,
+          "moderate": 0,
+          "weak": 40,
+          "missing": 0
+        },
+        "absent_entity": {
+          "strong": 0,
+          "moderate": 0,
+          "weak": 30,
+          "missing": 0
+        }
+      },
+      "reasons_by_class": {
+        "answerable_profile": {
+          "keyword_relaxed_corroborated": 30,
+          "keyword_exact_top": 20,
+          "keyword_relaxed_top": 10
+        },
+        "answerable_note": {
+          "keyword_relaxed_corroborated": 30,
+          "keyword_exact_top": 20,
+          "keyword_relaxed_top": 10
+        },
+        "missing_attribute": {
+          "keyword_relaxed_top": 50
+        },
+        "sibling_attribute": {
+          "keyword_relaxed_top": 40
+        },
+        "absent_entity": {
+          "keyword_relaxed_top": 30
+        }
+      },
+      "operating_points": [
+        {
+          "answer_when_grade_at_least": "strong",
+          "coverage": 0,
+          "risk_insufficient_evidence": null,
+          "risk_unanswerable": null,
+          "sufficient_evidence_kept": 0
+        },
+        {
+          "answer_when_grade_at_least": "moderate",
+          "coverage": 0.4166666666666667,
+          "risk_insufficient_evidence": 0,
+          "risk_unanswerable": 0,
+          "sufficient_evidence_kept": 0.8333333333333334
+        },
+        {
+          "answer_when_grade_at_least": "weak",
+          "coverage": 1,
+          "risk_insufficient_evidence": 0.5,
+          "risk_unanswerable": 0.5,
+          "sufficient_evidence_kept": 1
+        }
+      ],
+      "entity_lookup_by_class": {
+        "answerable_profile": {
+          "strong": 60,
+          "moderate": 0,
+          "weak": 0,
+          "missing": 0
+        },
+        "answerable_note": {
+          "strong": 60,
+          "moderate": 0,
+          "weak": 0,
+          "missing": 0
+        },
+        "missing_attribute": {
+          "strong": 50,
+          "moderate": 0,
+          "weak": 0,
+          "missing": 0
+        },
+        "sibling_attribute": {
+          "strong": 40,
+          "moderate": 0,
+          "weak": 0,
+          "missing": 0
+        },
+        "absent_entity": {
+          "strong": 0,
+          "moderate": 0,
+          "weak": 30,
+          "missing": 0
+        }
+      },
+      "top1_keyword_relaxed_by_class": {
+        "answerable_profile": "40/60",
+        "answerable_note": "40/60",
+        "missing_attribute": "50/50",
+        "sibling_attribute": "40/40",
+        "absent_entity": "30/30"
+      },
+      "strong_on_unanswerable": {
+        "hits": 0,
+        "n": 120,
+        "by_class": {
+          "missing_attribute": "0/50",
+          "sibling_attribute": "0/40",
+          "absent_entity": "0/30"
+        }
+      }
+    },
+    "s4": {
+      "unanswerable": 120,
+      "not_asked_no_evidence": 0,
+      "blocked_from_abstaining": 0,
+      "blocked_by_class": {
+        "missing_attribute": "0/50",
+        "sibling_attribute": "0/40",
+        "absent_entity": "0/30"
+      },
+      "identity_hit": 0,
+      "blocked_on_entity_lookup_evidence": {
+        "missing_attribute": "50/50",
+        "sibling_attribute": "40/40",
+        "absent_entity": "0/30"
+      },
+      "strong_grade": 0,
+      "note": "S4 abstains only when p < threshold - margin, coverage is complete, and neither an identity hit nor a strong deterministic grade is present (answerable.ts reduceAnswerable). Evidence here is the query top five; think gathers its own evidence, so this is an estimate of the structural ceiling, not a measurement of S4 on."
+    },
+    "presence": [
+      {
+        "name": "pages written without error",
+        "ok": true,
+        "expected": 310,
+        "actual": 310
+      },
+      {
+        "name": "answer text present in a stored chunk of its page",
+        "ok": true,
+        "expected": 120,
+        "actual": 120
+      }
+    ],
+    "timings_ms": {
+      "hermetic_total": 17886,
+      "seed": 8034,
+      "queries": 7007
+    },
+    "gaps": [
+      {
+        "capability": "keyless answerer or \"I don't know\" response",
+        "reason": "think without a chat model returns its gather without an answer (src/core/think/index.ts:784,1113-1116); the query op only grades. The keyless path cannot abstain, so A4 defines a paid harness answerer."
+      },
+      {
+        "capability": "attribute-level sufficiency in the CRAG grade",
+        "reason": "the grade reads rank-1 evidence labels; an exact title match is strong whether or not the asked-for attribute is present (crag.ts:67-106, matrix P5)."
+      },
+      {
+        "capability": "S4 abstention on exact-entity questions",
+        "reason": "reduceAnswerable passes whenever there is an identity hit or a strong deterministic grade (answerable.ts:62-68), so S4 cannot abstain on a missing attribute of a company whose page matches exactly."
+      },
+      {
+        "capability": "S4 on at gbrain defaults",
+        "reason": "gbrain ships no reference calibration for the answerable slot, so decide.slots.answerable.mode=on is inactive (no_calibration) on a fresh brain; the --s4-on arm (2026-10-06) applies an explicit threshold with force_on."
+      }
+    ],
+    "rows": [
+      {
+        "id": "q001",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/gavimar-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q002",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/gavimar-example",
+          "companies/oberox-example",
+          "companies/iskanth-example",
+          "companies/iskaska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q003",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/oberox-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/iskanth-example",
+          "companies/iskaska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q004",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/iskanth-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q005",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/iskaska-example",
+          "companies/doravel-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q006",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoravel-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q007",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/rilimar-example",
+          "companies/quoravel-example",
+          "companies/quoraska-example",
+          "companies/astendra-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q008",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/quoraska-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q009",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/quoruvio-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q010",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/doruvio-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q011",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/paxuvio-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q012",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/oberumbra-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q013",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/belippa-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q014",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/astilia-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q015",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/quoronde-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q016",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/karello-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/gavimar-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q017",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/riluvio-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q018",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quorosk-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q019",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/rililia-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q020",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/helumbra-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q021",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/astendra-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q022",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/jovilia-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q023",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/mavuvio-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q024",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/paxumbra-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q025",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/doranth-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q026",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/quorimar-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q027",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/iskumbra-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q028",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/levavel-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q029",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/cavippa-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q030",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/paxendra-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q031",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/gavumbra-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q032",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/falippa-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q033",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/helardo-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q034",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/elmaska-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q035",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/mavumbra-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q036",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/elmox-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q037",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/jovaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q038",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/gavilia-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q039",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/sivavel-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q040",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/jovonde-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q041",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/dorumbra-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q042",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/belumbra-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q043",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/mavethe-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q044",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/elmosk-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q045",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/astumbra-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q046",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/karardo-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q047",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/levello-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q048",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/jovippa-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q049",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/doronde-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q050",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/elmippa-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q051",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/elmello-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q052",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/belavel-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q053",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/gavanth-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q054",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/mavurne-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q055",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/elmanth-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q056",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/belello-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q057",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "companies/rilosk-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q058",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/falavel-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q059",
+        "cls": "answerable_profile",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "companies/mavilia-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q060",
+        "cls": "answerable_profile",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/paxox-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q061",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-iskosk-example-hq",
+          "companies/iskosk-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q062",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-belonde-example-ceo",
+          "companies/belonde-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q063",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-jovurne-example-founded",
+          "companies/jovurne-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q064",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-gavendra-example-headcount",
+          "companies/gavendra-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q065",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-jovethe-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q066",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/cavardo-example",
+          "notes/a4-cavardo-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q067",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-cavello-example-hq",
+          "companies/cavello-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q068",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-norurne-example-ceo",
+          "companies/norurne-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q069",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-toronde-example-founded",
+          "companies/toronde-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q070",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-sivosk-example-headcount",
+          "companies/sivosk-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q071",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-mavippa-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q072",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/iskonde-example",
+          "notes/a4-iskonde-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q073",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-falosk-example-hq",
+          "companies/falosk-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q074",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-torosk-example-ceo",
+          "companies/torosk-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q075",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-norardo-example-founded",
+          "companies/norardo-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q076",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-belilia-example-headcount",
+          "companies/belilia-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q077",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-falumbra-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q078",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/sivonde-example",
+          "notes/a4-sivonde-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q079",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-karavel-example-hq",
+          "companies/karavel-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q080",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-oberilia-example-ceo",
+          "companies/oberilia-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q081",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-jovardo-example-founded",
+          "companies/jovardo-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q082",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-iskardo-example-headcount",
+          "companies/iskardo-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q083",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-oberethe-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q084",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/levosk-example",
+          "notes/a4-levosk-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q085",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-iskello-example-hq",
+          "companies/iskello-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q086",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-paxonde-example-ceo",
+          "companies/paxonde-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q087",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-sivuvio-example-founded",
+          "companies/sivuvio-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q088",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-cavox-example-headcount",
+          "companies/cavox-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q089",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-elmonde-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q090",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/dorello-example",
+          "notes/a4-dorello-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q091",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-toruvio-example-hq",
+          "companies/toruvio-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q092",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-levanth-example-ceo",
+          "companies/levanth-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q093",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-rilello-example-founded",
+          "companies/rilello-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q094",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-sivippa-example-headcount",
+          "companies/sivippa-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q095",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-levumbra-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q096",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/dorippa-example",
+          "notes/a4-dorippa-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q097",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-karurne-example-hq",
+          "companies/karurne-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q098",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-cavanth-example-ceo",
+          "companies/cavanth-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q099",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-mavimar-example-founded",
+          "companies/mavimar-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q100",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-helurne-example-headcount",
+          "companies/helurne-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q101",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-gavavel-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q102",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/jovanth-example",
+          "notes/a4-jovanth-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q103",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-quorello-example-hq",
+          "companies/quorello-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q104",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-iskox-example-ceo",
+          "companies/iskox-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q105",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-asturne-example-founded",
+          "companies/asturne-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q106",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-jovosk-example-headcount",
+          "companies/jovosk-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q107",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-helonde-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q108",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/noranth-example",
+          "notes/a4-noranth-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q109",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-falardo-example-hq",
+          "companies/falardo-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q110",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-karaska-example-ceo",
+          "companies/karaska-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q111",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-elmardo-example-founded",
+          "companies/elmardo-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q112",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-helosk-example-headcount",
+          "companies/helosk-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q113",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-oberippa-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q114",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/sivello-example",
+          "notes/a4-sivello-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q115",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-karox-example-hq",
+          "companies/karox-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q116",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-norendra-example-ceo",
+          "companies/norendra-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q117",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_exact_top",
+        "slugs": [
+          "notes/a4-toranth-example-founded",
+          "companies/toranth-example",
+          "companies/gavimar-example",
+          "companies/doravel-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "keyword_exact",
+          "keyword_relaxed": false
+        }
+      },
+      {
+        "id": "q118",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-jovendra-example-headcount",
+          "companies/jovendra-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q119",
+        "cls": "answerable_note",
+        "grade": "moderate",
+        "reason": "keyword_relaxed_corroborated",
+        "slugs": [
+          "notes/a4-paxello-example-runway",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q120",
+        "cls": "answerable_note",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/oberendra-example",
+          "notes/a4-oberendra-example-arr",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example"
+        ],
+        "sufficient": true,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q121",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/paxurne-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q122",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/torurne-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q123",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/elmethe-example",
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q124",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/levonde-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q125",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q126",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quorardo-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q127",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/helello-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q128",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/falox-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q129",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/astello-example",
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q130",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/astuvio-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q131",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q132",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/mavendra-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q133",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/karippa-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q134",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/paxilia-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q135",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/paxavel-example",
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q136",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/levuvio-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q137",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q138",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/gavardo-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q139",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/torendra-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q140",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/sivanth-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q141",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/oberanth-example",
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q142",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/elmendra-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q143",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q144",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/helavel-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q145",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/astanth-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q146",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/gavippa-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q147",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/cavaska-example",
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q148",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/mavosk-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q149",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q150",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/helimar-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q151",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/gavuvio-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q152",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/paximar-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q153",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/oberimar-example",
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q154",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quorilia-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q155",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q156",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/astox-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q157",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/paxaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q158",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/rilavel-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q159",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/iskimar-example",
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q160",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/oberavel-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q161",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q162",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/gavox-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q163",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/belimar-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q164",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/elmilia-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q165",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/noravel-example",
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q166",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/belosk-example",
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q167",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q168",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/karendra-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q169",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/norello-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q170",
+        "cls": "missing_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/karimar-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q171",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/elmurne-labs-example",
+          "companies/elmurne-freight-example",
+          "companies/sivaska-labs-example",
+          "companies/helendra-labs-example",
+          "companies/karumbra-labs-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q172",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/belanth-health-example",
+          "companies/belanth-robotics-example",
+          "companies/rilaska-health-example",
+          "companies/dorurne-health-example",
+          "companies/karosk-health-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q173",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/helox-grid-example",
+          "companies/helox-foods-example",
+          "companies/jovimar-grid-example",
+          "companies/rilox-grid-example",
+          "companies/beluvio-grid-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q174",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/norumbra-freight-example",
+          "companies/norumbra-analytics-example",
+          "companies/elmurne-freight-example",
+          "companies/cavendra-freight-example",
+          "companies/karumbra-freight-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q175",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/jovox-marine-example",
+          "companies/jovox-robotics-example",
+          "companies/norimar-robotics-example",
+          "companies/karonde-robotics-example",
+          "companies/doravel-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q176",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/sivaska-foods-example",
+          "companies/helox-foods-example",
+          "companies/sivaska-labs-example",
+          "companies/jovimar-foods-example",
+          "companies/helendra-foods-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q177",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/rilaska-analytics-example",
+          "companies/rilaska-health-example",
+          "companies/toravel-analytics-example",
+          "companies/norumbra-analytics-example",
+          "companies/gavello-analytics-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q178",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/beluvio-marine-example",
+          "companies/beluvio-grid-example",
+          "companies/jovox-marine-example",
+          "companies/levox-marine-example",
+          "companies/norimar-marine-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q179",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/sivilia-labs-example",
+          "companies/elmurne-labs-example",
+          "companies/sivilia-freight-example",
+          "companies/sivaska-labs-example",
+          "companies/helendra-labs-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q180",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/dorurne-health-example",
+          "companies/dorurne-robotics-example",
+          "companies/toravel-health-example",
+          "companies/rilaska-health-example",
+          "companies/cavosk-health-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q181",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/jovimar-grid-example",
+          "companies/jovimar-foods-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q182",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/cavendra-freight-example",
+          "companies/elmurne-freight-example",
+          "companies/norumbra-freight-example",
+          "companies/sivilia-freight-example",
+          "companies/cavendra-analytics-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q183",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/norimar-robotics-example",
+          "companies/jovox-robotics-example",
+          "companies/dorurne-robotics-example",
+          "companies/belanth-robotics-example",
+          "companies/norimar-marine-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q184",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/helendra-foods-example",
+          "companies/helox-foods-example",
+          "companies/jovimar-foods-example",
+          "companies/sivaska-foods-example",
+          "companies/helendra-labs-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q185",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/toravel-analytics-example",
+          "companies/toravel-health-example",
+          "companies/karosk-analytics-example",
+          "companies/norumbra-analytics-example",
+          "companies/gavello-analytics-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q186",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quorumbra-marine-example",
+          "companies/quorumbra-grid-example",
+          "companies/jovox-marine-example",
+          "companies/beluvio-marine-example",
+          "companies/levox-marine-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q187",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/sivilia-labs-example",
+          "companies/karumbra-labs-example",
+          "companies/karumbra-freight-example",
+          "companies/paxardo-labs-example",
+          "companies/karilia-labs-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q188",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/cavosk-health-example",
+          "companies/rilaska-health-example",
+          "companies/dorurne-health-example",
+          "companies/belanth-health-example",
+          "companies/cavosk-robotics-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q189",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/rilox-grid-example",
+          "companies/helox-grid-example",
+          "companies/beluvio-grid-example",
+          "companies/rilox-foods-example",
+          "companies/levox-grid-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q190",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/gavello-freight-example",
+          "companies/elmurne-freight-example",
+          "companies/norumbra-freight-example",
+          "companies/gavello-analytics-example",
+          "companies/sivilia-freight-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q191",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/karonde-robotics-example",
+          "companies/belanth-robotics-example",
+          "companies/jovox-robotics-example",
+          "companies/karonde-marine-example",
+          "companies/norox-robotics-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q192",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/paxardo-foods-example",
+          "companies/sivaska-foods-example",
+          "companies/helox-foods-example",
+          "companies/jovimar-foods-example",
+          "companies/paxardo-labs-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q193",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/norumbra-analytics-example",
+          "companies/karosk-analytics-example",
+          "companies/rilaska-analytics-example",
+          "companies/karosk-health-example",
+          "companies/gavonde-analytics-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q194",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/levox-marine-example",
+          "companies/jovox-marine-example",
+          "companies/beluvio-marine-example",
+          "companies/levox-grid-example",
+          "companies/norimar-marine-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q195",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/karilia-labs-example",
+          "companies/elmurne-labs-example",
+          "companies/sivaska-labs-example",
+          "companies/karilia-freight-example",
+          "companies/helendra-labs-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q196",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/oberonde-health-example",
+          "companies/rilaska-health-example",
+          "companies/dorurne-health-example",
+          "companies/belanth-health-example",
+          "companies/karosk-health-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q197",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/dorox-grid-example",
+          "companies/jovimar-grid-example",
+          "companies/helox-grid-example",
+          "companies/rilox-grid-example",
+          "companies/dorox-foods-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q198",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/levaska-freight-example",
+          "companies/cavendra-freight-example",
+          "companies/elmurne-freight-example",
+          "companies/karumbra-freight-example",
+          "companies/norumbra-freight-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q199",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/norox-robotics-example",
+          "companies/norimar-robotics-example",
+          "companies/norox-marine-example",
+          "companies/karonde-robotics-example",
+          "companies/doravel-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q200",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/belaska-foods-example",
+          "companies/helox-foods-example",
+          "companies/jovimar-foods-example",
+          "companies/sivaska-foods-example",
+          "companies/dorox-foods-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q201",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/gavurne-analytics-example",
+          "companies/toravel-analytics-example",
+          "companies/norumbra-analytics-example",
+          "companies/rilaska-analytics-example",
+          "companies/gavello-analytics-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q202",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/falethe-marine-example",
+          "companies/jovox-marine-example",
+          "companies/levox-marine-example",
+          "companies/beluvio-marine-example",
+          "companies/norox-marine-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q203",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/mavavel-labs-example",
+          "companies/elmurne-labs-example",
+          "companies/sivaska-labs-example",
+          "companies/helendra-labs-example",
+          "companies/karumbra-labs-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q204",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/norethe-health-example",
+          "companies/toravel-health-example",
+          "companies/rilaska-health-example",
+          "companies/cavosk-health-example",
+          "companies/belanth-health-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q205",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/falurne-grid-example",
+          "companies/falurne-foods-example",
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q206",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/gavonde-freight-example",
+          "companies/elmurne-freight-example",
+          "companies/norumbra-freight-example",
+          "companies/sivilia-freight-example",
+          "companies/cavendra-freight-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q207",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/rilanth-robotics-example",
+          "companies/jovox-robotics-example",
+          "companies/dorurne-robotics-example",
+          "companies/belanth-robotics-example",
+          "companies/karonde-robotics-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q208",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/torimar-foods-example",
+          "companies/helox-foods-example",
+          "companies/jovimar-foods-example",
+          "companies/sivaska-foods-example",
+          "companies/dorox-foods-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q209",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/mavanth-analytics-example",
+          "companies/karosk-analytics-example",
+          "companies/norumbra-analytics-example",
+          "companies/toravel-analytics-example",
+          "companies/rilaska-analytics-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q210",
+        "cls": "sibling_attribute",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoranth-marine-example",
+          "companies/jovox-marine-example",
+          "companies/beluvio-marine-example",
+          "companies/levox-marine-example",
+          "companies/norimar-marine-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "strong",
+          "reason": "exact_lookup",
+          "s4_blocked": true
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q211",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q212",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q213",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q214",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q215",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q216",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q217",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q218",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q219",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q220",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q221",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q222",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q223",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q224",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q225",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q226",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q227",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q228",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q229",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q230",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q231",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q232",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q233",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q234",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q235",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example",
+          "companies/astendra-example",
+          "companies/gavimar-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q236",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q237",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/quoraska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/helumbra-example",
+          "companies/oberox-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q238",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/rilimar-example",
+          "companies/karello-example",
+          "companies/gavimar-example",
+          "companies/iskanth-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q239",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/paxuvio-example",
+          "companies/astilia-example",
+          "companies/karello-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      },
+      {
+        "id": "q240",
+        "cls": "absent_entity",
+        "grade": "weak",
+        "reason": "keyword_relaxed_top",
+        "slugs": [
+          "companies/doravel-example",
+          "companies/iskaska-example",
+          "companies/quoravel-example",
+          "companies/rilimar-example",
+          "companies/quoraska-example"
+        ],
+        "sufficient": false,
+        "s4": {
+          "asked": true,
+          "identity_hit": false,
+          "strong_grade": false
+        },
+        "lookup": {
+          "grade": "weak",
+          "reason": "keyword_relaxed_top",
+          "s4_blocked": false
+        },
+        "top1": {
+          "evidence": "weak_semantic",
+          "keyword_relaxed": true
+        }
+      }
+    ],
+    "s4_on": null,
+    "paid": null,
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 240,
+    "attempted": 240,
+    "scored": 240,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

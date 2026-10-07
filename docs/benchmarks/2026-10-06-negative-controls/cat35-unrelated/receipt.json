@@ -1,0 +1,173 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat35-transcript-distill",
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "started_at": "2026-10-06T19:19:42.127Z",
+  "finished_at": "2026-10-06T19:24:13.992Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 67,
+  "n_scored": 67,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "resolved_config": {
+    "mode": "b-pre-validity",
+    "lanes": [
+      "dream"
+    ],
+    "transcripts": 8,
+    "corpus_sha": "5fce384e57839be4d9adc231849718463af5235061b698576f63ff587cd22eef",
+    "judge_prompt_version": "2026-09-28-v2",
+    "input_allowlist": [
+      "cat35.sut.source@1",
+      "cat35.judge.coverage@1",
+      "cat35.judge.leak@1",
+      "cat35.judge.usability@1"
+    ],
+    "transcript_mode": "unrelated",
+    "control_inputs": {
+      "coding-reflection-01": {
+        "donor": "emotional-processing-01",
+        "chars": 3881,
+        "of_chars": 5606,
+        "sha256": "9784c371258c7b3da588170b2393a9c74429b725c390ba8a767a93a2e48f0000"
+      },
+      "coding-reflection-02": {
+        "donor": "emotional-processing-01",
+        "chars": 3881,
+        "of_chars": 4644,
+        "sha256": "9784c371258c7b3da588170b2393a9c74429b725c390ba8a767a93a2e48f0000"
+      },
+      "emotional-processing-01": {
+        "donor": "people-deal-01",
+        "chars": 4674,
+        "of_chars": 3881,
+        "sha256": "f4208d632921c2b527ee40a103a36305348dc8e7ca17c569d992f26d90410f21"
+      },
+      "emotional-processing-02": {
+        "donor": "people-deal-01",
+        "chars": 4674,
+        "of_chars": 6418,
+        "sha256": "f4208d632921c2b527ee40a103a36305348dc8e7ca17c569d992f26d90410f21"
+      },
+      "people-deal-01": {
+        "donor": "startup-ideation-01",
+        "chars": 6165,
+        "of_chars": 4674,
+        "sha256": "91992c9aea0e150a8b3ed0638550850f5faf43087db6a7866b49cb70eea86653"
+      },
+      "people-deal-02": {
+        "donor": "startup-ideation-01",
+        "chars": 6165,
+        "of_chars": 6425,
+        "sha256": "91992c9aea0e150a8b3ed0638550850f5faf43087db6a7866b49cb70eea86653"
+      },
+      "startup-ideation-01": {
+        "donor": "coding-reflection-01",
+        "chars": 5606,
+        "of_chars": 6165,
+        "sha256": "5c2d461cf68aed0229a628a34739e0f6a3d6215aa0e3f4bd26d44f195f48097c"
+      },
+      "startup-ideation-02": {
+        "donor": "coding-reflection-01",
+        "chars": 5606,
+        "of_chars": 5387,
+        "sha256": "5c2d461cf68aed0229a628a34739e0f6a3d6215aa0e3f4bd26d44f195f48097c"
+      }
+    },
+    "judge_transport": "OpenAI Responses API through openai-judge-shim: no temperature, reasoning effort low, max_output_tokens at least 8000",
+    "dream_model": "anthropic:claude-sonnet-5-5",
+    "triage_model": "anthropic:claude-sonnet-5-5",
+    "facts_model": "anthropic:claude-sonnet-5-5",
+    "max_turns": 8,
+    "triage_threshold": 0.5,
+    "subagent_timeout_ms": 600000,
+    "dream_concurrency": 2,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-10-06-191942-cat35-bpre.json"
+  },
+  "judge": {
+    "model": "openai:gpt-6.1-sol",
+    "temperature": 0,
+    "rubric_version": "2026-09-28-v2"
+  },
+  "data": {
+    "coverage_by_lane": {
+      "dream": {
+        "macro": 0,
+        "micro": 0,
+        "strict": 0,
+        "partial_rate": 0,
+        "ci_lo": 0,
+        "ci_hi": 0,
+        "n_items": 67,
+        "judge_failed_excluded": 0,
+        "joint_macro": 0,
+        "joint_ci_lo": 0,
+        "joint_ci_hi": 0,
+        "joint_n_items": 67,
+        "joint_excluded": 0
+      }
+    },
+    "gates": {
+      "verbatim_coverage": null,
+      "judge_failed_rate": true,
+      "dream_emission": true
+    },
+    "judge_failed_rate": 0,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-10-06-191942-cat35-bpre.json"
+  },
+  "cost": {
+    "usd": 0.476538,
+    "input_tokens": 165488,
+    "output_tokens": 27570,
+    "basis": "budget ledger cat35-transcript-distill-2026-10-06T19-19-42-227Z-e3359c24: 87 paid requests, 3 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0.000145,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 4,
+      "max": 2817.6
+    }
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-06-negative-controls-preregistration.md",
+    "preregistration_commit": "16d787266a30c390983ea7beca542ba77183201c",
+    "runner_commit": "5e9d79974a2b0d701ce3dcf2cb82d449633b6885",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-06T19:19:42.146Z"
+  },
+  "delivered_tokens": {
+    "tokens": 165488,
+    "basis": "provider-reported input tokens of every paid request (judges, fact extraction, dream synthesis and subagents), from the budget ledger"
+  },
+  "accounting": {
+    "planned": 67,
+    "attempted": 67,
+    "scored": 67,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "d1ffefbeccb60c39c0e581c3c7ec2ca762d57d98ac12dfc9a385e2f113210955",
+      "files": 3651,
+      "git_head": "b57c6ccb5b7f7ca1bf31ac80266a132de210c16c",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}
