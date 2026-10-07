@@ -28,6 +28,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
+import { homedir } from 'node:os';
 import { BudgetRun, initLedger, ledgerStatus } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS } from './metering-proxy.ts';
 
@@ -52,6 +53,12 @@ export interface CellSpec {
   /** Local environment variables forwarded to the VM; the proxy alone reads them. */
   pass?: string[];
   timeout_hours?: number;
+  /**
+   * A custodian sealed cell (Phase 7): the VM gets a custody root, ~/custody/<lease id>, outside the pulled output,
+   * passed to the command as SHOOTOUT_CUSTODY. The lease proxy's ledger and usage log (whose keys name questions)
+   * live there too, so only the lease summary and what the command itself writes to SHOOTOUT_OUT leave the VM.
+   */
+  sealed?: boolean;
 }
 
 export type ParamValue = number | boolean | string;
@@ -223,7 +230,7 @@ export class Campaign {
   launchArgv(l: LeaseState): string[] {
     const c = this.cell(l.cell);
     const remoteOut = `eval/reports/shootout/${l.cell}/${l.lease_id}`;
-    const payload = Buffer.from(JSON.stringify({ lease_id: l.lease_id, lease_usd: l.usd, max_output_tokens: l.max_output_tokens, command: c.command, out: remoteOut })).toString('base64');
+    const payload = Buffer.from(JSON.stringify({ lease_id: l.lease_id, lease_usd: l.usd, max_output_tokens: l.max_output_tokens, command: c.command, out: remoteOut, ...(c.sealed ? { sealed: true } : {}) })).toString('base64');
     let setup = c.setup ? (existsSync(resolve(REPO_ROOT, c.setup)) ? resolve(REPO_ROOT, c.setup) : resolve(c.setup)) : null;
     if (c.setup_command) {
       mkdirSync(join(this.stateDir, 'setup'), { recursive: true });
@@ -317,15 +324,24 @@ export class Campaign {
   }
 }
 
-/** On the VM: start the lease proxy, run the cell command against it, write the lease summary beside the cell's output. */
-export async function runRemote(payload: { lease_id: string; lease_usd: number; max_output_tokens?: number | null; command: string; out: string }, opts: { port?: number } = {}): Promise<number> {
+/**
+ * On the VM: start the lease proxy, run the cell command against it, write the lease summary beside the cell's output.
+ * A sealed cell keeps the proxy's ledger and usage log in its custody root (`opts.custodyBase`, default ~/custody).
+ * `opts.upstream` points the proxy at stand-in providers (keyless tests).
+ */
+export async function runRemote(payload: { lease_id: string; lease_usd: number; max_output_tokens?: number | null; command: string; out: string; sealed?: boolean },
+  opts: { port?: number; upstream?: Record<string, string>; custodyBase?: string } = {}): Promise<number> {
   const out = resolve(payload.out);
   mkdirSync(out, { recursive: true });
+  const custody = payload.sealed ? resolve(opts.custodyBase ?? join(homedir(), 'custody'), payload.lease_id) : null;
+  const traces = custody ? join(custody, 'proxy') : out;
+  mkdirSync(traces, { recursive: true });
   const port = opts.port ?? 8787;
-  const ledger = join(out, 'lease.sqlite');
+  const ledger = join(traces, 'lease.sqlite');
   const controlToken = randomUUID();
   const proxy = Bun.spawn([process.execPath, join(REPO_ROOT, 'eval/runner/metering-proxy.ts'), '--listen', `0.0.0.0:${port}`, '--budget-ledger', ledger, '--lease-usd', String(payload.lease_usd),
-    '--run-id', payload.lease_id, '--usage-log', join(out, 'usage.ndjson'), ...(payload.max_output_tokens ? ['--max-output-tokens', String(payload.max_output_tokens)] : []), '--control-token', controlToken], { stdout: 'inherit', stderr: 'inherit' });
+    '--run-id', payload.lease_id, '--usage-log', join(traces, 'usage.ndjson'), ...(payload.max_output_tokens ? ['--max-output-tokens', String(payload.max_output_tokens)] : []), '--control-token', controlToken,
+    ...Object.entries(opts.upstream ?? {}).flatMap(([prov, url]) => ['--upstream', `${prov}=${url}`])], { stdout: 'inherit', stderr: 'inherit' });
   let code: number | null = null;
   try {
     let up = false;
@@ -333,7 +349,7 @@ export async function runRemote(payload: { lease_id: string; lease_usd: number; 
     if (!up) throw new Error('the metering proxy did not start');
     const base = `http://127.0.0.1:${port}`;
     const env: Record<string, string | undefined> = { ...process.env, SHOOTOUT_OUT: out, SHOOTOUT_PROXY: base, SHOOTOUT_LEASE_ID: payload.lease_id, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken,
-      OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1` };
+      OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1`, ...(custody ? { SHOOTOUT_CUSTODY: custody } : {}) };
     for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
     // Not a login shell: a login profile can re-export the real keys over the dummy ones.
     const cell = Bun.spawn(['bash', '-c', payload.command], { cwd: REPO_ROOT, env, stdout: 'inherit', stderr: 'inherit' });

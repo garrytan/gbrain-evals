@@ -8,7 +8,7 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { checkSealedDestinations, exportAggregates, sealedPaths } from '../../eval/runner/memory-qa/sealed-profile.ts';
+import { checkSealedDestinations, exportAggregates, exportCell, sealedPaths } from '../../eval/runner/memory-qa/sealed-profile.ts';
 import { parseRunArgs, runArm } from '../../eval/runner/memory-qa/run.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -70,5 +70,31 @@ describe('aggregate export', () => {
     const text = readFileSync(join(dir, 'public.json'), 'utf8');
     expect(text).not.toContain(MARKERS[2]);
     expect(JSON.parse(text)['summary.recall_all_at_5']).toBe(0.5);
+  });
+});
+
+describe('cell export', () => {
+  const armReceipt = (extra: Record<string, unknown>) => JSON.stringify({ kind: 'memory-qa-arm', split: 'sealed', benchmark: 'locomo', summary: { qa_score: 0.61 }, outcomes: { scored: 10 }, ...extra });
+  test('one allowlisted file per arm; planted markers in receipts never survive', () => {
+    const cell = join(custody, 'cell-a', 'mqa');
+    for (const arm of ['fixed-evidence.native.b8000.main', 'vendor-default.rehydrated.bnone.main']) {
+      mkdirSync(join(cell, 'arms', arm), { recursive: true });
+      writeFileSync(join(cell, 'arms', arm, 'receipt.json'), armReceipt({ invalid_reasons: [MARKERS[2]], arm: { id: arm, note: MARKERS[0] }, qa: { contexts_file: MARKERS[4] } }));
+      writeFileSync(join(cell, 'arms', arm, 'rows.ndjson'), JSON.stringify({ id: MARKERS[5], qa_answer: MARKERS[0] }) + '\n');
+    }
+    writeFileSync(join(cell, 'contexts.ndjson'), JSON.stringify({ prompt: MARKERS[3] }) + '\n');
+    const out = join(custody, 'public-a');
+    expect(exportCell(cell, out)).toEqual(['fixed-evidence.native.b8000.main', 'vendor-default.rehydrated.bnone.main']);
+    const text = ['fixed-evidence.native.b8000.main.json', 'vendor-default.rehydrated.bnone.main.json'].map(f => readFileSync(join(out, f), 'utf8')).join('\n');
+    for (const m of MARKERS) expect(text).not.toContain(m);
+    expect(JSON.parse(readFileSync(join(out, 'fixed-evidence.native.b8000.main.json'), 'utf8'))).toEqual({ kind: 'memory-qa-arm', split: 'sealed', benchmark: 'locomo', 'summary.qa_score': 0.61, 'outcomes.scored': 10 });
+  });
+  test('an arm directory named outside the safe pattern stops the export; so does an export directory inside the cell', () => {
+    const cell = join(custody, 'cell-b', 'mqa');
+    mkdirSync(join(cell, 'arms', `x ${MARKERS[4]}!`), { recursive: true });
+    writeFileSync(join(cell, 'arms', `x ${MARKERS[4]}!`, 'receipt.json'), armReceipt({}));
+    expect(() => exportCell(cell, join(custody, 'public-b'))).toThrow(/outside \[A-Za-z0-9._-\]; nothing was exported/);
+    expect(() => readFileSync(join(custody, 'public-b', 'x.json'))).toThrow();
+    expect(() => exportCell(join(custody, 'cell-a', 'mqa'), join(custody, 'cell-a', 'mqa', 'export'))).toThrow(/outside the sealed cell output/);
   });
 });

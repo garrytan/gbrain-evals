@@ -366,7 +366,44 @@ of 34 structural and 43 search-only cases, and the pairing with Holm in which a 
 leaves the family) were accepted by Garry on 2026-10-06 and are stated under S3. Leases sum to $16.50, about $9.27
 estimated, $7.42 of it Graphiti's recipe. Recorded before any Phase 5 lease.
 
+**A5 (2026-10-06), custodian sealed batch (Phase 7).** Approved by Garry on 2026-10-06. Draft: the cells are in
+`docs/benchmarks/2026-10-06-oss-memory-shootout/phase7-cells.draft.json` and join the campaign only with this amendment.
+Campaign hash after A5: (filled when the cells join the campaign).
+
+- *Data.* LoCoMo sealed: conv-26, conv-30, conv-41, conv-42, conv-43, conv-49 and conv-50 (1,399 questions). BEAM-100K
+  sealed: the 14 sealed conversations of `eval/decisions/splits/beam-100k.json`, 224 questions. The 56
+  `preference_following` and `instruction_following` questions on those conversations are reserved for the P4 core
+  gate (commit `f03bc96`) and do not run; the cells select the other eight categories with `--categories`.
+- *Systems.* Basic Memory, Mem0, Hindsight, Graphiti and Cognee at their common configuration;
+  gbrain-shootout common at the repository pin `739e5cc`; gbrain-shootout common at frozen master
+  `c5fb0201d1960a0a5a81c35d77718311b03154b7`. The pin is gbrain's blind row: it was committed on 2026-10-04 and
+  contains none of the gbrain builds that the decisions below ran on these conversations (checked with
+  `git merge-base`), so its numbers carry no label.
+- *Fixed label.* Every number from the frozen-master row carries this label, verbatim: "gbrain decisions P6 (think
+  date frame), P2 E2 (date grounding) and P3 E1 used these 7 LoCoMo sealed conversations, and the P4 core gate
+  ingested these 14 BEAM-100K haystacks".
+- *Prior sealed use, for the audit.* P6 `think` date frame on sealed LoCoMo (`323c131`,
+  `docs/benchmarks/2026-10-05-heldout-verdicts/p6-think-dates-sealed-locomo-2026-10-06.json`); P2 E2 date grounding on
+  sealed LoCoMo (`66182e5`, `p2-e2-heldout-2026-10-04.json`); P3 E1 retrieval feedback, LoCoMo arm (`d21a2f8`,
+  `p3-e1-heldout-2026-10-04.json`); P4 core gate on the 14 BEAM-100K sealed haystacks, its 56 reserved questions
+  (`2b54049`, `p4-core-heldout-2026-10-06.json`).
+- *How the cells run.* Each cell runs memory-qa with `--split sealed --decision-id oss-memory-shootout-p7-sealed`,
+  its purpose and `GBRAIN_EVALS_CUSTODY_LOG`, under the sealed execution profile (`--sealed-profile`), with the Phase 4
+  four-arms file of its benchmark. The custody root is `~/custody/<lease id>` on the cell's VM, outside the output the
+  host pulls back: rows, reader contexts, answers, caches, the memory-qa log and the lease proxy's ledger and usage
+  log (whose keys name sealed questions) stay in it and are destroyed with the VM. Only three things leave: one file
+  of allowlisted aggregates per arm (`sealed-profile.ts export-cell`: finite numbers, booleans, hex hashes and fixed
+  vocabulary values), the custody access log (decision id, purpose, operator, host and time) and the lease summary.
+- *Order.* The batch runs last, after Phases 4 to 6, as one frozen batch.
+
 ## Changelog
+
+### 2026-10-06: amendment A5 drafted
+
+Drafted A5, the custodian sealed batch (Phase 7): LoCoMo sealed and BEAM-100K sealed without the P4 core gate's 56
+reserved questions, the five vendor common rows, gbrain-shootout common at the pin as the blind row and at frozen master
+with its fixed label, aggregates only, run last, and the audit list of prior sealed use. The campaign hash is filled
+when the cells join the campaign.
 
 ### 2026-10-06: gbrain master moved
 
