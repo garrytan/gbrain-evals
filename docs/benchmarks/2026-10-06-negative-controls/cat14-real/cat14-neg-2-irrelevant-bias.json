@@ -1,0 +1,79 @@
+{
+  "probe_id": "cat14-neg-2-irrelevant-bias",
+  "category": "calibration-bias-irrelevant",
+  "question": "How should we evaluate this AI infrastructure pitch from a technical perspective?",
+  "baseline_answer": "## Answer\n\nThe brain has no material on how to evaluate an AI infrastructure pitch technically. No pages cover technical diligence criteria, architecture, benchmarks, or past AI infrastructure investments, and there are no take hits.\n\nThe only retrieved pages are two resolved geography takes by garry, and both were incorrect:\n- \"This LA company won't scale\" was incorrect (conviction weight 0.8, recorded 2024-05-12) [cat14/cat14-neg-2-irrelevant-bias/take-1].\n- \"That Chicago founder is wrong-coast\" was incorrect (conviction weight 0.75, recorded 2024-09-04) [cat14/cat14-neg-2-irrelevant-bias/take-2].\n\nThese are about location, not technical merit. They show only that garry's past location-based judgments were wrong, with high conviction. They say nothing about how to assess the technical side of this pitch, so I am not drawing technical conclusions from them.",
+  "calibrated_answer": "## Answer\n\nThe brain has no material on how to evaluate an AI infrastructure pitch technically. No retrieved pages or takes cover technical criteria such as compute architecture, cost per inference, latency, or defensibility. No past evaluations of AI infrastructure companies appear either, and the takes search returned no hits. I can't give a grounded technical framework from this brain.\n\nThe only retrieved material is two resolved geography takes by garry, and both were incorrect:\n- \"This LA company won't scale\" was marked incorrect (conviction weight 0.8, recorded 2024-05-12) [cat14/cat14-neg-2-irrelevant-bias/take-1].\n- \"That Chicago founder is wrong-coast\" was marked incorrect (conviction weight 0.75, recorded 2024-09-04) [cat14/cat14-neg-2-irrelevant-bias/take-2].\n\nBoth concern location-based judgments, not technical assessment, so they say nothing about the technical merits of this pitch.\n\n## Calibration\n\n- **Active bias tag:** over-confident-geography, with a 0/2 record in 2024. The two resolved takes above are the evidence behind it [cat14/cat14-neg-2-irrelevant-bias/take-1] [cat14/cat14-neg-2-irrelevant-bias/take-2].\n- **Relevance to this question:** the pattern is domain-specific to geography, and the question is about technical evaluation. The brain shows no calibration data for technical-domain judgments, so the tag doesn't apply directly.\n- **Prior vs. counter-prior:** if garry's default reasoning on this pitch leans on where the company or founders are based, the geography-overconfidence pattern is the counter-prior to that. Nothing in the brain indicates what garry's prior on the technical side would be, or how well calibrated it is.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": false,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference geography overconfidence, which is irrelevant to technical diligence, although both correctly acknowledge that mismatch rather than drawing technical conclusions from it. Neither identifies an established gut prior about this pitch; B only offers a hypothetical location-based prior. Both use formal retrieval language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: the retrieved material cannot support technical evaluation, and neither supplies a useful technical diligence framework. || Both answers reference geography bias, which is unrelated to technical diligence, though both explicitly avoid applying it to the pitch. Neither identifies an actual gut prior and a relevant track-record counter-prior; A offers only a conditional geography example. Both use impersonal retrieval-report language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: they lack grounded technical material and provide no actionable technical evaluation framework."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference geography overconfidence, which is irrelevant to technical diligence, although both correctly acknowledge that mismatch rather than drawing technical conclusions from it. Neither identifies an established gut prior about this pitch; B only offers a hypothetical location-based prior. Both use formal retrieval language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: the retrieved material cannot support technical evaluation, and neither supplies a useful technical diligence framework. || Both answers reference geography bias, which is unrelated to technical diligence, though both explicitly avoid applying it to the pitch. Neither identifies an actual gut prior and a relevant track-record counter-prior; A offers only a conditional geography example. Both use impersonal retrieval-report language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: they lack grounded technical material and provide no actionable technical evaluation framework."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference geography overconfidence, which is irrelevant to technical diligence, although both correctly acknowledge that mismatch rather than drawing technical conclusions from it. Neither identifies an established gut prior about this pitch; B only offers a hypothetical location-based prior. Both use formal retrieval language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: the retrieved material cannot support technical evaluation, and neither supplies a useful technical diligence framework. || Both answers reference geography bias, which is unrelated to technical diligence, though both explicitly avoid applying it to the pitch. Neither identifies an actual gut prior and a relevant track-record counter-prior; A offers only a conditional geography example. Both use impersonal retrieval-report language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: they lack grounded technical material and provide no actionable technical evaluation framework."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference geography overconfidence, which is irrelevant to technical diligence, although both correctly acknowledge that mismatch rather than drawing technical conclusions from it. Neither identifies an established gut prior about this pitch; B only offers a hypothetical location-based prior. Both use formal retrieval language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: the retrieved material cannot support technical evaluation, and neither supplies a useful technical diligence framework. || Both answers reference geography bias, which is unrelated to technical diligence, though both explicitly avoid applying it to the pitch. Neither identifies an actual gut prior and a relevant track-record counter-prior; A offers only a conditional geography example. Both use impersonal retrieval-report language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: they lack grounded technical material and provide no actionable technical evaluation framework."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference geography overconfidence, which is irrelevant to technical diligence, although both correctly acknowledge that mismatch rather than drawing technical conclusions from it. Neither identifies an established gut prior about this pitch; B only offers a hypothetical location-based prior. Both use formal retrieval language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: the retrieved material cannot support technical evaluation, and neither supplies a useful technical diligence framework. || Both answers reference geography bias, which is unrelated to technical diligence, though both explicitly avoid applying it to the pitch. Neither identifies an actual gut prior and a relevant track-record counter-prior; A offers only a conditional geography example. Both use impersonal retrieval-report language and untranslated conviction weights rather than a consistently conversational voice. Their substantive response is the same: they lack grounded technical material and provide no actionable technical evaluation framework."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "voice_conversational",
+    "doesnt_force_fit_irrelevant_bias"
+  ]
+}

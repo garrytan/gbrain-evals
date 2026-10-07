@@ -1,0 +1,26 @@
+{
+ "schema_version": 1,
+ "family_id": "w10b-notes-vs-direct",
+ "registered_at": "2026-10-06",
+ "description": "W10b report-only: claude-sonnet-5-5 notes (B) against claude-sonnet-5-5 direct (A) on identical reranked retrieval, both judges.",
+ "alpha": 0.05,
+ "seed": 20261006,
+ "draws": 10000,
+ "id_field": "question_id",
+ "comparisons": [
+  {
+   "id": "notes-vs-direct-official",
+   "metric": "correct_official",
+   "gate": "exploratory",
+   "direction": "higher",
+   "cluster_by": "question_id"
+  },
+  {
+   "id": "notes-vs-direct-secondary",
+   "metric": "correct_secondary",
+   "gate": "exploratory",
+   "direction": "higher",
+   "cluster_by": "question_id"
+  }
+ ]
+}

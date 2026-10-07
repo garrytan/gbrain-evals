@@ -1,0 +1,156 @@
+{
+ "kind": "w10a",
+ "arms": {
+  "w10a-sonnet55-notes": {
+   "n": 500,
+   "official": 468,
+   "secondary": 475,
+   "judges_agree": 493,
+   "judged_by_both": 500,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 30,
+     "official": 28,
+     "secondary": 28
+    },
+    "knowledge-update": {
+     "total": 72,
+     "official": 71,
+     "secondary": 72
+    },
+    "multi-session": {
+     "total": 121,
+     "official": 103,
+     "secondary": 107
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "official": 56,
+     "secondary": 56
+    },
+    "single-session-preference": {
+     "total": 30,
+     "official": 30,
+     "secondary": 30
+    },
+    "single-session-user": {
+     "total": 64,
+     "official": 62,
+     "secondary": 64
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "official": 118,
+     "secondary": 118
+    }
+   },
+   "usd": 11.591193,
+   "mean_input_tokens": 22167,
+   "mean_output_tokens": 203
+  },
+  "w10b-sonnet55-notes": {
+   "n": 500,
+   "official": 462,
+   "secondary": 468,
+   "judges_agree": 488,
+   "judged_by_both": 500,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 30,
+     "official": 27,
+     "secondary": 26
+    },
+    "knowledge-update": {
+     "total": 72,
+     "official": 68,
+     "secondary": 69
+    },
+    "multi-session": {
+     "total": 121,
+     "official": 104,
+     "secondary": 109
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "official": 56,
+     "secondary": 56
+    },
+    "single-session-preference": {
+     "total": 30,
+     "official": 29,
+     "secondary": 29
+    },
+    "single-session-user": {
+     "total": 64,
+     "official": 63,
+     "secondary": 64
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "official": 115,
+     "secondary": 115
+    }
+   },
+   "usd": 11.772812,
+   "mean_input_tokens": 22077,
+   "mean_output_tokens": 203
+  }
+ },
+ "family": {
+  "family_id": "w10a-current-pin-vs-replay",
+  "verdict": "inconclusive",
+  "holm_family": [
+   "w10a-vs-w10b-sonnet55"
+  ],
+  "comparisons": [
+   {
+    "id": "w10a-vs-w10b-sonnet55",
+    "status": "inconclusive",
+    "n_pairs": 500,
+    "mean_a": 0.924,
+    "mean_b": 0.936,
+    "delta": 0.012,
+    "ci95": [
+     -0.002,
+     0.028
+    ],
+    "mcnemar": {
+     "losses": 5,
+     "wins": 11,
+     "both_pass": 457,
+     "both_fail": 27,
+     "discordant": 16,
+     "p_two_sided": 0.210113525390625
+    },
+    "p_superiority": 0.08139186081391861,
+    "p_holm": 0.08139186081391861,
+    "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0224; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+   },
+   {
+    "id": "w10a-vs-w10b-sonnet55-secondary",
+    "status": "report_only",
+    "n_pairs": 500,
+    "mean_a": 0.936,
+    "mean_b": 0.95,
+    "delta": 0.014,
+    "ci95": [
+     0,
+     0.03
+    ],
+    "mcnemar": {
+     "losses": 4,
+     "wins": 11,
+     "both_pass": 464,
+     "both_fail": 21,
+     "discordant": 15,
+     "p_two_sided": 0.11846923828125
+    },
+    "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0217; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+   }
+  ]
+ }
+}

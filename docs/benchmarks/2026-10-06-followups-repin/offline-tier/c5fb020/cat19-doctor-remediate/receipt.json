@@ -1,0 +1,115 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat19-doctor-remediate",
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "started_at": "2026-10-06T18:12:57.779Z",
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hash embedding stub: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hash embedding stub: no model and no paid request"
+  },
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 5,
+  "n_scored": 5,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "resolved_config": {
+    "embed_transport": "stubbed-hash",
+    "embedding_model": "openai:text-embedding-3-large",
+    "embedding_dimensions": 1536,
+    "min_links_inserted": 20,
+    "min_score_delta": 15,
+    "skip_remediation": false,
+    "search_mode": null,
+    "reranker_enabled": null
+  },
+  "finished_at": "2026-10-06T18:13:00.600Z",
+  "data": {
+    "seed_pages": 30,
+    "baseline": {
+      "brain_score": 10,
+      "page_count": 30,
+      "missing_embeddings": 30,
+      "embed_coverage": 0,
+      "stale_pages": 30,
+      "orphan_pages": 30,
+      "dead_links": 0,
+      "embed_coverage_score": 0,
+      "link_density_score": 0,
+      "no_orphans_score": 0,
+      "link_count": 0,
+      "chunk_count": 30
+    },
+    "achieved": {
+      "brain_score": 85,
+      "page_count": 30,
+      "missing_embeddings": 0,
+      "embed_coverage": 1,
+      "stale_pages": 30,
+      "orphan_pages": 0,
+      "dead_links": 0,
+      "embed_coverage_score": 35,
+      "link_density_score": 25,
+      "no_orphans_score": 15,
+      "link_count": 35,
+      "chunk_count": 30
+    },
+    "brain_score_delta": 75,
+    "links_inserted": 35,
+    "doctor_plan_ids": [
+      "embed.stale",
+      "extract.stale"
+    ],
+    "steps": [
+      {
+        "id": "extract.links",
+        "description": "gbrain extract links --source db (runExtract)",
+        "duration_ms": 177,
+        "outcome": "extract links --source db completed",
+        "error": null
+      },
+      {
+        "id": "embed.stale",
+        "description": "gbrain embed --stale (runEmbedCore)",
+        "duration_ms": 231,
+        "outcome": "embedded 30, skipped 0, failures 0",
+        "error": null
+      }
+    ],
+    "wall_clock_ms": 2820
+  },
+  "accounting": {
+    "planned": 5,
+    "attempted": 5,
+    "scored": 5,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "51a844e41a15021d2c8f1cbfbaf4298d4657239b9c28420608bdf358e63608d2",
+      "files": 3588,
+      "git_head": "615560956ab9deee098cb2a0801fc4be606c56f2",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "probe_id": "cat14-pos-4-hiring",
+  "category": "calibration-pattern-confidence-boost",
+  "question": "Should I hire a COO who was great at a slower-paced company?",
+  "baseline_answer": "## Answer\n\nThe brain has no direct verdict on your question and no take about a specific COO candidate. It does hold two resolved past judgments by garry that bear on the pattern of hiring an executive from a slower-paced environment:\n\n- garry judged that a \"polished operator was wrong-stage for early team.\" That call was resolved as correct, with conviction weight 0.7, recorded 2024-04-12 [cat14/cat14-pos-4-hiring/take-1].\n- garry judged that an \"executive couldn't adapt to startup velocity.\" That call was resolved as correct, with conviction weight 0.75, recorded 2024-08-20 [cat14/cat14-pos-4-hiring/take-2].\n\nBoth resolved calls point the same way. In garry's past experience, executives whose strength came from a different stage or pace did not fit a fast, early-stage setting. These are two data points, and the excerpts don't say who the executives were or whether they were COOs. They also don't say what \"slower-paced\" meant in each case, or what the company's stage is now. So they show a pattern in garry's track record but don't settle whether this particular hire would work.\n\nThe brain doesn't say what would offset the risk, such as evidence that a candidate adapts to speed.",
+  "calibrated_answer": "## Answer\n\nThe brain has no direct data on this specific COO candidate, so it cannot say whether to hire. It does hold two closely related resolved calls from garry about executives whose backgrounds did not fit an early-stage environment.\n\n- Garry judged that a polished operator was wrong-stage for an early team. This was resolved as correct, with conviction weight 0.7, recorded 2024-04-12 [cat14/cat14-pos-4-hiring/take-1].\n- Garry judged that an executive couldn't adapt to startup velocity. This was resolved as correct, with conviction weight 0.75, recorded 2024-08-20 [cat14/cat14-pos-4-hiring/take-2].\n\nBoth calls resemble the situation in the question, a strong performer from a slower-paced company. In both cases the concern was stage or velocity mismatch, and both were borne out.\n\nThese are two precedents, not a rule. The brain does not show whether any slower-paced-company hire ever worked out, so there are no counterexamples to compare against.\n\n## Calibration\n\n- **Prior (default reasoning):** a track record of excellence at a prior company is a strong signal of future performance. This is the usual default when assessing a COO candidate. The brain does not record garry's own default on this, so this is an inferred framing.\n- **Counter-prior (from the hedged-domain self):** the brain's record shows stage-fit mismatch, not raw ability, was the failure mode in both resolved executive-hiring calls [cat14/cat14-pos-4-hiring/take-1] [cat14/cat14-pos-4-hiring/take-2].\n- **Track record:** the calibration profile notes that garry's stage-fit reads on executive hires are sharp, and that both 2024 wrong-stage calls came true within 6 months. The active bias tag is well-calibrated-stage-fit. This suggests garry's instinct on stage-fit can be given real weight. The sample is only two calls, which is small.\n- Both priors are shown here and neither has been substituted for the other.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference relevant stage-fit judgments, without forcing in an unrelated bias. B explicitly contrasts an inferred prior about past excellence with the user's track record on stage mismatch, while acknowledging that the prior is not documented. Neither maintains a friend-like voice, and both expose untranslated conviction weights; B adds further calibration jargon. Their substantive advice is similar, but B is more useful because it explicitly explains why the user's demonstrated stage-fit judgment deserves weight. || Both answers reference the relevant stage-fit track record without forcing in an unrelated bias. A explicitly contrasts prior-company excellence with the track-record warning about stage mismatch, although it acknowledges that the supposed gut prior is inferred rather than known. Neither maintains a friend-like voice, and both expose untranslated conviction weights and impersonal recordkeeping language. Their substantive guidance is equivalent: take the pace mismatch seriously, but two past calls do not settle this particular hire."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference relevant stage-fit judgments, without forcing in an unrelated bias. B explicitly contrasts an inferred prior about past excellence with the user's track record on stage mismatch, while acknowledging that the prior is not documented. Neither maintains a friend-like voice, and both expose untranslated conviction weights; B adds further calibration jargon. Their substantive advice is similar, but B is more useful because it explicitly explains why the user's demonstrated stage-fit judgment deserves weight. || Both answers reference the relevant stage-fit track record without forcing in an unrelated bias. A explicitly contrasts prior-company excellence with the track-record warning about stage mismatch, although it acknowledges that the supposed gut prior is inferred rather than known. Neither maintains a friend-like voice, and both expose untranslated conviction weights and impersonal recordkeeping language. Their substantive guidance is equivalent: take the pace mismatch seriously, but two past calls do not settle this particular hire."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference relevant stage-fit judgments, without forcing in an unrelated bias. B explicitly contrasts an inferred prior about past excellence with the user's track record on stage mismatch, while acknowledging that the prior is not documented. Neither maintains a friend-like voice, and both expose untranslated conviction weights; B adds further calibration jargon. Their substantive advice is similar, but B is more useful because it explicitly explains why the user's demonstrated stage-fit judgment deserves weight. || Both answers reference the relevant stage-fit track record without forcing in an unrelated bias. A explicitly contrasts prior-company excellence with the track-record warning about stage mismatch, although it acknowledges that the supposed gut prior is inferred rather than known. Neither maintains a friend-like voice, and both expose untranslated conviction weights and impersonal recordkeeping language. Their substantive guidance is equivalent: take the pace mismatch seriously, but two past calls do not settle this particular hire."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference relevant stage-fit judgments, without forcing in an unrelated bias. B explicitly contrasts an inferred prior about past excellence with the user's track record on stage mismatch, while acknowledging that the prior is not documented. Neither maintains a friend-like voice, and both expose untranslated conviction weights; B adds further calibration jargon. Their substantive advice is similar, but B is more useful because it explicitly explains why the user's demonstrated stage-fit judgment deserves weight. || Both answers reference the relevant stage-fit track record without forcing in an unrelated bias. A explicitly contrasts prior-company excellence with the track-record warning about stage mismatch, although it acknowledges that the supposed gut prior is inferred rather than known. Neither maintains a friend-like voice, and both expose untranslated conviction weights and impersonal recordkeeping language. Their substantive guidance is equivalent: take the pace mismatch seriously, but two past calls do not settle this particular hire."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference relevant stage-fit judgments, without forcing in an unrelated bias. B explicitly contrasts an inferred prior about past excellence with the user's track record on stage mismatch, while acknowledging that the prior is not documented. Neither maintains a friend-like voice, and both expose untranslated conviction weights; B adds further calibration jargon. Their substantive advice is similar, but B is more useful because it explicitly explains why the user's demonstrated stage-fit judgment deserves weight. || Both answers reference the relevant stage-fit track record without forcing in an unrelated bias. A explicitly contrasts prior-company excellence with the track-record warning about stage mismatch, although it acknowledges that the supposed gut prior is inferred rather than known. Neither maintains a friend-like voice, and both expose untranslated conviction weights and impersonal recordkeeping language. Their substantive guidance is equivalent: take the pace mismatch seriously, but two past calls do not settle this particular hire."
+    }
+  ],
+  "win_score": 0.75,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "presents_counter_prior",
+    "voice_conversational"
+  ]
+}

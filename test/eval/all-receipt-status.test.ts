@@ -117,7 +117,13 @@ describe('loadFreshReceipt', () => {
   });
 
   test('a fresh valid receipt loads, in schema v2 or legacy v1', () => {
-    writeFileSync(path, JSON.stringify(upgradeReceipt(receipt({}))));
+    // A stated execution block keeps upgradeReceipt from hashing the source tree and the installed package (about
+    // 1 s idle, over 5 s under four concurrent test shards), which this test does not exercise.
+    const execution = {
+      source_tree: { sha256: null, files: 0, git_head: null, dirty: null, error: 'not hashed in this test' },
+      product: { package: 'gbrain', declared_pin: null, declared_sha: null, version: null, package_sha256: null, loaded_git_head: null, error: 'not hashed in this test' },
+    };
+    writeFileSync(path, JSON.stringify(upgradeReceipt({ ...receipt({}), execution } as never)));
     expect(loadFreshReceipt(path, Date.now() - 60_000).kind).toBe('ok');
     writeFileSync(path, JSON.stringify({ ...receipt({}), schema_version: 1 }));
     expect(loadFreshReceipt(path, Date.now() - 60_000).kind).toBe('ok');

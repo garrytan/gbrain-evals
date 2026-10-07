@@ -1,0 +1,39 @@
+{
+  "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 297,
+    "committed_usd": 210.820221294,
+    "reconciled_usd": 210.573795794,
+    "open_reservations_usd": 0.2464255,
+    "remaining_usd": 86.17977870600001,
+    "requests": 52694,
+    "overshoot_usd": 0.009141151999999991
+  },
+  "run": {
+    "run_id": "w10c-batch-2026-10-06T22-40-54-492Z-c417f982",
+    "runner": "w10c-batch",
+    "budget_usd": 50,
+    "estimate_usd": null,
+    "started_at": "2026-10-06T22:40:54.493Z",
+    "finished_at": "2026-10-07T15:27:28.521Z",
+    "committed_usd": 44.41722800000001,
+    "overshoot_usd": 0,
+    "remaining_usd": 5.582771999999991
+  },
+  "runs": 46,
+  "open_runs": 1,
+  "last_cap_change": {
+    "program_cap_usd": 297,
+    "kind": "open",
+    "reason": "Garry approved the 2026-10 follow-up round on 2026-10-06: plan caps $287 plus G8 (A4 S4-on $8, BEAM answer half $2); round limit $300",
+    "by": "user@cox.local",
+    "at": "2026-10-06T18:02:12.983Z"
+  },
+  "size_bytes": 20680704,
+  "read_ms": 24.39,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}

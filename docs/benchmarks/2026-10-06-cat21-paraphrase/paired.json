@@ -1,0 +1,276 @@
+{
+  "cells": [
+    {
+      "cell": "voyage-code-3",
+      "valid": true,
+      "splits": {
+        "named": {
+          "queries": 12,
+          "mrr": 0.9583333333333334,
+          "recall_at_5": 1,
+          "top1": 11
+        },
+        "paraphrase": {
+          "queries": 24,
+          "mrr": 0.9270833333333334,
+          "recall_at_5": 1,
+          "top1": 21
+        }
+      }
+    },
+    {
+      "cell": "voyage-code-4",
+      "valid": true,
+      "splits": {
+        "named": {
+          "queries": 12,
+          "mrr": 0.9583333333333334,
+          "recall_at_5": 1,
+          "top1": 11
+        },
+        "paraphrase": {
+          "queries": 24,
+          "mrr": 0.751010101010101,
+          "recall_at_5": 0.9166666666666666,
+          "top1": 15
+        }
+      }
+    },
+    {
+      "cell": "openai-default",
+      "valid": true,
+      "splits": {
+        "named": {
+          "queries": 12,
+          "mrr": 1,
+          "recall_at_5": 1,
+          "top1": 12
+        },
+        "paraphrase": {
+          "queries": 24,
+          "mrr": 0.90625,
+          "recall_at_5": 1,
+          "top1": 20
+        }
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "split": "named",
+      "metric": "mrr",
+      "a": "voyage-code-3",
+      "b": "voyage-code-4",
+      "mean_a": 0.9583333333333334,
+      "mean_b": 0.9583333333333334,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "n_pairs": 12,
+      "n_clusters": 12,
+      "p_method": "degenerate",
+      "p_holm": 1
+    },
+    {
+      "split": "named",
+      "metric": "mrr",
+      "a": "voyage-code-3",
+      "b": "openai-default",
+      "mean_a": 0.9583333333333334,
+      "mean_b": 1,
+      "delta": 0.041666666666666664,
+      "ci95": [
+        0,
+        0.125
+      ],
+      "p_two_sided": 1,
+      "n_pairs": 12,
+      "n_clusters": 12,
+      "p_method": "exact-sign-flip",
+      "p_holm": 1
+    },
+    {
+      "split": "named",
+      "metric": "mrr",
+      "a": "voyage-code-4",
+      "b": "openai-default",
+      "mean_a": 0.9583333333333334,
+      "mean_b": 1,
+      "delta": 0.041666666666666664,
+      "ci95": [
+        0,
+        0.125
+      ],
+      "p_two_sided": 1,
+      "n_pairs": 12,
+      "n_clusters": 12,
+      "p_method": "exact-sign-flip",
+      "p_holm": 1
+    },
+    {
+      "split": "named",
+      "metric": "recall_at_5",
+      "a": "voyage-code-3",
+      "b": "voyage-code-4",
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "n_pairs": 12,
+      "n_clusters": 12,
+      "p_method": "degenerate",
+      "p_holm": 1
+    },
+    {
+      "split": "named",
+      "metric": "recall_at_5",
+      "a": "voyage-code-3",
+      "b": "openai-default",
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "n_pairs": 12,
+      "n_clusters": 12,
+      "p_method": "degenerate",
+      "p_holm": 1
+    },
+    {
+      "split": "named",
+      "metric": "recall_at_5",
+      "a": "voyage-code-4",
+      "b": "openai-default",
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "n_pairs": 12,
+      "n_clusters": 12,
+      "p_method": "degenerate",
+      "p_holm": 1
+    },
+    {
+      "split": "paraphrase",
+      "metric": "mrr",
+      "a": "voyage-code-3",
+      "b": "voyage-code-4",
+      "mean_a": 0.9270833333333334,
+      "mean_b": 0.751010101010101,
+      "delta": -0.17607323232323235,
+      "ci95": [
+        -0.2782828282828283,
+        -0.08194444444444444
+      ],
+      "p_two_sided": 0.015625,
+      "n_pairs": 24,
+      "n_clusters": 12,
+      "p_method": "exact-sign-flip",
+      "p_holm": 0.046875
+    },
+    {
+      "split": "paraphrase",
+      "metric": "mrr",
+      "a": "voyage-code-3",
+      "b": "openai-default",
+      "mean_a": 0.9270833333333334,
+      "mean_b": 0.90625,
+      "delta": -0.020833333333333332,
+      "ci95": [
+        -0.0625,
+        0
+      ],
+      "p_two_sided": 1,
+      "n_pairs": 24,
+      "n_clusters": 12,
+      "p_method": "exact-sign-flip",
+      "p_holm": 1
+    },
+    {
+      "split": "paraphrase",
+      "metric": "mrr",
+      "a": "voyage-code-4",
+      "b": "openai-default",
+      "mean_a": 0.751010101010101,
+      "mean_b": 0.90625,
+      "delta": 0.15523989898989898,
+      "ci95": [
+        0.07329545454545454,
+        0.24034090909090908
+      ],
+      "p_two_sided": 0.015625,
+      "n_pairs": 24,
+      "n_clusters": 12,
+      "p_method": "exact-sign-flip",
+      "p_holm": 0.046875
+    },
+    {
+      "split": "paraphrase",
+      "metric": "recall_at_5",
+      "a": "voyage-code-3",
+      "b": "voyage-code-4",
+      "mean_a": 1,
+      "mean_b": 0.9166666666666666,
+      "delta": -0.08333333333333333,
+      "ci95": [
+        -0.20833333333333334,
+        0
+      ],
+      "p_two_sided": 0.5,
+      "n_pairs": 24,
+      "n_clusters": 12,
+      "p_method": "exact-sign-flip",
+      "p_holm": 1
+    },
+    {
+      "split": "paraphrase",
+      "metric": "recall_at_5",
+      "a": "voyage-code-3",
+      "b": "openai-default",
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "n_pairs": 24,
+      "n_clusters": 12,
+      "p_method": "degenerate",
+      "p_holm": 1
+    },
+    {
+      "split": "paraphrase",
+      "metric": "recall_at_5",
+      "a": "voyage-code-4",
+      "b": "openai-default",
+      "mean_a": 0.9166666666666666,
+      "mean_b": 1,
+      "delta": 0.08333333333333333,
+      "ci95": [
+        0,
+        0.20833333333333334
+      ],
+      "p_two_sided": 0.5,
+      "n_pairs": 24,
+      "n_clusters": 12,
+      "p_method": "exact-sign-flip",
+      "p_holm": 1
+    }
+  ]
+}

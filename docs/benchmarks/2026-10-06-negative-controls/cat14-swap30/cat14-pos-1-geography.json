@@ -1,0 +1,80 @@
+{
+  "probe_id": "cat14-pos-1-geography",
+  "category": "calibration-pattern-relevant",
+  "question": "Should we lead the seed round for a SaaS startup based in Austin? Founder has strong product instinct but no Bay Area network.",
+  "baseline_answer": "## Answer\n\nThe brain has no direct data on this Austin SaaS startup, its founder, or the round terms, so it cannot support a recommendation on whether to lead. It does contain a pattern from garry's past geography-based judgments.\n\nIn all three resolved geography takes in the brain, garry's location-skeptical or location-anchored claims were incorrect:\n- A high-conviction (w=0.85) claim that a New York startup would hit $5M ARR in 12 months was incorrect [cat14/cat14-pos-1-geography/take-1].\n- A claim (w=0.75) that a Boston founder could not build a marketplace from there was incorrect [cat14/cat14-pos-1-geography/take-3].\n- A claim (w=0.8) that a Miami fintech would not scale outside Florida was incorrect [cat14/cat14-pos-1-geography/take-2].\n\nThe pattern is that garry's geography-based doubts about non-Bay Area companies have missed, which bears on how much weight a \"no Bay Area network\" concern should get. It is a small sample (3 cases), and none involves Austin, SaaS, or a seed-stage lead decision. Two of the three are about location limiting a company's outcome, and the New York claim was a growth forecast. They are not evidence about founder network effects specifically.\n\nThe brain says nothing about the founder's product instinct, so that part of the question is unaddressed.",
+  "calibrated_answer": "## Answer\n\nThe brain has no direct evidence on this Austin SaaS startup or its founder, and it does not say whether to lead the round. It does hold relevant track-record data on how garry's location-based judgments have fared.\n\n**What the brain shows about geography calls**\n- All three resolved high-conviction geography takes in the brain were marked incorrect, and each one was skeptical of a startup because of where it was based:\n  - NY startup hitting $5M ARR in 12 months, conviction 0.85 [cat14/cat14-pos-1-geography/take-1]\n  - Boston founder unable to build a marketplace, conviction 0.75 [cat14/cat14-pos-1-geography/take-3]\n  - Miami fintech unable to scale outside Florida, conviction 0.8 [cat14/cat14-pos-1-geography/take-2]\n- The calibration profile says the same thing: 3 of 3 high-conviction geography calls in 2024 missed, so geography is a blind spot. It also reports that 8 of 10 early-stage tactics calls held up, with the active tag well-calibrated-tactics.\n\n**Applying this to the question**\n- The question has two parts. One is the Austin location and the founder's lack of a Bay Area network. The other is the founder's strong product instinct.\n- The location and network concern falls in the domain where garry's record is weakest. The product-instinct assessment is closer to the early-stage domain where his record is stronger. That mapping is my inference. The brain does not tag this deal by domain.\n\n## Calibration\n- **Prior (default reasoning):** The pattern in the resolved takes suggests a default of discounting a startup because it sits outside the Bay Area or lacks Bay Area network effects. This is inferred from the direction of the three missed calls, not from a stated rule.\n- **Counter-prior (from the hedged-domain self):** In geography, the skeptical location-based read has been wrong every time recorded, so a Bay Area network gap has not been a reliable negative signal in this brain's data.\n- **Active bias tags:** Only well-calibrated-tactics is listed. No geography-specific bias tag is active, though the pattern text names geography as a blind spot.\n- **Caveat:** Three data points is a small sample. All three are from 2024, and the brain does not show whether the pattern has held since.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect geography-based skepticism with the user's missed geography calls, offering a relevant counterweight to the network concern without recommending that they lead. A is more careful about distinguishing location judgments from evidence about founder networks. B force-fits the early-stage tactics record to product instinct and incorrectly says no geography bias tag is active. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures; their central recommendations are otherwise equivalent. || Both answers connect the concern about Austin and the missing Bay Area network to the user's poor geography track record, offering a counterweight rather than recommending a lead investment. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures. A incorrectly denies the active geography bias tag and overstates the connection between tactical forecasting success and founder product instinct. B is more useful because it distinguishes geography from network effects and acknowledges that the New York growth forecast does not establish location-based skepticism."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers connect geography-based skepticism with the user's missed geography calls, offering a relevant counterweight to the network concern without recommending that they lead. A is more careful about distinguishing location judgments from evidence about founder networks. B force-fits the early-stage tactics record to product instinct and incorrectly says no geography bias tag is active. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures; their central recommendations are otherwise equivalent. || Both answers connect the concern about Austin and the missing Bay Area network to the user's poor geography track record, offering a counterweight rather than recommending a lead investment. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures. A incorrectly denies the active geography bias tag and overstates the connection between tactical forecasting success and founder product instinct. B is more useful because it distinguishes geography from network effects and acknowledges that the New York growth forecast does not establish location-based skepticism."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers connect geography-based skepticism with the user's missed geography calls, offering a relevant counterweight to the network concern without recommending that they lead. A is more careful about distinguishing location judgments from evidence about founder networks. B force-fits the early-stage tactics record to product instinct and incorrectly says no geography bias tag is active. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures; their central recommendations are otherwise equivalent. || Both answers connect the concern about Austin and the missing Bay Area network to the user's poor geography track record, offering a counterweight rather than recommending a lead investment. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures. A incorrectly denies the active geography bias tag and overstates the connection between tactical forecasting success and founder product instinct. B is more useful because it distinguishes geography from network effects and acknowledges that the New York growth forecast does not establish location-based skepticism."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers connect geography-based skepticism with the user's missed geography calls, offering a relevant counterweight to the network concern without recommending that they lead. A is more careful about distinguishing location judgments from evidence about founder networks. B force-fits the early-stage tactics record to product instinct and incorrectly says no geography bias tag is active. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures; their central recommendations are otherwise equivalent. || Both answers connect the concern about Austin and the missing Bay Area network to the user's poor geography track record, offering a counterweight rather than recommending a lead investment. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures. A incorrectly denies the active geography bias tag and overstates the connection between tactical forecasting success and founder product instinct. B is more useful because it distinguishes geography from network effects and acknowledges that the New York growth forecast does not establish location-based skepticism."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        true
+      ],
+      "score": 0.5,
+      "outcome": "split",
+      "rationale": "Both answers connect geography-based skepticism with the user's missed geography calls, offering a relevant counterweight to the network concern without recommending that they lead. A is more careful about distinguishing location judgments from evidence about founder networks. B force-fits the early-stage tactics record to product instinct and incorrectly says no geography bias tag is active. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures; their central recommendations are otherwise equivalent. || Both answers connect the concern about Austin and the missing Bay Area network to the user's poor geography track record, offering a counterweight rather than recommending a lead investment. Neither maintains a friend-like voice, and both expose untranslated numerical conviction measures. A incorrectly denies the active geography bias tag and overstates the connection between tactical forecasting success and founder product instinct. B is more useful because it distinguishes geography from network effects and acknowledges that the New York growth forecast does not establish location-based skepticism."
+    }
+  ],
+  "win_score": 0,
+  "win_overall": "baseline",
+  "per_axis_pass_rate": 0.5,
+  "failure_modes": [
+    "changes_recommendation_meaningfully",
+    "voice_conversational",
+    "doesnt_force_fit_irrelevant_bias"
+  ]
+}

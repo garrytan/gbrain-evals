@@ -1,0 +1,506 @@
+{
+  "cat13": {
+    "cells": [
+      {
+        "file": "cat13-openai-1536-rerank-off.receipt.json",
+        "embedder": "openai-1536",
+        "rerank": false,
+        "valid": true,
+        "invalid_reason": null,
+        "heldout_first": 103,
+        "heldout_n": 181,
+        "heldout_ndcg5": 0.5817055775563023,
+        "all_first": 327,
+        "all_ndcg5": 0.558359384442283,
+        "cost_per_1000_queries_usd": 0.0008737043795620435,
+        "query_ms_mean": 368.85036496350364,
+        "query_ms_p95": 653,
+        "run_cost_usd": 0.021865,
+        "egress": "hosted embedding"
+      },
+      {
+        "file": "cat13-openai-1536-rerank-on.receipt.json",
+        "embedder": "openai-1536",
+        "rerank": true,
+        "valid": true,
+        "invalid_reason": null,
+        "heldout_first": 126,
+        "heldout_n": 181,
+        "heldout_ndcg5": 0.6581672552786088,
+        "all_first": 416,
+        "all_ndcg5": 0.6376512739357487,
+        "cost_per_1000_queries_usd": 0.5239705109489051,
+        "query_ms_mean": 616.4653284671533,
+        "query_ms_p95": 1100,
+        "run_cost_usd": 0.308522,
+        "egress": "hosted embedding, hosted reranking"
+      },
+      {
+        "file": "cat13-qwen3-local-rerank-off.receipt.json",
+        "embedder": "qwen3-local",
+        "rerank": false,
+        "valid": true,
+        "invalid_reason": null,
+        "heldout_first": 90,
+        "heldout_n": 181,
+        "heldout_ndcg5": 0.5309127068642765,
+        "all_first": 322,
+        "all_ndcg5": 0.5430753883094557,
+        "cost_per_1000_queries_usd": 0,
+        "query_ms_mean": 1237.1569343065694,
+        "query_ms_p95": 4144,
+        "run_cost_usd": 0,
+        "egress": "local: no text leaves the machine"
+      },
+      {
+        "file": "cat13-qwen3-local-rerank-on.receipt.json",
+        "embedder": "qwen3-local",
+        "rerank": true,
+        "valid": true,
+        "invalid_reason": null,
+        "heldout_first": 120,
+        "heldout_n": 181,
+        "heldout_ndcg5": 0.6236494847581907,
+        "all_first": 367,
+        "all_ndcg5": 0.5915044991119466,
+        "cost_per_1000_queries_usd": 0.38026961678832116,
+        "query_ms_mean": 794.0036496350365,
+        "query_ms_p95": 1029,
+        "run_cost_usd": 0.208388,
+        "egress": "local embedding, hosted reranking"
+      },
+      {
+        "file": "cat13-voyage-4-large-rerank-off.receipt.json",
+        "embedder": "voyage-4-large",
+        "rerank": false,
+        "valid": true,
+        "invalid_reason": null,
+        "heldout_first": 97,
+        "heldout_n": 181,
+        "heldout_ndcg5": 0.5465742407702827,
+        "all_first": 341,
+        "all_ndcg5": 0.5609039632878942,
+        "cost_per_1000_queries_usd": 0.0006731386861313905,
+        "query_ms_mean": 221.63868613138686,
+        "query_ms_p95": 267,
+        "run_cost_usd": 0.021552,
+        "egress": "hosted embedding"
+      },
+      {
+        "file": "cat13-voyage-4-large-rerank-on.receipt.json",
+        "embedder": "voyage-4-large",
+        "rerank": true,
+        "valid": true,
+        "invalid_reason": null,
+        "heldout_first": 128,
+        "heldout_n": 181,
+        "heldout_ndcg5": 0.643673419618927,
+        "all_first": 406,
+        "all_ndcg5": 0.6208026154240579,
+        "cost_per_1000_queries_usd": 0.49291447080291967,
+        "query_ms_mean": 461.33576642335765,
+        "query_ms_p95": 646,
+        "run_cost_usd": 0.2913,
+        "egress": "hosted embedding, hosted reranking"
+      },
+      {
+        "file": "cat13-voyage-4-rerank-off.receipt.json",
+        "embedder": "voyage-4",
+        "rerank": false,
+        "valid": true,
+        "invalid_reason": null,
+        "heldout_first": 99,
+        "heldout_n": 181,
+        "heldout_ndcg5": 0.5771383841211803,
+        "all_first": 344,
+        "all_ndcg5": 0.5729731596274228,
+        "cost_per_1000_queries_usd": 0.00033656934306569526,
+        "query_ms_mean": 196.78649635036496,
+        "query_ms_p95": 231,
+        "run_cost_usd": 0.010776,
+        "egress": "hosted embedding"
+      },
+      {
+        "file": "cat13-voyage-4-rerank-on.receipt.json",
+        "embedder": "voyage-4",
+        "rerank": true,
+        "valid": true,
+        "invalid_reason": null,
+        "heldout_first": 130,
+        "heldout_n": 181,
+        "heldout_ndcg5": 0.6612236837141604,
+        "all_first": 419,
+        "all_ndcg5": 0.6369922846022563,
+        "cost_per_1000_queries_usd": 0.5060996167883212,
+        "query_ms_mean": 471.3284671532847,
+        "query_ms_p95": 894,
+        "run_cost_usd": 0.287934,
+        "egress": "hosted embedding, hosted reranking"
+      }
+    ],
+    "families": [
+      {
+        "family": "primary: reranker on, each embedder vs voyage-4",
+        "comparisons": [
+          {
+            "a": "voyage-4+rerank",
+            "b": "voyage-4-large+rerank",
+            "n": 181,
+            "clusters": 10,
+            "delta": -0.011049723756906077,
+            "ci95": [
+              -0.038461538461538464,
+              0.0111731843575419
+            ],
+            "p_sign_flip": 0.75,
+            "mcnemar": {
+              "gained": 2,
+              "lost": 4,
+              "p": 0.6875
+            },
+            "p_holm": 0.8125
+          },
+          {
+            "a": "voyage-4+rerank",
+            "b": "openai-1536+rerank",
+            "n": 181,
+            "clusters": 10,
+            "delta": -0.022099447513812154,
+            "ci95": [
+              -0.056818181818181816,
+              0.011111111111111112
+            ],
+            "p_sign_flip": 0.40625,
+            "mcnemar": {
+              "gained": 3,
+              "lost": 7,
+              "p": 0.34375
+            },
+            "p_holm": 0.8125
+          },
+          {
+            "a": "voyage-4+rerank",
+            "b": "qwen3-local+rerank",
+            "n": 181,
+            "clusters": 10,
+            "delta": -0.055248618784530384,
+            "ci95": [
+              -0.11864406779661017,
+              0
+            ],
+            "p_sign_flip": 0.15625,
+            "mcnemar": {
+              "gained": 8,
+              "lost": 18,
+              "p": 0.07551869750022888
+            },
+            "p_holm": 0.46875
+          }
+        ]
+      },
+      {
+        "family": "report-only: reranker off, each embedder vs voyage-4",
+        "comparisons": [
+          {
+            "a": "voyage-4",
+            "b": "voyage-4-large",
+            "n": 181,
+            "clusters": 10,
+            "delta": -0.011049723756906077,
+            "ci95": [
+              -0.05084745762711865,
+              0.027472527472527472
+            ],
+            "p_sign_flip": 0.8125,
+            "mcnemar": {
+              "gained": 6,
+              "lost": 8,
+              "p": 0.79052734375
+            },
+            "p_holm": 1
+          },
+          {
+            "a": "voyage-4",
+            "b": "openai-1536",
+            "n": 181,
+            "clusters": 10,
+            "delta": 0.022099447513812154,
+            "ci95": [
+              -0.033707865168539325,
+              0.07142857142857142
+            ],
+            "p_sign_flip": 0.57421875,
+            "mcnemar": {
+              "gained": 12,
+              "lost": 8,
+              "p": 0.5034446716308594
+            },
+            "p_holm": 1
+          },
+          {
+            "a": "voyage-4",
+            "b": "qwen3-local",
+            "n": 181,
+            "clusters": 10,
+            "delta": -0.049723756906077346,
+            "ci95": [
+              -0.08426966292134831,
+              -0.011235955056179775
+            ],
+            "p_sign_flip": 0.0625,
+            "mcnemar": {
+              "gained": 6,
+              "lost": 15,
+              "p": 0.0783538818359375
+            },
+            "p_holm": 0.1875
+          }
+        ]
+      },
+      {
+        "family": "report-only: reranker effect per embedder (off vs on)",
+        "comparisons": [
+          {
+            "a": "voyage-4",
+            "b": "voyage-4+rerank",
+            "n": 181,
+            "clusters": 10,
+            "delta": 0.1712707182320442,
+            "ci95": [
+              0.0782122905027933,
+              0.26704545454545453
+            ],
+            "p_sign_flip": 0.01171875,
+            "mcnemar": {
+              "gained": 40,
+              "lost": 9,
+              "p": 0.000009263546409954415
+            },
+            "p_holm": 0.03125
+          },
+          {
+            "a": "voyage-4-large",
+            "b": "voyage-4-large+rerank",
+            "n": 181,
+            "clusters": 10,
+            "delta": 0.1712707182320442,
+            "ci95": [
+              0.09239130434782608,
+              0.2571428571428571
+            ],
+            "p_sign_flip": 0.0078125,
+            "mcnemar": {
+              "gained": 36,
+              "lost": 5,
+              "p": 7.84157236921601e-7
+            },
+            "p_holm": 0.03125
+          },
+          {
+            "a": "openai-1536",
+            "b": "openai-1536+rerank",
+            "n": 181,
+            "clusters": 10,
+            "delta": 0.1270718232044199,
+            "ci95": [
+              0.05434782608695652,
+              0.2
+            ],
+            "p_sign_flip": 0.01953125,
+            "mcnemar": {
+              "gained": 30,
+              "lost": 7,
+              "p": 0.00019107642583549023
+            },
+            "p_holm": 0.03125
+          },
+          {
+            "a": "qwen3-local",
+            "b": "qwen3-local+rerank",
+            "n": 181,
+            "clusters": 10,
+            "delta": 0.16574585635359115,
+            "ci95": [
+              0.08241758241758242,
+              0.2596685082872928
+            ],
+            "p_sign_flip": 0.0078125,
+            "mcnemar": {
+              "gained": 34,
+              "lost": 4,
+              "p": 6.038535502739251e-7
+            },
+            "p_holm": 0.03125
+          }
+        ]
+      }
+    ],
+    "not_scored": []
+  },
+  "cat18b": [
+    {
+      "file": "cat18b-hosted.receipt.json",
+      "cell": "voyage-4",
+      "valid": true,
+      "invalid_reasons": [],
+      "mrr": 0.42571428571428577,
+      "recall_at_10": 0.4143492063492063,
+      "top1_hit_rate": 0.12,
+      "rerank_scored_queries": 0,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": 0.0004728000000000024,
+      "ingest_cost_usd": 0.0012124199999999999,
+      "mean_query_ms": 163.68,
+      "p95_query_ms": 180.59999999999997,
+      "data_egress": "hosted embedding: text goes to the embedding provider"
+    },
+    {
+      "file": "cat18b-hosted.receipt.json",
+      "cell": "voyage-4+rerank",
+      "valid": true,
+      "invalid_reasons": [],
+      "mrr": 0.66,
+      "recall_at_10": 0.6218888888888889,
+      "top1_hit_rate": 0.52,
+      "rerank_scored_queries": 25,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": 0.0974188,
+      "ingest_cost_usd": 0.0012124199999999999,
+      "mean_query_ms": 341.08,
+      "p95_query_ms": 387.4,
+      "data_egress": "hosted embedding, hosted reranking"
+    },
+    {
+      "file": "cat18b-hosted.receipt.json",
+      "cell": "voyage-4-large",
+      "valid": true,
+      "invalid_reasons": [],
+      "mrr": 0.4233333333333333,
+      "recall_at_10": 0.4372380952380952,
+      "top1_hit_rate": 0.12,
+      "rerank_scored_queries": 0,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": 0.0009456000000000048,
+      "ingest_cost_usd": 0.00242484,
+      "mean_query_ms": 201.2,
+      "p95_query_ms": 220,
+      "data_egress": "hosted embedding: text goes to the embedding provider"
+    },
+    {
+      "file": "cat18b-hosted.receipt.json",
+      "cell": "voyage-4-large+rerank",
+      "valid": true,
+      "invalid_reasons": [],
+      "mrr": 0.66,
+      "recall_at_10": 0.6535555555555556,
+      "top1_hit_rate": 0.52,
+      "rerank_scored_queries": 25,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": 0.10418360000000002,
+      "ingest_cost_usd": 0.0024248399999999993,
+      "mean_query_ms": 380.36,
+      "p95_query_ms": 482.7999999999999,
+      "data_egress": "hosted embedding, hosted reranking"
+    },
+    {
+      "file": "cat18b-hosted.receipt.json",
+      "cell": "openai-1536",
+      "valid": true,
+      "invalid_reasons": [],
+      "mrr": 0.43799999999999994,
+      "recall_at_10": 0.2831111111111111,
+      "top1_hit_rate": 0.16,
+      "rerank_scored_queries": 0,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": 0.0011023999999999756,
+      "ingest_cost_usd": 0.0023206300000000006,
+      "mean_query_ms": 311.52,
+      "p95_query_ms": 417.9999999999999,
+      "data_egress": "hosted embedding: text goes to the embedding provider"
+    },
+    {
+      "file": "cat18b-hosted.receipt.json",
+      "cell": "openai-1536+rerank",
+      "valid": true,
+      "invalid_reasons": [],
+      "mrr": 0.66,
+      "recall_at_10": 0.5033015873015872,
+      "top1_hit_rate": 0.52,
+      "rerank_scored_queries": 25,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": 0.13504440000000006,
+      "ingest_cost_usd": 0.0023206300000000006,
+      "mean_query_ms": 560.72,
+      "p95_query_ms": 1206.5999999999985,
+      "data_egress": "hosted embedding, hosted reranking"
+    },
+    {
+      "file": "cat18b-hosted.receipt.json",
+      "cell": "qwen3-local",
+      "valid": false,
+      "invalid_reasons": [
+        "embed coverage incomplete: ingest 0/165 ok, chunks 0/245 embedded (first error: embedding failed for companies/acme-co-0: gbrain saved the text without vectors (embedding_deferred))"
+      ],
+      "mrr": null,
+      "recall_at_10": null,
+      "top1_hit_rate": null,
+      "rerank_scored_queries": 0,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": null,
+      "ingest_cost_usd": 0,
+      "mean_query_ms": null,
+      "p95_query_ms": null,
+      "data_egress": "local embedding: no text leaves the machine"
+    },
+    {
+      "file": "cat18b-hosted.receipt.json",
+      "cell": "qwen3-local+rerank",
+      "valid": false,
+      "invalid_reasons": [
+        "embed coverage incomplete: ingest 0/165 ok, chunks 0/245 embedded (first error: embedding failed for companies/acme-co-0: gbrain saved the text without vectors (embedding_deferred))"
+      ],
+      "mrr": null,
+      "recall_at_10": null,
+      "top1_hit_rate": null,
+      "rerank_scored_queries": 0,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": null,
+      "ingest_cost_usd": 0,
+      "mean_query_ms": null,
+      "p95_query_ms": null,
+      "data_egress": "local embedding, hosted reranking: queries and candidate passages go to the reranker"
+    },
+    {
+      "file": "cat18b-local.receipt.json",
+      "cell": "qwen3-local",
+      "valid": true,
+      "invalid_reasons": [],
+      "mrr": 0.4546666666666666,
+      "recall_at_10": 0.40201587301587294,
+      "top1_hit_rate": 0.16,
+      "rerank_scored_queries": 0,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": 0,
+      "ingest_cost_usd": 0,
+      "mean_query_ms": 475.56,
+      "p95_query_ms": 547,
+      "data_egress": "local embedding: no text leaves the machine"
+    },
+    {
+      "file": "cat18b-local.receipt.json",
+      "cell": "qwen3-local+rerank",
+      "valid": true,
+      "invalid_reasons": [],
+      "mrr": 0.66,
+      "recall_at_10": 0.6946984126984128,
+      "top1_hit_rate": 0.52,
+      "rerank_scored_queries": 25,
+      "queries_total": 25,
+      "cost_per_1000_queries_usd": 0.107158,
+      "ingest_cost_usd": 0,
+      "mean_query_ms": 802.2,
+      "p95_query_ms": 930,
+      "data_egress": "local embedding, hosted reranking: queries and candidate passages go to the reranker"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+ "schema_version": 1,
+ "family_id": "w10c-full-context-better-beyond-margin",
+ "registered_at": "2026-10-06",
+ "description": "W10c loss test: full context (B) better than gbrain (A) by more than 7 points, same reader and subset, official judge, Holm across the two readers.",
+ "alpha": 0.05,
+ "seed": 20261006,
+ "draws": 10000,
+ "id_field": "question_id",
+ "comparisons": [
+  {
+   "id": "full-vs-gbrain-sonnet55",
+   "metric": "correct__sonnet55",
+   "gate": "superiority",
+   "direction": "higher",
+   "min_effect": 0.07,
+   "cluster_by": "question_id",
+   "description": "reader claude-sonnet-5-5"
+  },
+  {
+   "id": "full-vs-gbrain-sol",
+   "metric": "correct__sol",
+   "gate": "superiority",
+   "direction": "higher",
+   "min_effect": 0.07,
+   "cluster_by": "question_id",
+   "description": "reader gpt-6.1-sol"
+  }
+ ]
+}

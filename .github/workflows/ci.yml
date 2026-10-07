@@ -67,6 +67,23 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  prereg-order:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.2
+
+      # Every experiment listed in docs/benchmarks/preregistrations.json must
+      # have its preregistration committed before any of its result files.
+      - name: Preregistration order
+        run: bun eval/runner/prereg.ts
+
   tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
