@@ -382,10 +382,10 @@ export function lmeMSelection(meta: ReadonlyArray<{ question_id: string; questio
   if (unknown.length) throw new Error(`unknown LongMemEval question types: ${unknown.join(', ')}`);
   const total = meta.length;
   const n = Math.min(size, total);
-  const exact = [...buckets].map(([b, ids]) => ({ b, size: ids.length, share: (n * ids.length) / total }));
-  const quotas = Object.fromEntries(exact.map(e => [e.b, Math.floor(e.share)]));
+  const exact = [...buckets].map(([b, ids]) => ({ b, size: ids.length, floor: Math.floor((n * ids.length) / total), rem: (n * ids.length) % total }));
+  const quotas = Object.fromEntries(exact.map(e => [e.b, e.floor]));
   const left = n - Object.values(quotas).reduce((a, x) => a + x, 0);
-  exact.sort((x, y) => (y.share - Math.floor(y.share)) - (x.share - Math.floor(x.share)) || y.size - x.size || (x.b < y.b ? -1 : 1)).slice(0, left).forEach(e => quotas[e.b]++);
+  exact.sort((x, y) => y.rem - x.rem || y.size - x.size || (x.b < y.b ? -1 : 1)).slice(0, left).forEach(e => quotas[e.b]++);
   const key = (id: string) => sha256(`${seed}\u0000${id}`);
   const selected = [...buckets.keys()].sort().flatMap(b => [...buckets.get(b)!].sort((x, y) => key(x) < key(y) ? -1 : key(x) > key(y) ? 1 : x < y ? -1 : 1).slice(0, quotas[b]));
   return { quotas: Object.fromEntries(Object.entries(quotas).sort(([a], [b]) => a < b ? -1 : 1)), selected };

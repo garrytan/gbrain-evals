@@ -104,6 +104,13 @@ describe('BEAM instrument', () => {
     const shas = Object.fromEntries(Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.sha256]));
     for (const v of Object.values(shas)) expect(v).toMatch(/^[0-9a-f]{64}$/);
     expect(new Set(Object.values(shas)).size).toBe(Object.keys(shas).length);
+    // Pinned: a prompt, parser, aggregation or call-setting edit changes these and needs a new instrument version.
+    expect(shas).toEqual({
+      'lme-s': 'fd43b41a0a454bf7095c3753365ab438334dbb8f20957f1cd878fb1212a6c95d', 'lme-m': '535a46da75ea691ba46777c37e920e98d4bf3d33e427a0851907cefea7c89da8',
+      locomo: '754c83f541b77e652f0b97edac9cb82a1561b8a38822eb88591c807c0dad13be', 'beam-100k': '0ab0407c66a3f83e0ef3fca40102420b5d558304bf21d92a5ecddff8f59ba715',
+      'beam-500k': 'c0161f30d0220f151cc6f58effff2054f2654881407e0bd35dea17064ee66d33', 'beam-1m': '54eb6c058d84444ef4f4bb35d125df923fc8b8fe8e281c047a07877196a59109',
+      'beam-10m': 'a7fbe33b55e4dadd1970d7cbc7810ae0928b1f25208bdd6aaa60027f6c44779b',
+    });
     expect(INSTRUMENTS['beam-1m'].canonical_judge).toBe('openai:gpt-4.1-mini');
     expect(INSTRUMENTS.locomo.canonical_judge).toBe('openai:gpt-4o-2024-08-06');
   });

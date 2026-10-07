@@ -23,10 +23,10 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, truncateSync } fro
 import { dirname } from 'node:path';
 import type { ProvenanceStatus } from '../systems/types.ts';
 import type { PackingLoss } from '../systems/render.ts';
-import type { Outcome } from './outcomes.ts';
+import { OUTCOMES, type Outcome } from './outcomes.ts';
 import type { MemoryQaRow } from './run.ts';
 
-export const OUTCOMES: readonly Outcome[] = ['scored', 'retrieval_error', 'unsupported', 'ingest_degraded', 'reader_error', 'judge_error', 'harness_invalid', 'budget_not_run'];
+export { OUTCOMES };
 
 export interface Usage { input: number; output: number; cache_read: number; cache_write: number }
 
@@ -52,6 +52,27 @@ export interface AnswerRecord {
   provider_input_tokens: number | null;
   latency_ms: number;
   outcome: Outcome;
+  /** Answering agents (file agent, agent runtime): why the agent stopped (`submitted`, `turn_cap`, `context_overflow`, ...). */
+  stop_reason?: string;
+  /** Answering agents: model turns taken. */
+  turns?: number;
+  /** Answering agents: the ingested source ids whose files the agent opened (evaluator side). */
+  opened_source_ids?: string[];
+  /** Dollars the answer cost, when the caller priced it. */
+  usd?: number;
+}
+
+/**
+ * The answer an answering system returns (`AgentAnswer` in
+ * eval/runner/systems/file-agent.ts is assignable to it); the cell adds the
+ * identity fields to make an `AnswerRecord`.
+ */
+export type AnswerPayload = Pick<AnswerRecord, 'text' | 'outcome' | 'usage' | 'latency_ms'> & { provider_input_tokens: number | null; stop_reason?: string; turns?: number; opened_source_ids?: string[]; usd?: number };
+
+/** An answer record from a system's answer and the cell's identity fields; the id is derived, never passed. */
+export function answerRecord(identity: Omit<AnswerRecord, 'answer_id' | keyof AnswerPayload>, a: AnswerPayload & { error?: string }): AnswerRecord {
+  const { error: _error, ...payload } = a;
+  return { answer_id: answerId(identity.cell_id, identity.question_id, identity.reader, identity.replicate), ...identity, ...payload };
 }
 
 export interface JudgmentRecord {
@@ -121,6 +142,8 @@ export function answerProblems(rec: unknown): string[] {
     effort: nullable(str), context_sha256: hex, text: v => typeof v === 'string', provider_input_tokens: nullable(int), latency_ms: num,
     outcome: v => OUTCOMES.includes(v as Outcome),
     usage: v => !!v && typeof v === 'object' && ['input', 'output', 'cache_read', 'cache_write'].every(k => int((v as Record<string, unknown>)[k])),
+    stop_reason: v => v === undefined || str(v), turns: v => v === undefined || int(v), usd: v => v === undefined || num(v),
+    opened_source_ids: v => v === undefined || (Array.isArray(v) && v.every(x => typeof x === 'string')),
   }, r => typeof r.cell_id === 'string' && typeof r.question_id === 'string' && typeof r.reader === 'string' && Number.isInteger(r.replicate)
     && r.answer_id !== answerId(r.cell_id, r.question_id, r.reader, r.replicate as number) ? ['answer.answer_id is not sha256(cell_id|question_id|reader|replicate)'] : []);
 }
