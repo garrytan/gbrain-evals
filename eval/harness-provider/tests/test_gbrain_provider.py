@@ -299,14 +299,14 @@ def test_concurrent_queries_across_units_survive_child_eviction(tmp_path, embed_
 def test_search_config_is_read_time_and_never_inherited(tmp_path, embed_stub):
     url, _ = embed_stub
     store = tmp_path / "store"
-    p = _provider(store, url, search_config={"search.entity_anchoring": "true"})
+    p = _provider(store, url, search_config={"search.return_budget_max_remote": "200000"})
     try:
         p.ingest([DOCS[0]])
         p.retrieve_with_meta("grey cat", user_id="u-a")
         home = p.units["u-a"].home
     finally:
         p.cleanup()
-    assert p._cli(home, "config", "get", "search.entity_anchoring").strip() == "true"
+    assert p._cli(home, "config", "get", "search.return_budget_max_remote").strip() == "200000"
 
     from mpw.gbrain_provider import GbrainMemoryProvider
 
@@ -319,4 +319,4 @@ def test_search_config_is_read_time_and_never_inherited(tmp_path, embed_stub):
     finally:
         q.cleanup()
     with pytest.raises(RuntimeError, match="not found"):
-        q._cli(home, "config", "get", "search.entity_anchoring")
+        q._cli(home, "config", "get", "search.return_budget_max_remote")
