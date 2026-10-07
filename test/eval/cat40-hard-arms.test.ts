@@ -432,6 +432,25 @@ describe('GbrainSlot.restore (asynchronous) and health check', () => {
     await slot.stop();
   });
 
+  test('every start points the brain at THIS process\'s proxy for Voyage (a snapshot keeps the build process\'s port; Cat 40 Hard R0)', async () => {
+    const dir = join(root, 'slot2');
+    const vault = join(dir, 'vault');
+    for (const d of ['vault', 'home/.gbrain', 'uh']) mkdirSync(join(dir, d), { recursive: true });
+    writeFileSync(join(vault, 'a.md'), 'corpus a\n');
+    const git = (args: string[]) => execFileSync('git', ['-C', vault, '-c', 'user.name=cat40', '-c', 'user.email=cat40@example.invalid', ...args], { stdio: 'pipe' });
+    git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '-m', 'corpus']); git(['tag', 'cat40-corpus']);
+    writeFileSync(join(dir, 'home', '.gbrain', 'config.json'), JSON.stringify({ engine: 'pglite', provider_base_urls: { voyage: 'http://127.0.0.1:1/slot2/voyage/v1', other: 'http://x.invalid' } }));
+    execFileSync('tar', ['-C', dir, '-cf', `${dir}.tar`, 'home']);
+    const slot = new GbrainSlot('slot2', root, buildDir, 43210, 'starter');
+    await slot.restore();
+    const cfg = JSON.parse(readFileSync(join(dir, 'home', '.gbrain', 'config.json'), 'utf8'));
+    expect(cfg.provider_base_urls).toEqual({ voyage: 'http://127.0.0.1:43210/slot2/voyage/v1', other: 'http://x.invalid' });
+    expect(cfg.engine).toBe('pglite');
+    await slot.newSession();
+    expect(JSON.parse(readFileSync(join(dir, 'home', '.gbrain', 'config.json'), 'utf8')).provider_base_urls.voyage).toBe('http://127.0.0.1:43210/slot2/voyage/v1');
+    await slot.stop();
+  });
+
   test('a restore whose snapshot is missing throws HarnessError and the pool quarantines the slot', async () => {
     const { dir } = slotFixture('slot1');
     rmSync(`${dir}.tar`);

@@ -304,7 +304,7 @@ export class GbrainSlot {
   /** `gbrain config set` pairs applied after every restore (the snapshot does not carry them). */
   config: Array<[string, string]> = [];
   /** `advertised`: the brain's mcp.advertised_surface (tools listed; the callable set stays `surface`). Null leaves it unset. */
-  constructor(readonly id: string, root: string, readonly buildDir: string, proxyPort: number, readonly surface: string, readonly advertised: string | null = null) {
+  constructor(readonly id: string, root: string, readonly buildDir: string, readonly proxyPort: number, readonly surface: string, readonly advertised: string | null = null) {
     this.dir = join(root, id);
     const base = `http://127.0.0.1:${proxyPort}/${id}`;
     this.run = {
@@ -429,10 +429,14 @@ export class GbrainSlot {
   }
 
   async start() {
-    if (this.advertised) {
-      const cfgPath = join(this.dir, 'home', '.gbrain', 'config.json');
+    // The snapshot's config.json carries the Voyage base URL written by the process that built it, whose proxy
+    // port is gone; a later process (cells run, latency replay) listens elsewhere, so every rerank call was
+    // refused (Cat 40 Hard R0). Point it at this process's proxy on every start.
+    const cfgPath = join(this.dir, 'home', '.gbrain', 'config.json');
+    if (existsSync(cfgPath)) {
       const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
-      cfg.mcp = { ...(cfg.mcp ?? {}), advertised_surface: this.advertised };
+      cfg.provider_base_urls = { ...(cfg.provider_base_urls ?? {}), voyage: `http://127.0.0.1:${this.proxyPort}/${this.id}/voyage/v1` };
+      if (this.advertised) cfg.mcp = { ...(cfg.mcp ?? {}), advertised_surface: this.advertised };
       writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
     }
     this.client = new McpClient(this.run, ['--surface', this.surface]);
