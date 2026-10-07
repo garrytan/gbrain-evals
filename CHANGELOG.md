@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.39] - 2026-10-07
+## [0.10.40] - 2026-10-06
 
 ### Cat 40 Hard result: gbrain trails plain files by 11.3 points on the 55,000-document company
 
@@ -113,6 +113,16 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.39] - 2026-10-07
+
+### gbrain fix wave 11: relaxed HNSW scan order ships default-on; the D12 agent smoke passes
+
+Two records paired with gbrain fix wave 11 (branch `capy/fix-wave-11`, head `b5c8fd5e8`, v0.60.103.0).
+
+- **W6.3, relaxed HNSW scan order (mirror, $0 here).** [Report](docs/benchmarks/2026-10-07-hnsw-relaxed-order.md), [`verdict.json`](docs/benchmarks/2026-10-07-hnsw-relaxed-order/verdict.json), raw tables and logs, and a copy of gbrain's `scripts/bench/hnsw-iterative-scan.ts`. On about 60,000 chunks of real text, 100 queries, Postgres 16 with pgvector 0.8.7, recall@10 at a 50% source filter goes from 0.962 to 0.983 with `voyage-4` at 1,024 dimensions and from 0.950 to 0.967 with `text-embedding-3-small` at 1,536 dimensions; k=50 and the 10% filter are unchanged (the 10% rows are exact in both modes). Latency moves both ways, by at most 3.7 ms at p50 and 5.7 ms at p95. Verdict: `relaxed_order` ships default-on, with `search.hnsw_iterative_scan strict_order` as the escape hatch. The lane's 128-d synthetic numbers (+8.3 points filtered recall) are recorded as a limit. Idea from #6132 by @MarvinDontPanic.
+- **D12 agent smoke (Cat 40, $49.21).** [Report](docs/benchmarks/2026-10-07-wave11-agent-smoke.md), [preregistration](docs/benchmarks/2026-10-07-wave11-agent-smoke-preregistration.md) committed before any cell with one amendment (separate `--gbrain-root` per build, Bun 1.4.2). gbrain master `5b5891069` against the wave, same window, `gbrain` arm, `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol` counted, `claude-fable-5-1` smoke-only. Verdict: pass. Permission tasks 60/60 on both builds with no leaks; write-back 55/60 on master and 56/60 on the wave with no unsafe writes. Five of six model-family cells sit at the ceiling. No model called `put_page`, so its shorter description is untested by agents; Opus 5.5 sent a non-UUID `request_id` on its first write in 12 of 20 write-back cells on master and 17 of 20 on the wave (p = 0.16), and recovered every time.
+- **Version.** 0.10.39, the next free version after #94 shipped 0.10.38.
 
 ## [0.10.38] - 2026-10-07
 
