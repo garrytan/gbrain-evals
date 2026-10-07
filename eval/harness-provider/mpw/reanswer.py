@@ -21,7 +21,7 @@ from . import cell as cellmod
 from .records import RetrieveRecord, read_record, write_record
 
 
-async def reanswer(src: Path, out_root: Path, sample: int) -> dict:
+async def reanswer(src: Path, out_root: Path, sample: int, retrievals: Path | None = None, only: set[str] | None = None, tag: str | None = None) -> dict:
     spec = json.loads((src / "cell.json").read_text())
     if spec["spec"]["mode"] != "rag":
         raise SystemExit(f"{src}: reanswer covers rag cells only (mode {spec['spec']['mode']})")
@@ -32,18 +32,25 @@ async def reanswer(src: Path, out_root: Path, sample: int) -> dict:
     cellmod._provider = lambda s: None
     run = cellmod.CellRun(src)
     run.setup()
-    new_id = f"{run.cell_id}-s{sample}"
+    new_id = f"{run.cell_id}-{tag}" if tag else f"{run.cell_id}-s{sample}"
     out = out_root / new_id
     (out / "stages" / "answer").mkdir(parents=True, exist_ok=True)
     cell = json.loads((src / "cell.json").read_text())
     cell["cell_id"] = new_id
-    cell["reanswer"] = {"source_cell": run.cell_id, "sample": sample, "note": "answers regenerated from the recorded retrievals"}
+    cell["reanswer"] = {"source_cell": run.cell_id, "sample": sample, "retrievals": str(retrievals) if retrievals else None,
+                        "questions": sorted(only) if only is not None else "all",
+                        "note": "answers regenerated from recorded retrievals; questions outside `questions` keep the source cell's answer"}
     (out / "cell.json").write_text(json.dumps(cell, indent=2) + "\n")
     counts = {"answered": 0, "failed": 0, "prompt_mismatch": 0}
     for q in run.queries:
         pq = run.pqueries[q.id]
-        ret = read_record(src, "retrieve", q.id, run.cell_id)
         orig = read_record(src, "answer", q.id, run.cell_id)
+        if only is not None and q.id not in only:
+            if orig is not None:
+                write_record(out, "answer", q.id, {**orig, "cell_id": new_id})
+                counts["kept"] = counts.get("kept", 0) + 1
+            continue
+        ret = read_record(retrievals or src, "retrieve", q.id, run.cell_id)
         if ret is None or orig is None or not ret.get("ok"):
             counts["failed"] += 1
             continue
@@ -53,7 +60,7 @@ async def reanswer(src: Path, out_root: Path, sample: int) -> dict:
         unit = str(q.user_id) if str(q.user_id) in run.pdocs_by_unit else "_all"
         base = dict(cell_id=new_id, query_id=q.id, task_type=run.task_type, answer_model=run.answer_llm.model_id)
         rec = await run._answer_rag(q, pq, docs, RetrieveRecord(**ret), f"{new_id}/answer/{pq.id}", base, unit)
-        if orig.get("final_prompt") and rec.final_prompt and rec.final_prompt != orig["final_prompt"]:
+        if retrievals is None and orig.get("final_prompt") and rec.final_prompt and rec.final_prompt != orig["final_prompt"]:
             counts["prompt_mismatch"] += 1
             raise SystemExit(f"{q.id}: the rebuilt prompt differs from the recorded one; refusing to reanswer this cell")
         write_record(out, "answer", q.id, rec)
@@ -66,8 +73,12 @@ def main() -> int:
     ap.add_argument("--cell", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--sample", type=int, default=2)
+    ap.add_argument("--retrievals", help="cell-shaped dir of replayed retrieve records (mpw_tools.replay)")
+    ap.add_argument("--questions", help="JSON list of question ids to answer; the rest keep the source cell's answer")
+    ap.add_argument("--tag", help="suffix for the new cell id instead of s<sample>")
     args = ap.parse_args()
-    print(json.dumps(asyncio.run(reanswer(Path(args.cell), Path(args.out), args.sample))))
+    only = set(json.loads(Path(args.questions).read_text())) if args.questions else None
+    print(json.dumps(asyncio.run(reanswer(Path(args.cell), Path(args.out), args.sample, Path(args.retrievals) if args.retrievals else None, only, args.tag))))
     return 0
 
 

@@ -25,7 +25,7 @@
  * provider keys are metering-proxy tokens, never real keys.
  */
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { BudgetRun, budgetOptionsFrom, closeLedgers, initLedger, priceRequest } from './budget-ledger.ts';
 import { gbrainSpecFrom, resolveGbrainUnderTest, productIdentityFor, type GbrainUnderTest } from './gbrain-under-test.ts';
@@ -532,6 +532,54 @@ export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetU
   return code;
 }
 
+/**
+ * Retrieval-only replay of a finished rag cell on the gbrain build given with
+ * --gbrain, against a copy of the cell's store (the original is never written),
+ * through the metering proxy (eval/harness-provider/mpw_tools/replay.py). Used to
+ * check a later build against a run's delivered contexts; nothing is answered.
+ */
+export async function replayCell(ctx: Ctx, id: string, storeDir: string, out: string, budgetUsd: number): Promise<number> {
+  const dir = join(ctx.cellsDir, id);
+  const cell = JSON.parse(readFileSync(join(dir, 'cell.json'), 'utf8')) as CellFile;
+  if (!existsSync(join(storeDir, 'store.json'))) throw new Error(`${storeDir} is not a cell store (no store.json)`);
+  mkdirSync(out, { recursive: true });
+  const store = join(out, 'store');
+  if (!existsSync(store)) cpSync(storeDir, store, { recursive: true });
+  const { startMeteringProxy } = await import('./metering-proxy.ts');
+  const run = BudgetRun.open({ runner: `harness-replay:${id}`, budgetUsd, ledgerPath: budgetOptionsFrom(ctx.argv).ledgerPath, log: ctx.log });
+  const proxyDir = join(out, 'proxy');
+  mkdirSync(proxyDir, { recursive: true });
+  const proxy = await startMeteringProxy({ run, cellId: `replay:${id}`, requestLogPath: join(proxyDir, 'requests.jsonl'), bodiesDir: join(proxyDir, 'bodies'), labels: ['harness', 'gbrain', 'comparator'] });
+  const env: Record<string, string> = {
+    ...pick(proxy.envFor('harness'), harnessCredentials(cell.spec, cell.resolved)),
+    MPW_PROXY_LOG: join(proxyDir, 'requests.jsonl'), MPW_PROXY_BODIES: join(proxyDir, 'bodies'),
+    MPW_PROVIDER_CONFIG: JSON.stringify(cell.spec.provider_config ?? {}),
+    MPW_GBRAIN_CLI: join(ctx.gut.root, 'src/cli.ts'), MPW_BUN: process.execPath,
+    MPW_CHILD_ENV_GBRAIN: JSON.stringify(pick({ ...proxy.envFor('gbrain'), VOYAGE_BASE_URL: proxy.baseUrls.voyage, GOOGLE_GENERATIVE_AI_BASE_URL: proxy.baseUrls.gemini }, cell.spec.gbrain_credentials ?? ['voyage'])),
+    MPW_CHILD_ENV_COMPARATOR: JSON.stringify(proxy.envFor('comparator')),
+    MPW_REPO_ROOT: REPO_ROOT, MPW_STORE_DIR: store, MPW_STORE_ID: `replay-${id}`,
+  };
+  // The cell's models are named so its setup checks pass; the replay itself makes no answer or judge call.
+  for (const [role, model] of [['ANSWER', cell.spec.models.answer], ['JUDGE', cell.spec.models.judge]] as const) {
+    if (!model) continue;
+    const m = splitModel(model);
+    env[`OMB_${role}_LLM`] = m.llm; env[`OMB_${role}_MODEL`] = m.model;
+  }
+  ctx.log(`[replay] ${id} on ${ctx.gut.root}; store copy ${store}; proxy ${proxy.url}`);
+  const child = Bun.spawn([ctx.install.python, '-m', 'mpw_tools.replay', '--cell', dir, '--out', out], {
+    cwd: PROVIDER_DIR, env: harnessProcessEnv(ctx.install, env), stdout: 'inherit', stderr: 'inherit',
+  });
+  let code: number;
+  try { code = await child.exited; } finally {
+    const stats = proxy.stats();
+    await proxy.close();
+    const summary = run.close();
+    writeFileSync(join(out, 'spend.json'), JSON.stringify({ run_id: summary.run_id, usd: summary.actual_usd, requests: summary.requests, metered: stats }, null, 2) + '\n');
+    closeLedgers();
+  }
+  return code;
+}
+
 export function makeCtx(argv: string[], log: (l: string) => void = l => process.stderr.write(l + '\n')): Ctx {
   const cellsDir = resolve(flag(argv, '--cells-dir') ?? DEFAULT_CELLS_DIR);
   return { argv, cellsDir, install: ensureHarness({ log }), gut: resolveGbrainUnderTest(gbrainSpecFrom(argv)), stub: argv.includes('--stub-upstream'), log };
@@ -540,6 +588,7 @@ export function makeCtx(argv: string[], log: (l: string) => void = l => process.
 export const USAGE = `usage: bun run harness:cell <plan|run|resume> <spec.json | cell-id> [--stub-upstream] [--budget-ledger <path>] [--gbrain <checkout>[@ref]] [--cells-dir <dir>]
        bun run harness:cell rejudge <cell-id> <cell-id> [--out <dir>] [--seed N] [--budget-usd N]   joint blinded re-judge with the dataset's judge
        bun run harness:cell reanswer <cell-id> [--sample N] [--out <dir>] [--budget-usd N]   another answer sample from the recorded retrievals
+       bun run harness:cell replay <cell-id> --store <store dir> --out <dir> --gbrain <checkout>@<ref> [--budget-usd N]   retrieval-only replay on another build
        bun run harness:cell ingest <spec.json | cell-id>   ingest every unit into the shared store, no questions
        bun run harness:cell tune <cell-id> --auto '{"targets": [4000, 8000, 16000, 32000], "base": {"token_budget": 8100}, "sample": 60}'
        bun run harness:cell tune <cell-id> --grid '{"token_budget": [6000, 7000, 8000]}'   retrieval-only knob sweep on an ingested cell
@@ -558,7 +607,7 @@ if (import.meta.main) {
       process.exit(proc.exitCode ?? 1);
     }
     if (action === 'ingest') argv.push('--ingest-only');
-    if (!['plan', 'run', 'resume', 'tune', 'rejudge', 'reanswer', 'ingest'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
+    if (!['plan', 'run', 'resume', 'tune', 'rejudge', 'reanswer', 'replay', 'ingest'].includes(action ?? '') || !target) { console.error(USAGE); process.exit(2); }
     const ctx = makeCtx(argv);
     if (action === 'plan') {
       const cell = planCell(ctx, target);
@@ -571,6 +620,11 @@ if (import.meta.main) {
       const ids = argv.slice(1).filter((a, i, all) => !a.startsWith('--') && !(all[i - 1] ?? '').startsWith('--'));
       const out = resolve(flag(argv, '--out') ?? join(ctx.cellsDir, `rejudge-${Date.now()}`));
       process.exit(await rejudgeCells(ctx, ids, Number(flag(argv, '--budget-usd') ?? 2), out, flag(argv, '--seed') ?? '20261005'));
+    }
+    if (action === 'replay') {
+      const store = flag(argv, '--store'), out = flag(argv, '--out');
+      if (!store || !out) throw new Error('replay needs --store <the cell\'s store dir> and --out <dir>');
+      process.exit(await replayCell(ctx, target, resolve(store), resolve(out), Number(flag(argv, '--budget-usd') ?? 5)));
     }
     if (action === 'reanswer') {
       const out = resolve(flag(argv, '--out') ?? ctx.cellsDir);
