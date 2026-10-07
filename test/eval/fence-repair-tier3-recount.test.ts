@@ -1,6 +1,9 @@
 /**
  * Tier 3 fence-repair receipts (2026-10-06, gbrain #6188 T4): recount the
- * published numbers from the raw per-fixture rows. Keyless, $0, no network.
+ * published numbers of both rounds from the raw per-fixture rows. Keyless,
+ * $0, no network. Round 2 counts gate-pass and false-accept over the fences
+ * that reached the model (amendment 1) and qualifies a model only when it
+ * meets the rule on the held-out set and on the round 1 fixtures.
  *
  * Each row in docs/benchmarks/2026-10-06-fence-repair-tier3/results/ is one
  * fixture run with its outcome and its match against the ground truth, as
@@ -73,3 +76,50 @@ describe('fence-repair Tier 3 receipts', () => {
     expect(rows.reduce((s, r) => s + r.spent_usd, 0)).toBeCloseTo(9.7456, 3);
   });
 });
+
+describe('fence-repair Tier 3 round 2 receipts', () => {
+  const R2 = join(DIR, 'round-2');
+  const r2 = (set: string): Array<Row & { tier1: string }> => readdirSync(join(R2, 'results')).filter(f => f.startsWith(`${set}-`) && /-run\d\.jsonl$/.test(f)).sort()
+    .flatMap(f => readFileSync(join(R2, 'results', f), 'utf8').trim().split('\n').map(line => JSON.parse(line)));
+  const verdict2 = JSON.parse(readFileSync(join(R2, 'verdict.json'), 'utf8'));
+  const tier3 = (rows: Array<Row & { tier1: string }>, model: string) => {
+    const t3 = rows.filter(r => r.model === model && r.set === 'repairable' && r.tier1 === 'llm');
+    const repaired = t3.filter(r => r.outcome === 'repaired').length;
+    const falseAccepts = t3.filter(r => r.outcome === 'repaired' && r.match_cells === false).length;
+    return { n: t3.length, repaired, falseAccepts, meets: repaired / t3.length >= 0.8 && falseAccepts / t3.length <= 0.01 };
+  };
+
+  test('1,950 fixture runs: 78 round 1 and 52 held-out fixtures, 5 models x 3 runs', () => {
+    expect(r2('fixtures').length).toBe(1170);
+    expect(r2('heldout').length).toBe(780);
+  });
+
+  test('Tier 3 counts per set, the qualifying models and the default order', () => {
+    const counts = Object.fromEntries(['heldout', 'fixtures'].map(set => [set, Object.fromEntries(MODELS.map(m => { const c = tier3(r2(set), m); return [m, [c.repaired, c.n, c.falseAccepts]]; }))]));
+    expect(counts).toEqual({
+      heldout: {
+        'anthropic:claude-opus-4-7': [96, 99, 0], 'anthropic:claude-opus-5-5': [95, 99, 0], 'anthropic:claude-sonnet-5-5': [96, 99, 3],
+        'openai:gpt-6.1-sol': [95, 99, 0], 'anthropic:claude-fable-5-1': [93, 99, 0],
+      },
+      fixtures: {
+        'anthropic:claude-opus-4-7': [162, 165, 3], 'anthropic:claude-opus-5-5': [157, 165, 0], 'anthropic:claude-sonnet-5-5': [144, 165, 3],
+        'openai:gpt-6.1-sol': [156, 165, 0], 'anthropic:claude-fable-5-1': [154, 165, 0],
+      },
+    });
+    const qualifies = MODELS.filter(m => tier3(r2('heldout'), m).meets && tier3(r2('fixtures'), m).meets);
+    expect(qualifies).toEqual(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'anthropic:claude-fable-5-1']);
+    expect(Object.entries(verdict2.qualifies).filter(([, q]) => q).map(([m]) => m).sort()).toEqual([...qualifies].sort());
+    expect(verdict2.default_pick.measured_models_order).toEqual(['openai:gpt-6.1-sol', 'anthropic:claude-opus-5-5', 'anthropic:claude-fable-5-1']);
+    for (const set of ['heldout', 'fixtures']) {
+      const summary2 = JSON.parse(readFileSync(join(R2, `summary-${set}.json`), 'utf8'));
+      for (const m of MODELS) {
+        const c = tier3(r2(set), m);
+        const s = summary2.models.find((x: { model: string }) => x.model === m);
+        expect([s.repairable.repaired, s.repairable.n, s.repairable.false_accepts, s.meets_rule]).toEqual([c.repaired, c.n, c.falseAccepts, c.meets]);
+        expect([verdict2.sets[set][m].repaired, verdict2.sets[set][m].false_accepts]).toEqual([c.repaired, c.falseAccepts]);
+      }
+    }
+    expect([...r2('fixtures'), ...r2('heldout')].reduce((s, r) => s + r.spent_usd, 0)).toBeCloseTo(13.6711, 3);
+  });
+});
+

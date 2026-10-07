@@ -1,0 +1,683 @@
+{
+  "experiment": "Tier 3 fence repair, round 2 (gbrain #6188 T4)",
+  "measured": "2026-10-06 (US Pacific)",
+  "preregistration": [
+    "docs/benchmarks/2026-10-06-fence-repair-tier3-preregistration.md (27d8fe5)",
+    "docs/benchmarks/2026-10-06-fence-repair-tier3-amendment-1.md (40fd5e1)"
+  ],
+  "gbrain_commit": "7d75e08c83a51ac4ebde4ba2fc84274db0f4a3d7",
+  "gbrain_branch": "capy/6188-pr4",
+  "harness_commit": "ead0b0c9c861b2ecdaf022fa1b6a14dfe23cac05 (capy/6188-t4-eval)",
+  "harness_sha256": "31299e62812fb0f27de1bb4f33180f3a19c7e77ae2269438b0d476594e028235",
+  "prompt_version": 2,
+  "fixtures": {
+    "fixtures": "769f7f04cda52128144383a95b1940228b684b80ed2743b81e7db05784799896",
+    "heldout": "d0b45d4ce492c0ba9b728f70beb7f01969e4e6ccabddfb074ca9ca4c520fb448"
+  },
+  "reach_tier3": {
+    "heldout_repairable": 33,
+    "fixtures_repairable": 55
+  },
+  "decision_rule": {
+    "min_gate_pass": 0.8,
+    "max_false_accept": 0.01,
+    "qualify": "meets the rule on both sets; held-out decisive"
+  },
+  "sets": {
+    "heldout": {
+      "openai:gpt-6.1-sol": {
+        "tier3_runs": 99,
+        "repaired": 95,
+        "gate_pass": 0.9596,
+        "gate_pass_wilson95": [
+          0.9007,
+          0.9842
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_wilson95": [
+          0,
+          0.0374
+        ],
+        "false_accept_fixtures": {},
+        "declined_repairable": 4,
+        "tier3_held": {
+          "h-f-sg-03:llm_declined": 3,
+          "h-f-hu-03:llm_declined": 1
+        },
+        "whole_path": {
+          "n": 120,
+          "repaired": 113,
+          "gate_pass": 0.9416666666666667,
+          "false_accepts": 0,
+          "false_accept": 0
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 95,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 32,
+        "adversarial_runs": 36,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "declined": 17
+        },
+        "adversarial_accepted": {
+          "h-adv-05": 3,
+          "h-spl-04": 1
+        },
+        "usd_total": 0.3169,
+        "usd_per_repair": 0.00264,
+        "latency_p50_ms": 3720,
+        "latency_p95_ms": 7085,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": true
+      },
+      "anthropic:claude-opus-5-5": {
+        "tier3_runs": 99,
+        "repaired": 95,
+        "gate_pass": 0.9596,
+        "gate_pass_wilson95": [
+          0.9007,
+          0.9842
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_wilson95": [
+          0,
+          0.0374
+        ],
+        "false_accept_fixtures": {},
+        "declined_repairable": 4,
+        "tier3_held": {
+          "h-f-sg-03:llm_declined": 3,
+          "h-f-hu-03:llm_declined": 1
+        },
+        "whole_path": {
+          "n": 120,
+          "repaired": 113,
+          "gate_pass": 0.9416666666666667,
+          "false_accepts": 0,
+          "false_accept": 0
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 95,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 33,
+        "adversarial_runs": 36,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "declined": 13,
+          "gate": 5
+        },
+        "adversarial_accepted": {
+          "h-spl-04": 3
+        },
+        "usd_total": 1.0754,
+        "usd_per_repair": 0.00815,
+        "latency_p50_ms": 3906,
+        "latency_p95_ms": 10950,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": true
+      },
+      "anthropic:claude-fable-5-1": {
+        "tier3_runs": 99,
+        "repaired": 93,
+        "gate_pass": 0.9394,
+        "gate_pass_wilson95": [
+          0.874,
+          0.9719
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_wilson95": [
+          0,
+          0.0374
+        ],
+        "false_accept_fixtures": {},
+        "declined_repairable": 6,
+        "tier3_held": {
+          "h-f-sg-03:llm_declined": 3,
+          "h-f-hu-03:llm_declined": 3
+        },
+        "whole_path": {
+          "n": 120,
+          "repaired": 111,
+          "gate_pass": 0.925,
+          "false_accepts": 0,
+          "false_accept": 0
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 93,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 33,
+        "adversarial_runs": 36,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "declined": 14,
+          "gate": 4
+        },
+        "adversarial_accepted": {
+          "h-spl-04": 3
+        },
+        "usd_total": 2.944,
+        "usd_per_repair": 0.02097,
+        "latency_p50_ms": 6648,
+        "latency_p95_ms": 17727,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": true
+      },
+      "anthropic:claude-opus-4-7": {
+        "tier3_runs": 99,
+        "repaired": 96,
+        "gate_pass": 0.9697,
+        "gate_pass_wilson95": [
+          0.9147,
+          0.9896
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_wilson95": [
+          0,
+          0.0374
+        ],
+        "false_accept_fixtures": {},
+        "declined_repairable": 0,
+        "tier3_held": {
+          "h-f-hu-03:gate_f": 3
+        },
+        "whole_path": {
+          "n": 120,
+          "repaired": 114,
+          "gate_pass": 0.95,
+          "false_accepts": 0,
+          "false_accept": 0
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 96,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 24,
+        "adversarial_runs": 36,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "gate": 6,
+          "declined": 3
+        },
+        "adversarial_accepted": {
+          "h-adv-04": 3,
+          "h-adv-05": 3,
+          "h-adv-06": 3,
+          "h-spl-04": 3
+        },
+        "usd_total": 0.9191,
+        "usd_per_repair": 0.00773,
+        "latency_p50_ms": 1819.5,
+        "latency_p95_ms": 4511,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": true
+      },
+      "anthropic:claude-sonnet-5-5": {
+        "tier3_runs": 99,
+        "repaired": 96,
+        "gate_pass": 0.9697,
+        "gate_pass_wilson95": [
+          0.9147,
+          0.9896
+        ],
+        "false_accepts": 3,
+        "false_accept": 0.0303,
+        "false_accept_wilson95": [
+          0.0104,
+          0.0853
+        ],
+        "false_accept_fixtures": {
+          "h-f-sg-03": 3
+        },
+        "declined_repairable": 2,
+        "tier3_held": {
+          "h-f-sg-01:llm_declined": 2,
+          "h-f-sg-01:llm_malformed": 1
+        },
+        "whole_path": {
+          "n": 120,
+          "repaired": 114,
+          "gate_pass": 0.95,
+          "false_accepts": 3,
+          "false_accept": 0.025
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 99,
+            "repaired": 96,
+            "wrong_writes": 3
+          },
+          "deterministic": {
+            "runs": 18,
+            "repaired": 18,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 33,
+        "adversarial_runs": 36,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "declined": 15,
+          "llm_malformed": 1,
+          "gate": 2
+        },
+        "adversarial_accepted": {
+          "h-adv-04": 3
+        },
+        "usd_total": 0.3404,
+        "usd_per_repair": 0.00305,
+        "latency_p50_ms": 1712.5,
+        "latency_p95_ms": 2983,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": false
+      }
+    },
+    "fixtures": {
+      "openai:gpt-6.1-sol": {
+        "tier3_runs": 165,
+        "repaired": 156,
+        "gate_pass": 0.9455,
+        "gate_pass_wilson95": [
+          0.8996,
+          0.971
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_wilson95": [
+          0,
+          0.0228
+        ],
+        "false_accept_fixtures": {},
+        "declined_repairable": 9,
+        "tier3_held": {
+          "f-sg-01:llm_declined": 3,
+          "f-sg-03:llm_declined": 2,
+          "f-hu-03:llm_declined": 3,
+          "f-nh-02:llm_declined": 1
+        },
+        "whole_path": {
+          "n": 198,
+          "repaired": 186,
+          "gate_pass": 0.9393939393939394,
+          "false_accepts": 0,
+          "false_accept": 0
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 165,
+            "repaired": 156,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 30,
+            "repaired": 30,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 27,
+        "adversarial_runs": 27,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "declined": 12
+        },
+        "adversarial_accepted": {},
+        "usd_total": 0.4668,
+        "usd_per_repair": 0.00259,
+        "latency_p50_ms": 3534,
+        "latency_p95_ms": 6678,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": true
+      },
+      "anthropic:claude-opus-5-5": {
+        "tier3_runs": 165,
+        "repaired": 157,
+        "gate_pass": 0.9515,
+        "gate_pass_wilson95": [
+          0.9073,
+          0.9752
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_wilson95": [
+          0,
+          0.0228
+        ],
+        "false_accept_fixtures": {},
+        "declined_repairable": 8,
+        "tier3_held": {
+          "f-sg-01:llm_declined": 3,
+          "f-sg-03:llm_declined": 3,
+          "f-sg-06:llm_declined": 2
+        },
+        "whole_path": {
+          "n": 198,
+          "repaired": 187,
+          "gate_pass": 0.9444444444444444,
+          "false_accepts": 0,
+          "false_accept": 0
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 165,
+            "repaired": 157,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 30,
+            "repaired": 30,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 27,
+        "adversarial_runs": 27,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "declined": 5,
+          "gate": 7
+        },
+        "adversarial_accepted": {},
+        "usd_total": 1.5827,
+        "usd_per_repair": 0.00819,
+        "latency_p50_ms": 3816,
+        "latency_p95_ms": 8660,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": true
+      },
+      "anthropic:claude-fable-5-1": {
+        "tier3_runs": 165,
+        "repaired": 154,
+        "gate_pass": 0.9333,
+        "gate_pass_wilson95": [
+          0.8846,
+          0.9624
+        ],
+        "false_accepts": 0,
+        "false_accept": 0,
+        "false_accept_wilson95": [
+          0,
+          0.0228
+        ],
+        "false_accept_fixtures": {},
+        "declined_repairable": 11,
+        "tier3_held": {
+          "f-sg-01:llm_declined": 3,
+          "f-sg-03:llm_declined": 3,
+          "f-hu-03:llm_declined": 3,
+          "f-sg-06:llm_declined": 1,
+          "f-sg-07:llm_declined": 1
+        },
+        "whole_path": {
+          "n": 198,
+          "repaired": 184,
+          "gate_pass": 0.9292929292929293,
+          "false_accepts": 0,
+          "false_accept": 0
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 165,
+            "repaired": 154,
+            "wrong_writes": 0
+          },
+          "deterministic": {
+            "runs": 30,
+            "repaired": 30,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 27,
+        "adversarial_runs": 27,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "declined": 11,
+          "gate": 1
+        },
+        "adversarial_accepted": {},
+        "usd_total": 4.0983,
+        "usd_per_repair": 0.02107,
+        "latency_p50_ms": 5677,
+        "latency_p95_ms": 16148,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": true
+      },
+      "anthropic:claude-opus-4-7": {
+        "tier3_runs": 165,
+        "repaired": 162,
+        "gate_pass": 0.9818,
+        "gate_pass_wilson95": [
+          0.9479,
+          0.9938
+        ],
+        "false_accepts": 3,
+        "false_accept": 0.0182,
+        "false_accept_wilson95": [
+          0.0062,
+          0.0521
+        ],
+        "false_accept_fixtures": {
+          "f-sg-01": 3
+        },
+        "declined_repairable": 0,
+        "tier3_held": {
+          "f-hu-03:gate_f": 3
+        },
+        "whole_path": {
+          "n": 198,
+          "repaired": 192,
+          "gate_pass": 0.9696969696969697,
+          "false_accepts": 3,
+          "false_accept": 0.015151515151515152
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 165,
+            "repaired": 162,
+            "wrong_writes": 3
+          },
+          "deterministic": {
+            "runs": 30,
+            "repaired": 30,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 27,
+        "adversarial_runs": 27,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "gate": 8,
+          "declined": 4
+        },
+        "adversarial_accepted": {},
+        "usd_total": 1.4122,
+        "usd_per_repair": 0.00762,
+        "latency_p50_ms": 1716,
+        "latency_p95_ms": 3938,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": false
+      },
+      "anthropic:claude-sonnet-5-5": {
+        "tier3_runs": 165,
+        "repaired": 144,
+        "gate_pass": 0.8727,
+        "gate_pass_wilson95": [
+          0.8133,
+          0.9152
+        ],
+        "false_accepts": 3,
+        "false_accept": 0.0182,
+        "false_accept_wilson95": [
+          0.0062,
+          0.0521
+        ],
+        "false_accept_fixtures": {
+          "f-sg-03": 3
+        },
+        "declined_repairable": 21,
+        "tier3_held": {
+          "f-st-08:llm_declined": 3,
+          "f-st-10:llm_declined": 3,
+          "f-sg-01:llm_declined": 3,
+          "f-sg-04:llm_declined": 3,
+          "f-sg-05:llm_declined": 3,
+          "f-sg-06:llm_declined": 3,
+          "f-sg-07:llm_declined": 3
+        },
+        "whole_path": {
+          "n": 198,
+          "repaired": 174,
+          "gate_pass": 0.8787878787878788,
+          "false_accepts": 3,
+          "false_accept": 0.015151515151515152
+        },
+        "end_to_end_by_tier": {
+          "llm": {
+            "runs": 165,
+            "repaired": 144,
+            "wrong_writes": 3
+          },
+          "deterministic": {
+            "runs": 30,
+            "repaired": 30,
+            "wrong_writes": 0
+          },
+          "manual": {
+            "runs": 3,
+            "repaired": 0,
+            "wrong_writes": 0
+          }
+        },
+        "adversarial_held": 27,
+        "adversarial_runs": 27,
+        "adversarial_held_how": {
+          "before_tier3": 15,
+          "declined": 8,
+          "gate": 4
+        },
+        "adversarial_accepted": {},
+        "usd_total": 0.5153,
+        "usd_per_repair": 0.00326,
+        "latency_p50_ms": 1646,
+        "latency_p95_ms": 3783,
+        "output_budget_stops": 0,
+        "reasks": 0,
+        "meets_rule": false
+      }
+    }
+  },
+  "qualifies": {
+    "openai:gpt-6.1-sol": true,
+    "anthropic:claude-opus-5-5": true,
+    "anthropic:claude-fable-5-1": true,
+    "anthropic:claude-opus-4-7": false,
+    "anthropic:claude-sonnet-5-5": false
+  },
+  "default_pick": {
+    "openai_key": "openai:gpt-6.1-sol",
+    "anthropic_key_only": "anthropic:claude-opus-5-5",
+    "both_keys": "openai:gpt-6.1-sol",
+    "measured_models_order": [
+      "openai:gpt-6.1-sol",
+      "anthropic:claude-opus-5-5",
+      "anthropic:claude-fable-5-1"
+    ],
+    "why": "Held-out gate-pass: gpt-6.1-sol 95/99, claude-opus-5-5 95/99, claude-fable-5-1 93/99 (intervals overlap); cheaper wins: $0.0026, $0.0081, $0.0210 per repair. The head ordered gpt-6.1-sol then claude-fable-5-1; claude-opus-5-5 now precedes Fable for Anthropic-only installs."
+  },
+  "spend_usd": {
+    "scored_runs": 13.6711,
+    "setup_run": 0.0074
+  },
+  "instrument_comparison": "The PR4 lane scorer (v2, 7d75e08c) counts gate-pass and false-accept over every repairable fence (free-tier repairs counted as repaired); on these rows its counts equal whole_path here and its pass/fail verdict per model and set equals the preregistered Tier 3 verdict."
+}

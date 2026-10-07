@@ -4602,6 +4602,24 @@
       "golden_test": "test/eval/fence-repair-tier3-recount.test.ts: per-model counts recounted from the raw per-fixture rows",
       "status": "covered",
       "note": "1,170 fixture runs (5 models x 3 runs x 78 synthetic fences) through gbrain's production Tier 3 path at 171a7e24 (branch capy/6188-t4-eval), preregistered at 27d8fe5. $9.75."
+    },
+    {
+      "claim_id": "fence-repair-tier3-round-2-2026-10-06",
+      "readme_anchor": "docs/benchmarks/2026-10-06-fence-repair-tier3.md: round 2 at gbrain 7d75e08c; gpt-6.1-sol, claude-opus-5-5 and claude-fable-5-1 qualify (held-out 95, 95 and 93 of 99, no false accept); claude-opus-4-7 fails on the round 1 fixtures (3 of 165); default order gpt-6.1-sol, claude-opus-5-5, claude-fable-5-1",
+      "artifact_path": "docs/benchmarks/2026-10-06-fence-repair-tier3/round-2/verdict.json",
+      "artifact_sha256": "352bfeb41f5a0416a447f9291895343e8a25fb63355ca33240fbfff10f437818",
+      "expected": {
+        "/sets/heldout/openai:gpt-6.1-sol/repaired": 95,
+        "/sets/heldout/anthropic:claude-opus-5-5/repaired": 95,
+        "/sets/heldout/anthropic:claude-fable-5-1/repaired": 93,
+        "/sets/heldout/anthropic:claude-sonnet-5-5/false_accepts": 3,
+        "/sets/fixtures/anthropic:claude-opus-4-7/false_accepts": 3,
+        "/qualifies/anthropic:claude-opus-4-7": false,
+        "/default_pick/anthropic_key_only": "anthropic:claude-opus-5-5"
+      },
+      "golden_test": "test/eval/fence-repair-tier3-recount.test.ts: round 2 Tier 3 counts recounted from the raw per-fixture rows of both sets",
+      "status": "covered",
+      "note": "1,950 fixture runs (5 models x 3 runs x 130 fences: the 78 round 1 fixtures and a 52-fence held-out set frozen in amendment 1 at 40fd5e1) through gbrain's production Tier 3 path at 7d75e08c with the harness from ead0b0c9. $13.67."
     }
   ]
 }
