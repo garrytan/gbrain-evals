@@ -1,0 +1,32 @@
+{
+ "dataset": "BEAM-10M",
+ "source": "https://huggingface.co/datasets/Mohammadta/BEAM-10M",
+ "revision": "9b2096193fe74e2837e4713e483351e19817773c",
+ "license": "CC BY-SA 4.0",
+ "resolve_base": "https://huggingface.co/datasets/Mohammadta/BEAM-10M/resolve/9b2096193fe74e2837e4713e483351e19817773c/",
+ "status": "unfilled",
+ "note": "Every sha256 and byte count below the shards is null until the custodian runs `bun eval/runner/q1/beam10m-manifest.ts fetch --write` on the custody host, which downloads the two parquet shards at this revision, checks them against the hub's LFS hashes, extracts each conversation into a corpus file (the `chat` column only) and a separate question file (the `probing_questions` column only), and records every hash here. Shard paths and sizes come from the hub's public file listing; no BEAM-10M file was downloaded or opened to write this manifest. Conversation ids assume the hub's `conversation_id` values are 1 to 10; the generator refuses if they are not. Corpus loaders read only `chat_path`; only the custodian's question loader reads `questions_path`. Hashes only; no dataset text is committed.",
+ "shards": [
+  { "path": "data/10M-00000-of-00002.parquet", "bytes": 153844664, "sha256": null },
+  { "path": "data/10M-00001-of-00002.parquet", "bytes": 189980875, "sha256": null }
+ ],
+ "extraction": {
+  "script": "eval/runner/q1/beam10m_extract.py",
+  "script_sha256": null,
+  "runner": "uv run --no-project --python 3.12 --with pyarrow==21.0.0",
+  "layout": "beam-10m/9b20961/<conversation>/chat.json and questions.json under the dataset root"
+ },
+ "conversations": [
+  { "conversation": "10m-1", "hf_conversation_id": "1", "chat_path": "beam-10m/9b20961/10m-1/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-1/questions.json", "questions_sha256": null, "questions_bytes": null },
+  { "conversation": "10m-2", "hf_conversation_id": "2", "chat_path": "beam-10m/9b20961/10m-2/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-2/questions.json", "questions_sha256": null, "questions_bytes": null },
+  { "conversation": "10m-3", "hf_conversation_id": "3", "chat_path": "beam-10m/9b20961/10m-3/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-3/questions.json", "questions_sha256": null, "questions_bytes": null },
+  { "conversation": "10m-4", "hf_conversation_id": "4", "chat_path": "beam-10m/9b20961/10m-4/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-4/questions.json", "questions_sha256": null, "questions_bytes": null },
+  { "conversation": "10m-5", "hf_conversation_id": "5", "chat_path": "beam-10m/9b20961/10m-5/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-5/questions.json", "questions_sha256": null, "questions_bytes": null },
+  { "conversation": "10m-6", "hf_conversation_id": "6", "chat_path": "beam-10m/9b20961/10m-6/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-6/questions.json", "questions_sha256": null, "questions_bytes": null },
+  { "conversation": "10m-7", "hf_conversation_id": "7", "chat_path": "beam-10m/9b20961/10m-7/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-7/questions.json", "questions_sha256": null, "questions_bytes": null },
+  { "conversation": "10m-8", "hf_conversation_id": "8", "chat_path": "beam-10m/9b20961/10m-8/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-8/questions.json", "questions_sha256": null, "questions_bytes": null },
+  { "conversation": "10m-9", "hf_conversation_id": "9", "chat_path": "beam-10m/9b20961/10m-9/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-9/questions.json", "questions_sha256": null, "questions_bytes": null },
+  { "conversation": "10m-10", "hf_conversation_id": "10", "chat_path": "beam-10m/9b20961/10m-10/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-10/questions.json", "questions_sha256": null, "questions_bytes": null }
+ ],
+ "filled": null
+}
