@@ -30,11 +30,11 @@ services:
     environment:
       HINDSIGHT_API_DATABASE_URL: postgresql://hindsight:hindsight@db:5432/hindsight
       HINDSIGHT_API_LLM_PROVIDER: ${HINDSIGHT_LLM_PROVIDER:-openai}
-      HINDSIGHT_API_LLM_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      HINDSIGHT_API_LLM_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
       HINDSIGHT_API_LLM_BASE_URL: *proxy_openai
       HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: *proxy_openai
       OPENAI_BASE_URL: *proxy_openai
-      OPENAI_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
       HINDSIGHT_API_SKIP_LLM_VERIFICATION: "true"
       HINDSIGHT_API_OTEL_TRACES_ENABLED: "false"
       HINDSIGHT_ENABLE_CP: "false"

@@ -15,9 +15,9 @@ services:
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
       OPENAI_BASE_URL: http://egress:8787${PROXY_OPENAI_PATH:-/letta/openai/v1}
-      OPENAI_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
       ANTHROPIC_BASE_URL: http://egress:8787${PROXY_ANTHROPIC_PATH:-/letta/anthropic}
-      ANTHROPIC_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      ANTHROPIC_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
     volumes:
       - letta-home:/root/.letta
       - ./run:/run/letta

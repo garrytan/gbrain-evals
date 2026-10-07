@@ -18,11 +18,11 @@ services:
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
       OPENAI_BASE_URL: http://egress:8787${PROXY_OPENAI_PATH:-/cognee/openai/v1}
-      OPENAI_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
       LLM_ENDPOINT: http://egress:8787${PROXY_OPENAI_PATH:-/cognee/openai/v1}
-      LLM_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      LLM_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
       EMBEDDING_ENDPOINT: http://egress:8787${PROXY_OPENAI_PATH:-/cognee/openai/v1}
-      EMBEDDING_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      EMBEDDING_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
     volumes:
       - cognee-data:/data
     mem_limit: ${SHIM_MEM_LIMIT:-6g}

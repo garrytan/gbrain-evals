@@ -32,7 +32,7 @@ services:
       NEO4J_USER: neo4j
       NEO4J_PASSWORD: shootout-graphiti
       OPENAI_BASE_URL: http://egress:9000${PROXY_OPENAI_PATH:-/openai/v1}
-      OPENAI_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
       GRAPHITI_TELEMETRY_ENABLED: "false"
     depends_on:
       neo4j: { condition: service_healthy }
