@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.40] - 2026-10-07
+## [0.10.37] - 2026-10-07
 
 ### The October follow-up round: re-pin to gbrain v0.60.104.0, privacy gates, current-model reruns and LongMemEval at the current pin
 

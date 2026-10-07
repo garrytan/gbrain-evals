@@ -384,7 +384,7 @@
           "docs/benchmarks/2026-10-06-followups-repin/n1-7/n1-ci-a865f8f-unpinned.json",
           "docs/benchmarks/2026-10-06-followups-repin/n1-7/n1-ci-a865f8f-contended.json"
         ],
-        "note": "Rechecked at the new pin a865f8f (gbrain-evals 0.10.40). The keyless repro passes: the ontology row keeps its own source after the first sweep and ontology_get still returns it after the rewrite and second sweep. N1-ci passes on this 4-core machine unpinned and pinned to one core (taskset -c 0): 0 acknowledged writes lost, 64 of 64 current-value probes correct, 0 stale values served, history retained 1.0; it also passes in GitHub CI's checks job at 7cfca65. The stale fence-value symptom is gone with the lost writes: it appeared only at commits containing 7007ba60 and 0 stale values are served at a865f8f, so it is recorded as the same cause, not a separate entry."
+        "note": "Rechecked at the new pin a865f8f (gbrain-evals 0.10.37). The keyless repro passes: the ontology row keeps its own source after the first sweep and ontology_get still returns it after the rewrite and second sweep. N1-ci passes on this 4-core machine unpinned and pinned to one core (taskset -c 0): 0 acknowledged writes lost, 64 of 64 current-value probes correct, 0 stale values served, history retained 1.0; it also passes in GitHub CI's checks job at 7cfca65. The stale fence-value symptom is gone with the lost writes: it appeared only at commits containing 7007ba60 and 0 stale values are served at a865f8f, so it is recorded as the same cause, not a separate entry."
       },
       "fixing_pr": "garrytan/gbrain#6265 (merged as a865f8f, v0.60.104.0)",
       "fixing_commit": "a865f8f8b7c95b9f8c30690702797bafcfef537a",

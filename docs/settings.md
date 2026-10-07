@@ -151,11 +151,11 @@ reproducible matrix used here.
 
 ### 2026-10-07: Installed pin moves to `a865f8f`
 
-gbrain-evals v0.10.40. The installed gbrain commit changed from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0). `src/core/search/mode.ts` is identical at both commits, so the mode-definition note stands with the new end commit.
+gbrain-evals v0.10.37. The installed gbrain commit changed from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0). `src/core/search/mode.ts` is identical at both commits, so the mode-definition note stands with the new end commit.
 
 ### 2026-10-06: Installed pin moves to `c5fb0201`; an embedder row
 
-gbrain-evals v0.10.40. The installed gbrain commit changed from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0). The mode-definition note now says the bundles are unchanged except the three multi-relation planner keys, which plan no LongMemEval question. A new "Choosing an embedder" row cites the October 6 embedding matrix (reranker +13 to +17 points; no embedder better than `voyage-4`) and Cat 21's paraphrase questions (no gain from a code embedder).
+gbrain-evals v0.10.37. The installed gbrain commit changed from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0). The mode-definition note now says the bundles are unchanged except the three multi-relation planner keys, which plan no LongMemEval question. A new "Choosing an embedder" row cites the October 6 embedding matrix (reranker +13 to +17 points; no embedder better than `voyage-4`) and Cat 21's paraphrase questions (no gain from a code embedder).
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).

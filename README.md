@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain master [`a865f8f`](https://github.com/garrytan/gbrain/tree/a865f8f8b7c95b9f8c30690702797bafcfef537a) (v0.60.104.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.40 (`VERSION`) |
+| This repository | gbrain-evals v0.10.37 (`VERSION`) |
 
 This repository installs gbrain master `a865f8f`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -245,15 +245,15 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 ### 2026-10-07: Re-pin to gbrain `a865f8f`; N1-7 fixed
 
-gbrain-evals v0.10.40. The pin moves from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0), which contains gbrain's fix for N1-7. The ledger sentence now says N1-7 is fixed (was: one open gbrain bug). The privacy and chat-format rows name `a865f8f`, where their keyless checks were rerun; the paid rows, the attendance world and the Postgres-over-HTTP privacy cells stay at `c5fb0201`, named as such.
+gbrain-evals v0.10.37. The pin moves from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0), which contains gbrain's fix for N1-7. The ledger sentence now says N1-7 is fixed (was: one open gbrain bug). The privacy and chat-format rows name `a865f8f`, where their keyless checks were rerun; the paid rows, the attendance world and the Postgres-over-HTTP privacy cells stay at `c5fb0201`, named as such.
 
 ### 2026-10-07: LongMemEval answers at the current pin, the full-context comparison, Fable smoke-only
 
-gbrain-evals v0.10.40. The LongMemEval answer row moves from 453 of 500 (Sonnet 4.6 house reader, v0.59.13.0) to 468 of 500 at `c5fb0201` with the Sonnet 5.5 benchmark notes reader; against the same reader on the old retrieval that is "no change shown" (462, p = 0.08), so the move reflects the reader and the current pin. The `gpt-5.4` frontier-reader row (447 of 500) is replaced by the best current reader on the same frozen retrieval, Opus 5.5 at 474. "How gbrain compares" gains the matched-reader full-context comparison. Takes and contradiction-judge rows count Opus 5.5 as the top Anthropic model; Fable 5.1 results are smoke-only under Garry's 2026-10-07 rule.
+gbrain-evals v0.10.37. The LongMemEval answer row moves from 453 of 500 (Sonnet 4.6 house reader, v0.59.13.0) to 468 of 500 at `c5fb0201` with the Sonnet 5.5 benchmark notes reader; against the same reader on the old retrieval that is "no change shown" (462, p = 0.08), so the move reflects the reader and the current pin. The `gpt-5.4` frontier-reader row (447 of 500) is replaced by the best current reader on the same frozen retrieval, Opus 5.5 at 474. "How gbrain compares" gains the matched-reader full-context comparison. Takes and contradiction-judge rows count Opus 5.5 as the top Anthropic model; Fable 5.1 results are smoke-only under Garry's 2026-10-07 rule.
 
 ### 2026-10-06: Re-pin to gbrain `c5fb0201` and the October follow-up round
 
-gbrain-evals v0.10.40. The pin moves from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), which contains every held-out-program plan, so the "newer builds also measured" row is gone. Results rows: privacy now covers Postgres over real HTTP and the N8 gate at `c5fb0201` (was N6 and N8 at `739e5cc`); chat formats 28 of 28 (was 27 of 27); new rows for attendance from documented lists, the contradiction judge on current models and the takes classifier on frontier models; the Cat 35 row says its judge calibration awaits a person's review; the ledger sentence names the October 6 re-pin and the open N1-7 bug it found. Reasons and receipts: the [round plan](docs/plans/2026-10-06-followups-round/PLAN.md) and its reports.
+gbrain-evals v0.10.37. The pin moves from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), which contains every held-out-program plan, so the "newer builds also measured" row is gone. Results rows: privacy now covers Postgres over real HTTP and the N8 gate at `c5fb0201` (was N6 and N8 at `739e5cc`); chat formats 28 of 28 (was 27 of 27); new rows for attendance from documented lists, the contradiction judge on current models and the takes classifier on frontier models; the Cat 35 row says its judge calibration awaits a person's review; the ledger sentence names the October 6 re-pin and the open N1-7 bug it found. Reasons and receipts: the [round plan](docs/plans/2026-10-06-followups-round/PLAN.md) and its reports.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.

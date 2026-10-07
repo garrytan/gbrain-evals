@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.40, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
+gbrain-evals v0.10.37, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -173,11 +173,11 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-10-07: Re-pin to `a865f8f`
 
-gbrain-evals v0.10.40. The opening names gbrain master `a865f8f` (v0.60.104.0, was `c5fb0201`), the commit with gbrain's fix for N1-7. The re-pin route names both October pins.
+gbrain-evals v0.10.37. The opening names gbrain master `a865f8f` (v0.60.104.0, was `c5fb0201`), the commit with gbrain's fix for N1-7. The re-pin route names both October pins.
 
 ### 2026-10-06: The October follow-up round and the re-pin to `c5fb0201`
 
-gbrain-evals v0.10.40. The opening names gbrain master `c5fb0201` (v0.60.95.0, was `739e5cc`). The route table points to the October 6 re-pin (was October 4) and the round's plan, and to the review packets awaiting Garry's labels. New rows link the embedding-provider matrix, Cat 21 paraphrases, the frontier takes-bootstrap rerun, Cat 20 with four judges, N6 on Postgres over HTTP, the N8 privacy gate, the N2 judges on current models, the attendance world, A4 with S4 on, the October 6 negative controls, the BEAM-1M dated rerun, and the October 7 LongMemEval current-pin run, reader replay, full-context comparison and LongMemEval negative control.
+gbrain-evals v0.10.37. The opening names gbrain master `c5fb0201` (v0.60.95.0, was `739e5cc`). The route table points to the October 6 re-pin (was October 4) and the round's plan, and to the review packets awaiting Garry's labels. New rows link the embedding-provider matrix, Cat 21 paraphrases, the frontier takes-bootstrap rerun, Cat 20 with four judges, N6 on Postgres over HTTP, the N8 privacy gate, the N2 judges on current models, the attendance world, A4 with S4 on, the October 6 negative controls, the BEAM-1M dated rerun, and the October 7 LongMemEval current-pin run, reader replay, full-context comparison and LongMemEval negative control.
 
 How this index changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
