@@ -9200,7 +9200,8 @@
         "lines": {
           "ingest": 1.3
         }
-      }
+      },
+      "ingest_sessions": 93
     },
     {
       "schema": "gbrain-evals/q1-cell/v1",

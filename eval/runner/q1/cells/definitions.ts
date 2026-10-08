@@ -436,9 +436,10 @@ export function generateSmokeCells(): CellDefinition[] {
     cells.push(makeCell('S3-smoke-default', system, headlineConfig(system, 'locomo'), [{ id: 'whole-default', mode: 'native-default', readers: [SONNET], label: 'whole system, own default amount (dev smoke, claude-sonnet-5-5)' }]));
   for (const system of ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph']) {
     const cell = makeCell('S2b-ingest', system, headlineConfig(system, 'beam'), [{ id: 'retrieval-only', mode: 'retrieval-only', label: 'ingest-cost probe, retrieval only' }]);
-    // The temporal graph's LoCoMo smoke ingested at many times the planned rate, so its BEAM-1M probe writes the first
-    // tenth of the conversation (93 of 928 sessions) and the projection scales from that prefix.
-    cells.push(system === 'ext-temporal-graph' ? { ...cell, ingest_sessions: 93 } : cell);
+    // The temporal graph's LoCoMo smoke ingested at many times the planned rate, and the graph pipeline's whole-
+    // conversation probe was on course for about two days, so their BEAM-1M probes write the first tenth of the
+    // conversation (93 of 928 sessions) and the projection scales from that prefix.
+    cells.push(system === 'ext-temporal-graph' || system === 'ext-graph-pipeline' ? { ...cell, ingest_sessions: 93 } : cell);
   }
   return cells;
 }

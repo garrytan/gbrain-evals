@@ -655,7 +655,7 @@ describe('paid dev smokes', () => {
     const locomo = m.smoke_cells.filter(c => c.set === 'S3-smoke');
     expect(new Set(locomo.map(c => c.system))).toEqual(new Set([...kinds].filter(k => k !== 'ext-agent-runtime')));
     expect(locomo.find(c => c.system === 'gbrain-defaults')!.arms.map(a => a.id)).toEqual(['component-b8000', 'whole-synthesize']);
-    expect(m.smoke_cells.filter(c => c.set === 'S2b-ingest').map(c => `${c.system}:${c.configuration}:${c.ingest_sessions ?? 'all'}`)).toEqual(['ext-extract-first:common:all', 'ext-memory-bank:recipe:all', 'ext-graph-pipeline:recipe:all', 'ext-temporal-graph:common:93']);
+    expect(m.smoke_cells.filter(c => c.set === 'S2b-ingest').map(c => `${c.system}:${c.configuration}:${c.ingest_sessions ?? 'all'}`)).toEqual(['ext-extract-first:common:all', 'ext-memory-bank:recipe:all', 'ext-graph-pipeline:recipe:93', 'ext-temporal-graph:common:93']);
     expect(m.total_usd).toBe(Math.round(m.blocks.reduce((s, b) => s + b.estimate_usd, 0) * 100) / 100);
   });
 
