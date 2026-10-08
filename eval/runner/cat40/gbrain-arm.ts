@@ -279,17 +279,22 @@ export class GbrainSlot {
   }
   get snapshot() { return `${this.dir}.tar`; }
 
-  async build(world: LadderWorld, proxy: MeteringProxy, analyze: boolean): Promise<SlotBuild> {
+  /**
+   * `render` turns a document into its Markdown file (default: the Cat 40 renderer). `embed: false` skips the
+   * embedding step for a keyless (hermetic) brain, which then searches by keyword only.
+   */
+  async build<D extends { id: string; type: string }>(world: { docs: D[] }, proxy: MeteringProxy, analyze: boolean, opts: { render?: (d: D) => string; embed?: boolean } = {}): Promise<SlotBuild> {
+    const render = opts.render ?? ((d: D) => renderDoc(d as unknown as LadderWorld['docs'][number]));
     const t0 = Date.now();
     const meterKey = `build:${this.id}`;
     proxy.bind(this.id, meterKey);
     rmSync(this.dir, { recursive: true, force: true });
     const vault = join(this.dir, 'vault');
     for (const d of ['home', 'uh', 'vault']) mkdirSync(join(this.dir, d), { recursive: true });
-    const writeDocs = (docs: LadderWorld['docs']) => { for (const doc of docs) {
+    const writeDocs = (docs: D[]) => { for (const doc of docs) {
       const p = join(vault, `${doc.id}.md`);
       mkdirSync(dirname(p), { recursive: true });
-      writeFileSync(p, renderDoc(doc));
+      writeFileSync(p, render(doc));
     } };
     const git = (args: string[]) => execFileSync('git', ['-C', vault, '-c', 'user.name=cat40', '-c', 'user.email=cat40@example.invalid', ...args], { stdio: 'pipe' });
     // `gbrain sources add` hashes every file into a manifest and refuses one over 1 MiB (source-lifecycle.ts),
@@ -342,8 +347,9 @@ export class GbrainSlot {
     // Builds that gate paid backfills (agent-first operator wave) refuse with exit 3 until `--yes`; older builds
     // reject that flag, so it is passed only after a confirmation_required refusal.
     const embedArgs = ['embed', '--stale', ...(staged ? ['--catch-up'] : [])];
-    const first = await runCli(this.run, embedArgs, 3_600_000);
-    if (first.code === 3 && /confirmation_required|needs the user's approval/.test(first.stdout + first.stderr)) {
+    const first = opts.embed === false ? null : await runCli(this.run, embedArgs, 3_600_000);
+    if (!first) steps.push({ step: 'embed-skipped', code: 0, ms: 0, tail: 'keyless brain: no embedding step (keyword search only)' });
+    else if (first.code === 3 && /confirmation_required|needs the user's approval/.test(first.stdout + first.stderr)) {
       steps.push({ step: 'embed-consent-refused', code: 3, ms: first.ms, tail: 'confirmation_required; rerun with --yes (evaluator-authorized build spend)' });
       await op('embed', [...embedArgs, '--yes']);
     } else {
