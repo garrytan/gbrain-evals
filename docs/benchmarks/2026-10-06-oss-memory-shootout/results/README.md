@@ -42,7 +42,19 @@ in `committed` against the $1,450 cap, but the stop check counts it separately. 
 as spend and tripped temporal-graph's stop at $535.78; temporal-graph's measured spend was $252.78 against its $252 pilot estimate
 (1.0 times; the stop is $378), so the check was corrected and the stop cleared before any Phase 7 cell.
 
+### `memory-bank` passed its per-system stop during Phase 7
+
+`memory-bank`'s measured spend is $132.90 against its stop of $109.50 (1.5 times the $73 pilot estimate). Phases 4
+and 5 account for $102.81, under the stop; the two sealed cells ($15.15 LoCoMo, $14.94 BEAM-100K) took it over. Both
+sealed cells had launched before the total crossed, and they ran to the end so the frozen sealed batch has no hole
+(campaign owner's decision, 2026-10-08). The overshoot has two causes beyond the sealed cells, which the pilot
+estimate never covered: the failed LongMemEval-S attempt `a2` ($9.82, the database shared-memory limit of amendment
+A7), and the LongMemEval-S rerun `a3` costing $66.74 against the pilot's $50.12 LongMemEval-S estimate. No other
+`memory-bank` cell remains.
+
 ## Changelog
+
+- 2026-10-08: `memory-bank`'s stop overshoot logged with its causes.
 
 - 2026-10-08: Phase 7 sealed cells (aggregates, custody access logs and lease summaries only); every counted cell finished.
 
