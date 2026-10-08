@@ -311,7 +311,7 @@ export async function runHardCell(ctx: HardCtx, model: string, armName: ArmName,
     if (slot) {
       const t = Date.now();
       try { await ctx.pool!.restoreOrQuarantine(slot); }
-      finally { timings.restore_ms = Date.now() - t; ctx.proxy!.unbind(slot.id); }
+      finally { timings.restore_ms = Date.now() - t; ctx.proxy!.unbind(slot.id, attemptId); }
     }
   }
   hardTranscripts.set(attemptId, runs.flatMap((r, k) => r.tools.map(t => ({ session: k + 1, name: t.name, args: t.args, result: t.result.slice(0, 40_000) }))));
