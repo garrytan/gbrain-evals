@@ -2,8 +2,8 @@
  "schema": "t0-receipt/v1",
  "runner": "t0-program-primary-v1",
  "verdict": "report-only",
- "gbrain_evals_head": "1e5caf37f0c9b87256ed28a98b9579b84d5702ec",
- "finished_at": "2026-10-08T21:08:52.311Z",
+ "gbrain_evals_head": "0dcf72397ea5e0b6b725b7a9b80d3347f2e0423e",
+ "finished_at": "2026-10-08T22:50:04.856Z",
  "data": {
   "metrics": {
    "forced_drop_detected": true,
@@ -39,6 +39,10 @@
       "lower": 0,
       "upper": 1,
       "clusters": 1
+     },
+     "other_scorers": {
+      "v1_failures": 0,
+      "v3_posthoc_failures": 4
      },
      "by_task_kind": {
       "prep": {
@@ -119,6 +123,10 @@
       "upper": 1,
       "clusters": 1
      },
+     "other_scorers": {
+      "v1_failures": 0,
+      "v3_posthoc_failures": 0
+     },
      "by_task_kind": {
       "prep": {
        "runs": 2,
@@ -198,6 +206,10 @@
       "upper": 1,
       "clusters": 1
      },
+     "other_scorers": {
+      "v1_failures": 0,
+      "v3_posthoc_failures": 4
+     },
      "by_task_kind": {
       "prep": {
        "runs": 2,
@@ -276,6 +288,10 @@
       "lower": 0,
       "upper": 1,
       "clusters": 1
+     },
+     "other_scorers": {
+      "v1_failures": 0,
+      "v3_posthoc_failures": 4
      },
      "by_task_kind": {
       "prep": {

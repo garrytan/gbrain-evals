@@ -19,7 +19,7 @@ import type { Arm, ToolSpec } from './loop.ts';
 import type { LadderWorld } from '../../generators/model-ladder-gen.ts';
 import { renderDoc } from '../../generators/model-ladder-gen.ts';
 import { runCli, type RunEnv } from '../lifecycle/drivers.ts';
-import { priceRequest, reservationUsd, usageCost, type BudgetAllowance } from '../budget-ledger.ts';
+import { priceRequest, reservationUsd, sseUsage, usageCost, type BudgetAllowance } from '../budget-ledger.ts';
 
 export const GBRAIN_EMBED_MODEL = 'openai:text-embedding-3-large';
 /** Above this many documents the source is registered before the corpus is written (see GbrainSlot.build). */
@@ -118,7 +118,7 @@ export class MeteringProxy {
           const text = await res.text();
           if (price) {
             let cost: ReturnType<typeof usageCost> = null;
-            try { cost = usageCost(price, JSON.parse(text)); } catch { cost = null; }
+            try { cost = (res.headers.get('content-type') ?? '').includes('event-stream') ? usageCost(price, { usage: sseUsage(text) }) : usageCost(price, JSON.parse(text)); } catch { cost = null; }
             charge(cost ? cost.usd : reservationUsd(price), !cost);
           } else charge(0, false);
           const out = new Headers(res.headers);

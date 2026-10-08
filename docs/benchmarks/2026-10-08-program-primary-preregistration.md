@@ -255,7 +255,7 @@ reader, $0.81 in ledger run `t0-program-primary-2026-10-08T21-07-30-319Z-3c3e450
 new meeting date, the corrected seat count and the owed order form. `t0-score-v1` failed two of them. Opus 5.5 wrote
 "Your Oct 12 daily note still says 'kickoff Thursday, Oct 22.' That note is out of date", "make sure no 150-seat
 figure ends up in the order form" and "Not to be confused with Idris Marchetti (Xerari Analytics)"; v1 scored a stale
-date, a stale correction and an unsupported value. gpt-6.1-sol linked "[Meeting record](meetings/2026-10-22-...)",
+date, a stale correction and an unsupported value. gpt-6.1-sol linked a "Meeting record" to `meetings/2026-10-22-...`,
 whose page slug carries the old date, and wrote "The meeting page still has October 22 in its filename"; v1 scored a
 stale date. Strong readers cite outdated records to warn the user, and v1 counted the warning as the error.
 

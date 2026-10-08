@@ -80,3 +80,12 @@ describe('within-persona size contrast', () => {
     }
   });
 });
+
+describe('PW sample-size rule', () => {
+  test('a frequent-failure baseline needs fewer personas than a rare one; the search stops at its cap', async () => {
+    const { personasForTenfold } = await import('../../eval/runner/power/validate.ts');
+    const common = personasForTenfold(0.5, { maxPersonas: 64, sims: 150 });
+    expect(common.personas).not.toBeNull();
+    expect(personasForTenfold(0.02, { maxPersonas: 16, sims: 100 }).personas).toBeNull();
+  });
+});

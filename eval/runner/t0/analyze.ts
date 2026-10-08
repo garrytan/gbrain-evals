@@ -17,7 +17,12 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { CellRecord } from '../t0-program-primary.ts';
 import { clusteredRate, riskDifference } from '../power/risk-ratio.ts';
-import { aggregate, FAILURE_KINDS } from './score.ts';
+import { aggregate, FAILURE_KINDS, scoreAnswer } from './score.ts';
+import { generateWorld } from '../../generators/program-primary-gen.ts';
+
+const TASKS = new Map(generateWorld().personas.flatMap(p => p.tasks).map(t => [t.id, t]));
+/** The post-hoc v3 rules on a stored deliverable (secondary; the preregistered primary is the cell's own score). */
+const failedV3 = (c: CellRecord) => { const t = TASKS.get(c.task); return t ? scoreAnswer(t, c.sessions[1]?.answer ?? '', { executionError: c.score.kinds.includes('execution_error') ? 'execution error' : null, version: 't0-score-v3' }).failed : c.score.failed; };
 
 const pct = (xs: number[], p: number) => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.ceil(p * s.length) - 1)]; };
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
@@ -39,6 +44,7 @@ export function summarize(cells: readonly CellRecord[]) {
     const s2 = cs.map(c => c.sessions[1]?.wall_ms ?? 0);
     return {
       arm, reader, ...agg, clustered: clusteredRate([...byPersona.values()]),
+      other_scorers: { v1_failures: cs.filter(c => (c as CellRecord & { score_v1?: { failed: boolean } }).score_v1?.failed).length, v3_posthoc_failures: cs.filter(failedV3).length },
       by_task_kind: Object.fromEntries(['prep', 'reply'].map(kind => { const sub = cs.filter(c => c.kind === kind); return [kind, { runs: sub.length, failures: sub.filter(c => c.score.failed).length }]; })),
       by_correction_kind: Object.fromEntries(['role', 'seats', 'price'].map(kind => { const sub = cs.filter(c => c.correction_kind === kind); return [kind, { runs: sub.length, failures: sub.filter(c => c.score.failed).length }]; })),
       omissions: { date: cs.filter(c => c.score.omissions.date).length, correction: cs.filter(c => c.score.omissions.correction).length },

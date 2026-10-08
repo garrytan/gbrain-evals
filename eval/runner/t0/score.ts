@@ -29,7 +29,9 @@
 import type { Matcher, PPTask } from '../../generators/program-primary-gen.ts';
 
 export const T0_SCORER_VERSION = 't0-score-v2';
-export type ScorerVersion = 't0-score-v1' | 't0-score-v2';
+export type ScorerVersion = 't0-score-v1' | 't0-score-v2' | 't0-score-v3';
+/** Post-hoc (written after reading baseline outputs; secondary only, never the preregistered primary). */
+export const T0_SCORER_POSTHOC = 't0-score-v3';
 export const FAILURE_KINDS = ['missed_commitment', 'stale_date', 'stale_correction', 'unsupported', 'execution_error'] as const;
 export type FailureKind = typeof FAILURE_KINDS[number];
 
@@ -94,6 +96,14 @@ export function staleMentions(m: Matcher, text: string, version: ScorerVersion =
   return { asserted, excused };
 }
 
+/** v3: a namesake value in the same line or paragraph as a disambiguation is attributed to the namesake. */
+const DISAMBIGUATION_V3 = new RegExp(`${DISAMBIGUATION.source}|mix \\w+ up|(?:his|her|their) own|for (?:him|her|them), not`, 'i');
+
+/** Lines (paragraphs and list items) of `text` that match `m`. */
+function linesMatching(m: Matcher, text: string): string[] {
+  return text.split(/\n+/).filter(x => matches(m, x));
+}
+
 /** Sentences (split on . ! ? and newlines) of `text` that match `m`. */
 function sentencesMatching(m: Matcher, text: string): string[] {
   return text.split(/(?<=[.!?])\s+|\n+/).filter(x => matches(m, x));
@@ -106,6 +116,9 @@ function sentencesMatching(m: Matcher, text: string): string[] {
  * AND the current value is absent, so a deliverable that states the current value and cites the outdated record
  * passes, and one that states only the old value fails; the namesake's company is not a value, and a namesake value
  * in a sentence that tells the two people apart is excused.
+ * v3 (post-hoc, written after reading two baseline deliverables that v2 failed; reported beside v2, never instead):
+ * as v2, but the disambiguation may sit anywhere in the same line or paragraph ("Don't mix him up with Yusuf Varga.
+ * Varga has his own meeting on October 21").
  */
 export function scoreAnswer(task: PPTask, answer: string | null | undefined, opts: { executionError?: string | null; version?: ScorerVersion } = {}): T0Score {
   const version = opts.version ?? T0_SCORER_VERSION;
@@ -119,7 +132,9 @@ export function scoreAnswer(task: PPTask, answer: string | null | undefined, opt
   const staleCorr = staleMentions(g.correction.stale, text, version);
   const namesake_hits = version === 't0-score-v1'
     ? g.namesake.filter(m => matches(m, text)).map(m => m.label)
-    : g.namesake.filter(m => m.label.startsWith('namesake ') && sentencesMatching(m, text).some(x => !DISAMBIGUATION.test(x))).map(m => m.label);
+    : version === 't0-score-v2'
+      ? g.namesake.filter(m => m.label.startsWith('namesake ') && sentencesMatching(m, text).some(x => !DISAMBIGUATION.test(x))).map(m => m.label)
+      : g.namesake.filter(m => m.label.startsWith('namesake ') && linesMatching(m, text).some(x => !DISAMBIGUATION_V3.test(x))).map(m => m.label);
   const staleDateFails = staleDate.asserted.length > 0 && (version === 't0-score-v1' || !new_date_hit);
   const staleCorrFails = staleCorr.asserted.length > 0 && (version === 't0-score-v1' || !corrected_hit);
   const kinds: FailureKind[] = [];

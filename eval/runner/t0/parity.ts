@@ -85,7 +85,7 @@ function pushRecorded(home: string, sessionId: string | null): boolean {
   if (!sessionId) return false;
   const root = join(home, '.claude', 'projects');
   if (!existsSync(root)) return false;
-  for (const dir of readdirSync(root)) {
+  for (const dir of readdirSync(root).sort()) {
     const f = join(root, dir, `${sessionId}.jsonl`);
     if (existsSync(f)) return readFileSync(f, 'utf8').includes('retrieved brain context');
   }

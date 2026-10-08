@@ -295,6 +295,22 @@ export async function runCell(ctx: Ctx, p: PPPersona, t: PPTask, reader: string,
   };
 }
 
+/** Writes receipt.json from every cell in `out`/results.jsonl (all arms run so far, not only this invocation's). */
+export function writeReceipt(out: string) {
+  const resultsPath = join(out, 'results.jsonl');
+  const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  const errors = existsSync(join(out, 'harness-errors.jsonl')) ? readFileSync(join(out, 'harness-errors.jsonl'), 'utf8').split('\n').filter(Boolean).length : 0;
+  const summary = summarize(readCells([resultsPath]));
+  const detected = (arm: string) => { const m = summary.mutants.filter(x => x.arm === arm); return m.length ? m.every(x => x.detected) : null; };
+  writeFileSync(join(out, 'receipt.json'), JSON.stringify({
+    schema: 't0-receipt/v1', runner: T0_VERSION, verdict: 'report-only', gbrain_evals_head: head, finished_at: new Date().toISOString(),
+    data: {
+      metrics: { forced_drop_detected: detected('mutant-forced-drop'), stale_correction_detected: detected('mutant-stale-correction'), scored_fraction: summary.cells / Math.max(1, summary.cells + errors), harness_errors: errors },
+      summary,
+    },
+  }, null, 1) + '\n');
+}
+
 // ─── Main ───────────────────────────────────────────────────────────
 
 function flag(argv: string[], name: string): string | undefined {
@@ -413,22 +429,7 @@ export async function main(argv: string[]) {
     }
     hermetic?.restore();
   }
-  const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  const errors = existsSync(join(out, 'harness-errors.jsonl')) ? readFileSync(join(out, 'harness-errors.jsonl'), 'utf8').split('\n').filter(Boolean).length : 0;
-  const summary = summarize(readCells([resultsPath]));
-  const detected = (arm: string) => summary.mutants.filter(m => m.arm === arm).length > 0 && summary.mutants.filter(m => m.arm === arm).every(m => m.detected);
-  writeFileSync(join(out, 'receipt.json'), JSON.stringify({
-    schema: 't0-receipt/v1', runner: T0_VERSION, verdict: 'report-only', gbrain_evals_head: head, finished_at: new Date().toISOString(),
-    data: {
-      metrics: {
-        forced_drop_detected: arms.includes('mutant-forced-drop') ? detected('mutant-forced-drop') : null,
-        stale_correction_detected: arms.includes('mutant-stale-correction') ? detected('mutant-stale-correction') : null,
-        scored_fraction: summary.cells / Math.max(1, summary.cells + errors),
-        harness_errors: errors,
-      },
-      summary,
-    },
-  }, null, 1) + '\n');
+  writeReceipt(out);
 }
 
 if (import.meta.main) {

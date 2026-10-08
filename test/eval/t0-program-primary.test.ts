@@ -88,3 +88,15 @@ describe('T0 mutant detection', () => {
     expect(s.mutants.find(m => m.arm === 'mutant-stale-correction')!.detected).toBe(false);
   });
 });
+
+describe('T0 native parity slice', () => {
+  test('registers both gbrain hooks with the release timeouts and passes the persona, not the answer', async () => {
+    const { hookSettings, personaLine } = await import('../../eval/runner/t0/parity.ts');
+    const s = hookSettings('/opt/gbrain');
+    expect(s.hooks.SessionStart[0].hooks[0]).toEqual({ type: 'command', command: 'bun /opt/gbrain/src/cli.ts hook session-start', timeout: 5 });
+    expect(s.hooks.UserPromptSubmit[0].hooks[0]).toEqual({ type: 'command', command: 'bun /opt/gbrain/src/cli.ts hook user-prompt', timeout: 3 });
+    const line = personaLine(persona, '2026-10-15');
+    expect(line).toContain(persona.principal.name);
+    expect(scoreAnswer(task, line).commitment_hit).toBe(false);
+  });
+});

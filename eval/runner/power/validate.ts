@@ -70,3 +70,20 @@ if (import.meta.main) {
   for (const r of v.validation.filter(x => x.method === v.method.method)) console.log(`${r.scenario.padEnd(24)} coverage ${r.coverage === null ? '  n/a' : r.coverage.toFixed(3)}  10x ${r.verdicts['10x'].toFixed(3)}  improvement ${r.verdicts.improvement.toFixed(3)}  worse ${r.verdicts.worse.toFixed(3)}`);
   console.log(`wrote ${out}`);
 }
+
+/**
+ * The preregistered sample-size rule: the smallest persona count (4 tasks, 3 readers, 2 repeats) at which a
+ * candidate with true factor `factor` reaches `10x` with probability >= `power` at baseline failure rate
+ * `baseRate`, searched up to `maxPersonas`; null when none does.
+ */
+export function personasForTenfold(baseRate: number, opts: { factor?: number; power?: number; maxPersonas?: number; sims?: number; seed?: number } = {}): { personas: number | null; curve: Array<{ personas: number; p_10x: number }> } {
+  const central = SCENARIOS.find(s => s.name === 'null-central')!;
+  const s: Scenario = { ...central, name: `sample-size-${baseRate}`, base_rate: baseRate, ratio: 1 / (opts.factor ?? 20) };
+  const curve: Array<{ personas: number; p_10x: number }> = [];
+  for (let k = 8; k <= (opts.maxPersonas ?? 128); k += 8) {
+    const r = simulate(s, { personas: k, tasks: 4, readers: 3, repeats: 2 }, 'cond-binomial', { sims: opts.sims ?? 1000, seed: opts.seed ?? 20261008 });
+    curve.push({ personas: k, p_10x: r.verdicts['10x'] });
+    if (r.verdicts['10x'] >= (opts.power ?? 0.8)) return { personas: k, curve };
+  }
+  return { personas: null, curve };
+}
