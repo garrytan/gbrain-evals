@@ -106,7 +106,7 @@ export const GAPS_DOCUMENTED: ReadonlyArray<{ feature: string; reason: string }>
 
 // ─── Observations (what the adapter saw) ─────────────────────────────────
 
-export interface StoreReport { store: string; status: string; removed?: number; remaining?: number; reason?: string }
+export interface StoreReport { store: string; status: string; removed?: number; remaining?: number; reason?: string; items?: unknown[] }
 
 export interface PurgeReceiptView {
   kind: 'fact' | 'page';
@@ -161,21 +161,35 @@ export function receiptStoreFor(receipt: PurgeReceiptView, hit: Hit): string {
 const removedNames = (r: PurgeReceiptView) => new Set(Object.keys(r.removed));
 
 /** The status the receipt gives the store holding this hit, bucketed. */
+const PROSE_TABLES = new Set(['pages', 'content_chunks', 'page_versions']);
+
+/** Map a receipt store row's status to a bucket. */
+function bucketOf(status: string): StatusBucket {
+  if (status === 'deleted' || status === 'not_present' || status === 'would_remove') return 'deleted';
+  return (STATUS_BUCKETS as readonly string[]).includes(status) ? status as StatusBucket : 'unreported';
+}
+
+/** The status the receipt gives the store holding this hit, bucketed. */
 export function receiptStatusFor(receipt: PurgeReceiptView | null, hit: Hit): StatusBucket {
   if (!receipt) return 'unreported';
+  const rows = [...receipt.residuals, ...receipt.stores];
+  const names = STORE_ALIASES[hit.table] ?? [hit.table, receiptStoreFor(receipt, hit)];
+  // A store row that names the hit's page in its items (other pages' prose: out_of_scope source_prose) speaks for that page.
+  const proseStore = PROSE_TABLES.has(hit.table) ? ['source_prose'] : [];
+  const listed = hit.slug === null ? undefined : rows.find(r => [...names, ...proseStore].includes(r.store) && Array.isArray(r.items) && r.items.includes(hit.slug));
+  if (listed) return bucketOf(listed.status);
   if (receipt.kind === 'page') {
     if (hit.slug !== receipt.page_slug) return 'unreported';
-    const names = new Set([...removedNames(receipt), ...(receipt.status === 'purged' ? PAGE_PURGE_IMPLIED : [])]);
-    return (STORE_ALIASES[hit.table] ?? [hit.table]).some(n => names.has(n)) ? 'deleted' : 'unreported';
+    const row = rows.find(r => names.includes(r.store) && !Array.isArray(r.items));
+    if (row) return bucketOf(row.status);
+    const removed = new Set([...removedNames(receipt), ...(receipt.status === 'purged' ? PAGE_PURGE_IMPLIED : [])]);
+    return names.some(n => removed.has(n)) ? 'deleted' : 'unreported';
   }
   const store = receiptStoreFor(receipt, hit);
   const row = receipt.residuals.find(s => s.store === store) ?? receipt.stores.find(s => s.store === store);
-  if (row) {
-    if (row.status === 'deleted' || row.status === 'not_present' || row.status === 'would_remove') return 'deleted';
-    return (STATUS_BUCKETS as readonly string[]).includes(row.status) ? row.status as StatusBucket : 'unreported';
-  }
-  const names = removedNames(receipt);
-  return (STORE_ALIASES[hit.table] ?? [hit.table, store]).some(n => names.has(n)) ? 'deleted' : 'unreported';
+  if (row) return bucketOf(row.status);
+  const removed = removedNames(receipt);
+  return (STORE_ALIASES[hit.table] ?? [hit.table, store]).some(n => removed.has(n)) ? 'deleted' : 'unreported';
 }
 
 export interface HitVerdict { hit: Hit; expected: boolean; status: StatusBucket; live: boolean; dishonest: boolean }
@@ -420,8 +434,17 @@ function normalizeFactReceipt(r: any): PurgeReceiptView {
   return { kind: 'fact', subject: r?.subject ?? r?.purge?.subject ?? null, page_slug: null, stores: Array.isArray(r?.stores) ? r.stores : [], residuals: Array.isArray(r?.residuals) ? r.residuals : [],
     removed: r?.purge?.removed ?? {}, completion: r?.completion ?? null, status: r?.state ?? null };
 }
-function normalizePageReceipt(slug: string, r: any): PurgeReceiptView {
-  return { kind: 'page', subject: null, page_slug: slug, stores: [], residuals: [], removed: r?.purge?.removed ?? {}, completion: null, status: r?.status ?? null };
+/** delete_page --purge: the store-by-store receipt is nested under `receipt`; the prose `residuals` string stays for back-compat. */
+export function normalizePageReceipt(slug: string, r: any): PurgeReceiptView {
+  const nested = r?.receipt && typeof r.receipt === 'object' ? r.receipt : null;
+  return {
+    kind: 'page', subject: null, page_slug: slug,
+    stores: Array.isArray(nested?.stores) ? nested.stores : [],
+    residuals: Array.isArray(nested?.residuals) ? nested.residuals : [],
+    removed: r?.purge?.removed ?? nested?.purge?.removed ?? {},
+    completion: nested?.completion ?? null,
+    status: r?.status ?? null,
+  };
 }
 
 const errText = (e: unknown) => e instanceof Error ? e.message : String(e);

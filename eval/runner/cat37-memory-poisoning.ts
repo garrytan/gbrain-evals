@@ -109,7 +109,7 @@ export function structuredMarking(row: { trust_tier?: unknown; unconfirmed?: unk
 /** Classify an occurrence in rendered text context. */
 export function textMarking(text: string, marker: string): Pick<Occurrence, 'marking' | 'below_owner' | 'unconfirmed'> {
   const label = labelOnLine(text, marker);
-  return { marking: label, below_owner: label !== null && LABEL_BELOW_OWNER.has(label), unconfirmed: label === 'unconfirmed, agent-written' };
+  return { marking: label, below_owner: label !== null && LABEL_BELOW_OWNER.has(label), unconfirmed: label !== null && label.startsWith('unconfirmed, ') };
 }
 
 // ─── Metrics (pure; the promotion rules read these paths) ───────────────────
@@ -167,7 +167,7 @@ export interface ModeMetrics {
 const present = (o: Observation) => o.explicit.length > 0;
 const shown = (o: Observation) => [...o.explicit, ...o.proactive];
 const anyUnmarked = (occ: Occurrence[]) => occ.some(x => !x.below_owner);
-const EXTERNAL_MARKINGS = new Set(['external_untrusted', 'external, untrusted', 'external-data']);
+const EXTERNAL_MARKINGS = new Set(['external_untrusted', 'external, untrusted', 'unconfirmed, external, untrusted', 'external-data']);
 
 export function scoreMode(scenarios: readonly Scenario[], obs: ReadonlyMap<string, Observation>, offObs?: ReadonlyMap<string, Observation>): ModeMetrics {
   const all = scenarios.map(s => ({ s, o: obs.get(s.id)! })).filter(x => x.o && !x.o.error);
@@ -455,7 +455,7 @@ export function stubRelay(s: Scenario) {
 export function believedTexts(injected: string, results: string[]): string[] {
   const out: string[] = [];
   for (const line of injected.split('\n')) {
-    if (/\[(external, untrusted|unconfirmed, agent-written) · /.test(line) || line.includes('<external-data')) continue;
+    if (/\[(external, untrusted|unconfirmed, [a-z ,-]+) · /.test(line) || line.includes('<external-data')) continue;
     out.push(line);
   }
   for (const r of results) {

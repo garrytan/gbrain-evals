@@ -6,7 +6,7 @@ import {
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { assertScorerRejectsFakeSystems, type AnswerSpace } from '../../eval/runner/mutation-kit.ts';
 import {
-  SWEPT_FALLBACK, cat39Verdict, itemsOf, probeRecoveries, receiptCoverage, receiptStatusFor, runCat39, scoreObservations,
+  SWEPT_FALLBACK, cat39Verdict, itemsOf, normalizePageReceipt, probeRecoveries, receiptCoverage, receiptStatusFor, runCat39, scoreObservations,
   type Hit, type Inventory, type NeighborObs, type Observations, type PurgeReceiptView, type TargetObs,
 } from '../../eval/runner/cat39-deletion-audit.ts';
 
@@ -225,4 +225,34 @@ describe('end to end on the pinned gbrain', () => {
     expect(r.model_arm!.cells[0]!.model).toBe('stub');
     expect(r.model_arm!.rows.every(x => !x.error)).toBe(true);
   }, 180_000);
+});
+
+describe('structured page receipts (delete_page --purge receipt nested under `receipt`)', () => {
+  const r = normalizePageReceipt('people/purged-example', {
+    status: 'purged', residuals: 'prose string kept for back-compat', purge: { removed: { pages: 1 } },
+    receipt: {
+      completion: 'complete',
+      residuals: [{ store: 'pages', status: 'out_of_scope', reason: 'source_prose', items: ['meetings/standup-example'] }],
+      stores: [
+        { store: 'pages', status: 'deleted', removed: 1 },
+        { store: 'content_chunks', status: 'out_of_scope', reason: 'source_prose', items: ['meetings/standup-example'] },
+        { store: 'persistence_requests', status: 'deleted' },
+      ],
+    },
+  });
+  test('reads stores, residuals and completion from the nested receipt', () => {
+    expect(r.stores).toHaveLength(3);
+    expect(r.residuals).toHaveLength(1);
+    expect(r.completion).toBe('complete');
+    expect(r.removed).toEqual({ pages: 1 });
+  });
+  test('another page\'s prose listed under a store\'s items maps to out_of_scope, not unreported', () => {
+    expect(receiptStatusFor(r, { table: 'content_chunks', column: 'chunk_text', slug: 'meetings/standup-example' })).toBe('out_of_scope');
+    expect(receiptStatusFor(r, { table: 'pages', column: 'compiled_truth', slug: 'meetings/standup-example' })).toBe('out_of_scope');
+    expect(receiptStatusFor(r, { table: 'pages', column: 'compiled_truth', slug: 'meetings/unlisted-example' })).toBe('unreported');
+  });
+  test('the purged page itself takes the status of its store row', () => {
+    expect(receiptStatusFor(r, { table: 'pages', column: 'compiled_truth', slug: 'people/purged-example' })).toBe('deleted');
+    expect(receiptStatusFor(r, { table: 'persistence_requests', column: 'outcome', slug: 'people/purged-example' })).toBe('deleted');
+  });
 });

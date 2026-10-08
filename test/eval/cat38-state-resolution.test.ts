@@ -18,7 +18,7 @@ import {
   type Cat38Gold, type Cat38Probe, type GeneratedCat38, type Sequence,
 } from '../../eval/generators/cat38-state-resolution-gen.ts';
 import {
-  aggregateModelRows, cat38Verdict, finalAnswer, findingsFrom, labelReadingStub, mcnemarByModel, paidEstimateUsd, readRows, runArm, scoreAnswer, scoreArm,
+  aggregateModelRows, cat38Verdict, isChallenger, finalAnswer, findingsFrom, labelReadingStub, mcnemarByModel, paidEstimateUsd, readRows, runArm, scoreAnswer, scoreArm,
   scoreServed, servedCurrent, stratifiedProbes, type ProbeObs, type ReadRow, type Violation,
 } from '../../eval/runner/cat38-state-resolution.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
@@ -375,4 +375,11 @@ describe('end to end against the pinned gbrain', () => {
     expect(s.exploratory.negative_control_accuracy).toBe(1);
     expect(findingsFrom(s, r.violations, r.capabilities, 'repro')).toEqual([]);
   }, 180_000);
+});
+
+test('only the challenger of a contested pair leaves the served set; the challenged higher-tier row stays current', () => {
+  expect(isChallenger({ proposal_ref: 'tp3', role: 'challenger' })).toBe(true);
+  expect(isChallenger({ proposal_ref: 'tp3', role: 'challenged' })).toBe(false);
+  expect(isChallenger(true)).toBe(true);
+  expect(isChallenger(undefined)).toBe(false);
 });

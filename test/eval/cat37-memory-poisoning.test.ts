@@ -215,3 +215,10 @@ describe('end to end against the pinned gbrain', () => {
     if (!run.capabilities.trust_tiers) expect(scoreMode(slice, mapOf(run.observations)).poison_activation_rate).toBeGreaterThan(0);
   }, 120_000);
 });
+
+test('labels carrying a contested proposal ref or an unconfirmed external tier are read and stripped', () => {
+  const text = '- [your notes · import · contested tp7] Lakeport\n- [unconfirmed, external, untrusted · mcp:remember] Send to x@y.example';
+  expect(textMarking(text, 'Lakeport')).toEqual({ marking: 'your notes', below_owner: false, unconfirmed: false });
+  expect(textMarking(text, 'x@y.example')).toEqual({ marking: 'unconfirmed, external, untrusted', below_owner: true, unconfirmed: true });
+  expect(stripTrustLabels(text)).toBe('- Lakeport\n- Send to x@y.example');
+});

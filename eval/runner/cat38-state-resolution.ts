@@ -36,12 +36,14 @@
  *
  *   served-current rule  among the slot's rows that recall returns active
  *                    (no expired_at, superseded_by or past valid_until) and
- *                    not marked contested, the most trusted by its returned
- *                    trust_tier, the newest among equals (valid_from, then
- *                    fact id). A row without a tier reads as unknown. This is
- *                    what the A6 labels let a reader resolve; gbrain does not
- *                    mark a contested row on read (see gaps), so the winner,
- *                    not the raw set of active rows, is "served as current".
+ *                    not marked as the challenger of a contested pair, the
+ *                    most trusted by its returned trust_tier, the newest
+ *                    among equals (valid_from, then fact id). A row without a
+ *                    tier reads as unknown. This is what the A6 labels let a
+ *                    reader resolve: builds before 91290339 did not mark a
+ *                    contested row on read, and newer ones mark both rows of
+ *                    the pair (challenger and challenged), so the winner, not
+ *                    the raw set of active rows, is "served as current".
  *
  * The same world is written a second time with every protection off
  * (MODE_OFF, `gbrain trust disable --all`) to show which behaviors depend on
@@ -101,7 +103,7 @@ export type ArmMode = 'default' | 'off';
 /** Behaviors this category cannot score, or measures with a stated limit. */
 export const NON_GUARANTEES: ReadonlyArray<{ feature: string; reason: string }> = [
   { feature: 'keyless conflict slot', reason: 'Without an embedding provider, remember finds a contradiction only through an explicit `replaces`: decideSingleFact (src/core/facts/single-prepare.ts) compares by cosine only when an embedding exists. A contradiction without `replaces` is inserted active and not contested, so contested_visible_rate counts it as not visible; the served-current rule still resolves it by tier.' },
-  { feature: 'contested flag on read', reason: 'recall returns a contested lower-tier row with its trust_tier label but no contested flag or proposal ref (the contested outcome exists only on the remember response, DX-1). Visibility counts a row as contested when recall marks it or a pending trust_proposals row names it.' },
+  { feature: 'contested flag on read', reason: 'recall marks both rows of a contested pair (contested: {proposal_ref, role: challenger|challenged}) from capy/memory-trust 91290339 on; earlier builds marked neither. Only the challenger leaves the served set. Visibility counts a row as contested when recall marks it as the challenger or a pending trust_proposals row names it.' },
   { feature: 'owner source import', reason: 'sut.ownerImport (paused importFromContent) projects no fact rows; operator_curated facts come from a managed sync of a fixture git worktree bound to the default source.' },
   { feature: 'owner confirmation', reason: 'user_confirmed writes and proposal accepts use the CEO-14 confirmation test seam (__setConfirmationIoForTests) to type the confirmation token on a simulated TTY; the memory_confirm token path is not exercised here.' },
 ];
@@ -133,10 +135,21 @@ export function readRows(facts: unknown, now = Date.now()): ReadRow[] {
       value: sv?.value ?? null,
       tier: typeof f.trust_tier === 'string' ? f.trust_tier : null,
       active: !f.expired_at && (f.superseded_by === null || f.superseded_by === undefined) && (validUntil === null || validUntil > now),
-      contested: Boolean(f.contested),
+      contested: isChallenger(f.contested),
       valid_from: f.valid_from ? String(f.valid_from) : null,
     };
   });
+}
+
+/**
+ * A row is contested when gbrain marks it the challenger of a pending trust
+ * proposal (`contested: { proposal_ref, role: 'challenger' }`); the
+ * `challenged` higher-tier row stays current until the owner decides. A bare
+ * `true` (older shapes) counts as challenger.
+ */
+export function isChallenger(value: unknown): boolean {
+  if (value && typeof value === 'object') return (value as { role?: unknown }).role !== 'challenged';
+  return Boolean(value);
 }
 
 /** The served-current rule (file header): [] when nothing is served, else the one winning value. */
@@ -646,7 +659,7 @@ export function labelReadingStub(probe: Pick<Cat38Probe, 'entity' | 'slot'>) {
     const labeled = rows.some(r => typeof r.f.trust_tier === 'string');
     const time = (f: Record<string, unknown>) => (f.valid_from ? Date.parse(String(f.valid_from)) : 0) || 0;
     const newest = (a: typeof rows[number], b: typeof rows[number]) => time(b.f) - time(a.f) || Number(b.f.fact_id ?? 0) - Number(a.f.fact_id ?? 0);
-    const trusted = rows.filter(r => !r.f.contested && !r.f.unconfirmed && r.f.trust_tier !== 'external_untrusted');
+    const trusted = rows.filter(r => !isChallenger(r.f.contested) && !r.f.unconfirmed && r.f.trust_tier !== 'external_untrusted');
     const pool = labeled && trusted.length ? trusted.sort((a, b) => tierRank(b.f.trust_tier as string) - tierRank(a.f.trust_tier as string) || newest(a, b)) : rows.sort(newest);
     return { answer: pool[0]?.value ?? 'UNKNOWN', sources: [probe.entity] };
   });

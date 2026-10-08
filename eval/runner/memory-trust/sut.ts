@@ -294,7 +294,7 @@ export async function openTrustSut(gut: GbrainUnderTest, opts: { sourceId?: stri
 // ─── Labels ──────────────────────────────────────────────────────────────
 
 /** The compact label gbrain renders before an item (src/core/eligibility/labels.ts compactTrustLabel). */
-export const TRUST_LABEL_RE = /\[(?:confirmed by you|your notes|tool data|written by an agent|unverified origin|external, untrusted|unconfirmed, agent-written) · [A-Za-z0-9:_./-]*\] ?/g;
+export const TRUST_LABEL_RE = /\[(?:confirmed by you|your notes|tool data|written by an agent|unverified origin|external, untrusted|unconfirmed, agent-written|unconfirmed, external, untrusted|unconfirmed, unverified origin) · [A-Za-z0-9:_./-]*(?: · contested tp\d+)?\] ?/g;
 const ENVELOPE_OPEN_RE = /<external-data trust="[a-z_]+" origin="[^"]*">\n?/g;
 const ENVELOPE_CLOSE_RE = /\n?<\/external-data>/g;
 const TRUST_KEYS = new Set(['trust_tier', 'origin', 'unconfirmed', 'contested']);
@@ -323,7 +323,7 @@ export function labeledAsUntrusted(text: string, needle: string): boolean {
   if (open >= 0 && open > close) return true;
   const lineStart = text.lastIndexOf('\n', at) + 1;
   const line = text.slice(lineStart, at);
-  return /\[(?:external, untrusted|unconfirmed, agent-written) · /.test(line);
+  return /\[(?:external, untrusted|unconfirmed, [a-z ,-]+) · /.test(line);
 }
 
 /** Tiers a payload may carry and still count as labeled: anything presented below the owner's own notes. */
@@ -341,9 +341,9 @@ export function labelOnLine(text: string, needle: string): string | null {
   const close = text.lastIndexOf('</external-data>', at);
   if (open >= 0 && open > close) return 'external-data';
   const line = text.slice(text.lastIndexOf('\n', at) + 1, at);
-  const m = /\[([a-z ,-]+) · [A-Za-z0-9:_./-]*\][^[]*$/.exec(line);
+  const m = /\[([a-z ,-]+) · [A-Za-z0-9:_./-]*(?: · contested tp\d+)?\][^[]*$/.exec(line);
   return m ? m[1]! : null;
 }
 
 /** Label words that present an item below the owner's notes (src/core/trust/tier.ts TRUST_TIER_LABELS). */
-export const BELOW_OWNER_LABELS = ['written by an agent', 'unverified origin', 'external, untrusted', 'unconfirmed, agent-written', 'external-data'] as const;
+export const BELOW_OWNER_LABELS = ['written by an agent', 'unverified origin', 'external, untrusted', 'unconfirmed, agent-written', 'unconfirmed, external, untrusted', 'unconfirmed, unverified origin', 'external-data'] as const;
