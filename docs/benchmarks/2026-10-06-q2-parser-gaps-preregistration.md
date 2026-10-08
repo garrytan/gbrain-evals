@@ -467,6 +467,21 @@ The 150-pairs-per-corpus raise could not be met for amara, so the final mix is *
 - Progress: G5 passed (world-v1 any-type Δ0, invariance 240/240, variant recall 1.00, 0 decoys added). G6 ingest is
   complete for all four arms ($293.70). The K mint and the G2 sample are done.
 
+### Two N template files dropped, N re-minted (recorded 2026-10-08, before any G1 label or score)
+
+- gbrain's `put_page` refuses two template files for invalid YAML frontmatter (unquoted template-plugin
+  placeholders), and any page error blocks every G1 gate. Both files are dropped from N's `templates` stratum, which
+  goes from 1,408 to 1,406 files. N keeps about 664,930 list lines, above the 500,000 floor. The two files stay hashed
+  in custody but are no longer part of N.
+- `n/n-manifest.json` = `bdbd1e115a2d4de19c1dcbaec13de3748824a9f1c9c2082e23e90800559a4e6e`. `custody-hashes.txt`
+  (5,215 entries) = `f30b31273dd4e597fb995211ae685fcdd8729881156c8eab120ef42e98da7cd9`, replacing `6c9912a1…`. Only the
+  manifest entry changed.
+- N is re-minted for both arms. The superseded baseline mint was moved to `work/superseded-N-v2/`; no labels or scores
+  were produced from it, and only its 711-mint aggregate count was seen. N is not under the one-opening rule (I2, W2
+  and the G6 question set are). The K mints and the G2 sample are unchanged.
+- The custodian fetched and hash-verified the 21 BEAM-1M sealed conversations and their `probing_questions.json` onto
+  the run machine, because the runner's loader requires them and does not download them. Nothing reads the questions.
+
 ### Builds, runners and models
 
 - **Candidate (frozen Q2 build):** gbrain `4ec7fbbe4221bd353b88cf46292b44153c542bb2` on branch `capy/q2-parser-gaps`
