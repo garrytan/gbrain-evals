@@ -645,7 +645,7 @@ describe('paid dev smokes', () => {
 
   test('smoke cells are dev-only: one LoCoMo dev conversation for every system, one BEAM-1M dev conversation for the ingest probes', () => {
     const kinds = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
-    expect(m.smoke_cells.length).toBe(23);
+    expect(m.smoke_cells.length).toBe(24);
     for (const c of m.smoke_cells) {
       expect(definitionProblems(c, kinds)).toEqual([]);
       expect(c.split).toBe('dev');
@@ -655,7 +655,7 @@ describe('paid dev smokes', () => {
     const locomo = m.smoke_cells.filter(c => c.set === 'S3-smoke');
     expect(new Set(locomo.map(c => c.system))).toEqual(new Set([...kinds].filter(k => k !== 'ext-agent-runtime')));
     expect(locomo.find(c => c.system === 'gbrain-defaults')!.arms.map(a => a.id)).toEqual(['component-b8000', 'whole-synthesize']);
-    expect(m.smoke_cells.filter(c => c.set === 'S2b-ingest').map(c => `${c.system}:${c.configuration}:${c.ingest_sessions ?? 'all'}`)).toEqual(['ext-extract-first:common:all', 'ext-memory-bank:recipe:all', 'ext-graph-pipeline:recipe:93', 'ext-temporal-graph:common:93']);
+    expect(m.smoke_cells.filter(c => c.set === 'S2b-ingest').map(c => `${c.system}:${c.configuration}:${c.ingest_sessions ?? 'all'}`)).toEqual(['ext-extract-first:common:all', 'ext-memory-bank:recipe:all', 'ext-graph-pipeline:recipe:93', 'ext-graph-pipeline:common:93', 'ext-temporal-graph:common:93']);
     expect(m.total_usd).toBe(Math.round(m.blocks.reduce((s, b) => s + b.estimate_usd, 0) * 100) / 100);
   });
 
@@ -692,7 +692,7 @@ describe('paid dev smokes', () => {
     const fake = new FakeMemorySystem();
     const asked: number[] = [];
     const finish = fake.finishIngest.bind(fake);
-    fake.finishIngest = async (ns, t) => { asked.push(t ?? -1); return finish(ns, t); };
+    (fake as { finishIngest: (ns: string, timeoutS?: number) => ReturnType<typeof finish> }).finishIngest = async (_ns: string, t?: number) => { asked.push(t ?? -1); return finish(); };
     const def = cellDef('ext-extract-first', 'shim', [{ id: 'retrieval-only', mode: 'retrieval-only', policy: 'fixed-evidence', readers: [] }], { expected_hours: 3, only_conversations: [corpus.conversations[0].id] });
     await runCell(def, { out: join(tmp, 'finish-timeout'), ...quiet }, { corpus, system: fake });
     expect(asked).toEqual([16_200]);

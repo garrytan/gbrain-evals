@@ -1,0 +1,12 @@
+{
+ "baseline-hybrid": 0.75,
+ "baseline-none": 0.3,
+ "baseline-recency": 0.5667,
+ "ext-extract-first": 0.807,
+ "ext-graph-pipeline": 0.7667,
+ "ext-markdown-kb": 0.8,
+ "ext-memory-bank": 0.7333,
+ "ext-temporal-graph": 0.8,
+ "ext-verbatim-session": 0.5833,
+ "gbrain-defaults": 0.7833
+}

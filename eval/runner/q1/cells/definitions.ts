@@ -177,28 +177,43 @@ export const CAP_USD = 8500;
 export const MEASURED_ON = 'paid dev smokes, 2026-10-07 (docs/benchmarks/2026-10-06-scoreboard/dev-smokes/)';
 
 export const ASSUMPTIONS = {
-  /** Reader prompt tokens besides the evidence (the reading template and the question), per reader's own tokens, measured on the no-memory smoke. */
-  reader_input_overhead_tokens: { default: 1_000 } as Record<string, number>,
-  /** Reader input tokens per budget token of a packed arm: the pack fills until the largest calibrated reader count reaches the budget, so the binding reader reads the budget and the others proportionally less. */
-  reader_tokens_per_budget_token: { default: 1 } as Record<string, number>,
+  /** Reader prompt tokens besides the evidence (the reading template and the question), in the reader's own tokens, measured on the no-memory smoke (182 and 133). */
+  reader_input_overhead_tokens: { default: 180, 'openai:gpt-6.1-sol': 130 } as Record<string, number>,
+  /**
+   * Reader input tokens per budget token of a packed arm. The pack fills until the largest calibrated reader count
+   * reaches the budget; the Claude readers bind (1.45-1.47 tokens per cl100k token against GPT-6.1's 1.00 per o200k
+   * token, and o200k counts 0.974 of cl100k on these packs), so GPT-6.1 reads about two thirds of the budget.
+   */
+  reader_tokens_per_budget_token: { default: 1, 'openai:gpt-6.1-sol': 0.66 } as Record<string, number>,
   /** Reader tokens per local cl100k_base token for unbudgeted text (a system's own default amount, a whole history): the calibration factor times the reader's encoding ratio. */
-  reader_tokens_per_cl100k: { default: 1 } as Record<string, number>,
-  reader_output_tokens: { default: 400, 'openai:gpt-6.1-sol': 1_000 } as Record<string, number>,
-  /** Delivered evidence at a system's own default amount, in cl100k_base tokens: gbrain's auto delivery reaches 24,000 tokens; every other system is assumed at 8,000. */
-  vendor_default_tokens: { 'gbrain-defaults': 24_000, default: 8_000 } as Record<string, number>,
-  /** Ingest dollars per million ingested tokens, from the shootout's pilots and the proof wave's ledger (PLAN §7); a recipe without a measured rate uses its common rate. */
+  reader_tokens_per_cl100k: { default: 1.47, 'anthropic:claude-opus-5-5': 1.47, 'anthropic:claude-sonnet-5-5': 1.45, 'openai:gpt-6.1-sol': 0.975 } as Record<string, number>,
+  /** Mean output tokens per answer at effort medium on the 8k component smokes (nine systems, 20 questions each). */
+  reader_output_tokens: { default: 400, 'anthropic:claude-opus-5-5': 720, 'anthropic:claude-sonnet-5-5': 395, 'openai:gpt-6.1-sol': 155 } as Record<string, number>,
+  /** Delivered evidence at a system's own default amount, in cl100k_base tokens, measured on the LoCoMo dev own-default smokes; the temporal graph (not measured) keeps the 8,000 assumption. */
+  vendor_default_tokens: { 'gbrain-defaults': 23_800, 'ext-extract-first': 1_200, 'ext-memory-bank': 10_400, 'ext-graph-pipeline': 2_200, 'ext-markdown-kb': 2_300, 'ext-verbatim-session': 8_000, 'baseline-hybrid': 7_100, default: 8_000 } as Record<string, number>,
+  /**
+   * Ingest dollars per million ingested tokens, without probe polling, by `system:configuration[:family]`: the BEAM-1M
+   * dev probes for the BEAM configurations (whole conversation, or its first 93 sessions), the LoCoMo dev smokes for the
+   * LoCoMo recipes; a configuration nothing measured keeps the shootout's pilot rate (PLAN §7).
+   */
   ingest_usd_per_mtok: {
-    'ext-extract-first:common': 1.9, 'ext-extract-first:recipe': 1.9, 'ext-memory-bank:recipe': 1.4, 'ext-memory-bank:common': 1.4,
-    'ext-graph-pipeline:recipe': 1.4, 'ext-graph-pipeline:common': 1.4, 'ext-temporal-graph:common': 12, 'ext-temporal-graph:recipe': 12,
-    'ext-markdown-kb:recipe': 0.1, 'ext-markdown-kb:common': 0.1, 'ext-verbatim-session:recipe': 0.1, 'ext-verbatim-session:common': 0.1,
-    'gbrain-defaults:shipped-defaults': 0.12, 'gbrain-defaults:full-surface': 0.12, 'gbrain-defaults:common-embedder': 0.13, 'baseline-hybrid:baseline': 0.13,
+    'ext-extract-first:common': 2.8, 'ext-extract-first:recipe': 95, 'ext-memory-bank:recipe': 1.72, 'ext-memory-bank:common': 1.4,
+    'ext-graph-pipeline:recipe': 18.4, 'ext-graph-pipeline:recipe:beam': 3.5, 'ext-graph-pipeline:common': 1.4, 'ext-graph-pipeline:common:beam': 3.98, 'ext-temporal-graph:common': 17.5, 'ext-temporal-graph:recipe': 90,
+    'ext-markdown-kb:recipe': 0, 'ext-markdown-kb:common': 0.1, 'ext-verbatim-session:recipe': 0, 'ext-verbatim-session:common': 0.1,
+    'gbrain-defaults:shipped-defaults': 0.12, 'gbrain-defaults:full-surface': 0.12, 'gbrain-defaults:common-embedder': 0.13, 'baseline-hybrid:baseline': 0.14,
   } as Record<string, number>,
-  /** gbrain's own calls per retrieval (query embedding, LLM expansion with claude-haiku-4-5, rerank), dollars per query. */
-  gbrain_query_usd: 0.0008,
-  /** Write-start-to-queryable probes poll retrieval while a conversation is written: dollars per conversation for systems whose retrieval calls paid models. */
-  probe_usd_per_conversation: {} as Record<string, number>,
-  /** Canonical judge tokens per call; BEAM judges every rubric item (3 assumed). */
-  judge: { lme: { model: 'openai:gpt-4o-2024-08-06', calls: 1, input: 700, output: 10 }, beam: { model: 'openai:gpt-4.1-mini', calls: 3, input: 900, output: 60 } },
+  /** gbrain's own calls per retrieval (query embedding, LLM expansion with claude-haiku-4-5, rerank), dollars per query, measured (20 queries). */
+  gbrain_query_usd: 0.00176,
+  /**
+   * Write-start-to-queryable probes poll retrieval while a conversation is written, for systems whose retrieval calls
+   * paid models. A found probe costs one or two polls; a missed one polls until /finish reports ready, at most its
+   * 15-minute deadline. So spend grows with the conversation's write time up to a ceiling: dollars per million
+   * conversation tokens, capped per conversation. gbrain on conv-44: 18 probes found at the first poll, 3 missed,
+   * 732 polls at $0.00176 before the drain fix (the cap), about 75 after it (6.5 per million tokens).
+   */
+  probe_usd: { 'gbrain-defaults': { per_mtok: 6.5, max_per_conversation: 1.3 }, 'ext-temporal-graph': { per_mtok: 1.7, max_per_conversation: 0.13 } } as Record<string, { per_mtok: number; max_per_conversation: number }>,
+  /** Canonical judge tokens per call (LongMemEval and LoCoMo measured: 367 in, 2 out); BEAM judges every rubric item (3 assumed, not measured). */
+  judge: { lme: { model: 'openai:gpt-4o-2024-08-06', calls: 1, input: 370, output: 2 }, beam: { model: 'openai:gpt-4.1-mini', calls: 3, input: 900, output: 60 } },
   frontier_judge_output_tokens: 60,
   /**
    * Agent loops (file agent, `think`, agent runtime): input tokens per question per reader (a number for every reader,
@@ -206,14 +221,16 @@ export const ASSUMPTIONS = {
    * entries are cache-weighted (cached reads and writes at their price ratio to plain input).
    */
   agent: {
-    'baseline-file-agent': { S1: 130_000, S2a: 30_000, S2b: 73_000, S3: 18_000, output: 2_000 },
+    'baseline-file-agent': { S1: 130_000, S2a: 30_000, S2b: 73_000, S3: { 'anthropic:claude-opus-5-5': 9_700, 'openai:gpt-6.1-sol': 7_800, 'anthropic:claude-sonnet-5-5': 4_950, default: 9_700 }, output: 2_000,
+      output_S3: { 'anthropic:claude-opus-5-5': 860, 'openai:gpt-6.1-sol': 210, 'anthropic:claude-sonnet-5-5': 460, default: 860 } },
     think: { S1: 36_000, S2a: 21_000, S2b: 30_000, S3: 20_000, output: 1_000 },
     'ext-agent-runtime': { S3: 7_000, output: 2_000 },
   } as Record<string, Record<string, number | Record<string, number>>>,
   /** gbrain `synthesize` answers with its configured default model (claude-opus-4-7 at gbrain's pinned price) over its default delivery. */
-  synthesize: { model: 'anthropic:claude-opus-4-7', input: 25_000, output: 1_000, price: { input: 5, output: 25 } },
+  synthesize: { model: 'anthropic:claude-opus-4-7', input: 34_700, output: 850, price: { input: 5, output: 25 } },
   /** Ingest wall time per million tokens (hours) by `system:configuration` where the dev smokes measured it, else by runner, for the schedule and the /finish wait; a shim cell on S1 runs one conversation per VM. */
-  hours_per_mtok: { shim: 4, 'in-process': 0.05, 'ext-extract-first:recipe': 90 } as Record<string, number>,
+  hours_per_mtok: { shim: 4, 'in-process': 0.05, 'ext-extract-first:recipe': 110, 'ext-extract-first:common': 1.74, 'ext-memory-bank:recipe': 2.32, 'ext-graph-pipeline:recipe': 5.6, 'ext-graph-pipeline:recipe:beam': 4.93, 'ext-graph-pipeline:common:beam': 3.09,
+    'ext-temporal-graph:common': 3.53, 'ext-temporal-graph:recipe': 6.6, 'ext-markdown-kb:recipe': 0.53, 'ext-verbatim-session:recipe': 0.15, 'gbrain-defaults:shipped-defaults': 0.9 } as Record<string, number>,
   vcpu: { shim: 8, 'in-process': 8 },
 };
 
@@ -259,10 +276,12 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
   const set = SETS[def.set];
   const lines: Record<string, number> = {};
   const add = (k: string, v: number) => { if (v) lines[k] = (lines[k] ?? 0) + v; };
-  const rate = ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? 0;
+  const family = def.benchmark.startsWith('beam') ? 'beam' : def.benchmark;
+  const rate = ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? 0;
   const tokens = def.ingest_sessions ? set.corpus_tokens * Math.min(1, def.ingest_sessions / Math.max(1, set.sessions ?? def.ingest_sessions)) : set.corpus_tokens;
   add('ingest', rate * tokens / 1e6);
-  add('ingest_probes', (ASSUMPTIONS.probe_usd_per_conversation[def.system] ?? 0) * set.conversations);
+  const probe = ASSUMPTIONS.probe_usd[def.system];
+  if (probe) add('ingest_probes', Math.min(probe.max_per_conversation, probe.per_mtok * tokens / set.conversations / 1e6) * set.conversations);
   const policies = new Set(def.arms.map(a => a.policy).filter(Boolean));
   if (def.system === 'gbrain-defaults') add('system_queries', policies.size * set.questions * ASSUMPTIONS.gbrain_query_usd);
   for (const arm of def.arms) {
@@ -272,8 +291,8 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
       if (arm.mode === 'packed') add('readers', answers(r) * call(r, arm.budget! * byReader(ASSUMPTIONS.reader_tokens_per_budget_token, r) + overhead(r), outTokens(r)));
       else if (arm.mode === 'native-default') add('readers', answers(r) * call(r, byReader(ASSUMPTIONS.vendor_default_tokens, def.system) * perCl100k(r) + overhead(r), outTokens(r)));
       else if (arm.mode === 'full-context') add('full_context', fullContextCost(set, r, n));
-      else if (arm.mode === 'agent') { const a = ASSUMPTIONS.agent[def.system]; add('agent', n * call(r, agentTokens(a[def.set], r), agentTokens(a.output, r))); }
-      else if (arm.mode === 'own-answer' && arm.variant === 'think') { const a = ASSUMPTIONS.agent.think; add('own_answer', n * call(r, agentTokens(a[def.set], r), agentTokens(a.output, r))); }
+      else if (arm.mode === 'agent') { const a = ASSUMPTIONS.agent[def.system]; add('agent', n * call(r, agentTokens(a[def.set], r), agentTokens(a[`output_${def.set}`] ?? a.output, r))); }
+      else if (arm.mode === 'own-answer' && arm.variant === 'think') { const a = ASSUMPTIONS.agent.think; add('own_answer', n * call(r, agentTokens(a[def.set], r), agentTokens(a[`output_${def.set}`] ?? a.output, r))); }
     }
     if (arm.mode === 'own-answer' && arm.variant === 'synthesize') { const s = ASSUMPTIONS.synthesize; add('own_answer', n * (s.input * s.price.input + s.output * s.price.output) / 1e6); }
     if (arm.mode === 'retrieval-only') continue;
@@ -298,10 +317,17 @@ const FRONTIER_JUDGES = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'];
 const EXT_BEAM = ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph', 'ext-markdown-kb', 'ext-verbatim-session'];
 const EXT_LME = ['ext-markdown-kb', 'ext-verbatim-session'];
 const PASSIVE_BASELINES = ['baseline-recency', 'baseline-hybrid', 'baseline-none'];
-/** Headline configuration per system and benchmark family (preregistration "External configurations"). */
-const headlineConfig = (system: string, family: 'beam' | 'locomo' | 'lme') =>
+/**
+ * Headline configuration per system and benchmark family (preregistration "External configurations"). The shootout's
+ * pilots put the extract-first server and the temporal graph on common for BEAM. The dev smokes' BEAM-1M probe puts the
+ * graph pipeline on common for S1 only: its recipe projects 54 hours per BEAM-10M conversation, past the 48-hour rule,
+ * and fits on the smaller BEAM sets.
+ */
+const COMMON_ON_BEAM = new Set(['ext-extract-first', 'ext-temporal-graph']);
+const COMMON_ON_S1 = new Set(['ext-graph-pipeline']);
+const headlineConfig = (system: string, family: 'beam' | 'locomo' | 'lme', set?: SetId) =>
   system === 'gbrain-defaults' ? 'shipped-defaults' : system.startsWith('baseline-') ? 'baseline'
-  : (system === 'ext-extract-first' || system === 'ext-temporal-graph') && family === 'beam' ? 'common' : 'recipe';
+  : family === 'beam' && (COMMON_ON_BEAM.has(system) || (set === 'S1' && COMMON_ON_S1.has(system))) ? 'common' : 'recipe';
 const SHIMS = new Set(['gbrain-defaults', ...EXT_BEAM]);
 
 const short = (system: string) => system.replace(/^ext-|^baseline-/, '');
@@ -326,7 +352,9 @@ function makeCell(set: SetId, system: string, configuration: string, armSpecs: A
   });
   const shards = runner === 'shim' && set === 'S1' ? s.conversations : 1;
   const launch = runner === 'shim' ? shimLaunch(system, configuration) : null;
-  const hours = Math.max(1, Math.ceil((ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner]) * s.corpus_tokens / 1e6 / shards));
+  const family = s.benchmark.startsWith('beam') ? 'beam' : s.benchmark;
+  const perMtok = ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
+  const hours = Math.max(1, Math.ceil(perMtok * s.corpus_tokens / 1e6 / shards));
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
     ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}` },
     ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), shards, expected_hours: Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
@@ -376,7 +404,7 @@ export function generateCells(): CellDefinition[] {
     ];
     if (system !== 'baseline-recency' && system !== 'baseline-none') arms.push({ id: 'whole-default', mode: 'native-default', label: 'whole system, own default amount', frontier: sonnetRows, ...(system === 'gbrain-defaults' ? { anchor: true } : {}) });
     if (system === 'gbrain-defaults') arms.push(synthesize);
-    cells.push(makeCell('S1', system, headlineConfig(system, 'beam'), arms));
+    cells.push(makeCell('S1', system, headlineConfig(system, 'beam', 'S1'), arms));
     if (system === 'gbrain-defaults') cells.push(fullSurface('S1'));
   }
   cells.push(makeCell('S1', 'baseline-full-context', 'baseline', [{ id: 'whole-full-context', mode: 'full-context', label: 'whole history, where it fits', frontier: sonnetRows }]));
@@ -434,8 +462,9 @@ export function generateSmokeCells(): CellDefinition[] {
   // plan, and its S1 row runs the common configuration.
   for (const system of ['gbrain-defaults', ...EXT_BEAM.filter(s => s !== 'ext-temporal-graph'), 'baseline-hybrid'])
     cells.push(makeCell('S3-smoke-default', system, headlineConfig(system, 'locomo'), [{ id: 'whole-default', mode: 'native-default', readers: [SONNET], label: 'whole system, own default amount (dev smoke, claude-sonnet-5-5)' }]));
-  for (const system of ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph']) {
-    const cell = makeCell('S2b-ingest', system, headlineConfig(system, 'beam'), [{ id: 'retrieval-only', mode: 'retrieval-only', label: 'ingest-cost probe, retrieval only' }]);
+  const probes: Array<[string, string]> = [['ext-extract-first', 'common'], ['ext-memory-bank', 'recipe'], ['ext-graph-pipeline', 'recipe'], ['ext-graph-pipeline', 'common'], ['ext-temporal-graph', 'common']];
+  for (const [system, configuration] of probes) {
+    const cell = makeCell('S2b-ingest', system, configuration, [{ id: 'retrieval-only', mode: 'retrieval-only', label: 'ingest-cost probe, retrieval only' }]);
     // The temporal graph's LoCoMo smoke ingested at many times the planned rate, and the graph pipeline's whole-
     // conversation probe was on course for about two days, so their BEAM-1M probes write the first tenth of the
     // conversation (93 of 928 sessions) and the projection scales from that prefix.

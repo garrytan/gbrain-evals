@@ -13,7 +13,9 @@ const SOL = 'openai:gpt-6.1-sol';
 const item = (rank: number, text: string, extra: Partial<Item> = {}): Item => ({ id: `i${rank}`, rank, type: 'page', text, source_ids: [`src-${rank}`], valid_from: null, valid_to: null, provenance_status: 'exact', ...extra });
 const q = { id: 'q', conversation: 'c', question: 'What did the user decide?', category: 'x', gold: [], abstention: false } as MemoryQuestion;
 const turns = (n: number, words = 40) => Array.from({ length: n }, (_, i) => `**${i % 2 ? 'assistant' : 'user'}:** turn ${i} ${'word '.repeat(words).trim()}.`).join('\n\n');
-const counter = readerCounter([SONNET, SOL]);
+/** Uncalibrated counts (factor 1.0), so the packer's mechanics are checked against raw encoder counts. */
+const RAW = { [SONNET]: { encoding: 'cl100k_base' as const, calibration: 1.0, calibrated: false }, [SOL]: { encoding: 'o200k_base' as const, calibration: 1.0, calibrated: false } };
+const counter = readerCounter([SONNET, SOL], RAW);
 const lone = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 
 describe('packing v2 cut rule', () => {
@@ -109,8 +111,8 @@ describe('one byte string for every reader', () => {
 
   test('identical bytes for every reader; identity covers the reader set and tokenizer, not reader order', () => {
     const both = packContext('native', q, items.slice(0, 2), { budgetTokens: null, sessionOf: () => undefined, counter });
-    const swapped = packContext('native', q, items.slice(0, 2), { budgetTokens: null, sessionOf: () => undefined, counter: readerCounter([SOL, SONNET, SOL]) });
-    const one = packContext('native', q, items.slice(0, 2), { budgetTokens: null, sessionOf: () => undefined, counter: readerCounter([SONNET]) });
+    const swapped = packContext('native', q, items.slice(0, 2), { budgetTokens: null, sessionOf: () => undefined, counter: readerCounter([SOL, SONNET, SOL], RAW) });
+    const one = packContext('native', q, items.slice(0, 2), { budgetTokens: null, sessionOf: () => undefined, counter: readerCounter([SONNET], RAW) });
     expect(swapped.prompt).toBe(both.prompt);
     expect(swapped.context_sha256).toBe(both.context_sha256);
     expect(one.prompt).toBe(both.prompt);
@@ -118,6 +120,18 @@ describe('one byte string for every reader', () => {
     expect(one.context_sha256).not.toBe(both.context_sha256);
     expect(both.renderer).toBe(RENDERER_VERSION);
     expect(both.tokenizer).toBe('reader-max:cl100k_base+o200k_base');
+  });
+
+  test('the shipped table is calibrated from the dev smokes: Claude 5 counts about 1.45-1.47 per cl100k token, GPT-6.1 about 1.0 per o200k token', () => {
+    for (const r of ['anthropic:claude-opus-5-5', SONNET]) {
+      const t = readerTokenizer(r);
+      expect([t.encoding, t.calibrated, t.measured?.on]).toEqual(['cl100k_base', true, '2026-10-07']);
+      expect(t.calibration).toBeGreaterThan(1.4);
+      expect(t.calibration).toBeLessThan(1.55);
+    }
+    expect(readerTokenizer(SOL)).toMatchObject({ encoding: 'o200k_base', calibrated: true });
+    expect(Math.abs(readerTokenizer(SOL).calibration - 1)).toBeLessThan(0.01);
+    expect(readerTokenizer('anthropic:claude-fable-5-1').calibrated).toBe(false);
   });
 
   test('a calibration factor scales its reader count and can make that reader the binding one', () => {
