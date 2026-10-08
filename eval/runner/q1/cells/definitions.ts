@@ -196,8 +196,8 @@ export const ASSUMPTIONS = {
   } as Record<string, Record<string, number>>,
   /** gbrain `synthesize` answers with its configured default model (claude-opus-4-7 at gbrain's pinned price) over its default delivery. */
   synthesize: { model: 'anthropic:claude-opus-4-7', input: 25_000, output: 1_000, price: { input: 5, output: 25 } },
-  /** Ingest wall time per million tokens by runner, for the schedule (hours); a shim cell on S1 runs one conversation per VM. */
-  hours_per_mtok: { shim: 4, 'in-process': 0.05 },
+  /** Ingest wall time per million tokens (hours) by `system:configuration` where the dev smokes measured it, else by runner, for the schedule and the /finish wait; a shim cell on S1 runs one conversation per VM. */
+  hours_per_mtok: { shim: 4, 'in-process': 0.05, 'ext-extract-first:recipe': 90 } as Record<string, number>,
   vcpu: { shim: 8, 'in-process': 8 },
 };
 
@@ -304,7 +304,7 @@ function makeCell(set: SetId, system: string, configuration: string, armSpecs: A
   });
   const shards = runner === 'shim' && set === 'S1' ? s.conversations : 1;
   const launch = runner === 'shim' ? shimLaunch(system, configuration) : null;
-  const hours = Math.max(1, Math.ceil(ASSUMPTIONS.hours_per_mtok[runner] * s.corpus_tokens / 1e6 / shards));
+  const hours = Math.max(1, Math.ceil((ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner]) * s.corpus_tokens / 1e6 / shards));
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
     ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}` },
     ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), shards, expected_hours: Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };

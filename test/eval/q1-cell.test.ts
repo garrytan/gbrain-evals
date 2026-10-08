@@ -685,17 +685,17 @@ describe('paid dev smokes', () => {
     expect(definitionProblems({ ...def, ingest_sessions: 0 }, new Set(['ext-temporal-graph']))).toContain('ingest_sessions must be a positive whole number of sessions');
   });
 
-  test('ingest waits for background work up to the cell\'s expected hours by default, never just ten minutes on a long cell', async () => {
+  test('ingest waits for background work up to 1.5x the cell\'s expected hours by default, never just ten minutes on a long cell', async () => {
     const { finishTimeoutFor } = await import('../../eval/runner/q1/cell.ts');
     expect(finishTimeoutFor({ expected_hours: 0.01 })).toBe(600);
-    expect(finishTimeoutFor({ expected_hours: 4 })).toBe(14_400);
+    expect(finishTimeoutFor({ expected_hours: 4 })).toBe(21_600);
     const fake = new FakeMemorySystem();
     const asked: number[] = [];
     const finish = fake.finishIngest.bind(fake);
     fake.finishIngest = async (ns, t) => { asked.push(t ?? -1); return finish(ns, t); };
     const def = cellDef('ext-extract-first', 'shim', [{ id: 'retrieval-only', mode: 'retrieval-only', policy: 'fixed-evidence', readers: [] }], { expected_hours: 3, only_conversations: [corpus.conversations[0].id] });
     await runCell(def, { out: join(tmp, 'finish-timeout'), ...quiet }, { corpus, system: fake });
-    expect(asked).toEqual([10_800]);
+    expect(asked).toEqual([16_200]);
   });
 
   test('a dev cell never names a conversation outside the dev split; the corpus keeps only its conversations', async () => {

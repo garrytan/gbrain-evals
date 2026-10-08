@@ -7,7 +7,7 @@
  *   bun eval/runner/q1/cell.ts show --cell <id> [--json]
  *   bun eval/runner/q1/cell.ts run --cell <id> [--paid --budget-run-id <id>] [--limit N] [--out <dir>] [--arms a,b]
  *     [--shard i/n] [--system-url <shim URL>] [--provider-proxy <url>] [--aggregates <file>] [--max-attempts 3]
- *     [--no-frontier] [--finish-timeout-s <default: the cell's expected hours, at least 600>] [--probe-timeout-s 900]
+ *     [--no-frontier] [--finish-timeout-s <default: 1.5x the cell's expected hours, at least 600>] [--probe-timeout-s 900]
  *   bun eval/runner/q1/cell.ts merge --cell <id> --from <out dir>... --out <dir>
  *
  * A cell (eval/runner/q1/cells/definitions.ts) is one system x configuration
@@ -182,11 +182,12 @@ export function devOnly(def: Pick<CellDefinition, 'benchmark' | 'split' | 'only_
 }
 
 /**
- * How long ingest waits for a system's background work (/finish) by default: the cell's expected hours, at least ten
+ * How long ingest waits for a system's background work (/finish) by default: 1.5 times the cell's expected hours (its
+ * timeout's margin), at least ten
  * minutes. A queued system drains for hours at scale (the extract-first server's recipe /finish took 185 minutes on the
  * shootout's LoCoMo), and questions that start before it drains read a half-built store.
  */
-export const finishTimeoutFor = (def: Pick<CellDefinition, 'expected_hours'>) => Math.max(600, Math.round(def.expected_hours * 3600));
+export const finishTimeoutFor = (def: Pick<CellDefinition, 'expected_hours'>) => Math.max(600, Math.round(def.expected_hours * 1.5 * 3600));
 
 export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): boolean {
   if (def.split === 'dev' || def.benchmark === 'lme-m') return false;
