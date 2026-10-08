@@ -50,7 +50,7 @@ describe('aggregate export', () => {
       summary: { recall_all_at_5: 0.71, qa_score: 0.64, qa_answer: MARKERS[0], latency_p50_ms: 120 },
       outcomes: { scored: 110, retrieval_error: 2, reader_error: 1, note: MARKERS[3] },
       cost: { usd: 3.21, ledger: `/custody/${MARKERS[4]}` },
-      system: { name: 'mem0', capabilities: { source: MARKERS[1] } }, context: 'native', policy: { name: `mem0:${MARKERS[1]}`, mode: 'fixed-evidence' },
+      system: { name: 'extract-first', capabilities: { source: MARKERS[1] } }, context: 'native', policy: { name: `extract-first:${MARKERS[1]}`, mode: 'fixed-evidence' },
       rows: [{ id: MARKERS[5], qa_prompt: MARKERS[3], retrieved: [MARKERS[1]] }],
       run_status_note: 'complete', comparison_complete: false, ingest: { conversations: 14, degraded_conversations: 1 },
     };
@@ -58,7 +58,7 @@ describe('aggregate export', () => {
     const text = JSON.stringify(out);
     for (const m of MARKERS) expect(text).not.toContain(m);
     expect(out).toMatchObject({ kind: 'memory-qa-arm', benchmark: 'locomo', split: 'sealed', run_status: 'partial', 'summary.recall_all_at_5': 0.71, 'summary.qa_score': 0.64,
-      'outcomes.reader_error': 1, 'cost.usd': 3.21, 'system.name': 'mem0', context: 'native', 'policy.mode': 'fixed-evidence', 'selection.questions_expected': 120, comparison_complete: false });
+      'outcomes.reader_error': 1, 'cost.usd': 3.21, 'system.name': 'extract-first', context: 'native', 'policy.mode': 'fixed-evidence', 'selection.questions_expected': 120, comparison_complete: false });
     expect(Object.keys(out).some(k => k.startsWith('rows') || k.startsWith('invalid_reasons') || k.startsWith('product') || k.startsWith('dataset'))).toBe(false);
   });
 

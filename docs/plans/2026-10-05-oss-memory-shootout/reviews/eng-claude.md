@@ -3,7 +3,7 @@
 Target: `/workspace/gbrain-evals/docs/plans/2026-10-05-oss-memory-shootout/PLAN.md` (v2, uncommitted, amended after the CEO phase).
 Repository HEAD: `d47c40d`. gbrain pin in `package.json:45`: `739e5cc` (installed `node_modules/gbrain` reports 0.60.46.0).
 Mode: /autoplan engineering phase, auto-decide, no questions. Method: plan-eng-review (Scope Challenge, Sections 1 to 4, required outputs). Preamble, telemetry, review log and the gstack test-plan artifact are skipped under the hard rule "write only this file"; the test plan is inline below and is **not persisted** elsewhere.
-Evidence: every finding quotes or cites code I read on this machine. Vendor claims come from the pinned wheels (`graphiti-core 0.30.2`, `cognee 1.6.2`, `mem0ai 2.2.1`, `hindsight-client 0.10.2`, `basic-memory 0.23.2`, all confirmed on PyPI and unpacked into `/tmp`). Letta and the vendor MCP servers were not unpacked.
+Evidence: every finding quotes or cites code I read on this machine. Vendor claims come from the pinned wheels (`graphiti-core 0.30.2`, `graph-pipeline 1.6.2`, `mem0ai 2.2.1`, `hindsight-client 0.10.2`, `markdown-notes 0.23.2`, all confirmed on PyPI and unpacked into `/tmp`). agent-runtime and the vendor MCP servers were not unpacked.
 
 ## 1. Verdict
 
@@ -28,7 +28,7 @@ gbrain gets a fresh, truncated store per conversation (`else if (processed > 0) 
 Fix: mirror run.ts for every system: per namespace `reset → ingestSession* → finishIngest → retrieve*`. Parallelism comes from N independent shard processes, each with its own vendor stack on the cell VM (N sized to VM memory), reusing run.ts `--shard i/n` (run.ts:138-140) and the shared budget run (`--budget-run-id`, budget-ledger.ts:53-58).
 
 **A4. [P2] (8/10) `eval/runner/cat40/gbrain-arm.ts:53-132`, `eval/runner/budget-ledger.ts:1174-1180` — the existing metering proxy only fails closed when a paid-request guard is active in the same process.**
-The proxy swallows pricing errors (`try { price = priceRequest(target, body ? JSON.parse(body) : undefined); } catch { price = null; }`, line 101) and charges `$0` for unpriced requests (`} else charge(0, false);`, line 123). `priceRequest` throws for an unknown model (budget-ledger.ts:1077-1125), which is exactly the vendor-default case (Mem0 `gpt-5-mini` is not in `CHAT_PRICE_OVERRIDES`, budget-ledger.ts:1019-1041). Refusal happens only because `forward` calls global `fetch`, which is `delegatingFetch` (budget-ledger.ts:1176-1180) and re-prices through the guard when one is installed. A standalone proxy that imports the ledger but never calls `startPaidRun` forwards unpriced traffic unmetered.
+The proxy swallows pricing errors (`try { price = priceRequest(target, body ? JSON.parse(body) : undefined); } catch { price = null; }`, line 101) and charges `$0` for unpriced requests (`} else charge(0, false);`, line 123). `priceRequest` throws for an unknown model (budget-ledger.ts:1077-1125), which is exactly the vendor-default case (extract-first `gpt-5-mini` is not in `CHAT_PRICE_OVERRIDES`, budget-ledger.ts:1019-1041). Refusal happens only because `forward` calls global `fetch`, which is `delegatingFetch` (budget-ledger.ts:1176-1180) and re-prices through the guard when one is installed. A standalone proxy that imports the ledger but never calls `startPaidRun` forwards unpriced traffic unmetered.
 Fix: extract `MeteringProxy` to `eval/runner/metering-proxy.ts` (two real callers: Cat 40 and the shootout cell), make a pricing throw return 402 without forwarding, add key injection (strip inbound `authorization` / `x-api-key`, inject from the proxy's env), keep the existing `/<slot>/<provider>/…` routing and `bind`/`finalize` (lines 64, 75), and require the standalone entrypoint to call `startPaidRun` first. The plan's "listens on the bridge" is a one-line `hostname` change from `'127.0.0.1'` (line 87).
 
 **A5. [P2] (7/10) PLAN "Phases and gates" Phase 0 and the 12-hour GC rule in the ubicloud skill (`ubirun-*` VMs older than 12 hours are destroyed by any thread's `up`) — long cells die mid-run.**
@@ -37,16 +37,16 @@ Fix: size each cell shard to finish in under 8 hours using Phase 0's measured pe
 
 ### Code quality and contracts
 
-**C1. [P1] (9/10) PLAN contract 2 (`{ text, source_ids[], event_time?, score? }`); `graphiti_core/edges.py:267` (`episodes: list[str]`), Graphiti edge validity fields; `mem0/memory/main.py:1393-1403` (`reference_date`, `show_expired`) — the evidence item cannot say a fact stopped being true.**
-Graphiti keeps superseded facts as edges with a validity window by design; flattening them to text presents an invalidated fact as current. That biases P1 temporal and knowledge-update questions and all of P2 against the systems whose design is temporal, while the plan's own mitigation ("report retrieval as not measurable") does not cover it. Mem0 search also takes `reference_date`, which the interface never passes, so it ranks 2023 conversations relative to a 2026 wall clock.
+**C1. [P1] (9/10) PLAN contract 2 (`{ text, source_ids[], event_time?, score? }`); `graphiti_core/edges.py:267` (`episodes: list[str]`), temporal-graph edge validity fields; `mem0/memory/main.py:1393-1403` (`reference_date`, `show_expired`) — the evidence item cannot say a fact stopped being true.**
+temporal-graph keeps superseded facts as edges with a validity window by design; flattening them to text presents an invalidated fact as current. That biases P1 temporal and knowledge-update questions and all of P2 against the systems whose design is temporal, while the plan's own mitigation ("report retrieval as not measurable") does not cover it. extract-first search also takes `reference_date`, which the interface never passes, so it ranks 2023 conversations relative to a 2026 wall clock.
 Fix: `Item = { text, source_ids, event_time?, valid_from?, valid_to?, score? }`; the one renderer prints `[valid 2023-05-01 to 2023-06-02]` when present; `retrieve(ns, question, { k, now })` passes the public `question_date` (corpus.ts:29, already public in `readerPrompt`, qa.ts:64) as `now`.
 
 **C2. [P1] (8/10) PLAN "What the report will say" ("strict session recall where provenance exists"); run.ts:368 — recall from `source_ids` is undefined and gameable.**
-Today recall is computed over distinct sessions in rank order, cut at top-k (`uniqueInOrder(results.map(...)).slice(0, a.topK)`). An item may carry many `source_ids` (a Graphiti edge's `episodes`, a merged Mem0 memory). One item that cites every session scores recall 1.0.
+Today recall is computed over distinct sessions in rank order, cut at top-k (`uniqueInOrder(results.map(...)).slice(0, a.topK)`). An item may carry many `source_ids` (a temporal-graph edge's `episodes`, a merged extract-first memory). One item that cites every session scores recall 1.0.
 Fix: preregister strict recall as `recall_all@5/@10` over the distinct `source_ids` in first-appearance order across items, truncated at K, exactly the current gbrain definition; record per-row fan-out (mean and max `source_ids` per item). The P1 scorer gets a mutation suite: an "always-positive" fake (every item cites every session in the namespace) must fail via `assertScorerRejectsFakeSystems` (mutation-kit.ts).
 
 **C3. [P1] (9/10) `eval/runner/memory-qa/corpus.ts:224-225`; PLAN contract 5 — the namespace id leaks the abstention marker.**
-For LongMemEval the conversation id is the question id (`conversations.push({ id: q.question_id, sessions })`) and abstention is `q.question_id.endsWith('_abs')`. The in-process gbrain path never sends conversation ids to gbrain, but every vendor namespace (Mem0 `user_id`, Graphiti `group_id`, Hindsight bank, Cognee dataset) would receive `…_abs` if the adapter uses the conversation id. LongMemEval raw session ids also carry `answer_` prefixes for gold sessions; they must stay behind the existing opaque `occurrenceId` (corpus.ts:50-52).
+For LongMemEval the conversation id is the question id (`conversations.push({ id: q.question_id, sessions })`) and abstention is `q.question_id.endsWith('_abs')`. The in-process gbrain path never sends conversation ids to gbrain, but every vendor namespace (extract-first `user_id`, temporal-graph `group_id`, memory-bank bank, graph-pipeline dataset) would receive `…_abs` if the adapter uses the conversation id. LongMemEval raw session ids also carry `answer_` prefixes for gold sessions; they must stay behind the existing opaque `occurrenceId` (corpus.ts:50-52).
 Fix: `sanitize.ts` maps namespace ids to `sha256(salt, conversation).slice(0,16)` and source ids to `occurrenceId`, and the harness passes a `PublicQuestion` type (text and `question_date` only), reusing the compile-time boundary pattern of `PublicQuery` in `eval/runner/types.ts:226-229`. The runtime tripwire lives in the metering proxy: scan outbound bodies for a forbidden set (raw dataset session ids, question ids, category names, `_abs`), never for answer text (answers legitimately appear in sessions). A hit marks the cell `invalid`.
 
 **C4. [P2] (8/10) `eval/runner/memory-qa/qa.ts:40, 42-45, 51-61`; PLAN contract 2 ("counts tokens with the reader's tokenizer", "first-appearance order") — packing rules conflict with the existing renderer and with D2.**
@@ -54,7 +54,7 @@ Fix: `sanitize.ts` maps namespace ids to `sha256(salt, conversation).slice(0,16)
 Fix: keep one reader-independent budget unit (`approxTokens`, already tested at `test/eval/decide-kit.test.ts:179`) and record the reader-reported input tokens per row. Preregister: selection in rank order (first item that does not fit ends the pack, as qa.ts:56 does); presentation in date order for source-rehydrated sessions (parity with the starting line) and in rank order for native items.
 
 **C5. [P2] (8/10) PLAN contract 3 ("each system's own default retrieval amount, and a fixed 8,000-token budget") — two budgets would mean two retrieval calls.**
-Defaults differ (Mem0 `top_k: int = 20`, main.py:1397; Cognee `top_k: int = 15`, recall.py:353). Calling `retrieve` twice doubles query cost and can return different rankings.
+Defaults differ (extract-first `top_k: int = 20`, main.py:1397; graph-pipeline `top_k: int = 15`, recall.py:353). Calling `retrieve` twice doubles query cost and can return different rankings.
 Fix: one `retrieve` per (system, configuration, question) at `k_fill` large enough for 8,000 tokens; store the raw items in the attempt row; derive both budgets and both context modes offline with a pure `packItems()` function; the default-amount context is the first `k_default` items. Phase 0 adds a prefix-stability probe (top `k_default` at `k_fill` equals the result at `k_default`) per system and records the result. Reader runs (including D2) then replay from rows without touching vendor stores.
 
 **C6. [P2] (7/10) `eval/runner/memory-qa/corpus.ts:61-74, 254`; `graphiti_core/graphiti.py:1043-1055` (`reference_time: datetime` required) — `event_time` can be missing.**
@@ -69,7 +69,7 @@ The scorer drives `searchText(query, scope[])` and scores returned belief ids. S
 Fix: `retrieve` accepts `ns: string | string[]`, and the shim protocol states the merge rule for systems that cannot search several namespaces at once (round-robin by rank, preregistered). Belief ids map from `source_ids`; a merged item counts as returning every belief it cites. Report the searchText categories (alias, scope, fuzzy, supersession, ranking) as the P3 headline, structural categories separately.
 
 **C9. [P2] (8/10) `cognee/api/v1/recall/recall.py:353-363` (`auto_route: bool = True`; comment: "only_context / verbose inspect retriever-specific shapes. Pin query_type: unspecified hybrid may defer to GRAPH_COMPLETION"); `mem0/memory/telemetry.py:14` (`MEM0_TELEMETRY = os.environ.get("MEM0_TELEMETRY", "True")`) — capability records must pin vendor switches the plan does not name.**
-Fix: the Cognee record pins `query_type` and `auto_route`, and the shim normalizes that one shape; `include_references=True` for provenance. Every record lists telemetry switches set off (Mem0 `MEM0_TELEMETRY=false`), so fail-closed egress does not surface as ingest errors.
+Fix: the graph-pipeline record pins `query_type` and `auto_route`, and the shim normalizes that one shape; `include_references=True` for provenance. Every record lists telemetry switches set off (extract-first `MEM0_TELEMETRY=false`), so fail-closed egress does not surface as ingest errors.
 
 **C10. [P2] (9/10) `node_modules/gbrain/src/core/ai/defaults.ts:15` (`DEFAULT_EMBEDDING_MODEL = 'voyage:voyage-4'`) — gbrain's "documented recipe" row needs a Voyage key that this environment does not have.**
 The jam's configured variables are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `UBICLOUD_API_KEY`. The ledger can price it (`'voyage:voyage-4': { pricePerMTok: 0.06 }`, gbrain embedding-pricing.ts:44) and the proxy already routes `voyage`.
@@ -84,7 +84,7 @@ The registry test fails on any unclassified directory under `eval/runner/` (`if 
 Fix: add `systems` (and `shootout` if used) to `RUNNER_HELPER_DIRS`, `metering-proxy.ts` to `RUNNER_HELPERS`, and a `lifecycle-lite` registry row with promotion rules in the same commit as its runner, before any counted run.
 
 **C13. [P2] (8/10) PLAN P2 and Phase 5; `eval/generators/n5-forget-residue-gen.ts`, `eval/generators/n1-knowledge-update-gen.ts`, `eval/runner/mutation-kit.ts` (`FAKE_SYSTEM_KINDS = ['empty', 'always-positive', 'always-refuse', 'stale', 'wrong-source']`); `graphiti.py:1824-1834`; `mem0/memory/main.py:1883` — lifecycle-lite should reuse two existing oracles and needs a witness step.**
-N5 already solves "is the fact gone": each canary carries a unique token (`cnry` plus 8 letters) and a witness checkpoint proves presence before the forget. Without a witness, a system whose extractor dropped the fact scores as a perfect forget. Deletion semantics differ: Graphiti `remove_episode` deletes only edges whose first episode is the deleted one (`if edge.episodes and edge.episodes[0] == episode.uuid`); Mem0 deletes memories, not sources (`def delete(self, memory_id)`).
+N5 already solves "is the fact gone": each canary carries a unique token (`cnry` plus 8 letters) and a witness checkpoint proves presence before the forget. Without a witness, a system whose extractor dropped the fact scores as a perfect forget. Deletion semantics differ: temporal-graph `remove_episode` deletes only edges whose first episode is the deleted one (`if edge.episodes and edge.episodes[0] == episode.uuid`); extract-first deletes memories, not sources (`def delete(self, memory_id)`).
 Fix: lifecycle-lite renders N1-style dated value chains and N5 canary tokens as chat sessions, with a witness read before every delete or correction; a pair not witnessed carries no signal and is counted, never scored. Map the plan's mutation list onto the kit: delete-everything is the `empty` fake, stale post-delete is `stale`; leaked ids, inflated provenance and dropped failures are harness contract tests (C3, C2, A1), not answer-space fakes. Each capability record states its delete semantics.
 
 **C14. [P3] (8/10) PLAN P1 data cell ("excluding the question categories P4 has reserved"); `eval/decisions/splits/beam-100k.json` (reservation `"decision": "P4 core memory (always-loaded core page)"`); run.ts:222 — naming collision and a missing filter.**
@@ -94,8 +94,8 @@ Fix: say "the categories reserved for the held-out program's P4 core-memory deci
 ### Test review
 
 **T1. [P2] (9/10) PLAN Phase 1 gate ("every shim passes the keyless fixture") — infeasible as written.**
-Graphiti, Cognee, Mem0 with `infer=True` and Hindsight need an LLM to ingest at all; a keyless run of their real code is impossible without per-vendor canned LLM responses. CI (`.github/workflows/ci.yml`) runs no Docker today.
-Fix: the keyless CI gate covers the harness: a reference fake shim (TypeScript, in-repo) speaking the shim protocol, the HTTP client, sanitizer, renderer and packer, outcome accounting and the proxy. Each real vendor shim gets a paid Phase 0 smoke (cents) on its cell VM. Basic Memory runs keyless with its local FastEmbed embedder, so it is the real-vendor end-to-end canary on a VM. Optional: proxy record/replay of a vendor's LLM traffic, reporting the cache-miss rate rather than assuming determinism.
+temporal-graph, graph-pipeline, extract-first with `infer=True` and memory-bank need an LLM to ingest at all; a keyless run of their real code is impossible without per-vendor canned LLM responses. CI (`.github/workflows/ci.yml`) runs no Docker today.
+Fix: the keyless CI gate covers the harness: a reference fake shim (TypeScript, in-repo) speaking the shim protocol, the HTTP client, sanitizer, renderer and packer, outcome accounting and the proxy. Each real vendor shim gets a paid Phase 0 smoke (cents) on its cell VM. markdown-notes runs keyless with its local FastEmbed embedder, so it is the real-vendor end-to-end canary on a VM. Optional: proxy record/replay of a vendor's LLM traffic, reporting the cache-miss rate rather than assuming determinism.
 
 **T2. [P1] (9/10) PLAN Phase 1 ("replay parity with the starting line … same retrieved session ids row for row") — the paid parity check alone does not protect the refactor.**
 Fix: before moving any code out of run.ts, capture a keyless golden: `runArm` on the `fixture` benchmark with hash embeddings (the path `test/eval/decide-kit.test.ts:153-162` already exercises), rows minus `latency_ms`. After the `MemorySystem` refactor the gbrain adapter must reproduce it byte for byte. The paid starting-line parity stays as a one-time Phase 1 check.
@@ -107,12 +107,12 @@ Retrieval interleaved with other namespaces' ingest measures contention. Per-que
 Fix: shims report `service_ms` around the vendor call and the gbrain adapter times the same boundary; queries run as a serial pass after `finishIngest`; the shim calls the proxy's existing `bind(slot, key)` and `finalize(key)` (gbrain-arm.ts:64, 75) around each `retrieve`, so query-time LLM and embedding calls land on the question's row. Ingest cost is attributed per namespace the same way.
 
 **P2. [P2] (7/10) PLAN contract 6 (`finishIngest` waits for quiescence) — a quiescence signal that lies yields silently low scores.**
-Fix: after `finishIngest`, a per-namespace readiness probe queries a verbatim sentence from the last ingested session and expects its `source_id` in the top k; failure marks the namespace `ingest-degraded` (the existing 1% rule) and is reported. This adds no inputs to the benchmark data. Hindsight exposes an operations API for `retain_async` (hindsight_client.py:457-471, 388) that the shim can poll.
+Fix: after `finishIngest`, a per-namespace readiness probe queries a verbatim sentence from the last ingested session and expects its `source_id` in the top k; failure marks the namespace `ingest-degraded` (the existing 1% rule) and is reported. This adds no inputs to the benchmark data. memory-bank exposes an operations API for `retain_async` (hindsight_client.py:457-471, 388) that the shim can poll.
 
 ### Cat 40 (P4)
 
 **K1. [P3] (8/10) `eval/runner/cat40/gbrain-arm.ts:136-160` (`spawn('bun', [join(this.run.buildDir, 'src/cli.ts'), 'serve', ...this.args]`), line 460 (`writeTools() { return this.client.tools.filter(t => t.annotations?.readOnlyHint !== true)… }`); `eval/runner/cat40/arms.ts:210-213`; `eval/runner/cat40-model-ladder.ts:410` — the "generic MCP arm" does not exist and three Cat 40 measures assume gbrain.**
-The MCP client is stdio-only and hard-wired to the gbrain CLI; Graphiti and Hindsight serve MCP over HTTP. Unannotated vendor tools all count as writes, so every cell triggers a restore, and vendor stores have no snapshot or restore today. `unsafe_write` and `evidence_cited` read `path`/`slug`/`id` arguments and document ids, so for vendor tools they read as zero rather than unmeasurable. The judge defaults to `gpt-5.4-mini` (`flag(argv, '--judge') ?? 'gpt-5.4-mini'`), which CLAUDE.md forbids basing decisions on.
+The MCP client is stdio-only and hard-wired to the gbrain CLI; temporal-graph and memory-bank serve MCP over HTTP. Unannotated vendor tools all count as writes, so every cell triggers a restore, and vendor stores have no snapshot or restore today. `unsafe_write` and `evidence_cited` read `path`/`slug`/`id` arguments and document ids, so for vendor tools they read as zero rather than unmeasurable. The judge defaults to `gpt-5.4-mini` (`flag(argv, '--judge') ?? 'gpt-5.4-mini'`), which CLAUDE.md forbids basing decisions on.
 Fix: a `McpArm` in `cat40/mcp-arm.ts` on `@modelcontextprotocol/sdk` (present in `node_modules` transitively; add it as a pinned direct dependency) with stdio and streamable-HTTP transports; per-system write-tool lists in the capability record when annotations are absent; Docker-volume snapshot and restore after a writing cell, timed and reported; `unsafe_write` and `evidence_cited` reported as "not measurable" for arms whose tools cannot name a document; an explicit `--judge` in the preregistration. Build this lane after the P1 report, not before.
 
 ## 3. Decisions (auto-decided)
@@ -133,13 +133,13 @@ Fix: a `McpArm` in `cat40/mcp-arm.ts` on `@modelcontextprotocol/sdk` (present in
 | E12 | No silent `event_time` fallback; disclosed synthetic dates counted (C6) | Mechanical | 1, 5 | Silent 2026 dates would corrupt temporal results |
 | E13 | Session-level interface, vendor granularity inside the adapter (C7) | Mechanical | 4, 5 | Keeps vendor recipes and comparable recall |
 | E14 | PMB: multi-namespace retrieve with a preregistered merge; searchText categories as headline (C8) | Taste | 1, 5 | Reporting choice; structural numbers stay visible |
-| E15 | Capability records pin Cognee routing and vendor telemetry switches (C9) | Mechanical | 5 | Determinism and fail-closed egress |
+| E15 | Capability records pin graph-pipeline routing and vendor telemetry switches (C9) | Mechanical | 5 | Determinism and fail-closed egress |
 | E16 | gbrain recipe row `blocked` without `VOYAGE_API_KEY` (C10) | User Challenge (access) | 1 | Only Garry can provision the key |
 | E17 | Counted gbrain rows at one frozen master SHA; `6622a119e` parity is a harness check (C11) | Taste | 3 | Cuts cells; keeping the pin row is also defensible |
 | E18 | Registry plumbing in the same commits (C12) | Mechanical | 1 | The registry test fails otherwise |
 | E19 | lifecycle-lite reuses N5 canaries and N1 chains, adds witness, maps fakes to the kit (C13) | Mechanical | 4 | Existing oracles; witness prevents false forgets |
 | E20 | Rename the P4 reservation reference; explicit custodian category list (C14) | Mechanical | 5 | Ambiguity |
-| E21 | Keyless gate = harness with a reference fake shim; vendor smokes are paid Phase 0; Basic Memory as keyless canary (T1) | Mechanical | 3 | The stated gate is impossible |
+| E21 | Keyless gate = harness with a reference fake shim; vendor smokes are paid Phase 0; markdown-notes as keyless canary (T1) | Mechanical | 3 | The stated gate is impossible |
 | E22 | Keyless golden parity before the refactor (T2) | Mechanical | 2 | Catches refactor drift for free |
 | E23 | `service_ms`, serial query pass, per-query proxy binding (P1) | Mechanical | 1, 5 | Comparable latency and cost |
 | E24 | Post-ingest readiness probe per namespace (P2) | Mechanical | 1 | Detects lying quiescence |
@@ -163,7 +163,7 @@ With 3 LoCoMo dev clusters the exact sign-flip test has 2^3 = 8 patterns, so the
 
 **TODOS cross-reference.** `TODOS.md:105` ("Retire or repair the historical shootout wrapper", `scripts/RUNBOOK_SHOOTOUT.md`) uses the same word for an unrelated gbrain-config wrapper. Name new paths `systems/` and the report "open-source memory comparison" to avoid confusion; no blocking TODO.
 
-**Search.** Vendor feasibility was checked against the pinned wheels rather than web search: Graphiti `add_episode(..., reference_time: datetime, group_id, uuid)` and `remove_episode`; Cognee `recall(..., only_context, auto_route, include_references, top_k)`; Mem0 `add(messages, user_id, metadata, timestamp, infer)`, `search(..., reference_date, show_expired)`, `delete(memory_id)`; Hindsight `retain(bank_id, content, timestamp, document_id, metadata, retain_async)` and `DocumentsApi.delete_document`; Basic Memory MCP tools `write_note`, `search_notes`, `delete_note`. All plan rows are feasible at their pins; Letta was not checked.
+**Search.** Vendor feasibility was checked against the pinned wheels rather than web search: temporal-graph `add_episode(..., reference_time: datetime, group_id, uuid)` and `remove_episode`; graph-pipeline `recall(..., only_context, auto_route, include_references, top_k)`; extract-first `add(messages, user_id, metadata, timestamp, infer)`, `search(..., reference_date, show_expired)`, `delete(memory_id)`; memory-bank `retain(bank_id, content, timestamp, document_id, metadata, retain_async)` and `DocumentsApi.delete_document`; markdown-notes MCP tools `write_note`, `search_notes`, `delete_note`. All plan rows are feasible at their pins; agent-runtime was not checked.
 
 ### Architecture (recommended file layout)
 
@@ -193,7 +193,7 @@ gbrain-evals/
 ├── eval/systems/
 │   ├── _shim/app.py          NEW      FastAPI: /reset /ingest /finish /retrieve /delete /capabilities
 │   │                                  /healthz; service_ms; proxy bind/finalize calls
-│   ├── <vendor>/adapter.py   NEW x6   graphiti, cognee, mem0, letta, basic-memory, hindsight
+│   ├── <vendor>/adapter.py   NEW x6   temporal-graph, graph-pipeline, extract-first, agent-runtime, markdown-notes, memory-bank
 │   ├── <vendor>/pyproject.toml + uv.lock + Dockerfile + compose.yml + capability.json
 │   └── bootstrap.sh          NEW      VM setup (Docker, Bun, deps), mirrors CI
 ├── docs/benchmarks/2026-10-xx-oss-memory-preregistration.md   NEW
@@ -247,7 +247,7 @@ _shim/app.py         protocol conformance         run fake.ts contract suite aga
                                                   a stub adapter (pytest or bun over HTTP)
 <vendor>/adapter.py  real ingest + retrieve       Phase 0 paid smoke on cell VM (dated probe,             paid
                                                   canary isolation, one LoCoMo conversation)
-basic-memory         real end to end              Phase 0 smoke on VM, local FastEmbed                    keyless (VM)
+markdown-notes         real end to end              Phase 0 smoke on VM, local FastEmbed                    keyless (VM)
 readiness probe      lying quiescence             memory-systems :: fake shim "late index" ->             keyless
                                                   ingest-degraded
 lifecycle-lite       oracle, witness, delete      lifecycle-lite :: determinism, scorer negative,         keyless
@@ -287,7 +287,7 @@ Pending decisions affecting tests: D2 (frontier readers) only changes which read
 - Bumping the `package.json` gbrain pin to the frozen master SHA: docs-wide change, separate decision.
 - Cat 40 vendor arms and lifecycle-lite before the P1 report (E25, E28).
 - Recording and replaying vendor LLM traffic as a required test: optional, miss rate reported if attempted.
-- Letta API verification: left to Phase 0 as the plan says.
+- agent-runtime API verification: left to Phase 0 as the plan says.
 
 ### What already exists (reuse map)
 
@@ -319,7 +319,7 @@ Shared-code evidence for the proxy extraction: callers are `cat40-model-ladder.t
 | Resume after errors | Duplicate ids; reader failures dropped from the QA mean | T-plan 2 | outcomes file (A1) | Silent today | **Yes, until A1** |
 | Standalone proxy | Unpriced vendor model forwarded unmetered | T-plan 6 | fail closed (A4) | Silent today | **Yes, until A4** |
 | Namespace naming | `_abs` reaches vendor `user_id` | T-plan 3 | hashed ids + tripwire (C3) | Silent | **Yes, until C3** |
-| Graph validity | Invalidated Graphiti fact rendered as current | T-plan 4 | item validity window (C1) | Silent bias | **Yes, until C1** |
+| Graph validity | Invalidated temporal-graph fact rendered as current | T-plan 4 | item validity window (C1) | Silent bias | **Yes, until C1** |
 | Provenance fan-out | One item cites every session, recall 1.0 | T-plan 5 | first-appearance cut + fan-out (C2) | Silent | **Yes, until C2** |
 | Missing event time | Shim defaults to now(); facts dated 2026 | T-plan 8 | reject, disclosed fallback (C6) | Silent | **Yes, until C6** |
 | Background indexing | Queries before the index is ready | T-plan 9 | readiness probe (P2) | Lower scores, silent | No once P2 lands |
@@ -329,7 +329,7 @@ Shared-code evidence for the proxy extraction: callers are `cat40-model-ladder.t
 | One-sided reader failure | PairingError blocks a family | T-plan 2 | cross-system exclusion join | Loud | No |
 | Few clusters | Intervals cannot resolve on LoCoMo/BEAM dev | existing `decide-kit` "too few clusters" | descriptive reporting (S1) | Loud if preregistered | No |
 | Vendor egress telemetry | Blocked call surfaces as ingest error | Phase 0 smoke | switches off in capability record (C9) | Loud | No |
-| Cognee routing | Retriever shape varies by query | Phase 0 smoke | pinned `query_type` (C9) | Loud (parse error) | No |
+| graph-pipeline routing | Retriever shape varies by query | Phase 0 smoke | pinned `query_type` (C9) | Loud (parse error) | No |
 | Cat 40 vendor writes | No restore, later cells see earlier notes | cat40 extension | volume snapshot restore (K1) | Silent | Deferred with P4 |
 
 Failure modes: **6 critical gaps flagged**, each closed by a P1 task below.
@@ -360,7 +360,7 @@ Effort assumptions: tests about 50x, scaffolding about 100x, features about 30x,
 - [ ] **T6 (P1, human ~4h / CC ~20min)** — corpus — Event-time normalization for BEAM and counted disclosed fallback. Surfaced by C6. Files: `corpus.ts`, `decide-kit.test.ts`. Verify: test-plan item 8.
 - [ ] **T7 (P1, human ~6h / CC ~30min)** — proxy — Extract `MeteringProxy`, fail closed on pricing errors, key injection, bridge binding, marker tripwire, standalone entrypoint with `startPaidRun`. Surfaced by A4, C3. Files: `eval/runner/metering-proxy.ts`, `cat40/gbrain-arm.ts`, `eval/registry.ts`, tests. Verify: test-plan item 6; `cat40-followups.test.ts`.
 - [ ] **T8 (P1, human ~1d / CC ~45min)** — shims — Shared FastAPI shim app (protocol, `service_ms`, bind/finalize, readiness probe), TS reference fake, HTTP client, conformance suite. Surfaced by T1, P1, P2. Files: `eval/systems/_shim/app.py`, `eval/runner/systems/{http,fake}.ts`, tests. Verify: conformance suite keyless.
-- [ ] **T9 (P1, human ~5d / CC ~1d)** — shims — Six vendor adapters and images from vendor benchmark code, capability records (granularity, routing pins, telemetry off, delete semantics, model roles). Basic Memory and Mem0 first, then Hindsight, Graphiti, Cognee, Letta. Surfaced by C7, C9, C13. Files: `eval/systems/<vendor>/*`. Verify: Phase 0 paid smoke per vendor; Basic Memory keyless on a VM.
+- [ ] **T9 (P1, human ~5d / CC ~1d)** — shims — Six vendor adapters and images from vendor benchmark code, capability records (granularity, routing pins, telemetry off, delete semantics, model roles). markdown-notes and extract-first first, then memory-bank, temporal-graph, graph-pipeline, agent-runtime. Surfaced by C7, C9, C13. Files: `eval/systems/<vendor>/*`. Verify: Phase 0 paid smoke per vendor; markdown-notes keyless on a VM.
 - [ ] **T10 (P1, human ~1d / CC ~40min)** — cells — `shootout-cell.ts` (reserve, `ubi-runner run`, pull, settle, merge), `bootstrap.sh`, shards under 8 hours. Surfaced by A2, A3, A5. Files: `eval/runner/shootout-cell.ts`, `eval/systems/bootstrap.sh`, `eval/registry.ts`. Verify: test-plan item 7; one fixture cell on a real VM.
 - [ ] **T11 (P1, human ~4h / CC ~30min)** — preregistration — Inferential versus descriptive sets, outcome rules, recall definition, packing rule, k_fill, gbrain identity, exclusion join, custodian category list, comparison family files. Surfaced by S1, C11, C14, E10, E14. Files: `docs/benchmarks/2026-10-xx-oss-memory-preregistration.md`, `stats` family JSON. Verify: `validateFamily` on each family file; docs checks.
 - [ ] **T12 (P2, human ~3d / CC ~3h)** — lifecycle-lite — Generator from N1 chains and N5 canaries, witness checkpoint, oracle, registry row and promotion rules first, CONTRIBUTING step 7 tests. Surfaced by C13, C12. Files: `eval/generators/lifecycle-lite-gen.ts`, `eval/runner/lifecycle-lite.ts`, `eval/registry.ts`, `test/eval/lifecycle-lite.test.ts`. Verify: test-plan item 10.
@@ -391,8 +391,8 @@ Effort assumptions: tests about 50x, scaffolding about 100x, features about 30x,
 
 ### Suppressed findings (confidence 4 or below)
 
-- (4/10) pgvector-backed systems (Hindsight) may under-return on selective bank filters if namespaces are co-resident. Moot once E4 is adopted.
-- (4/10) `CHAT_PRICE_OVERRIDES` may lack Graphiti's and Hindsight's default small models; `canonicalLookup` in the gbrain table may cover them. Phase 0 price registration catches this either way.
+- (4/10) pgvector-backed systems (memory-bank) may under-return on selective bank filters if namespaces are co-resident. Moot once E4 is adopted.
+- (4/10) `CHAT_PRICE_OVERRIDES` may lack temporal-graph's and memory-bank's default small models; `canonicalLookup` in the gbrain table may cover them. Phase 0 price registration catches this either way.
 
 ## GSTACK REVIEW REPORT
 

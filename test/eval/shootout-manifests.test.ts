@@ -39,8 +39,7 @@ describe('Phase 4 draft manifests', () => {
   });
   test('gbrain runs at the pin and at frozen master; no lease is reserved before the master SHA is filled', () => {
     const master = manifest.cells.filter(c => c.system === 'gbrain-shootout-master');
-    expect(master.map(c => c.id).sort()).toEqual([
-      'gbrain-shootout-master-common-beam-100k', 'gbrain-shootout-master-common-beam-100k-sealed', 'gbrain-shootout-master-common-lme-s', 'gbrain-shootout-master-common-locomo-r1', 'gbrain-shootout-master-common-locomo-r2', 'gbrain-shootout-master-common-locomo-sealed', 'gbrain-shootout-master-common-pmb', 'gbrain-shootout-master-recipe-beam-100k', 'gbrain-shootout-master-recipe-locomo-r1', 'gbrain-shootout-master-recipe-locomo-r2']);
+    expect(master.map(c => c.id).sort()).toEqual(['gbrain-shootout-master-common-beam-100k', 'gbrain-shootout-master-common-beam-100k-sealed', 'gbrain-shootout-master-common-lme-s', 'gbrain-shootout-master-common-locomo-r1', 'gbrain-shootout-master-common-locomo-r2', 'gbrain-shootout-master-common-locomo-sealed', 'gbrain-shootout-master-common-pmb', 'gbrain-shootout-master-recipe-beam-100k', 'gbrain-shootout-master-recipe-locomo-r1', 'gbrain-shootout-master-recipe-locomo-r2']);
     const sha = String(manifest.parameters!.gbrain_master_sha);
     expect(sha).toMatch(/^[0-9a-f]{40}$/);
     expect(master.every(c => c.command.includes(`--gbrain "$HOME/gbrain-master@${sha}"`) && c.setup_command!.includes(`checkout -q ${sha}`))).toBe(true);
@@ -50,22 +49,22 @@ describe('Phase 4 draft manifests', () => {
     writeFileSync(join(tmp, 'campaign.json'), JSON.stringify({ ...c, ledger: join(tmp, 'l.sqlite'), parameters: { ...c.parameters, gbrain_master_sha: 'fill-at-freeze' }, cells_from: c.cells_from.map((f: string) => join(DIR, f)) }));
     const camp = new Campaign(join(tmp, 'campaign.json'), join(tmp, 'state'));
     camp.init();
-    expect(() => camp.reserve('mem0-common-locomo-r1')).toThrow(/gbrain_master_sha are still fill-at-freeze/);
+    expect(() => camp.reserve('extract-first-common-locomo-r1')).toThrow(/gbrain_master_sha are still fill-at-freeze/);
     const filled = withParams({ gbrain_master_sha: 'b51ad15ff45e74348df9991b5673cff5a58b10cb' });
     expect(filled.cells.find(x => x.id === 'gbrain-shootout-master-common-lme-s')!.command).toContain('gbrain-master@b51ad15ff45e74348df9991b5673cff5a58b10cb');
   });
 
-  test('the frozen values: cap $1,450, LongMemEval-S 100, Graphiti recipe off BEAM', () => {
-    expect([manifest.cap_usd, manifest.parameters]).toEqual([1450, { lme_s_limit: 100, graphiti_beam_recipe: false, gbrain_master_sha: 'c5fb0201d1960a0a5a81c35d77718311b03154b7' }]);
+  test('the frozen values: cap $1,450, LongMemEval-S 100, temporal-graph recipe off BEAM', () => {
+    expect([manifest.cap_usd, manifest.parameters]).toEqual([1450, { lme_s_limit: 100, temporal_graph_beam_recipe: false, gbrain_master_sha: 'c5fb0201d1960a0a5a81c35d77718311b03154b7' }]);
   });
 
-  test('parameters: the Graphiti BEAM recipe cell switches off, and LongMemEval-S leases follow the slice', () => {
+  test('parameters: the temporal-graph BEAM recipe cell switches off, and LongMemEval-S leases follow the slice', () => {
     const lme = (m: typeof manifest) => m.cells.filter(c => c.id.includes('lme-s')).reduce((s, c) => s + c.lease_usd, 0);
-    const off = withParams({ graphiti_beam_recipe: false, lme_s_limit: 50 });
-    expect(manifest.cells.some(c => c.id === 'graphiti-recipe-beam-100k')).toBe(false);
-    expect(withParams({ graphiti_beam_recipe: true }).cells.some(c => c.id === 'graphiti-recipe-beam-100k')).toBe(true);
-    expect(off.cells.some(c => c.id === 'graphiti-recipe-beam-100k')).toBe(false);
+    const off = withParams({ temporal_graph_beam_recipe: false, lme_s_limit: 50 });
+    expect(manifest.cells.some(c => c.id === 'temporal-graph-recipe-beam-100k')).toBe(false);
+    expect(withParams({ temporal_graph_beam_recipe: true }).cells.some(c => c.id === 'temporal-graph-recipe-beam-100k')).toBe(true);
+    expect(off.cells.some(c => c.id === 'temporal-graph-recipe-beam-100k')).toBe(false);
     expect(lme(off)).toBeLessThan(lme(manifest) * 0.55);
-    expect(off.cells.find(c => c.id === 'mem0-common-lme-s')!.command).toContain('--limit 50');
+    expect(off.cells.find(c => c.id === 'extract-first-common-lme-s')!.command).toContain('--limit 50');
   });
 });

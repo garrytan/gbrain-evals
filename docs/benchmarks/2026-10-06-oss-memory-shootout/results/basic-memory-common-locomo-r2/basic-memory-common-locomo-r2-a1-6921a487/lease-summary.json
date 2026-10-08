@@ -1,8 +1,0 @@
-{
-  "run_id": "basic-memory-common-locomo-r2-a1-6921a487",
-  "lease_usd": 1,
-  "committed_usd": 0.01103218999999999,
-  "requests": 2245,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

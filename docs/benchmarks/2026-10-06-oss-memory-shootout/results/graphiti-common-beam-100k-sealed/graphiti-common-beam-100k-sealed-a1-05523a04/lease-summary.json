@@ -1,8 +1,0 @@
-{
-  "run_id": "graphiti-common-beam-100k-sealed-a1-05523a04",
-  "lease_usd": 48,
-  "committed_usd": 38.35684704999958,
-  "requests": 89205,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

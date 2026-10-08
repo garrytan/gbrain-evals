@@ -97,7 +97,7 @@ export interface MemorySystem {
   close?(): Promise<void>;
 }
 
-/** True for a system with no passive memory API (a native agent such as Letta): every passive call answers `unsupported`. */
+/** True for a system with no passive memory API (a native agent such as agent-runtime): every passive call answers `unsupported`. */
 export function passiveUnsupported(cap: Pick<CapabilityRecord, 'agent_surface' | 'retrieval_policies'>): boolean {
   const policies = Object.values(cap.retrieval_policies ?? {});
   return cap.agent_surface?.kind === 'native-agent' && policies.length > 0 && policies.every(p => p?.supported === false);

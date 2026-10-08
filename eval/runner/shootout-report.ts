@@ -11,7 +11,7 @@
  * table is a failed attempt, listed in the output and never used. The latest attempt not
  * listed there, with a lease summary, is the cell's settled attempt; a cell without one is
  * "pending". A system row (system, configuration, benchmark, replicate) joins its cells
- * (Basic Memory and Cognee split LongMemEval-S over shard cells) and each cell's sources
+ * (markdown-notes and graph-pipeline split LongMemEval-S over shard cells) and each cell's sources
  * (`shard-<i>/` inside a cell, or the cell directory), and is pending while any cell is.
  *
  * Per question (memory-qa/outcomes.ts): `scored` and `ingest_degraded` keep their judge
@@ -59,7 +59,7 @@ export const SEED = 20261006;
 export const DRAWS = 10_000;
 export const ALPHA = 0.05;
 export const PRIMARY_ARM = 'fixed-evidence.native.b8000.main';
-export const VENDORS = ['basic-memory', 'mem0', 'graphiti', 'hindsight', 'cognee'] as const;
+export const VENDORS = ['markdown-notes', 'extract-first', 'temporal-graph', 'memory-bank', 'graph-pipeline'] as const;
 const INCOMPLETE_SHARE = 0.05;
 const CEILING = 0.95;
 const MASTER = 'gbrain-shootout-master', PIN = 'gbrain-shootout';
@@ -446,7 +446,7 @@ const usd = (x: number | null | undefined) => x === null || x === undefined ? 'n
 const pv = (x: number | undefined) => x === undefined ? 'n/a' : x < 0.001 ? '<0.001' : x.toFixed(3);
 
 export function renderMarkdown(r: Report): string {
-  const out: string[] = ['# Open-source memory shootout, Phase 4 analysis', '', `Generated ${r.generated_at} from \`${r.results_dir}\` (campaign ${r.campaign_sha256.slice(0, 8)}). Computed as the preregistration defines; numbers are fractions of 1 unless marked %.`, ''];
+  const out: string[] = ['# Open-source memory shootout, Phase 4 analysis', '', `Generated ${r.generated_at} from \`${r.results_dir}\` (campaign ${r.campaign_sha256.slice(0, 8)}). Computed as the preregistration defines; numbers are fractions of 1 unless marked %. Systems are named by kind; [the comparison table](../../docs/comparison-systems.md#systems-in-the-open-source-comparison) maps each label to its project.`, ''];
   for (const f of r.families) {
     out.push(`## ${f.id}: ${f.role}`, '', `${f.questions} questions, ${f.excluded_questions} excluded from every pair for harness failures${f.provisional ? '; **provisional** (a pair is pending, Holm runs over the pairs that landed)' : ''}.`, '',
       '| Pair | System | gbrain | Delta | 95% interval | p | Holm p | Reading | Pairs | Undefined | MDD |', '|---|---:|---:|---:|---|---:|---:|---|---:|---:|---:|');

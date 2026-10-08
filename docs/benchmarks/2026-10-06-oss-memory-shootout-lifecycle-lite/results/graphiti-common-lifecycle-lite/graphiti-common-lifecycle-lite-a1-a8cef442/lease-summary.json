@@ -1,8 +1,0 @@
-{
-  "run_id": "graphiti-common-lifecycle-lite-a1-a8cef442",
-  "lease_usd": 11.93,
-  "committed_usd": 2.335577160000302,
-  "requests": 105397,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

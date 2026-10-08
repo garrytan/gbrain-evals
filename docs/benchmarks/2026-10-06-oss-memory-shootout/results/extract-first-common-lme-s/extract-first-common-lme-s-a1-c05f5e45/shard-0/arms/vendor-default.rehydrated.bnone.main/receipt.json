@@ -1,0 +1,288 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "lme-s",
+  "split": "dev",
+  "started_at": "2026-10-06T22:25:00.224Z",
+  "finished_at": "2026-10-07T02:12:30.962Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "LongMemEval-S cleaned",
+    "files": [
+      {
+        "path": "longmemeval/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+      }
+    ],
+    "revision": "98d7416c",
+    "license": "MIT"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "extract-first",
+    "lease_id": "extract-first-common-lme-s-a1-c05f5e45",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 13,
+    "sessions": 629,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 1.00750123,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 19701
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "1ef11605704465ebb58aa13c1695f5aee9cd5eaf6a9037b6990cca44f37040eb",
+  "cell_run_config_hash": "77a2a35ba54bb547962301fbc576b285e5b5e80e0463a2af091cb45164ffc312",
+  "arm": {
+    "id": "vendor-default.rehydrated.bnone.main",
+    "policy": "vendor-default",
+    "context": "rehydrated",
+    "budget_tokens": null,
+    "reader": {
+      "id": "main",
+      "model": "openai:gpt-4o-2024-08-06",
+      "slice": null
+    }
+  },
+  "retrieval_path": "MemorySystem.retrieve (http:http://127.0.0.1:8700, policy extract-first:vendor-default), one retrieval per question and policy shared by every arm",
+  "selection": {
+    "categories": null,
+    "limit": 100,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 8
+    },
+    "conversations": 13,
+    "questions_expected": 13,
+    "reader_slice": null
+  },
+  "counts": {
+    "rows": 13,
+    "scored": 11,
+    "errors": 0,
+    "abstention": 2
+  },
+  "summary": {
+    "recall_all_at_5": 1,
+    "recall_any_at_5": 1,
+    "recall_all_at_10": 1,
+    "ndcg_at_10": 0.9545454545454546,
+    "latency_p50_ms": 846.9,
+    "latency_p95_ms": 1177,
+    "qa_score": 0.9230769230769231,
+    "qa_rows": 13,
+    "qa_errors": 0,
+    "qa_service_score": 0.9230769230769231,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "reader": "openai:gpt-4o-2024-08-06",
+    "judge": "openai:gpt-4o-2024-08-06",
+    "runs": 1,
+    "context": "rehydrated",
+    "budget_tokens": null,
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "judge_prompts": "LongMemEval official per-type prompts",
+    "contexts_file": "../../contexts.ndjson"
+  },
+  "system": {
+    "name": "http:http://127.0.0.1:8700",
+    "capability_system": "extract-first",
+    "capabilities": {
+      "protocol": 1,
+      "system": "extract-first",
+      "versions": {
+        "package": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
+        "lock_sha256": "9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680",
+        "image": null,
+        "vendor_benchmark_code": "mem0ai/memory-benchmarks@4b61c5d31b9c668a12b4f5e78064248a02c82d2b, benchmarks/locomo/run.py (ingest_conversation, session_to_chunks, process_question), benchmarks/longmemeval/run.py and benchmarks/beam/run.py (CHUNK_SIZE), benchmarks/common/mem0_client.py",
+        "backend": "qdrant/qdrant:v1.19.2@sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad (server, matching qdrant-client 1.19.1 in uv.lock)",
+        "resolved_dependencies": "uv.lock resolved 2026-10-05 with exclude-newer and no prereleases: qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1, posthog 7.62.1. pip install mem0ai resolves the same way; extract-first's poetry.lock is not used by its hatch build."
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": "gpt-5-mini",
+            "small": null,
+            "embedder": "text-embedding-3-small",
+            "dims": 1536,
+            "reranker": null
+          },
+          "notes": "documented self-hosted install: Memory.from_config with the OpenAI LLM and embedder left at SDK defaults (llms/openai.py sets gpt-5-mini, embeddings/openai.py sets text-embedding-3-small), Qdrant server, mem0ai[nlp] with en_core_web_sm for entity extraction and BM25 lemmatization, fastembed for Qdrant BM25 sparse vectors (docs/migration/oss-v2-to-v3.mdx). One LLM call per add (the v3 additive pipeline), no update or delete calls. No reranker is configured and search(rerank=False) is the default. Note: memory-benchmarks' own OSS server defaults to gpt-4o-mini (docker/mem0/main.py LLM_MODEL); the SDK default is gpt-5-mini, which this record follows as the plan does. The recipe sets is_reasoning_model=True on the LLM config: extract-first 2.2.1's reasoning-model list (llms/base.py _is_reasoning_model) matches only the exact name gpt-5, so with its own default gpt-5-mini it sends temperature=0.1, which OpenAI rejects with HTTP 400 on every extraction call (seen in the 2026-10-05 metered smoke). is_reasoning_model is extract-first's documented override for this; it drops temperature and max_tokens."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": "gpt-4.1-mini",
+            "embedder": "text-embedding-3-large",
+            "dims": 1536,
+            "reranker": null
+          },
+          "unsettable": [],
+          "notes": "embedder embedding_dims=1536 makes extract-first send `dimensions` to the API (embeddings/openai.py)."
+        }
+      },
+      "time": "in-text",
+      "time_notes": "Memory.add raises ValueError for any non-null timestamp in OSS 2.2.1 (main.py:818, 'Platform-only temporal parameter'), and Memory.search raises for any non-null reference_date (main.py:1447). The shim puts a system message 'This conversation took place at 1:56 pm on 8 May, 2023.' at the head of every add call. The extraction prompt's '## Observation Date' section, which the prompt calls the only temporal anchor, is always the wall-clock date in OSS (configs/prompts.py _resolve_dates), so relative dates may still resolve against today. The session's ISO date is also stored in memory metadata (session_date) and returned as valid_from.",
+      "provenance": {
+        "status": "partial",
+        "mechanism": "metadata={'source_id', 'session_date'} on every add; extract-first copies it into each memory it creates and returns it from search. Each memory cites the session whose add created it. The extractor also reads the scope's last 10 raw messages and its 10 nearest existing memories, and a later restatement of the same fact is dropped by hash dedup rather than cited, so the list can be incomplete."
+      },
+      "delete": "public-api-composition",
+      "delete_notes": "get_all(filters={user_id, source_id}) then delete(memory_id) for each. extract-first deletes memories, not sources. The history store keeps the scope's 10 most recent raw messages (fed to later extraction calls as context) and each memory's change log; neither is searchable.",
+      "readiness": "queued: /ingest validates the session and queues it on the namespace's single worker, returning completeness `unknown` at once, because one session of synchronous Memory.add calls can outlast the harness's 600-second request deadline (gpt-5-mini takes about 16 s per call; a 30-turn LoCoMo session at one turn per call is about 8 minutes). /finish waits until the queue drains (bounded by timeout_s, else ready=false) and reports `known`, or `degraded` when any add raised (extract-first falls back to per-record inserts and raises only when none persisted, main.py:1055-1076), with counts in its receipt. A budget refusal stops the namespace's remaining chunks and /finish returns the budget error. /reset cancels queued sessions; one already running finishes into the retired user_id, which nothing reads.",
+      "namespace": "user_id (filters={'user_id': ...} on search and get_all). /reset moves the namespace to a fresh user_id (<ns>.g<n>) after delete_all, because delete_all leaves the scope's recent raw messages in the history store.",
+      "parallel_namespaces": true,
+      "parallel_notes": "memory-benchmarks drives one Memory instance from 10 concurrent workers across conversations (FastAPI threadpool, sync endpoints); the shim serializes calls within a namespace.",
+      "ingest_chunking": {
+        "env": "MEM0_CHUNK_TURNS",
+        "default": 2,
+        "vendor_values": {
+          "locomo": 1,
+          "longmemeval": 2,
+          "beam": 2
+        },
+        "notes": "set per cell at container start; each chunk is one add call and one extraction LLM call"
+      },
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 20
+          },
+          "maps_to": "Memory.search(query, top_k=20, filters={'user_id'}, threshold=0.1, rerank=False): the SDK defaults (main.py:1397-1400). Hybrid scoring (semantic + BM25 + entity boost) is always on when spaCy and fastembed are installed."
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 200
+          },
+          "maps_to": "same call with top_k=200, the largest cutoff memory-benchmarks evaluates (--top-k 200, cutoffs 10,20,50,200), so the harness can pack 8,000 tokens of short memories"
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [
+        "MEM0_TELEMETRY=false",
+        "HF_HUB_OFFLINE=1",
+        "HF_HUB_DISABLE_TELEMETRY=1",
+        "QDRANT__TELEMETRY_DISABLED=true"
+      ],
+      "agent_surface": {
+        "kind": "harness-mcp",
+        "transport": "stdio",
+        "version": "not built yet: a harness MCP wrapper over this image's mem0ai 2.2.1 SDK (add, search, get_all, delete), because OpenMemory, extract-first's own MCP server, is being sunset"
+      },
+      "deviations_from_vendor_code": [
+        "memory-benchmarks talks to its own FastAPI server (docker/mem0/main.py) built from extract-first's feat/v3-pipeline branch; the shim calls the pinned mem0ai 2.2.1 SDK in process, with the same Qdrant backend. That server passes user_id to search() as a keyword, which 2.2.1 rejects; the shim uses filters={'user_id'}.",
+        "The session date goes into the messages as a system line. memory-benchmarks sends timestamp=<epoch> to its OSS server, whose AddRequest model has no timestamp field, so in the vendor's own OSS runs the date never reaches extract-first.",
+        "Messages keep the harness's role and render content as 'Speaker: text', as session_to_chunks does; when a role is neither user nor assistant the first speaker becomes user and others assistant, the vendor's mapping. Image captions are not sent because the sanitized sessions carry text only.",
+        "metadata={'source_id', 'session_date'} is added to every add call for provenance and delete; the vendor sends no metadata.",
+        "user_id is the opaque namespace plus a reset generation, not locomo_<conv>_<run_id>.",
+        "Extraction model: the recipe uses the SDK default gpt-5-mini; memory-benchmarks' server defaults to gpt-4o-mini.",
+        "Search runs once per question at the policy's top_k; the vendor searches once at top_k=200 and slices cutoffs.",
+        "Recipe LLM config sets is_reasoning_model=True, extract-first's documented override; without it every gpt-5-mini extraction call fails with HTTP 400 (temperature 0.1 unsupported)."
+      ],
+      "proxy_refusals": "HTTP 402 from the metering proxy maps to the protocol's budget error, HTTP 403 (route outside the allowlist or leak tripwire) to invalid_request",
+      "resolved": {
+        "config": "common",
+        "extraction": "gpt-4.1-mini",
+        "embedder": "text-embedding-3-large",
+        "dims": 1536,
+        "chunk_turns": 2
+      }
+    },
+    "identity": {
+      "system": "extract-first",
+      "config": "common",
+      "versions": {
+        "package": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
+        "lock_sha256": "9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680",
+        "image": null,
+        "vendor_benchmark_code": "mem0ai/memory-benchmarks@4b61c5d31b9c668a12b4f5e78064248a02c82d2b, benchmarks/locomo/run.py (ingest_conversation, session_to_chunks, process_question), benchmarks/longmemeval/run.py and benchmarks/beam/run.py (CHUNK_SIZE), benchmarks/common/mem0_client.py",
+        "backend": "qdrant/qdrant:v1.19.2@sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad (server, matching qdrant-client 1.19.1 in uv.lock)",
+        "resolved_dependencies": "uv.lock resolved 2026-10-05 with exclude-newer and no prereleases: qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1, posthog 7.62.1. pip install mem0ai resolves the same way; extract-first's poetry.lock is not used by its hatch build."
+      },
+      "health": {
+        "ok": true,
+        "config": "common",
+        "extraction": "gpt-4.1-mini",
+        "embedder": "text-embedding-3-large",
+        "dims": 1536,
+        "chunk_turns": 2
+      }
+    }
+  },
+  "context": "rehydrated",
+  "policy": {
+    "name": "extract-first:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "k": 20
+    },
+    "settings_source": "settings"
+  },
+  "manifest_sha256": "fc57c320c4cb30698bb58de94a35978a63dbbc8b13f564dc73359e3db9537c57",
+  "outcomes": {
+    "scored": 13,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 13,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "rows_file": "rows.ndjson",
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

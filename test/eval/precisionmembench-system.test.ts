@@ -224,7 +224,7 @@ describe('a failed system call is a recorded outcome, never a crash', () => {
 
   test('flags are strict', () => {
     expect(() => parsePmbArgs(['--output', 'x'])).toThrow(/--system/);
-    expect(() => parsePmbArgs(['--system', 'mem0', '--output', 'x'])).toThrow(/shim URL/);
+    expect(() => parsePmbArgs(['--system', 'extract-first', '--output', 'x'])).toThrow(/shim URL/);
     expect(() => parsePmbArgs(['--system', 'fake', '--output', 'x', '--mode', 'hybrid'])).toThrow(/unknown argument --mode/);
     expect(parsePmbArgs(['--system', 'fake', '--output', 'x', '--paid', '--budget-run-id', 'r1']).policy).toBe('vendor-default');
   });
@@ -327,7 +327,7 @@ describe('Phase 5 cells (amendment A4, manifests/cells/pmb.json)', () => {
 
   test('load in the cell schema under the campaign parameters, one cell per system configuration, every command the PMB runner', () => {
     const m = load();
-    expect(m.cells.map(c => `${c.system}:${c.config}`).sort()).toEqual(['basic-memory:common', 'cognee:common', 'gbrain-shootout-master:common', 'gbrain-shootout:common', 'graphiti:common', 'graphiti:recipe', 'hindsight:common', 'mem0:common']);
+    expect(m.cells.map(c => `${c.system}:${c.config}`).sort()).toEqual(['extract-first:common', 'gbrain-shootout-master:common', 'gbrain-shootout:common', 'graph-pipeline:common', 'markdown-notes:common', 'memory-bank:common', 'temporal-graph:common', 'temporal-graph:recipe']);
     for (const c of m.cells) {
       expect(c.command).toContain('bun eval/runner/precisionmembench-system.ts');
       expect(c.command).toContain('--output "$SHOOTOUT_OUT/pmb"');
@@ -338,7 +338,7 @@ describe('Phase 5 cells (amendment A4, manifests/cells/pmb.json)', () => {
     expect(m.cells.find(c => c.system === 'gbrain-shootout')!.command).not.toContain('--gbrain');
   });
 
-  test('every lease names its basis; the common-model cells fit the plan\'s $10 Phase 5 line, Graphiti\'s recipe is the one cell that does not', () => {
+  test('every lease names its basis; the common-model cells fit the plan\'s $10 Phase 5 line, temporal-graph\'s recipe is the one cell that does not', () => {
     const m = load();
     const file = JSON.parse(readFileSync(PMB, 'utf8')) as { cells: Array<{ lease_basis?: string }> };
     expect(file.cells.every(c => (c.lease_basis ?? '').startsWith('1.5 x'))).toBe(true);
@@ -349,6 +349,6 @@ describe('Phase 5 cells (amendment A4, manifests/cells/pmb.json)', () => {
 
   test('A4 adds the cells to the campaign; the campaign carries the hash the preregistration records after A7', () => {
     expect(campaign().manifest.cells_from).toContain('cells/pmb.json');
-    expect(campaign().sha256).toBe('dc73da2341d238df4a567fc8c22539986d1a73ee6604fb59fbbd2cd8287ea69f');
+    expect(campaign().sha256).toBe('36ba918f59963a0cc1a6af1cb12ab3a5aa0a48af585e6e5e0b07d41e90db0894');
   });
 });

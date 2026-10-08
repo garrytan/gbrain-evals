@@ -1,7 +1,7 @@
 # Preregistration: open-source memory shootout, memory QA and PrecisionMemBench (2026-10-06)
 
 **Status: Frozen on 2026-10-06**, before any counted cell was reserved. The three open values are filled:
-`lme_s_limit` = 100 (the LongMemEval-S slice), `graphiti_beam_recipe` = false (Graphiti's `gpt-5.5` recipe does not run
+`lme_s_limit` = 100 (the LongMemEval-S slice), `temporal_graph_beam_recipe` = false (temporal-graph's `gpt-5.5` recipe does not run
 on BEAM) and `gbrain_master_sha` = `c5fb0201d1960a0a5a81c35d77718311b03154b7` (`garrytan/gbrain` master at the freeze,
 v0.60.95.0, resolved with `git ls-remote`). The campaign cap is $1,450 (Garry chose option B on 2026-10-06). Nothing below changes after the first counted cell runs; a later change gets a new
 dated amendment at the end of this file, before any cell it affects.
@@ -12,8 +12,8 @@ Plan: [docs/plans/2026-10-05-oss-memory-shootout/PLAN.md](../plans/2026-10-05-os
 
 ## The question
 
-When an agent needs memory, an engineer can choose gbrain or an open-source memory system: Graphiti, Cognee, Mem0, Basic
-Memory or Hindsight (Letta is in scope only as an agent, in P4, because it has no passive memory API at 0.34.4). For
+When an agent needs memory, an engineer can choose gbrain or an open-source memory system: temporal-graph, graph-pipeline, extract-first, Basic
+Memory or memory-bank (agent-runtime is in scope only as an agent, in P4, because it has no passive memory API at 0.34.4). For
 the same conversations, the same reader and the same amount of evidence, which system returns evidence that lets the
 reader answer correctly, how much of the right evidence does it return, and at what cost and latency? The report says
 where gbrain loses as plainly as where it wins.
@@ -31,28 +31,28 @@ configuration hash.
 
 | System | Pinned version | Capability record sha256 | Lock sha256 | Provenance | Time | Parallel namespaces |
 |---|---|---|---|---|---|---|
-| Basic Memory | `basic-memory==0.23.2` | `9bee4c555c01574ab93a9dfcebf9a3560b970286ed1bacf94e5ff661de62df90` | `e1a14a19…ab16807` | exact | in text | no |
-| Mem0 (OSS) | `mem0ai[nlp]==2.2.1`, Qdrant 1.19.2 | `6f52b7a4ac246d554359c99b6ade6245b77cb7bcf1a3d305b4ea7d0f6c3f96c8` | `9777b7a8…25680` | partial | in text | yes |
-| Graphiti (OSS) | `graphiti-core==0.30.2`, Neo4j 5.26.2 | `d972b84d6d7ea0e137d04e4954e4390d7d34d823c4830ac49b908236b470f5ab` | `4ce9b216…bddd1d13` | partial | native | yes |
-| Hindsight | server and client 0.10.2, image `ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062…ab70` | `fe5b7c118722bbabd732c9ce7b0507b646ec6b48a84bcb409e8a564dc262b2f9` | `f54d89df…d6d8` | exact | native | yes |
-| Cognee | `cognee==1.6.2` | `bccc141c3cdc6b95078743ae1c45c7179adaac1267fb60dee00475fadd70b8be` | `59af44d5…5a0d7` | partial | in text | no |
-| Letta (P4 only) | Letta Code 0.34.4, image `letta/letta:0.34.4@sha256:8ee7fb69…a5c` | `f856cfe1e101df172998f4fc7f888afa328f1cbf5efdd7e0682c97dfac3845a5` | none | unavailable | none | no |
+| markdown-notes | `basic-memory==0.23.2` | `9bee4c555c01574ab93a9dfcebf9a3560b970286ed1bacf94e5ff661de62df90` | `e1a14a19…ab16807` | exact | in text | no |
+| extract-first (OSS) | `mem0ai[nlp]==2.2.1`, Qdrant 1.19.2 | `6f52b7a4ac246d554359c99b6ade6245b77cb7bcf1a3d305b4ea7d0f6c3f96c8` | `9777b7a8…25680` | partial | in text | yes |
+| temporal-graph (OSS) | `graphiti-core==0.30.2`, Neo4j 5.26.2 | `d972b84d6d7ea0e137d04e4954e4390d7d34d823c4830ac49b908236b470f5ab` | `4ce9b216…bddd1d13` | partial | native | yes |
+| memory-bank | server and client 0.10.2, image `ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062…ab70` | `fe5b7c118722bbabd732c9ce7b0507b646ec6b48a84bcb409e8a564dc262b2f9` | `f54d89df…d6d8` | exact | native | yes |
+| graph-pipeline | `cognee==1.6.2` | `bccc141c3cdc6b95078743ae1c45c7179adaac1267fb60dee00475fadd70b8be` | `59af44d5…5a0d7` | partial | in text | no |
+| agent-runtime (P4 only) | agent-runtime 0.34.4, image `letta/letta:0.34.4@sha256:8ee7fb69…a5c` | `f856cfe1e101df172998f4fc7f888afa328f1cbf5efdd7e0682c97dfac3845a5` | none | unavailable | none | no |
 | gbrain, frozen master | `garrytan/gbrain` master at `c5fb0201` (v0.60.95.0), built as a `--gbrain` overlay (`git archive` of the commit, `bun install --frozen-lockfile`, tree verified) | in process | the commit's `bun.lock` | exact | native (shootout recipe) | no |
 | gbrain, repository pin | `739e5cc` (v0.60.46.0), `package.json` | in process | `bun.lock` | exact | native (shootout recipe) | no |
 
 Two configurations per system, named for what they control:
 
 - **recipe**: the vendor's documented local or self-hosted install, as its capability record resolves it. Extraction
-  and embedding models: Basic Memory local `bge-small-en-v1.5` (384 dims, no provider calls at ingest); Mem0
-  `gpt-5-mini` with `text-embedding-3-small`; Graphiti `gpt-5.5` with `gpt-4.1-nano` as small model and reranker,
-  `text-embedding-3-small` at 1,024; Hindsight `gpt-4o-mini` with a local `bge-small-en-v1.5` and a local cross-encoder;
-  Cognee `gpt-5.6-luna` with `text-embedding-3-large` at 3,072; gbrain `gbrain init` defaults (`voyage:voyage-4` at
+  and embedding models: markdown-notes local `bge-small-en-v1.5` (384 dims, no provider calls at ingest); extract-first
+  `gpt-5-mini` with `text-embedding-3-small`; temporal-graph `gpt-5.5` with `gpt-4.1-nano` as small model and reranker,
+  `text-embedding-3-small` at 1,024; memory-bank `gpt-4o-mini` with a local `bge-small-en-v1.5` and a local cross-encoder;
+  graph-pipeline `gpt-5.6-luna` with `text-embedding-3-large` at 3,072; gbrain `gbrain init` defaults (`voyage:voyage-4` at
   1,024, balanced search with the Voyage `rerank-2.5` reranker).
 - **common**: extraction `gpt-4.1-mini` and embedder `text-embedding-3-large` at 1,536 dimensions wherever the system
   lets them be set, and nothing else changed. gbrain's common row keeps its default search (the Voyage reranker stays).
 
 The recipe configuration does not run on LongMemEval-S (cost); it runs on LoCoMo dev and BEAM-100K dev, and on BEAM for
-Graphiti only when `graphiti_beam_recipe` is true.
+temporal-graph only when `temporal_graph_beam_recipe` is true.
 
 gbrain runs as two named adapters (`eval/runner/systems/gbrain.ts`): **gbrain-shootout**, the counted recipe (native
 chunk items from gbrain's own search defaults, limits `vendor-default` = the search mode's own 25 and
@@ -170,7 +170,7 @@ reported, never combined with `recall_all`. Abstention questions have no gold an
 
 **Provenance.** A source id must be one the namespace ingested; any other id makes that retrieval a `retrieval_error`.
 Items with `provenance_status: unavailable` cite nothing; a system whose items all lack provenance gets "recall not
-measurable", never zero. `partial` provenance (Mem0, Graphiti, Cognee) counts for recall and is labeled beside every
+measurable", never zero. `partial` provenance (extract-first, temporal-graph, graph-pipeline) counts for recall and is labeled beside every
 number. Shims never query a vendor database privately to manufacture provenance. Recall is not reported for the
 full-context and no-memory controls (returning everything is not a ranking).
 
@@ -181,11 +181,11 @@ full-context and no-memory controls (returning everything is not a ranking).
 On the LongMemEval-S slice, arm `fixed-evidence.native.b8000.main` (8,000 tokens of native evidence, the main reader),
 metric **QA service quality**, each system's common configuration against **gbrain-shootout common at frozen master**:
 
-1. Basic Memory common vs gbrain-shootout common (master)
-2. Mem0 common vs gbrain-shootout common (master)
-3. Graphiti common vs gbrain-shootout common (master)
-4. Hindsight common vs gbrain-shootout common (master)
-5. Cognee common vs gbrain-shootout common (master)
+1. markdown-notes common vs gbrain-shootout common (master)
+2. extract-first common vs gbrain-shootout common (master)
+3. temporal-graph common vs gbrain-shootout common (master)
+4. memory-bank common vs gbrain-shootout common (master)
+5. graph-pipeline common vs gbrain-shootout common (master)
 
 Method: rows paired by question id after the exclusion join (`pairObservations`), `clusteredPairedDelta` with the
 question as cluster, seed 20261006, 10,000 draws; the two-sided cluster sign-flip p-value (`p_two_sided`), Holm-adjusted
@@ -211,7 +211,7 @@ In the secondary families, "gbrain-shootout common" also means the frozen-master
      federation the legacy gbrain adapter uses. The five universal beliefs are therefore ingested once per searched
      scope (50 sessions for 35 beliefs). A belief that no searched namespace holds (the other user's) gets a namespace
      of its own, so every belief reaches the system, and the cross-user case tests namespace isolation.
-  2. *Event times.* Upstream sends no dates, but the Graphiti and Hindsight shims refuse an undated session. Each
+  2. *Event times.* Upstream sends no dates, but the temporal-graph and memory-bank shims refuse an undated session. Each
      belief gets a disclosed synthetic time, 2026-05-29T00:00 plus one minute per position in the fixture: the order in
      which upstream providers received the beliefs. No belief's own dates are used, since they would hint at which
      belief supersedes which. A query is asked at its namespace's last event time.
@@ -236,7 +236,7 @@ In the secondary families, "gbrain-shootout common" also means the frozen-master
      pair with more than 5% of the search-only cases excluded (3 or more of 43), or with a run that is invalid or
      incomplete, reads "incomplete", with its numbers and no direction, and stays in the Holm family. Structural
      categories get means and pass counts per system, with no tests.
-  7. *Configurations and cells.* Graphiti's recipe configuration runs on PrecisionMemBench as its own descriptive
+  7. *Configurations and cells.* temporal-graph's recipe configuration runs on PrecisionMemBench as its own descriptive
      cell (the plan's risk table allows it; its lease uses the per-session cost basis, the conservative one). The
      Phase 5 cells join the campaign only through an amendment.
 
@@ -298,15 +298,15 @@ primary comparison favors one system after Holm.
 The Phase 2 pilots (`eval/systems/<name>/PILOT.md` on the vendor lane branches) found three product behaviors that the
 report states as results, and that this run does not tune away:
 
-1. **Mem0, out of the box.** Mem0 2.2.1 treats only the exact model name `gpt-5` as a reasoning model, so with its own
+1. **extract-first, out of the box.** extract-first 2.2.1 treats only the exact model name `gpt-5` as a reasoning model, so with its own
    default `gpt-5-mini` it sends `temperature=0.1`, and OpenAI rejects every extraction call with HTTP 400: the default
-   OSS install stores no memories against the current OpenAI API. The recipe arm sets `is_reasoning_model=True`, Mem0's
+   OSS install stores no memories against the current OpenAI API. The recipe arm sets `is_reasoning_model=True`, extract-first's
    documented override, and says so; the report states both facts.
-2. **Graphiti, delete residue.** `remove_episode` deletes an edge only when the removed episode first created it, so text
+2. **temporal-graph, delete residue.** `remove_episode` deletes an edge only when the removed episode first created it, so text
    from a deleted session can survive in an entity summary or in a fact first stored from another session (31 of 32
    protocol checks pass; the miss is "deleted fact no longer in text"). P2 measures the residue; the shim does not repair
    it.
-3. **Basic Memory, common embedder.** Basic Memory's default `semantic_min_similarity` of 0.55 was set for its local
+3. **markdown-notes, common embedder.** markdown-notes's default `semantic_min_similarity` of 0.55 was set for its local
    embedder. With `text-embedding-3-large` the scores run lower, so the common configuration returns fewer notes (8.5 of
    10 on average on the LoCoMo pilot, 9.2 on BEAM), and one probe query returned nothing. The floor stays at its
    default in both configurations.
@@ -318,8 +318,8 @@ report states as results, and that this run does not tune away:
   durable leases: each cell reserves its lease before its VM starts, the VM's metering proxy can spend only that lease,
   and the lease settles to the proxy's recorded spend. A lease is used once; a cell whose VM never reports back keeps
   its full lease until abandoned. Leases are 1.5 times the pilot measurement (the gbrain, D1 and D2 lines are estimates).
-  Pilot-based totals: Graphiti about $343 (LongMemEval-S ingest $154; the BEAM recipe about $91 if run), Cognee about $94,
-  Mem0 $91, Hindsight $73, Basic Memory $43; Graphiti's BEAM recipe (about $91) does not run. The 64 frozen cells'
+  Pilot-based totals: temporal-graph about $343 (LongMemEval-S ingest $154; the BEAM recipe about $91 if run), graph-pipeline about $94,
+  extract-first $91, memory-bank $73, markdown-notes $43; temporal-graph's BEAM recipe (about $91) does not run. The 64 frozen cells'
   estimates sum to about $740 and their leases to $1,140. Leases are reserved one cell at a time and settle when the
   cell ends; a reservation that would pass the cap is refused rather than run.
 - **Phase 4 stops.** If the settled total for Phase 4 heads past $1,000, or any system's measured spend passes 1.5 times
@@ -349,17 +349,17 @@ uses frozen master; the pin rows are the secondary link to the starting line and
 labeled with its commit. Recorded on 2026-10-06 at the campaign owner's decision; an earlier draft of this amendment
 ran the pin only and was replaced before freezing.
 
-**A3 (2026-10-06), finish wait.** Every Mem0 cell and every vendor LongMemEval-S cell passes `--finish-timeout-s
+**A3 (2026-10-06), finish wait.** Every extract-first cell and every vendor LongMemEval-S cell passes `--finish-timeout-s
 14400` to the runner, so the runner waits up to four hours for a system's `/finish` instead of the 600-second default.
-The reason: `mem0-common-locomo-r1` attempt 1 (lease `a1-757e7284`) timed out on all three conversations' `/finish`
-while Mem0's ingest queue drained, so all 587 rows were recorded `ingest_degraded`. The pilot's recipe drain took 185
+The reason: `extract-first-common-locomo-r1` attempt 1 (lease `a1-757e7284`) timed out on all three conversations' `/finish`
+while extract-first's ingest queue drained, so all 587 rows were recorded `ingest_degraded`. The pilot's recipe drain took 185
 minutes, and LongMemEval-S haystacks are the longest ingests in the campaign. The flag caps waiting only: it changes no
 measurement, scoring, arm, lease or budget. Attempt 1 stays in the record as a harness failure, and the rerun is
 attempt 2 under a new lease. Recorded on 2026-10-06, after ten cells had settled and before any other cell was
 reserved; the campaign hash changes (see "Cells and the manifest").
 
-**A4 (2026-10-06), PrecisionMemBench cells.** The campaign gains eight Phase 5 cells in `cells/pmb.json`: Basic Memory,
-Mem0, Hindsight, Graphiti and Cognee at common, Graphiti at recipe (the plan's risk table allows its recipe on
+**A4 (2026-10-06), PrecisionMemBench cells.** The campaign gains eight Phase 5 cells in `cells/pmb.json`: markdown-notes,
+extract-first, memory-bank, temporal-graph and graph-pipeline at common, temporal-graph at recipe (the plan's risk table allows its recipe on
 PrecisionMemBench), and gbrain-shootout common at the pin and at frozen master. They run
 `eval/runner/precisionmembench-system.ts`, which sends only `searchText` through the system; the vendored scorer
 supplies persona, pins, open questions and relation expansion for every system. The S3 rules (namespaces per user and
@@ -367,7 +367,7 @@ scope, disclosed synthetic event times in fixture order, the `vendor-default` po
 without provenance not counted against precision with each system's share reported, the scorer's own structural split
 of 34 structural and 43 search-only cases, and the pairing with Holm in which a system with no measurable provenance
 leaves the family) were accepted by Garry on 2026-10-06 and are stated under S3. Leases sum to $16.50, about $9.27
-estimated, $7.42 of it Graphiti's recipe. Recorded before any Phase 5 lease.
+estimated, $7.42 of it temporal-graph's recipe. Recorded before any Phase 5 lease.
 
 **A5 (2026-10-06, completed 2026-10-07), custodian sealed batch (Phase 7).** Approved by Garry on 2026-10-06. The 14
 cells are in `manifests/cells/sealed.json` and join the campaign with this amendment; the campaign hash after A5 and A7
@@ -379,13 +379,13 @@ is recorded under "Cells and the manifest".
   custody); no second ingest; sealed aggregates are descriptive only (LoCoMo sealed has 7 clusters, below the
   10-cluster minimum, and per-question rows never leave custody); a row is identified by its cell id; custody is
   destroyed with the VM; every vendor cell waits up to four hours for `/finish` (`--finish-timeout-s 14400`), as
-  amendment A3 gives the Mem0 and LongMemEval-S cells.
+  amendment A3 gives the extract-first and LongMemEval-S cells.
 
 - *Data.* LoCoMo sealed: conv-26, conv-30, conv-41, conv-42, conv-43, conv-49 and conv-50 (1,399 questions). BEAM-100K
   sealed: the 14 sealed conversations of `eval/decisions/splits/beam-100k.json`, 224 questions. The 56
   `preference_following` and `instruction_following` questions on those conversations are reserved for the P4 core
   gate (commit `f03bc96`) and do not run; the cells select the other eight categories with `--categories`.
-- *Systems.* Basic Memory, Mem0, Hindsight, Graphiti and Cognee at their common configuration;
+- *Systems.* markdown-notes, extract-first, memory-bank, temporal-graph and graph-pipeline at their common configuration;
   gbrain-shootout common at the repository pin `739e5cc`; gbrain-shootout common at frozen master
   `c5fb0201d1960a0a5a81c35d77718311b03154b7`. The pin is gbrain's blind row: it was committed on 2026-10-04 and
   contains none of the gbrain builds that the decisions below ran on these conversations (checked with
@@ -410,21 +410,21 @@ is recorded under "Cells and the manifest".
 **A7 (2026-10-07), harness-failure reruns.** Four Phase 4 cells failed for harness reasons and rerun under new leases;
 each failed attempt stays in the record (`results/README.md`). Nothing about measurement, scoring or arms changes.
 
-- `cognee-common-locomo-r2` and `cognee-recipe-locomo-r2`: the $2 leases were smaller than the metering proxy's
-  in-flight reservations while Cognee ingests in parallel (each chat call is reserved at its 32,768-token output bound,
+- `graph-pipeline-common-locomo-r2` and `graph-pipeline-recipe-locomo-r2`: the $2 leases were smaller than the metering proxy's
+  in-flight reservations while graph-pipeline ingests in parallel (each chat call is reserved at its 32,768-token output bound,
   $0.053), so 19 and 16 calls were refused and every row was `budget_not_run`. Their leases become $8, the LoCoMo r1
   lease; a lease settles to measured spend.
-- `basic-memory-common-beam-100k`: one of six conversations hit the runner's 600-second `/finish` default while Basic
+- `markdown-notes-common-beam-100k`: one of six conversations hit the runner's 600-second `/finish` default while Basic
   Memory reindexed. The cell gains `--finish-timeout-s 14400`, the waiting cap A3 gives the other long ingests. Read
   strictly, section "Outcomes" calls a finish timeout a product failure; the campaign owner treats it as the harness
   wait cap, as in A3, and both attempts are published.
-- `hindsight-common-lme-s`: after each shard's first haystack, every Hindsight bank create returned HTTP 500 ("could
-  not resize shared memory segment ... No space left on device"). Hindsight builds each new bank's HNSW indexes on its
+- `memory-bank-common-lme-s`: after each shard's first haystack, every memory-bank bank create returned HTTP 500 ("could
+  not resize shared memory segment ... No space left on device"). memory-bank builds each new bank's HNSW indexes on its
   shared `memory_units` table inside the create transaction; once that table passes Postgres's
   `min_parallel_table_scan_size`, the build runs in parallel and needs a 64 MB shared-memory segment, which Docker's
   default 64 MB `/dev/shm` for the database container cannot hold. A keyless repro reproduced it at one shard and at
-  eight. The fix is `shm_size: 1g` on the database service in `eval/systems/hindsight/docker-compose.yml` (sha256
-  `4b66e26a…3640a2b` before, `83a36887…b93a812ee` after), which changes no Hindsight setting or code path; with it the
+  eight. The fix is `shm_size: 1g` on the database service in `eval/systems/memory-bank/docker-compose.yml` (sha256
+  `4b66e26a…3640a2b` before, `83a36887…b93a812ee` after), which changes no memory-bank setting or code path; with it the
   eight-shard repro scored every row. The cell command is unchanged.
 
 Recorded on 2026-10-07 before any rerun lease.
@@ -435,7 +435,77 @@ descriptive row only: its scores are reported, labeled descriptive, and enter no
 headline. The counted D2 readers are `anthropic:claude-opus-5-5`, `openai:gpt-6.1-sol` and
 `anthropic:claude-sonnet-5-5`. Recorded before any D2 replay ran; no cell or arm file changes.
 
+**A6 (2026-10-08), systems named by kind.** Only names changed. No measurement, row, score, lease amount, cell
+command's behavior, pinned dependency or vendor code changed. Garry decided that the repository describes the systems
+in the open-source comparison by kind: `temporal-graph`, `graph-pipeline`, `extract-first`, `agent-runtime`,
+`markdown-notes` and `memory-bank`. One table maps each label to its project, version, license, upstream repository and
+the id it carried before this amendment:
+[systems in the open-source comparison](../comparison-systems.md#systems-in-the-open-source-comparison). This
+preregistration, the manifests, the results and the report link there instead of naming the projects.
+
+What was renamed, mechanically, by a one-off rename script (idempotent, run from the repository root):
+
+- **Directories and files.** `eval/systems/<former id>/` became `eval/systems/<label>/`. The manifest cell files
+  `cells/<former id>-<config>.json` became `cells/<label>-<config>.json`, and every results directory
+  `results/<former id>-<cell suffix>/<former id>-<cell suffix>-a<N>-<hex>/` became `results/<label>-…/<label>-…-a<N>-<hex>/`
+  in both campaigns. That is 876 files in all; their contents moved unchanged except for the ids below.
+- **Ids.**
+  - A system id `<former id>` became `<label>` everywhere it is ours: the capability record's `system` field,
+    `--system` arguments, proxy slots (`/<label>/openai/v1`), compose project, service and image names, and policy
+    names (`<label>:fixed-evidence`).
+  - Cell ids and lease ids keep everything after the system: `<former id>-common-locomo-r1` is now
+    `<label>-common-locomo-r1`, and lease `<former id>-common-locomo-r1-a2-7c50fc54` is now
+    `<label>-common-locomo-r1-a2-7c50fc54`. The attempt number and the ledger entry prefix (`a2-7c50fc54`) are unchanged,
+    so every lease still matches its ledger entry.
+  - The campaign parameter for the temporal-graph BEAM recipe cell became `temporal_graph_beam_recipe`, still `false`.
+  - Every cell id and committed lease id of the five open-source systems changed. Recover any former id by putting the former-id column of the
+    comparison table in place of the label.
+- **Prose.** Project names became labels in this preregistration, the plan and its reviews, the manifests, the
+  results READMEs and receipts, the shim READMEs, PILOT notes, capability records and comments, and the test and
+  runner code.
+- **Kept as dependency facts.**
+  - Package names and pins, vendor images, upstream URLs and repository names, and file paths inside vendor
+    repositories (a capability record's `vendor_benchmark_code`, for example).
+  - Vendor API names and the environment variables vendor software reads.
+  - The agent-runtime's vendor CLI and the home directory it writes, and the memory-bank stack's Postgres
+    credentials.
+  - Shim code that imports and calls the vendor SDK.
+  - Lock files and `pyproject.toml` are byte-identical.
+- **Ledger and attempt logs.** These live outside the repository and keep the former ids. The former-id column is the
+  join key.
+
+Capability records and locks. The "frozen" column is the sha256 the systems table recorded; every file was unchanged
+until this amendment. A capability record's hash changes because its `system` field and prose now use the label, and
+every lock file is unchanged:
+
+| Label | capability.json, frozen | capability.json, after A6 | uv.lock (unchanged) |
+|---|---|---|---|
+| `markdown-notes` | `9bee4c555c01574ab93a9dfcebf9a3560b970286ed1bacf94e5ff661de62df90` | `d2fd42f000d84b6399a3eaca1fcd992151e8948f07028e044a21b7888cd2e9b2` | `e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807` |
+| `extract-first` | `6f52b7a4ac246d554359c99b6ade6245b77cb7bcf1a3d305b4ea7d0f6c3f96c8` | `9f003252b7d9d6c2310eb50210858b026ea7209c566b76211fd0da41bf2b3715` | `9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680` |
+| `temporal-graph` | `d972b84d6d7ea0e137d04e4954e4390d7d34d823c4830ac49b908236b470f5ab` | `83bd0323cb207746d3e9e0113445fe87cf739053108f848918e32bbc9129ffc1` | `4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13` |
+| `memory-bank` | `fe5b7c118722bbabd732c9ce7b0507b646ec6b48a84bcb409e8a564dc262b2f9` | `b7a913a9d7091b51031504f8314b36273446b5a462b8114609c9e667f62f1f70` | `f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8` |
+| `graph-pipeline` | `bccc141c3cdc6b95078743ae1c45c7179adaac1267fb60dee00475fadd70b8be` | `e44ca375e26c1b3219894b97314ca9e39ea46af272746dcdc855ef4a059af30f` | `59af44d5a70bfa016e888d650259443ba8d0d2f2fd27f4416f9b8e184ef5a0d7` |
+| `agent-runtime` | `f856cfe1e101df172998f4fc7f888afa328f1cbf5efdd7e0682c97dfac3845a5` | `63d6ec90623ab9dc09c6f26350ad2bbbcdf903d2727b2ad06e25baa1ebe7b36d` | none |
+
+Campaign hashes (`bun eval/runner/shootout-cell.ts hash --campaign <campaign.json>`). The cell count and the lease
+total are unchanged:
+
+| Campaign | Before A6 | After A6 | Cells | Leases |
+|---|---|---|---:|---:|
+| memory QA and PrecisionMemBench (`manifests/campaign.json`) | `dc73da2341d238df4a567fc8c22539986d1a73ee6604fb59fbbd2cd8287ea69f` | `36ba918f59963a0cc1a6af1cb12ab3a5aa0a48af585e6e5e0b07d41e90db0894` | 86 | $1,467.50 |
+| update and forget (`2026-10-06-oss-memory-shootout-lifecycle-lite/manifests/campaign.json`) | `c6be1367cb1a6708f6dd109b76869d1776ee3e659408eb702a6224aca474c70f` | `ae18af154d2cd2e8e11994618f408fe0d46d6ceb6570acead55ff4ec18488fc1` | 7 | $24.37 |
+
+The hash of each campaign is recomputed after this amendment because cell files, cell ids, commands and one parameter
+name changed; each earlier hash stays recorded above as history. Applied after every counted cell had settled, so no
+lease was reserved under one name and settled under the other.
+
 ## Changelog
+
+### 2026-10-08: amendment A6, systems named by kind
+
+Added A6: the systems are named by kind and the projects are named only in the comparison table, with the
+former-id rule, the capability-record hashes before and after, and the new campaign hash (`dc73da23` to
+`36ba918f`; lifecycle-lite `c6be1367` to `ae18af15`). Names only; no measurement changed.
 
 ### 2026-10-06: amendment A5 drafted
 
@@ -455,7 +525,7 @@ gbrain master moved to 8e11aa1f (v0.60.105.0) during Phase 4; keyless retrieval 
 ### 2026-10-07: amendments A5 completed and A7
 
 A5's sealed cells join the campaign with all four arms (Garry's choice) and a four-hour `/finish` wait; A7 reruns four
-Phase 4 harness failures (two Cognee leases, Basic Memory's BEAM finish wait, Hindsight's database shared memory).
+Phase 4 harness failures (two graph-pipeline leases, markdown-notes's BEAM finish wait, memory-bank's database shared memory).
 Recorded the new campaign hash.
 
 ### 2026-10-06: gbrain master moved
@@ -475,7 +545,7 @@ Added A4 (the eight PrecisionMemBench cells) and recorded the new campaign hash.
 
 ### 2026-10-06: amendment A3
 
-Added A3 (`--finish-timeout-s 14400` on every Mem0 cell and every vendor LongMemEval-S cell) after Mem0's LoCoMo r1
+Added A3 (`--finish-timeout-s 14400` on every extract-first cell and every vendor LongMemEval-S cell) after extract-first's LoCoMo r1
 cell timed out at the 600-second default; recorded the new campaign hash.
 
 ### 2026-10-06: main merged
@@ -485,13 +555,13 @@ sessions are all dated and the synthetic fill no longer fires; the BEAM pilots r
 
 ### 2026-10-06: frozen
 
-Filled `lme_s_limit` = 100, `graphiti_beam_recipe` = false and `gbrain_master_sha` = `c5fb0201`; cap $1,200 to $1,450
+Filled `lme_s_limit` = 100, `temporal_graph_beam_recipe` = false and `gbrain_master_sha` = `c5fb0201`; cap $1,200 to $1,450
 (Garry's option B); capability-record hashes updated to the vendor lanes' final commits (policy knobs under
-`settings`, Mem0's queued ingest, Cognee's null event time); overlay fixture check repeated at the frozen SHA; campaign
+`settings`, extract-first's queued ingest, graph-pipeline's null event time); overlay fixture check repeated at the frozen SHA; campaign
 hash recorded; Phase 4 stop rules added.
 
 ### 2026-10-06: draft
 
 First draft, from the approved plan, the pilots and the Phase 4 draft manifests. Open: `lme_s_limit`,
-`graphiti_beam_recipe` and `gbrain_master_sha`. Amendment A2 now runs gbrain-shootout at frozen master (primary) and at
+`temporal_graph_beam_recipe` and `gbrain_master_sha`. Amendment A2 now runs gbrain-shootout at frozen master (primary) and at
 the pin (secondary), with the master cells added to the manifests.

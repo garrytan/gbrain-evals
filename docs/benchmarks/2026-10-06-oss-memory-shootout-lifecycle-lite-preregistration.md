@@ -4,7 +4,7 @@
 with no inferential family. The code is gbrain-evals `2eb2faa` and the campaign hash is `c6be1367…a474c70f` (see "Code
 identity at freeze" and "Cells and the campaign"). Garry decided the first draft's open questions on
 2026-10-06 (see "Decisions"): the reader-judged answer is the update headline, as-of probes stay report-only, the
-survivor floor is 1.0, leases are 1.15 times the estimates, and the Mem0 cell waits up to four hours for `/finish`.
+survivor floor is 1.0, leases are 1.15 times the estimates, and the extract-first cell waits up to four hours for `/finish`.
 The campaign is written (`2026-10-06-oss-memory-shootout-lifecycle-lite/manifests/`), and every vendor shim passed a
 keyless restart check.
 
@@ -37,22 +37,22 @@ would tell the system which fact changed (plan decision 9). Deletes go through t
 Every system runs behind the shim protocol v1 ([eval/systems/PROTOCOL.md](../../eval/systems/PROTOCOL.md)) at its
 **common** configuration (extraction `gpt-4.1-mini`, embedder `text-embedding-3-large` at 1,536 dimensions wherever
 settable), pinned exactly as in the memory-QA preregistration's systems table, plus gbrain-shootout in process at two
-builds. Letta has no passive memory API at 0.34.4 and is out of scope, as in P1.
+builds. agent-runtime has no passive memory API at 0.34.4 and is out of scope, as in P1.
 
 | System | Pin | Delete capability (capability record) | Time | Provenance |
 |---|---|---|---|---|
-| Basic Memory | `basic-memory==0.23.2` | native | in text | exact |
-| Mem0 (OSS) | `mem0ai[nlp]==2.2.1` | public-api-composition (list the source's memories, delete each) | in text | partial |
-| Graphiti (OSS) | `graphiti-core==0.30.2` | native (`remove_episode`; the pilot found residue, see below) | native | partial |
-| Hindsight | server and client 0.10.2 | native | native | exact |
-| Cognee | `cognee==1.6.2` | native | in text | partial |
+| markdown-notes | `basic-memory==0.23.2` | native | in text | exact |
+| extract-first (OSS) | `mem0ai[nlp]==2.2.1` | public-api-composition (list the source's memories, delete each) | in text | partial |
+| temporal-graph (OSS) | `graphiti-core==0.30.2` | native (`remove_episode`; the pilot found residue, see below) | native | partial |
+| memory-bank | server and client 0.10.2 | native | native | exact |
+| graph-pipeline | `cognee==1.6.2` | native | in text | partial |
 | gbrain-shootout, repository pin | `739e5cc` (v0.60.46.0) | native (`deletePage`) | native | exact |
 | gbrain-shootout, frozen master | `c5fb0201d1960a0a5a81c35d77718311b03154b7` (v0.60.95.0), `--gbrain` overlay | native (`deletePage`) | native | exact |
 
 gbrain-shootout is the recipe the memory-QA preregistration describes (gbrain's own search defaults, Voyage reranker
 on), with the common embedder. For lifecycle-lite its PGLite brain is kept on disk for the run so it can restart.
 
-The Phase 2 pilot found that Graphiti's `remove_episode` deletes an edge only when the removed episode first created
+The Phase 2 pilot found that temporal-graph's `remove_episode` deletes an edge only when the removed episode first created
 it, so text from a deleted session can survive in an entity summary or in a fact first stored from another session.
 lifecycle-lite measures that residue; the shim does not repair it.
 
@@ -129,7 +129,7 @@ All counts have named denominators and are reported per system, overall and per 
 - **Update retrieval (report-only, a design choice)**: `update_current` probes whose items serve the new value with no
   earlier value active, of 60. Beside it: new value served (in an active item), an earlier value still active, earlier
   values returned only as superseded history, and probes where one active item carries both values. A system that keeps
-  every session as written (gbrain-shootout, Basic Memory) still returns the earlier session after a correction; that
+  every session as written (gbrain-shootout, markdown-notes) still returns the earlier session after a correction; that
   is how it is built, not a failure, and the report says so. The headline asks whether the evidence it returns leads a
   reader to the current value.
 - **As-of (report-only)**: `update_asof` probes correct on retrieval, of 60, the number with a later value active at the
@@ -178,7 +178,7 @@ A system whose `/delete_source` answers `unsupported` for every target (or whose
 forget check is `unsupported`, and overall never passes. Its update, as-of and survivor measures are still reported. A
 single target answered `unsupported` among others leaves the forget denominator and is counted. A delete answered
 `partial`, or one that errors, is scored like any other by residue, with its status reported. `public-api-composition`
-deletes (Mem0) are scored the same as native ones, with the capability printed beside the numbers. None of the five
+deletes (extract-first) are scored the same as native ones, with the capability printed beside the numbers. None of the five
 vendors or gbrain declares `unsupported` today.
 
 ### Reader and judge
@@ -299,20 +299,20 @@ forget numbers say nothing about the products and are not reported here.
 
 | System | Keyless provider | Survivors witnessed | Present after the deletes | Present after the restart | Delete targets reactivated | Restart time |
 |---|---|---:|---:|---:|---:|---:|
-| Basic Memory | shared fake provider (`eval/systems/_shim/fake_provider.py`) | 19 | 19 | 19 | 0 | 19.2 s |
-| Mem0 | Mem0's own `eval/systems/mem0/fake_provider.py` | 19 | 19 | 19 | 0 | 12.9 s |
-| Graphiti | shared fake provider | 19 | 19 | 19 | 0 | 16.9 s |
-| Hindsight | Hindsight's built-in mock LLM (`HINDSIGHT_LLM_PROVIDER=mock`), shared fake provider for embeddings | 19 | 19 | 19 | 0 | 14.9 s |
-| Cognee | shared fake provider | 19 | 19 | 19 | 0 | 17.2 s |
+| markdown-notes | shared fake provider (`eval/systems/_shim/fake_provider.py`) | 19 | 19 | 19 | 0 | 19.2 s |
+| extract-first | extract-first's own `eval/systems/extract-first/fake_provider.py` | 19 | 19 | 19 | 0 | 12.9 s |
+| temporal-graph | shared fake provider | 19 | 19 | 19 | 0 | 16.9 s |
+| memory-bank | memory-bank's built-in mock LLM (`HINDSIGHT_LLM_PROVIDER=mock`), shared fake provider for embeddings | 19 | 19 | 19 | 0 | 14.9 s |
+| graph-pipeline | shared fake provider | 19 | 19 | 19 | 0 | 17.2 s |
 
 No shim lost state on a restart, and no deleted claim came back. Every run completed with all 133 rows `scored`.
 
-A first pass ran Mem0 and Hindsight against the shared fake provider. They returned no items at all, before and after
-the restart, so the "nothing lost" result had no signal. The cause is the stand-in, not the shims: Mem0 made one
-extraction call per session (67) and stored nothing from the shared provider's canned answer, and Hindsight's
+A first pass ran extract-first and memory-bank against the shared fake provider. They returned no items at all, before and after
+the restart, so the "nothing lost" result had no signal. The cause is the stand-in, not the shims: extract-first made one
+extraction call per session (67) and stored nothing from the shared provider's canned answer, and memory-bank's
 `retain` extracted zero facts from it (its recall logged "0 facts, 0 chunks"; the `fixed-evidence` settings exclude
 chunks). With each vendor's own keyless stand-in, as their conformance runs use, both witnessed all 19 survivors and
-kept them. Mem0's run used the shim's default `MEM0_CHUNK_TURNS` (2); its counted cell sets 1.
+kept them. extract-first's run used the shim's default `MEM0_CHUNK_TURNS` (2); its counted cell sets 1.
 
 
 ## What the report may say
@@ -328,7 +328,7 @@ Descriptive only: five seeded histories are one synthetic workload, not a sample
 - "{system} kept {s} of the {t} other facts it had returned before the deletes."
 - As-of, report-only: "Asked as of an earlier date, {system} returned the value current then for {c} of 60."
 - A system with `unsupported` deletes: "{system} has no public delete; forgetting was not measured."
-- Graphiti's residue, if seen: the residue count and the pilot's explanation, never repaired by the shim.
+- temporal-graph's residue, if seen: the residue count and the pilot's explanation, never repaired by the shim.
 
 Never "forgets correctly" or "keeps facts current" without the counts and the lexical-oracle caveat.
 
@@ -339,15 +339,15 @@ configuration, per system for five seeds (335 sessions, 665 retrievals, 205 read
 pilot's LoCoMo cost per session (28 sessions, about 80,000 characters), an upper bound, because these sessions are
 about 30 times shorter; priced per character instead, the same pilots put all five vendors' ingest under $1. Reader
 and judge: $0.0027 per probe, the LoCoMo native-context reader and judge cost the pilots measured with the same pair
-(Graphiti $0.0026, Hindsight $0.0027 per question), so $0.55 per system. Leases are 1.15 times each estimate.
+(temporal-graph $0.0026, memory-bank $0.0027 per question), so $0.55 per system. Leases are 1.15 times each estimate.
 
 | System | Ingest basis | Ingest | Query basis | Query | Reader and judge | Estimate | Lease |
 |---|---|---:|---|---:|---:|---:|---:|
-| Basic Memory | $0.0033 per LoCoMo conversation (embeddings) | $0.01 | embeddings | $0.00 | $0.55 | $0.56 | $0.65 |
-| Mem0 | $0.968 per 675 `add` calls, one per turn pair | $0.48 | embeddings | $0.01 | $0.55 | $1.04 | $1.20 |
-| Graphiti | $0.46 per 28 sessions | $5.50 | cross-encoder, 5 times vendor-default's $0.0013 (the pilot's own assumption for `fixed-evidence`) | $4.32 | $0.55 | $10.37 | $11.93 |
-| Hindsight | $0.096 per 28 sessions | $1.15 | under $0.0001 | $0.07 | $0.55 | $1.77 | $2.04 |
-| Cognee | $0.369 per 28 sessions | $4.41 | $0.000003 | $0.00 | $0.55 | $4.96 | $5.71 |
+| markdown-notes | $0.0033 per LoCoMo conversation (embeddings) | $0.01 | embeddings | $0.00 | $0.55 | $0.56 | $0.65 |
+| extract-first | $0.968 per 675 `add` calls, one per turn pair | $0.48 | embeddings | $0.01 | $0.55 | $1.04 | $1.20 |
+| temporal-graph | $0.46 per 28 sessions | $5.50 | cross-encoder, 5 times vendor-default's $0.0013 (the pilot's own assumption for `fixed-evidence`) | $4.32 | $0.55 | $10.37 | $11.93 |
+| memory-bank | $0.096 per 28 sessions | $1.15 | under $0.0001 | $0.07 | $0.55 | $1.77 | $2.04 |
+| graph-pipeline | $0.369 per 28 sessions | $4.41 | $0.000003 | $0.00 | $0.55 | $4.96 | $5.71 |
 | gbrain-shootout, pin | embeddings | $0.01 | about $0.001 per retrieval (the Phase 4 retrieval-only basis: Voyage rerank and embeddings) | $0.67 | $0.55 | $1.23 | $1.42 |
 | gbrain-shootout, master | as the pin | $0.01 | as the pin | $0.67 | $0.55 | $1.23 | $1.42 |
 | **Total** | | | | | | **$21.16** | **$24.37** |
@@ -364,14 +364,14 @@ $24.37, parameter `gbrain_master_sha` = `c5fb0201d1960a0a5a81c35d77718311b03154b
 on a standard-8 Ubicloud VM behind its own metering proxy lease (`bun eval/runner/shootout-cell.ts reserve` and
 `launch`). Campaign hash (`bun eval/runner/shootout-cell.ts hash --campaign <campaign.json>`): **`c6be1367cb1a6708f6dd109b76869d1776ee3e659408eb702a6224aca474c70f`**.
 
-A vendor cell (Mem0 shown; the others drop `MEM0_CHUNK_TURNS=1` and `--finish-timeout-s 14400`):
+A vendor cell (extract-first shown; the others drop `MEM0_CHUNK_TURNS=1` and `--finish-timeout-s 14400`):
 
 ```
-MEM0_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system mem0 --config common --timeout 1800 && \
+MEM0_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system extract-first --config common --timeout 1800 && \
 { bun eval/runner/lifecycle-lite.ts --system http://127.0.0.1:8700 --seeds 1,2,3,4,5 --policy fixed-evidence --qa reader \
-    --restart --restart-cmd "bash eval/systems/bootstrap.sh restart --system mem0 --timeout 1800" \
+    --restart --restart-cmd "bash eval/systems/bootstrap.sh restart --system extract-first --timeout 1800" \
     --finish-timeout-s 14400 --output "$SHOOTOUT_OUT/lifecycle-lite"; }; \
-s=$?; bash eval/systems/bootstrap.sh down --system mem0; exit $s
+s=$?; bash eval/systems/bootstrap.sh down --system extract-first; exit $s
 ```
 
 The gbrain cells (the master cell clones `garrytan/gbrain` at the frozen SHA in its setup, as the Phase 4 master cells
@@ -395,7 +395,7 @@ Garry accepted the first draft's defaults with these choices:
 2. **As-of probes**: kept, report-only.
 3. **Survivor floor**: 1.0.
 4. **Leases**: 1.15 times the estimates; the cap is their sum.
-5. **Mem0**: `--finish-timeout-s 14400`, as amendment A3 gives its Phase 4 cells.
+5. **extract-first**: `--finish-timeout-s 14400`, as amendment A3 gives its Phase 4 cells.
 6. The remaining defaults stand: `fixed-evidence` only with every item scored, the lexical oracle (paraphrased residue
    it misses, and items carrying both values, are counted and named), five seeds, and a restart through `docker compose
    restart`.
@@ -416,7 +416,83 @@ The counted cells run gbrain-evals commit `2eb2faa06a464bfef6b5d30dc98473ed32aea
 
 The cap equals the sum of the leases, so a harness failure that needs a new lease needs a cap amendment first.
 
+## Amendments
+
+**A6 (2026-10-08), systems named by kind.** Only names changed. No measurement, row, score, lease amount, cell
+command's behavior, pinned dependency or vendor code changed. Garry decided that the repository describes the systems
+in the open-source comparison by kind: `temporal-graph`, `graph-pipeline`, `extract-first`, `agent-runtime`,
+`markdown-notes` and `memory-bank`. One table maps each label to its project, version, license, upstream repository and
+the id it carried before this amendment:
+[systems in the open-source comparison](../comparison-systems.md#systems-in-the-open-source-comparison). This
+preregistration, the manifests, the results and the report link there instead of naming the projects.
+
+What was renamed, mechanically, by a one-off rename script (idempotent, run from the repository root):
+
+- **Directories and files.** `eval/systems/<former id>/` became `eval/systems/<label>/`. The manifest cell files
+  `cells/<former id>-<config>.json` became `cells/<label>-<config>.json`, and every results directory
+  `results/<former id>-<cell suffix>/<former id>-<cell suffix>-a<N>-<hex>/` became `results/<label>-…/<label>-…-a<N>-<hex>/`
+  in both campaigns. That is 876 files in all; their contents moved unchanged except for the ids below.
+- **Ids.**
+  - A system id `<former id>` became `<label>` everywhere it is ours: the capability record's `system` field,
+    `--system` arguments, proxy slots (`/<label>/openai/v1`), compose project, service and image names, and policy
+    names (`<label>:fixed-evidence`).
+  - Cell ids and lease ids keep everything after the system: `<former id>-common-locomo-r1` is now
+    `<label>-common-locomo-r1`, and lease `<former id>-common-locomo-r1-a2-7c50fc54` is now
+    `<label>-common-locomo-r1-a2-7c50fc54`. The attempt number and the ledger entry prefix (`a2-7c50fc54`) are unchanged,
+    so every lease still matches its ledger entry.
+  - The campaign parameter for the temporal-graph BEAM recipe cell became `temporal_graph_beam_recipe`, still `false`.
+  - Every cell id and committed lease id of the five open-source systems changed. Recover any former id by putting the former-id column of the
+    comparison table in place of the label.
+- **Prose.** Project names became labels in this preregistration, the plan and its reviews, the manifests, the
+  results READMEs and receipts, the shim READMEs, PILOT notes, capability records and comments, and the test and
+  runner code.
+- **Kept as dependency facts.**
+  - Package names and pins, vendor images, upstream URLs and repository names, and file paths inside vendor
+    repositories (a capability record's `vendor_benchmark_code`, for example).
+  - Vendor API names and the environment variables vendor software reads.
+  - The agent-runtime's vendor CLI and the home directory it writes, and the memory-bank stack's Postgres
+    credentials.
+  - Shim code that imports and calls the vendor SDK.
+  - Lock files and `pyproject.toml` are byte-identical.
+- **Ledger and attempt logs.** These live outside the repository and keep the former ids. The former-id column is the
+  join key.
+
+Capability records and locks. The "frozen" column is the sha256 the systems table recorded; every file was unchanged
+until this amendment. A capability record's hash changes because its `system` field and prose now use the label, and
+every lock file is unchanged:
+
+| Label | capability.json, frozen | capability.json, after A6 | uv.lock (unchanged) |
+|---|---|---|---|
+| `markdown-notes` | `9bee4c555c01574ab93a9dfcebf9a3560b970286ed1bacf94e5ff661de62df90` | `d2fd42f000d84b6399a3eaca1fcd992151e8948f07028e044a21b7888cd2e9b2` | `e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807` |
+| `extract-first` | `6f52b7a4ac246d554359c99b6ade6245b77cb7bcf1a3d305b4ea7d0f6c3f96c8` | `9f003252b7d9d6c2310eb50210858b026ea7209c566b76211fd0da41bf2b3715` | `9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680` |
+| `temporal-graph` | `d972b84d6d7ea0e137d04e4954e4390d7d34d823c4830ac49b908236b470f5ab` | `83bd0323cb207746d3e9e0113445fe87cf739053108f848918e32bbc9129ffc1` | `4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13` |
+| `memory-bank` | `fe5b7c118722bbabd732c9ce7b0507b646ec6b48a84bcb409e8a564dc262b2f9` | `b7a913a9d7091b51031504f8314b36273446b5a462b8114609c9e667f62f1f70` | `f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8` |
+| `graph-pipeline` | `bccc141c3cdc6b95078743ae1c45c7179adaac1267fb60dee00475fadd70b8be` | `e44ca375e26c1b3219894b97314ca9e39ea46af272746dcdc855ef4a059af30f` | `59af44d5a70bfa016e888d650259443ba8d0d2f2fd27f4416f9b8e184ef5a0d7` |
+| `agent-runtime` | `f856cfe1e101df172998f4fc7f888afa328f1cbf5efdd7e0682c97dfac3845a5` | `63d6ec90623ab9dc09c6f26350ad2bbbcdf903d2727b2ad06e25baa1ebe7b36d` | none |
+
+Of the files frozen under "Code identity at freeze", the runner, scorer, fakes and generator are byte-identical. Two
+scripts changed in system ids and comments only: `eval/systems/bootstrap.sh` (`b84e45df…d0e3` to `2840a79d…f684c`;
+its per-stack case labels use the new ids) and `eval/systems/restart_check.sh` (`bba92c47…c19c` to `7dc50c1f…79f79`).
+
+Campaign hashes (`bun eval/runner/shootout-cell.ts hash --campaign <campaign.json>`). The cell count and the lease
+total are unchanged:
+
+| Campaign | Before A6 | After A6 | Cells | Leases |
+|---|---|---|---:|---:|
+| memory QA and PrecisionMemBench (`manifests/campaign.json`) | `dc73da2341d238df4a567fc8c22539986d1a73ee6604fb59fbbd2cd8287ea69f` | `36ba918f59963a0cc1a6af1cb12ab3a5aa0a48af585e6e5e0b07d41e90db0894` | 86 | $1,467.50 |
+| update and forget (`2026-10-06-oss-memory-shootout-lifecycle-lite/manifests/campaign.json`) | `c6be1367cb1a6708f6dd109b76869d1776ee3e659408eb702a6224aca474c70f` | `ae18af154d2cd2e8e11994618f408fe0d46d6ceb6570acead55ff4ec18488fc1` | 7 | $24.37 |
+
+The hash of each campaign is recomputed after this amendment because cell files, cell ids, commands and one parameter
+name changed; each earlier hash stays recorded above as history. Applied after every counted cell had settled, so no
+lease was reserved under one name and settled under the other.
+
 ## Changelog
+
+### 2026-10-08: amendment A6, systems named by kind
+
+Added A6: the systems are named by kind and the projects are named only in the comparison table, with the
+former-id rule, the capability-record hashes before and after, and the new campaign hash (`dc73da23` to
+`36ba918f`; lifecycle-lite `c6be1367` to `ae18af15`). Names only; no measurement changed.
 
 ### 2026-10-06: frozen
 
@@ -427,7 +503,7 @@ code commit `2eb2faa`, the file hashes and the campaign hash `c6be1367`. No coun
 
 Applied Garry's decisions: the reader-judged answer is the update headline (reader `gpt-4o-mini`, judge
 `gpt-4o-2024-08-06`, prompts quoted), the retrieval and as-of checks are report-only, the survivor floor is 1.0 (was
-0.9), leases are 1.15 times the estimates, and the Mem0 cell waits up to four hours for `/finish`. Added the reader and
+0.9), leases are 1.15 times the estimates, and the extract-first cell waits up to four hours for `/finish`. Added the reader and
 judge to the budget ($17.31 to $21.16), wrote the campaign (cap $24.37, hash recorded), and recorded the keyless
 restart check for every vendor shim. Open questions became the decisions list.
 

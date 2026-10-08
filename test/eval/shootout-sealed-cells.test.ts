@@ -36,7 +36,7 @@ const cells = (): CellSpec[] => {
 describe('Phase 7 cells (amendment A5)', () => {
   test('one sealed cell per system and benchmark, each running memory-qa on the sealed split under the sealed profile', () => {
     const all = cells();
-    expect(all.map(c => c.id).sort()).toEqual(['basic-memory', 'cognee', 'gbrain-shootout', 'gbrain-shootout-master', 'graphiti', 'hindsight', 'mem0']
+    expect(all.map(c => c.id).sort()).toEqual(['extract-first', 'gbrain-shootout', 'gbrain-shootout-master', 'graph-pipeline', 'markdown-notes', 'memory-bank', 'temporal-graph']
       .flatMap(s => [`${s}-common-beam-100k-sealed`, `${s}-common-locomo-sealed`]).sort());
     for (const c of all) {
       expect([c.sealed, c.config]).toEqual([true, 'common']);
@@ -50,7 +50,7 @@ describe('Phase 7 cells (amendment A5)', () => {
     }
     expect(all.find(c => c.id === 'gbrain-shootout-master-common-locomo-sealed')!.command).toContain('--gbrain "$HOME/gbrain-master@c5fb0201d1960a0a5a81c35d77718311b03154b7"');
     expect(all.find(c => c.id === 'gbrain-shootout-common-locomo-sealed')!.command).not.toContain('--gbrain');
-    expect(all.filter(c => c.system === 'mem0').every(c => c.command.includes('--finish-timeout-s 14400'))).toBe(true);
+    expect(all.filter(c => c.system === 'extract-first').every(c => c.command.includes('--finish-timeout-s 14400'))).toBe(true);
   });
 
   test('BEAM-100K cells select every category but the P4 core gate\'s reserved two', () => {
@@ -78,7 +78,7 @@ const haveBeam = existsSync(join(DATASET_ROOT, 'beam'));
 
 describe.skipIf(!haveBeam)('BEAM-100K sealed selection', () => {
   test('14 conversations, 224 questions once the 56 reserved ones are left out', () => {
-    const cats = cells().find(c => c.id === 'graphiti-common-beam-100k-sealed')!.command.match(/--categories (\S+)/)![1].split(',');
+    const cats = cells().find(c => c.id === 'temporal-graph-common-beam-100k-sealed')!.command.match(/--categories (\S+)/)![1].split(',');
     const sealed = new Set(loadSplit('beam-100k').sealed);
     const qs = loadCorpus('beam-100k').questions.filter(q => sealed.has(q.conversation));
     expect([qs.length, qs.filter(q => cats.includes(q.category)).length, qs.filter(q => RESERVED.includes(q.category)).length]).toEqual([280, 224, 56]);
@@ -157,7 +157,7 @@ describe.skipIf(!haveLocomo)('sealed cells end to end through runRemote (keyless
     const shim = serveProtocol(new FakeMemorySystem(), { config: 'common' });
     let r;
     try {
-      r = await runSealed('mem0-common-locomo-sealed', cmd => cmd.replace(/MEM0_CHUNK_TURNS=1 bash eval\/systems\/bootstrap\.sh up [^&]*&&/, 'true &&').replace('bash eval/systems/bootstrap.sh down --system mem0', 'true')
+      r = await runSealed('extract-first-common-locomo-sealed', cmd => cmd.replace(/MEM0_CHUNK_TURNS=1 bash eval\/systems\/bootstrap\.sh up [^&]*&&/, 'true &&').replace('bash eval/systems/bootstrap.sh down --system extract-first', 'true')
         .replace('http://127.0.0.1:8700', shim.url).replace('--split sealed', '--split sealed --limit 24'), 'sealed-shim-lease');
     } finally { shim.stop(); }
     expect(r.code, readFileSync(join(r.custody, 'memory-qa.log'), 'utf8').slice(-2000)).toBe(0);

@@ -1,8 +1,0 @@
-{
-  "run_id": "hindsight-common-locomo-sealed-a1-bef586e3",
-  "lease_usd": 23,
-  "committed_usd": 15.153308159999952,
-  "requests": 14630,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

@@ -36,92 +36,92 @@ const comparison = (v: ReturnType<typeof analyzeS3>, baseline: string, id: strin
 
 describe('S3 pairing and tests', () => {
   test('a system better on every search-only case reads higher after Holm; equal recall is not distinguishable', () => {
-    const v = analyzeS3({ master: gbrainRun('c5fb020'), systems: [synth('mem0', () => ({ precision: 1 }))] });
-    const p = comparison(v, 'master', 'mem0:precision');
+    const v = analyzeS3({ master: gbrainRun('c5fb020'), systems: [synth('extract-first', () => ({ precision: 1 }))] });
+    const p = comparison(v, 'master', 'extract-first:precision');
     expect(searchOnly).toHaveLength(43);
     expect(p).toMatchObject({ status: 'tested', n_pairs: 43, n_clusters: 43, mean_system: 1, mean_gbrain: 0.5, delta: 0.5, reading: 'system higher', p_method: 'monte-carlo-sign-flip' });
     expect(p.p_two_sided).toBeCloseTo(1 / (S3_DRAWS + 1), 10);
-    expect(comparison(v, 'master', 'mem0:recall')).toMatchObject({ delta: 0, p_two_sided: 1, reading: 'not distinguishable' });
+    expect(comparison(v, 'master', 'extract-first:recall')).toMatchObject({ delta: 0, p_two_sided: 1, reading: 'not distinguishable' });
     expect(v.method.test).toContain(String(S3_SEED));
   });
 
   test('as in the primary family, a harness failure on any run excludes that case from every pair of the family', () => {
     const failsIn = (ids: string[]) => (c: RetrievalCase) => ids.includes(c.caseId) ? { outcome: 'harness_invalid' as Outcome } : { precision: 1 };
     const [x, y] = searchOnly.map(c => c.caseId);
-    const v = analyzeS3({ master: gbrainRun('m'), systems: [synth('hindsight', failsIn([x])), synth('cognee', failsIn([y]))] });
+    const v = analyzeS3({ master: gbrainRun('m'), systems: [synth('memory-bank', failsIn([x])), synth('graph-pipeline', failsIn([y]))] });
     expect(v.families[0].excluded_cases).toEqual([x, y].sort());
-    expect(v.families[0].exclusion_runs).toEqual(['gbrain-shootout', 'hindsight', 'cognee']);
-    for (const id of ['hindsight:precision', 'cognee:precision', 'hindsight:recall']) expect(comparison(v, 'master', id)).toMatchObject({ n_pairs: 41, excluded: { cross_system: 2 }, reading: id.endsWith('recall') ? 'not distinguishable' : 'system higher' });
+    expect(v.families[0].exclusion_runs).toEqual(['gbrain-shootout', 'memory-bank', 'graph-pipeline']);
+    for (const id of ['memory-bank:precision', 'graph-pipeline:precision', 'memory-bank:recall']) expect(comparison(v, 'master', id)).toMatchObject({ n_pairs: 41, excluded: { cross_system: 2 }, reading: id.endsWith('recall') ? 'not distinguishable' : 'system higher' });
     const md = renderMarkdown(v);
     expect(md).toContain('Cases excluded from every pair for harness failures on any run in this family: 2');
   });
 
   test('3 or more of 43 excluded, or a run invalid or incomplete, reads incomplete with its numbers, no direction, and stays in Holm', () => {
     const three = new Set(searchOnly.slice(0, 3).map(c => c.caseId));
-    const v = analyzeS3({ master: gbrainRun('m', c => three.has(c.caseId) ? { outcome: 'budget_not_run' } : {}), systems: [synth('mem0', () => ({ precision: 1 }))] });
-    const c = comparison(v, 'master', 'mem0:precision');
+    const v = analyzeS3({ master: gbrainRun('m', c => three.has(c.caseId) ? { outcome: 'budget_not_run' } : {}), systems: [synth('extract-first', () => ({ precision: 1 }))] });
+    const c = comparison(v, 'master', 'extract-first:precision');
     expect(c).toMatchObject({ n_pairs: 40, excluded: { cross_system: 3 }, reading: 'incomplete', delta: 0.5 });
     expect(c.reasons[0]).toContain('3 of 43');
-    expect(v.families[0].holm_family).toContain('mem0:precision');
+    expect(v.families[0].holm_family).toContain('extract-first:precision');
     expect(c.p_holm).toBeDefined();
-    const partial = analyzeS3({ master: gbrainRun('m'), systems: [synth('mem0', () => ({ precision: 1 }), { run_status: 'invalid' })] });
-    expect(comparison(partial, 'master', 'mem0:precision')).toMatchObject({ reading: 'incomplete', reasons: ['mem0 run is invalid'] });
-    expect(partial.families[0].holm_family).toContain('mem0:precision');
+    const partial = analyzeS3({ master: gbrainRun('m'), systems: [synth('extract-first', () => ({ precision: 1 }), { run_status: 'invalid' })] });
+    expect(comparison(partial, 'master', 'extract-first:precision')).toMatchObject({ reading: 'incomplete', reasons: ['extract-first run is invalid'] });
+    expect(partial.families[0].holm_family).toContain('extract-first:precision');
   });
 
   test('a missing row counts as a harness failure in the join; a not-measurable system stays out of it', () => {
-    const blind = synth('cognee', c => c.caseId === searchOnly[1].caseId ? { outcome: 'harness_invalid', items: 0, cited: 0 } : { precision: null, recall: null, cited: 0, measurable: false });
-    const short = synth('mem0');
+    const blind = synth('graph-pipeline', c => c.caseId === searchOnly[1].caseId ? { outcome: 'harness_invalid', items: 0, cited: 0 } : { precision: null, recall: null, cited: 0, measurable: false });
+    const short = synth('extract-first');
     short.rows = short.rows.filter(r => r.case_id !== searchOnly[0].caseId);
     const v = analyzeS3({ master: gbrainRun('m'), systems: [short, blind] });
     expect(v.families[0].excluded_cases).toEqual([searchOnly[0].caseId]);
-    expect(v.families[0].exclusion_runs).toEqual(['gbrain-shootout', 'mem0']);
+    expect(v.families[0].exclusion_runs).toEqual(['gbrain-shootout', 'extract-first']);
   });
 
   test('an undefined metric on either side drops that case from that metric and is counted per side', () => {
     const [a, b, c] = searchOnly.map(x => x.caseId);
-    const v = analyzeS3({ master: gbrainRun('m', x => x.caseId === a || x.caseId === c ? { precision: null } : {}), systems: [synth('graphiti', x => x.caseId === b || x.caseId === c ? { precision: null } : {})] });
-    expect(comparison(v, 'master', 'graphiti:precision')).toMatchObject({ n_pairs: 40, excluded: { undefined_gbrain: 1, undefined_system: 1, undefined_both: 1 } });
-    expect(comparison(v, 'master', 'graphiti:recall').n_pairs).toBe(43);
+    const v = analyzeS3({ master: gbrainRun('m', x => x.caseId === a || x.caseId === c ? { precision: null } : {}), systems: [synth('temporal-graph', x => x.caseId === b || x.caseId === c ? { precision: null } : {})] });
+    expect(comparison(v, 'master', 'temporal-graph:precision')).toMatchObject({ n_pairs: 40, excluded: { undefined_gbrain: 1, undefined_system: 1, undefined_both: 1 } });
+    expect(comparison(v, 'master', 'temporal-graph:recall').n_pairs).toBe(43);
   });
 
   test('a system whose items all lack provenance is not measurable and leaves the Holm family; Holm runs over the rest', () => {
-    const blind = synth('cognee', () => ({ precision: null, recall: null, cited: 0, measurable: false }));
-    const v = analyzeS3({ master: gbrainRun('m'), systems: [synth('mem0', (_c, i) => ({ precision: i % 3 ? 0.6 : 0.5 })), synth('graphiti', (_c, i) => ({ recall: i % 2 ? 0.7 : 0.4 })), blind] });
+    const blind = synth('graph-pipeline', () => ({ precision: null, recall: null, cited: 0, measurable: false }));
+    const v = analyzeS3({ master: gbrainRun('m'), systems: [synth('extract-first', (_c, i) => ({ precision: i % 3 ? 0.6 : 0.5 })), synth('temporal-graph', (_c, i) => ({ recall: i % 2 ? 0.7 : 0.4 })), blind] });
     const f = v.families[0];
-    expect(f.holm_family).toEqual(['mem0:precision', 'mem0:recall', 'graphiti:precision', 'graphiti:recall']);
-    expect(comparison(v, 'master', 'cognee:precision')).toMatchObject({ status: 'not-measurable', reading: 'not measurable', no_provenance_share: 1 });
+    expect(f.holm_family).toEqual(['extract-first:precision', 'extract-first:recall', 'temporal-graph:precision', 'temporal-graph:recall']);
+    expect(comparison(v, 'master', 'graph-pipeline:precision')).toMatchObject({ status: 'not-measurable', reading: 'not measurable', no_provenance_share: 1 });
     const tested = f.comparisons.filter(c => c.status === 'tested');
     expect(tested.map(c => c.p_holm)).toEqual(holmAdjusted(tested.map(c => c.p_two_sided!)));
-    expect(v.runs.find(r => r.name === 'cognee')!.provenance).toBe('not measurable');
+    expect(v.runs.find(r => r.name === 'graph-pipeline')!.provenance).toBe('not measurable');
   });
 
   test('pin and master are separate families with their own Holm; master is the preregistered one', () => {
-    const v = analyzeS3({ master: gbrainRun('c5fb020', () => ({ precision: 0.2 })), pin: gbrainRun('739e5cc', () => ({ precision: 0.9 })), systems: [synth('mem0')] });
+    const v = analyzeS3({ master: gbrainRun('c5fb020', () => ({ precision: 0.2 })), pin: gbrainRun('739e5cc', () => ({ precision: 0.9 })), systems: [synth('extract-first')] });
     expect(v.families.map(f => [f.baseline, f.gbrain.build, f.holm_family.length])).toEqual([['master', 'c5fb020', 2], ['pin', '739e5cc', 2]]);
     expect(v.families[0].role).toContain('preregistered family S3');
-    expect(comparison(v, 'master', 'mem0:precision').reading).toBe('system higher');
-    expect(comparison(v, 'pin', 'mem0:precision').reading).toBe('gbrain higher');
+    expect(comparison(v, 'master', 'extract-first:precision').reading).toBe('system higher');
+    expect(comparison(v, 'pin', 'extract-first:precision').reading).toBe('gbrain higher');
   });
 
   test('structural categories are summarized without tests; uncited share is reported beside precision', () => {
-    const v = analyzeS3({ master: gbrainRun('m'), systems: [synth('graphiti', () => ({ items: 10, cited: 7 }))] });
-    const s = v.structural.find(x => x.system === 'graphiti')!;
+    const v = analyzeS3({ master: gbrainRun('m'), systems: [synth('temporal-graph', () => ({ items: 10, cited: 7 }))] });
+    const s = v.structural.find(x => x.system === 'temporal-graph')!;
     expect(s.all.cases).toBe(34);
     expect(JSON.stringify(s)).not.toContain('p_');
-    expect(comparison(v, 'master', 'graphiti:precision').no_provenance_share).toBe(0.3);
+    expect(comparison(v, 'master', 'temporal-graph:precision').no_provenance_share).toBe(0.3);
     expect(noProvenanceShare([])).toEqual({ items: 0, uncited: 0, share: null });
     const md = renderMarkdown(v);
-    expect(md).toContain('| graphiti | precision | 43 |');
+    expect(md).toContain('| temporal-graph | precision | 43 |');
     expect(md).toContain('30.0%');
     expect(md).toContain('## Structural categories (no tests)');
     expect(md).not.toContain('\u2014');
   });
 
   test('runs on a different fixture or scorer are refused; a non-common config is a warning', () => {
-    expect(() => analyzeS3({ master: gbrainRun('m'), systems: [synth('mem0', undefined, { fixture_sha256: { x: 'y' } })] })).toThrow(/different fixture or scorer/);
-    expect(() => analyzeS3({ master: gbrainRun('m'), systems: [synth('mem0'), synth('mem0')] })).toThrow(/more than once/);
-    expect(analyzeS3({ master: gbrainRun('m'), systems: [synth('mem0', undefined, { config: 'recipe' })] }).warnings).toEqual(['mem0 ran config recipe; S3 compares common configurations']);
+    expect(() => analyzeS3({ master: gbrainRun('m'), systems: [synth('extract-first', undefined, { fixture_sha256: { x: 'y' } })] })).toThrow(/different fixture or scorer/);
+    expect(() => analyzeS3({ master: gbrainRun('m'), systems: [synth('extract-first'), synth('extract-first')] })).toThrow(/more than once/);
+    expect(analyzeS3({ master: gbrainRun('m'), systems: [synth('extract-first', undefined, { config: 'recipe' })] }).warnings).toEqual(['extract-first ran config recipe; S3 compares common configurations']);
   });
 });
 

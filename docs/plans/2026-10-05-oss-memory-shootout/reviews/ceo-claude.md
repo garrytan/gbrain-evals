@@ -5,12 +5,12 @@ Inputs read: `CLAUDE.md`, the plan, `docs/comparison-systems.md`, `docs/decision
 `docs/benchmarks/2026-10-02-model-ladder.md` and its protocol, `docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md` (sections 3 and 5),
 `eval/runner/memory-qa/{run,qa,corpus}.ts`, `eval/runner/cat40/{loop,arms,gbrain-arm}.ts`, `eval/runner/decisions/splits.ts`,
 `eval/decisions/splits/*.json`, `eval/runner/budget-ledger.ts`, `eval/runner/precisionmembench.ts`, `eval/runner/lifecycle-experiment.ts`.
-Facts checked today: Graphiti 0.30.2 and Mem0 2.2.1 source at their tags, PyPI versions, Letta, Cognee, Hindsight and Basic Memory docs, AMB.
+Facts checked today: temporal-graph 0.30.2 and extract-first 2.2.1 source at their tags, PyPI versions, agent-runtime, graph-pipeline, memory-bank and markdown-notes docs, AMB.
 Dataset sizes were measured by downloading the pinned LoCoMo and LongMemEval-S files (4 characters per token).
 
 ## 1. Verdict
 
-The plan asks the right question and its skeleton (one interface, Docker shims, preregistration, two configurations, published failures) is the right one, but as written it cannot run: its LoCoMo-all-10 and BEAM-100K-all-20 cells collide with the held-out program's sealed splits, its $1,200 cap is unenforceable because vendor containers call OpenAI outside the budget ledger, and its cost table is off by roughly 3x once Graphiti's real default model (`gpt-5.5`) and the frontier-reader cell are priced. The fairness protocol is credible on paper but has three holes a skeptical vendor will find in an afternoon: gbrain's reader gets raw corpus sessions rehydrated by the harness while competitors get whatever text they return, Cat 40 is gbrain's home field (its tool surface was tuned on that world, used three times for gbrain decisions, and at the frontier it is at ceiling), and nothing checks that each system honored session dates or finished background ingestion before it was queried. Fix the eight critical and high items below (all are plan edits, none needs new research) and this becomes the most useful public memory comparison available; the single highest-value addition is a full-context baseline (flagged as a User Challenge), because "do I need a memory system at all" is the first question an engineer has.
+The plan asks the right question and its skeleton (one interface, Docker shims, preregistration, two configurations, published failures) is the right one, but as written it cannot run: its LoCoMo-all-10 and BEAM-100K-all-20 cells collide with the held-out program's sealed splits, its $1,200 cap is unenforceable because vendor containers call OpenAI outside the budget ledger, and its cost table is off by roughly 3x once temporal-graph's real default model (`gpt-5.5`) and the frontier-reader cell are priced. The fairness protocol is credible on paper but has three holes a skeptical vendor will find in an afternoon: gbrain's reader gets raw corpus sessions rehydrated by the harness while competitors get whatever text they return, Cat 40 is gbrain's home field (its tool surface was tuned on that world, used three times for gbrain decisions, and at the frontier it is at ceiling), and nothing checks that each system honored session dates or finished background ingestion before it was queried. Fix the eight critical and high items below (all are plan edits, none needs new research) and this becomes the most useful public memory comparison available; the single highest-value addition is a full-context baseline (flagged as a User Challenge), because "do I need a memory system at all" is the first question an engineer has.
 
 ## 2. Findings
 
@@ -28,7 +28,7 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 ### F2. Critical: the $1,200 cap cannot be enforced; vendor containers spend outside the ledger
 
 - **Section:** "Phases and gates" cap sentence (PLAN.md:126); Architecture shim bullet (PLAN.md:104-106).
-- **Problem:** The ledger only sees requests that go through the harness's own `fetch` (memory-qa `ChatClient`, Cat 40 loop) or through `MeteringProxy` (`gbrain-arm.ts:53`). The plan meters vendor calls through the proxy only for Cat 40 (PLAN.md:109). Phase 3 ingest, the largest line item (Graphiti alone is about 122M input tokens on the LME-S subset, table below), runs inside six Python containers holding the real `OPENAI_API_KEY`. Two concrete blockers in the existing proxy: it binds `127.0.0.1` (`gbrain-arm.ts:87`), unreachable from a Docker bridge network, and it forwards the client's own `Authorization` header (`gbrain-arm.ts:97`), so every container must hold the real key. `priceRequest` also has no prices for the vendor-default models (`gpt-5-mini`, `gpt-4.1-nano`, `gpt-4o-mini`, `text-embedding-3-small`; `budget-ledger.ts:1019-1039` lists none of them), so their calls would be charged at reservation and marked unpriced.
+- **Problem:** The ledger only sees requests that go through the harness's own `fetch` (memory-qa `ChatClient`, Cat 40 loop) or through `MeteringProxy` (`gbrain-arm.ts:53`). The plan meters vendor calls through the proxy only for Cat 40 (PLAN.md:109). Phase 3 ingest, the largest line item (temporal-graph alone is about 122M input tokens on the LME-S subset, table below), runs inside six Python containers holding the real `OPENAI_API_KEY`. Two concrete blockers in the existing proxy: it binds `127.0.0.1` (`gbrain-arm.ts:87`), unreachable from a Docker bridge network, and it forwards the client's own `Authorization` header (`gbrain-arm.ts:97`), so every container must hold the real key. `priceRequest` also has no prices for the vendor-default models (`gpt-5-mini`, `gpt-4.1-nano`, `gpt-4o-mini`, `text-embedding-3-small`; `budget-ledger.ts:1019-1039` lists none of them), so their calls would be charged at reservation and marked unpriced.
 - **Fix:** Add an architecture bullet:
   > **Every provider call is metered.** Each shim container gets `OPENAI_BASE_URL=http://<proxy>:<port>/<system>/openai/v1` and a dummy key; the metering proxy listens on the Docker bridge address, strips the client's `Authorization` header and injects the real key, and charges each request to a per-system ledger allowance. Containers have no network route except the proxy (Docker `internal` network plus the proxy as the only gateway). A shim whose SDK ignores the base URL is `blocked` in Phase 0. Before Phase 0, register list prices for every vendor-default model in `CHAT_PRICE_OVERRIDES`.
 
@@ -37,9 +37,9 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 ### F3. Critical: the cost estimate is about 3x low and the vendor-default arm on LongMemEval-S alone exceeds the cap
 
 - **Section:** "Phases and gates" cost column and total (PLAN.md:117-127); Risks row 1 (PLAN.md:142); fairness item 2 (PLAN.md:55-59).
-- **Problem:** Graphiti 0.30.2 defaults to `gpt-5.5` for its main model and `gpt-4.1-nano` for small prompts (`graphiti_core/llm_client/openai_base_client.py:34-35` at tag `v0.30.2`); the ledger prices `gpt-5.5` at $5 input / $30 output per million tokens (`budget-ledger.ts:1033`). Mem0 2.2.1 defaults to `gpt-5-mini` (`mem0/llms/openai.py:40`), Cognee ships `openai/gpt-5-mini`, Hindsight's README default is `gpt-4o-mini` and it recommends Groq `gpt-oss-20b`, Basic Memory defaults to local FastEmbed `bge-small-en-v1.5` (384 dimensions). The measured LME-S haystack is 122,418 tokens on average (61.2M tokens for 500 questions, 12.2M for the 100-question subset), and isolation per question forces re-ingest of shared sessions. Ingest estimate (raw tokens measured; per-system LLM multipliers are my estimates from each system's documented call pattern: Mem0 3x input and 15% output, Cognee 2.5x and 30%, Hindsight 4x and 30%, Graphiti 10x and 30% per its 4 to 6+ serial calls per episode; Phase 0 must replace them with measurements):
+- **Problem:** temporal-graph 0.30.2 defaults to `gpt-5.5` for its main model and `gpt-4.1-nano` for small prompts (`graphiti_core/llm_client/openai_base_client.py:34-35` at tag `v0.30.2`); the ledger prices `gpt-5.5` at $5 input / $30 output per million tokens (`budget-ledger.ts:1033`). extract-first 2.2.1 defaults to `gpt-5-mini` (`mem0/llms/openai.py:40`), graph-pipeline ships `openai/gpt-5-mini`, memory-bank's README default is `gpt-4o-mini` and it recommends Groq `gpt-oss-20b`, markdown-notes defaults to local FastEmbed `bge-small-en-v1.5` (384 dimensions). The measured LME-S haystack is 122,418 tokens on average (61.2M tokens for 500 questions, 12.2M for the 100-question subset), and isolation per question forces re-ingest of shared sessions. Ingest estimate (raw tokens measured; per-system LLM multipliers are my estimates from each system's documented call pattern: extract-first 3x input and 15% output, graph-pipeline 2.5x and 30%, memory-bank 4x and 30%, temporal-graph 10x and 30% per its 4 to 6+ serial calls per episode; Phase 0 must replace them with measurements):
 
-  | Benchmark | Raw tokens | Graphiti LLM input | 4 extraction systems, matched (`gpt-4.1-mini`) | 4 extraction systems, vendor defaults | of which Graphiti default |
+  | Benchmark | Raw tokens | temporal-graph LLM input | 4 extraction systems, matched (`gpt-4.1-mini`) | 4 extraction systems, vendor defaults | of which temporal-graph default |
   |---|---|---|---|---|---|
   | LoCoMo dev (3 conv) | 0.06M | 0.6M | $1 | $3 | $3 |
   | LoCoMo all 10 | 0.19M | 1.9M | $2 | $9 | $8 |
@@ -49,30 +49,30 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
   | BEAM-100K all 20 | 2.0M | 20M | $19 | $93 | $83 |
   | Cat 40 world (4,036 docs) | 0.82M per build | 8.2M | $8 | $38 | $34 |
 
-  gbrain, Letta archival and Basic Memory spend only on embeddings (about $0.13 per million tokens with `text-embedding-3-large`, $0 with FastEmbed). Readers add about $4 per arm on full LoCoMo (the `gpt-4o` judge dominates), about $2.40 per arm on the LME-S subset, and the plan's "one frontier-reader cell on LoCoMo" is about $36 per system on all 1,986 questions (`gpt-6.1-sol` at $2/$10 with at least 2,000 completion tokens allowed, `qa.ts` `openaiChat`), so about $250 for seven systems. As written, Phase 3 is roughly $1,200 by itself against a $350 line.
+  gbrain, agent-runtime archival and markdown-notes spend only on embeddings (about $0.13 per million tokens with `text-embedding-3-large`, $0 with FastEmbed). Readers add about $4 per arm on full LoCoMo (the `gpt-4o` judge dominates), about $2.40 per arm on the LME-S subset, and the plan's "one frontier-reader cell on LoCoMo" is about $36 per system on all 1,986 questions (`gpt-6.1-sol` at $2/$10 with at least 2,000 completion tokens allowed, `qa.ts` `openaiChat`), so about $250 for seven systems. As written, Phase 3 is roughly $1,200 by itself against a $350 line.
 - **Fix:** Replace fairness item 2's scope and the cost table:
-  > The vendor-default configuration runs on LoCoMo, BEAM-100K dev, PrecisionMemBench and the custody set. LongMemEval-S runs the matched configuration only; Graphiti's default `gpt-5.5` extraction would cost about $500 on the 100-question subset alone. The full 500 questions are outside this plan's cap (about $580 for the matched extraction systems) and need separate approval. The frontier-reader cell runs on a 300-question stratified LoCoMo subset and on the LME-S subset, matched configuration, fixed budget.
+  > The vendor-default configuration runs on LoCoMo, BEAM-100K dev, PrecisionMemBench and the custody set. LongMemEval-S runs the matched configuration only; temporal-graph's default `gpt-5.5` extraction would cost about $500 on the 100-question subset alone. The full 500 questions are outside this plan's cap (about $580 for the matched extraction systems) and need separate approval. The frontier-reader cell runs on a 300-question stratified LoCoMo subset and on the LME-S subset, matched configuration, fixed budget.
 
   New phase costs: Phase 3 about $410 (matched ingest $127, vendor-default ingest $37, readers $164, frontier cell $38, full-context baseline $43 if F10 is accepted); sealed LoCoMo/BEAM custodian cells about $85; Phase 4 custody set $60 plus authoring; Phase 5 $20; Phase 6 about $400 (F8). Total about $1,000 with about $200 headroom under $1,200. Keep the existing 50% overrun stop.
 
 ### F4. High: gbrain's reader sees raw corpus sessions rehydrated by the harness, not gbrain's output
 
 - **Section:** fairness items 3 and 4 (PLAN.md:60-66); `MemorySystem.retrieve` (PLAN.md:101).
-- **Problem:** In the current path the reader never sees gbrain's returned text. The harness maps gbrain's ranked slugs back to session ids, then builds the prompt from the benchmark's own session objects (`run.ts:374-375`, `sessById` and `packSessions`). The evidence budget is the variable that matters most: the same reader fell from 89/100 to 65/100 when given gbrain's five chunks instead of full sessions (comparison-systems.md:82). If the plan lets each adapter render its own `context` string, gbrain gets five whole raw sessions (about 11,500 tokens on LME-S) while Mem0 gets terse extracted memories, and the default-budget arm measures packaging, not memory. A vendor will call this out first.
+- **Problem:** In the current path the reader never sees gbrain's returned text. The harness maps gbrain's ranked slugs back to session ids, then builds the prompt from the benchmark's own session objects (`run.ts:374-375`, `sessById` and `packSessions`). The evidence budget is the variable that matters most: the same reader fell from 89/100 to 65/100 when given gbrain's five chunks instead of full sessions (comparison-systems.md:82). If the plan lets each adapter render its own `context` string, gbrain gets five whole raw sessions (about 11,500 tokens on LME-S) while extract-first gets terse extracted memories, and the default-budget arm measures packaging, not memory. A vendor will call this out first.
 - **Fix:** Change the interface to return items, and render in one place:
   > `retrieve(namespace, question, k) -> { items: [{ text, source_ids[], timestamp?, score? }], native_tokens }`. The harness renders every system's items with one renderer and packs them with the existing `packSessions` budget logic. Two context modes, both reported: **native** (the item text the system returned; gbrain's items are the page text its read API returns, not corpus sessions) and **provenance-rehydrated** (the harness replaces items by the raw sessions behind their `source_ids`, in first-appearance order, for every system with provenance; this isolates ranking). The fixed-budget arm applies to both modes.
 
 ### F5. High: adapters are written from scratch instead of mirroring each vendor's own benchmark ingestion
 
 - **Section:** "How each run stays fair" item 7 (PLAN.md:72-74); Architecture shim bullet.
-- **Problem:** Ingestion conventions move scores by double digits (Mem0's LoCoMo runs store each speaker's turns as that speaker's memories; Basic Memory's v0.23 release reports its own LoCoMo retrieval MRR; Zep publishes a LoCoMo harness for Graphiti; Hindsight and Cognee ship benchmark code and AMB providers). A from-scratch adapter invites "you held it wrong", and the one-week review window is the only defense.
+- **Problem:** Ingestion conventions move scores by double digits (extract-first's LoCoMo runs store each speaker's turns as that speaker's memories; markdown-notes's v0.23 release reports its own LoCoMo retrieval MRR; Zep publishes a LoCoMo harness for temporal-graph; memory-bank and graph-pipeline ship benchmark code and AMB providers). A from-scratch adapter invites "you held it wrong", and the one-week review window is the only defense.
 - **Fix:** Add fairness item 7a:
-  > Each adapter starts from the vendor's own published benchmark ingestion code where one exists (Mem0 `mem0ai/memory-benchmarks`, Hindsight `hindsight-benchmarks` and its AMB provider, Cognee's evaluation framework and AMB provider, Basic Memory's LoCoMo benchmark, Zep's LoCoMo harness for Graphiti), pinned by commit. The adapter README lists every deviation (reader, judge, budget, namespace scheme) and why. Where no vendor code exists the adapter says so.
+  > Each adapter starts from the vendor's own published benchmark ingestion code where one exists (extract-first `mem0ai/memory-benchmarks`, memory-bank `hindsight-benchmarks` and its AMB provider, graph-pipeline's evaluation framework and AMB provider, markdown-notes's LoCoMo benchmark, Zep's LoCoMo harness for temporal-graph), pinned by commit. The adapter README lists every deviation (reader, judge, budget, namespace scheme) and why. Where no vendor code exists the adapter says so.
 
 ### F6. High: no check that session dates were honored or that background ingestion finished before queries
 
 - **Section:** `MemorySystem` interface (`ingestSession`, `finishIngest`, PLAN.md:99-102); Phase 0 gate (PLAN.md:117).
-- **Problem:** Temporal and knowledge-update questions depend on each memory carrying the session's date, not the wall-clock time of ingest (Graphiti `reference_time`, Hindsight retain timestamps, Letta passage `created_at`, Basic Memory frontmatter dates, Mem0 metadata). Several systems finish work asynchronously (Hindsight observation consolidation, Cognee `run_in_background`, Basic Memory background sync and embedding). Extraction calls can fail on malformed JSON and the SDK may log and continue. Each of these silently lowers one system's score and the report would attribute it to the system's design.
+- **Problem:** Temporal and knowledge-update questions depend on each memory carrying the session's date, not the wall-clock time of ingest (temporal-graph `reference_time`, memory-bank retain timestamps, agent-runtime passage `created_at`, markdown-notes frontmatter dates, extract-first metadata). Several systems finish work asynchronously (memory-bank observation consolidation, graph-pipeline `run_in_background`, markdown-notes background sync and embedding). Extraction calls can fail on malformed JSON and the SDK may log and continue. Each of these silently lowers one system's score and the report would attribute it to the system's design.
 - **Fix:** Add to the interface and Phase 0:
   > `ingestSession` takes `event_time` (the session date) and returns `{ items_created, errors[] }`; the receipt sums them per conversation and marks a conversation `ingest-degraded` above 1% failed sessions. `finishIngest` polls a system-specific quiescence signal (queue empty, no running pipeline) with a timeout recorded as an outcome. Phase 0 gates per system: (a) a dated probe ("what did I do on 8 May 2023") retrieves the right session, proving event time is honored or recording that the API cannot set it; (b) a canary fact ingested in namespace A is never returned from namespace B; (c) zero unexplained ingest errors on one LoCoMo conversation.
 
@@ -85,9 +85,9 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 ### F8. High: Cat 40 as planned is gbrain's home field, at ceiling, and its leak metric is unfair to systems without visibility
 
 - **Section:** P2 row (PLAN.md:41); Phase 6 (PLAN.md:123).
-- **Problem:** On the five frontier models the oracle arm scores 97.6% and gbrain and plain files both score 95.6%, with GPT-6.1 Sol at 100% (model-ladder.md:10-31). The held-out world (seed 20261003) had been used three times for gbrain decisions (model-ladder.md:44), and gbrain's MCP surface was tuned against Cat 40 in the cost wave and entity-recall wave. "Reuse the 2026-10-04 gbrain and files cells" mixes builds (`51f865d78` there versus the pin here). The leak metric rewards gbrain's `visibility: private` hiding (`gbrain-arm.ts:8`); none of the six vendors is configured to hide finance documents, so every competitor leaks by construction, and the report would present a configuration choice as a capability. Writing runs also need each system restored to its post-build state; rebuilding Graphiti per writing cell costs about $7 in the matched configuration.
+- **Problem:** On the five frontier models the oracle arm scores 97.6% and gbrain and plain files both score 95.6%, with GPT-6.1 Sol at 100% (model-ladder.md:10-31). The held-out world (seed 20261003) had been used three times for gbrain decisions (model-ladder.md:44), and gbrain's MCP surface was tuned against Cat 40 in the cost wave and entity-recall wave. "Reuse the 2026-10-04 gbrain and files cells" mixes builds (`51f865d78` there versus the pin here). The leak metric rewards gbrain's `visibility: private` hiding (`gbrain-arm.ts:8`); none of the six vendors is configured to hide finance documents, so every competitor leaks by construction, and the report would present a configuration choice as a capability. Writing runs also need each system restored to its post-build state; rebuilding temporal-graph per writing cell costs about $7 in the matched configuration.
 - **Fix:** Rewrite Phase 6:
-  > The custodian generates a fresh Cat 40 world (new seed and template set, `model-ladder-gen.ts` custodian mode) that neither gbrain nor any vendor has seen. gbrain (pinned build), `fs` and every competitor run on it in the same run; no 2026-10-04 cells are reused. Four models, the newest of each family (Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol), one run each. The preregistration states that success differences are not claimed where the oracle and best arm are within 3 points (ceiling); the primary Cat 40 outcomes are cost per task, turns, finance-text leaks and success. Finance access: each system keeps finance-only documents in a separate native partition (namespace, bank, dataset, project or agent) the acting user's connection cannot read; a system with no partition gets the `fs-acl`-style filtered corpus and is labeled "harness-filtered". Each system's state is restored from a Docker volume snapshot after a writing run. Mem0's MCP server (OpenMemory) is a separate package; pin its own version.
+  > The custodian generates a fresh Cat 40 world (new seed and template set, `model-ladder-gen.ts` custodian mode) that neither gbrain nor any vendor has seen. gbrain (pinned build), `fs` and every competitor run on it in the same run; no 2026-10-04 cells are reused. Four models, the newest of each family (Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol), one run each. The preregistration states that success differences are not claimed where the oracle and best arm are within 3 points (ceiling); the primary Cat 40 outcomes are cost per task, turns, finance-text leaks and success. Finance access: each system keeps finance-only documents in a separate native partition (namespace, bank, dataset, project or agent) the acting user's connection cannot read; a system with no partition gets the `fs-acl`-style filtered corpus and is labeled "harness-filtered". Each system's state is restored from a Docker volume snapshot after a writing run. extract-first's MCP server (OpenMemory) is a separate package; pin its own version.
 
 ### F9. High: the "sealed custody set" does not exist yet and has no authoring spec
 
@@ -99,14 +99,14 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 ### F10. High (User Challenge): no full-context baseline, so the report cannot answer "do I need a memory system at all"
 
 - **Section:** "Which categories" (PLAN.md:37-43); "What the report will be able to say" (PLAN.md:129-136).
-- **Problem:** LoCoMo conversations average 19,000 tokens and BEAM-100K about 100,000; both fit in current context windows, and LME-S haystacks (122,000 tokens) fit in `gpt-4.1-mini`. The one independent Mem0 study in comparison-systems.md found long-context GPT-5-mini at 82.4% against Mem0's 49.0% (comparison-systems.md:52). The held-out program lists "a full-context baseline and a file-agent baseline at matched cost" as not yet done (heldout-program.md:136). Without it, every system's number lacks the reference an engineer needs.
+- **Problem:** LoCoMo conversations average 19,000 tokens and BEAM-100K about 100,000; both fit in current context windows, and LME-S haystacks (122,000 tokens) fit in `gpt-4.1-mini`. The one independent extract-first study in comparison-systems.md found long-context GPT-5-mini at 82.4% against extract-first's 49.0% (comparison-systems.md:52). The held-out program lists "a full-context baseline and a file-agent baseline at matched cost" as not yet done (heldout-program.md:136). Without it, every system's number lacks the reference an engineer needs.
 - **Fix (not auto-applied; Garry decides):** add a "full context" arm to Memory QA: the reader gets the whole conversation (or haystack), same reader and judge. Cost about $43 (LoCoMo all 10 $8, LME-S subset $30, BEAM-100K dev $5). Optional second baseline: the existing plain Postgres full-text plus pgvector arm (`arms.ts`, `pg`) as "naive RAG", about $5.
 
 ### F11. Medium: the plan's premise that only vendor numbers exist ignores AMB
 
 - **Section:** "The question" (PLAN.md:9-11).
-- **Problem:** Vectorize's AMB (agentmemorybenchmark.ai, `vectorize-io/agent-memory-benchmark`) already runs Mem0, Hindsight, Cognee, Qdrant and BM25 under one harness with fixed prompts and a Gemini judge. The repository's own audit called it "big opportunity" and "the clean route" (coverage-and-categories.md:232, 256). AMB is vendor-run (Vectorize makes Hindsight), so it does not replace this plan, but ignoring it weakens the opening claim and wastes a free cross-check.
-- **Fix:** Replace PLAN.md:9-11's second sentence with: "Today the answers are each vendor's own numbers and one vendor-run shared harness (AMB, built by Hindsight's maker, Gemini reader and judge). This plan adds what neither gives: strict retrieval with provenance, ingest cost and time, a matched extraction model, an OpenAI reader and judge continuous with LongMemEval's official prompts, update and forget probes, and agent tasks." Add a Phase 0 sanity check: for each system AMB also runs, our vendor-default LoCoMo number is compared with AMB's published one, and a gap above 10 points blocks Phase 3 until explained.
+- **Problem:** Vectorize's AMB (agentmemorybenchmark.ai, `vectorize-io/agent-memory-benchmark`) already runs extract-first, memory-bank, graph-pipeline, Qdrant and BM25 under one harness with fixed prompts and a Gemini judge. The repository's own audit called it "big opportunity" and "the clean route" (coverage-and-categories.md:232, 256). AMB is vendor-run (Vectorize makes memory-bank), so it does not replace this plan, but ignoring it weakens the opening claim and wastes a free cross-check.
+- **Fix:** Replace PLAN.md:9-11's second sentence with: "Today the answers are each vendor's own numbers and one vendor-run shared harness (AMB, built by memory-bank's maker, Gemini reader and judge). This plan adds what neither gives: strict retrieval with provenance, ingest cost and time, a matched extraction model, an OpenAI reader and judge continuous with LongMemEval's official prompts, update and forget probes, and agent tasks." Add a Phase 0 sanity check: for each system AMB also runs, our vendor-default LoCoMo number is compared with AMB's published one, and a gap above 10 points blocks Phase 3 until explained.
 
 ### F12. Medium: ingest is nondeterministic and the plan measures it once
 
@@ -123,13 +123,13 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 ### F14. Medium: "line up with published numbers" overclaims
 
 - **Section:** fairness item 3 (PLAN.md:60-63).
-- **Problem:** Published LoCoMo numbers mostly use Mem0's J-score judge and exclude adversarial category 5; the harness uses LongMemEval's prompts with a planted-answer check (`qa.ts` `judgePromptsFor`, `repeatsTrap`). LoCoMo also has a documented 6.4% answer-key error rate (coverage-and-categories.md:217).
+- **Problem:** Published LoCoMo numbers mostly use extract-first's J-score judge and exclude adversarial category 5; the harness uses LongMemEval's prompts with a planted-answer check (`qa.ts` `judgePromptsFor`, `repeatsTrap`). LoCoMo also has a documented 6.4% answer-key error rate (coverage-and-categories.md:217).
 - **Fix:** Change to "so gbrain's rows line up with the program's starting line. Published vendor numbers use other readers, judges and category handling; the report quotes them as context and claims no ranking against them." Report LoCoMo categories 1 to 4 and category 5 separately, with the trap-repeat rate; disclose the answer-key error rate.
 
 ### F15. Medium: `update()` is an unneeded method; lifecycle-lite should use the natural user actions and measure derived-memory residue
 
 - **Section:** `MemorySystem` interface (PLAN.md:101); P3 row (PLAN.md:42); Phase 5.
-- **Problem:** "Update a fact" has no common API (Mem0 has `update(memory_id)`, Graphiti invalidates through new episodes, Basic Memory edits a note). An `update()` method forces each adapter to invent semantics. For privacy, the question engineers have is whether deleting a source conversation also removes memories derived from it (Mem0 facts, Graphiti edges, Hindsight observations). The repository already has a lifecycle runner with an independent ledger and N1/N5 scorers (`eval/runner/lifecycle/{scenario,score,n1-score,n5-score}.ts`).
+- **Problem:** "Update a fact" has no common API (extract-first has `update(memory_id)`, temporal-graph invalidates through new episodes, markdown-notes edits a note). An `update()` method forces each adapter to invent semantics. For privacy, the question engineers have is whether deleting a source conversation also removes memories derived from it (extract-first facts, temporal-graph edges, memory-bank observations). The repository already has a lifecycle runner with an independent ledger and N1/N5 scorers (`eval/runner/lifecycle/{scenario,score,n1-score,n5-score}.ts`).
 - **Fix:** Drop `update()`. Lifecycle-lite: an update is a later-dated session stating the new value, ingested through `ingestSession`; `forget(namespace, source_id)` deletes a source document; the probe then checks that answers and retrieved items no longer contain the forgotten fact or anything derived from it (residue per tier, following N5's metric), plus a natural-language forget where a system offers one, reported separately. Reuse `lifecycle/scenario.ts`'s evaluator-side ledger pattern and N1/N5 scoring rather than writing a new scorer from zero.
 
 ### F16. Medium: the report does not give an engineer the numbers they choose by
@@ -137,12 +137,12 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 - **Section:** "What the report will be able to say" (PLAN.md:129-136).
 - **Problem:** A per-benchmark leaderboard does not tell an engineer which system to pick for their workload, what it costs at their volume, or what they must operate.
 - **Fix:** Add:
-  > A decision table, one row per system: best-fit workload (chat-history QA, agent over company documents, frequently changing facts, deletion requirements), ingest dollars and minutes per million tokens of conversation (normalized from receipts), p50 and p95 query latency, services to operate (containers, peak RAM, disk from `docker stats`), license (AGPL-3.0 matters for hosted products), runtime, MCP availability, and the question types where it is strongest and weakest (LongMemEval's six types). A native-answer arm for systems with their own answer path (gbrain `think`, Cognee graph completion, Hindsight `reflect`), reported separately from the fixed-reader arm.
+  > A decision table, one row per system: best-fit workload (chat-history QA, agent over company documents, frequently changing facts, deletion requirements), ingest dollars and minutes per million tokens of conversation (normalized from receipts), p50 and p95 query latency, services to operate (containers, peak RAM, disk from `docker stats`), license (AGPL-3.0 matters for hosted products), runtime, MCP availability, and the question types where it is strongest and weakest (LongMemEval's six types). A native-answer arm for systems with their own answer path (gbrain `think`, graph-pipeline graph completion, memory-bank `reflect`), reported separately from the fixed-reader arm.
 
 ### F17. Medium: retrieval for consolidating systems is structurally penalized
 
 - **Section:** fairness item 5 (PLAN.md:67-69).
-- **Problem:** Mem0 merges a later fact into an earlier memory and keeps the earlier add's metadata; a Graphiti edge can cite several episodes. Mapping returned items to sessions then loses or misorders provenance, so strict session recall is a lower bound for those systems.
+- **Problem:** extract-first merges a later fact into an earlier memory and keeps the earlier add's metadata; a temporal-graph edge can cite several episodes. Mapping returned items to sessions then loses or misorders provenance, so strict session recall is a lower bound for those systems.
 - **Fix:** Add: "Returned items map to sessions in first-appearance order across `source_ids`. Systems that consolidate memories across sessions are labeled `provenance-limited`; their strict recall is a lower bound and the report says so beside the number."
 
 ### F18. Medium: public vendor-review posts need Garry's explicit approval, and the window delays every result by a week
@@ -154,7 +154,7 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 ### F19. Medium: vendor telemetry and key exposure
 
 - **Section:** Architecture; Risks.
-- **Problem:** Mem0 2.2.1 sends telemetry unless `MEM0_TELEMETRY` is false (`mem0/memory/telemetry.py:14`); Graphiti and Cognee also have telemetry switches. Six third-party codebases holding the real OpenAI key is avoidable.
+- **Problem:** extract-first 2.2.1 sends telemetry unless `MEM0_TELEMETRY` is false (`mem0/memory/telemetry.py:14`); temporal-graph and graph-pipeline also have telemetry switches. Six third-party codebases holding the real OpenAI key is avoidable.
 - **Fix:** Covered by F2's network rule plus: "Every shim sets the vendor's telemetry-off switch (recorded in the receipt); the containers hold a dummy key; the run uses a dedicated OpenAI project with a hard monthly limit equal to the cap."
 
 ### F20. Low: lead with a current reader
@@ -163,34 +163,34 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 - **Problem:** CLAUDE.md "Report the models people use first". GPT-4o and GPT-4o-mini are the continuity link to the starting line, which the model rules allow, but they are not what an engineer would deploy in October 2026.
 - **Fix:** "The report leads with the frontier-reader (`gpt-6.1-sol`) results where they exist (LME-S subset, LoCoMo 300-question subset) and gives the GPT-4o-family results as the link to the starting line."
 
-### F21. Low: Letta's row needs sharper labeling
+### F21. Low: agent-runtime's row needs sharper labeling
 
-- **Section:** systems table Letta row (PLAN.md:24, 28-30).
-- **Problem:** The legacy server repository is archived ("should not be used in production", `letta-ai/letta` README); the `letta/letta:0.34.4` image tag is not obviously a real tag for the App Server. Archival insert and search exercise a vector store, not Letta's agent-managed memory, which is its design.
-- **Fix:** "Phase 0 confirms the App Server image and tag. If an archival API exists, Letta's QA rows are labeled 'archival store, not agent memory'; its agent memory is tested only in Cat 40."
+- **Section:** systems table agent-runtime row (PLAN.md:24, 28-30).
+- **Problem:** The legacy server repository is archived ("should not be used in production", `letta-ai/letta` README); the `letta/letta:0.34.4` image tag is not obviously a real tag for the App Server. Archival insert and search exercise a vector store, not agent-runtime's agent-managed memory, which is its design.
+- **Fix:** "Phase 0 confirms the App Server image and tag. If an archival API exists, agent-runtime's QA rows are labeled 'archival store, not agent memory'; its agent memory is tested only in Cat 40."
 
 ### F22. Low: matched embedder is not reachable for every system
 
 - **Section:** fairness item 2.
-- **Problem:** Basic Memory supports OpenAI embeddings (`text-embedding-3-small` default for that provider; other models through `semantic_embedding_model` and the experimental LiteLLM provider); Letta and Hindsight have their own defaults.
+- **Problem:** markdown-notes supports OpenAI embeddings (`text-embedding-3-small` default for that provider; other models through `semantic_embedding_model` and the experimental LiteLLM provider); agent-runtime and memory-bank have their own defaults.
 - **Fix:** Add a "matched-ness" column per system and configuration listing extraction model, embedder and dimensions actually achieved, so a partially matched row is visible.
 
 ### F23. Low: reranker policy is unstated
 
 - **Section:** fairness item 2.
-- **Problem:** gbrain (Voyage), Mem0 and Basic Memory (Cohere, Jina, Voyage via LiteLLM) and Graphiti (cross-encoder) have optional rerankers.
+- **Problem:** gbrain (Voyage), extract-first and markdown-notes (Cohere, Jina, Voyage via LiteLLM) and temporal-graph (cross-encoder) have optional rerankers.
 - **Fix:** "Matched: optional paid rerankers off for every system. Vendor default: whatever a new install does."
 
 ### F24. Low: PrecisionMemBench can reuse upstream provider adapters
 
 - **Section:** P4 row (PLAN.md:43).
-- **Problem:** Upstream PrecisionMemBench already lists Mem0 and Zep rows; its provider code is the vendor-neutral reference. Return-set precision is dominated by each system's default `k`.
-- **Fix:** "Start from upstream PMB's Mem0 provider (pinned commit, see `eval/precisionmembench/ATTRIBUTION.md`); report each system at its default `k` and at `k = 5`."
+- **Problem:** Upstream PrecisionMemBench already lists extract-first and Zep rows; its provider code is the vendor-neutral reference. Return-set precision is dominated by each system's default `k`.
+- **Fix:** "Start from upstream PMB's extract-first provider (pinned commit, see `eval/precisionmembench/ATTRIBUTION.md`); report each system at its default `k` and at `k = 5`."
 
-### F25. Low: wall time for Graphiti needs parallelism across namespaces
+### F25. Low: wall time for temporal-graph needs parallelism across namespaces
 
 - **Section:** Risks row 4 (PLAN.md:145).
-- **Problem:** The LME-S subset is about 4,800 Graphiti episodes at several serial LLM calls each (Graphiti issue #1516 documents the per-episode cost). Serially that is most of a day.
+- **Problem:** The LME-S subset is about 4,800 temporal-graph episodes at several serial LLM calls each (temporal-graph issue #1516 documents the per-episode cost). Serially that is most of a day.
 - **Fix:** "Episodes within a namespace are added in date order; namespaces run in parallel up to the provider rate limit; Phase 0 records the OpenAI tier and tokens per minute available."
 
 ## 3. Decisions
@@ -199,7 +199,7 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 |---|---|---|---|---|
 | 1 | Run LoCoMo and BEAM-100K dev publicly; sealed conversations only through the custodian, aggregate-only; honor P4's BEAM reservation (F1) | Mechanical | 2 fix blast radius | Existing custody rules and runner guards already require it |
 | 2 | Route every vendor provider call through a Docker-reachable metering proxy with key injection; register vendor-default prices (F2) | Mechanical | 1 completeness | A cap the ledger cannot see is not a cap |
-| 3 | Vendor-default arm skips LongMemEval-S; full 500 questions out of cap (F3) | Taste | 3 pragmatic | Graphiti's `gpt-5.5` default costs about $500 on the subset alone; matched arm still answers the design question |
+| 3 | Vendor-default arm skips LongMemEval-S; full 500 questions out of cap (F3) | Taste | 3 pragmatic | temporal-graph's `gpt-5.5` default costs about $500 on the subset alone; matched arm still answers the design question |
 | 4 | Frontier-reader cell on a 300-question LoCoMo subset plus the LME-S subset (F3, F20) | Taste | 3 pragmatic | $38 instead of about $250 for the same ranking check |
 | 5 | Replace the cost table with the measured-token estimate (F3) | Mechanical | 5 explicit | Phase gates are meaningless with a 3x error |
 | 6 | Interface returns items; one harness renderer; native and provenance-rehydrated modes (F4) | Taste | 5 explicit, 4 DRY | Removes the packaging advantage; reuses `packSessions` |
@@ -220,7 +220,7 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 | 21 | Label consolidating systems `provenance-limited` (F17) | Mechanical | 5 explicit | Lower bound must be stated beside the number |
 | 22 | Add Garry's approval for public vendor posts to "Needs"; run cheap cells during the window; vendor-tuned slot (F18) | Mechanical (approval) / Taste (ordering, slot) | 6 bias to action | Public action under his account; a week of idle budget otherwise |
 | 23 | Telemetry off, dummy keys, dedicated project key (F19) | Mechanical | 2 blast radius | Avoidable exposure |
-| 24 | Letta labeling and tag check (F21) | Mechanical | 5 explicit | Archival store is not Letta's memory design |
+| 24 | agent-runtime labeling and tag check (F21) | Mechanical | 5 explicit | Archival store is not agent-runtime's memory design |
 | 25 | Matched-ness column and reranker policy (F22, F23) | Mechanical | 5 explicit | Partial matching must be visible |
 | 26 | PMB starts from upstream provider adapters; report default `k` and `k = 5` (F24) | Taste | 4 reuse | Vendor-neutral reference already exists |
 | 27 | Review mode SELECTIVE EXPANSION, depth implementation-ready for harness pieces | Mechanical | n/a | Set by the dispatch; plan adds capability to an existing harness |
@@ -235,7 +235,7 @@ Severity counts: 3 critical, 7 high, 9 medium, 6 low.
 4. **"The sealed custody set is the fully fair cell."** It is the right idea, but the corpus does not exist and, authored by gbrain's own custodian with no published spec, it is home-field data (F9).
 5. **"Cat 40 is high priority."** For gbrain's own story yes; for choosing among systems, its 50 tasks are at ceiling on the frontier models CLAUDE.md requires, and its world and tool surface were tuned for gbrain. It is worth running only on a fresh world with cost and leaks as the primary outcomes (F8).
 6. **"$900 with a $1,200 cap."** The estimate omits vendor default models' prices and the frontier cell, and the cap cannot see vendor spend (F2, F3).
-7. **"Vendor default means OpenAI-hosted default models."** True for five systems at very different price points (Graphiti `gpt-5.5`, Mem0 and Cognee `gpt-5-mini`, Hindsight `gpt-4o-mini`), and false for Basic Memory (local FastEmbed). gbrain itself must also be held to its own new-install default (F7).
+7. **"Vendor default means OpenAI-hosted default models."** True for five systems at very different price points (temporal-graph `gpt-5.5`, extract-first and graph-pipeline `gpt-5-mini`, memory-bank `gpt-4o-mini`), and false for markdown-notes (local FastEmbed). gbrain itself must also be held to its own new-install default (F7).
 8. **"Engineers want a leaderboard."** They want a choice for a workload, a cost at their volume, an operations footprint, and a reference point for "no memory system" (F10, F16).
 
 Are these the right categories for "high priority"? Memory QA is right and should stay P1 (with F1's split handling). The custody set is right in principle (F9). Lifecycle-lite deserves P2: knowledge update is the weakest LongMemEval type for most systems, deletion of derived memories is a privacy requirement every engineer faces, and it costs $20. PrecisionMemBench is cheap and fine at P4. Cat 40 drops to P3 and is resized (Decision 12). The one missing high-priority cell is the full-context baseline (User Challenge, Decision 13).
@@ -264,8 +264,8 @@ Is the fairness protocol credible to a skeptical vendor? With F4 (one renderer, 
            v                                           v
  +------------------- Docker internal network ---------------------+
  | gbrain adapter (in-process or container)                        |
- | graphiti+neo4j | cognee | mem0+qdrant | letta | basic-memory    |
- | hindsight+postgres         (each: shim + vendor SDK, uv.lock)   |
+ | temporal-graph+neo4j | graph-pipeline | extract-first+qdrant | agent-runtime | markdown-notes    |
+ | memory-bank+postgres         (each: shim + vendor SDK, uv.lock)   |
  |   all provider calls --> OPENAI_BASE_URL = metering proxy       |
  +-----------------------------------|-----------------------------+
                                      v
@@ -282,10 +282,10 @@ Data flow, per item: happy path (reset namespace, ingest sessions with event tim
 | Threat | Likelihood | Impact | Mitigated by plan? | Fix |
 |---|---|---|---|---|
 | Real OpenAI key inside six third-party containers | High | Medium | No | F2, F19 |
-| Vendor telemetry sends usage or content off-box | High (Mem0 on by default) | Low (public data) | No | F19 |
+| Vendor telemetry sends usage or content off-box | High (extract-first on by default) | Low (public data) | No | F19 |
 | Sealed rows published in a public receipt | Medium | High (spends program evidence) | No | F1 |
 | Prompt injection inside benchmark text steering an extraction LLM | Low | Low | n/a | Benchmarks are public; record and ignore |
-| AGPL obligations from Basic Memory | Low | Medium | Yes (PLAN.md:146) | none |
+| AGPL obligations from markdown-notes | Low | Medium | Yes (PLAN.md:146) | none |
 | Neo4j or Postgres exposed on host ports | Medium | Low | No | Internal network only (F2) |
 
 **Section 4, Data flow and edge cases.** Shadow paths that matter here: LoCoMo sessions with images (captions only; adapters must not drop the session), LME-S haystacks that repeat a session (occurrence ids already handle this, `corpus.ts` header), BEAM conversations far above a system's batch size (timeouts recorded as outcomes), duplicate ingest on retry (shims must be idempotent per `session_id`, or reset and re-ingest the namespace), a session whose date fails to parse (record `event_time: null`, count in the receipt). Async ordering: the only shared mutable state is a namespace; the invariant is "no query before quiescence", enforced by the client state machine above and tested by a scripted shim that delays settling.
@@ -294,7 +294,7 @@ Data flow, per item: happy path (reset namespace, ingest sessions with event tim
 
 **Section 6, Tests.** Required, all keyless except where noted: a fixture-corpus contract test every shim passes (already planned; add event-time, quiescence, idempotent re-ingest, isolation canary and empty-result cases); a metering test that a scripted shim's calls appear in the ledger with correct model prices; a renderer test that native and rehydrated modes produce identical prompts for gbrain when its items are whole sessions; a custody test that a sealed run writes no per-question rows to the public output directory; the lifecycle-lite scorer mutation kit (planned). Hostile-QA test: a shim that returns gold-looking session ids it never retrieved (provenance spoofing) must be caught by checking returned item text against the cited session. Flakiness: every LLM-backed path is nondeterministic, which is why F12 exists.
 
-**Section 7, Performance.** Graphiti ingest wall time (F25); Neo4j memory at BEAM scale (planned risk row); reader cache reuse across budgets (the `ChatClient` cache keys on prompt, so the 8,000-token arm reuses nothing from the default arm, budget accordingly); proxy throughput (it buffers whole responses, `gbrain-arm.ts` reads `res.text()`, so streaming SDK calls must be off or the proxy extended; Phase 0 check).
+**Section 7, Performance.** temporal-graph ingest wall time (F25); Neo4j memory at BEAM scale (planned risk row); reader cache reuse across budgets (the `ChatClient` cache keys on prompt, so the 8,000-token arm reuses nothing from the default arm, budget accordingly); proxy throughput (it buffers whole responses, `gbrain-arm.ts` reads `res.text()`, so streaming SDK calls must be off or the proxy extended; Phase 0 check).
 
 **Section 8, Observability.** Receipts per cell: system version and image digest, configuration and matched-ness, telemetry switch, ingest items and errors per conversation, quiescence wait, proxy dollars by model, reader and judge tokens, p50 and p95 latency, `docker stats` peak RAM and disk. A one-page run dashboard (markdown table regenerated from receipts) during Phase 3 shows cells done, dollars spent against allowance and degraded conversations. Runbook entries: proxy down, 429 storm, OOM, quiescence timeout, vendor correction mid-run.
 
@@ -348,8 +348,8 @@ Data flow, per item: happy path (reset namespace, ingest sessions with event tim
 
 Deferred (to the plan's follow-ups or TODOS.md, with reason):
 - LongMemEval-S all 500 questions: about $580 extra for matched extraction systems; needs its own approval (Decision 3).
-- BEAM-1M and BEAM-500K: ingest scale makes Graphiti and Cognee cost and time unbounded inside this cap; the program's own BEAM-500K sealed split is reserved by P4.
-- world-v1 relational retrieval for Graphiti and Cognee (plan's own deferral, agreed): the most relevant category for graph systems, worth a follow-up once adapters exist.
+- BEAM-1M and BEAM-500K: ingest scale makes temporal-graph and graph-pipeline cost and time unbounded inside this cap; the program's own BEAM-500K sealed split is reserved by P4.
+- world-v1 relational retrieval for temporal-graph and graph-pipeline (plan's own deferral, agreed): the most relevant category for graph systems, worth a follow-up once adapters exist.
 - Submitting a gbrain provider to AMB: independent cross-check, small work once the HTTP contract exists.
 - Automated re-run on vendor version bumps: the standing-arena trajectory below.
 - HaluMem extraction scoring: fair and system-agnostic per the audit, but a different harness.
@@ -377,7 +377,7 @@ Rejected for this plan (with reason):
 | Custodian world generation | `model-ladder-gen.ts` custodian mode | Should be (F8) |
 | Lifecycle ledger and N1/N5 scoring | `eval/runner/lifecycle/` | Should be (F15) |
 | PMB scorer and fixtures | `eval/precisionmembench/`, upstream providers | Partially (F24) |
-| Vendor benchmark ingestion | Mem0 `memory-benchmarks`, `hindsight-benchmarks`, AMB providers, Basic Memory and Zep LoCoMo harnesses | Not mentioned (F5) |
+| Vendor benchmark ingestion | extract-first `memory-benchmarks`, `hindsight-benchmarks`, AMB providers, markdown-notes and Zep LoCoMo harnesses | Not mentioned (F5) |
 
 ### 4.7 Dream-state delta
 

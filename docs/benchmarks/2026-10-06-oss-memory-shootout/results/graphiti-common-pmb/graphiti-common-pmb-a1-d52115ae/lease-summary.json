@@ -1,8 +1,0 @@
-{
-  "run_id": "graphiti-common-pmb-a1-d52115ae",
-  "lease_usd": 1.5,
-  "committed_usd": 0.18731203999999962,
-  "requests": 4098,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

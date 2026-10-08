@@ -1,8 +1,0 @@
-{
-  "run_id": "mem0-common-lifecycle-lite-a1-1dc8e598",
-  "lease_usd": 1.2,
-  "committed_usd": 1.0954521700000062,
-  "requests": 3908,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

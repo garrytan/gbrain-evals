@@ -41,13 +41,13 @@ export interface CellSpec {
   benchmark: string;
   config: string;
   lease_usd: number;
-  /** Output-token cap per provider request, recorded with the lease (proxy default 32,768; Letta asks for 64,000). */
+  /** Output-token cap per provider request, recorded with the lease (proxy default 32,768; agent-runtime asks for 64,000). */
   max_output_tokens?: number;
   /** Shell command run in the synced checkout on the VM, with SHOOTOUT_OUT, SHOOTOUT_PROXY and the proxy base URLs set. */
   command: string;
   /** Local bootstrap script run once on the VM before the command (ubi-runner --setup). */
   setup?: string;
-  /** Or a setup command line (for example `bash eval/systems/bootstrap.sh setup --system mem0 --datasets locomo`), written to a script at launch. */
+  /** Or a setup command line (for example `bash eval/systems/bootstrap.sh setup --system extract-first --datasets locomo`), written to a script at launch. */
   setup_command?: string;
   vm?: { size?: string; location?: string; storage_gib?: number };
   /** Local environment variables forwarded to the VM; the proxy alone reads them. */

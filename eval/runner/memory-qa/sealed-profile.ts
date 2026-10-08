@@ -48,7 +48,7 @@ const VOCAB: Record<string, readonly string[]> = {
   kind: ['memory-qa-arm'], split: ['dev', 'sealed'], run_status: ['complete', 'partial', 'invalid'], context: ['native', 'rehydrated'],
   'policy.mode': ['vendor-default', 'fixed-evidence'],
   benchmark: ['locomo', 'lme-s', 'beam-100k', 'beam-500k', 'beam-1m', 'fixture', 'custody'],
-  'system.name': ['gbrain', 'gbrain-shootout', 'fake', 'mem0', 'graphiti', 'cognee', 'letta', 'basic-memory', 'hindsight', 'full-context', 'no-memory', 'plain-hybrid'],
+  'system.name': ['gbrain', 'gbrain-shootout', 'fake', 'extract-first', 'temporal-graph', 'graph-pipeline', 'agent-runtime', 'markdown-notes', 'memory-bank', 'full-context', 'no-memory', 'plain-hybrid'],
 };
 const HASHES = ['run_config_hash', 'manifest_sha256'];
 const NUMERIC_PREFIXES = ['schema_version', 'selection.questions_expected', 'selection.conversations', 'counts.', 'summary.', 'outcomes.', 'cost.usd', 'ingest.', 'comparison_complete'];

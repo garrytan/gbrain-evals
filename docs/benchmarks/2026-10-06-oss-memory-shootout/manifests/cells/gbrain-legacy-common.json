@@ -9,7 +9,7 @@
       "id": "gbrain-legacy-common-locomo-r1",
       "benchmark": "locomo",
       "lease_usd": 2,
-      "lease_basis": "1.5 x estimate, not piloted: 587 reader+judge calls at the Basic Memory rate ($1.30)",
+      "lease_basis": "1.5 x estimate, not piloted: 587 reader+judge calls at the markdown-notes rate ($1.30)",
       "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system gbrain --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --qa reader --reader openai:gpt-4o-mini --judge openai:gpt-4o-2024-08-06 --output \"$SHOOTOUT_OUT/mqa\"",
       "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
       "vm": {

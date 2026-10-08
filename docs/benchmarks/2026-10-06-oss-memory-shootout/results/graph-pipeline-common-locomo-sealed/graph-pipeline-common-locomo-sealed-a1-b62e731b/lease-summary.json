@@ -1,0 +1,8 @@
+{
+  "run_id": "graph-pipeline-common-locomo-sealed-a1-b62e731b",
+  "lease_usd": 20,
+  "committed_usd": 12.675222379999875,
+  "requests": 22185,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

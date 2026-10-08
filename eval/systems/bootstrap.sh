@@ -20,9 +20,9 @@
 #   down   --system NAME      Stop the stack and remove its volumes.
 #
 # A counted cell command therefore looks like:
-#   bash eval/systems/bootstrap.sh up --system mem0 --config common && \
+#   bash eval/systems/bootstrap.sh up --system extract-first --config common && \
 #   bun eval/runner/memory-qa/run.ts --benchmark locomo --system http://127.0.0.1:8700 ... --output "$SHOOTOUT_OUT/mqa"; \
-#   bash eval/systems/bootstrap.sh down --system mem0
+#   bash eval/systems/bootstrap.sh down --system extract-first
 #
 # The proxy alone holds provider keys. Containers get a dummy key and reach the proxy only through their compose
 # egress relay; the three relay variables the vendor stacks use (PROXY_UPSTREAM, PROXY_HOSTPORT, PROXY_URL) are all
@@ -60,16 +60,16 @@ compose_file() {
   echo "$f"
 }
 
-# The stacks name their relay settings differently: Mem0 and Basic Memory read PROXY_UPSTREAM and PROXY_SLOT (and
-# would take PROXY_URL as their in-network base URL), Graphiti and Hindsight read PROXY_URL and PROXY_OPENAI_PATH,
-# Cognee and Letta read PROXY_HOSTPORT and PROXY_OPENAI_PATH. Every stack's provider calls arrive on the proxy slot
+# The stacks name their relay settings differently: extract-first and markdown-notes read PROXY_UPSTREAM and PROXY_SLOT (and
+# would take PROXY_URL as their in-network base URL), temporal-graph and memory-bank read PROXY_URL and PROXY_OPENAI_PATH,
+# graph-pipeline and agent-runtime read PROXY_HOSTPORT and PROXY_OPENAI_PATH. Every stack's provider calls arrive on the proxy slot
 # named after the system, which the harness binds to each question for attribution.
 compose_env() {
   export SHIM_CONFIG="$CONFIG" SHIM_HOST_PORT="${PORT:-8700}" PROXY_SLOT="$SYSTEM"
   export PROXY_UPSTREAM="host.docker.internal:$PROXY_PORT" PROXY_HOSTPORT="host.docker.internal:$PROXY_PORT"
   export PROXY_OPENAI_PATH="/$SYSTEM/openai/v1" PROXY_ANTHROPIC_PATH="/$SYSTEM/anthropic"
   case "$SYSTEM" in
-    graphiti|hindsight) export PROXY_URL="http://host.docker.internal:$PROXY_PORT" ;;
+    temporal-graph|memory-bank) export PROXY_URL="http://host.docker.internal:$PROXY_PORT" ;;
     *) unset PROXY_URL ;;
   esac
 }

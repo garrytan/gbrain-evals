@@ -1,8 +1,0 @@
-{
-  "run_id": "basic-memory-common-beam-100k-a2-bf2d30ca",
-  "lease_usd": 6,
-  "committed_usd": 2.4932613899999905,
-  "requests": 7128,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

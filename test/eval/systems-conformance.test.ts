@@ -32,7 +32,7 @@ const POLICY: RetrievalPolicy = { name: 'conformance:vendor-default', mode: 'ven
 
 const ts = serveProtocol(new FakeMemorySystem());
 
-/** A system with no passive memory API, shaped like the Letta record: native agent, every policy unsupported. */
+/** A system with no passive memory API, shaped like the agent-runtime record: native agent, every policy unsupported. */
 class NativeAgentOnly implements MemorySystem {
   readonly name = 'native-agent-only';
   private no = (): never => { throw new SystemError('unsupported', 'no passive memory API', 501); };
@@ -246,7 +246,7 @@ describe('shared Python shim tooling (eval/systems/_shim)', () => {
     probe.stop(true);
     const log = join(mkdtempSync(join(tmpdir(), 'fake-provider-')), 'log.jsonl');
     const proc = Bun.spawn(['python3', 'eval/systems/_shim/fake_provider.py', '--port', String(port), '--log', log], { cwd: ROOT, stdout: 'ignore', stderr: 'pipe' });
-    const base = `http://127.0.0.1:${port}/mem0/openai/v1`;
+    const base = `http://127.0.0.1:${port}/extract-first/openai/v1`;
     const post = async (path: string, body: unknown) => (await fetch(`${base}${path}`, { method: 'POST', headers: { authorization: 'Bearer dummy-key', 'content-type': 'application/json' }, body: JSON.stringify(body), keepalive: false })).json() as Promise<any>;
     try {
       for (let i = 0; i < 200; i++) { try { await fetch(`${base}/models`, { keepalive: false }); break; } catch { await Bun.sleep(50); } }

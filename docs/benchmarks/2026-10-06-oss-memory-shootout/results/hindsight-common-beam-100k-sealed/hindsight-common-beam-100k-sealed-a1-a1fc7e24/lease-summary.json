@@ -1,8 +1,0 @@
-{
-  "run_id": "hindsight-common-beam-100k-sealed-a1-a1fc7e24",
-  "lease_usd": 18,
-  "committed_usd": 14.93873176999999,
-  "requests": 13843,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

@@ -9,7 +9,7 @@
  * error; a network failure or a deadline is a `timeout`. Connections are not
  * reused (a shim may close each one). Bun's own 300-second fetch timeout is
  * off: every call runs under the harness's deadline instead, so a vendor
- * that drains its background work for hours (Mem0's recipe /finish took 185
+ * that drains its background work for hours (extract-first's recipe /finish took 185
  * minutes) is waited for, up to `--finish-timeout-s` plus a minute for
  * /finish and `--ingest-timeout-s` for each /ingest.
  */

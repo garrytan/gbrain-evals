@@ -131,24 +131,24 @@ describe('campaign leases', () => {
   });
 
   test('launch argv runs the cell remotely through ubi-runner and pulls its output', () => {
-    const { manifestPath, state } = campaign({ cells: [{ id: 'mem0-locomo', system: 'mem0', benchmark: 'locomo', config: 'common', lease_usd: 2, command: 'echo hi', vm: { size: 'standard-4' }, pass: ['OPENAI_API_KEY'] }] });
+    const { manifestPath, state } = campaign({ cells: [{ id: 'extract-first-locomo', system: 'extract-first', benchmark: 'locomo', config: 'common', lease_usd: 2, command: 'echo hi', vm: { size: 'standard-4' }, pass: ['OPENAI_API_KEY'] }] });
     const c = new Campaign(manifestPath, state);
     c.init();
-    const l = c.reserve('mem0-locomo');
+    const l = c.reserve('extract-first-locomo');
     const argv = c.launchArgv(l);
     expect(argv.slice(0, 7)).toEqual(['bash', expect.stringContaining('ubi-runner.sh'), 'run', '-s', 'standard-4', '-l', 'eu-central-h1']);
     expect(argv).toContain('--pass');
     expect(argv.join(' ')).not.toMatch(/sk-|placeholder/);
-    expect(argv[argv.indexOf('--pull') + 1]).toBe(`work/gbrain-evals/eval/reports/shootout/mem0-locomo/${l.lease_id}:${join(state, 'results', 'mem0-locomo')}`);
+    expect(argv[argv.indexOf('--pull') + 1]).toBe(`work/gbrain-evals/eval/reports/shootout/extract-first-locomo/${l.lease_id}:${join(state, 'results', 'extract-first-locomo')}`);
     const payload = JSON.parse(Buffer.from(argv.at(-1)!.split('--cell-b64 ')[1], 'base64').toString('utf8'));
-    expect(payload).toEqual({ lease_id: l.lease_id, lease_usd: 2, max_output_tokens: null, command: 'echo hi', out: `eval/reports/shootout/mem0-locomo/${l.lease_id}` });
+    expect(payload).toEqual({ lease_id: l.lease_id, lease_usd: 2, max_output_tokens: null, command: 'echo hi', out: `eval/reports/shootout/extract-first-locomo/${l.lease_id}` });
   });
 
   test('a sealed cell tells the remote side, so the proxy traces go to the custody root; other cells carry no flag', () => {
-    const { manifestPath, state } = campaign({ cells: [{ id: 'mem0-sealed', system: 'mem0', benchmark: 'locomo', config: 'common', lease_usd: 2, command: 'echo hi', sealed: true }] });
+    const { manifestPath, state } = campaign({ cells: [{ id: 'extract-first-sealed', system: 'extract-first', benchmark: 'locomo', config: 'common', lease_usd: 2, command: 'echo hi', sealed: true }] });
     const c = new Campaign(manifestPath, state);
     c.init();
-    const argv = c.launchArgv(c.reserve('mem0-sealed'));
+    const argv = c.launchArgv(c.reserve('extract-first-sealed'));
     expect(JSON.parse(Buffer.from(argv.at(-1)!.split('--cell-b64 ')[1], 'base64').toString('utf8')).sealed).toBe(true);
   });
 });
@@ -157,16 +157,16 @@ describe('cell files and parameters', () => {
   test('a setup command becomes the --setup script, placeholders fill from parameters, and an unknown parameter is refused', () => {
     const dir = join(tmp, `files-${++n}`);
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'cells.json'), JSON.stringify({ kind: 'oss-shootout-cells', schema_version: 1, system: 'mem0', config: 'common', cells: [
-      { id: 'mem0-lme', lease_usd: 10, lease_scale: { param: 'n', base: 100 }, command: 'run --limit {{n}}', setup_command: 'bash eval/systems/bootstrap.sh setup --system mem0' },
-      { id: 'mem0-off', lease_usd: 5, when: 'extra', command: 'x' }] }));
+    writeFileSync(join(dir, 'cells.json'), JSON.stringify({ kind: 'oss-shootout-cells', schema_version: 1, system: 'extract-first', config: 'common', cells: [
+      { id: 'extract-first-lme', lease_usd: 10, lease_scale: { param: 'n', base: 100 }, command: 'run --limit {{n}}', setup_command: 'bash eval/systems/bootstrap.sh setup --system extract-first' },
+      { id: 'extract-first-off', lease_usd: 5, when: 'extra', command: 'x' }] }));
     writeFileSync(join(dir, 'campaign.json'), JSON.stringify({ kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: `files-${n}`, cap_usd: 10, ledger: join(dir, 'l.sqlite'), parameters: { n: 50, extra: false }, cells_from: ['cells.json'], cells: [] }));
     const c = new Campaign(join(dir, 'campaign.json'), join(dir, 'state'));
-    expect(c.manifest.cells.map(x => [x.id, x.system, x.lease_usd, x.command])).toEqual([['mem0-lme', 'mem0', 5, 'run --limit 50']]);
+    expect(c.manifest.cells.map(x => [x.id, x.system, x.lease_usd, x.command])).toEqual([['extract-first-lme', 'extract-first', 5, 'run --limit 50']]);
     c.init();
-    const argv = c.launchArgv(c.reserve('mem0-lme'));
+    const argv = c.launchArgv(c.reserve('extract-first-lme'));
     const script = argv[argv.indexOf('--setup') + 1];
-    expect(readFileSync(script, 'utf8')).toBe('set -euo pipefail\nbash eval/systems/bootstrap.sh setup --system mem0\n');
+    expect(readFileSync(script, 'utf8')).toBe('set -euo pipefail\nbash eval/systems/bootstrap.sh setup --system extract-first\n');
     writeFileSync(join(dir, 'campaign.json'), JSON.stringify({ kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: 'x', cap_usd: 10, ledger: join(dir, 'l2.sqlite'), parameters: {}, cells_from: ['cells.json'], cells: [] }));
     expect(() => new Campaign(join(dir, 'campaign.json'), join(dir, 'state2'))).toThrow(/unknown parameter/);
   });

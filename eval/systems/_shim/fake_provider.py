@@ -8,9 +8,9 @@ Routes (any path prefix, so `/openai/v1/...` and `/<slot>/openai/v1/...` both wo
   POST .../chat/completions  logprobs requests get a word-overlap True/False answer (cross-encoder rerankers);
                              `response_format: json_schema` gets a schema-valid instance (entities are capitalized
                              words, knowledge graphs get nodes and edges); a forced tool call gets schema-valid
-                             arguments; a Mem0-style "## New Messages" prompt gets one memory per message line;
+                             arguments; a extract-first-style "## New Messages" prompt gets one memory per message line;
                              anything else gets "ok". `stream: true` answers as server-sent events with usage.
-  POST .../responses         `text.format: json_schema` gets Graphiti's named structured outputs (ExtractedEntities,
+  POST .../responses         `text.format: json_schema` gets temporal-graph's named structured outputs (ExtractedEntities,
                              ExtractedEdges, EdgeTimestamps) or a schema-valid instance for any other schema.
   POST .../embeddings        hashed bag-of-words vectors; `dimensions` is honored, else the model's native size.
   POST .../messages          an Anthropic-style text answer.
@@ -143,7 +143,7 @@ class SchemaFiller:
         return out
 
 
-def mem0_extraction(prompt: str) -> str | None:
+def extract_first_extraction(prompt: str) -> str | None:
     m = re.search(r"## New Messages\n(.*?)(?:\n## |\Z)", prompt, re.S)
     if not m:
         return None
@@ -157,7 +157,7 @@ def mem0_extraction(prompt: str) -> str | None:
     return json.dumps({"memory": [{"id": str(i), "text": f} for i, f in enumerate(facts)]})
 
 
-def graphiti_structured(name: str, schema: dict[str, Any], prompt: str) -> Any:
+def temporal_graph_structured(name: str, schema: dict[str, Any], prompt: str) -> Any:
     filler = SchemaFiller(schema, prompt)
     current = section(prompt, "CURRENT MESSAGES") or section(prompt, "CURRENT MESSAGE") or section(prompt, "CURRENT_MESSAGE")
     if name == "ExtractedEntities":
@@ -206,7 +206,7 @@ def chat(body: dict[str, Any]) -> dict[str, Any]:
         params = fn.get("parameters", {})
         message["tool_calls"] = [{"id": "call_fake", "type": "function", "function": {"name": fn["name"], "arguments": json.dumps(SchemaFiller(params, last_user).fill(params))}}]
     else:
-        extracted = mem0_extraction(prompt)
+        extracted = extract_first_extraction(prompt)
         message["content"] = extracted if extracted is not None else "{}" if rf.get("type") == "json_object" else "ok"
     return {"id": f"chatcmpl-{uuid.uuid4().hex}", "object": "chat.completion", "created": int(time.time()), "model": body.get("model", "fake"),
             "choices": [{"index": 0, "message": message, "logprobs": logprobs, "finish_reason": "tool_calls" if message.get("tool_calls") else "stop"}],
@@ -218,7 +218,7 @@ def responses(body: dict[str, Any]) -> dict[str, Any]:
     items = body.get("input") or []
     prompt = items if isinstance(items, str) else "\n".join(content_text(m.get("content")) if isinstance(m, dict) else str(m) for m in items)
     prompt = "\n".join(x for x in [content_text(body.get("instructions")), prompt] if x)
-    payload = graphiti_structured(fmt.get("name", ""), fmt.get("schema", {}), prompt) if fmt.get("type") == "json_schema" else "ok"
+    payload = temporal_graph_structured(fmt.get("name", ""), fmt.get("schema", {}), prompt) if fmt.get("type") == "json_schema" else "ok"
     text = payload if isinstance(payload, str) else json.dumps(payload)
     u = usage_chat(prompt, text)
     return {"id": f"resp_{uuid.uuid4().hex}", "object": "response", "created_at": int(time.time()), "model": body.get("model"),

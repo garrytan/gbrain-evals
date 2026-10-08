@@ -6,11 +6,11 @@
 # seed with a restart through `bootstrap.sh restart`, and the stack comes down. It shows whether a restart loses state
 # for shim reasons; with canned provider answers its scores say nothing about memory quality. No provider key is used.
 #
-#   bash eval/systems/restart_check.sh basic-memory mem0 graphiti hindsight cognee
+#   bash eval/systems/restart_check.sh markdown-notes extract-first temporal-graph memory-bank graph-pipeline
 #
-# FAKE_PROVIDER=<script> swaps in a vendor's own fake provider (Mem0's: eval/systems/mem0/fake_provider.py), with
+# FAKE_PROVIDER=<script> swaps in a vendor's own fake provider (extract-first's: eval/systems/extract-first/fake_provider.py), with
 # BOOTSTRAP_PROXY_CHECK=off since it has no proxy status route; other variables reach the compose stack, so
-# HINDSIGHT_LLM_PROVIDER=mock selects Hindsight's built-in test LLM.
+# HINDSIGHT_LLM_PROVIDER=mock selects memory-bank's built-in test LLM.
 #
 # Results per system in eval/reports/restart-check/<system>/ (RESTART_CHECK_OUT moves them): up, lifecycle-lite and
 # compose logs, and the lifecycle-lite run directory with its receipt. Exits non-zero if any system failed to come up

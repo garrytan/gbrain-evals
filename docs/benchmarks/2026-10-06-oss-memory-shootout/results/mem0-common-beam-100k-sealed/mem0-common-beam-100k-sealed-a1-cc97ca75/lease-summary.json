@@ -1,8 +1,0 @@
-{
-  "run_id": "mem0-common-beam-100k-sealed-a1-cc97ca75",
-  "lease_usd": 9,
-  "committed_usd": 8.720883159999893,
-  "requests": 11730,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

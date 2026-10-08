@@ -1,4 +1,4 @@
-# Open-source memory shootout: gbrain against Graphiti, Cognee, Mem0, Letta, Basic Memory and Hindsight
+# Open-source memory shootout: gbrain against temporal-graph, graph-pipeline, extract-first, agent-runtime, markdown-notes and memory-bank
 
 Status: approved by Garry on 2026-10-05 with every recommendation: D1 baselines yes, D2 option A, D3 deferred, D4 no public vendor posts for now, D5 Voyage key requested. v3, autoplan complete (CEO and engineering phases, Claude and GPT-6 Astra voices each).
 Review files: [reviews/](reviews/) (summarized in [Review record](#review-record)).
@@ -9,7 +9,7 @@ When an agent needs memory, an engineer can choose gbrain or one of six popular 
 evidence, lets a fixed reader answer correctly, keeps facts current, forgets on request and helps an agent finish
 real work, at what ingest cost, query cost and latency? We lack a matched, reproducible comparison of these six
 open-source releases against gbrain. Vendor numbers use their own harness, reader, judge and budget
-([comparison page](../../comparison-systems.md)), and Mem0's and Zep's headline scores describe their managed
+([comparison page](../../comparison-systems.md)), and extract-first's and Zep's headline scores describe their managed
 platforms, not the open-source code. The Agent Memory Benchmark (AMB) is related prior work with its own adapters;
 we reuse its contracts where they fit and cite it, rather than rebuild what exists.
 
@@ -27,14 +27,14 @@ A later version is a new run, never an edit.
 | System | Pin | License | Design | Backend | Write / read API | Provenance to source session | Agent (Cat 40) surface |
 |---|---|---|---|---|---|---|---|
 | gbrain | repo pin `739e5cc` (v0.60.46.0) and master frozen at one SHA on the preregistration date | MIT | Markdown + index, hybrid search, typed links | PGLite | existing in-process path, refactored behind the new interface | page = session | `gbrain serve --surface starter` |
-| Graphiti (OSS, not Zep) | `graphiti-core` 0.30.2; MCP `mcp-v1.1.0` | Apache-2.0 | temporal knowledge graph, facts with validity windows | Neo4j 5.26 | `add_episode(reference_time=…)`, `search_` | edge and node `episodes` | vendor MCP over HTTP |
-| Cognee | `cognee` 1.6.2; `cognee-mcp` 0.5.6 | Apache-2.0 | knowledge graph with `recall` routing | SQLite + LanceDB + Kuzu | `add` + `cognify`, `recall(only_context=True)` | chunk `data_id` / evidence references (verify) | vendor MCP |
-| Mem0 (OSS, not the platform) | `mem0ai` 2.2.1 | Apache-2.0 | LLM-extracted memories | Qdrant | `add(messages, metadata)`, `search` | per-memory metadata | harness MCP wrapper over the same SDK (OpenMemory is being sunset) |
-| Letta | Letta Code 0.34.4 App Server, local backend | Apache-2.0 | stateful agent with memory blocks and archival memory | local | archival insert / search, if Phase 0 proves it | passage tags (verify) | native Letta agent, separate table |
-| Basic Memory | `basic-memory` 0.23.2 | AGPL-3.0 | Markdown notes, SQLite FTS, local semantic search + reranker | SQLite | write note, `search_notes` | one note per session | vendor MCP (stdio) |
-| Hindsight | server and `hindsight-client` 0.10.2 | MIT | memory banks, `retain` / `recall` / `reflect`, observations | Postgres + pgvector | `retain(…, timestamp, document_id)`, `recall` | `document_id`, `chunk_id` | vendor MCP (`/mcp/{bank}`) |
+| temporal-graph (OSS, not Zep) | `graphiti-core` 0.30.2; MCP `mcp-v1.1.0` | Apache-2.0 | temporal knowledge graph, facts with validity windows | Neo4j 5.26 | `add_episode(reference_time=…)`, `search_` | edge and node `episodes` | vendor MCP over HTTP |
+| graph-pipeline | `cognee` 1.6.2; `cognee-mcp` 0.5.6 | Apache-2.0 | knowledge graph with `recall` routing | SQLite + LanceDB + Kuzu | `add` + `cognify`, `recall(only_context=True)` | chunk `data_id` / evidence references (verify) | vendor MCP |
+| extract-first (OSS, not the platform) | `mem0ai` 2.2.1 | Apache-2.0 | LLM-extracted memories | Qdrant | `add(messages, metadata)`, `search` | per-memory metadata | harness MCP wrapper over the same SDK (OpenMemory is being sunset) |
+| agent-runtime | agent-runtime 0.34.4 App Server, local backend | Apache-2.0 | stateful agent with memory blocks and archival memory | local | archival insert / search, if Phase 0 proves it | passage tags (verify) | native agent-runtime agent, separate table |
+| markdown-notes | `basic-memory` 0.23.2 | AGPL-3.0 | Markdown notes, SQLite FTS, local semantic search + reranker | SQLite | write note, `search_notes` | one note per session | vendor MCP (stdio) |
+| memory-bank | server and `hindsight-client` 0.10.2 | MIT | memory banks, `retain` / `recall` / `reflect`, observations | Postgres + pgvector | `retain(…, timestamp, document_id)`, `recall` | `document_id`, `chunk_id` | vendor MCP (`/mcp/{bank}`) |
 
-Letta stays in scope either way. If Phase 0 finds no passive memory API at 0.34.4, Letta runs only as a native agent
+agent-runtime stays in scope either way. If Phase 0 finds no passive memory API at 0.34.4, agent-runtime runs only as a native agent
 on the Cat 40 tasks, in its own table, because its agent loop is not the harness loop.
 
 ## Categories, in priority order
@@ -57,7 +57,7 @@ the reviews proposed are listed under [Decisions for Garry](#decisions-for-garry
    denominators, reader and judge models, budgets, the minimum detectable differences, and the sentence the report
    may write for each outcome, before the first counted cell.
 2. **One evidence contract.** `retrieve(ns, question, policy)` takes the question's date and a named, versioned retrieval policy (`vendor-default` with the resolved per-vendor settings, or `fixed-evidence`), and returns ranked items `{ id, rank, type, text, source_ids[], valid_from?, valid_to?, provenance_status: exact | partial | unavailable }` plus the settings actually applied, through
-   the product's public read API only; no answer-generation endpoint (Cognee runs with `only_context=True`), no
+   the product's public read API only; no answer-generation endpoint (graph-pipeline runs with `only_context=True`), no
    evaluator-side expansion. The harness renders every system's items with one renderer, counts tokens with the
    reader's tokenizer and packs deterministically. Two context modes, both reported:
    - **native**: the item text the system returned (gbrain's items are the text its read API returns, not corpus
@@ -70,8 +70,8 @@ the reviews proposed are listed under [Decisions for Garry](#decisions-for-garry
    replay those bytes unchanged.
 3. **Two budgets.** Each system's own default retrieval amount, and a fixed 8,000-token evidence budget for everyone.
 4. **Two configurations, named for what they control.** *Documented recipe*: the vendor's documented local or
-   self-hosted install, resolved in the capability record (Graphiti's default main model is `gpt-5.5`, Mem0's
-   `gpt-5-mini`, Basic Memory's embedder is local FastEmbed). *Common models*: extraction LLM `gpt-4.1-mini` and
+   self-hosted install, resolved in the capability record (temporal-graph's default main model is `gpt-5.5`, extract-first's
+   `gpt-5-mini`, markdown-notes's embedder is local FastEmbed). *Common models*: extraction LLM `gpt-4.1-mini` and
    embedder `text-embedding-3-large` at 1,536 dimensions wherever settable; it controls those two inputs and nothing
    else. gbrain gets the same two rows (`gbrain init` defaults, and the common models).
 5. **No answer leakage.** A sanitizer sits in front of every adapter: only opaque source and namespace ids, dated
@@ -79,7 +79,7 @@ the reviews proposed are listed under [Decisions for Garry](#decisions-for-garry
    namespace is the question id, which carries `_abs`; it becomes opaque). A captured-request
    contract test checks HTTP bodies, MCP traffic, prompts, filenames and metadata for any gold marker.
 6. **Ingestion is checked, not assumed.** `ingestSession` carries the session's `event_time` under a frozen date and
-   ordering policy (Mem0 OSS rejects a `timestamp`, so its date goes in the text; each capability record says whether
+   ordering policy (extract-first OSS rejects a `timestamp`, so its date goes in the text; each capability record says whether
    time is native or in-text). Sessions are serialized within a namespace and parallel across namespaces. It returns
    items created, warnings and errors, with completeness `known | unknown | degraded`; a conversation above 1% failed sessions is `ingest-degraded`. `finishIngest` waits for each system's
    quiescence signal (queues empty, pipelines done); a timeout is an outcome. Phase 0 proves per system that a dated
@@ -93,8 +93,8 @@ the reviews proposed are listed under [Decisions for Garry](#decisions-for-garry
    least 10 independent clusters: the LongMemEval-S 100 slice and PrecisionMemBench. LoCoMo and BEAM dev are
    descriptive, with cluster counts and ranges, and the report says so.
 8. **Adapters start from vendor code.** Each adapter begins from the vendor's own published benchmark ingestion where
-   it exists (Mem0 `memory-benchmarks`, Hindsight `hindsight-benchmarks` and its AMB provider, Cognee's eval framework,
-   Basic Memory's LoCoMo benchmark, Zep's LoCoMo harness for Graphiti), pinned by commit, with every deviation listed.
+   it exists (extract-first `memory-benchmarks`, memory-bank `hindsight-benchmarks` and its AMB provider, graph-pipeline's eval framework,
+   markdown-notes's LoCoMo benchmark, Zep's LoCoMo harness for temporal-graph), pinned by commit, with every deviation listed.
 9. **Vendors can check our work.** With Garry's approval (decision D4), each adapter and capability record is posted
    to the vendor's repository before the counted run; corrections that arrive before the freeze are applied, later
    ones get an amendment and new cells, and silence is not endorsement.
@@ -151,13 +151,13 @@ flowchart LR
 | Phase | Work | Gate | Estimate |
 |---|---|---|---|
 | 1. Keyless skeleton | golden output; `MemorySystem` types, sanitizer, renderer and packer; canonical outcomes and resume; campaign manifest; leases; extracted fail-closed proxy; sealed profile; shared shim app with an in-repo fake shim and conformance suite | all keyless tests green; old `memory-qa` CLI and `eval:decide` unchanged | $0 |
-| 2. Vendor adapters and pilots | adapters from vendor benchmark code, in order Basic Memory (keyless with its local embedder), Mem0, Hindsight, Graphiti, Cognee, Letta; capability records; tiny metered smoke per vendor; then one LoCoMo conversation, one LME-S haystack, one BEAM history per system; proxy reconciliation | each system `ready`, `qa-only`, `agent-only` or `blocked`, with evidence; measured cost per item replaces every estimate here | $40 |
+| 2. Vendor adapters and pilots | adapters from vendor benchmark code, in order markdown-notes (keyless with its local embedder), extract-first, memory-bank, temporal-graph, graph-pipeline, agent-runtime; capability records; tiny metered smoke per vendor; then one LoCoMo conversation, one LME-S haystack, one BEAM history per system; proxy reconciliation | each system `ready`, `qa-only`, `agent-only` or `blocked`, with evidence; measured cost per item replaces every estimate here | $40 |
 | 3. Preregistration | manifest frozen with measured costs; inferential and descriptive sets; outcome, recall and packing rules; comparison families | committed before any counted cell | $0 |
 | 4. Memory QA dev (P1) + baselines (D1) + frontier readers (D2) | LoCoMo dev, BEAM-100K dev, LME-S 100; recipe arm off LME-S; both budgets and context modes; reader replays | every manifest cell terminal | $380 |
 | 5. PrecisionMemBench (P3) | system adapter on the upstream contract | 77 cases terminal per system | $10 |
 | 6. Update and forget (P2) | `lifecycle-lite`: seeded generator from N1 chains and N5 canaries, presence check before delete, survivor floor, restart, mutation kit; registered report-only | mutation suite rejects every fake | $20 |
 | 7. Custodian sealed batch | LoCoMo sealed and BEAM-100K sealed (excluding the held-out program's P4 reservations), one frozen batch, aggregates only | custodian verdict file | $85 |
-| 8. Cat 40, fresh world (P4) | runtime lease per vendor (new session, restore, close, metering), maintained MCP client for stdio and HTTP, canonical write targets, native Letta driver, explicit claims judge; newest Opus, GPT, Sonnet, Fable; one repeat | all cells terminal | $400 |
+| 8. Cat 40, fresh world (P4) | runtime lease per vendor (new session, restore, close, metering), maintained MCP client for stdio and HTTP, canonical write targets, native agent-runtime driver, explicit claims judge; newest Opus, GPT, Sonnet, Fable; one repeat | all cells terminal | $400 |
 | 9. Report | dated report, comparison page, README; a P1 + P3 report may publish before 6 to 8 finish | docs checks pass | $0 |
 
 Estimated total about $935 plus Ubicloud VM time, under a $1,200 cap held in the ledger as leases. A phase whose
@@ -176,13 +176,13 @@ success, cost and finance capability. The finding says where gbrain loses. Ties 
 
 | Risk | Mitigation |
 |---|---|
-| Graphiti's documented `gpt-5.5` default makes its recipe arm expensive | recipe arm only on LoCoMo, BEAM dev and PMB; LME-S uses common models |
+| temporal-graph's documented `gpt-5.5` default makes its recipe arm expensive | recipe arm only on LoCoMo, BEAM dev and PMB; LME-S uses common models |
 | Ingest wall time for graph systems | one VM per system, parallel namespaces, timeouts recorded as outcomes |
 | A vendor SDK ignores the proxy base URL | that system is `blocked` until fixed; no unmetered spend |
-| Letta has no passive memory API | native-agent table only |
+| agent-runtime has no passive memory API | native-agent table only |
 | Provenance is coarse (merged facts, graph tags) | report retrieval as not measurable rather than guess |
 | Vendor disputes | vendor code as the starting point, published capability records, review window |
-| Basic Memory is AGPL-3.0 | run unmodified in its own container; copy no code |
+| markdown-notes is AGPL-3.0 | run unmodified in its own container; copy no code |
 
 ## Decisions for Garry
 
@@ -193,7 +193,7 @@ success, cost and finance capability. The finding says where gbrain loses. Ties 
   Option A: GPT-4o as the one historical link on everything, plus the four frontier readers on frozen contexts for a
   stratified 100-question slice (about $230). Option B: one frontier reader only (cheaper, breaks the house rule).
 - **D3, more workloads (one reviewer each).** A small relational and temporal multi-hop category that exercises
-  Graphiti's and Cognee's graphs (about $40), and a BEAM-1M dev subset for scale, where gbrain's own strict recall
+  temporal-graph's and graph-pipeline's graphs (about $40), and a BEAM-1M dev subset for scale, where gbrain's own strict recall
   falls to 18.2% (about $60).
 - **D4, vendor review posts.** Publicly post adapters to the six vendors' repositories before the counted run. Adds
   about a week.
@@ -201,7 +201,7 @@ success, cost and finance capability. The finding says where gbrain loses. Ties 
   Without `VOYAGE_API_KEY` that one row is blocked and gbrain runs only the common-models row.
 - **Cap.** $1,200 covers the base plan plus D1 and D2-A; adding D3 needs $1,300.
 - **Phase 4 budget (2026-10-06).** Garry chose B on 2026-10-06: the cap rises to $1,450, LongMemEval-S stays at 100
-  questions, and only Graphiti's recipe arm on BEAM is skipped. Frozen in
+  questions, and only temporal-graph's recipe arm on BEAM is skipped. Frozen in
   [the preregistration](../../benchmarks/2026-10-06-oss-memory-shootout-preregistration.md).
 
 ## Review record
@@ -211,7 +211,7 @@ CEO phase, 2026-10-05. Claude voice: 25 findings (3 critical, 7 high). GPT-6 Ast
 got harness-rehydrated sessions), the unenforceable cap and roughly 3x cost underestimate, undefined vendor defaults,
 Cat 40 at the ceiling on a spent world, the house model policy, and the need to reuse vendor and AMB ingestion code.
 Every one is fixed above. Astra alone found the raw-id leak path through vendor metadata, the OpenMemory sunset, the
-Letta runtime mismatch, the fixed-denominator gap and the LoCoMo key concern; Claude alone found the ingest
+agent-runtime runtime mismatch, the fixed-denominator gap and the LoCoMo key concern; Claude alone found the ingest
 quiescence and event-time checks, the measured dataset sizes, and the proxy's localhost binding.
 
 Engineering phase, 2026-10-05. Claude voice: 25 findings, 6 silent-bias failure modes. GPT-6 Astra voice: 15
@@ -219,8 +219,8 @@ findings (3 critical). Both found: resume and failure counting that drop reader 
 cap no single process can enforce across VMs, a proxy that forwards unpriced models, provenance recall that one
 over-citing item can game, too few dev conversations for intervals, a retrieve call without query date or policy,
 and the need to keep the gbrain refactor's parity check separate from the new gbrain recipe. Astra alone found the
-PrecisionMemBench evaluator-side expansion, the sealed-output leak paths, Mem0's rejected `timestamp`, Hindsight's
-token-budgeted recall and Graphiti's entity nodes lacking `episodes`. Claude alone found the `_abs` namespace leak,
+PrecisionMemBench evaluator-side expansion, the sealed-output leak paths, extract-first's rejected `timestamp`, memory-bank's
+token-budgeted recall and temporal-graph's entity nodes lacking `episodes`. Claude alone found the `_abs` namespace leak,
 the in-process versus VM latency skew, the keyless gate that LLM-ingesting vendors cannot meet, the registry helper
 directory and the Voyage key. Every one is fixed above.
 
@@ -236,8 +236,8 @@ directory and the Voyage key. Every one is fixed above.
 | 7 | CEO | Metering proxy with key injection, internal network, fail closed | Mechanical | 1 |
 | 8 | CEO | Update and forget to P2, Cat 40 to P4 on a fresh world | Taste | 1, 3 |
 | 9 | CEO | No `update()` method; corrections arrive as dated sessions | Mechanical | 5 |
-| 10 | CEO | Letta native-agent table if no passive API | Mechanical | 3, 5 |
-| 11 | CEO | Mem0 agent surface: harness MCP wrapper over the pinned SDK | Mechanical | 5 |
+| 10 | CEO | agent-runtime native-agent table if no passive API | Mechanical | 3, 5 |
+| 11 | CEO | extract-first agent surface: harness MCP wrapper over the pinned SDK | Mechanical | 5 |
 | 12 | CEO | Start adapters from vendor benchmark code and AMB | Mechanical | 4 |
 | 13 | CEO | Fixed denominators and conversation-clustered intervals | Mechanical | 1 |
 | 14 | CEO | Baselines, frontier readers, extra workloads, vendor posts left to Garry | User Challenge | n/a |
@@ -249,5 +249,5 @@ directory and the Voyage key. Every one is fixed above.
 | 20 | Eng | PMB on the upstream contract, labeled | Mechanical | 4 |
 | 21 | Eng | Sealed execution profile with allowlist export | Mechanical | 1 |
 | 22 | Eng | Golden output before the gbrain refactor; separate shootout recipe | Mechanical | 5 |
-| 23 | Eng | Vendor order Basic Memory, Mem0, Hindsight, Graphiti, Cognee, Letta | Taste | 3 |
+| 23 | Eng | Vendor order markdown-notes, extract-first, memory-bank, temporal-graph, graph-pipeline, agent-runtime | Taste | 3 |
 | 24 | Eng | P1 + P3 report may ship before P2 and Cat 40 | Taste | 6 |

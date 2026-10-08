@@ -31,7 +31,7 @@
  * reaches the system.
  *
  * Time. The fixture has no event times on the upstream wire, but two shims
- * (Graphiti, Hindsight) refuse an undated session. Every belief gets a
+ * (temporal-graph, memory-bank) refuse an undated session. Every belief gets a
  * disclosed synthetic time, one minute apart in fixture order from
  * 2026-05-29T00:00 (upstream's pin date): the arrival order upstream
  * providers saw, and nothing taken from the belief's own dates. Queries are

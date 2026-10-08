@@ -1,8 +1,0 @@
-{
-  "run_id": "cognee-recipe-locomo-r1-a1-586baa70",
-  "lease_usd": 8,
-  "committed_usd": 5.465642900000015,
-  "requests": 9921,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

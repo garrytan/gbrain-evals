@@ -6,15 +6,15 @@
   "notes": "Phase 7, the custodian sealed batch, added by amendment A5: all four Phase 4 arms (Garry approved all four arms on 2026-10-07), the sealed execution profile, aggregates only; runs after Phases 4 to 6.",
   "cells": [
     {
-      "id": "basic-memory-common-locomo-sealed",
-      "system": "basic-memory",
+      "id": "markdown-notes-common-locomo-sealed",
+      "system": "markdown-notes",
       "config": "common",
       "benchmark": "locomo",
       "sealed": true,
       "lease_usd": 14,
-      "lease_basis": "1.5 x estimate: Phase 4 basic-memory-common-locomo-r1 settled $3.76 (ingest $0.01); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($8.96)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system basic-memory --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell basic-memory-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system basic-memory; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system basic-memory --datasets locomo",
+      "lease_basis": "1.5 x estimate: Phase 4 markdown-notes-common-locomo-r1 settled $3.76 (ingest $0.01); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($8.96)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system markdown-notes --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell markdown-notes-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system markdown-notes; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system markdown-notes --datasets locomo",
       "vm": {
         "size": "standard-8"
       },
@@ -23,15 +23,15 @@
       ]
     },
     {
-      "id": "mem0-common-locomo-sealed",
-      "system": "mem0",
+      "id": "extract-first-common-locomo-sealed",
+      "system": "extract-first",
       "config": "common",
       "benchmark": "locomo",
       "sealed": true,
       "lease_usd": 28,
-      "lease_basis": "1.5 x estimate: Phase 4 mem0-common-locomo-r1 settled $7.78 (ingest $0.83); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($18.30)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && MEM0_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system mem0 --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell mem0-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system mem0; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system mem0 --datasets locomo",
+      "lease_basis": "1.5 x estimate: Phase 4 extract-first-common-locomo-r1 settled $7.78 (ingest $0.83); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($18.30)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && MEM0_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system extract-first --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell extract-first-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system extract-first; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system extract-first --datasets locomo",
       "vm": {
         "size": "standard-8"
       },
@@ -40,15 +40,15 @@
       ]
     },
     {
-      "id": "hindsight-common-locomo-sealed",
-      "system": "hindsight",
+      "id": "memory-bank-common-locomo-sealed",
+      "system": "memory-bank",
       "config": "common",
       "benchmark": "locomo",
       "sealed": true,
       "lease_usd": 23,
-      "lease_basis": "1.5 x estimate: Phase 4 hindsight-common-locomo-r1 settled $6.36 (ingest $0.31); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($15.07)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system hindsight --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell hindsight-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system hindsight; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system hindsight --datasets locomo",
+      "lease_basis": "1.5 x estimate: Phase 4 memory-bank-common-locomo-r1 settled $6.36 (ingest $0.31); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($15.07)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system memory-bank --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell memory-bank-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system memory-bank; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system memory-bank --datasets locomo",
       "vm": {
         "size": "standard-8"
       },
@@ -57,15 +57,15 @@
       ]
     },
     {
-      "id": "graphiti-common-locomo-sealed",
-      "system": "graphiti",
+      "id": "temporal-graph-common-locomo-sealed",
+      "system": "temporal-graph",
       "config": "common",
       "benchmark": "locomo",
       "sealed": true,
       "lease_usd": 37,
-      "lease_basis": "1.5 x estimate: Phase 4 graphiti-common-locomo-r1 settled $10.41 (ingest $1.35); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($24.44)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system graphiti --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell graphiti-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system graphiti; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system graphiti --datasets locomo",
+      "lease_basis": "1.5 x estimate: Phase 4 temporal-graph-common-locomo-r1 settled $10.41 (ingest $1.35); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($24.44)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system temporal-graph --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell temporal-graph-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system temporal-graph; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system temporal-graph --datasets locomo",
       "vm": {
         "size": "standard-8"
       },
@@ -74,15 +74,15 @@
       ]
     },
     {
-      "id": "cognee-common-locomo-sealed",
-      "system": "cognee",
+      "id": "graph-pipeline-common-locomo-sealed",
+      "system": "graph-pipeline",
       "config": "common",
       "benchmark": "locomo",
       "sealed": true,
       "lease_usd": 20,
-      "lease_basis": "1.5 x estimate: Phase 4 cognee-common-locomo-r1 settled $5.51 (ingest $1.16); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($12.81)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system cognee --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell cognee-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system cognee; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system cognee --datasets locomo",
+      "lease_basis": "1.5 x estimate: Phase 4 graph-pipeline-common-locomo-r1 settled $5.51 (ingest $1.16); ingest x 2.10 (sealed/dev characters, 492,334/234,429), the rest x 2.38 (questions, 1,399/587), four arms ($12.81)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system graph-pipeline --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark locomo --split sealed --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell graph-pipeline-common-locomo-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system graph-pipeline; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system graph-pipeline --datasets locomo",
       "vm": {
         "size": "standard-8"
       },
@@ -127,15 +127,15 @@
       ]
     },
     {
-      "id": "basic-memory-common-beam-100k-sealed",
-      "system": "basic-memory",
+      "id": "markdown-notes-common-beam-100k-sealed",
+      "system": "markdown-notes",
       "config": "common",
       "benchmark": "beam-100k",
       "sealed": true,
       "lease_usd": 11,
-      "lease_basis": "1.5 x estimate: Phase 4 basic-memory-common-beam-100k estimate $3.37 (eval/systems/basic-memory/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($7.27)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system basic-memory --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell basic-memory-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system basic-memory; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system basic-memory --datasets beam-100k",
+      "lease_basis": "1.5 x estimate: Phase 4 markdown-notes-common-beam-100k estimate $3.37 (eval/systems/markdown-notes/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($7.27)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system markdown-notes --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell markdown-notes-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system markdown-notes; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system markdown-notes --datasets beam-100k",
       "vm": {
         "size": "standard-8"
       },
@@ -144,15 +144,15 @@
       ]
     },
     {
-      "id": "mem0-common-beam-100k-sealed",
-      "system": "mem0",
+      "id": "extract-first-common-beam-100k-sealed",
+      "system": "extract-first",
       "config": "common",
       "benchmark": "beam-100k",
       "sealed": true,
       "lease_usd": 9,
-      "lease_basis": "1.5 x estimate: Phase 4 mem0-common-beam-100k estimate $2.66 (eval/systems/mem0/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($5.74)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && MEM0_CHUNK_TURNS=2 bash eval/systems/bootstrap.sh up --system mem0 --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell mem0-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system mem0; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system mem0 --datasets beam-100k",
+      "lease_basis": "1.5 x estimate: Phase 4 extract-first-common-beam-100k estimate $2.66 (eval/systems/extract-first/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($5.74)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && MEM0_CHUNK_TURNS=2 bash eval/systems/bootstrap.sh up --system extract-first --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell extract-first-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system extract-first; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system extract-first --datasets beam-100k",
       "vm": {
         "size": "standard-8"
       },
@@ -161,15 +161,15 @@
       ]
     },
     {
-      "id": "hindsight-common-beam-100k-sealed",
-      "system": "hindsight",
+      "id": "memory-bank-common-beam-100k-sealed",
+      "system": "memory-bank",
       "config": "common",
       "benchmark": "beam-100k",
       "sealed": true,
       "lease_usd": 18,
-      "lease_basis": "1.5 x estimate: Phase 4 hindsight-common-beam-100k estimate $5.48 (eval/systems/hindsight/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($11.82)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system hindsight --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell hindsight-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system hindsight; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system hindsight --datasets beam-100k",
+      "lease_basis": "1.5 x estimate: Phase 4 memory-bank-common-beam-100k estimate $5.48 (eval/systems/memory-bank/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($11.82)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system memory-bank --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell memory-bank-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system memory-bank; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system memory-bank --datasets beam-100k",
       "vm": {
         "size": "standard-8"
       },
@@ -178,15 +178,15 @@
       ]
     },
     {
-      "id": "graphiti-common-beam-100k-sealed",
-      "system": "graphiti",
+      "id": "temporal-graph-common-beam-100k-sealed",
+      "system": "temporal-graph",
       "config": "common",
       "benchmark": "beam-100k",
       "sealed": true,
       "lease_usd": 48,
-      "lease_basis": "1.5 x estimate: Phase 4 graphiti-common-beam-100k estimate $14.80 (eval/systems/graphiti/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($31.91)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system graphiti --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell graphiti-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system graphiti; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system graphiti --datasets beam-100k",
+      "lease_basis": "1.5 x estimate: Phase 4 temporal-graph-common-beam-100k estimate $14.80 (eval/systems/temporal-graph/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($31.91)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system temporal-graph --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell temporal-graph-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system temporal-graph; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system temporal-graph --datasets beam-100k",
       "vm": {
         "size": "standard-8"
       },
@@ -195,15 +195,15 @@
       ]
     },
     {
-      "id": "cognee-common-beam-100k-sealed",
-      "system": "cognee",
+      "id": "graph-pipeline-common-beam-100k-sealed",
+      "system": "graph-pipeline",
       "config": "common",
       "benchmark": "beam-100k",
       "sealed": true,
       "lease_usd": 21,
-      "lease_basis": "1.5 x estimate: Phase 4 cognee-common-beam-100k estimate $6.39 (eval/systems/cognee/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($13.78)",
-      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system cognee --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell cognee-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system cognee; exit $s",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system cognee --datasets beam-100k",
+      "lease_basis": "1.5 x estimate: Phase 4 graph-pipeline-common-beam-100k estimate $6.39 (eval/systems/graph-pipeline/PILOT.md; no BEAM dev cell had settled) x 2.16 (sealed/dev characters, 7,359,149/3,412,857, above the question ratio 224/120), four arms ($13.78)",
+      "command": "C=\"${SHOOTOUT_CUSTODY:?a sealed cell needs SHOOTOUT_CUSTODY}\" && bash eval/systems/bootstrap.sh up --system graph-pipeline --config common --timeout 1800 && { GBRAIN_EVALS_CUSTODY_LOG=\"$C/access.ndjson\" bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split sealed --categories abstention,contradiction_resolution,event_ordering,information_extraction,knowledge_update,multi_session_reasoning,summarization,temporal_reasoning --decision-id oss-memory-shootout-p7-sealed --purpose \"Phase 7 custodian sealed batch, cell graph-pipeline-common-beam-100k-sealed, aggregates only\" --sealed-profile \"$C\" --system http://127.0.0.1:8700 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --finish-timeout-s 14400 --output \"$C/mqa\" > \"$C/memory-qa.log\" 2>&1; m=$?; bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell \"$C/mqa\" --out \"$SHOOTOUT_OUT/sealed\"; x=$?; cp \"$C/access.ndjson\" \"$SHOOTOUT_OUT/custody-access.ndjson\"; [ $m -eq 0 ] && m=$x; (exit $m); }; s=$?; bash eval/systems/bootstrap.sh down --system graph-pipeline; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system graph-pipeline --datasets beam-100k",
       "vm": {
         "size": "standard-8"
       },

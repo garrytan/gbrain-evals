@@ -1,8 +1,0 @@
-{
-  "run_id": "mem0-common-lme-s-a1-c05f5e45",
-  "lease_usd": 80,
-  "committed_usd": 55.77517113999899,
-  "requests": 100930,
-  "max_output_tokens": 32768,
-  "cell_exit_code": 0
-}

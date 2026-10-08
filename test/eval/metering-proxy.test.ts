@@ -197,21 +197,21 @@ describe('attribution across processes', () => {
     proxy.start();
     const base = `http://127.0.0.1:${proxy.port}`;
     const ctl = new ProxyControl(base, 'tok');
-    const post = () => fetch(`${base}/mem0/openai/v1/chat/completions`, { method: 'POST', body: JSON.stringify(chat()) });
+    const post = () => fetch(`${base}/extract-first/openai/v1/chat/completions`, { method: 'POST', body: JSON.stringify(chat()) });
     try {
-      expect((await fetch(`${base}/__proxy/bind`, { method: 'POST', body: JSON.stringify({ slot: 'mem0', key: 'x' }) })).status).toBe(403);
-      const ok = await ctl.around('mem0', 'q:1', async () => { await post(); mode = '503'; await post(); return 'done'; });
+      expect((await fetch(`${base}/__proxy/bind`, { method: 'POST', body: JSON.stringify({ slot: 'extract-first', key: 'x' }) })).status).toBe(403);
+      const ok = await ctl.around('extract-first', 'q:1', async () => { await post(); mode = '503'; await post(); return 'done'; });
       expect(ok.value).toBe('done');
       expect(ok.meter).toMatchObject({ requests: 2, upstream: { statuses: { '200': 1, '503': 1 }, failed: 0, unparseable: 0 } });
       expect(upstreamTrouble(ok.meter)).toBe(true);
       mode = 'garbled';
-      const bad = await ctl.around('mem0', 'q:2', () => post());
+      const bad = await ctl.around('extract-first', 'q:2', () => post());
       expect(bad.meter.upstream).toEqual({ statuses: {}, failed: 0, unparseable: 1 });
       mode = 'ok';
-      const clean = await ctl.around('mem0', 'q:3', () => post());
+      const clean = await ctl.around('extract-first', 'q:3', () => post());
       expect(upstreamTrouble(clean.meter)).toBe(false);
       await post();
-      expect(proxy.meters.get('slot:mem0')!.requests).toBe(1);
+      expect(proxy.meters.get('slot:extract-first')!.requests).toBe(1);
     } finally { proxy.stop(); }
   });
 });

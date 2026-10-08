@@ -295,13 +295,13 @@ describe('lifecycle-lite campaign (Phase 6 manifests)', () => {
     const { manifest } = loadCampaign(join(ROOT, 'docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/manifests/campaign.json'));
     expect(manifest.campaign_id).toBe('oss-memory-shootout-p2-lifecycle-lite');
     expect(manifest.ledger.startsWith('.budget/')).toBe(true);
-    expect(manifest.cells.map(c => c.system).sort()).toEqual(['basic-memory', 'cognee', 'gbrain-shootout', 'gbrain-shootout-master', 'graphiti', 'hindsight', 'mem0']);
+    expect(manifest.cells.map(c => c.system).sort()).toEqual(['extract-first', 'gbrain-shootout', 'gbrain-shootout-master', 'graph-pipeline', 'markdown-notes', 'memory-bank', 'temporal-graph']);
     expect(Math.round(manifest.cells.reduce((n, c) => n + c.lease_usd, 0) * 100) / 100).toBe(manifest.cap_usd);
     for (const c of manifest.cells) {
       expect([c.id, c.command.includes('eval/runner/lifecycle-lite.ts'), c.command.includes('--qa reader'), c.command.includes('--restart'), c.command.includes('--seeds 1,2,3,4,5'), c.config]).toEqual([c.id, true, true, true, true, 'common']);
       if (!c.system.startsWith('gbrain')) expect([c.id, c.command.includes(`bootstrap.sh restart --system ${c.system}`), c.command.includes(`bootstrap.sh down --system ${c.system}`)]).toEqual([c.id, true, true]);
     }
-    expect(manifest.cells.find(c => c.system === 'mem0')!.command).toContain('--finish-timeout-s 14400');
+    expect(manifest.cells.find(c => c.system === 'extract-first')!.command).toContain('--finish-timeout-s 14400');
     expect(manifest.cells.find(c => c.system === 'gbrain-shootout-master')!.command).toContain('@c5fb0201d1960a0a5a81c35d77718311b03154b7');
   });
 });
