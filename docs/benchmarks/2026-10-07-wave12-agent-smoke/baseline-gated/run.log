@@ -1,0 +1,17 @@
+2026-10-07T20:42:46.567Z 120 cells to run (0 already done, order task) in eval/reports/cat40/w12-smoke/baseline-gated
+2026-10-07T20:42:46.598Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/w12-smoke.sqlite
+2026-10-07T20:44:59.148Z write probe passed on every slot
+2026-10-07T20:44:59.148Z gbrain 0.60.105.0 (027d3c69ff46) ready on 4 slots, surface starter
+2026-10-07T20:47:33.561Z 10/120 cells; last claude-sonnet-5-5|baseline|C04|0 success=true $0.049
+2026-10-07T20:49:47.701Z 20/120 cells; last claude-opus-5-5|baseline|C07|0 success=true $0.285
+2026-10-07T20:52:10.561Z 30/120 cells; last gpt-6.1-sol|baseline|C10|0 success=true $0.075
+2026-10-07T20:54:27.193Z 40/120 cells; last claude-sonnet-5-5|baseline|F04|0 success=true $0.136
+2026-10-07T20:56:42.899Z 50/120 cells; last claude-opus-5-5|baseline|F07|0 success=true $0.238
+2026-10-07T20:59:25.962Z 60/120 cells; last claude-sonnet-5-5|baseline|C01|1 success=true $0.049
+2026-10-07T21:01:27.615Z 70/120 cells; last claude-sonnet-5-5|baseline|C04|1 success=true $0.049
+2026-10-07T21:04:21.927Z 80/120 cells; last gpt-6.1-sol|baseline|C07|1 success=true $0.038
+2026-10-07T21:06:12.132Z 90/120 cells; last gpt-6.1-sol|baseline|C10|1 success=true $0.054
+2026-10-07T21:08:47.939Z 100/120 cells; last claude-sonnet-5-5|baseline|F04|1 success=true $0.111
+2026-10-07T21:11:47.271Z 110/120 cells; last gpt-6.1-sol|baseline|F07|1 success=true $0.036
+2026-10-07T21:13:54.965Z 120/120 cells; last gpt-6.1-sol|baseline|F10|1 success=true $0.037
+2026-10-07T21:13:55.277Z receipt eval/reports/cat40/w12-smoke/baseline-gated/receipt-1791407635277.json

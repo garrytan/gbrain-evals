@@ -4738,6 +4738,26 @@
         "/builds/wave11/commit": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e"
       },
       "note": "Preregistered (dade12c6, amendment c1e9ed4f) Cat 40 gbrain-arm smoke, master 5b5891069 vs wave b5c8fd5e8, same window; counts recomputable from the committed results.jsonl and transcripts.jsonl.gz in each set directory. claude-fable-5-1 cells are smoke-only and outside the gate."
+    },
+    {
+      "claim_id": "fix-wave-12-agent-smoke",
+      "readme_anchor": "docs/benchmarks/2026-10-07-wave12-agent-smoke.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-07-wave12-agent-smoke/verdict.json",
+      "artifact_sha256": "cb01c26b404776826fbf61853c4f6009d4141cd5895fc5748284a50626cacced",
+      "status": "covered",
+      "expected": {
+        "/per_build/baseline/C/success": 60,
+        "/per_build/wave12/C/success": 60,
+        "/per_build/baseline/F/success": 60,
+        "/per_build/wave12/F/success": 55,
+        "/per_build/wave12/F/unsafe_writes": 0,
+        "/attribution/success": 19,
+        "/w46_verdict": "regress",
+        "/w416/verdict": "pass on its own measures (no harm); improvement not shown",
+        "/builds/wave12/commit": "209b20a961fc4d64bbaf7ac37597b37dbaf00d76",
+        "/gbrain_shipped_in/merge_commit": "7aa2caa0"
+      },
+      "note": "Preregistered (5ee10126, amendment c8042a27) Cat 40 gbrain-arm smoke, capy/fix-wave-11 027d3c69f vs capy/fix-wave-12 209b20a96, same window; counts recomputable from the committed results.jsonl and transcripts.jsonl.gz in each set directory. The attribution set runs the wave 12 build with the baseline served instructions. Shipped in gbrain v0.60.106.0 (7aa2caa0, #6269) with W4.6 reverted (instructions identical to the baseline) and W4.16 kept."
     }
   ]
 }

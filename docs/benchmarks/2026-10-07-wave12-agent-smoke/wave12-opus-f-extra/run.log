@@ -1,0 +1,6 @@
+2026-10-07T21:13:00.855Z 10 cells to run (0 already done, order task) in eval/reports/cat40/w12-smoke/wave12-opus-f-extra
+2026-10-07T21:13:00.897Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger .budget/w12-smoke.sqlite
+2026-10-07T21:15:26.527Z write probe passed on every slot
+2026-10-07T21:15:26.528Z gbrain 0.60.106.0 (209b20a961fc) ready on 4 slots, surface starter
+2026-10-07T21:18:47.200Z 10/10 cells; last claude-opus-5-5|wave12|F09|0 success=true $0.255
+2026-10-07T21:18:47.433Z receipt eval/reports/cat40/w12-smoke/wave12-opus-f-extra/receipt-1791407927433.json
