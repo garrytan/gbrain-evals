@@ -429,6 +429,12 @@ each failed attempt stays in the record (`results/README.md`). Nothing about mea
 
 Recorded on 2026-10-07 before any rerun lease.
 
+**A8 (2026-10-08), Fable is descriptive only.** Garry's model rule of 2026-10-07 counts Opus 5.5, Sonnet 5.5 and the
+newest GPT model; Fable is a smoke test. `anthropic:claude-fable-5-1` therefore stays in the D2 reader list as a
+descriptive row only: its scores are reported, labeled descriptive, and enter no counted claim, comparison family or
+headline. The counted D2 readers are `anthropic:claude-opus-5-5`, `openai:gpt-6.1-sol` and
+`anthropic:claude-sonnet-5-5`. Recorded before any D2 replay ran; no cell or arm file changes.
+
 ## Changelog
 
 ### 2026-10-06: amendment A5 drafted
@@ -437,6 +443,10 @@ Drafted A5, the custodian sealed batch (Phase 7): LoCoMo sealed and BEAM-100K se
 reserved questions, the five vendor common rows, gbrain-shootout common at the pin as the blind row and at frozen master
 with its fixed label, aggregates only, run last, and the audit list of prior sealed use. The campaign hash is filled
 when the cells join the campaign.
+
+### 2026-10-08: amendment A8
+
+Fable 5.1 becomes a descriptive-only D2 reader under Garry's 2026-10-07 model rule, before any D2 replay.
 
 ### 2026-10-07: gbrain master moved again
 
