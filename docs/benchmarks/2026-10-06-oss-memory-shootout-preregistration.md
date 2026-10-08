@@ -509,7 +509,10 @@ frozen master: 100 questions each, with `anthropic:claude-opus-5-5`, `anthropic:
 the replay possible, and neither changes a counted row: a reader in an arms file may name the policies it reads
 (`policies`), and the retrievals a cell expects come from the policies the arms file defines rather than from the
 arms it expands; a replay of an in-process gbrain cell also no longer needs the live system's fidelity counters.
-D2 replays the frozen contexts on the host through the campaign ledger (about $90 to $100). D2 results are descriptive
+A third fix came from the first D2 pass: Claude 5.x point releases (Opus 5.5, Sonnet 5.5, Fable 5.1) reject
+`temperature` with HTTP 400, so every Anthropic reader row of that pass was a `reader_error` (a harness failure); the
+reader now omits `temperature` for those models, which then run at their default, and the failed rows were retried on
+resume. No counted cell used an Anthropic reader. D2 replays the frozen contexts on the host through the campaign ledger (about $90 to $100). D2 results are descriptive
 per reader; they enter no Holm family. Recorded before any D2 call.
 
 ## Changelog

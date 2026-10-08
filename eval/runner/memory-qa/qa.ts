@@ -155,7 +155,8 @@ async function openaiChat(model: string, prompt: string, opts: { maxTokens: numb
 async function anthropicChat(model: string, prompt: string, opts: { maxTokens: number; temperature?: number }): Promise<Omit<ChatResult, 'cached'>> {
   const res = await fetch(`${(process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com').replace(/\/$/, '')}/v1/messages`, {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: opts.maxTokens, temperature: opts.temperature ?? 0, messages: [{ role: 'user', content: prompt }] }),
+    // Claude 5.x point releases (Opus 5.5, Sonnet 5.5, Fable 5.1) reject `temperature` with HTTP 400; they run at their default.
+    body: JSON.stringify({ model, max_tokens: opts.maxTokens, ...(/^claude-[a-z]+-5-\d/.test(model) ? {} : { temperature: opts.temperature ?? 0 }), messages: [{ role: 'user', content: prompt }] }),
     signal: AbortSignal.timeout(300_000),
   });
   const json = await res.json() as any;
