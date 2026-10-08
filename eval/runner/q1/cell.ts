@@ -97,7 +97,6 @@ import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, read
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
 import { definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, SETS, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type Selection } from './cells/definitions.ts';
-import { hedgeStamp } from './hedge.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -914,14 +913,15 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 }
 
 /**
- * The per-answer derived fields on a judged answer (preregistration, "Derived columns"): the hedge verdict on its text,
- * and the evidence its reader was given, as the packed context's per-tokenizer counts on a component arm or the
- * reader's total input tokens (`reader_input`) on a whole-system arm.
+ * The per-answer derived field on a judged answer (preregistration, "Derived columns"): the evidence its reader was
+ * given, as the packed context's per-tokenizer counts on a component arm or the reader's total input tokens
+ * (`reader_input`) on a whole-system arm. The hedge verdict is not stamped here: the scoreboard computes it at render
+ * time with the classifier version campaign.json names, so the classifier stays outside the cell's executed tree.
  */
 export function withDerived(a: AnswerRecord, pack: PackedContext | null): AnswerRecord {
   if (!JUDGED.has(a.outcome)) return a;
   const delivered = a.arm === 'component' && pack ? pack.delivered : { reader_input: a.provider_input_tokens ?? a.usage.input + a.usage.cache_read + a.usage.cache_write };
-  return { ...a, hedge: hedgeStamp(a.text), delivered_tokens: delivered };
+  return { ...a, delivered_tokens: delivered };
 }
 
 // ─── Publish ─────────────────────────────────────────────────────────
@@ -1043,7 +1043,7 @@ export function scoreboardCampaignCell(def: CellDefinition, arm: ArmDefinition, 
  */
 export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Record<string, string> {
   const out: Record<string, string> = {};
-  const dirs = ['eval/systems', 'docs/comparison-systems'].flatMap(d => readdirSync(join(root, d), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => join(root, d, e.name)));
+  const dirs = ['eval/systems', 'docs/comparison-systems'].flatMap(d => readdirSync(join(root, d), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => join(root, d, e.name)).sort());
   for (const dir of dirs) for (const f of ['docker-compose.yml', 'Dockerfile']) {
     const path = join(dir, f);
     if (!existsSync(path)) continue;
@@ -1055,7 +1055,7 @@ export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Recor
 /** Repository paths every Q1 cell executes (their git tree enters the campaign hash). */
 export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions',
   'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
-  'eval/runner/q1/hedge.ts', 'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
+  'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
   'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',
   'eval/systems', 'docs/comparison-systems', 'eval/decisions', 'package.json', 'bun.lock'];
 

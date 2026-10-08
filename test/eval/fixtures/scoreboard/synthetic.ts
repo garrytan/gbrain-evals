@@ -8,7 +8,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { seededRandom } from '../../../../eval/runner/stats/paired.ts';
-import { hedgeStamp } from '../../../../eval/runner/q1/hedge.ts';
+import { CURRENT_CLASSIFIER } from '../../../../eval/runner/q1/hedge.ts';
 import { answerId, CAMPAIGN_SCHEMA, type AnswerRecord, type CampaignCell, type CampaignManifest, type JudgmentRecord, type RowRecord } from '../../../../eval/runner/scoreboard.ts';
 
 export const READERS = ['claude-opus-5-5', 'gpt-6.1-sol', 'claude-sonnet-5-5'];
@@ -29,14 +29,16 @@ export interface SyntheticCell {
   answerText?: (i: number, reader: string) => string;
   /** Canonical score per question index and reader (default: seeded around `quality`). */
   scoreOf?: (i: number, reader: string) => number;
-  /** Leave the per-answer `hedge` stamp off (an answer written before the derived columns existed). */
-  noHedge?: boolean;
+  /** Stamp each judged answer with this old-style `hedge` field (cells run before verdicts moved to render time). */
+  legacyStamp?: { verdict: 'abstain' | 'hedged' | 'confident'; classifier_version: string };
 }
 
 export interface SyntheticOptions {
   conversations?: number; questionsPerConversation?: number; cells?: SyntheticCell[];
   family1?: 'full' | 'shrunk' | 'descriptive'; shrunkComparators?: string[] | null;
   draws?: number; renderTargets?: string[]; releaseAssets?: CampaignManifest['release_assets'];
+  /** campaign.json `hedge_classifier` (default: CURRENT_CLASSIFIER). */
+  hedgeClassifier?: string;
 }
 
 const EXTERNALS = ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph', 'ext-markdown-kb', 'ext-verbatim-session'];
@@ -103,7 +105,7 @@ export function writeSyntheticReceipt(dir: string, o: SyntheticOptions = {}): Ca
             answer_id: answerId(c.id, q.question_id, reader, 0), cell_id: c.id, realization_id: `${c.id}-r1`, question_id: q.question_id, conversation: q.conversation,
             system: c.system, arm: c.arm, reader, replicate: 0, context_sha256: c.arm === 'component' ? context : sha(`${context}|${reader}`), text,
             usage: { input: 8000, output: 300, cache_read: 0, cache_write: 0 }, provider_input_tokens: 8100, latency_ms: 2000 + Math.floor(rng() * 1000), outcome: harness ? 'reader_error' : unfit ? 'does_not_fit' : 'scored',
-            ...(harness || unfit || c.noHedge ? {} : { hedge: hedgeStamp(text), delivered_tokens: { cl100k_base: 7000, o200k_base: 6800 } }),
+            ...(harness || unfit ? {} : { ...(c.legacyStamp ? { hedge: c.legacyStamp } : {}), delivered_tokens: { cl100k_base: 7000 + i, o200k_base: 6800 + i } }),
           };
           answers.push(a);
           if (harness || unfit) continue;
@@ -135,7 +137,7 @@ export function writeSyntheticReceipt(dir: string, o: SyntheticOptions = {}): Ca
     schema: CAMPAIGN_SCHEMA, campaign_id: 'q1-scoreboard-synthetic', campaign_hash: sha('synthetic'),
     gbrain: { commit: 'c5fb0201aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', version: '0.60.95.0', resolved_search_mode: 'hybrid' },
     measured: { from: '2026-10-20', to: '2026-10-28' }, readers: READERS,
-    statistics: { alpha: 0.05, draws: o.draws ?? 199, descriptive_draws: 1000, seed: 7 },
+    statistics: { alpha: 0.05, draws: o.draws ?? 199, descriptive_draws: 1000, seed: 7 }, hedge_classifier: o.hedgeClassifier ?? CURRENT_CLASSIFIER,
     sets, cells: campaignCells, families,
     pins: [{ system: 'ext-memory-bank', version: '0.10.2', latest_release: '0.10.3' }, { system: 'ext-extract-first', version: '2.2.1', latest_release: null }],
     release_assets: o.releaseAssets ?? [], disclosures: ['Synthetic fixture: every number is invented.'], render_targets: o.renderTargets ?? [],

@@ -25,11 +25,14 @@ import type { ProvenanceStatus } from '../systems/types.ts';
 import type { PackingLoss } from '../systems/render.ts';
 import { OUTCOMES, type Outcome } from './outcomes.ts';
 import type { MemoryQaRow } from './run.ts';
-import { HEDGE_VERDICTS, type HedgeVerdict } from '../q1/hedge.ts';
 
 export { OUTCOMES };
 
 export interface Usage { input: number; output: number; cache_read: number; cache_write: number }
+
+/** Mirrors eval/runner/q1/hedge.ts HEDGE_VERDICTS without importing it, so the classifier stays out of the cell's executed tree. */
+const HEDGE_VERDICTS = ['abstain', 'hedged', 'confident'] as const;
+type HedgeVerdict = (typeof HEDGE_VERDICTS)[number];
 
 export interface AnswerRecord {
   answer_id: string;
@@ -61,7 +64,10 @@ export interface AnswerRecord {
   opened_source_ids?: string[];
   /** Dollars the answer cost, when the caller priced it. */
   usd?: number;
-  /** eval/runner/q1/hedge.ts verdict on `text`, stamped on judged answers; the scoreboard recomputes it and refuses a mismatch. */
+  /**
+   * A hedge verdict stamped by cells run before the classifier left the cell's executed tree; no longer written. Read
+   * for back-compatibility only: the scoreboard ignores it and computes verdicts at render time (cells/<id>/derived/hedge.ndjson).
+   */
   hedge?: { verdict: HedgeVerdict; classifier_version: string };
   /** Evidence the reader was given: the packed context's per-tokenizer counts (component arms) or `{ reader_input }`, the reader's total input tokens (whole-system arms). */
   delivered_tokens?: Record<string, number>;
@@ -72,7 +78,7 @@ export interface AnswerRecord {
  * eval/runner/systems/file-agent.ts is assignable to it); the cell adds the
  * identity fields to make an `AnswerRecord`.
  */
-export type AnswerPayload = Pick<AnswerRecord, 'text' | 'outcome' | 'usage' | 'latency_ms'> & { provider_input_tokens: number | null; stop_reason?: string; turns?: number; opened_source_ids?: string[]; usd?: number; hedge?: AnswerRecord['hedge']; delivered_tokens?: Record<string, number> };
+export type AnswerPayload = Pick<AnswerRecord, 'text' | 'outcome' | 'usage' | 'latency_ms'> & { provider_input_tokens: number | null; stop_reason?: string; turns?: number; opened_source_ids?: string[]; usd?: number; delivered_tokens?: Record<string, number> };
 
 /** An answer record from a system's answer and the cell's identity fields; the id is derived, never passed. */
 export function answerRecord(identity: Omit<AnswerRecord, 'answer_id' | keyof AnswerPayload>, a: AnswerPayload & { error?: string }): AnswerRecord {

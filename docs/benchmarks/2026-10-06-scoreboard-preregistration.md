@@ -214,9 +214,10 @@ correct-abstention rate on BEAM-10M.
   three labels: `abstain`, `hedged` and `confident`. It ignores quoted text and reported speech ("you said you might
   move" reports the user's hedge), and its rules handle negation ("no doubt" and "not mentioned again" are not cues).
   An abstention that goes on to guess, or that only disclaims precision before answering, is `hedged`.
-- **Per answer.** `answers.ndjson` stores `hedge` (verdict and classifier version) and `delivered_tokens` (the packed
-  context's per-tokenizer counts on component arms, the reader's total input tokens on whole-system arms).
-  `bun eval/runner/scoreboard.ts check` recomputes every verdict from the stored text and fails on a mismatch.
+- **Per answer.** `answers.ndjson` stores `delivered_tokens` (the packed context's per-tokenizer counts on component
+  arms, the reader's total input tokens on whole-system arms). The classifier version is fixed by amendment before
+  render (campaign.json `hedge_classifier`) and computed at render time: `bun eval/runner/scoreboard.ts` writes each
+  answer's verdict to `cells/<id>/derived/hedge.ndjson`, and `check` recomputes that file byte for byte.
 - **Validation.** Before freeze, `bun eval/runner/q1/hedge.ts sample` draws a 200-answer sample of dev-smoke answers,
   stratified by verdict, with verdicts hidden from the labeler. The sample is hand-labeled, and
   `bun eval/runner/q1/hedge.ts validate` writes per-class precision and recall and the confusion matrix into the
@@ -377,6 +378,11 @@ setup (34 hours and $44 per conversation) and is labeled "common setup" wherever
 needs every external kind on S1, so it runs.
 
 ## Changelog
+
+### 2026-10-08: hedge verdicts at render time
+
+Cells no longer stamp a hedge verdict; the scoreboard computes it at render time with the classifier version the
+campaign names, so the classifier leaves the cell's executed tree.
 
 ### 2026-10-08: amendment A5
 

@@ -1,0 +1,49 @@
+{
+  "note": "hedge-v2 on the same 200 labeled answers, which were its development data, so these numbers are not a validation. Unweighted: the sample was stratified by hedge-v1 verdicts.",
+  "schema": "gbrain-evals/hedge-validation/v1",
+  "classifier_version": "hedge-v2",
+  "rules_sha256": "8a3f60ce1668af9e06b9838d989f82e42a48818d8b9e754931608870cf2260b0",
+  "labels_sha256": "5e624aaeac97bccfbf69943386c8bb0b592187d279b1d797aa68d240bfc82694",
+  "n": 200,
+  "unlabeled": 0,
+  "accuracy": 0.97,
+  "per_class": {
+    "abstain": {
+      "support": 32,
+      "predicted": 32,
+      "precision": 1,
+      "recall": 1
+    },
+    "hedged": {
+      "support": 59,
+      "predicted": 57,
+      "precision": 0.9649,
+      "recall": 0.9322
+    },
+    "confident": {
+      "support": 109,
+      "predicted": 111,
+      "precision": 0.964,
+      "recall": 0.9817
+    }
+  },
+  "confusion": {
+    "abstain": {
+      "abstain": 32,
+      "hedged": 0,
+      "confident": 0
+    },
+    "hedged": {
+      "abstain": 0,
+      "hedged": 55,
+      "confident": 4
+    },
+    "confident": {
+      "abstain": 0,
+      "hedged": 2,
+      "confident": 107
+    }
+  },
+  "population_weighted": null,
+  "misclassified_count": 6
+}

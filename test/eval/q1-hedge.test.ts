@@ -1,16 +1,22 @@
 /**
- * Hedge classifier for Q1's derived columns (eval/runner/q1/hedge.ts): the
- * rule table on abstentions, hedges, negations, quotes and reported speech;
- * its version and rule-table hash; the `sample` and `validate` tools; the
- * committed fixture validation numbers; and the answer record round trip with
- * the `hedge` and `delivered_tokens` fields. Every answer here is invented.
+ * Hedge classifiers for Q1's derived columns (eval/runner/q1/hedge.ts):
+ * hedge-v1's rule table on abstentions, hedges, negations, quotes and
+ * reported speech; hedge-v2's final-answer span and its conventions on long
+ * markdown answers; versions, rule-table hashes and the registry; the
+ * `sample` (with --exclude and --blind) and `validate` tools; the committed
+ * fixture validation numbers; and the answer record round trip with
+ * `delivered_tokens` and the legacy `hedge` field. Every answer here is
+ * invented.
  */
 import { describe, expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { classify, CLASSIFIER_VERSION, explainVerdict, hedgeStamp, parseCsv, RULES, RULES_SHA256, stratifiedSample, toCsv, validate, type SampleAnswer, type SampleDesign } from '../../eval/runner/q1/hedge.ts';
+import {
+  classify, classifyV2, CLASSIFIER_VERSION, CLASSIFIER_VERSION_V2, CURRENT_CLASSIFIER, explainVerdict, explainVerdictV2, finalSpan, HEDGE_CLASSIFIERS, hedgeClassifier, parseCsv, RULES, RULES_SHA256,
+  RULES_SHA256_V2, RULES_V2, stratifiedSample, toCsv, validate, type SampleAnswer, type SampleDesign,
+} from '../../eval/runner/q1/hedge.ts';
 import { answerId, answerProblems, readRecords, RecordLog, type AnswerRecord } from '../../eval/runner/memory-qa/records.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -18,7 +24,7 @@ const FIX = join(ROOT, 'test/eval/fixtures/hedge');
 
 const cases = (verdict: string, texts: string[]) => texts.map(t => [t, verdict] as const);
 
-describe('classify', () => {
+describe('hedge-v1 classify', () => {
   test.each([
     ...cases('abstain', [
       "I don't know.", 'The conversation doesn\'t say.', 'There is no information about that.', 'I cannot determine that from the history.',
@@ -84,12 +90,101 @@ describe('classify', () => {
     expect(e).toEqual({ verdict: 'hedged', abstain: [], hedge: ['h.probably'], demoted: ['a.doesnt-say'] });
   });
 
-  test('version and rule-table hash; the stamp cell.ts writes', () => {
+  test('version and rule-table hash, unchanged for the record', () => {
     expect(CLASSIFIER_VERSION).toBe('hedge-v1');
-    expect(RULES_SHA256).toMatch(/^[0-9a-f]{64}$/);
+    expect(RULES_SHA256).toBe('3181d1a9963f1c065fd19ca4470062e8f9aba161931289969d15f4cca56c7be7');
     expect(new Set(RULES.map(r => r.id)).size).toBe(RULES.length);
     for (const r of RULES) expect(() => new RegExp(r.pattern, `g${r.flags ?? ''}`)).not.toThrow();
-    expect(hedgeStamp('Probably March.')).toEqual({ verdict: 'hedged', classifier_version: 'hedge-v1' });
+  });
+});
+
+describe('hedge-v2: the final-answer span', () => {
+  const steps = (answer: string, reasoning = 'Item 4 says the class met on Tuesdays.', extra = '') =>
+    `**Relevant information:**\n- Item 4 (2023-05-02): Priya joined a pottery class at the studio on Elm Street.\n- Item 9 (2023-06-11): she said the class was going well and that she might take a glazing course later.\n\n**Reasoning:**\n${reasoning}${extra}\n\n**Answer:** ${answer}`;
+
+  test('version, rule-table hash and registry; hedge-v1 stays importable', () => {
+    expect(CLASSIFIER_VERSION_V2).toBe('hedge-v2');
+    expect(CURRENT_CLASSIFIER).toBe('hedge-v2');
+    expect(RULES_SHA256_V2).toMatch(/^[0-9a-f]{64}$/);
+    expect(RULES_SHA256_V2).not.toBe(RULES_SHA256);
+    expect(new Set(RULES_V2.map(r => r.id)).size).toBe(RULES_V2.length);
+    for (const r of RULES_V2) expect(() => new RegExp(r.pattern, `g${r.flags ?? ''}`)).not.toThrow();
+    expect(Object.keys(HEDGE_CLASSIFIERS)).toEqual(['hedge-v1', 'hedge-v2']);
+    expect(hedgeClassifier('hedge-v1').classify).toBe(classify);
+    expect(hedgeClassifier('hedge-v2')).toEqual({ version: 'hedge-v2', rules_sha256: RULES_SHA256_V2, classify: classifyV2 });
+    expect(() => hedgeClassifier('hedge-v0')).toThrow(/unknown hedge classifier "hedge-v0"; known: hedge-v1, hedge-v2/);
+  });
+
+  test('span: the last answer marker, a stand-alone marker\'s next paragraph, a conclusion, a leading answer, else the last paragraph', () => {
+    expect(finalSpan(steps('Tuesdays.')).text).toBe('Tuesdays.');
+    expect(finalSpan('**Answer: Tuesdays.** The class met weekly.\n\n**Relevant information**\n- Item 4: Tuesdays.').text).toBe('Tuesdays. The class met weekly.');
+    expect(finalSpan('Step 1: Items.\n- Item 4: Tuesdays.\n\nAnswer: Tuesdays.').text).toBe('Tuesdays.');
+    expect(finalSpan('1. **Relevant information:** Item 4 says Tuesdays.\n2. **Answer:** Tuesdays.').text).toBe('Tuesdays.');
+    expect(finalSpan('## Answer\n\nTuesdays, every week.\n\n- Item 4: Tuesdays.').text).toBe('Tuesdays, every week.');
+    expect(finalSpan('# Answer: Tuesdays\n\n## Step 1\n- Item 4.').text).toBe('Tuesdays');
+    expect(finalSpan('**Step 1**\n- Item 4.\n\n**Conclusion**\n\nThe class met on Tuesdays.').text).toBe('The class met on Tuesdays.');
+    expect(finalSpan('**Priya joined the pottery class, not the glazing course.** Item 4 records it.\n\n- Item 9: glazing later.')).toMatchObject({ kind: 'lead', text: 'Priya joined the pottery class, not the glazing course.' });
+    expect(finalSpan('The class met on Tuesdays. Item 4 records the day, and item 9 says she kept going through June.')).toMatchObject({ kind: 'lead', text: 'The class met on Tuesdays.' });
+    expect(finalSpan('1. **Relevant information:** Item 4 says Tuesdays.\n\n2. **Reason over the information:** The class met on Tuesdays.')).toMatchObject({ kind: 'last' });
+    expect(finalSpan('').kind).toBe('empty');
+  });
+
+  test('cues in the reasoning do not count once the final answer is flat; v1 read them anywhere', () => {
+    const text = steps('Priya\'s class met on Tuesdays.', 'Item 9 is dated after the current date, so it may not apply. The question probably means the pottery class.');
+    expect(classify(text)).toBe('hedged');
+    expect(classifyV2(text)).toBe('confident');
+  });
+
+  test('an abstention only when the final answer declines', () => {
+    expect(classifyV2(steps("I can't determine this. No memory items mention Priya's class schedule. If you tell me more, I can work out the likely day."))).toBe('abstain');
+    expect(classifyV2(steps('The memories do not specify which day the class met.'))).toBe('abstain');
+    expect(classifyV2(steps("There isn't enough information to say which studio she could be referring to."))).toBe('abstain');
+    const speculatesEarlier = steps("I don't know which day the class met.", 'Any specific day, such as Tuesday, would be a guess.');
+    expect(classifyV2(speculatesEarlier)).toBe('abstain');
+  });
+
+  test('a decline that goes on to guess is hedged, in the span, its conclusion paragraph or after a declining lead', () => {
+    expect(classifyV2(steps("The memories never name the day, so it can't be determined with confidence. If a guess is needed, Tuesday is the likeliest."))).toBe('hedged');
+    expect(classifyV2(steps("The records don't name the studio. Elm Street is the only place named, so that is the best guess, but I can't confirm it."))).toBe('hedged');
+    const conclusion = "**Step 1:** Item 4.\n\n**Step 3: Conclusion.**\nNo item names the day. If I had to guess, Tuesday would be plausible, but nothing in the records confirms it.\n\n**Answer: The records don't say which day the class met.**";
+    expect(classifyV2(conclusion)).toBe('hedged');
+    expect(classifyV2("None of the memories name a day for the class.\n\nMy guess: Tuesday, since item 4 mentions a Tuesday flyer. That link is my own inference.")).toBe('hedged');
+    expect(classifyV2(steps("I don't have any stored information about Priya. Given her love of clay, a ceramics career would be a strong fit, though this is a general suggestion."))).toBe('hedged');
+  });
+
+  test('a hedge is uncertainty about the answer itself, not about the premise or a record\'s date', () => {
+    expect(classifyV2(steps("The question seems to mix up the two people. It was Priya who joined the pottery class, not Sam. She joined on 2 May 2023."))).toBe('confident');
+    expect(classifyV2(steps("The records don't show Sam in a pottery class. The one they do record is Priya's, which met on Tuesdays."))).toBe('confident');
+    expect(classifyV2(steps('Tuesdays. Item 9 is dated after the current date, so it may be out of range.'))).toBe('confident');
+    expect(classifyV2(steps('The class probably met on Tuesdays.'))).toBe('hedged');
+    expect(classifyV2(steps('The class met on Tuesdays. The two flyers may refer to the same class.'))).toBe('hedged');
+  });
+
+  test('approximators on a number or date are hedged; the same words elsewhere are not', () => {
+    expect(classifyV2(steps('About 3 years passed between the two classes.'))).toBe('hedged');
+    expect(classifyV2(steps('She joined around May 2023.'))).toBe('hedged');
+    expect(classifyV2(steps('It ran roughly from May into early July 2023.'))).toBe('hedged');
+    expect(classifyV2(steps('She joined sometime between 2 and 9 May 2023.'))).toBe('hedged');
+    expect(classifyV2(steps('She talked about two classes: pottery and glazing.'))).toBe('confident');
+    expect(classifyV2(steps('Pottery. She took it on Elm Street (around 2 May 2023).'))).toBe('confident');
+  });
+
+  test('a precision note about the source is not a hedge; the answerer\'s own precision disclaimer before a contrast is', () => {
+    expect(classifyV2(steps('She joined in May 2023. The exact date isn\'t given.'))).toBe('confident');
+    expect(classifyV2("I don't know the exact date, but it was in early May.")).toBe('hedged');
+    expect(classifyV2(steps("The conversations don't name a specific studio, so it can't be identified with certainty."))).toBe('abstain');
+  });
+
+  test('a bare final answer reads its reasoning section for hedges about the answer', () => {
+    expect(classifyV2(steps('3', 'The first two plans may be the same class, so the count is probably 3.'))).toBe('hedged');
+    expect(classifyV2(steps('3', 'Items 4, 9 and 12 name three separate classes.'))).toBe('confident');
+    expect(classifyV2(steps('3', 'Item 12 is from around 4 June 2023, and it names a third class.'))).toBe('confident');
+    expect(explainVerdictV2(steps('3', 'The count is probably 3.')).read).toEqual(['span', 'reasoning']);
+  });
+
+  test('quotes, reported speech and offers to the user are not the answer\'s voice', () => {
+    expect(classifyV2(steps('She said she "might take a glazing course", and she signed up for pottery on 2 May 2023.'))).toBe('confident');
+    expect(classifyV2(steps('Tuesdays. If you can share the later chats, I can check whether that probably changed.'))).toBe('confident');
   });
 });
 
@@ -126,19 +221,21 @@ describe('sample and validate', () => {
     expect(rows.every(r => r.label === '')).toBe(true);
     const design = JSON.parse(readFileSync(`${out}.design.json`, 'utf8')) as SampleDesign;
     expect(design.strata.abstain).toEqual({ population: 5, sampled: 5 });
-    expect(design.rules_sha256).toBe(RULES_SHA256);
+    expect(design.classifier_version).toBe(CLASSIFIER_VERSION_V2);
+    expect(design.rules_sha256).toBe(RULES_SHA256_V2);
     expect(design.answers).toHaveLength(2);
 
     // A labeler disagrees on two answers: one hedge the classifier missed, one abstention it called hedged.
-    const labeled: Array<Record<string, string>> = rows.map(r => ({ ...r, label: classify(r.text) }));
-    const conf = labeled.find(r => classify(r.text) === 'confident')!; conf.label = 'hedged';
-    const hed = labeled.find(r => classify(r.text) === 'hedged')!; hed.label = 'abstain';
+    const labeled: Array<Record<string, string>> = rows.map(r => ({ ...r, label: classifyV2(r.text) }));
+    const conf = labeled.find(r => classifyV2(r.text) === 'confident')!; conf.label = 'hedged';
+    const hed = labeled.find(r => classifyV2(r.text) === 'hedged')!; hed.label = 'abstain';
     writeFileSync(out, toCsv(Object.keys(rows[0]), labeled));
     const v = Bun.spawnSync(['bun', 'eval/runner/q1/hedge.ts', 'validate', '--labels', out, '--design', `${out}.design.json`, '--out', join(dir, 'v.json')], { cwd: ROOT });
     expect(v.exitCode).toBe(0);
     const report = JSON.parse(v.stdout.toString());
     expect(report).toEqual(JSON.parse(readFileSync(join(dir, 'v.json'), 'utf8')));
     expect(report.n).toBe(30);
+    expect(report.classifier_version).toBe(CLASSIFIER_VERSION_V2);
     expect(report.confusion).toEqual({ abstain: { abstain: 5, hedged: 1, confident: 0 }, hedged: { abstain: 0, hedged: 12, confident: 1 }, confident: { abstain: 0, hedged: 0, confident: 11 } });
     expect(report.per_class.hedged).toEqual({ support: 13, predicted: 13, precision: Number((12 / 13).toFixed(4)), recall: Number((12 / 13).toFixed(4)) });
     expect(report.per_class.abstain).toEqual({ support: 6, predicted: 5, precision: 1, recall: Number((5 / 6).toFixed(4)) });
@@ -147,6 +244,45 @@ describe('sample and validate', () => {
     const wAbstain = 5 * 1, wHedgedAsAbstain = 30 / 13;
     expect(report.population_weighted.recall.abstain).toBe(Number((wAbstain / (wAbstain + wHedgedAsAbstain)).toFixed(4)));
     rmSync(dir, { recursive: true });
+  });
+
+  test('--exclude leaves an earlier sample\'s answers out; --blind writes answer_id and text only, in the seeded order; --classifier picks the version', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hedge-'));
+    const answers = join(dir, 'a.ndjson');
+    writeFileSync(answers, pool.map(a => JSON.stringify(a) + '\n').join(''));
+    const earlier = join(dir, 'earlier.csv');
+    writeFileSync(earlier, toCsv(['answer_id', 'text', 'label'], pool.slice(0, 20).map(a => ({ answer_id: a.answer_id, text: a.text, label: 'confident' }))));
+    const out = join(dir, 'sample.csv'), blind = join(dir, 'blind.csv');
+    const run = Bun.spawnSync(['bun', 'eval/runner/q1/hedge.ts', 'sample', '--answers', answers, '--exclude', earlier, '--n', '30', '--seed', 'seed-1', '--out', out, '--blind', blind], { cwd: ROOT });
+    expect(run.exitCode).toBe(0);
+    const full = parseCsv(readFileSync(out, 'utf8')), b = parseCsv(readFileSync(blind, 'utf8'));
+    expect(Object.keys(b[0])).toEqual(['answer_id', 'text']);
+    expect(b.map(r => r.answer_id)).toEqual(full.map(r => r.answer_id));
+    expect(b.map(r => r.text)).toEqual(full.map(r => r.text));
+    expect(full.some(r => pool.slice(0, 20).some(a => a.answer_id === r.answer_id))).toBe(false);
+    const design = JSON.parse(readFileSync(`${out}.design.json`, 'utf8')) as SampleDesign;
+    expect(design.schema).toBe('gbrain-evals/hedge-sample-design/v2');
+    expect(design.excluded!.answers).toBe(20);
+    expect(design.excluded!.files[0].path).toBe(earlier);
+    expect(design.blind!.path).toBe(blind);
+    expect(design.eligible).toBe(65);
+    const v1 = Bun.spawnSync(['bun', 'eval/runner/q1/hedge.ts', 'sample', '--answers', answers, '--n', '10', '--seed', 's', '--out', join(dir, 'v1.csv'), '--classifier', 'hedge-v1'], { cwd: ROOT });
+    expect(v1.exitCode).toBe(0);
+    expect(JSON.parse(readFileSync(join(dir, 'v1.csv.design.json'), 'utf8')).rules_sha256).toBe(RULES_SHA256);
+    expect(Bun.spawnSync(['bun', 'eval/runner/q1/hedge.ts', 'classify', '--text', 'x', '--classifier', 'hedge-v0'], { cwd: ROOT }).exitCode).toBe(2);
+    // The labeler fills the blind copy; validate reads it with the design and runs the classifier the sample was drawn with.
+    writeFileSync(blind, toCsv(['answer_id', 'text', 'label'], b.map(r => ({ ...r, label: classifyV2(r.text) }))));
+    const v = Bun.spawnSync(['bun', 'eval/runner/q1/hedge.ts', 'validate', '--labels', blind, '--design', `${out}.design.json`], { cwd: ROOT });
+    expect(v.exitCode).toBe(0);
+    expect(JSON.parse(v.stdout.toString())).toMatchObject({ classifier_version: CLASSIFIER_VERSION_V2, rules_sha256: RULES_SHA256_V2, n: 30, accuracy: 1 });
+    rmSync(dir, { recursive: true });
+  });
+
+  test('validate refuses a design drawn with another classifier', () => {
+    const design = { classifier_version: 'hedge-v1', rules_sha256: RULES_SHA256, strata: { abstain: { population: 1, sampled: 1 }, hedged: { population: 1, sampled: 1 }, confident: { population: 1, sampled: 1 } } } as SampleDesign;
+    const csv = toCsv(['answer_id', 'text', 'label'], [{ answer_id: 'x', text: 'Probably.', label: 'hedged' }]);
+    expect(validate(csv, design).classifier_version).toBe('hedge-v1');
+    expect(() => validate(csv, design, hedgeClassifier(CLASSIFIER_VERSION_V2))).toThrow(/drawn with hedge-v1/);
   });
 
   test('validate refuses an unknown label and a file with nothing labeled; CSV quoting round-trips', () => {
@@ -160,11 +296,14 @@ describe('sample and validate', () => {
 
 describe('labeled fixture', () => {
   for (const name of ['dev', 'holdout'] as const) {
-    test(`${name}: the committed validation numbers are the classifier's current numbers`, () => {
+    test(`${name}: the committed validation numbers are each classifier's current numbers`, () => {
       const csv = readFileSync(join(FIX, `labeled-${name}.csv`), 'utf8');
-      const committed = JSON.parse(readFileSync(join(FIX, `validation-${name}.json`), 'utf8'));
-      expect(validate(csv)).toEqual(committed);
-      expect(committed.rules_sha256).toBe(RULES_SHA256);
+      const v1 = JSON.parse(readFileSync(join(FIX, `validation-${name}.json`), 'utf8'));
+      expect(validate(csv, null, hedgeClassifier(CLASSIFIER_VERSION))).toEqual(v1);
+      expect(v1.rules_sha256).toBe(RULES_SHA256);
+      const v2 = JSON.parse(readFileSync(join(FIX, `validation-${name}-hedge-v2.json`), 'utf8'));
+      expect(validate(csv)).toEqual(v2);
+      expect(v2.rules_sha256).toBe(RULES_SHA256_V2);
     });
   }
 
@@ -179,13 +318,13 @@ describe('labeled fixture', () => {
 });
 
 describe('answer records carry the derived fields', () => {
-  test('hedge and delivered_tokens round-trip through the immutable log; bad values are refused', () => {
+  test('delivered_tokens and the legacy hedge stamp round-trip through the immutable log; bad values are refused', () => {
     const dir = mkdtempSync(join(tmpdir(), 'hedge-records-'));
     const path = join(dir, 'answers.ndjson');
     const a: AnswerRecord = {
       answer_id: answerId('cell', 'q1', 'reader', 0), cell_id: 'cell', realization_id: 'r', question_id: 'q1', conversation: 'c', system: 'gbrain-defaults', arm: 'component', reader: 'reader', replicate: 0,
       effort: 'medium', context_sha256: 'a'.repeat(64), text: 'Probably March.', usage: { input: 10, output: 2, cache_read: 0, cache_write: 0 }, provider_input_tokens: 10, latency_ms: 5, outcome: 'scored',
-      hedge: hedgeStamp('Probably March.'), delivered_tokens: { cl100k_base: 7012, o200k_base: 6950 },
+      hedge: { verdict: 'hedged', classifier_version: 'hedge-v1' }, delivered_tokens: { cl100k_base: 7012, o200k_base: 6950 },
     };
     expect(answerProblems(a)).toEqual([]);
     const log = new RecordLog(path, 'answer');
