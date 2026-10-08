@@ -40,7 +40,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { assertCustodyRoots, openCustodyFile } from './sealed-confirmation-lib.ts';
+import { assertCustodyRoots, manifestFiles, openCustodyFile } from './sealed-confirmation-lib.ts';
 import { campaignGuard } from './q2/campaign.ts';
 import { parseEvalConfig } from './eval-config.ts';
 import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
@@ -92,9 +92,7 @@ export function loadCustodyPages(dir: string, custody: { decisionId: string; pur
   if (manifests.length) {
     const m = openCustodyFile({ file: join(dir, manifests[0]), flag: '--dir', decisionId: custody.decisionId, purpose: custody.purpose });
     manifestSha = m.sha256;
-    const parsed = JSON.parse(m.bytes.toString('utf8')) as { files?: Array<{ path: string; sha256: string }> };
-    if (!Array.isArray(parsed.files) || !parsed.files.length) throw new Error(`${manifests[0]} (sha256 ${m.sha256}) needs files [{ path, sha256 }]; ask the custodian for the manifest`);
-    listed = parsed.files.map(f => ({ path: f.path, sha256: f.sha256 }));
+    listed = manifestFiles(JSON.parse(m.bytes.toString('utf8')), ['files', 'pages'], `${manifests[0]} (sha256 ${m.sha256})`).map(f => ({ path: f.path, sha256: f.sha256 }));
   } else listed = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')).sort().map(path => ({ path, sha256: null }));
   if (!listed.length) throw new Error(`--dir ${dir} holds no page files (*.json in world-v1 format); ask the custodian for the set`);
   const hashes: string[] = [];

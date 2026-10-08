@@ -277,6 +277,18 @@ export function custodyTemplatesInput(argv: readonly string[], seeds: readonly n
   return { parsed, sha256, roots };
 }
 
+/**
+ * The file list of a custody manifest under any of the accepted keys (`files`, or the set's own name such as `pages`
+ * or `documents`). Exactly one key may be present; the refusal names the keys so the custodian can fix the file.
+ */
+export function manifestFiles(m: Record<string, unknown>, keys: readonly string[], what: string): Array<{ path: string; sha256: string }> {
+  const present = keys.filter(k => m[k] !== undefined);
+  if (present.length > 1) throw new Error(`${what} lists files under both ${present.join(' and ')}; keep one key (${keys.join(' or ')}) and ask the custodian to fix it`);
+  const list = present.length ? m[present[0]] : undefined;
+  if (!Array.isArray(list) || !list.length) throw new Error(`${what} needs a non-empty list of { path, sha256 } under ${keys.join(' or ')}; ask the custodian for the complete manifest`);
+  return list as Array<{ path: string; sha256: string }>;
+}
+
 export interface CustodySeeds { id: string; seeds: number[]; sha256: string; roots: CustodyRoots }
 
 /**

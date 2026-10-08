@@ -5,6 +5,8 @@
  * the gbrain-evals verdict index. Nothing else leaves custody.
  *
  *   bun eval/runner/q2/export.ts --campaign <root> --step export --run aggregate --out <file>
+ * When G6 legitimately does not run (G1–G5 failed), record its decision first with
+ * `campaign.ts not-run --step g6-decision --run decision`; the export then lists it under not_run_steps.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -48,7 +50,9 @@ async function main(argv: string[]): Promise<void> {
     const receipt = JSON.parse(readFileSync(join(campaign.root, e.receipt), 'utf8'));
     steps[k.replace('/', '.')] = { ...exportAggregates(receipt, Q2_EXPORT_ALLOWLIST).aggregate, receipt_sha256: e.receipt_sha256, spend_usd: e.spend_usd };
   }
-  const aggregate = { decision_id: m.decision_id, exported_at: new Date().toISOString(), spend_usd: spentUsd(entries), approved_usd: m.approved_usd, alert_usd: m.alert_usd, steps };
+  const notRun = [...latestRuns(entries).values()].filter(e => e.run_status === 'not_run').map(e => `${e.step}.${e.run}`).sort();
+  const aggregate = { decision_id: m.decision_id, exported_at: new Date().toISOString(), spend_usd: spentUsd(entries), approved_usd: m.approved_usd, alert_usd: m.alert_usd,
+    not_run_steps: notRun, ...(notRun.length ? { export_note: 'steps listed in not_run_steps were stopped by a failed upstream gate (preregistration, order of runs) and recorded with campaign.ts not-run' } : {}), steps };
   writeFileSync(resolve(out), JSON.stringify(aggregate, null, 2) + '\n');
   const receipt = p5Receipt({ category: 'q2-export', gut: resolveGbrainUnderTest(null), startedAt: new Date().toISOString(), rows: [], harnessError: null, summary: { steps: Object.keys(steps).length }, basis: 'no model call', resolvedConfig: { allowlist_entries: Q2_EXPORT_ALLOWLIST.length } });
   writeReceipt(join(campaign.output, 'receipt.json'), receipt);

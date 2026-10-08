@@ -10,6 +10,8 @@
  *
  *   bun eval/runner/q2/campaign.ts status --campaign <root>          what is done, what is next, spend
  *   bun eval/runner/q2/campaign.ts preflight --campaign <root> ...   dependencies, prices, builds, permissions, access log
+ *   bun eval/runner/q2/campaign.ts not-run --campaign <root> --step <id> --run <name>
+ *                                                                    record a not-run receipt for a step a failed upstream gate stops
  *   bun eval/runner/q2/campaign.ts record --campaign <root> --step <id> --run <name> --receipt <file> [--spend-usd N]
  *                                                                    record a receipt produced outside a Q2 runner
  */
@@ -17,6 +19,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, relative, resolve } from 'node:path';
 import { assertOutsideRepository, resolvedPath } from '../sealed-confirmation-lib.ts';
+import { BENCHMARK_VERSION, writeReceipt, type Receipt } from '../receipt.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
 export const CAMPAIGN_MANIFEST = join(REPO, 'docs/benchmarks/2026-10-06-q2-parser-gaps-campaign.json');
@@ -124,7 +127,8 @@ export function stepBlockers(m: CampaignManifest, entries: readonly LedgerEntry[
     let runs: string[] | null;
     try { runs = expandRuns(m, p, root, entries); } catch (e) { out.push((e as Error).message); continue; }
     if (!runs) { out.push(`step ${pre} needs the recorded selection decision (c-select/decision) to know its packages`); continue; }
-    const missing = runs.filter(r => latest.get(`${pre}/${r}`)?.run_status !== 'completed');
+    // A not-run receipt (recordable only when an upstream gate legitimately stopped the step) satisfies the order.
+    const missing = runs.filter(r => !['completed', 'not_run'].includes(latest.get(`${pre}/${r}`)?.run_status ?? ''));
     if (missing.length) out.push(`step ${pre} has no completed receipt for ${missing.join(', ')}`);
   }
   for (const pre of step.requires_pass ?? []) {
@@ -201,9 +205,68 @@ export function campaignStatus(m: CampaignManifest, entries: readonly LedgerEntr
   const steps = m.steps.map(s => {
     let runs: string[];
     try { runs = expandRuns(m, s, root, entries) ?? s.runs; } catch { runs = s.runs; }
-    return { id: s.id, done: runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status === 'completed'), missing: runs.filter(r => latest.get(`${s.id}/${r}`)?.run_status !== 'completed'), blockers: stepBlockers(m, entries, s.id, root) };
+    const settled = (r: string) => ['completed', 'not_run'].includes(latest.get(`${s.id}/${r}`)?.run_status ?? '');
+    return { id: s.id, done: runs.filter(settled), missing: runs.filter(r => !settled(r)), blockers: stepBlockers(m, entries, s.id, root) };
   });
   return { steps, next: steps.find(s => s.missing.length && !s.blockers.length)?.id ?? null, spent_usd: spentUsd(entries), approved_usd: m.approved_usd, alert_usd: m.alert_usd };
+}
+
+/**
+ * Why a step may legitimately not run: the first step in its predecessor chain (itself included) whose requires_pass
+ * names a step whose recorded runs all completed and at least one did not pass. Null when nothing upstream failed, in
+ * which case the step must run.
+ */
+export function legitimatelyNotRun(m: CampaignManifest, entries: readonly LedgerEntry[], stepId: string, root: string | null = null): string | null {
+  const latest = latestRuns(entries);
+  const seen = new Set<string>();
+  const visit = (id: string): string | null => {
+    if (seen.has(id)) return null;
+    seen.add(id);
+    const step = m.steps.find(s => s.id === id);
+    if (!step) return null;
+    for (const req of step.requires_pass ?? []) {
+      const r = m.steps.find(s => s.id === req)!;
+      let runs: string[];
+      try { runs = expandRuns(m, r, root, entries) ?? r.runs; } catch { runs = r.runs; }
+      const recs = runs.map(x => latest.get(`${req}/${x}`));
+      if (recs.every(e => e?.run_status === 'completed') && recs.some(e => e!.verdict !== 'pass')) {
+        return `step ${id} requires ${req} to pass, and ${req} did not pass (${runs.filter((_, i) => recs[i]!.verdict !== 'pass').map(x => `${x}: ${latest.get(`${req}/${x}`)!.verdict}`).join(', ')})`;
+      }
+    }
+    for (const a of step.after) { const why = visit(a); if (why) return why; }
+    return null;
+  };
+  return visit(stepId);
+}
+
+/**
+ * Record a not-run receipt for a step an upstream gate legitimately stopped (for example the G6 decision when G1–G5
+ * failed, preregistration "Order of runs" step 5). The receipt has run_status not_run, one not-run gate with the reason,
+ * and no spend; later steps (export) then accept it in place of a completed receipt.
+ */
+export function recordNotRun(m: CampaignManifest, root: string, stepId: string, run: string): LedgerEntry {
+  const entries = readLedger(root);
+  const step = m.steps.find(s => s.id === stepId);
+  if (!step) throw new Error(`unknown campaign step ${stepId}; steps are ${m.steps.map(s => s.id).join(', ')}`);
+  const runs = expandRuns(m, step, root, entries) ?? step.runs;
+  if (!runs.includes(run)) throw new Error(`step ${stepId} records runs ${runs.join(', ')}; ${run} is not one of them`);
+  const why = legitimatelyNotRun(m, entries, stepId, root);
+  if (!why) throw new Error(`step ${stepId} is not stopped by any failed upstream gate, so it must run; a not-run receipt is only for a step the preregistration's order of runs skips. Run \`bun eval/runner/q2/campaign.ts status --campaign <root>\` to see what is next.`);
+  const dir = join(root, stepId, run);
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, 'receipt.json');
+  const now = new Date().toISOString();
+  const receipt = {
+    schema_version: 2, benchmark_version: BENCHMARK_VERSION, category: `q2-${stepId}`, run_status: 'not_run', n_total: 0, n_scored: 0, completion_rate: 0, errors: [], publishable: false,
+    gbrain_version: 'n/a', gbrain_pin: 'n/a', started_at: now, finished_at: now,
+    gates: [{ gate: stepId, outcome: 'not_run', threshold: 'runs only after its upstream gates pass (preregistration, order of runs)', observed: null, denominators: { planned: 0, attempted: 0, scored: 0, errors: 0 }, reason: why }],
+    accounting: { planned: 0, attempted: 0, scored: 0, errors: 0, misses: null, source: 'runner' },
+    data: { not_run_reason: why },
+  } as unknown as Receipt;
+  writeReceipt(path, receipt);
+  const entry: LedgerEntry = { step: stepId, run, receipt: relative(root, path), receipt_sha256: createHash('sha256').update(readFileSync(path)).digest('hex'), run_status: 'not_run', verdict: null, spend_usd: 0, at: now, note: why };
+  appendFileSync(join(root, 'campaign-ledger.jsonl'), JSON.stringify(entry) + '\n');
+  return entry;
 }
 
 async function main(argv: string[]): Promise<void> {
@@ -213,6 +276,12 @@ async function main(argv: string[]): Promise<void> {
   assertOutsideRepository(root, '--campaign');
   const m = loadCampaignManifest();
   if (cmd === 'status') { console.log(JSON.stringify(campaignStatus(m, readLedger(resolvedPath(root)), resolvedPath(root)), null, 2)); return; }
+  if (cmd === 'not-run') {
+    const step = flag(argv, '--step'), run = flag(argv, '--run');
+    if (!step || !run) throw new Error('not-run needs --step <id> and --run <name>');
+    console.log(JSON.stringify(recordNotRun(m, resolvedPath(root), step, run), null, 2));
+    return;
+  }
   if (cmd === 'record') {
     const h = campaignGuard(argv, { manifest: m });
     const receipt = flag(argv, '--receipt');
@@ -226,7 +295,7 @@ async function main(argv: string[]): Promise<void> {
     await runPreflight(argv, m);
     return;
   }
-  throw new Error(`unknown command ${cmd}; use status, preflight or record`);
+  throw new Error(`unknown command ${cmd}; use status, preflight, record or not-run`);
 }
 
 if (import.meta.main) main(process.argv.slice(2)).catch(e => { console.error(e instanceof Error ? e.message : e); process.exit(3); });

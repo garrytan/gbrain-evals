@@ -195,7 +195,7 @@ bun eval/runner/q2/junk-audit.ts g2-sample --grammar-lines "$(ls $W/g6-*-B/gramm
 ```
 
 Expected: up to 300 relation lines from arm B's brains, stratified by model (all lines if fewer), plus a fact-line
-sample for the reported fact precision.
+sample for the reported fact precision; a `q2-g2-sample` receipt with `run_status: completed`, recorded in the ledger.
 
 ## 12. Labels (`grammar-label`)
 
@@ -205,8 +205,9 @@ bun eval/runner/q2/junk-audit.ts label --work "$W/grammar" --paid --budget-usd 4
 
 Every candidate mint on N, every baseline mint the candidate does not keep (N), every baseline and candidate mint on K
 and the G2 samples get labels from `claude-opus-5-5` and `gpt-6.1-sol` with `q2-judge-v1`. A disagreement counts as
-wrong; there is no adjudication. Expected: `label-summary.json` with no retryable or unstarted pairs (rerun the same
-command until there are none).
+wrong; there is no adjudication. Expected: a `q2-grammar-label` receipt with `run_status: completed` and no retryable or
+unstarted pairs (while pairs are left the receipt is an error that says to rerun the same command), plus
+`label-summary.json`.
 
 ## 13. G1–G4 and G2 (`grammar-score`)
 
@@ -281,6 +282,15 @@ bun eval/runner/q2/export.ts --campaign "$C" --step export --run aggregate --out
 Expected: one JSON with gate outcomes, observed values, denominators and spend for every recorded receipt. Only this
 file leaves custody.
 
+When G1–G5 fail, G6's answer phase does not run (preregistration, order of runs), so no G6 decision receipt can exist.
+Record a not-run receipt first; the command refuses unless a failed upstream gate stops the step:
+
+```bash
+bun eval/runner/q2/campaign.ts not-run --campaign "$C" --step g6-decision --run decision
+```
+
+The export then starts and lists `g6-decision.decision` under `not_run_steps`.
+
 ## Development pilot and power simulation (before the freeze)
 
 The implementer's dev pilot runs steps 9, 15 and 16 on development material (`--dev-seed 1`, no `--questions-file`,
@@ -298,6 +308,8 @@ A raise in sizes goes into the freeze record with its cost; sizes never fall.
 
 ## Changelog
 
+- 2026-10-08: `g2-sample` and `label` write receipts with `run_status`; W manifests may key their list `pages` and the
+  career manifest `documents`; `campaign.ts not-run` records a G6 decision that G1–G5 stopped, so the export runs.
 - 2026-10-07: G6 runs claude-sonnet-5-5, gpt-6.1-sol and claude-opus-5-5 (amendment 4; Fable 5.1 smoke-test only);
   step estimates scaled to three models; `--skip-models` resumes a pilot work root recorded with Fable, and
   `--exclude-models` keeps its cells out of `compare` and the power simulation.

@@ -4,13 +4,13 @@
  *   q-questions.json   { "id", "templates": { "questions": [{ "id", "pair", "corpus": "amara"|"career",
  *                        "type": "relational"|"temporal", "answerable": true|false, "question", "answer" }] } }
  *   career-corpus/     one markdown or text file per raw document, with career-manifest.json listing
- *                      { "files": [{ "path", "sha256" }], "owner"?, "today"? }
+ *                      { "files" (or "documents"): [{ "path", "sha256" }], "owner"?, "today"? }
  * Every custody file is access-logged and hash-checked before parsing. Pair keys are shared across models (one pair
  * key per question pair, the cluster for the crossed bootstrap).
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, normalize } from 'node:path';
-import { appendAccessLog, openCustodyFile, sha256Hex } from '../sealed-confirmation-lib.ts';
+import { appendAccessLog, manifestFiles, openCustodyFile, sha256Hex } from '../sealed-confirmation-lib.ts';
 
 export type QCorpus = 'amara' | 'career';
 export interface QQuestion { id: string; pair: string; corpus: QCorpus; type: 'relational' | 'temporal'; answerable: boolean; question: string; answer: string }
@@ -45,9 +45,8 @@ export interface CareerCorpus { manifest_sha256: string; docs: Array<{ path: str
 
 export function loadCareerCorpus(dir: string, custody: { decisionId: string; purpose: string }): CareerCorpus {
   const { bytes, sha256 } = openCustodyFile({ file: join(dir, 'career-manifest.json'), flag: '--career-dir', decisionId: custody.decisionId, purpose: custody.purpose });
-  const m = JSON.parse(bytes.toString('utf8')) as { files?: Array<{ path: string; sha256: string }>; owner?: string; today?: string };
-  if (!Array.isArray(m.files) || !m.files.length) throw new Error(`career-manifest.json (sha256 ${sha256}) needs files [{ path, sha256 }]; ask the custodian for the complete manifest`);
-  const docs = m.files.map(f => {
+  const m = JSON.parse(bytes.toString('utf8')) as { owner?: string; today?: string } & Record<string, unknown>;
+  const docs = manifestFiles(m, ['files', 'documents'], `career-manifest.json (sha256 ${sha256})`).map(f => {
     if (isAbsolute(f.path) || normalize(f.path).startsWith('..')) throw new Error(`career-manifest.json: ${f.path} must be relative and stay inside the corpus directory`);
     const path = join(dir, f.path);
     if (!existsSync(path)) throw new Error(`career corpus: ${f.path} is listed but missing; ask the custodian for the complete corpus`);

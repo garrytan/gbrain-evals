@@ -32,7 +32,7 @@ import { mintDocs, type DocRecord, type MintDoc, type MintedLine } from '../line
 import { openP5Brain, p5Receipt } from '../p5-brain.ts';
 import { Checkpoint, closePaid, flagValue, limitFlag, openPaid, type PaidSession } from '../p5-agent.ts';
 import { receiptCost, type RunSummary } from '../budget-ledger.ts';
-import { writeReceipt, type GateOutcome } from '../receipt.ts';
+import { writeReceipt, type GateOutcome, type Receipt } from '../receipt.ts';
 import { assertCustodyRoots, openCustodyFile } from '../sealed-confirmation-lib.ts';
 import { campaignGuard } from './campaign.ts';
 import { AttemptCheckpoint, interruptionReport, openOrContinue, resumeCommand } from './checkpoints.ts';
@@ -181,8 +181,21 @@ async function cmdG2Sample(argv: string[], log: (s: string) => void): Promise<vo
   writeFileSync(join(work, 'g2-sample.json'), JSON.stringify(sample) + '\n');
   const summary = { seed, stratum_sha256: sample.stratum_sha256, relation_allocation: sample.relation.allocation, fact_allocation: sample.fact.allocation };
   writeFileSync(join(output, 'g2-sample-summary.json'), JSON.stringify(summary, null, 2) + '\n');
-  campaign?.finish(join(output, 'g2-sample-summary.json'), 0);
+  const n = sample.relation.lines.length + sample.fact.lines.length;
+  const receipt = stepReceipt('q2-g2-sample', { ...summary, relation_lines: sample.relation.lines.length, fact_lines: sample.fact.lines.length }, null, { planned: n, attempted: n, scored: n, errors: 0 },
+    { seed: 'frozen (custody)', size: Number(flagValue(argv, '--size') ?? G2_DEFAULT_SIZE), grammar_line_files: files.length, sample_file: 'g2-sample.json in the work root (line text stays there)' });
+  writeReceipt(join(output, 'receipt.json'), receipt);
+  campaign?.finish(join(output, 'receipt.json'), 0);
   log(`G2 sample: ${sample.relation.lines.length} relation lines, ${sample.fact.lines.length} fact lines; ${JSON.stringify(sample.relation.allocation)}`);
+}
+
+/**
+ * The receipt a step without a build of its own writes (g2-sample, label): run_status completed, or error with the
+ * resume instruction when work is left, so the campaign never needs a hand-made wrapper receipt.
+ */
+export function stepReceipt(category: string, summary: Record<string, unknown>, harnessError: string | null, accounting: { planned: number; attempted: number; scored: number; errors: number }, resolvedConfig: Record<string, unknown>): Receipt {
+  return p5Receipt({ category, gut: resolveGbrainUnderTest(null), startedAt: new Date().toISOString(), rows: [], summary, harnessError, accounting, resolvedConfig,
+    basis: category === 'q2-g2-sample' ? 'no model call: a seeded draw from the grammar lines in the work root' : 'judge calls through the paid-request guard' });
 }
 
 // ─── label ──────────────────────────────────────────────────────────
@@ -226,7 +239,13 @@ async function cmdLabel(argv: string[], log: (s: string) => void): Promise<void>
   const counts = ckpt.counts(lines.flatMap(l => judges.map(j => `${l.id}|${j}`)));
   const report = { judges, judge_prompt: Q2_JUDGE_PROMPT_VERSION, judge_prompt_sha256: Q2_JUDGE_PROMPT_SHA256, lines: lines.length, parts, label_states: counts, spend_usd: ckpt.spendUsd(), error: err };
   writeFileSync(join(output, 'label-summary.json'), JSON.stringify({ ...report, ...(summary ? { cost: receiptCost(summary) } : {}) }, null, 2) + '\n');
-  campaign?.finish(join(output, 'label-summary.json'), summary ? receiptCost(summary).usd : 0);
+  const pairs = lines.length * judges.length;
+  const left = counts.retryable + counts.not_started;
+  const receipt = stepReceipt('q2-grammar-label', report, err ?? (left ? `${left} of ${pairs} (line, judge) labels are still retryable or unstarted; rerun the same command to finish them` : null),
+    { planned: pairs, attempted: pairs - counts.not_started, scored: counts.done, errors: counts.terminal }, { judges, judge_prompt: Q2_JUDGE_PROMPT_VERSION, judge_prompt_sha256: Q2_JUDGE_PROMPT_SHA256, disagreement: 'counts as wrong; no adjudication' });
+  if (summary) receipt.cost = receiptCost(summary);
+  writeReceipt(join(output, 'receipt.json'), receipt);
+  campaign?.finish(join(output, 'receipt.json'), summary ? receiptCost(summary).usd : 0);
   if (err || counts.retryable || counts.not_started) {
     const openings = ['N', 'K'].filter(x => existsSync(join(work, `opening-${x}.json`))).map(x => JSON.parse(readFileSync(join(work, `opening-${x}.json`), 'utf8')) as { opening_id: string; set: string });
     process.stderr.write('\n' + interruptionReport({ command: resumeCommand('eval/runner/q2/junk-audit.ts', ['label', ...argv]), remaining: { '(line, judge) labels': counts.retryable + counts.not_started }, spentUsd: ckpt.spendUsd(),
