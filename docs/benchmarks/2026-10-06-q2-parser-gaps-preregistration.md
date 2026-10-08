@@ -449,6 +449,24 @@ The 150-pairs-per-corpus raise could not be met for amara, so the final mix is *
   question depends on "now".
 - Progress note: the amara G6 ingest is complete for both arms × 3 models × 3 ingests ($144).
 
+### N manifest format fix and G2 receipt wrapper (recorded 2026-10-08, before G1–G4 continue)
+
+- **N manifest format fix.** `n/n-manifest.json` is now `63d98b5e5ebd615363ee6ea2b61804a199e34ba0c9d797ba277b72b21b061a18`.
+  The beam stratum's `conversations` key is renamed `conversation_ids`. The three vault repositories are merged into
+  one `vault` stratum and the three template repositories into one `templates` stratum, keeping their license and
+  source strings. The runner expects one stratum per id. All 4,616 path and hash entries are identical, and no
+  document bytes change.
+- `custody-hashes.txt` (5,215 entries) = `6c9912a1590009ec646cec8e9635618689f0128c551e1222cf611ec1845381db`, replacing
+  `1f1882c5…`. Only the N manifest entry changed.
+- **G2 receipt wrapper (harness defect).** `junk-audit.ts g2-sample` writes a ledger receipt with no `run_status`, so
+  `grammar-label` refused to start. The custodian recorded a wrapper receipt with `run_status: completed` through
+  `campaign.ts record`. Nothing was re-run. Sample summary
+  `4cd4ac13c57a486bd10cbd7fb4b2f9b0677008a16c2ceae1522e959d45a39d67`; wrapper receipt
+  `4100b6f963ca3f4e9ea4096e5777d2ec7e208b432cc3081970dd4cabd567a6da` (300 relation and 300 fact lines). The runner
+  is fixed after the decision, not before.
+- Progress: G5 passed (world-v1 any-type Δ0, invariance 240/240, variant recall 1.00, 0 decoys added). G6 ingest is
+  complete for all four arms ($293.70). The K mint and the G2 sample are done.
+
 ### Builds, runners and models
 
 - **Candidate (frozen Q2 build):** gbrain `4ec7fbbe4221bd353b88cf46292b44153c542bb2` on branch `capy/q2-parser-gaps`
