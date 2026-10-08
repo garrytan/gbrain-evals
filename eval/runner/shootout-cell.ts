@@ -155,6 +155,8 @@ export interface CampaignManifest {
   executes?: string[];
   /** Q1: container images by digest (`sha256:<64 hex>` or `<ref>@sha256:<64 hex>`), part of the campaign hash. */
   images?: Record<string, string>;
+  /** Q1: the hedge classifier version the derived columns use at render (`none` when no version met its bar, amendment A6). */
+  hedge_classifier?: string;
   /** Q1: spend blocks (T1, T2-S2a, ...) with their estimate and hard cap. */
   blocks?: Record<string, { estimate_usd: number; cap_usd: number }>;
   /** Q1: per-route output caps for every cell's proxy (default extraction 4096, reader 2048, judge 1024). */

@@ -1099,7 +1099,7 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean } = {}): Q
   const models = [...new Set([...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5'])].sort();
   return {
     kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: 'q1-scoreboard', cap_usd: m.cap_usd, ledger: 'eval/reports/scoreboard/q1-scoreboard/campaign.sqlite',
-    parameters: {}, cells: campaignCells(m, opts), executes: EXECUTES, images: pinnedImages(),
+    parameters: {}, hedge_classifier: 'none', cells: campaignCells(m, opts), executes: EXECUTES, images: pinnedImages(),
     blocks: Object.fromEntries(m.blocks.map(b => [b.id, { estimate_usd: b.estimate_usd, cap_usd: b.cap_usd }])),
     output_caps: { ...DEFAULT_ROUTE_CAPS }, route_classes: { ...DEFAULT_ROUTE_CLASSES }, schedule: { vcpu_cap_day: 128, vcpu_cap_night: 200 }, row_pull_every: ROW_FLUSH_EVERY, pull_interval_minutes: 10, models,
   };
