@@ -1,0 +1,8 @@
+{
+  "run_id": "graph-pipeline-recipe-beam-100k-a1-b67d8e5f",
+  "lease_usd": 10,
+  "committed_usd": 4.6254816000000645,
+  "requests": 7221,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

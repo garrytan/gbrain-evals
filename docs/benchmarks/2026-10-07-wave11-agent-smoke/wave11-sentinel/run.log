@@ -1,0 +1,8 @@
+2026-10-07T16:06:12.389Z 27 cells to run (0 already done, order task) in /workspace/gbrain-evals/eval/reports/cat40/w11-d12/wave11-sentinel
+2026-10-07T16:06:12.420Z [budget] cat40-model-ladder: estimated cost unmeasured; ledger /workspace/gbrain-evals/.budget/w11-d12-smoke.sqlite
+2026-10-07T16:08:51.467Z write probe passed on every slot
+2026-10-07T16:08:51.467Z gbrain 0.60.103.0 (b5c8fd5e8b0b) ready on 4 slots, surface starter
+2026-10-07T16:11:24.490Z 10/27 cells; last claude-opus-5-5|wave11|B01|0 success=true $0.165
+2026-10-07T16:13:13.136Z 20/27 cells; last claude-sonnet-5-5|wave11|E01|0 success=true $0.137
+2026-10-07T16:14:27.762Z 27/27 cells; last gpt-6.1-sol|wave11|E03|0 success=true $0.060
+2026-10-07T16:14:27.968Z receipt /workspace/gbrain-evals/eval/reports/cat40/w11-d12/wave11-sentinel/receipt-1791389667968.json

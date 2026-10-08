@@ -1,0 +1,61 @@
+[bench 01:23:06] corpus: 4766 pages, 60022 chunks; voyage @ 1024 dims
+[bench 01:23:08] embedded 64/60022 document
+[bench 01:23:26] embedded 1344/60022 document
+[bench 01:23:37] embedded 2624/60022 document
+[bench 01:23:48] embedded 3904/60022 document
+[bench 01:23:58] embedded 5184/60022 document
+[bench 01:24:08] embedded 6464/60022 document
+[bench 01:24:17] embedded 7744/60022 document
+[bench 01:24:28] embedded 9024/60022 document
+[bench 01:24:38] embedded 10304/60022 document
+[bench 01:25:01] embedded 11584/60022 document
+[bench 01:25:34] embedded 12864/60022 document
+[bench 01:25:56] embedded 14144/60022 document
+[bench 01:26:12] embedded 15424/60022 document
+[bench 01:26:22] embedded 16704/60022 document
+[bench 01:26:35] embedded 17984/60022 document
+[bench 01:26:46] embedded 19264/60022 document
+[bench 01:26:56] embedded 20544/60022 document
+[bench 01:27:07] embedded 21824/60022 document
+[bench 01:27:17] embedded 23104/60022 document
+[bench 01:27:27] embedded 24384/60022 document
+[bench 01:27:37] embedded 25664/60022 document
+[bench 01:27:47] embedded 26944/60022 document
+[bench 01:27:57] embedded 28224/60022 document
+[bench 01:28:08] embedded 29504/60022 document
+[bench 01:28:31] embedded 30784/60022 document
+[bench 01:28:56] embedded 32064/60022 document
+[bench 01:29:25] embedded 33344/60022 document
+[bench 01:29:40] embedded 34624/60022 document
+[bench 01:29:52] embedded 35904/60022 document
+[bench 01:30:03] embedded 37184/60022 document
+[bench 01:31:21] embedded 38464/60022 document
+[bench 01:31:37] embedded 39744/60022 document
+[bench 01:31:46] embedded 41024/60022 document
+[bench 01:32:05] embedded 42304/60022 document
+[bench 01:32:20] embedded 43584/60022 document
+[bench 01:32:42] embedded 44864/60022 document
+[bench 01:33:03] embedded 46144/60022 document
+[bench 01:33:25] embedded 47424/60022 document
+[bench 01:33:42] embedded 48704/60022 document
+[bench 01:33:52] embedded 49984/60022 document
+[bench 01:34:15] embedded 51264/60022 document
+[bench 01:34:35] embedded 52544/60022 document
+[bench 01:34:52] embedded 53824/60022 document
+[bench 01:35:09] embedded 55104/60022 document
+[bench 01:35:28] embedded 56384/60022 document
+[bench 01:35:39] embedded 57664/60022 document
+[bench 01:35:50] embedded 58944/60022 document
+[bench 01:36:01] embedded 64/100 query
+  Setting up brain schema (v215)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  210 migration(s) applied
+[bench 01:37:02] seeded and indexed
+[bench 01:37:28] {"selectivity":"10%","k":10,"mode":"strict_order","recall":1,"p50":63.4,"p95":84.5,"underfilled":0}
+[bench 01:37:28] {"selectivity":"10%","k":10,"mode":"relaxed_order","recall":1,"p50":63,"p95":85.1,"underfilled":0}
+[bench 01:37:55] {"selectivity":"10%","k":50,"mode":"strict_order","recall":1,"p50":65.8,"p95":81,"underfilled":0}
+[bench 01:37:55] {"selectivity":"10%","k":50,"mode":"relaxed_order","recall":1,"p50":66.2,"p95":86.7,"underfilled":0}
+[bench 01:39:06] {"selectivity":"50%","k":10,"mode":"strict_order","recall":0.962,"p50":10.6,"p95":17.7,"underfilled":0}
+[bench 01:39:06] {"selectivity":"50%","k":10,"mode":"relaxed_order","recall":0.983,"p50":11.2,"p95":16.3,"underfilled":0}
+[bench 01:40:19] {"selectivity":"50%","k":50,"mode":"strict_order","recall":0.951,"p50":16.3,"p95":24.4,"underfilled":0}
+[bench 01:40:19] {"selectivity":"50%","k":50,"mode":"relaxed_order","recall":0.952,"p50":16.3,"p95":24.5,"underfilled":0}

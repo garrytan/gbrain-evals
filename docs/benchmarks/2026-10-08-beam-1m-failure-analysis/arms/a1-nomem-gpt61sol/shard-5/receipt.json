@@ -1,0 +1,117 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-1m",
+  "split": "dev",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "started_at": "2026-10-08T15:18:21.338Z",
+  "finished_at": "2026-10-08T15:21:46.176Z",
+  "run_config_hash": "40eb572c95b134167c15cdd8458ac1fd8407605d408edd67acc5b496021c6370",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "declared_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "version": "0.60.104.0",
+    "package_sha256": "99add9ef401b69dc23b807aa66889af7aa836ec136896322f1ab5ff67fb83ef0",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "retrieval_path": "none (no-memory reader)",
+  "search_knobs": {
+    "limit": null,
+    "poolDepth": null,
+    "maxPerSession": null
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "BEAM 1m",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 5,
+      "count": 11
+    },
+    "conversations": 1,
+    "questions_expected": 20
+  },
+  "counts": {
+    "rows": 20,
+    "scored": 18,
+    "errors": 0,
+    "abstention": 2
+  },
+  "summary": {
+    "recall_all_at_5": null,
+    "recall_any_at_5": null,
+    "recall_all_at_10": null,
+    "ndcg_at_10": null,
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "qa_score": 0.29305555555555557,
+    "qa_rows": 20,
+    "qa_errors": 0
+  },
+  "facts": null,
+  "qa": {
+    "mode": "reader",
+    "reader": "openai:gpt-6.1-sol",
+    "judge": "openai:gpt-4.1-mini",
+    "runs": 1,
+    "sessions": 5,
+    "budgetTokens": null,
+    "thinkModel": "anthropic:claude-sonnet-5-5",
+    "context": "none",
+    "reader_prompt": "LongMemEval step-by-step reading prompt with an empty history (no memory)",
+    "temperature_sent": {
+      "reader": "none (provider default)",
+      "judge": 0
+    },
+    "session_order": "chronological (BEAM Month-DD-YYYY dates compared as dates since 2026-10-08; other formats as strings)",
+    "judge_prompts": "per-rubric-item yes/no"
+  },
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0,
+    "rerank_degraded_queries": 0,
+    "rerank_provider_requests": null
+  },
+  "cost": {
+    "usd": 0.068837,
+    "input_tokens": 34423,
+    "output_tokens": 5260,
+    "basis": "budget ledger b2-a1-nomem-gpt61sol-2026-10-08T15-18-21-114Z-0e7804a7: 95 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<repo>/.budget/b2-beam-1m-2026-10-08.sqlite",
+    "program_cap_usd": 60,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 1,
+      "max": 81.1
+    }
+  },
+  "rows_file": "rows.ndjson"
+}

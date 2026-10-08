@@ -41,7 +41,7 @@ class ScriptedJudge implements ChatLike {
     if (this.calls.length >= this.failAfter) throw Object.assign(new Error('openai 503: upstream unavailable'), { status: 503 });
     this.calls.push({ model, prompt, opts });
     const text = this.reply ? this.reply(prompt, opts) : prompt.includes('How many days?') && opts.replicate % 3 === 2 ? 'no' : 'yes';
-    return { text, input_tokens: 10, output_tokens: 1, cached: false };
+    return { text, input_tokens: 10, output_tokens: 1, cached: false, finish: null, usage: null, response_model: null, attempt_errors: [] as string[] };
   }
 }
 

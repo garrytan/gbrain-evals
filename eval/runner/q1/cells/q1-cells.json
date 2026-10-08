@@ -41,7 +41,14 @@
       "input": 2,
       "output": 10,
       "cache_read": 0.1,
-      "cache_write": 2.5
+      "cache_write": 2.5,
+      "long": {
+        "above_input_tokens": 272000,
+        "input": 4,
+        "output": 15,
+        "cache_read": 0.2,
+        "cache_write": 5
+      }
     }
   },
   "assumptions": {

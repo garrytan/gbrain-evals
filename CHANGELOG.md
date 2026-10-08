@@ -2,6 +2,92 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.46] - 2026-10-08
+
+### Open-source memory comparison: gbrain and five open-source memory systems through one harness
+
+[Report](docs/benchmarks/2026-10-06-oss-memory-shootout.md), [preregistration](docs/benchmarks/2026-10-06-oss-memory-shootout-preregistration.md) (frozen 2026-10-06, amendments A1 to A8), [update-and-forget preregistration](docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md), per-cell receipts and text-free rows. The systems are named by kind (`memory-bank`, `graph-pipeline`, `extract-first`, `markdown-notes`, `temporal-graph`, `agent-runtime`); [docs/comparison-systems.md](docs/comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project.
+
+- **Primary family (LongMemEval-S, 100 questions, 8,000 tokens of each system's evidence, `gpt-4o` reader).** gbrain at master `c5fb0201`, measured through an adapter that hands the reader bare chunks without titles or dates, answered 59%; `memory-bank` 91%, `graph-pipeline` 83% and `extract-first` 79% are ahead after Holm, `markdown-notes` 69% is not distinguishable and `temporal-graph` 37% is behind. gbrain's strict `recall_all@5` is 97.9%, tied for the top, and its answers reach 78% on the original sessions behind its hits, so the gap is delivery through this adapter, not retrieval. A `gbrain-query` adapter is planned.
+- **Also measured.** LoCoMo dev, BEAM-100K dev, the custodian's sealed LoCoMo and BEAM-100K batch (aggregates only, gbrain's pin as the blind row), PrecisionMemBench on the upstream contract (S3) and update-and-forget (lifecycle-lite, report-only). The frontier-reader replays (D2) await a scope decision.
+- **Harness.** Ubicloud cell runner with durable leases and a fail-closed metering proxy (`eval/runner/shootout-cell.ts`), the shim protocol and six vendor shims (`eval/systems/`), multi-arm memory QA, the sealed execution profile, the PrecisionMemBench system path and S3 analysis, lifecycle-lite with its mutation kit, and `eval/runner/shootout-report.ts`.
+- **Frontier readers (D2).** On the LongMemEval-S primary arm, Opus 5.5, Sonnet 5.5 and `gpt-6.1-sol` lift every system; gbrain gains 7 to 9 points and the order holds. Fable 5.1 is descriptive only.
+- **Spend.** $1,079.48 measured across Phases 4 to 7 and D2, plus a $283 reservation with unknown actual spend held against the $1,450 cap.
+- **Version.** Main is at 0.10.45, so this release is 0.10.46.
+
+## [0.10.45] - 2026-10-08
+
+### gbrain #6317 mirror: the sync wedge is a pooler round trip that never completes; two consumers were a multiplier
+
+Paired with gbrain #6330 (branch `capy/6317-reliability-contract`, merged as `b5f12b12e`, v0.60.117.0) and the mechanism fix #6329 (v0.60.114.0). No paid call ($0 here); this mirror reruns nothing.
+
+- **Two-consumer and partition arms (mirror, $0 here).** [Report](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md). On 16-vCPU Ubicloud VMs behind PgBouncer in transaction mode at 57 ms: 2 h 49 min of `gbrain serve --http` beside a 6-lane `gbrain sync` on v0.60.110.0 published 4,951 pages with no wedge (three arms: plain; adoption load plus CLI restarts; dual direct pool plus restarts), while one `gbrain sync --no-lanes` with no serve wedged within one sample once the client→pooler half of its connections was dropped: backend `active`/`ClientRead`, the consumer's `expired_claims` round trip parked 135 s past its 5 s deadline, renewals lapsing, zero commits, until the network came back. The named await is postgres.js's query promise in `runUnsafe`; the v0.60.112.0 preparation budget does not cover it (run F: 16 members parked 166 s, nothing cut or held).
+- **Reading.** `persistence.single_consumer` ships off in gbrain v0.60.117.0 per the preregistered reading (the single-process arm wedged). The fix is the bounded client-side settle in v0.60.114.0; v0.60.117.0 adds direct-lane routing for the consumer's round trips, `owner.backend[]` in `writer status`, and movement-based health.
+- **Version.** Main is at 0.10.44, so this release is 0.10.45.
+
+## [0.10.44] - 2026-10-08
+
+### BEAM-1M failure analysis on the development split: the 1M no-memory floor, frontier readers, the oracle ceiling and the reranker; the BEAM date order in the reader prompt fixed
+
+Wave 0 item B2 / E5.3 of the 10x memory advantage plan (gbrain-evals #97, GBRA-60). No gbrain change. Paid: $52.42 of a $60 ledger cap, preregistered before any paid request (46013ab, amendments 05a7cbb, 593b557 and 1d28760). Development split only; no sealed conversation was read.
+
+- **Report.** [BEAM-1M failure analysis](docs/benchmarks/2026-10-08-beam-1m-failure-analysis.md), with [`decomposition.json`](docs/benchmarks/2026-10-08-beam-1m-failure-analysis/decomposition.json) and [`arms-summary.json`](docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms-summary.json) recomputed keyless by `decompose.ts --check` and `analyze.ts --check`, and every arm's receipts, rows and full answers under `arms/`. The 1M no-memory floor is 26.2% with the `gpt-4.1-mini` bridge and 28.6% to 31.3% with Sonnet 5.5, Opus 5.5 and `gpt-6.1-sol`. On the published top 5, `gpt-6.1-sol` scores 62.0% against the bridge's 53.9% (+8.1 points, 95% interval [4.4, 12.2]); with only the gold turns it reaches 84.9%. The shipped reranker raises strict recall at 5 from 47 to 57 of 198 at gbrain `7aa2caa0` with voyage-4; its answer gain (+3.2) is not distinguished. The three-reader ranking is confounded by unequal output limits (preregistration amendment 3).
+- **Free decomposition.** 49 of 194 answerable questions can never pass strict recall at 5; strict recall is 36 of 145 feasible at 5 and 57 of 160 at 10. The 57 questions with no gold in the top 5 are 30 semantic drift, 15 lexical gap and 12 date-scoped. 50 of 220 published answers commit to a wrong value regardless of hedge (model-read labels).
+- **Reader prompt date order (fix).** `renderHistory` sorted BEAM's `Month-DD-YYYY` dates as strings, so sessions reached the reader alphabetically by month name, and the fallback "Current Date" was the alphabetically last date, earlier than the true latest session in 8 of 11 BEAM-1M dev conversations. `sessionDateKey` and `latestDate` in `eval/runner/memory-qa/qa.ts` compare BEAM dates as dates; other date formats keep their string keys, so LongMemEval and LoCoMo prompts are byte-identical. Rerun with the fix, the published 53.5% bridge row is 53.9%.
+- **Runner.** `memory-qa/run.ts` gains `--retrieved-from` (replay another arm's ranked lists without building a brain), `--qa-context none|oracle` (the no-memory floor and the gold-evidence ceiling), and `--search-limit`, `--pool-depth` and `--max-per-session`. A dev run loads only its split's conversation files. With the reranker pinned on, a run is `invalid` unless every query carries rerank scores, none reports a rerank degradation, and the budget ledger holds a request to the configured reranker model for every reranked query. Claude 5 readers are sent no `temperature`, which they reject. Tests: `test/eval/memory-qa-arms.test.ts`.
+- **Version.** Main is at 0.10.43, so this release is 0.10.44.
+
+## [0.10.43] - 2026-10-08
+
+### One usage receipt for every reading lane, the reading headroom recount, and model rules that match the project rule
+
+Wave 0 items A1, A2 and R1 of the 10x memory advantage plan (gbrain-evals #97, GBRA-60). No gbrain change and no paid call ($0).
+
+- **Shared usage receipt (A1).** [`eval/runner/usage-receipt.ts`](eval/runner/usage-receipt.ts) defines `usage-receipt/v1`, documented in [docs/usage-receipt.md](docs/usage-receipt.md): total, uncached, cache-read and cache-write input, output and reasoning tokens, the full answer, a provider-neutral finish reason and delivered tokens with the tokenizer named, one record per replicate and per attempt. Anthropic's separate cache buckets are summed; OpenAI's cached and cache-write tokens are already inside `prompt_tokens` and are never added on top (the committed W10b `gpt-5.4` arm shows the size of that error: 17,004 against a billed 14,458 mean). memory-qa now writes the receipt for reader, `think` and judge calls (`readAndJudge` in `eval/runner/memory-qa/run.ts`): the `think` lane records `think`'s returned usage instead of the question's characters, every replicate keeps its full answer instead of the last one cut to 2,000 characters, a row with no provider usage says so instead of reporting a count, and reader rows carry cl100k delivered tokens. The W10 re-score reads committed usage through the same normalizer and still reproduces every committed summary byte for byte. New test: `test/eval/memory-qa-usage.test.ts` (recorded synthetic Anthropic and OpenAI responses, retries, failures, cache hits, `think` usage, a 5,000-character answer, and the committed W10 means 22,167, 22,077, 13,695 and 14,458).
+- **Reading headroom recount (A2).** [Report](docs/benchmarks/2026-10-08-reading-headroom.md), [`headroom.json`](docs/benchmarks/2026-10-08-reading-headroom/headroom.json) and [`eval/runner/reading-headroom.ts`](eval/runner/reading-headroom.ts), from the committed W10a and W10b receipts; exploratory, not preregistered. The answer's own sessions are 41% of the 15,823 chars/4 tokens gbrain delivers (8,981 on multi-session questions); readers' notes run 138.5 (Sonnet 5.5), 150.8 (Opus 5.5) and 62.5 (`gpt-6.1-sol`) tokens; committed wrong answers are 25 of 470 answerable for Sonnet 5.5 (W10a) and 19 for Opus 5.5, and 29 and 24 for Sonnet 5.5 and `gpt-6.1-sol` on the W10b text. The commitment counts rest on agent-written labels ([`commitment-labels.json`](docs/benchmarks/2026-10-08-reading-headroom/commitment-labels.json)) that no person has reviewed.
+- **Model rules and prices (R1).** CLAUDE.md "Choose models" and AGENTS.md follow the 2026-10-07 project rule: counted runs use the newest Opus, Sonnet and GPT (`claude-opus-5-5`, `claude-sonnet-5-5`, `gpt-6.1-sol`), Fable runs only in smoke tests, `gpt-4.1-mini` only as the bridge to earlier BEAM runs, never `gpt-5.4-mini`. `scripts/model-freshness.ts` blocks `gpt-5.4-mini` and flags Fable and `gpt-4.1-mini`. The budget ledger prices `claude-haiku-5-5` ($0.10 / $0.50, and $0.50 / $2.50 above 100,000 input tokens) and the GPT-6 long-prompt rates above 272K input tokens, reserving and settling at the long rates only when a prompt crosses the threshold.
+- **Ledger correction.** `usageCost` settled OpenAI cache writes (`cache_write_tokens`) at the uncached input price; it now uses the cache-write price. The committed `gpt-6.1-sol` arms of W10b and W10c were settled the old way and are understated by about $6 in total if the batch discount applies to cache writes; their receipts are left as recorded.
+- **Version.** Main is at 0.10.42, so this release is 0.10.43.
+
+## [0.10.42] - 2026-10-08
+
+### gbrain #6278 mirror: a stuck write is cut off and held within 240 s; a table lock still pins the pool
+
+Paired with gbrain #6298 (branch `capy/6278-preparation-deadline`, merged as `b65d4bae7`, v0.60.112.0), which fixes issue #6278.
+
+- **Preparation stall before and after (mirror, $0 here).** [Report](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md), [`results.json`](docs/benchmarks/2026-10-08-managed-sync-preparation-stall/results.json) and the raw captures (report, per-pass tables, stall captures, 30 s timelines; the lock runs keep their full samples). A 15,000-entry catch-up with heavy fact adoption behind a transaction-mode pooler at 57 ms, on 16-vCPU Ubicloud VMs: v0.60.105.0 never drained (102 pages in 47.6 min at pool 10, 62 at pool 3, with no page committed for 888 s and 668 s). The fixed head drained in 2 passes (91 min) at pool 10 and 3 passes at pool 3, with 0 failed fence receipts, 0 watchdog stops and 20 files held with their reason. The report records how the cause picture moved: a lock-wait class proven by a forced probe (`LOCK TABLE pages` through the pooler), a never-settling await found live by the reporter's managed brain (open as gbrain #6317), and two zero-progress modes (the lock wait, and adoption writes queued ahead of the sync).
+- **Goals.** G1 (one request never stops the catch-up) is partly met: a stuck write is cut off at 120 s and held at 240 s, but a table lock still pins 9 of 10 pool connections until it drops (gbrain #6318). G2 (writer status names the step) and G3 (fence defects never consume the write path) are met. G4 (`fence_repair` during a sync) is not met in this release: 22 candidates, none repaired. G5 meets its rate and watchdog parts (1,500-file bench 150.4 to 150.0 pages/min wall and 401.5 to 378.1 steady; 0 watchdog stops in 5 passes) but one pass does not drain 15,000 entries at a 3600 s timeout; it does at the reporter's 14,400 s by arithmetic, and no run used that timeout.
+- **What this mirror could not measure.** The 15,000-entry runs ran at `846bea442`, before the bounded reads and the two follow-up fixes; the merged head was checked by the 1,500-file bench and the lock runs only. Foreground `put_page` latency during the catch-up, a database outage and several poisoned entries in one run were not measured.
+- **Version.** Main is at 0.10.41, so this release is 0.10.42.
+
+## [0.10.41] - 2026-10-08
+
+### gbrain #6279 mirror: managed Postgres catch-up at 368 pages/min, a page save at 2.5 s
+
+Paired with gbrain #6279 (branch `capy/sync-feeder-fast-writes`, measured at `0ba3b1f7c`, merged as `9d013e52d`, v0.60.111.0).
+
+- **Catch-up and put_page before and after (mirror, $0 here).** [Report](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md), [`results.json`](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground/results.json) and the raw bench JSON for every row. Master `a865f8f8` and the branch on 16-vCPU Ubicloud VMs at 57 ms: the 10,000-file backlog takes 33.6 min (was 74.5), steady 367.9 pages/min (was 174.8), idle `put_page` p50 2.46 s (was 8.6), 3,332 pages/min near the database (was 2,404). Three of gbrain's targets missed and are recorded as missed: first commit (18.4 s against 15 s), `put_page` p95 during a catch-up (idle + 1.5 s against idle + 1 s) and catch-up while a page is saved every 5 s (174.4 pages/min, 45% of idle against 50%; master 0.4 with 115 of 120 saves failed).
+- **Version.** Main is at 0.10.40, so this release is 0.10.41.
+
+## [0.10.40] - 2026-10-07
+
+### gbrain fix wave 12 agent smoke: the forget-caveat move regresses Opus 5.5 write-back; the restored put_page UUID line does no harm
+
+Paired with gbrain fix wave 12 (GBRA-57, branch `capy/fix-wave-12`, head `209b20a96`, v0.60.106.0) against `capy/fix-wave-11` head `027d3c69f`. Shipped in gbrain v0.60.106.0, merge commit `7aa2caa0` (#6269), with W4.6 reverted (the shipped instructions are byte-identical to the baseline's) and W4.16 kept.
+
+- **Agent smoke (Cat 40, $38.88).** [Report](docs/benchmarks/2026-10-07-wave12-agent-smoke.md), [preregistration](docs/benchmarks/2026-10-07-wave12-agent-smoke-preregistration.md) committed before any cell, with amendment 1 (one attribution set) written after the preregistered cells and before that set ran. #92's harness and gated cells, `gbrain` arm, `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol`. Permission tasks: 60/60 on both builds, no leaks. Write-back: 60/60 against 55/60, all of it Opus 5.5 (20/20 to 15/20), so the preregistered W4.6 gate reads regress. The wave 12 build serving the baseline's instructions gives Opus 19/20, which names the instruction change. W4.16: Opus non-UUID first-write `request_id` 17/30 on the baseline and 14/30 on wave 12 (p = 0.61), so it does no harm but shows no measured gain. Five of six model-family cells are at the ceiling. No model called `put_page`. Computed, not measured: on the full surface the move pushes 152 characters of clause 7's "what is true now" sentence past a 2,048-character cap (53 before).
+- **Version.** Main is at 0.10.39, so this release is 0.10.40.
+
+## [0.10.39] - 2026-10-07
+
+### gbrain fix wave 11: relaxed HNSW scan order ships default-on; the D12 agent smoke passes
+
+Two records paired with gbrain fix wave 11 (branch `capy/fix-wave-11`, head `b5c8fd5e8`, v0.60.103.0).
+
+- **W6.3, relaxed HNSW scan order (mirror, $0 here).** [Report](docs/benchmarks/2026-10-07-hnsw-relaxed-order.md), [`verdict.json`](docs/benchmarks/2026-10-07-hnsw-relaxed-order/verdict.json), raw tables and logs, and a copy of gbrain's `scripts/bench/hnsw-iterative-scan.ts`. On about 60,000 chunks of real text, 100 queries, Postgres 16 with pgvector 0.8.7, recall@10 at a 50% source filter goes from 0.962 to 0.983 with `voyage-4` at 1,024 dimensions and from 0.950 to 0.967 with `text-embedding-3-small` at 1,536 dimensions; k=50 and the 10% filter are unchanged (the 10% rows are exact in both modes). Latency moves both ways, by at most 3.7 ms at p50 and 5.7 ms at p95. Verdict: `relaxed_order` ships default-on, with `search.hnsw_iterative_scan strict_order` as the escape hatch. The lane's 128-d synthetic numbers (+8.3 points filtered recall) are recorded as a limit. Idea from #6132 by @MarvinDontPanic.
+- **D12 agent smoke (Cat 40, $49.21).** [Report](docs/benchmarks/2026-10-07-wave11-agent-smoke.md), [preregistration](docs/benchmarks/2026-10-07-wave11-agent-smoke-preregistration.md) committed before any cell with one amendment (separate `--gbrain-root` per build, Bun 1.4.2). gbrain master `5b5891069` against the wave, same window, `gbrain` arm, `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol` counted, `claude-fable-5-1` smoke-only. Verdict: pass. Permission tasks 60/60 on both builds with no leaks; write-back 55/60 on master and 56/60 on the wave with no unsafe writes. Five of six model-family cells sit at the ceiling. No model called `put_page`, so its shorter description is untested by agents; Opus 5.5 sent a non-UUID `request_id` on its first write in 12 of 20 write-back cells on master and 17 of 20 on the wave (p = 0.16), and recovered every time.
+- **Version.** 0.10.39, the next free version after #94 shipped 0.10.38.
+
 ## [0.10.38] - 2026-10-07
 
 ### The budget-ledger scale test measures the ledger, not the runner's disk

@@ -262,11 +262,21 @@ describe('leases survive restarts without replay', () => {
     const one = reservationUsd({ ...priceRequest('https://api.openai.com/v1/chat/completions', body)!, inputTokens: Buffer.byteLength(JSON.stringify(body)) + 64 });
     const leaseUsd = (one * 2.5).toFixed(6);
     const start = async () => {
-      const port = 20000 + Math.floor(Math.random() * 20000);
-      const proc = Bun.spawn([process.execPath, 'eval/runner/metering-proxy.ts', '--listen', `127.0.0.1:${port}`, '--budget-ledger', path, '--lease-usd', leaseUsd, '--run-id', 'lease-cli',
-        '--upstream', `openai=http://127.0.0.1:${upstream.port}`], { cwd: ROOT, env: { PATH: process.env.PATH, HOME: process.env.HOME, ...FAKE_ENV }, stdout: 'pipe', stderr: 'pipe' });
-      for (let i = 0; i < 100; i++) { try { await fetch(`http://127.0.0.1:${port}/__proxy/status`); return { proc, port }; } catch { await Bun.sleep(50); } }
-      throw new Error(`proxy did not start: ${await new Response(proc.stderr).text()}`);
+      let stderr = '';
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const probe = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response() });
+        const port = probe.port!;
+        probe.stop(true);
+        const proc = Bun.spawn([process.execPath, 'eval/runner/metering-proxy.ts', '--listen', `127.0.0.1:${port}`, '--budget-ledger', path, '--lease-usd', leaseUsd, '--run-id', 'lease-cli',
+          '--upstream', `openai=http://127.0.0.1:${upstream.port}`], { cwd: ROOT, env: { PATH: process.env.PATH, HOME: process.env.HOME, ...FAKE_ENV }, stdout: 'pipe', stderr: 'pipe' });
+        for (let i = 0; i < 100; i++) {
+          if (proc.exitCode !== null) break;
+          try { await fetch(`http://127.0.0.1:${port}/__proxy/status`); return { proc, port }; } catch { await Bun.sleep(50); }
+        }
+        proc.kill('SIGKILL'); await proc.exited;
+        stderr = await new Response(proc.stderr).text();
+      }
+      throw new Error(`proxy did not start: ${stderr}`);
     };
     const call = (port: number) => fetch(`http://127.0.0.1:${port}/openai/v1/chat/completions`, { method: 'POST', body: JSON.stringify(body), headers: { authorization: 'Bearer container-dummy' } }).then(r => r.status);
     try {

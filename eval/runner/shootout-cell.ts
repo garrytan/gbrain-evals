@@ -60,6 +60,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
+import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { BudgetRun, initLedger, ledgerStatus } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
@@ -317,6 +318,12 @@ export interface RemotePayload {
   restore?: { realization_id: string; dir: string; restore_command?: string };
   route_caps?: { caps: Record<string, number>; slots: Record<string, string>; defaultClass: string };
   admission?: Partial<Record<ProviderName, ProviderLimits>>;
+  /**
+   * An open-source shootout sealed cell (not Q1, whose sealed cells run from the custodian's host): the proxy's ledger
+   * and usage log live in the VM's custody root, ~/custody/<lease id>, passed to the command as SHOOTOUT_CUSTODY, so
+   * only the lease summary and what the command writes to SHOOTOUT_OUT leave the VM.
+   */
+  sealed?: boolean;
 }
 
 /** What the executor needs beyond argv: the VM name (Q1), where its output lives remotely and locally, the deadline and the pull interval. */
@@ -476,7 +483,7 @@ export class Campaign {
     const c = this.cell(l.cell);
     const base: RemotePayload = { lease_id: l.lease_id, lease_usd: l.usd, max_output_tokens: l.max_output_tokens, command: c.command, out: this.remoteOut(l) };
     if (c.timeout_hours !== undefined) base.timeout_hours = c.timeout_hours;
-    if (!this.q1) return base;
+    if (!this.q1) return c.sealed ? { ...base, sealed: true } : base;
     return { ...base, cell: c.id, campaign_sha256: this.sha, row_pull_every: this.manifest.row_pull_every ?? ROW_PULL_EVERY,
       ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(restore ? { restore } : {}),
       route_caps: { caps: { ...DEFAULT_ROUTE_CAPS, ...(this.manifest.output_caps ?? {}) }, slots: { ...DEFAULT_ROUTE_CLASSES, ...(this.manifest.route_classes ?? {}) }, defaultClass: 'extraction' },
@@ -759,11 +766,14 @@ async function takeSnapshot(payload: RemotePayload, out: string, env: Record<str
  * command's, snapshot's and restore's environment); the runners present it as their provider key and the compose
  * stacks as their dummy key (`${SHOOTOUT_CELL_TOKEN:-dummy}`), so nothing on the VM is trusted for being local.
  */
-export async function runRemote(payload: RemotePayload, opts: { port?: number; pollMs?: number } = {}): Promise<number> {
+export async function runRemote(payload: RemotePayload, opts: { port?: number; pollMs?: number; upstream?: Record<string, string>; custodyBase?: string } = {}): Promise<number> {
   const out = resolve(payload.out);
   mkdirSync(out, { recursive: true });
+  const custody = payload.sealed ? resolve(opts.custodyBase ?? join(homedir(), 'custody'), payload.lease_id) : null;
+  const traces = custody ? join(custody, 'proxy') : out;
+  mkdirSync(traces, { recursive: true });
   const port = opts.port ?? 8787;
-  const ledger = join(out, 'lease.sqlite');
+  const ledger = join(traces, 'lease.sqlite');
   const controlToken = randomUUID();
   const cellToken = randomUUID();
   const extra: string[] = [];
@@ -771,8 +781,8 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     '--route-class', Object.entries(payload.route_caps.slots).map(([k, v]) => `${k}=${v}`).join(','), '--default-route-class', payload.route_caps.defaultClass);
   for (const [prov, lim] of Object.entries(payload.admission ?? {})) extra.push('--admission', `${prov}=${Object.entries(lim!).map(([k, v]) => `${k}:${v}`).join(',')}`);
   const proxy = Bun.spawn([process.execPath, join(REPO_ROOT, 'eval/runner/metering-proxy.ts'), '--listen', `0.0.0.0:${port}`, '--budget-ledger', ledger, '--lease-usd', String(payload.lease_usd),
-    '--run-id', payload.lease_id, '--usage-log', join(out, 'usage.ndjson'), ...(payload.max_output_tokens ? ['--max-output-tokens', String(payload.max_output_tokens)] : []), '--control-token', controlToken,
-    ...extra], { stdout: 'inherit', stderr: 'inherit', env: { ...process.env, SHOOTOUT_CELL_TOKEN: cellToken } });
+    '--run-id', payload.lease_id, '--usage-log', join(traces, 'usage.ndjson'), ...(payload.max_output_tokens ? ['--max-output-tokens', String(payload.max_output_tokens)] : []), '--control-token', controlToken,
+    ...extra, ...Object.entries(opts.upstream ?? {}).flatMap(([prov, url]) => ['--upstream', `${prov}=${url}`])], { stdout: 'inherit', stderr: 'inherit', env: { ...process.env, SHOOTOUT_CELL_TOKEN: cellToken } });
   let code: number | null = null;
   let timedOut = false;
   let checkpointRows = 0;
@@ -783,7 +793,7 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     if (!up) throw new Error('the metering proxy did not start');
     const base = `http://127.0.0.1:${port}`;
     const env: Record<string, string | undefined> = { ...process.env, SHOOTOUT_OUT: out, SHOOTOUT_PROXY: base, SHOOTOUT_LEASE_ID: payload.lease_id, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken,
-      OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1`, SHOOTOUT_CELL_TOKEN: cellToken };
+      OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1`, SHOOTOUT_CELL_TOKEN: cellToken, ...(custody ? { SHOOTOUT_CUSTODY: custody } : {}) };
     for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
     if (payload.restore) {
       const dir = resolve(REPO_ROOT, payload.restore.dir);

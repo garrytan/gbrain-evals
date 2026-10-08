@@ -88,7 +88,7 @@ import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa.ts';
 import { answerId, answerRecord, judgmentKey, readRecords, RecordLog, sha256, type AnswerRecord, type JudgmentRecord, type Q1Row } from '../memory-qa/records.ts';
-import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run.ts';
+import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
@@ -880,7 +880,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           continue;
         }
         const c = res.value!;
-        const u = normalizeUsage(readerConvention(rd), c);
+        const u = normalizeUsage(readerConvention(rd), c.usage ?? c);
         appendAnswer(answerRecord(id, { text: c.text, outcome: r!.outcome, usage: answerUsage(u), latency_ms: Math.round(performance.now() - t0), provider_input_tokens: u.total_input }), undefined, pack);
       }
       return pack;
@@ -1120,7 +1120,7 @@ export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Recor
 
 /** Repository paths every Q1 cell executes (their git tree enters the campaign hash). */
 export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions',
-  'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
+  'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/openai-judge-shim.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
   'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
   'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',
   'eval/systems', 'docs/comparison-systems', 'eval/decisions', 'package.json', 'bun.lock'];

@@ -1,0 +1,734 @@
+{
+  "kind": "precisionmembench-system",
+  "schema_version": 1,
+  "benchmark": "precisionmembench",
+  "contract": "PrecisionMemBench upstream contract",
+  "started_at": "2026-10-07T21:09:33.523Z",
+  "finished_at": "2026-10-07T21:13:01.619Z",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "eb9be1a5563b71d67453cd9522efe4939e44403f0841c0603c7a19e17b0bbef7",
+  "upstream": {
+    "repo": "tenurehq/precisionmembench",
+    "commit": "c9689ca63d83f8979b235fd2c0a6ddf2d28ca850",
+    "fixture_sha256": {
+      "fixtures/beliefs.seed.json": "35659b3b9a581b644fc6746e1b4e902c3e7b56c0973b546bf7b0816a69e3de98",
+      "fixtures/retrieval.cases.json": "09e99f0852280538abe34b03570f65583fdb10df3c554b7150f0f665d5db709c"
+    },
+    "scorer_sha256": {
+      "scorer/baseAdapter.ts": "0aa2bf9ec4544b548e8bd6ffbf47a23a2fa78eb236b3a60c9b46593d80c35356",
+      "scorer/belief.ts": "c3a992066d452cd6b80865640782c31d201a14e1f3fde44cd25953c0d6459353",
+      "scorer/buildRetrievalReport.ts": "809c77fccbf0e3b3001a2c396f4c6dc515d4f1f19b293373c8abca9239fcfa9b",
+      "scorer/runCases.ts": "e0e9c7bfcff2999955989e27127698cc9f4ed57284dbd9d3b87d2bbc46e61958",
+      "providers.config.json": "3b5a7fef80f5272f9b0f8d67c9a96249ee30ade34b28fcb77a44b34e7204a8eb"
+    }
+  },
+  "evaluator": "vendored BaseAdapter.buildContext and scoreCases, unchanged: persona, pinned facts, open questions, relation expansion and the budget come from the shared evaluator; only searchText calls the system (eval/precisionmembench/systemAdapter.ts)",
+  "ingestion": {
+    "unit": "one session per belief, one user turn with upstream's /add text (BaseAdapter.beliefToText)",
+    "superseded": "seeded live; no supersession field crosses",
+    "event_time": "synthetic and disclosed: 2026-05-29T00:00:00 plus one minute per fixture index (arrival order), never the belief's own dates",
+    "query_time": "the namespace's last event time",
+    "namespaces": "one per (user, scope) a case searches: that user's beliefs of that scope plus the user's universal beliefs; a belief no searched namespace holds gets its owner's own namespace"
+  },
+  "belief_mapping": "distinct cited sources in first-appearance order over items in rank order, whole items, cut at the case limit (maxBeliefs, default 20); one source is one belief of that namespace; items with provenance unavailable cite nothing; a retrieval whose items all lack provenance is not measurable",
+  "families": {
+    "search-only": "every category the vendored scorer does not list as structural (the S3 headline)",
+    "structural": "the scorer's STRUCTURAL_CATEGORIES, reported separately"
+  },
+  "selection": {
+    "cases_expected": 77,
+    "full_case_count": 77,
+    "limit": null,
+    "partial": false
+  },
+  "system": {
+    "name": "http:http://127.0.0.1:8700",
+    "capability_system": "markdown-notes",
+    "identity": {
+      "system": "markdown-notes",
+      "config": "common",
+      "versions": {
+        "package": "basic-memory==0.23.2",
+        "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
+        "image": null,
+        "vendor_benchmark_code": "basicmachines-co/basic-memory@c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048 (tag v0.23.2), benchmarks/src/basic_memory_benchmarks/{converters/locomo_to_corpus.py,providers/bm_local.py,scoring/qa.py}",
+        "resolved_dependencies": "uv.lock pins every transitive dependency to markdown-notes's own uv.lock at the tag; prereleases resolved: fastmcp==4.0.0b1 and fastmcp-slim==4.0.0b1 (markdown-notes requires fastmcp==4.0.0b1), opentelemetry-instrumentation==0.63b1 and opentelemetry-semantic-conventions==0.63b1"
+      },
+      "health": {
+        "ok": true,
+        "config": "common",
+        "bm_version": "markdown-notes version: 0.23.2"
+      }
+    },
+    "capabilities": {
+      "protocol": 1,
+      "system": "markdown-notes",
+      "versions": {
+        "package": "basic-memory==0.23.2",
+        "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
+        "image": null,
+        "vendor_benchmark_code": "basicmachines-co/basic-memory@c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048 (tag v0.23.2), benchmarks/src/basic_memory_benchmarks/{converters/locomo_to_corpus.py,providers/bm_local.py,scoring/qa.py}",
+        "resolved_dependencies": "uv.lock pins every transitive dependency to markdown-notes's own uv.lock at the tag; prereleases resolved: fastmcp==4.0.0b1 and fastmcp-slim==4.0.0b1 (markdown-notes requires fastmcp==4.0.0b1), opentelemetry-instrumentation==0.63b1 and opentelemetry-semantic-conventions==0.63b1"
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": null,
+            "small": null,
+            "embedder": "fastembed:BAAI/bge-small-en-v1.5 (local ONNX, quantized qdrant/bge-small-en-v1.5-onnx-q)",
+            "dims": 384,
+            "reranker": null
+          },
+          "notes": "documented local install (pip/uv install markdown-notes, SQLite + sqlite-vec). Semantic search is on by default because fastembed and sqlite_vec import (config_models.py _default_semantic_search_enabled). The local reranker jinaai/jina-reranker-v1-tiny-en is configured but reranker_enabled defaults to False (config_models.py:430), and the vendor LoCoMo benchmark does not enable it, so the recipe runs without a reranker. No LLM anywhere in ingest or search: the recipe makes zero provider calls."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": null,
+            "embedder": "litellm:openai/text-embedding-3-large",
+            "dims": 1536,
+            "reranker": null
+          },
+          "unsettable": [
+            "extraction"
+          ],
+          "notes": "markdown-notes has no extraction model. The embedder runs through the LiteLLM provider because the built-in openai provider never sends `dimensions` (openai_provider.py embed_documents), so text-embedding-3-large would return 3,072 dimensions; the LiteLLM provider forwards `dimensions` for text-embedding-3 models. Calls go to OPENAI_BASE_URL via semantic_embedding_api_base. markdown-notes keeps its default semantic_min_similarity of 0.55 in this config. text-embedding-3-large scores lower in absolute terms than bge-small: in the 2026-10-05 metered smoke the relevant note scored 0.466 for 'What did Caroline sign up for in May 2023?', so vector search dropped it and the query returned nothing (full-text search did not match either)."
+        }
+      },
+      "time": "in-text",
+      "time_notes": "The session date is rendered into the note title, a `session_date` frontmatter field and the heading, exactly where the vendor converter puts it. markdown-notes's own created/updated timestamps are file and index times, not event times. search_notes takes no reference date, so query_time is ignored.",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one note per session named <source_id>.md; each search_notes row maps back through its file_path. Rows are whole-note entities (entity_types default), so every item cites exactly one session."
+      },
+      "delete": "native",
+      "delete_notes": "delete_note MCP tool on the session's note removes the file and its index rows. Nothing is derived across notes, so no residue is expected.",
+      "readiness": "synchronous: /finish runs `bm reindex --search --embeddings -p <ns>` (the vendor benchmark's command), which returns after full-text indexing and embedding. Completeness is `known` when its summary reports 0 embedding errors and `bm status --json` counts as many files as were written, else `degraded`. The vendor's `bm status --json` readiness poll has no readiness field to read at 0.23.2 (its helper returns None and proceeds).",
+      "namespace": "project: one markdown-notes project per namespace, named <ns>, rooted at /data/notes/<ns>",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 10
+          },
+          "maps_to": "search_notes(page_size=10, search_type='hybrid', output_format='json'): page_size default 10 in search_notes and top_k default 10 in the vendor benchmark; hybrid is the default search type when semantic search is on; semantic_min_similarity 0.55, semantic_vector_k 100, reranker off"
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 30
+          },
+          "maps_to": "same call with page_size=30, so the harness can pack an 8,000-token budget from more candidates than the default page"
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [
+        "BASIC_MEMORY_NO_PROMOS=1",
+        "BASIC_MEMORY_AUTO_UPDATE=false",
+        "BASIC_MEMORY_LOGFIRE_ENABLED=false",
+        "BASIC_MEMORY_LOGFIRE_SEND_TO_LOGFIRE=false",
+        "LITELLM_LOCAL_MODEL_COST_MAP=True",
+        "LITELLM_TELEMETRY=False",
+        "HF_HUB_OFFLINE=1",
+        "HF_HUB_DISABLE_TELEMETRY=1"
+      ],
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "stdio",
+        "version": "bm mcp (markdown-notes 0.23.2, fastmcp 4.0.0b1, mcp 2.0.0)"
+      },
+      "deviations_from_vendor_code": [
+        "Sessions arrive one at a time through /ingest and are written as notes in the vendor converter's format; the vendor converter writes a whole dataset first. Indexing happens at /finish with the vendor's reindex command.",
+        "Note ids and titles use the opaque source id (src-...) instead of locomo-cNN-sNN, and the frontmatter drops dataset_id, conversation_id and session_number, which would leak dataset identity across the sanitizer.",
+        "The session date is rendered from the ISO event_time into the LoCoMo phrase format ('1:56 pm on 8 May, 2023') for every dataset; the vendor copies LoCoMo's raw string.",
+        "Real-time file watching is off (BASIC_MEMORY_INDEX_CHANGES=false) so the warm MCP server never indexes concurrently with the explicit `bm reindex`; indexing still runs only through the vendor's reindex command.",
+        "The warm MCP session starts at container start instead of after the first ingest, and serves every project.",
+        "Item text is matched_chunk with the note title prefixed when the chunk lacks it, mirroring the vendor's qa.assemble_context header; the vendor's character budget (12,000 chars, 10 hits) is replaced by the harness's shared packer.",
+        "The MCP client is an independent implementation (no vendor benchmark code is copied, because the repository is AGPL-3.0)."
+      ]
+    }
+  },
+  "policy": {
+    "name": "markdown-notes:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "k": 10
+    },
+    "settings_source": "settings"
+  },
+  "product": null,
+  "overlay": null,
+  "gbrain_config": null,
+  "embedding": null,
+  "fidelity": null,
+  "cost": null,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "markdown-notes",
+    "lease_id": "markdown-notes-common-pmb-a1-c76688fe",
+    "retry_upstream_5xx": true
+  },
+  "sanitizer": {
+    "forbidden_markers": 146
+  },
+  "ingest": {
+    "namespaces": 6,
+    "sessions": 50,
+    "failed_sessions": 0,
+    "degraded_namespaces": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "usd": 0.0008,
+    "requests": 57
+  },
+  "namespaces": [
+    {
+      "ns": "ns-e74018f73571f14d",
+      "user": "other-user",
+      "scope": "domain:code",
+      "beliefs": 1,
+      "searched": false,
+      "ingest": {
+        "ns": "ns-e74018f73571f14d",
+        "sessions": 1,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.000014950000000000001,
+          "requests": 2,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 1
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-abb81fdedb08802d",
+      "user": "test-user",
+      "scope": "domain:code",
+      "beliefs": 27,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-abb81fdedb08802d",
+        "sessions": 27,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.0004079400000000001,
+          "requests": 29,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 27
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-98ddaaea6feb302f",
+      "user": "test-user",
+      "scope": "domain:hobby",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-98ddaaea6feb302f",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.00007617999999999999,
+          "requests": 6,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 5
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-c2532db06631d40d",
+      "user": "test-user",
+      "scope": "domain:writing",
+      "beliefs": 12,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-c2532db06631d40d",
+        "sessions": 12,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.00018291000000000002,
+          "requests": 14,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 12
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-d1596052c0df4ee8",
+      "user": "brand-new-user",
+      "scope": "domain:code",
+      "beliefs": 0,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-d1596052c0df4ee8",
+        "sessions": 0,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "skipped",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0,
+          "requests": 0,
+          "unpriced": 0
+        }
+      }
+    },
+    {
+      "ns": "ns-ffed2e4f226cd412",
+      "user": "test-user",
+      "scope": "user:universal",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-ffed2e4f226cd412",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.00007683000000000001,
+          "requests": 6,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 5
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    }
+  ],
+  "costs": {
+    "ingest_usd": 0.0008,
+    "retrieval_usd": 0.0001,
+    "total_usd": 0.0009,
+    "source": "metering proxy"
+  },
+  "latency": {
+    "system_calls": 72,
+    "p50_ms": 370.65,
+    "p95_ms": 494.45500000000004
+  },
+  "outcomes": {
+    "scored": 77,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 77,
+  "comparison_complete": true,
+  "summary": {
+    "search-only": {
+      "cases": 43,
+      "counted": 43,
+      "harness_failures": 0,
+      "passed": 11,
+      "mean_precision": 0.3883,
+      "n_precision": 37,
+      "mean_recall": 0.937,
+      "n_recall": 34,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "structural": {
+      "cases": 34,
+      "counted": 34,
+      "harness_failures": 0,
+      "passed": 10,
+      "mean_precision": 0.1213,
+      "n_precision": 25,
+      "mean_recall": 0.9444,
+      "n_recall": 9,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "all": {
+      "cases": 77,
+      "counted": 77,
+      "harness_failures": 0,
+      "passed": 21,
+      "mean_precision": 0.2807,
+      "n_precision": 62,
+      "mean_recall": 0.9385,
+      "n_recall": 43,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "categories": [
+      {
+        "category": "Type routing and open questions",
+        "family": "structural",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0278,
+        "n_precision": 6,
+        "mean_recall": 1,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Alias resolution",
+        "family": "search-only",
+        "cases": 23,
+        "counted": 23,
+        "harness_failures": 0,
+        "passed": 4,
+        "mean_precision": 0.4785,
+        "n_precision": 23,
+        "mean_recall": 0.9935,
+        "n_recall": 22,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Scope disambiguation",
+        "family": "structural",
+        "cases": 12,
+        "counted": 12,
+        "harness_failures": 0,
+        "passed": 3,
+        "mean_precision": 0.1481,
+        "n_precision": 9,
+        "mean_recall": 0.875,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Supersession chain exclusion",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0,
+        "n_precision": 3,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Design boundary cases",
+        "family": "search-only",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 3,
+        "mean_precision": 0,
+        "n_precision": 3,
+        "mean_recall": 0,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cross-user isolation",
+        "family": "structural",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0,
+        "n_precision": 1,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Persona prelude content",
+        "family": "structural",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 2,
+        "mean_precision": 0,
+        "n_precision": 2,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Ranking stability",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0.2667,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Fuzzy matching and prefix guards",
+        "family": "search-only",
+        "cases": 7,
+        "counted": 7,
+        "harness_failures": 0,
+        "passed": 2,
+        "mean_precision": 0.2333,
+        "n_precision": 5,
+        "mean_recall": 0.8,
+        "n_recall": 5,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cold start behavior",
+        "family": "search-only",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": null,
+        "n_precision": 0,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Budget eviction and capacity",
+        "family": "structural",
+        "cases": 5,
+        "counted": 5,
+        "harness_failures": 0,
+        "passed": 3,
+        "mean_precision": 0.5,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Counter-signal retrieval",
+        "family": "search-only",
+        "cases": 2,
+        "counted": 2,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0.5556,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Relation expansion",
+        "family": "search-only",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.2714,
+        "n_precision": 4,
+        "mean_recall": 1,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      }
+    ],
+    "upstream": {
+      "meanLatencyMs": 379.8,
+      "p50LatencyMs": 367.44,
+      "p95LatencyMs": 503.68,
+      "caseCount": 77,
+      "meanPrecision": 0.2807,
+      "meanRecall": 0.9385,
+      "totalPassed": 21,
+      "totalCases": 77,
+      "passRate": 0.2727,
+      "activeRetrievalPasses": 5,
+      "passTypes": {
+        "activeRetrieval": 5,
+        "structural": 10,
+        "triviallyEmpty": 6
+      },
+      "categories": [
+        {
+          "category": "Alias resolution",
+          "caseCount": 23,
+          "passed": 4,
+          "failed": 19,
+          "meanPrecision": 0.4785,
+          "meanRecall": 0.9935
+        },
+        {
+          "category": "Scope disambiguation",
+          "caseCount": 12,
+          "passed": 3,
+          "failed": 9,
+          "meanPrecision": 0.1481,
+          "meanRecall": 0.875
+        },
+        {
+          "category": "Fuzzy matching and prefix guards",
+          "caseCount": 7,
+          "passed": 2,
+          "failed": 5,
+          "meanPrecision": 0.2333,
+          "meanRecall": 0.8
+        },
+        {
+          "category": "Type routing and open questions",
+          "caseCount": 6,
+          "passed": 0,
+          "failed": 6,
+          "meanPrecision": 0.0278,
+          "meanRecall": 1
+        },
+        {
+          "category": "Design boundary cases",
+          "caseCount": 6,
+          "passed": 3,
+          "failed": 3,
+          "meanPrecision": 0,
+          "meanRecall": 0
+        },
+        {
+          "category": "Budget eviction and capacity",
+          "caseCount": 5,
+          "passed": 3,
+          "failed": 2,
+          "meanPrecision": 0.5,
+          "meanRecall": 1
+        },
+        {
+          "category": "Persona prelude content",
+          "caseCount": 4,
+          "passed": 2,
+          "failed": 2,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Relation expansion",
+          "caseCount": 4,
+          "passed": 0,
+          "failed": 4,
+          "meanPrecision": 0.2714,
+          "meanRecall": 1
+        },
+        {
+          "category": "Supersession chain exclusion",
+          "caseCount": 3,
+          "passed": 0,
+          "failed": 3,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Ranking stability",
+          "caseCount": 3,
+          "passed": 1,
+          "failed": 2,
+          "meanPrecision": 0.2667,
+          "meanRecall": 1
+        },
+        {
+          "category": "Counter-signal retrieval",
+          "caseCount": 2,
+          "passed": 1,
+          "failed": 1,
+          "meanPrecision": 0.5556,
+          "meanRecall": 1
+        },
+        {
+          "category": "Cross-user isolation",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Cold start behavior",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": null,
+          "meanRecall": null
+        }
+      ]
+    }
+  },
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson",
+    "report": "report.json"
+  }
+}

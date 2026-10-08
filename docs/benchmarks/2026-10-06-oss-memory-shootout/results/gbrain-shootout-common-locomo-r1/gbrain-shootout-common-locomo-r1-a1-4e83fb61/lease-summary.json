@@ -1,0 +1,8 @@
+{
+  "run_id": "gbrain-shootout-common-locomo-r1-a1-4e83fb61",
+  "lease_usd": 9,
+  "committed_usd": 6.294042850000004,
+  "requests": 6464,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

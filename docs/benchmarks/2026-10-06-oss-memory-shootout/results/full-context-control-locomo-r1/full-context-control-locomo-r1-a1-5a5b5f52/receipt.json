@@ -1,0 +1,245 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "locomo",
+  "split": "dev",
+  "started_at": "2026-10-06T17:14:27.035Z",
+  "finished_at": "2026-10-06T18:44:51.220Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "LoCoMo (locomo10.json)",
+    "files": [
+      {
+        "path": "locomo/locomo10.json",
+        "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4"
+      }
+    ],
+    "revision": "3eb6f2c",
+    "license": "CC BY-NC 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "full-context-control-locomo-r1-a1-5a5b5f52",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 3,
+    "sessions": 89,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 2034
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "ddfa9fd7f580ad48c4cbb3b2436a6d376670ee177859246ef285c94e679a7183",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 3,
+    "questions_expected": 587
+  },
+  "system": {
+    "name": "full-context",
+    "capability_system": "full-context",
+    "capabilities": {
+      "system": "full-context",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {},
+          "notes": "harness control"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous; retrieval returns every ingested session, most recent first",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {}
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [],
+      "retrieval_metrics": "not-applicable",
+      "presentation": "event-time"
+    },
+    "identity": {
+      "system": "full-context",
+      "config": null,
+      "versions": null
+    }
+  },
+  "counts": {
+    "rows": 1174,
+    "scored": 0,
+    "errors": 0,
+    "abstention": 246
+  },
+  "summary": {
+    "recall_all_at_5": null,
+    "recall_any_at_5": null,
+    "recall_all_at_10": null,
+    "ndcg_at_10": null,
+    "latency_p50_ms": null,
+    "latency_p95_ms": null
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 1174,
+    "outcomes": {
+      "scored": 1174,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence",
+      "vendor-default"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 1174
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.rehydrated.b8000.main",
+      "dir": "arms/fixed-evidence.rehydrated.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 587,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 587,
+        "scored": 0,
+        "errors": 0,
+        "abstention": 123
+      },
+      "summary": {
+        "recall_all_at_5": null,
+        "recall_any_at_5": null,
+        "recall_all_at_10": null,
+        "ndcg_at_10": null,
+        "latency_p50_ms": null,
+        "latency_p95_ms": null,
+        "qa_score": 0.40545144804088584,
+        "qa_rows": 587,
+        "qa_errors": 0,
+        "qa_service_score": 0.40545144804088584,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "vendor-default.rehydrated.bnone.main",
+      "dir": "arms/vendor-default.rehydrated.bnone.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 587,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 587,
+        "scored": 0,
+        "errors": 0,
+        "abstention": 123
+      },
+      "summary": {
+        "recall_all_at_5": null,
+        "recall_any_at_5": null,
+        "recall_all_at_10": null,
+        "ndcg_at_10": null,
+        "latency_p50_ms": null,
+        "latency_p95_ms": null,
+        "qa_score": 0.6286201022146508,
+        "qa_rows": 587,
+        "qa_errors": 0,
+        "qa_service_score": 0.6286201022146508,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    }
+  ]
+}

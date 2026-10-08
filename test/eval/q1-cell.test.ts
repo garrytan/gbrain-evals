@@ -25,6 +25,8 @@ import { FRONTIER_READERS, FullContextSystem } from '../../eval/runner/systems/b
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
 import type { ScriptedModel } from '../../eval/runner/cat40/loop.ts';
 import { CAMPAIGN_SCHEMA, type CampaignManifest } from '../../eval/runner/scoreboard.ts';
+
+const NO_META = { finish: null, usage: null, response_model: null, attempt_errors: [] as string[] };
 import { Campaign, loadCampaign, planWaves } from '../../eval/runner/shootout-cell.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -46,7 +48,7 @@ function scriptedReader(): ChatLike & { calls: Array<{ model: string; opts: Chat
       calls.push({ model, opts });
       const q = byText.get(/Question: (.*)\n/.exec(prompt)?.[1] ?? '');
       const text = q && !q.abstention && prompt.includes(q.answer!) ? `From the history: ${q.answer}.` : 'The history does not say.';
-      return { text, input_tokens: Math.ceil(prompt.length / 4), output_tokens: 12, cached: false };
+      return { text, input_tokens: Math.ceil(prompt.length / 4), output_tokens: 12, cached: false, ...NO_META };
     },
   };
 }
@@ -61,7 +63,7 @@ function scriptedJudge(): ChatLike & { judges: string[] } {
       const response = /Model Response: ([\s\S]*?)\n\n/.exec(prompt)?.[1] ?? '';
       const reference = /Correct Answer: ([\s\S]*?)\n\n/.exec(prompt)?.[1];
       const yes = reference !== undefined ? response.toLowerCase().includes(reference.toLowerCase()) : /does not say/.test(response);
-      return { text: yes ? 'yes' : 'no', input_tokens: 100, output_tokens: 1, cached: false };
+      return { text: yes ? 'yes' : 'no', input_tokens: 100, output_tokens: 1, cached: false, ...NO_META };
     },
   };
 }
@@ -304,8 +306,8 @@ describe('reader usage (eval/runner/q1/usage.ts)', () => {
     const def = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {} })], { configuration: 'baseline' });
     const reader: ChatLike = {
       async chat(model): Promise<ChatResult> {
-        return model.startsWith('anthropic:') ? { text: 'The history does not say.', input_tokens: 40, output_tokens: 5, cache_read_tokens: 50, cache_write_tokens: 10, cached: false }
-          : { text: 'The history does not say.', input_tokens: 100, output_tokens: 5, cache_read_tokens: 60, cache_write_tokens: 0, cached: false };
+        return model.startsWith('anthropic:') ? { ...NO_META, text: 'The history does not say.', input_tokens: 100, output_tokens: 5, cached: false, usage: { input_tokens: 40, cache_read_input_tokens: 50, cache_creation_input_tokens: 10, output_tokens: 5 } }
+          : { ...NO_META, text: 'The history does not say.', input_tokens: 100, output_tokens: 5, cached: false, usage: { prompt_tokens: 100, completion_tokens: 5, prompt_tokens_details: { cached_tokens: 60 } } };
       },
     };
     const out = join(tmp, 'usage-packed');

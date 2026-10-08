@@ -189,7 +189,9 @@
     "fidelity": {
       "embedding_deferred_pages": 0,
       "rerank_missing_queries": 0,
-      "reranked_queries": 0
+      "reranked_queries": 0,
+      "rerank_degraded_queries": 0,
+      "rerank_provider_requests": null
     },
     "rows_file": "rows.ndjson"
   }

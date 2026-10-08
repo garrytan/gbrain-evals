@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "b2-beam-1m-failure-analysis",
+      "preregistration": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/**",
+        "docs/benchmarks/2026-10-08-beam-1m-failure-analysis/*.json",
+        "docs/benchmarks/2026-10-08-beam-1m-failure-analysis.md"
+      ]
+    }
+  ]
+}

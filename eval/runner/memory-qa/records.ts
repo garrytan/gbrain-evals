@@ -24,7 +24,7 @@ import { dirname } from 'node:path';
 import type { ProvenanceStatus } from '../systems/types.ts';
 import type { PackingLoss } from '../systems/render.ts';
 import { OUTCOMES, type Outcome } from './outcomes.ts';
-import type { MemoryQaRow } from './run.ts';
+import type { MemoryQaRow } from './run-systems.ts';
 
 export { OUTCOMES };
 

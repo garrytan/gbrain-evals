@@ -5,7 +5,7 @@
  * (eval/systems/_fake), every canonical failure outcome, the not-measurable provenance rule,
  * gbrain-shootout in process behind a stand-in metering proxy (hash vectors through the
  * transport, then OpenAI-style embeddings and Voyage reranks answered by the stand-in), and the
- * Phase 5 draft cells. With GBRAIN_OVERLAY_SPEC=<checkout>@<sha> it also runs gbrain-shootout on
+ * Phase 5 cells (amendment A4). With GBRAIN_OVERLAY_SPEC=<checkout>@<sha> it also runs gbrain-shootout on
  * that overlay build.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
@@ -224,7 +224,7 @@ describe('a failed system call is a recorded outcome, never a crash', () => {
 
   test('flags are strict', () => {
     expect(() => parsePmbArgs(['--output', 'x'])).toThrow(/--system/);
-    expect(() => parsePmbArgs(['--system', 'ext-extract-first', '--output', 'x'])).toThrow(/shim URL/);
+    expect(() => parsePmbArgs(['--system', 'extract-first', '--output', 'x'])).toThrow(/shim URL/);
     expect(() => parsePmbArgs(['--system', 'fake', '--output', 'x', '--mode', 'hybrid'])).toThrow(/unknown argument --mode/);
     expect(parsePmbArgs(['--system', 'fake', '--output', 'x', '--paid', '--budget-run-id', 'r1']).policy).toBe('vendor-default');
   });
@@ -319,3 +319,36 @@ describe.skipIf(!process.env.GBRAIN_OVERLAY_SPEC)('gbrain-shootout on an overlay
   }, 900_000);
 });
 
+describe('Phase 5 cells (amendment A4, manifests/cells/pmb.json)', () => {
+  const MANIFESTS = join(ROOT, 'docs/benchmarks/2026-10-06-oss-memory-shootout/manifests');
+  const PMB = join(MANIFESTS, 'cells/pmb.json');
+  const campaign = () => loadCampaign(join(MANIFESTS, 'campaign.json'));
+  const load = () => { const m = campaign().manifest; return { ...m, cells: m.cells.filter(c => c.id.endsWith('-pmb')) }; };
+
+  test('load in the cell schema under the campaign parameters, one cell per system configuration, every command the PMB runner', () => {
+    const m = load();
+    expect(m.cells.map(c => `${c.system}:${c.config}`).sort()).toEqual(['extract-first:common', 'gbrain-shootout-master:common', 'gbrain-shootout:common', 'graph-pipeline:common', 'markdown-notes:common', 'memory-bank:common', 'temporal-graph:common', 'temporal-graph:recipe']);
+    for (const c of m.cells) {
+      expect(c.command).toContain('bun eval/runner/precisionmembench-system.ts');
+      expect(c.command).toContain('--output "$SHOOTOUT_OUT/pmb"');
+      for (const s of c.command.matchAll(/up --system (\S+) --config (\S+)/g)) { expect(s[1]).toBe(c.system); expect(s[2]).toBe(c.config); }
+    }
+    const master = m.cells.find(c => c.system === 'gbrain-shootout-master')!;
+    expect(master.command).toContain(`--gbrain "$HOME/gbrain-master@${m.parameters!.gbrain_master_sha}"`);
+    expect(m.cells.find(c => c.system === 'gbrain-shootout')!.command).not.toContain('--gbrain');
+  });
+
+  test('every lease names its basis; the common-model cells fit the plan\'s $10 Phase 5 line, temporal-graph\'s recipe is the one cell that does not', () => {
+    const m = load();
+    const file = JSON.parse(readFileSync(PMB, 'utf8')) as { cells: Array<{ lease_basis?: string }> };
+    expect(file.cells.every(c => (c.lease_basis ?? '').startsWith('1.5 x'))).toBe(true);
+    const common = m.cells.filter(c => c.config === 'common').reduce((s, c) => s + c.lease_usd, 0);
+    expect([common, m.cells.reduce((s, c) => s + c.lease_usd, 0)]).toEqual([5, 16.5]);
+    expect(common).toBeLessThanOrEqual(10);
+  });
+
+  test('A4 adds the cells to the campaign; the campaign carries the hash the preregistration records after A7', () => {
+    expect(campaign().manifest.cells_from).toContain('cells/pmb.json');
+    expect(campaign().sha256).toBe('36ba918f59963a0cc1a6af1cb12ab3a5aa0a48af585e6e5e0b07d41e90db0894');
+  });
+});

@@ -39,7 +39,7 @@ export type PolicyMode = RetrievalPolicy['mode'];
 export interface ArmsSpec {
   policies: Partial<Record<PolicyMode, { budget_tokens: number | null }>>;
   contexts: ContextMode[];
-  readers: Array<{ id: string; model: string; slice?: { limit: number; seed: number } }>;
+  readers: Array<{ id: string; model: string; slice?: { limit: number; seed: number }; policies?: PolicyMode[] }>;
   judge?: string;
 }
 
@@ -69,6 +69,7 @@ export function parseArms(text: string, source = 'arms file'): ArmsSpec {
     ids.add(r.id);
     if (typeof r.model !== 'string' || !r.model) problems.push(`reader ${r.id}: model is required`);
     if (r.slice && !(Number.isInteger(r.slice.limit) && r.slice.limit > 0 && Number.isInteger(r.slice.seed))) problems.push(`reader ${r.id}: slice needs an integer limit and seed`);
+    if (r.policies && (!r.policies.length || r.policies.some(m => !modes.includes(m)))) problems.push(`reader ${r.id}: policies must name policies the file defines`);
   }
   if (problems.length) throw new Error(`${source}: ${problems.join('; ')}`);
   return spec;
@@ -83,6 +84,7 @@ export function expandArms(spec: ArmsSpec): Arm[] {
     const budget = spec.policies[policy]!.budget_tokens;
     if (!spec.readers.length) { out.push({ id: `${policy}.retrieval`, policy, context: null, budget_tokens: budget, reader: null }); continue; }
     for (const context of spec.contexts) for (const r of spec.readers) {
+      if (r.policies && !r.policies.includes(policy)) continue;
       out.push({ id: `${policy}.${context}.b${budget ?? 'none'}.${r.id}`, policy, context, budget_tokens: budget, reader: { id: r.id, model: r.model, slice: r.slice ?? null } });
     }
   }

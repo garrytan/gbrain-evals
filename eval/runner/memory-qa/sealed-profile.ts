@@ -10,8 +10,10 @@
  * no answer, source id, exception text, context or filename can ride along.
  *
  *   bun eval/runner/memory-qa/sealed-profile.ts export --receipt <custody>/receipt.json --out <public file>
+ *   bun eval/runner/memory-qa/sealed-profile.ts export-cell --cell <custody memory-qa output> --out <public dir>
+ *     (a multi-arm cell: one allowlisted file per arm, named by the arm id from the public arms file)
  */
-import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, relative, resolve, isAbsolute } from 'node:path';
 
@@ -69,9 +71,32 @@ export function exportAggregates(receipt: Record<string, unknown>): Record<strin
   return out;
 }
 
+const ARM_ID = /^[A-Za-z0-9._-]{1,80}$/;
+
+/**
+ * Export a sealed multi-arm cell: `<cell>/arms/<arm id>/receipt.json` becomes `<out>/<arm id>.json`, each through
+ * `exportAggregates`. Arm ids come from the public arms file; any other directory name is refused, not copied.
+ */
+export function exportCell(cellDir: string, outDir: string): string[] {
+  const armsDir = join(cellDir, 'arms');
+  if (inside(outDir, cellDir)) throw new Error('the export directory must be outside the sealed cell output');
+  const arms = existsSync(armsDir) ? readdirSync(armsDir).filter(a => existsSync(join(armsDir, a, 'receipt.json'))).sort() : [];
+  if (!arms.length) throw new Error(`${cellDir} holds no arm receipts (arms/<id>/receipt.json)`);
+  const bad = arms.filter(a => !ARM_ID.test(a));
+  if (bad.length) throw new Error(`${bad.length} arm director${bad.length === 1 ? 'y has' : 'ies have'} a name outside [A-Za-z0-9._-]; nothing was exported`);
+  mkdirSync(outDir, { recursive: true });
+  for (const a of arms) writeFileSync(join(outDir, `${a}.json`), JSON.stringify(exportAggregates(JSON.parse(readFileSync(join(armsDir, a, 'receipt.json'), 'utf8'))), null, 2) + '\n');
+  return arms;
+}
+
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  if (argv[0] === 'export-cell' && one('--cell') && one('--out')) {
+    const arms = exportCell(resolve(one('--cell')!), resolve(one('--out')!));
+    console.log(`exported ${arms.length} arms`);
+    process.exit(0);
+  }
   if (argv[0] !== 'export' || !one('--receipt') || !one('--out')) { console.error('usage: bun eval/runner/memory-qa/sealed-profile.ts export --receipt <custody receipt.json> --out <file>'); process.exit(2); }
   const out = resolve(one('--out')!);
   mkdirSync(dirname(out), { recursive: true });

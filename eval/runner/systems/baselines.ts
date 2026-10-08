@@ -37,7 +37,7 @@ import { vector } from '@electric-sql/pglite/vector';
 import { PG_EMBED_DIMS, PG_EMBED_MODEL, type Embedder } from '../cat40/pg-arm.ts';
 import { decideError } from '../decisions/errors.ts';
 import type { Outcome } from '../memory-qa/outcomes.ts';
-import { defaultTemperatureOnly } from '../memory-qa/qa.ts';
+import { sendsTemperature } from '../memory-qa/qa.ts';
 import { answerUsage, normalizeUsage } from '../q1/usage.ts';
 import { SystemError, type CapabilityRecord, type DeleteResult, type FinishResult, type IngestResult, type Item, type MemorySystem, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from './types.ts';
 
@@ -255,7 +255,7 @@ export async function answerFullContext(opts: { reader: string; prompt: string; 
   const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
   const request: { url: string; headers: Record<string, string>; body: unknown } = prov === 'anthropic'
     ? { url: `${(process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com').replace(/\/$/, '')}/v1/messages`, headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
-      body: { model, max_tokens: outputTokens, ...(defaultTemperatureOnly(model) ? {} : { temperature: 0 }), output_config: { effort }, messages: [{ role: 'user', content: [{ type: 'text', text: prefix, cache_control: { type: 'ephemeral' } }, ...(suffix ? [{ type: 'text', text: suffix }] : [])] }] } }
+      body: { model, max_tokens: outputTokens, ...(sendsTemperature(`anthropic:${model}`) ? { temperature: 0 } : {}), output_config: { effort }, messages: [{ role: 'user', content: [{ type: 'text', text: prefix, cache_control: { type: 'ephemeral' } }, ...(suffix ? [{ type: 'text', text: suffix }] : [])] }] } }
     : { url: `${(process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, '')}/chat/completions`, headers: { authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
       body: /^(gpt-[5-9]|o\d)/.test(model)
         ? { model, messages: [{ role: 'user', content: opts.prompt }], n: 1, max_completion_tokens: Math.max(outputTokens, 2000), reasoning_effort: effort, prompt_cache_key: cache_key }

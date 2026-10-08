@@ -1,0 +1,139 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "precisionmembench",
+  "config": "common",
+  "notes": "Phase 5, PrecisionMemBench (P3), added by amendment A4. Each cell sets its own system and config. Workload per system: 6 namespaces, 50 one-belief sessions, 72 searching cases and 6 readiness probes; leases from each system's pilot ingest cost per session.",
+  "cells": [
+    {
+      "id": "markdown-notes-common-pmb",
+      "system": "markdown-notes",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x eval/systems/markdown-notes/PILOT.md, scaled per session: LoCoMo common ingest $0.0033 for 28 sessions, x 50/28 = $0.006, plus query embeddings (under $0.001); $0.50 floor so one reservation fits",
+      "command": "bash eval/systems/bootstrap.sh up --system markdown-notes --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system markdown-notes; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system markdown-notes",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "extract-first-common-pmb",
+      "system": "extract-first",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x eval/systems/extract-first/PILOT.md, per add call: $0.00142 per common add (8,399 input tokens, mostly extract-first's own prompt) x 50 one-turn sessions = $0.071; $0.50 floor so one reservation fits",
+      "command": "MEM0_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system extract-first --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --finish-timeout-s 14400 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system extract-first; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system extract-first",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "memory-bank-common-pmb",
+      "system": "memory-bank",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x eval/systems/memory-bank/PILOT.md, scaled per session: LoCoMo conv-44 common ingest $0.096 for 28 sessions x 50/28 = $0.17 (per character, 10,921 of about 80,000: $0.013); query cost under $0.0001 each; $0.50 floor",
+      "command": "bash eval/systems/bootstrap.sh up --system memory-bank --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system memory-bank; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system memory-bank",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "temporal-graph-common-pmb",
+      "system": "temporal-graph",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 1.5,
+      "lease_basis": "1.5 x eval/systems/temporal-graph/PILOT.md, scaled per session: LoCoMo common ingest $0.46 for 28 session episodes x 50/28 = $0.82 (per character: $0.063), plus the cross-encoder at $0.0013 per search x 78 = $0.10; estimate $0.92",
+      "command": "bash eval/systems/bootstrap.sh up --system temporal-graph --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system temporal-graph; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system temporal-graph",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "temporal-graph-recipe-pmb",
+      "system": "temporal-graph",
+      "config": "recipe",
+      "benchmark": "precisionmembench",
+      "lease_usd": 11.5,
+      "lease_basis": "1.5 x eval/systems/temporal-graph/PILOT.md, scaled per session: LoCoMo recipe (gpt-5.5) ingest $4.10 for 28 session episodes x 50/28 = $7.32 (per character: $0.56), plus the cross-encoder at $0.0013 per search x 78 = $0.10; estimate $7.42, the per-session basis is the ceiling because temporal-graph makes about three gpt-5.5 calls per episode whatever its length",
+      "command": "bash eval/systems/bootstrap.sh up --system temporal-graph --config recipe --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system temporal-graph; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system temporal-graph",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "graph-pipeline-common-pmb",
+      "system": "graph-pipeline",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 1.0,
+      "lease_basis": "1.5 x eval/systems/graph-pipeline/PILOT.md, scaled per session: LoCoMo common ingest $0.369 for 28 sessions x 50/28 = $0.66 (per turn pair, $0.00108 x 50: $0.054); query embeddings $0.000003 each; estimate $0.66",
+      "command": "bash eval/systems/bootstrap.sh up --system graph-pipeline --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system graph-pipeline; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system graph-pipeline",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-shootout-common-pmb",
+      "system": "gbrain-shootout",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x estimate, not piloted: 50 pages (10,921 characters, about 2,700 tokens) through text-embedding-3-large (under $0.001) plus Voyage rerank-2.5 on 78 searches (72 cases and 6 readiness probes) at about 2,000 tokens each (about $0.01); $0.50 floor so one reservation fits",
+      "command": "bun eval/runner/precisionmembench-system.ts --system gbrain-shootout --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --output \"$SHOOTOUT_OUT/pmb\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-shootout-master-common-pmb",
+      "system": "gbrain-shootout-master",
+      "config": "common",
+      "benchmark": "precisionmembench",
+      "lease_usd": 0.5,
+      "lease_basis": "1.5 x estimate, not piloted: 50 pages (10,921 characters, about 2,700 tokens) through text-embedding-3-large (under $0.001) plus Voyage rerank-2.5 on 78 searches (72 cases and 6 readiness probes) at about 2,000 tokens each (about $0.01); $0.50 floor so one reservation fits",
+      "command": "bun eval/runner/precisionmembench-system.ts --system gbrain-shootout --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_master_sha}}\" --output \"$SHOOTOUT_OUT/pmb\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_master_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_master_sha}}",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    }
+  ]
+}

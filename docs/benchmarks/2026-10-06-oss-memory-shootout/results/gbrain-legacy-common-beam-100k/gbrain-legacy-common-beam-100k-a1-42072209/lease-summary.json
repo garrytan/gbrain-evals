@@ -1,0 +1,8 @@
+{
+  "run_id": "gbrain-legacy-common-beam-100k-a1-42072209",
+  "lease_usd": 2,
+  "committed_usd": 0.7340602000000008,
+  "requests": 1046,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}
