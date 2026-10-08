@@ -8,7 +8,8 @@
     {
       "path": "docs/README.md",
       "sha256_before": "644fa33ddc182a9ae36f33e035ddd5099090808f74d8c132ced7681f956f760f",
-      "sha256_after": "62f364117a2f5933ffc0c6be7f74d409446df4679663188224ea9552ab14b330"
+      "sha256_after": "8c6231d60b2f8d821d9d282cde0ee109fd14e0cc9fb9151883d33211276579bf",
+      "note": "sha256_after updated after merging main (0.10.49, #103 added an index row); the rename part of the diff is unchanged"
     },
     {
       "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md",
