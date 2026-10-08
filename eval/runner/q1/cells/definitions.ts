@@ -39,7 +39,7 @@ export const MANIFEST_PATH = resolve(import.meta.dir, 'q1-cells.json');
 export const SCHEMA_PATH = resolve(import.meta.dir, 'schema.json');
 export const PREREGISTRATION = 'docs/benchmarks/2026-10-06-scoreboard-preregistration.md';
 
-export type SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5';
+export type SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S2b-ingest';
 export type BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
 export type Split = 'dev' | 'sealed' | 'all';
 
@@ -98,6 +98,8 @@ export interface CellDefinition {
   canonical_instrument: string;
   /** Write-start-to-queryable probes: the last session plus `sample` sessions per conversation, seeded. */
   probes: { sample: number; seed: string };
+  /** Dev smoke cells: only these conversations of the split run (the set's `only_conversations`). */
+  only_conversations?: string[];
   /** VM units: conversations per launch (a shim cell on S1 launches one VM per conversation). */
   shards: number;
   expected_hours: number;
@@ -113,7 +115,9 @@ export interface CellDefinition {
 
 export interface SetFacts {
   id: SetId; benchmark: string; split: Split; questions: number; conversations: number; corpus_tokens: number; messages: number;
-  block: BlockId; selection: Selection; exclusions: Array<{ question_id: string; reason: string }>; role: 'headline' | 'public'; exposure: 'E0' | 'E2' | 'E3'; label: string;
+  block: BlockId; selection: Selection; exclusions: Array<{ question_id: string; reason: string }>; role: 'headline' | 'public' | 'smoke'; exposure: 'E0' | 'E2' | 'E3'; label: string;
+  /** Smoke sets: the dev conversations that run (the rest of the split is never loaded). */
+  only_conversations?: string[];
 }
 
 export interface Manifest {
@@ -127,6 +131,8 @@ export interface Manifest {
   sets: SetFacts[];
   blocks: Array<{ id: BlockId; label: string; plan_usd: number; estimate_usd: number; cap_usd: number }>;
   cells: CellDefinition[];
+  /** Paid dev smokes (`generateSmokeCells`): dev conversations only, outside every block total. */
+  smoke_cells: CellDefinition[];
   total_usd: number;
   plan_total_usd: number;
   cap_usd: number;
@@ -145,6 +151,8 @@ export const SETS: Record<SetId, SetFacts> = {
   S4: { id: 'S4', benchmark: 'lme-s', split: 'dev', questions: 500, conversations: 500, corpus_tokens: 57_500_000, messages: 250_000, block: 'T2-S4-S5', selection: { kind: 'all' }, exclusions: [], role: 'public', exposure: 'E3', label: 'LongMemEval-S' },
   'S4-slice': { id: 'S4-slice', benchmark: 'lme-s', split: 'dev', questions: 100, conversations: 100, corpus_tokens: 11_500_000, messages: 50_000, block: 'T2-S4-S5', selection: { kind: 'shootout-slice', limit: 100, seed: 42 }, exclusions: [], role: 'public', exposure: 'E3', label: 'LongMemEval-S, shootout slice' },
   S5: { id: 'S5', benchmark: 'lme-m', split: 'dev', questions: 100, conversations: 100, corpus_tokens: 150_000_000, messages: 500_000, block: 'T2-S4-S5', selection: { kind: 'all' }, exclusions: [], role: 'public', exposure: 'E3', label: 'LongMemEval-M' },
+  'S3-smoke': { id: 'S3-smoke', benchmark: 'locomo', split: 'dev', questions: 20, conversations: 1, corpus_tokens: 20_474, messages: 675, block: 'T2-S3', selection: { kind: 'stratified', limit: 20, stratify: 'category', seed: 'q1-smoke' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'LoCoMo dev smoke (conv-44, 20 questions)', only_conversations: ['conv-44'] },
+  'S2b-ingest': { id: 'S2b-ingest', benchmark: 'beam-1m', split: 'dev', questions: 10, conversations: 1, corpus_tokens: 926_773, messages: 2_182, block: 'T2-S2b', selection: { kind: 'stratified', limit: 10, stratify: 'category', seed: 'q1-ingest-probe' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BEAM-1M dev ingest probe (1m-16, retrieval only)', only_conversations: ['1m-16'] },
 };
 
 /** PLAN §7 block lines (the approved estimate the re-priced manifest is compared with). */
@@ -296,7 +304,7 @@ function makeCell(set: SetId, system: string, configuration: string, armSpecs: A
   const hours = Math.max(1, Math.ceil(ASSUMPTIONS.hours_per_mtok[runner] * s.corpus_tokens / 1e6 / shards));
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
     ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}` },
-    shards, expected_hours: Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
+    ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), shards, expected_hours: Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
   return { ...base, estimate: estimateCell(base) };
 }
 
@@ -384,6 +392,23 @@ export function generateCells(): CellDefinition[] {
   return cells;
 }
 
+/**
+ * The preregistered paid dev smokes (re-pricing, token calibration and the shrink rule's dev strengths): every system's
+ * 8k component arm with the three readers and the canonical judge on one LoCoMo dev conversation, gbrain synthesize, the
+ * file agent and full context on the same questions, and a retrieval-only ingest of one BEAM-1M dev conversation for
+ * each LLM-extracting system (the ingest-cost projection behind the 48-hour and 1.5x rules).
+ */
+export function generateSmokeCells(): CellDefinition[] {
+  const synthesize: ArmSpec = { id: 'whole-synthesize', mode: 'own-answer', variant: 'synthesize', readers: ['system-default'], label: 'gbrain synthesize (own answer, starter surface)' };
+  const cells = ['gbrain-defaults', ...EXT_BEAM, ...PASSIVE_BASELINES].map(system =>
+    makeCell('S3-smoke', system, headlineConfig(system, 'locomo'), [b8({ label: 'component, 8,000 tokens (dev smoke)' }), ...(system === 'gbrain-defaults' ? [synthesize] : [])]));
+  cells.push(makeCell('S3-smoke', 'baseline-file-agent', 'baseline', [{ id: 'whole-agent', mode: 'agent', label: 'file agent, uncapped grep, 40 turns (dev smoke)' }]));
+  cells.push(makeCell('S3-smoke', 'baseline-full-context', 'baseline', [{ id: 'whole-full-context', mode: 'full-context', label: 'whole history (dev smoke)' }]));
+  for (const system of ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph'])
+    cells.push(makeCell('S2b-ingest', system, headlineConfig(system, 'beam'), [{ id: 'retrieval-only', mode: 'retrieval-only', label: 'ingest-cost probe, retrieval only' }]));
+  return cells;
+}
+
 /** A stratified ~300-item frontier re-judge per set: the sample spread over the set's judged arms that have no other frontier scope. */
 function withFrontierSample(cells: CellDefinition[], set: SetId): CellDefinition[] {
   const open = cells.flatMap(c => c.arms.filter(a => a.set === set && !a.frontier && a.mode !== 'retrieval-only' && a.readers.length && a.readers[0] !== 'system-default'));
@@ -406,7 +431,7 @@ export function buildManifest(): Manifest {
   return {
     schema: MANIFEST_SCHEMA, generated_by: 'bun eval/runner/q1/cells/definitions.ts', preregistration: PREREGISTRATION, readers: READERS, effort: 'medium',
     prices: Object.fromEntries(models.sort(([a], [b]) => (a < b ? -1 : 1))), assumptions: ASSUMPTIONS,
-    sets: Object.values(SETS), blocks, cells,
+    sets: Object.values(SETS), blocks, cells, smoke_cells: generateSmokeCells(),
     total_usd: Math.round(blocks.reduce((s, b) => s + b.estimate_usd, 0) * 100) / 100,
     plan_total_usd: Object.values(PLAN_BLOCKS).reduce((s, b) => s + b.plan_usd, 0) + PLAN_SHARED_USD, cap_usd: CAP_USD,
   };
@@ -447,6 +472,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (!['shim', 'in-process'].includes(d.runner)) p.push('runner must be shim or in-process');
   if (!(Number.isInteger(d.ingest_replicate) && d.ingest_replicate >= 1)) p.push('ingest_replicate must be a positive integer');
   if (!(Number.isInteger(d.probes?.sample) && d.probes.sample >= 0 && d.probes.seed)) p.push('probes needs a sample size and a seed');
+  if (d.only_conversations !== undefined && !(Array.isArray(d.only_conversations) && d.only_conversations.length && d.only_conversations.every(c => typeof c === 'string' && c) && d.split === 'dev')) p.push('only_conversations must list dev conversation ids on a dev-split cell');
   if (!Array.isArray(d.arms) || !d.arms.length) p.push('arms must list at least one arm');
   const ids = new Set<string>();
   for (const a of d.arms ?? []) {

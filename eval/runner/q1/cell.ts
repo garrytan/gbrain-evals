@@ -3,6 +3,7 @@
  * docs/benchmarks/2026-10-06-scoreboard-preregistration.md).
  *
  *   bun eval/runner/q1/cell.ts plan [--json] [--campaign-out <q1 campaign manifest.json>] [--with-smoke]
+ *     (--with-smoke adds the paid dev smoke cells, manifest `smoke_cells`: dev conversations only, never sealed)
  *   bun eval/runner/q1/cell.ts show --cell <id> [--json]
  *   bun eval/runner/q1/cell.ts run --cell <id> [--paid --budget-run-id <id>] [--limit N] [--out <dir>] [--arms a,b]
  *     [--shard i/n] [--system-url <shim URL>] [--provider-proxy <url>] [--aggregates <file>] [--max-attempts 3]
@@ -168,6 +169,16 @@ export function splitConversations(benchmark: string, split: CellDefinition['spl
   if (benchmark === 'lme-m' || benchmark === 'fixture' || corpus.benchmark === 'fixture') return new Set(corpus.conversations.map(c => c.id));
   const s = loadSplit(benchmark);
   return new Set(split === 'dev' ? s.dev : split === 'sealed' ? s.sealed : [...s.dev, ...s.sealed]);
+}
+
+/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo); null loads everything. */
+export function devOnly(def: Pick<CellDefinition, 'benchmark' | 'split' | 'only_conversations'>): Set<string> | null {
+  if (def.split !== 'dev' || !(def.benchmark === 'locomo' || def.benchmark.startsWith('beam-'))) return null;
+  const dev = loadSplit(def.benchmark).dev;
+  const outside = (def.only_conversations ?? []).filter(c => !dev.includes(c));
+  if (outside.length) throw refuse({ code: 'USAGE', message: `only_conversations names ${outside.join(', ')}, which ${outside.length > 1 ? 'are' : 'is'} not in ${def.benchmark}'s dev split`,
+    why: 'a dev cell runs dev conversations only (eval/decisions/splits)', fix: { next: 'run', argv: ['bun', 'eval/runner/q1/cells/definitions.ts'] } });
+  return new Set(def.only_conversations ?? dev);
 }
 
 export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): boolean {
@@ -435,8 +446,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     appendAccessLog(log, { action: 'open', purpose: `q1 cell ${def.id}`, decision_id: env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', labels_sha256: 'public-split-file', run_sha256: null });
   }
   mkdirSync(out, { recursive: true });
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark);
-  const allowed = splitConversations(def.benchmark, def.split, corpus);
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, devOnly(def) ?? undefined);
+  const allowed = new Set([...splitConversations(def.benchmark, def.split, corpus)].filter(c => !def.only_conversations || def.only_conversations.includes(c)));
   let selected = selectCellQuestions(corpus.questions.filter(q => allowed.has(q.conversation)), def.selection);
   if (opts.limit) selected = selectCellQuestions(selectQuestions(selected, opts.limit, 42), { kind: 'all' });
   const shard = opts.shard ?? { index: 0, count: 1 };
@@ -996,23 +1007,24 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
   const t1Waves = Math.max(1, Math.ceil(t1Units.length / perWave));
   const waveOf = new Map(t1Units.map((u, k) => [`${u.c.id}|${u.i}`, Math.floor(k / perWave) + 1]));
   const spec = (c: CellDefinition, i: number, smoke: boolean): CellSpec => {
-    const id = `${c.id}${c.shards > 1 ? `.c${i}` : ''}${smoke ? '.smoke' : ''}`;
-    const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(smoke ? ['--limit', '20'] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
+    const id = `${c.id}${c.shards > 1 ? `.c${i}` : ''}`;
+    const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
     const command = c.runner === 'shim' ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}; exit $rc` : run;
-    const lease = Math.max(0.01, Math.ceil((smoke ? c.estimate.usd * 20 / SETS[c.set].questions : c.estimate.usd / c.shards) * 100) / 100);
+    /** A smoke measures what the estimate assumes, so its lease holds twice the estimate. */
+    const lease = Math.max(0.01, Math.ceil((smoke ? 2 : 1) * c.estimate.usd / c.shards * 100) / 100);
     return {
       id, system: c.system, benchmark: c.benchmark, config: c.configuration, lease_usd: lease, command,
-      setup_command: `bash eval/systems/bootstrap.sh setup${c.runner === 'shim' ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}`,
-      vm: { size: `standard-${VM_VCPU}` }, timeout_hours: smoke ? 6 : Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
+      setup_command: `bash eval/systems/bootstrap.sh setup${c.runner === 'shim' ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
+      vm: { size: `standard-${VM_VCPU}` }, timeout_hours: Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
       ...(smoke ? { smoke: true } : {}), providers: c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'],
-      expected_hours: smoke ? 1 : c.expected_hours, wave: c.block === 'T1' ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
+      expected_hours: c.expected_hours, wave: c.block === 'T1' ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
       ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(c.restore_command ? { restore_command: c.restore_command } : {}),
     };
   };
   const out: CellSpec[] = [];
   for (const c of m.cells) for (let i = 0; i < c.shards; i++) out.push(spec(c, i, false));
-  if (opts.smoke) for (const c of m.cells.filter(x => x.ingest_replicate === 1)) out.push(spec(c, 0, true));
+  if (opts.smoke) for (const c of m.smoke_cells ?? []) out.push(spec(c, 0, true));
   return out;
 }
 
@@ -1046,9 +1058,9 @@ export function renderPlan(m: Manifest): string {
 // ─── CLI ─────────────────────────────────────────────────────────────
 
 export function findCell(id: string, m: Manifest = loadManifest()): CellDefinition {
-  const c = m.cells.find(x => x.id === id);
+  const c = m.cells.find(x => x.id === id) ?? (m.smoke_cells ?? []).find(x => x.id === id);
   if (c) return c;
-  const near = m.cells.filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
+  const near = [...m.cells, ...(m.smoke_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
   throw refuse({ code: 'USAGE', message: `no cell ${id} in ${rel(MANIFEST_PATH)}`, why: 'run, show and merge take a cell id from the generated manifest', fix: { next: 'run', argv: [...FRONT, 'plan'], user_message: near.length ? `did you mean ${near.join(', ')}?` : 'list the cells with plan' } });
 }
 

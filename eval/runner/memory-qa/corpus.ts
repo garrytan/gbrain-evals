@@ -120,23 +120,27 @@ export function beamManifest(): BeamManifest {
   return JSON.parse(readFileSync(join(REPO_ROOT, 'eval/decisions/datasets/beam-b2da22e.json'), 'utf8'));
 }
 
-export function beamFiles(size: string): DatasetFile[] {
+/** A BEAM size's chat and question files; `only` keeps those conversations' files (a dev split). */
+export function beamFiles(size: string, only?: ReadonlySet<string>): DatasetFile[] {
   const m = beamManifest();
   const convs = m.sizes[size];
   if (!convs) throw new Error(`BEAM size ${size} is not in the manifest`);
-  return convs.flatMap(c => [
+  const unknown = only ? [...only].filter(id => !convs.some(c => c.conversation === id)) : [];
+  if (unknown.length) throw new Error(`BEAM ${size} has no conversation ${unknown.join(', ')}`);
+  return convs.filter(c => !only || only.has(c.conversation)).flatMap(c => [
     { path: `beam/${c.chat_path}`, url: m.raw_base + c.chat_path, sha256: c.chat_sha256 },
     { path: `beam/${c.questions_path}`, url: m.raw_base + c.questions_path, sha256: c.questions_sha256 },
   ]);
 }
 
-export function filesFor(benchmark: string): DatasetFile[] {
+/** A benchmark's pinned files; `only` narrows BEAM to those conversations (single-file benchmarks ignore it). */
+export function filesFor(benchmark: string, only?: ReadonlySet<string>): DatasetFile[] {
   switch (benchmark) {
     case 'locomo': return [LOCOMO_FILE];
     case 'lme-s': return [LME_S_FILE];
-    case 'beam-100k': return beamFiles('100k');
-    case 'beam-500k': return beamFiles('500k');
-    case 'beam-1m': return beamFiles('1m');
+    case 'beam-100k': return beamFiles('100k', only);
+    case 'beam-500k': return beamFiles('500k', only);
+    case 'beam-1m': return beamFiles('1m', only);
     case 'lme-m': return [LME_M_FILE];
     case 'beam-10m': throw decideError({ code: 'CUSTODY_MISSING', message: 'BEAM-10M is sealed: it is fetched and extracted only by the custodian',
       why: 'every BEAM-10M conversation is in the sealed split; its files live in owner custody, never on a development machine',
@@ -165,12 +169,12 @@ export function readDatasetFile(f: DatasetFile, benchmark: string): string {
   return bytes.toString('utf8');
 }
 
-export async function fetchDataset(benchmark: string, opts: { force?: boolean; verifyOnly?: boolean; log?: (s: string) => void } = {}): Promise<{ fetched: number; verified: number }> {
+export async function fetchDataset(benchmark: string, opts: { force?: boolean; verifyOnly?: boolean; log?: (s: string) => void; only?: ReadonlySet<string> } = {}): Promise<{ fetched: number; verified: number }> {
   const log = opts.log ?? ((s: string) => process.stderr.write(s + '\n'));
   let fetched = 0; let verified = 0;
   const { mkdirSync, renameSync, rmSync, createWriteStream } = await import('node:fs');
   const { dirname } = await import('node:path');
-  for (const f of filesFor(benchmark)) {
+  for (const f of filesFor(benchmark, opts.only)) {
     const path = join(DATASET_ROOT, f.path);
     const ok = existsSync(path) && fileSha256(path) === f.sha256;
     if (ok && !opts.force) { verified++; continue; }
@@ -213,11 +217,12 @@ export function fileSha256(path: string): string {
 
 const LOCOMO_CATEGORY: Record<number, string> = { 1: 'multi-hop', 2: 'temporal', 3: 'open-domain', 4: 'single-hop', 5: 'adversarial' };
 
-export function loadLocomo(): Corpus {
+/** `only` keeps those conversation ids (a split): the others are dropped right after the file parses and never enter the corpus. */
+export function loadLocomo(only?: ReadonlySet<string>): Corpus {
   const raw = JSON.parse(readDatasetFile(LOCOMO_FILE, 'locomo')) as Array<{ sample_id: string; conversation: Record<string, unknown>; qa: Array<{ question: string; category: number; evidence?: string[]; answer?: unknown; adversarial_answer?: unknown }> }>;
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
-  for (const sample of raw) {
+  for (const sample of raw.filter(x => !only || only.has(x.sample_id))) {
     const conv = sample.conversation;
     const sessions: Session[] = [];
     for (let n = 1; conv[`session_${n}`] !== undefined || conv[`session_${n + 1}`] !== undefined; n++) {
@@ -493,17 +498,18 @@ export function loadCustodyCorpus(path: string): Corpus {
     source: { name: `custodian sealed corpus ${raw.id}`, files: [{ path: 'custody', sha256: sha256(bytes) }], revision: raw.id, license: 'custodian-authored' } };
 }
 
-export function loadCorpus(benchmark: string, corpusFile?: string): Corpus {
+/** `only` restricts LoCoMo and BEAM to those conversations (a dev split), so a BEAM conversation outside it is never read. */
+export function loadCorpus(benchmark: string, corpusFile?: string, only?: ReadonlySet<string>): Corpus {
   if (benchmark === 'custody') {
     if (!corpusFile) throw new Error('benchmark custody needs --corpus-file <custody path>');
     return loadCustodyCorpus(corpusFile);
   }
   switch (benchmark) {
-    case 'locomo': return loadLocomo();
+    case 'locomo': return loadLocomo(only);
     case 'lme-s': return loadLmeS();
-    case 'beam-100k': return loadBeam('100k');
-    case 'beam-500k': return loadBeam('500k');
-    case 'beam-1m': return loadBeam('1m');
+    case 'beam-100k': return loadBeam('100k', only);
+    case 'beam-500k': return loadBeam('500k', only);
+    case 'beam-1m': return loadBeam('1m', only);
     case 'lme-m': return loadLmeM();
     case 'beam-10m': {
       const log = process.env.GBRAIN_EVALS_CUSTODY_LOG;

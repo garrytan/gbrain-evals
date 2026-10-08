@@ -5,7 +5,7 @@
  *
  * Dev workflow (milestone M1, open to every plan author):
  *   init       write a decision spec from a plan template; baseline defaults to the candidate checkout's origin/master
- *   fetch      download and SHA-check the datasets a spec (or one benchmark) needs
+ *   fetch      download and SHA-check the datasets a spec (or one benchmark) needs; --conversations narrows BEAM to those conversations
  *   preflight  check datasets, keys, budget, overlay builds and dirty checkouts before spending anything
  *   dev        run baseline and candidate on dev splits (each arm in its own process, bound to its gbrain build)
  *   verdict    paired, clustered comparison per source (stats/gates.ts); dev verdicts never flip a default
@@ -115,7 +115,8 @@ async function cmdFetch(argv: string[]): Promise<string> {
   const benches = bench ? [bench] : [...new Set(loadSpec(decisionPath(argv)).sources.filter((s): s is MemoryQaSource => s.kind === 'memory-qa').map(s => s.benchmark))];
   const out: string[] = [];
   for (const b of benches) {
-    const r = await fetchDataset(b, { force: argv.includes('--force'), verifyOnly: argv.includes('--verify-only') });
+    const only = flag(argv, '--conversations');
+    const r = await fetchDataset(b, { force: argv.includes('--force'), verifyOnly: argv.includes('--verify-only'), ...(only ? { only: new Set(only.split(',').filter(Boolean)) } : {}) });
     out.push(`${b}: ${r.verified} file(s) verified${r.fetched ? `, ${r.fetched} downloaded` : ''} under ${DATASET_ROOT}`);
   }
   return out.join('\n') || 'nothing to fetch';
@@ -422,7 +423,7 @@ const LATER: Record<string, string> = {
 const HELP = `eval:decide — held-out decision kit
 
   init       --plan P1..P8 --gbrain <checkout>@<ref> [--baseline <checkout>@<ref>] [--type quality|cost|correctness] [--id <id>] [--out <dir>] | --fixture
-  fetch      --decision <dir> | --benchmark locomo|lme-s|beam-100k|beam-500k|beam-1m  [--force] [--verify-only]
+  fetch      --decision <dir> | --benchmark locomo|lme-s|beam-100k|beam-500k|beam-1m  [--conversations id,id] [--force] [--verify-only]
   preflight  --decision <dir> [--budget-run-id <id>]
   dev        --decision <dir> [--paid --budget-usd <n> | --paid --budget-run-id <id>] [--shards N] [--jobs N] [--only <source>] [--output <dir>]
   verdict    --decision <dir> [--only <source>] [--json]
