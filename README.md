@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain master [`a865f8f`](https://github.com/garrytan/gbrain/tree/a865f8f8b7c95b9f8c30690702797bafcfef537a) (v0.60.104.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.44 (`VERSION`) |
+| This repository | gbrain-evals v0.10.45 (`VERSION`) |
 
 This repository installs gbrain master `a865f8f`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -243,6 +243,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-08: Repository row names v0.10.45
+
+gbrain-evals v0.10.45. The repository row names v0.10.45 (was v0.10.44). This release adds the Q2 parser-gaps preregistration, harness, custodian runbook and held-out verdicts (typed relation lines stay opt-in; two link-typing units ship); no row in the results table changes, because Q2 changes no shipped default that the table reports.
 
 ### 2026-10-08: Repository row names v0.10.44
 
