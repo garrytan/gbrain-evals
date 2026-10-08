@@ -82,7 +82,7 @@ describe('cell token', () => {
   test('the CLI reads --cell-token (or SHOOTOUT_CELL_TOKEN), --trust-local, --route-caps and --admission', () => {
     const a = parseProxyArgs(['--budget-ledger', 'x', '--lease-usd', '1', '--run-id', 'r', '--cell-token', 't', '--trust-local', '--route-caps', 'extraction=4096,reader=2048,judge=1024',
       '--route-class', 'harness=reader,judge=judge', '--admission', 'openai=rpm:500,tpm:2000000,concurrency:16', '--admission', 'anthropic=concurrency:4']);
-    expect(a).toMatchObject({ cellToken: 't', trustLocal: true, routeCaps: { caps: DEFAULT_ROUTE_CAPS, slots: { harness: 'reader', judge: 'judge' }, defaultClass: 'extraction' },
+    expect(a).toMatchObject({ cellToken: 't', trustLocal: true, routeCaps: { caps: { extraction: 4096, reader: 2048, judge: 1024 }, slots: { harness: 'reader', judge: 'judge' }, defaultClass: 'extraction' },
       admission: { openai: { rpm: 500, tpm: 2_000_000, concurrency: 16 }, anthropic: { concurrency: 4 } } });
     expect(() => parseProxyArgs(['--budget-ledger', 'x', '--lease-usd', '1', '--run-id', 'r', '--route-caps', 'reader=2048', '--route-class', 'harness=judge'])).toThrow(/no cap/);
     expect(() => parseAdmission(['openai=rpm:-1'])).toThrow(/positive whole number/);
@@ -137,6 +137,17 @@ describe('route output caps and billed versus reserved dollars', () => {
       expect(over.status).toBe(400);
       expect((await over.json() as any).error.message).toContain('judge route cap of 1024');
       expect(lines().slice(0, 3).map(l => [l.route_class, l.output_cap])).toEqual([['extraction', 4096], ['reader', 2048], ['judge', 1024]]);
+    } finally { proxy.stop(); }
+  });
+
+  test('the agent slot (the file agent\'s loop) takes its stated per-turn allowance up to the agent cap, not the reader cap', async () => {
+    const up = upstream();
+    const { proxy, post } = start(up.fetchImpl, { routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { harness: 'reader', judge: 'judge', agent: 'agent' }, defaultClass: 'extraction' } });
+    try {
+      expect((await post('/agent/openai/v1/chat/completions', chat({ max_completion_tokens: 16000 }))).status).toBe(200);
+      expect((await post('/harness/openai/v1/chat/completions', chat({ max_completion_tokens: 16000 }))).status).toBe(400);
+      expect((await post('/agent/openai/v1/chat/completions', chat({ max_completion_tokens: 16001 }))).status).toBe(400);
+      expect(up.seen.map(s => s.body.max_completion_tokens)).toEqual([16000]);
     } finally { proxy.stop(); }
   });
 

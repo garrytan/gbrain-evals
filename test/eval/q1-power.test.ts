@@ -59,6 +59,8 @@ describe('rules', () => {
   test('descriptive only when even the shrunk family cannot detect 10 points', () => {
     expect(decide([result('balanced', 15), result('shrunk', 12)], null)).toMatchObject({ family1: 'descriptive', detectable_difference_points: 12 });
     expect(decide([result('balanced', null), result('shrunk', null)], null).family1).toBe('descriptive');
+    expect(decide([result('balanced', 15), result('shrunk', 12)], { 'ext-a': 0.6, 'ext-b': 0.5, 'ext-c': 0.4, 'ext-d': 0.3, 'ext-e': 0.2 })).toMatchObject({ family1: 'descriptive', shrunk_comparators: ['ext-a', 'ext-b', 'ext-c', 'ext-d'] });
+    expect(decide([result('balanced', 8), result('shrunk', 6)], { 'ext-a': 0.6 }).shrunk_comparators).toBeNull();
   });
 });
 

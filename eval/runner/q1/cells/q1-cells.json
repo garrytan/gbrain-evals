@@ -45,44 +45,73 @@
     }
   },
   "assumptions": {
-    "reader_input_overhead_tokens": 1000,
+    "reader_input_overhead_tokens": {
+      "default": 180,
+      "openai:gpt-6.1-sol": 130
+    },
+    "reader_tokens_per_budget_token": {
+      "default": 1,
+      "openai:gpt-6.1-sol": 0.66
+    },
+    "reader_tokens_per_cl100k": {
+      "default": 1.47,
+      "anthropic:claude-opus-5-5": 1.47,
+      "anthropic:claude-sonnet-5-5": 1.45,
+      "openai:gpt-6.1-sol": 0.975
+    },
     "reader_output_tokens": {
       "default": 400,
-      "openai:gpt-6.1-sol": 1000
+      "anthropic:claude-opus-5-5": 720,
+      "anthropic:claude-sonnet-5-5": 395,
+      "openai:gpt-6.1-sol": 155
     },
     "vendor_default_tokens": {
-      "gbrain-defaults": 24000,
+      "gbrain-defaults": 23800,
+      "ext-extract-first": 1200,
+      "ext-memory-bank": 10400,
+      "ext-graph-pipeline": 2200,
+      "ext-markdown-kb": 2300,
+      "ext-verbatim-session": 8000,
+      "baseline-hybrid": 7100,
       "default": 8000
     },
     "ingest_usd_per_mtok": {
-      "ext-extract-first:common": 1.9,
-      "ext-extract-first:recipe": 1.9,
-      "ext-memory-bank:recipe": 1.4,
+      "ext-extract-first:common": 2.8,
+      "ext-extract-first:recipe": 95,
+      "ext-memory-bank:recipe": 1.72,
       "ext-memory-bank:common": 1.4,
-      "ext-graph-pipeline:recipe": 1.4,
+      "ext-graph-pipeline:recipe": 18.4,
+      "ext-graph-pipeline:recipe:beam": 3.5,
       "ext-graph-pipeline:common": 1.4,
-      "ext-temporal-graph:common": 12,
-      "ext-temporal-graph:recipe": 12,
-      "ext-markdown-kb:recipe": 0.1,
+      "ext-graph-pipeline:common:beam": 3.98,
+      "ext-temporal-graph:common": 17.5,
+      "ext-temporal-graph:recipe": 90,
+      "ext-markdown-kb:recipe": 0,
       "ext-markdown-kb:common": 0.1,
-      "ext-verbatim-session:recipe": 0.1,
+      "ext-verbatim-session:recipe": 0,
       "ext-verbatim-session:common": 0.1,
       "gbrain-defaults:shipped-defaults": 0.12,
       "gbrain-defaults:full-surface": 0.12,
       "gbrain-defaults:common-embedder": 0.13,
-      "baseline-hybrid:baseline": 0.13
+      "baseline-hybrid:baseline": 0.14
     },
-    "gbrain_expansion": {
-      "model": "anthropic:claude-haiku-4-5",
-      "input": 300,
-      "output": 100
+    "gbrain_query_usd": 0.00176,
+    "probe_usd": {
+      "gbrain-defaults": {
+        "per_mtok": 6.5,
+        "max_per_conversation": 1.3
+      },
+      "ext-temporal-graph": {
+        "per_mtok": 1.7,
+        "max_per_conversation": 0.13
+      }
     },
     "judge": {
       "lme": {
         "model": "openai:gpt-4o-2024-08-06",
         "calls": 1,
-        "input": 700,
-        "output": 10
+        "input": 370,
+        "output": 2
       },
       "beam": {
         "model": "openai:gpt-4.1-mini",
@@ -97,8 +126,19 @@
         "S1": 130000,
         "S2a": 30000,
         "S2b": 73000,
-        "S3": 18000,
-        "output": 2000
+        "S3": {
+          "anthropic:claude-opus-5-5": 9700,
+          "openai:gpt-6.1-sol": 7800,
+          "anthropic:claude-sonnet-5-5": 4950,
+          "default": 9700
+        },
+        "output": 2000,
+        "output_S3": {
+          "anthropic:claude-opus-5-5": 860,
+          "openai:gpt-6.1-sol": 210,
+          "anthropic:claude-sonnet-5-5": 460,
+          "default": 860
+        }
       },
       "think": {
         "S1": 36000,
@@ -114,8 +154,8 @@
     },
     "synthesize": {
       "model": "anthropic:claude-opus-4-7",
-      "input": 25000,
-      "output": 1000,
+      "input": 34700,
+      "output": 850,
       "price": {
         "input": 5,
         "output": 25
@@ -123,7 +163,18 @@
     },
     "hours_per_mtok": {
       "shim": 4,
-      "in-process": 0.05
+      "in-process": 0.05,
+      "ext-extract-first:recipe": 110,
+      "ext-extract-first:common": 1.74,
+      "ext-memory-bank:recipe": 2.32,
+      "ext-graph-pipeline:recipe": 5.6,
+      "ext-graph-pipeline:recipe:beam": 4.93,
+      "ext-graph-pipeline:common:beam": 3.09,
+      "ext-temporal-graph:common": 3.53,
+      "ext-temporal-graph:recipe": 6.6,
+      "ext-markdown-kb:recipe": 0.53,
+      "ext-verbatim-session:recipe": 0.15,
+      "gbrain-defaults:shipped-defaults": 0.9
     },
     "vcpu": {
       "shim": 8,
@@ -291,6 +342,76 @@
       "role": "public",
       "exposure": "E3",
       "label": "LongMemEval-M"
+    },
+    {
+      "id": "S3-smoke",
+      "benchmark": "locomo",
+      "split": "dev",
+      "questions": 20,
+      "conversations": 1,
+      "corpus_tokens": 20474,
+      "messages": 675,
+      "block": "T2-S3",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "role": "smoke",
+      "exposure": "E2",
+      "label": "LoCoMo dev smoke (conv-44, 20 questions)",
+      "only_conversations": [
+        "conv-44"
+      ]
+    },
+    {
+      "id": "S3-smoke-default",
+      "benchmark": "locomo",
+      "split": "dev",
+      "questions": 20,
+      "conversations": 1,
+      "corpus_tokens": 20474,
+      "messages": 675,
+      "block": "T2-S3",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "role": "smoke",
+      "exposure": "E2",
+      "label": "LoCoMo dev smoke, own default amount (conv-44, 20 questions, claude-sonnet-5-5)",
+      "only_conversations": [
+        "conv-44"
+      ]
+    },
+    {
+      "id": "S2b-ingest",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "questions": 10,
+      "conversations": 1,
+      "corpus_tokens": 926773,
+      "messages": 2182,
+      "sessions": 928,
+      "block": "T2-S2b",
+      "selection": {
+        "kind": "stratified",
+        "limit": 10,
+        "stratify": "category",
+        "seed": "q1-ingest-probe"
+      },
+      "exclusions": [],
+      "role": "smoke",
+      "exposure": "E2",
+      "label": "BEAM-1M dev ingest probe (1m-16, retrieval only)",
+      "only_conversations": [
+        "1m-16"
+      ]
     }
   ],
   "blocks": [
@@ -298,36 +419,36 @@
       "id": "T1",
       "label": "T1 S1 headline (complete)",
       "plan_usd": 3995,
-      "estimate_usd": 3101.81,
-      "cap_usd": 4652.72
+      "estimate_usd": 4068.78,
+      "cap_usd": 6103.17
     },
     {
       "id": "T2-S2a",
       "label": "T2 S2a BEAM-100K",
       "plan_usd": 585,
-      "estimate_usd": 418.54,
-      "cap_usd": 627.81
+      "estimate_usd": 456.27,
+      "cap_usd": 684.41
     },
     {
       "id": "T2-S2b",
       "label": "T2 S2b BEAM-1M",
       "plan_usd": 1720,
-      "estimate_usd": 1155.46,
-      "cap_usd": 1733.19
+      "estimate_usd": 1424.89,
+      "cap_usd": 2137.34
     },
     {
       "id": "T2-S3",
       "label": "T2 S3 LoCoMo",
       "plan_usd": 730,
-      "estimate_usd": 528.05,
-      "cap_usd": 792.08
+      "estimate_usd": 519,
+      "cap_usd": 778.5
     },
     {
       "id": "T2-S4-S5",
       "label": "T2 S4, S5",
       "plan_usd": 420,
-      "estimate_usd": 213.73,
-      "cap_usd": 320.6
+      "estimate_usd": 664.58,
+      "cap_usd": 996.87
     }
   ],
   "cells": [
@@ -358,7 +479,7 @@
         "seed": "q1-probes-s1"
       },
       "shards": 10,
-      "expected_hours": 44,
+      "expected_hours": 10,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -517,15 +638,16 @@
         }
       ],
       "estimate": {
-        "usd": 154.9,
+        "usd": 181.66,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 13.2,
+          "ingest_probes": 13,
           "judge_repeats": 2.74,
           "judges": 3.28,
-          "own_answer": 30,
-          "readers": 92.4,
-          "system_queries": 0.32
+          "own_answer": 38.95,
+          "readers": 96.83,
+          "system_queries": 0.7
         }
       }
     },
@@ -598,10 +720,11 @@
         }
       ],
       "estimate": {
-        "usd": 100.79,
+        "usd": 113.79,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 13.2,
+          "ingest_probes": 13,
           "judge_repeats": 8.21,
           "judges": 0.82,
           "own_answer": 65.6
@@ -635,7 +758,7 @@
         "seed": "q1-probes-s1"
       },
       "shards": 10,
-      "expected_hours": 44,
+      "expected_hours": 20,
       "launch": {
         "env": {},
         "config": "common"
@@ -774,13 +897,13 @@
         }
       ],
       "estimate": {
-        "usd": 294.51,
+        "usd": 375.04,
         "lines": {
           "frontier_judges": 12.96,
-          "ingest": 209,
+          "ingest": 308,
           "judge_repeats": 2.74,
           "judges": 3.01,
-          "readers": 66.8
+          "readers": 48.33
         }
       }
     },
@@ -811,7 +934,7 @@
         "seed": "q1-probes-s1"
       },
       "shards": 10,
-      "expected_hours": 44,
+      "expected_hours": 26,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -950,19 +1073,19 @@
         }
       ],
       "estimate": {
-        "usd": 239.51,
+        "usd": 275.98,
         "lines": {
           "frontier_judges": 12.96,
-          "ingest": 154,
+          "ingest": 189.2,
           "judge_repeats": 2.74,
           "judges": 3.01,
-          "readers": 66.8
+          "readers": 68.07
         }
       }
     },
     {
       "schema": "gbrain-evals/q1-cell/v1",
-      "id": "s1.ext-graph-pipeline.recipe",
+      "id": "s1.ext-graph-pipeline.common",
       "set": "S1",
       "block": "T1",
       "benchmark": "beam-10m",
@@ -977,7 +1100,7 @@
         }
       ],
       "system": "ext-graph-pipeline",
-      "configuration": "recipe",
+      "configuration": "common",
       "runner": "shim",
       "ingest_replicate": 1,
       "effort": "medium",
@@ -987,17 +1110,17 @@
         "seed": "q1-probes-s1"
       },
       "shards": 10,
-      "expected_hours": 44,
+      "expected_hours": 34,
       "launch": {
         "env": {},
-        "config": "recipe"
+        "config": "common"
       },
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
-      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
       "arms": [
         {
           "id": "component-b8000",
-          "cell_id": "s1.ext-graph-pipeline.recipe.component-b8000",
+          "cell_id": "s1.ext-graph-pipeline.common.component-b8000",
           "set": "S1",
           "arm": "component",
           "mode": "packed",
@@ -1032,7 +1155,7 @@
         },
         {
           "id": "component-b2000",
-          "cell_id": "s1.ext-graph-pipeline.recipe.component-b2000",
+          "cell_id": "s1.ext-graph-pipeline.common.component-b2000",
           "set": "S1-sweep",
           "arm": "component",
           "mode": "packed",
@@ -1065,7 +1188,7 @@
         },
         {
           "id": "component-b16000",
-          "cell_id": "s1.ext-graph-pipeline.recipe.component-b16000",
+          "cell_id": "s1.ext-graph-pipeline.common.component-b16000",
           "set": "S1-sweep",
           "arm": "component",
           "mode": "packed",
@@ -1098,7 +1221,7 @@
         },
         {
           "id": "whole-default",
-          "cell_id": "s1.ext-graph-pipeline.recipe.whole-default",
+          "cell_id": "s1.ext-graph-pipeline.common.whole-default",
           "set": "S1",
           "arm": "whole-system",
           "mode": "native-default",
@@ -1126,13 +1249,13 @@
         }
       ],
       "estimate": {
-        "usd": 239.51,
+        "usd": 506.98,
         "lines": {
           "frontier_judges": 12.96,
-          "ingest": 154,
+          "ingest": 437.8,
           "judge_repeats": 2.74,
           "judges": 3.01,
-          "readers": 66.8
+          "readers": 50.48
         }
       }
     },
@@ -1163,7 +1286,7 @@
         "seed": "q1-probes-s1"
       },
       "shards": 10,
-      "expected_hours": 44,
+      "expected_hours": 39,
       "launch": {
         "env": {},
         "config": "common"
@@ -1302,13 +1425,14 @@
         }
       ],
       "estimate": {
-        "usd": 1405.51,
+        "usd": 2007.93,
         "lines": {
           "frontier_judges": 12.96,
-          "ingest": 1320,
+          "ingest": 1925,
+          "ingest_probes": 1.3,
           "judge_repeats": 2.74,
           "judges": 3.01,
-          "readers": 66.8
+          "readers": 62.92
         }
       }
     },
@@ -1339,7 +1463,7 @@
         "seed": "q1-probes-s1"
       },
       "shards": 10,
-      "expected_hours": 44,
+      "expected_hours": 6,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -1478,13 +1602,12 @@
         }
       ],
       "estimate": {
-        "usd": 96.51,
+        "usd": 69.4,
         "lines": {
           "frontier_judges": 12.96,
-          "ingest": 11,
           "judge_repeats": 2.74,
           "judges": 3.01,
-          "readers": 66.8
+          "readers": 50.69
         }
       }
     },
@@ -1515,7 +1638,7 @@
         "seed": "q1-probes-s1"
       },
       "shards": 10,
-      "expected_hours": 44,
+      "expected_hours": 2,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -1654,13 +1777,12 @@
         }
       ],
       "estimate": {
-        "usd": 96.51,
+        "usd": 81.63,
         "lines": {
           "frontier_judges": 12.96,
-          "ingest": 11,
           "judge_repeats": 2.74,
           "judges": 3.01,
-          "readers": 66.8
+          "readers": 62.92
         }
       }
     },
@@ -1796,12 +1918,12 @@
         }
       ],
       "estimate": {
-        "usd": 61.56,
+        "usd": 55.07,
         "lines": {
           "frontier_judges": 8.64,
           "judge_repeats": 2.74,
           "judges": 2.19,
-          "readers": 48
+          "readers": 41.51
         }
       }
     },
@@ -1965,13 +2087,13 @@
         }
       ],
       "estimate": {
-        "usd": 99.81,
+        "usd": 95.1,
         "lines": {
           "frontier_judges": 12.96,
-          "ingest": 14.3,
+          "ingest": 15.4,
           "judge_repeats": 2.74,
           "judges": 3.01,
-          "readers": 66.8
+          "readers": 60.99
         }
       }
     },
@@ -2107,12 +2229,12 @@
         }
       ],
       "estimate": {
-        "usd": 61.56,
+        "usd": 55.07,
         "lines": {
           "frontier_judges": 8.64,
           "judge_repeats": 2.74,
           "judges": 2.19,
-          "readers": 48
+          "readers": 41.51
         }
       }
     },
@@ -2275,7 +2397,7 @@
         "seed": "q1-probes-s2b"
       },
       "shards": 1,
-      "expected_hours": 48,
+      "expected_hours": 22,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -2383,15 +2505,16 @@
         }
       ],
       "estimate": {
-        "usd": 79.05,
+        "usd": 117,
         "lines": {
           "frontier_judges": 0.65,
           "ingest": 2.88,
+          "ingest_probes": 31.2,
           "judge_repeats": 3.28,
           "judges": 1.97,
-          "own_answer": 36,
-          "readers": 34.08,
-          "system_queries": 0.19
+          "own_answer": 46.74,
+          "readers": 29.86,
+          "system_queries": 0.42
         }
       }
     },
@@ -2461,10 +2584,11 @@
         }
       ],
       "estimate": {
-        "usd": 96.47,
+        "usd": 127.67,
         "lines": {
           "frontier_judges": 15.55,
           "ingest": 2.88,
+          "ingest_probes": 31.2,
           "judge_repeats": 9.85,
           "judges": 0.98,
           "own_answer": 67.2
@@ -2495,7 +2619,7 @@
         "seed": "q1-probes-s2b"
       },
       "shards": 1,
-      "expected_hours": 48,
+      "expected_hours": 42,
       "launch": {
         "env": {},
         "config": "common"
@@ -2584,13 +2708,13 @@
         }
       ],
       "estimate": {
-        "usd": 85.25,
+        "usd": 102.63,
         "lines": {
           "frontier_judges": 0.65,
-          "ingest": 45.6,
+          "ingest": 67.2,
           "judge_repeats": 3.28,
           "judges": 1.64,
-          "readers": 34.08
+          "readers": 29.86
         }
       }
     },
@@ -2707,13 +2831,13 @@
         }
       ],
       "estimate": {
-        "usd": 73.25,
+        "usd": 76.71,
         "lines": {
           "frontier_judges": 0.65,
-          "ingest": 33.6,
+          "ingest": 41.28,
           "judge_repeats": 3.28,
           "judges": 1.64,
-          "readers": 34.08
+          "readers": 29.86
         }
       }
     },
@@ -2830,13 +2954,13 @@
         }
       ],
       "estimate": {
-        "usd": 73.25,
+        "usd": 119.43,
         "lines": {
           "frontier_judges": 0.65,
-          "ingest": 33.6,
+          "ingest": 84,
           "judge_repeats": 3.28,
           "judges": 1.64,
-          "readers": 34.08
+          "readers": 29.86
         }
       }
     },
@@ -2953,13 +3077,14 @@
         }
       ],
       "estimate": {
-        "usd": 327.65,
+        "usd": 458.55,
         "lines": {
           "frontier_judges": 0.65,
-          "ingest": 288,
+          "ingest": 420,
+          "ingest_probes": 3.12,
           "judge_repeats": 3.28,
           "judges": 1.64,
-          "readers": 34.08
+          "readers": 29.86
         }
       }
     },
@@ -2987,7 +3112,7 @@
         "seed": "q1-probes-s2b"
       },
       "shards": 1,
-      "expected_hours": 48,
+      "expected_hours": 13,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -3076,13 +3201,12 @@
         }
       ],
       "estimate": {
-        "usd": 42.05,
+        "usd": 35.43,
         "lines": {
           "frontier_judges": 0.65,
-          "ingest": 2.4,
           "judge_repeats": 3.28,
           "judges": 1.64,
-          "readers": 34.08
+          "readers": 29.86
         }
       }
     },
@@ -3110,7 +3234,7 @@
         "seed": "q1-probes-s2b"
       },
       "shards": 1,
-      "expected_hours": 48,
+      "expected_hours": 4,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -3199,13 +3323,12 @@
         }
       ],
       "estimate": {
-        "usd": 42.05,
+        "usd": 35.43,
         "lines": {
           "frontier_judges": 0.65,
-          "ingest": 2.4,
           "judge_repeats": 3.28,
           "judges": 1.64,
-          "readers": 34.08
+          "readers": 29.86
         }
       }
     },
@@ -3316,12 +3439,12 @@
         }
       ],
       "estimate": {
-        "usd": 39.65,
+        "usd": 35.43,
         "lines": {
           "frontier_judges": 0.65,
           "judge_repeats": 3.28,
           "judges": 1.64,
-          "readers": 34.08
+          "readers": 29.86
         }
       }
     },
@@ -3432,13 +3555,13 @@
         }
       ],
       "estimate": {
-        "usd": 42.77,
+        "usd": 38.79,
         "lines": {
           "frontier_judges": 0.65,
-          "ingest": 3.12,
+          "ingest": 3.36,
           "judge_repeats": 3.28,
           "judges": 1.64,
-          "readers": 34.08
+          "readers": 29.86
         }
       }
     },
@@ -3549,12 +3672,12 @@
         }
       ],
       "estimate": {
-        "usd": 39.65,
+        "usd": 35.43,
         "lines": {
           "frontier_judges": 0.65,
           "judge_repeats": 3.28,
           "judges": 1.64,
-          "readers": 34.08
+          "readers": 29.86
         }
       }
     },
@@ -3618,13 +3741,14 @@
         }
       ],
       "estimate": {
-        "usd": 27.25,
+        "usd": 55.27,
         "lines": {
           "frontier_judges": 0.39,
           "ingest": 3.12,
+          "ingest_probes": 31.2,
           "judges": 0.98,
-          "readers": 22.56,
-          "system_queries": 0.19
+          "readers": 19.15,
+          "system_queries": 0.42
         }
       }
     },
@@ -3779,7 +3903,7 @@
         "seed": "q1-probes-s2a"
       },
       "shards": 1,
-      "expected_hours": 8,
+      "expected_hours": 2,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -3839,15 +3963,16 @@
         }
       ],
       "estimate": {
-        "usd": 37.65,
+        "usd": 55.06,
         "lines": {
           "frontier_judges": 0.45,
           "ingest": 0.24,
+          "ingest_probes": 13,
           "judge_repeats": 1.92,
           "judges": 0.77,
-          "own_answer": 21,
-          "readers": 13.16,
-          "system_queries": 0.11
+          "own_answer": 27.27,
+          "readers": 11.17,
+          "system_queries": 0.25
         }
       }
     },
@@ -3917,10 +4042,11 @@
         }
       ],
       "estimate": {
-        "usd": 44.75,
+        "usd": 57.75,
         "lines": {
           "frontier_judges": 9.07,
           "ingest": 0.24,
+          "ingest_probes": 13,
           "judge_repeats": 5.75,
           "judges": 0.57,
           "own_answer": 29.12
@@ -3951,7 +4077,7 @@
         "seed": "q1-probes-s2a"
       },
       "shards": 1,
-      "expected_hours": 8,
+      "expected_hours": 4,
       "launch": {
         "env": {},
         "config": "common"
@@ -3992,13 +4118,13 @@
         }
       ],
       "estimate": {
-        "usd": 19.9,
+        "usd": 19.72,
         "lines": {
           "frontier_judges": 0.45,
-          "ingest": 3.8,
+          "ingest": 5.6,
           "judge_repeats": 1.92,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4026,7 +4152,7 @@
         "seed": "q1-probes-s2a"
       },
       "shards": 1,
-      "expected_hours": 8,
+      "expected_hours": 5,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -4067,13 +4193,13 @@
         }
       ],
       "estimate": {
-        "usd": 18.9,
+        "usd": 17.56,
         "lines": {
           "frontier_judges": 0.45,
-          "ingest": 2.8,
+          "ingest": 3.44,
           "judge_repeats": 1.92,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4101,7 +4227,7 @@
         "seed": "q1-probes-s2a"
       },
       "shards": 1,
-      "expected_hours": 8,
+      "expected_hours": 10,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -4142,13 +4268,13 @@
         }
       ],
       "estimate": {
-        "usd": 18.9,
+        "usd": 21.12,
         "lines": {
           "frontier_judges": 0.45,
-          "ingest": 2.8,
+          "ingest": 7,
           "judge_repeats": 1.92,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4217,13 +4343,14 @@
         }
       ],
       "estimate": {
-        "usd": 40.1,
+        "usd": 50.94,
         "lines": {
           "frontier_judges": 0.45,
-          "ingest": 24,
+          "ingest": 35,
+          "ingest_probes": 1.82,
           "judge_repeats": 1.92,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4251,7 +4378,7 @@
         "seed": "q1-probes-s2a"
       },
       "shards": 1,
-      "expected_hours": 8,
+      "expected_hours": 2,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -4292,13 +4419,12 @@
         }
       ],
       "estimate": {
-        "usd": 16.3,
+        "usd": 14.12,
         "lines": {
           "frontier_judges": 0.45,
-          "ingest": 0.2,
           "judge_repeats": 1.92,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4326,7 +4452,7 @@
         "seed": "q1-probes-s2a"
       },
       "shards": 1,
-      "expected_hours": 8,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -4367,13 +4493,12 @@
         }
       ],
       "estimate": {
-        "usd": 16.3,
+        "usd": 14.12,
         "lines": {
           "frontier_judges": 0.45,
-          "ingest": 0.2,
           "judge_repeats": 1.92,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4436,12 +4561,12 @@
         }
       ],
       "estimate": {
-        "usd": 16.1,
+        "usd": 14.12,
         "lines": {
           "frontier_judges": 0.45,
           "judge_repeats": 1.92,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4504,13 +4629,13 @@
         }
       ],
       "estimate": {
-        "usd": 16.36,
+        "usd": 14.4,
         "lines": {
           "frontier_judges": 0.45,
-          "ingest": 0.26,
+          "ingest": 0.28,
           "judge_repeats": 1.92,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4573,12 +4698,12 @@
         }
       ],
       "estimate": {
-        "usd": 16.1,
+        "usd": 14.12,
         "lines": {
           "frontier_judges": 0.45,
           "judge_repeats": 1.92,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4642,12 +4767,12 @@
         }
       ],
       "estimate": {
-        "usd": 16.99,
+        "usd": 15,
         "lines": {
           "frontier_judges": 0.45,
           "ingest": 2.8,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4675,7 +4800,7 @@
         "seed": "q1-probes-s2a"
       },
       "shards": 1,
-      "expected_hours": 8,
+      "expected_hours": 7,
       "launch": {
         "env": {},
         "config": "common"
@@ -4711,12 +4836,12 @@
         }
       ],
       "estimate": {
-        "usd": 16.99,
+        "usd": 20.16,
         "lines": {
           "frontier_judges": 0.45,
-          "ingest": 2.8,
+          "ingest": 7.96,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4780,12 +4905,12 @@
         }
       ],
       "estimate": {
-        "usd": 14.39,
+        "usd": 12.4,
         "lines": {
           "frontier_judges": 0.45,
           "ingest": 0.2,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4849,12 +4974,12 @@
         }
       ],
       "estimate": {
-        "usd": 14.39,
+        "usd": 12.4,
         "lines": {
           "frontier_judges": 0.45,
           "ingest": 0.2,
           "judges": 0.57,
-          "readers": 13.16
+          "readers": 11.17
         }
       }
     },
@@ -4912,10 +5037,10 @@
         }
       ],
       "estimate": {
-        "usd": 34.23,
+        "usd": 43.09,
         "lines": {
           "frontier_judges": 0.45,
-          "full_context": 33.2,
+          "full_context": 42.07,
           "judges": 0.57
         }
       }
@@ -5014,7 +5139,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -5056,14 +5181,15 @@
         }
       ],
       "estimate": {
-        "usd": 23.91,
+        "usd": 20.56,
         "lines": {
-          "frontier_judges": 0.11,
+          "frontier_judges": 0.07,
           "ingest": 0.03,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8,
-          "system_queries": 0.16
+          "ingest_probes": 1.69,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96,
+          "system_queries": 0.35
         }
       }
     },
@@ -5137,12 +5263,13 @@
         }
       ],
       "estimate": {
-        "usd": 55.84,
+        "usd": 50.37,
         "lines": {
-          "frontier_judges": 3.6,
+          "frontier_judges": 2.41,
           "ingest": 0.03,
-          "judge_repeats": 11.1,
-          "judges": 1.11,
+          "ingest_probes": 1.69,
+          "judge_repeats": 5.67,
+          "judges": 0.57,
           "own_answer": 40
         }
       }
@@ -5175,7 +5302,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 29,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -5216,13 +5343,13 @@
         }
       ],
       "estimate": {
-        "usd": 24.21,
+        "usd": 43.19,
         "lines": {
-          "frontier_judges": 0.11,
-          "ingest": 0.49,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "ingest": 24.7,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5254,7 +5381,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -5295,13 +5422,13 @@
         }
       ],
       "estimate": {
-        "usd": 24.08,
+        "usd": 18.94,
         "lines": {
-          "frontier_judges": 0.11,
-          "ingest": 0.36,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "ingest": 0.45,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5374,13 +5501,13 @@
         }
       ],
       "estimate": {
-        "usd": 24.08,
+        "usd": 23.27,
         "lines": {
-          "frontier_judges": 0.11,
-          "ingest": 0.36,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "ingest": 4.78,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5453,13 +5580,14 @@
         }
       ],
       "estimate": {
-        "usd": 26.84,
+        "usd": 42.33,
         "lines": {
-          "frontier_judges": 0.11,
-          "ingest": 3.12,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "ingest": 23.4,
+          "ingest_probes": 0.44,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5491,7 +5619,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -5532,13 +5660,12 @@
         }
       ],
       "estimate": {
-        "usd": 23.74,
+        "usd": 18.49,
         "lines": {
-          "frontier_judges": 0.11,
-          "ingest": 0.03,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5570,7 +5697,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -5611,13 +5738,12 @@
         }
       ],
       "estimate": {
-        "usd": 23.74,
+        "usd": 18.49,
         "lines": {
-          "frontier_judges": 0.11,
-          "ingest": 0.03,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5684,12 +5810,12 @@
         }
       ],
       "estimate": {
-        "usd": 23.72,
+        "usd": 18.49,
         "lines": {
-          "frontier_judges": 0.11,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5756,13 +5882,13 @@
         }
       ],
       "estimate": {
-        "usd": 23.75,
+        "usd": 18.53,
         "lines": {
-          "frontier_judges": 0.11,
-          "ingest": 0.03,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "ingest": 0.04,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5829,12 +5955,12 @@
         }
       ],
       "estimate": {
-        "usd": 23.72,
+        "usd": 18.49,
         "lines": {
-          "frontier_judges": 0.11,
-          "judge_repeats": 3.7,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "judge_repeats": 1.89,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5866,7 +5992,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "common"
@@ -5902,12 +6028,12 @@
         }
       ],
       "estimate": {
-        "usd": 20.51,
+        "usd": 17.33,
         "lines": {
-          "frontier_judges": 0.11,
-          "ingest": 0.49,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "ingest": 0.73,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -5975,12 +6101,12 @@
         }
       ],
       "estimate": {
-        "usd": 20.38,
+        "usd": 16.96,
         "lines": {
-          "frontier_judges": 0.11,
+          "frontier_judges": 0.07,
           "ingest": 0.36,
-          "judges": 1.11,
-          "readers": 18.8
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -6048,12 +6174,12 @@
         }
       ],
       "estimate": {
-        "usd": 20.38,
+        "usd": 16.96,
         "lines": {
-          "frontier_judges": 0.11,
+          "frontier_judges": 0.07,
           "ingest": 0.36,
-          "judges": 1.11,
-          "readers": 18.8
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -6085,7 +6211,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "common"
@@ -6121,12 +6247,13 @@
         }
       ],
       "estimate": {
-        "usd": 23.14,
+        "usd": 21.59,
         "lines": {
-          "frontier_judges": 0.11,
-          "ingest": 3.12,
-          "judges": 1.11,
-          "readers": 18.8
+          "frontier_judges": 0.07,
+          "ingest": 4.55,
+          "ingest_probes": 0.44,
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -6194,12 +6321,12 @@
         }
       ],
       "estimate": {
-        "usd": 20.04,
+        "usd": 16.63,
         "lines": {
-          "frontier_judges": 0.11,
+          "frontier_judges": 0.07,
           "ingest": 0.03,
-          "judges": 1.11,
-          "readers": 18.8
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -6267,12 +6394,12 @@
         }
       ],
       "estimate": {
-        "usd": 20.04,
+        "usd": 16.63,
         "lines": {
-          "frontier_judges": 0.11,
+          "frontier_judges": 0.07,
           "ingest": 0.03,
-          "judges": 1.11,
-          "readers": 18.8
+          "judges": 0.57,
+          "readers": 15.96
         }
       }
     },
@@ -6334,11 +6461,11 @@
         }
       ],
       "estimate": {
-        "usd": 12.29,
+        "usd": 11.74,
         "lines": {
-          "frontier_judges": 0.11,
-          "full_context": 11.07,
-          "judges": 1.11
+          "frontier_judges": 0.07,
+          "full_context": 11.1,
+          "judges": 0.57
         }
       }
     },
@@ -6403,12 +6530,12 @@
         }
       ],
       "estimate": {
-        "usd": 60.61,
+        "usd": 26.29,
         "lines": {
-          "agent": 44.8,
-          "frontier_judges": 3.6,
-          "judge_repeats": 11.1,
-          "judges": 1.11
+          "agent": 17.64,
+          "frontier_judges": 2.41,
+          "judge_repeats": 5.67,
+          "judges": 0.57
         }
       }
     },
@@ -6470,11 +6597,11 @@
         }
       ],
       "estimate": {
-        "usd": 28.42,
+        "usd": 27.84,
         "lines": {
           "agent": 27.2,
-          "frontier_judges": 0.11,
-          "judges": 1.11
+          "frontier_judges": 0.07,
+          "judges": 0.57
         }
       }
     },
@@ -6506,7 +6633,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -6531,10 +6658,11 @@
         }
       ],
       "estimate": {
-        "usd": 0.19,
+        "usd": 2.07,
         "lines": {
           "ingest": 0.03,
-          "system_queries": 0.16
+          "ingest_probes": 1.69,
+          "system_queries": 0.35
         }
       }
     },
@@ -6566,7 +6694,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 29,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -6591,9 +6719,9 @@
         }
       ],
       "estimate": {
-        "usd": 0.49,
+        "usd": 24.7,
         "lines": {
-          "ingest": 0.49
+          "ingest": 24.7
         }
       }
     },
@@ -6625,7 +6753,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -6650,9 +6778,9 @@
         }
       ],
       "estimate": {
-        "usd": 0.36,
+        "usd": 0.45,
         "lines": {
-          "ingest": 0.36
+          "ingest": 0.45
         }
       }
     },
@@ -6709,9 +6837,9 @@
         }
       ],
       "estimate": {
-        "usd": 0.36,
+        "usd": 4.78,
         "lines": {
-          "ingest": 0.36
+          "ingest": 4.78
         }
       }
     },
@@ -6768,9 +6896,10 @@
         }
       ],
       "estimate": {
-        "usd": 3.12,
+        "usd": 23.84,
         "lines": {
-          "ingest": 3.12
+          "ingest": 23.4,
+          "ingest_probes": 0.44
         }
       }
     },
@@ -6802,7 +6931,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -6827,10 +6956,8 @@
         }
       ],
       "estimate": {
-        "usd": 0.03,
-        "lines": {
-          "ingest": 0.03
-        }
+        "usd": 0,
+        "lines": {}
       }
     },
     {
@@ -6861,7 +6988,7 @@
         "seed": "q1-probes-s3"
       },
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -6886,10 +7013,8 @@
         }
       ],
       "estimate": {
-        "usd": 0.03,
-        "lines": {
-          "ingest": 0.03
-        }
+        "usd": 0,
+        "lines": {}
       }
     },
     {
@@ -6939,9 +7064,9 @@
         }
       ],
       "estimate": {
-        "usd": 0.03,
+        "usd": 0.04,
         "lines": {
-          "ingest": 0.03
+          "ingest": 0.04
         }
       }
     },
@@ -7026,13 +7151,14 @@
         }
       ],
       "estimate": {
-        "usd": 29.49,
+        "usd": 400.63,
         "lines": {
-          "frontier_judges": 0.31,
+          "frontier_judges": 0.21,
           "ingest": 6.9,
-          "judges": 1.48,
-          "readers": 20.4,
-          "system_queries": 0.4
+          "ingest_probes": 373.75,
+          "judges": 0.76,
+          "readers": 18.13,
+          "system_queries": 0.88
         }
       }
     },
@@ -7060,7 +7186,7 @@
         "seed": "q1-probes-s4-slice"
       },
       "shards": 1,
-      "expected_hours": 46,
+      "expected_hours": 7,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -7096,12 +7222,11 @@
         }
       ],
       "estimate": {
-        "usd": 11.41,
+        "usd": 8.47,
         "lines": {
-          "frontier_judges": 0.31,
-          "ingest": 1.15,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     },
@@ -7129,7 +7254,7 @@
         "seed": "q1-probes-s4-slice"
       },
       "shards": 1,
-      "expected_hours": 46,
+      "expected_hours": 2,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -7165,12 +7290,11 @@
         }
       ],
       "estimate": {
-        "usd": 11.41,
+        "usd": 8.47,
         "lines": {
-          "frontier_judges": 0.31,
-          "ingest": 1.15,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     },
@@ -7228,11 +7352,11 @@
         }
       ],
       "estimate": {
-        "usd": 10.26,
+        "usd": 8.47,
         "lines": {
-          "frontier_judges": 0.31,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     },
@@ -7290,12 +7414,12 @@
         }
       ],
       "estimate": {
-        "usd": 11.76,
+        "usd": 10.08,
         "lines": {
-          "frontier_judges": 0.31,
-          "ingest": 1.5,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "ingest": 1.61,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     },
@@ -7353,11 +7477,11 @@
         }
       ],
       "estimate": {
-        "usd": 10.26,
+        "usd": 8.47,
         "lines": {
-          "frontier_judges": 0.31,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     },
@@ -7420,13 +7544,14 @@
         }
       ],
       "estimate": {
-        "usd": 28.34,
+        "usd": 156.64,
         "lines": {
-          "frontier_judges": 0.31,
+          "frontier_judges": 0.21,
           "ingest": 18,
-          "judges": 0.56,
-          "readers": 9.4,
-          "system_queries": 0.08
+          "ingest_probes": 130,
+          "judges": 0.28,
+          "readers": 7.98,
+          "system_queries": 0.18
         }
       }
     },
@@ -7488,12 +7613,11 @@
         }
       ],
       "estimate": {
-        "usd": 25.26,
+        "usd": 8.47,
         "lines": {
-          "frontier_judges": 0.31,
-          "ingest": 15,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     },
@@ -7519,7 +7643,7 @@
         "seed": "q1-probes-s5"
       },
       "shards": 1,
-      "expected_hours": 48,
+      "expected_hours": 23,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -7555,12 +7679,11 @@
         }
       ],
       "estimate": {
-        "usd": 25.26,
+        "usd": 8.47,
         "lines": {
-          "frontier_judges": 0.31,
-          "ingest": 15,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     },
@@ -7616,11 +7739,11 @@
         }
       ],
       "estimate": {
-        "usd": 10.26,
+        "usd": 8.47,
         "lines": {
-          "frontier_judges": 0.31,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     },
@@ -7676,12 +7799,12 @@
         }
       ],
       "estimate": {
-        "usd": 29.76,
+        "usd": 29.47,
         "lines": {
-          "frontier_judges": 0.31,
-          "ingest": 19.5,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "ingest": 21,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     },
@@ -7737,16 +7860,1518 @@
         }
       ],
       "estimate": {
-        "usd": 10.26,
+        "usd": 8.47,
         "lines": {
-          "frontier_judges": 0.31,
-          "judges": 0.56,
-          "readers": 9.4
+          "frontier_judges": 0.21,
+          "judges": 0.28,
+          "readers": 7.98
         }
       }
     }
   ],
-  "total_usd": 5417.59,
+  "smoke_cells": [
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.gbrain-defaults.shipped-defaults",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "shipped-defaults",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.gbrain-defaults.shipped-defaults.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        },
+        {
+          "id": "whole-synthesize",
+          "cell_id": "s3-smoke.gbrain-defaults.shipped-defaults.whole-synthesize",
+          "set": "S3-smoke",
+          "arm": "whole-system",
+          "mode": "own-answer",
+          "policy": null,
+          "budget": null,
+          "variant": "synthesize",
+          "questions": null,
+          "readers": [
+            "system-default"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "gbrain synthesize (own answer, starter surface)"
+        }
+      ],
+      "estimate": {
+        "usd": 5.74,
+        "lines": {
+          "ingest": 0,
+          "ingest_probes": 0.13,
+          "judges": 0.08,
+          "own_answer": 3.9,
+          "readers": 1.6,
+          "system_queries": 0.04
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.ext-extract-first.recipe",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-extract-first",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 3,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.ext-extract-first.recipe.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 3.6,
+        "lines": {
+          "ingest": 1.95,
+          "judges": 0.06,
+          "readers": 1.6
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.ext-memory-bank.recipe",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-memory-bank",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.ext-memory-bank.recipe.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.69,
+        "lines": {
+          "ingest": 0.04,
+          "judges": 0.06,
+          "readers": 1.6
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.ext-graph-pipeline.recipe",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-graph-pipeline",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.ext-graph-pipeline.recipe.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 2.03,
+        "lines": {
+          "ingest": 0.38,
+          "judges": 0.06,
+          "readers": 1.6
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.ext-temporal-graph.recipe",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-temporal-graph",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.ext-temporal-graph.recipe.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 3.53,
+        "lines": {
+          "ingest": 1.84,
+          "ingest_probes": 0.03,
+          "judges": 0.06,
+          "readers": 1.6
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.ext-markdown-kb.recipe",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-markdown-kb",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.ext-markdown-kb.recipe.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.65,
+        "lines": {
+          "judges": 0.06,
+          "readers": 1.6
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.ext-verbatim-session.recipe",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-verbatim-session",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.ext-verbatim-session.recipe.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.65,
+        "lines": {
+          "judges": 0.06,
+          "readers": 1.6
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.baseline-recency.baseline",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "baseline-recency",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.baseline-recency.baseline.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.65,
+        "lines": {
+          "judges": 0.06,
+          "readers": 1.6
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.baseline-hybrid.baseline",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "baseline-hybrid",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.baseline-hybrid.baseline.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.66,
+        "lines": {
+          "ingest": 0,
+          "judges": 0.06,
+          "readers": 1.6
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.baseline-none.baseline",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "baseline-none",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3-smoke.baseline-none.baseline.component-b8000",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.65,
+        "lines": {
+          "judges": 0.06,
+          "readers": 1.6
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.baseline-file-agent.baseline",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "baseline-file-agent",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "whole-agent",
+          "cell_id": "s3-smoke.baseline-file-agent.baseline.whole-agent",
+          "set": "S3-smoke",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "file agent, uncapped grep, 40 turns (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.66,
+        "lines": {
+          "agent": 1.6,
+          "judges": 0.06
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.baseline-full-context.baseline",
+      "set": "S3-smoke",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "baseline-full-context",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "whole-full-context",
+          "cell_id": "s3-smoke.baseline-full-context.baseline.whole-full-context",
+          "set": "S3-smoke",
+          "arm": "whole-system",
+          "mode": "full-context",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole history (dev smoke)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.02,
+        "lines": {
+          "full_context": 0.96,
+          "judges": 0.06
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.gbrain-defaults.shipped-defaults",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "shipped-defaults",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.gbrain-defaults.shipped-defaults.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.66,
+        "lines": {
+          "ingest": 0,
+          "ingest_probes": 0.13,
+          "judges": 0.02,
+          "readers": 1.47,
+          "system_queries": 0.04
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-extract-first.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-extract-first",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 3,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-extract-first.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 2.12,
+        "lines": {
+          "ingest": 1.95,
+          "judges": 0.02,
+          "readers": 0.16
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-memory-bank.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-memory-bank",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-memory-bank.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.74,
+        "lines": {
+          "ingest": 0.04,
+          "judges": 0.02,
+          "readers": 0.69
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-graph-pipeline.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-graph-pipeline",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-graph-pipeline.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.61,
+        "lines": {
+          "ingest": 0.38,
+          "judges": 0.02,
+          "readers": 0.21
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-markdown-kb.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-markdown-kb",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-markdown-kb.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.24,
+        "lines": {
+          "judges": 0.02,
+          "readers": 0.22
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-verbatim-session.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-verbatim-session",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-verbatim-session.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.57,
+        "lines": {
+          "judges": 0.02,
+          "readers": 0.55
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.baseline-hybrid.baseline",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "baseline-hybrid",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.baseline-hybrid.baseline.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.52,
+        "lines": {
+          "ingest": 0,
+          "judges": 0.02,
+          "readers": 0.5
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b-ingest.ext-extract-first.common",
+      "set": "S2b-ingest",
+      "block": "T2-S2b",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 10,
+        "stratify": "category",
+        "seed": "q1-ingest-probe"
+      },
+      "exclusions": [],
+      "system": "ext-extract-first",
+      "configuration": "common",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s2b-ingest"
+      },
+      "only_conversations": [
+        "1m-16"
+      ],
+      "shards": 1,
+      "expected_hours": 2,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "arms": [
+        {
+          "id": "retrieval-only",
+          "cell_id": "s2b-ingest.ext-extract-first.common.retrieval-only",
+          "set": "S2b-ingest",
+          "arm": "diagnostic",
+          "mode": "retrieval-only",
+          "policy": "fixed-evidence",
+          "budget": null,
+          "questions": null,
+          "readers": [],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "ingest-cost probe, retrieval only"
+        }
+      ],
+      "estimate": {
+        "usd": 2.59,
+        "lines": {
+          "ingest": 2.59
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b-ingest.ext-memory-bank.recipe",
+      "set": "S2b-ingest",
+      "block": "T2-S2b",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 10,
+        "stratify": "category",
+        "seed": "q1-ingest-probe"
+      },
+      "exclusions": [],
+      "system": "ext-memory-bank",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s2b-ingest"
+      },
+      "only_conversations": [
+        "1m-16"
+      ],
+      "shards": 1,
+      "expected_hours": 3,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
+      "arms": [
+        {
+          "id": "retrieval-only",
+          "cell_id": "s2b-ingest.ext-memory-bank.recipe.retrieval-only",
+          "set": "S2b-ingest",
+          "arm": "diagnostic",
+          "mode": "retrieval-only",
+          "policy": "fixed-evidence",
+          "budget": null,
+          "questions": null,
+          "readers": [],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "ingest-cost probe, retrieval only"
+        }
+      ],
+      "estimate": {
+        "usd": 1.59,
+        "lines": {
+          "ingest": 1.59
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b-ingest.ext-graph-pipeline.recipe",
+      "set": "S2b-ingest",
+      "block": "T2-S2b",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 10,
+        "stratify": "category",
+        "seed": "q1-ingest-probe"
+      },
+      "exclusions": [],
+      "system": "ext-graph-pipeline",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s2b-ingest"
+      },
+      "only_conversations": [
+        "1m-16"
+      ],
+      "shards": 1,
+      "expected_hours": 5,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
+      "arms": [
+        {
+          "id": "retrieval-only",
+          "cell_id": "s2b-ingest.ext-graph-pipeline.recipe.retrieval-only",
+          "set": "S2b-ingest",
+          "arm": "diagnostic",
+          "mode": "retrieval-only",
+          "policy": "fixed-evidence",
+          "budget": null,
+          "questions": null,
+          "readers": [],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "ingest-cost probe, retrieval only"
+        }
+      ],
+      "estimate": {
+        "usd": 3.24,
+        "lines": {
+          "ingest": 3.24
+        }
+      },
+      "ingest_sessions": 93
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b-ingest.ext-graph-pipeline.common",
+      "set": "S2b-ingest",
+      "block": "T2-S2b",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 10,
+        "stratify": "category",
+        "seed": "q1-ingest-probe"
+      },
+      "exclusions": [],
+      "system": "ext-graph-pipeline",
+      "configuration": "common",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s2b-ingest"
+      },
+      "only_conversations": [
+        "1m-16"
+      ],
+      "shards": 1,
+      "expected_hours": 3,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
+      "arms": [
+        {
+          "id": "retrieval-only",
+          "cell_id": "s2b-ingest.ext-graph-pipeline.common.retrieval-only",
+          "set": "S2b-ingest",
+          "arm": "diagnostic",
+          "mode": "retrieval-only",
+          "policy": "fixed-evidence",
+          "budget": null,
+          "questions": null,
+          "readers": [],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "ingest-cost probe, retrieval only"
+        }
+      ],
+      "estimate": {
+        "usd": 3.69,
+        "lines": {
+          "ingest": 3.69
+        }
+      },
+      "ingest_sessions": 93
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b-ingest.ext-temporal-graph.common",
+      "set": "S2b-ingest",
+      "block": "T2-S2b",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 10,
+        "stratify": "category",
+        "seed": "q1-ingest-probe"
+      },
+      "exclusions": [],
+      "system": "ext-temporal-graph",
+      "configuration": "common",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s2b-ingest"
+      },
+      "only_conversations": [
+        "1m-16"
+      ],
+      "shards": 1,
+      "expected_hours": 4,
+      "launch": {
+        "env": {},
+        "config": "common"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
+      "arms": [
+        {
+          "id": "retrieval-only",
+          "cell_id": "s2b-ingest.ext-temporal-graph.common.retrieval-only",
+          "set": "S2b-ingest",
+          "arm": "diagnostic",
+          "mode": "retrieval-only",
+          "policy": "fixed-evidence",
+          "budget": null,
+          "questions": null,
+          "readers": [],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "ingest-cost probe, retrieval only"
+        }
+      ],
+      "estimate": {
+        "usd": 16.35,
+        "lines": {
+          "ingest": 16.22,
+          "ingest_probes": 0.13
+        }
+      },
+      "ingest_sessions": 93
+    }
+  ],
+  "total_usd": 7133.52,
   "plan_total_usd": 7710,
   "cap_usd": 8500
 }

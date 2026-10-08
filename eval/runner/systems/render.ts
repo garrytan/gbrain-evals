@@ -117,19 +117,30 @@ export function cutCandidates(lines: readonly string[], unit: CutUnit): string[]
 // ─── Budget counters ─────────────────────────────────────────────────
 
 export type Encoding = 'cl100k_base' | 'o200k_base';
-export interface ReaderTokenizer { encoding: Encoding; calibration: number; calibrated: boolean }
+export interface ReaderTokenizer {
+  encoding: Encoding; calibration: number; calibrated: boolean;
+  /** Where a calibrated factor comes from: the date, the packs it was fitted on and the largest per-pack error under it. */
+  measured?: { on: string; samples: number; max_error: number; source: string };
+}
+
+const SMOKES = 'docs/benchmarks/2026-10-06-scoreboard/dev-smokes/ (bun eval/runner/q1/calibrate.ts)';
 
 /**
  * Local encoding and calibration factor per reader. A factor is the reader's
  * provider-reported input tokens per local token, measured on dev packs
  * against `usage.input_tokens`; 1.0 with `calibrated: false` until measured.
  * Changing a factor changes every context identity built with that reader.
+ * The Claude 5 tokenizer counts about 1.45-1.47 tokens per cl100k_base token, with
+ * up to 10% error per pack (content-dependent), above the 3% that a local
+ * count is good enough for; GPT-6.1 matches o200k_base (exact on full packs,
+ * 4.7% on prompts of about 130 tokens, where the chat format's six tokens
+ * show).
  */
 export const READER_TOKENIZERS: Record<string, ReaderTokenizer> = {
-  'anthropic:claude-opus-5-5': { encoding: 'cl100k_base', calibration: 1.0, calibrated: false },
-  'anthropic:claude-sonnet-5-5': { encoding: 'cl100k_base', calibration: 1.0, calibrated: false },
+  'anthropic:claude-opus-5-5': { encoding: 'cl100k_base', calibration: 1.4708, calibrated: true, measured: { on: '2026-10-07', samples: 199, max_error: 0.101, source: SMOKES } },
+  'anthropic:claude-sonnet-5-5': { encoding: 'cl100k_base', calibration: 1.4524, calibrated: true, measured: { on: '2026-10-07', samples: 317, max_error: 0.0983, source: SMOKES } },
   'anthropic:claude-fable-5-1': { encoding: 'cl100k_base', calibration: 1.0, calibrated: false },
-  'openai:gpt-6.1-sol': { encoding: 'o200k_base', calibration: 1.0, calibrated: false },
+  'openai:gpt-6.1-sol': { encoding: 'o200k_base', calibration: 1.0009, calibrated: true, measured: { on: '2026-10-07', samples: 199, max_error: 0.0468, source: SMOKES } },
 };
 
 const canonicalReader = (reader: string) => reader.includes(':') ? reader : `openai:${reader}`;

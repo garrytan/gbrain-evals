@@ -8,7 +8,7 @@
   "properties": {
     "schema": { "const": "gbrain-evals/q1-cell/v1" },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,79}$", "description": "<set>.<system>.<configuration>[.r<n>]" },
-    "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5"], "description": "The preregistered set the cell selects questions from." },
+    "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5", "S3-smoke", "S3-smoke-default", "S2b-ingest"], "description": "The preregistered set the cell selects questions from (S3-smoke and S2b-ingest: the paid dev smokes)." },
     "block": { "enum": ["T1", "T2-S2a", "T2-S2b", "T2-S3", "T2-S4-S5"], "description": "The spend block (ledger run) the cell is charged to." },
     "benchmark": { "enum": ["beam-10m", "beam-100k", "beam-1m", "locomo", "lme-s", "lme-m"] },
     "split": { "enum": ["dev", "sealed", "all"], "description": "Conversations from the benchmark's split file; sealed and all need custody (GBRAIN_EVALS_CUSTODY_LOG and an output directory outside the repository)." },
@@ -21,6 +21,8 @@
     "effort": { "const": "medium" },
     "canonical_instrument": { "type": "string", "description": "The benchmark's instrument id in eval/runner/memory-qa/instruments.ts; its judgments are judge_replicate 0." },
     "probes": { "type": "object", "required": ["sample", "seed"], "properties": { "sample": { "type": "integer", "minimum": 0 }, "seed": { "type": "string" } }, "description": "Write-start-to-queryable probes: the last session plus `sample` sessions per conversation." },
+    "only_conversations": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "Dev smoke cells: only these conversations of the dev split run; the rest are never loaded." },
+    "ingest_sessions": { "type": "integer", "minimum": 1, "description": "Ingest probes: write only the first N sessions of each conversation." },
     "shards": { "type": "integer", "minimum": 1, "description": "VM launch units (conversation shards)." },
     "expected_hours": { "type": "number", "minimum": 0 },
     "launch": { "type": "object", "required": ["env", "config"], "properties": { "env": { "type": "object", "additionalProperties": { "type": "string" } }, "config": { "enum": ["recipe", "common"] } }, "description": "Shim cells: the environment and bootstrap.sh --config the stack starts with." },
@@ -44,7 +46,7 @@
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$" },
         "cell_id": { "type": "string", "description": "The scoreboard cell id: <cell id>.<arm id>." },
-        "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5"] },
+        "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5", "S3-smoke", "S3-smoke-default", "S2b-ingest"] },
         "arm": { "enum": ["component", "whole-system", "diagnostic"] },
         "mode": { "enum": ["packed", "native-default", "own-answer", "agent", "full-context", "retrieval-only"], "description": "packed: the system's items packed into `budget` tokens, one frozen byte string per question for every reader; native-default: the system's own default amount; own-answer: the system's answer route; agent: an answering system's loop; full-context: the whole history where it fits each reader's window; retrieval-only: rows without readers." },
         "policy": { "enum": ["fixed-evidence", "vendor-default", null] },

@@ -1,6 +1,6 @@
 {
   "schema": "gbrain-evals/q1-power/v1",
-  "command": "bun eval/runner/q1/power.ts --sims 1000 --draws 1999 --seed 20261006",
+  "command": "bun eval/runner/q1/power.ts --sims 1000 --draws 1999 --seed 20261006 --dev-strength <file>",
   "method": "restricted wild cluster bootstrap-t, Webb weights, two-sided, Holm within the family; estimand: per-question three-reader mean, clustered by conversation",
   "inputs": {
     "sources": [
@@ -3395,8 +3395,13 @@
       "mdd_points": 13.58
     },
     "family1": "descriptive",
-    "shrunk_comparators": null,
+    "shrunk_comparators": [
+      "ext-extract-first",
+      "ext-markdown-kb",
+      "ext-temporal-graph",
+      "ext-graph-pipeline"
+    ],
     "detectable_difference_points": 13.58,
-    "note": "Comparator rows are exchangeable under these inputs, so one detectable difference applies to every row; rerun when dev smokes give paired cross-system rows."
+    "note": "The four comparators are the strongest dev rows by three-reader mean; their comparisons are still underpowered, so S1 is published descriptively with this detectable difference. Comparator rows are exchangeable under these inputs, so one detectable difference applies to every row."
   }
 }

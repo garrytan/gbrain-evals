@@ -125,7 +125,8 @@ export const upstreamTrouble = (m: Meter | null | undefined) => !!m?.upstream &&
 
 /** Output-token caps by route class, and which slot belongs to which class. */
 export interface RouteCaps { caps: Record<string, number>; slots: Record<string, string>; defaultClass: string }
-export const DEFAULT_ROUTE_CAPS: Record<string, number> = { extraction: 4096, reader: 2048, judge: 1024 };
+/** Output caps by route class. `agent` is the harness's own answering baselines (the file agent's loop states 8,192 tokens on Anthropic and 16,000 on OpenAI per turn). */
+export const DEFAULT_ROUTE_CAPS: Record<string, number> = { extraction: 4096, reader: 2048, judge: 1024, agent: 16000 };
 
 export type Phase = 'commit' | 'background' | 'query';
 export const PHASES: readonly Phase[] = ['commit', 'background', 'query'];
@@ -285,7 +286,7 @@ export interface UsageLine {
 export interface RequestTag { request_id: string; slot: string; brain: string | null; phase: Phase | null; bucket: Bucket }
 /** `harness`: the harness's own reader and judge slots, never background work. */
 export type Bucket = 'attributed' | 'harness' | 'unattributed-background';
-export const HARNESS_CLASSES = new Set(['reader', 'judge']);
+export const HARNESS_CLASSES = new Set(['reader', 'judge', 'agent']);
 
 const json = (status: number, kind: string, message: string) =>
   new Response(JSON.stringify({ error: { kind, type: kind, message: `metering proxy: ${message}` } }), { status, headers: { 'content-type': 'application/json' } });

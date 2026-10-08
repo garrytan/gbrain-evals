@@ -3,10 +3,11 @@
  * docs/benchmarks/2026-10-06-scoreboard-preregistration.md).
  *
  *   bun eval/runner/q1/cell.ts plan [--json] [--campaign-out <q1 campaign manifest.json>] [--with-smoke]
+ *     (--with-smoke adds the paid dev smoke cells, manifest `smoke_cells`: dev conversations only, never sealed)
  *   bun eval/runner/q1/cell.ts show --cell <id> [--json]
  *   bun eval/runner/q1/cell.ts run --cell <id> [--paid --budget-run-id <id>] [--limit N] [--out <dir>] [--arms a,b]
  *     [--shard i/n] [--system-url <shim URL>] [--provider-proxy <url>] [--aggregates <file>] [--max-attempts 3]
- *     [--no-frontier] [--finish-timeout-s 600] [--probe-timeout-s 900]
+ *     [--no-frontier] [--finish-timeout-s <default: 1.5x the cell's expected hours, at least 600>] [--probe-timeout-s 900]
  *   bun eval/runner/q1/cell.ts merge --cell <id> --from <out dir>... --out <dir>
  *
  * A cell (eval/runner/q1/cells/definitions.ts) is one system x configuration
@@ -17,7 +18,8 @@
  *      session write, finish wait) and write-start-to-queryable probes: the
  *      last session plus a seeded sample of 20 sessions, each timed from the
  *      start of its write to the first fixed-evidence retrieval that returns
- *      it (probes poll while later sessions are written). Every conversation
+ *      it (probes poll while later sessions are written; once /finish reports
+ *      ready, a probe's next miss is final). Every conversation
  *      of the shard is ingested before any question, then
  *      `$SHOOTOUT_OUT/ingest-complete` is written so the VM snapshots the
  *      store; with SHOOTOUT_RESTORED_REALIZATION set the restored store is
@@ -54,9 +56,9 @@
  * Metering (with a lease proxy, SHOOTOUT_PROXY or --provider-proxy): provider
  * keys become SHOOTOUT_CELL_TOKEN (or a dummy), the system's calls run on its
  * slot with proxy phases `commit` (each /ingest), `background` (last ingest
- * to finish ready) and `query` (retrieval); readers run on the `harness` slot
- * and judges on the `judge` slot, so judge spend and its output cap are apart
- * from answers. Without a proxy the run needs `--paid --budget-run-id`
+ * to finish ready) and `query` (retrieval); readers run on the `harness` slot,
+ * answering baselines' agent loops (file agent) on the `agent` slot and judges
+ * on the `judge` slot, so each has its own output cap and spend line. Without a proxy the run needs `--paid --budget-run-id`
  * (eval/runner/paid-arm.ts) and the budget ledger guards every call.
  *
  * Custody (contract 10): a cell whose split is sealed (or all, on a benchmark
@@ -170,6 +172,24 @@ export function splitConversations(benchmark: string, split: CellDefinition['spl
   const s = loadSplit(benchmark);
   return new Set(split === 'dev' ? s.dev : split === 'sealed' ? s.sealed : [...s.dev, ...s.sealed]);
 }
+
+/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo); null loads everything. */
+export function devOnly(def: Pick<CellDefinition, 'benchmark' | 'split' | 'only_conversations'>): Set<string> | null {
+  if (def.split !== 'dev' || !(def.benchmark === 'locomo' || def.benchmark.startsWith('beam-'))) return null;
+  const dev = loadSplit(def.benchmark).dev;
+  const outside = (def.only_conversations ?? []).filter(c => !dev.includes(c));
+  if (outside.length) throw refuse({ code: 'USAGE', message: `only_conversations names ${outside.join(', ')}, which ${outside.length > 1 ? 'are' : 'is'} not in ${def.benchmark}'s dev split`,
+    why: 'a dev cell runs dev conversations only (eval/decisions/splits)', fix: { next: 'run', argv: ['bun', 'eval/runner/q1/cells/definitions.ts'] } });
+  return new Set(def.only_conversations ?? dev);
+}
+
+/**
+ * How long ingest waits for a system's background work (/finish) by default: 1.5 times the cell's expected hours (its
+ * timeout's margin), at least ten
+ * minutes. A queued system drains for hours at scale (the extract-first server's recipe /finish took 185 minutes on the
+ * shootout's LoCoMo), and questions that start before it drains read a half-built store.
+ */
+export const finishTimeoutFor = (def: Pick<CellDefinition, 'expected_hours'>) => Math.max(600, Math.round(def.expected_hours * 1.5 * 3600));
 
 export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): boolean {
   if (def.split === 'dev' || def.benchmark === 'lme-m') return false;
@@ -436,8 +456,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     appendAccessLog(log, { action: 'open', purpose: `q1 cell ${def.id}`, decision_id: env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', labels_sha256: 'public-split-file', run_sha256: null });
   }
   mkdirSync(out, { recursive: true });
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark);
-  const allowed = splitConversations(def.benchmark, def.split, corpus);
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, devOnly(def) ?? undefined);
+  const allowed = new Set([...splitConversations(def.benchmark, def.split, corpus)].filter(c => !def.only_conversations || def.only_conversations.includes(c)));
   let selected = selectCellQuestions(corpus.questions.filter(q => allowed.has(q.conversation)), def.selection);
   if (opts.limit) selected = selectCellQuestions(selectQuestions(selected, opts.limit, 42), { kind: 'all' });
   const shard = opts.shard ?? { index: 0, count: 1 };
@@ -463,6 +483,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const system = deps.system ?? systemFor(def, opts, sanitizer);
   const capabilities = await system.capabilities();
   const slot = def.runner === 'shim' ? capabilities.system : def.system;
+  /** The sessions a conversation writes, in order; an ingest probe with `ingest_sessions` writes only that prefix. */
+  const ingestPlan = (conv: Corpus['conversations'][number]) => sanitizer.ingestPlan(conv).slice(0, def.ingest_sessions ?? Infinity);
   const policyFor = (mode: RetrievalPolicy['mode']): RetrievalPolicy => ({ name: `${capabilities.system}:${mode}`, mode, settings: policyKnobs(capabilities.retrieval_policies?.[mode]).settings });
   const ownArms = arms.filter(a => a.mode === 'own-answer');
   const agentArms = arms.filter(a => a.mode === 'agent');
@@ -574,7 +596,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const conv = byConv.get(convId)!;
     const ns = sanitizer.ns(convId);
     staging.event({ realization_id: rid, conversation: convId, attempt, event: 'started', at: new Date().toISOString() });
-    const plan = sanitizer.ingestPlan(conv);
+    const plan = ingestPlan(conv);
     const sample = probeSample(plan, def.probes.sample, `${def.probes.seed}|${convId}`);
     const canProbe = probeable(capabilities);
     const fixed = policyFor('fixed-evidence');
@@ -582,6 +604,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const writes: number[] = [];
     let failed = 0, synthetic = 0, messages = 0, tokens = 0;
     const probes: Array<Promise<ProbeRecord>> = [];
+    /** Set once /finish has returned: the store is as queryable as it will get, so a probe whose next poll misses is missed. */
+    let drained = false;
     const probe = async (step: { input: SessionInput }, kind: 'last' | 'sample', t0: number): Promise<ProbeRecord> => {
       const base = { realization_id: rid, source_id: step.input.source_id, kind };
       if (!canProbe) return { ...base, status: 'not-measurable', write_start_to_queryable_ms: null, polls: 0 };
@@ -590,11 +614,12 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       let polls = 0;
       while (true) {
         polls++;
+        const last = drained;
         try {
           const res = await system.retrieve(ns, { text: passage, query_time: null }, fixed);
           if (res.items.some(i => i.source_ids.includes(step.input.source_id))) return { ...base, status: 'found', write_start_to_queryable_ms: Math.round((performance.now() - t0) * 10) / 10, polls };
         } catch { /* a vendor error is polled again until the deadline */ }
-        if (performance.now() >= deadline) return { ...base, status: 'missed', write_start_to_queryable_ms: null, polls };
+        if (last || performance.now() >= deadline) return { ...base, status: 'missed', write_start_to_queryable_ms: null, polls };
         await Bun.sleep(opts.probeIntervalMs ?? 2000);
       }
     };
@@ -623,7 +648,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       }
       await meter.phase(slot, 'background');
       let finish = { ready: false, waited_ms: 0, completeness: 'not reached' };
-      if (!importError) { try { const f = await system.finishIngest(ns, opts.finishTimeoutS ?? 600); finish = { ready: f.ready, waited_ms: f.waited_ms, completeness: f.completeness }; } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; } }
+      if (!importError) { try { const f = await system.finishIngest(ns, opts.finishTimeoutS ?? finishTimeoutFor(def)); finish = { ready: f.ready, waited_ms: f.waited_ms, completeness: f.completeness }; } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; } }
+      if (finish.ready) drained = true;
       const probeRecords = await Promise.all(probes);
       await meter.phase(slot, null);
       return { finish, probeRecords };
@@ -649,7 +675,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const ns = sanitizer.ns(convId);
     const dir = staging.dir(rid);
     const isLive = live.has(rid);
-    const plan = sanitizer.ingestPlan(conv);
+    const plan = ingestPlan(conv);
     const lastEventTime = plan.map(p => p.event_time).filter((t): t is string => !!t).sort().pop() ?? null;
     const fallbackDate = conv.sessions.map(x => x.date ?? '').sort().pop() || undefined;
     const ingested = new Set(plan.map(p => p.input.source_id));
@@ -835,7 +861,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           continue;
         }
         const pq = sanitizer.question(q, lastEventTime);
-        const res = await meter.around('harness', `answer:${aid.slice(0, 16)}`, 'reader', () => (system as AnsweringSystem).answer(ns, pq, { reader: rd, replicate: rep }));
+        const res = await meter.around('agent', `answer:${aid.slice(0, 16)}`, 'reader', () => (system as AnsweringSystem).answer(ns, pq, { reader: rd, replicate: rep }));
         if (res.error !== undefined) { appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: 0, provider_input_tokens: null }), String((res.error as Error).message)); continue; }
         const a = res.value!;
         const gold = q.gold.map(g => sanitizer.source(q.conversation, g));
@@ -999,6 +1025,8 @@ export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval
   'eval/systems', 'docs/comparison-systems', 'eval/decisions', 'package.json', 'bun.lock'];
 
 const VM_VCPU = 4;
+/** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
+const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY' } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
 const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4 };
 
@@ -1009,23 +1037,25 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
   const t1Waves = Math.max(1, Math.ceil(t1Units.length / perWave));
   const waveOf = new Map(t1Units.map((u, k) => [`${u.c.id}|${u.i}`, Math.floor(k / perWave) + 1]));
   const spec = (c: CellDefinition, i: number, smoke: boolean): CellSpec => {
-    const id = `${c.id}${c.shards > 1 ? `.c${i}` : ''}${smoke ? '.smoke' : ''}`;
-    const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(smoke ? ['--limit', '20'] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
+    const id = `${c.id}${c.shards > 1 ? `.c${i}` : ''}`;
+    const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
+    const providers: Array<keyof typeof PROVIDER_KEYS> = c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'];
     const command = c.runner === 'shim' ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}; exit $rc` : run;
-    const lease = Math.max(0.01, Math.ceil((smoke ? c.estimate.usd * 20 / SETS[c.set].questions : c.estimate.usd / c.shards) * 100) / 100);
+    /** A smoke measures what the estimate assumes, so its lease holds twice the estimate. */
+    const lease = Math.max(0.01, Math.ceil((smoke ? 2 : 1) * c.estimate.usd / c.shards * 100) / 100);
     return {
       id, system: c.system, benchmark: c.benchmark, config: c.configuration, lease_usd: lease, command,
-      setup_command: `bash eval/systems/bootstrap.sh setup${c.runner === 'shim' ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}`,
-      vm: { size: `standard-${VM_VCPU}` }, timeout_hours: smoke ? 6 : Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
-      ...(smoke ? { smoke: true } : {}), providers: c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'],
-      expected_hours: smoke ? 1 : c.expected_hours, wave: c.block === 'T1' ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
+      setup_command: `bash eval/systems/bootstrap.sh setup${c.runner === 'shim' ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
+      vm: { size: `standard-${VM_VCPU}` }, timeout_hours: Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
+      ...(smoke ? { smoke: true } : {}), ...(c.only_conversations ? { conversations: c.only_conversations } : {}), providers, pass: providers.map(p => PROVIDER_KEYS[p]),
+      expected_hours: c.expected_hours, wave: c.block === 'T1' ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
       ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(c.restore_command ? { restore_command: c.restore_command } : {}),
     };
   };
   const out: CellSpec[] = [];
   for (const c of m.cells) for (let i = 0; i < c.shards; i++) out.push(spec(c, i, false));
-  if (opts.smoke) for (const c of m.cells.filter(x => x.ingest_replicate === 1)) out.push(spec(c, 0, true));
+  if (opts.smoke) for (const c of m.smoke_cells ?? []) out.push(spec(c, 0, true));
   return out;
 }
 
@@ -1059,9 +1089,9 @@ export function renderPlan(m: Manifest): string {
 // ─── CLI ─────────────────────────────────────────────────────────────
 
 export function findCell(id: string, m: Manifest = loadManifest()): CellDefinition {
-  const c = m.cells.find(x => x.id === id);
+  const c = m.cells.find(x => x.id === id) ?? (m.smoke_cells ?? []).find(x => x.id === id);
   if (c) return c;
-  const near = m.cells.filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
+  const near = [...m.cells, ...(m.smoke_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
   throw refuse({ code: 'USAGE', message: `no cell ${id} in ${rel(MANIFEST_PATH)}`, why: 'run, show and merge take a cell id from the generated manifest', fix: { next: 'run', argv: [...FRONT, 'plan'], user_message: near.length ? `did you mean ${near.join(', ')}?` : 'list the cells with plan' } });
 }
 

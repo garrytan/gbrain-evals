@@ -166,7 +166,7 @@ describe('executor, VM payload and schedule', () => {
     expect(argv.slice(argv.indexOf('-n'), argv.indexOf('-n') + 2)).toEqual(['-n', name]);
     const p = payloadOf(argv);
     expect(p).toMatchObject({ cell: 'kb-locomo', timeout_hours: 2, row_pull_every: 20, campaign_sha256: c.sha256,
-      route_caps: { caps: { extraction: 4096, reader: 2048, judge: 1024 }, slots: { harness: 'reader', judge: 'judge' }, defaultClass: 'extraction' } });
+      route_caps: { caps: { extraction: 4096, reader: 2048, judge: 1024, agent: 16000 }, slots: { harness: 'reader', judge: 'judge', agent: 'agent' }, defaultClass: 'extraction' } });
     expect(p.admission).toEqual({ openai: { rpm: 333, tpm: 666_666, concurrency: 5 } });
     delete process.env.UBI_OWNER;
     expect(caught(() => c.vmName(l)).op.code).toBe('OWNER_UNSET');

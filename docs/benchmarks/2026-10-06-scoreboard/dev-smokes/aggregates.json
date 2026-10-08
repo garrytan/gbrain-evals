@@ -1,0 +1,2914 @@
+{
+ "schema": "gbrain-evals/q1-dev-smoke-aggregates/v1",
+ "note": "Dev smokes, not results: LoCoMo dev conv-44 (20 questions) and BEAM-1M dev 1m-16. Allowlisted receipt fields only; no answer or context text.",
+ "arms": [
+  {
+   "cell_id": "s3-smoke.baseline-file-agent.baseline.whole-agent",
+   "run_cell": "s3-smoke.baseline-file-agent.baseline",
+   "config_sha256": "047c07ef47aee2922fc38bed793e8c27aa8f7afbc2d1a00d22503b4b503e3515",
+   "run_status": "partial",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 0,
+    "answers_promised": 60,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": null,
+    "openai:gpt-6.1-sol": null,
+    "anthropic:claude-sonnet-5-5": null
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": null,
+     "p95": null
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 0
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.baseline-file-agent.baseline-a1-8bafc01b",
+    "usd": 3.42,
+    "committed_usd": 0,
+    "cell_exit_code": 4
+   },
+   "configuration": "baseline",
+   "system": "baseline-file-agent",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 132,
+     "p50": 132,
+     "p95": 132
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 0,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "not-measurable",
+    "write_start_to_queryable_ms": {
+     "p50": null,
+     "p95": null,
+     "probes": 21,
+     "found": 0,
+     "missed": 0,
+     "not_measurable": 21
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "local (Capy machine, Docker)"
+  },
+  {
+   "cell_id": "s3-smoke.baseline-full-context.baseline.whole-full-context",
+   "run_cell": "s3-smoke.baseline-full-context.baseline",
+   "config_sha256": "3223b88131bbee5366f63b8516c2c592ad296cc6adcb0ec66ad436833a0825ad",
+   "run_status": "partial",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 57,
+    "answers_promised": 60,
+    "judgments": 57,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 57
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.823529,
+    "openai:gpt-6.1-sol": 0.8,
+    "anthropic:claude-sonnet-5-5": 0.8
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": null,
+     "p95": null
+    },
+    "answer_ms": {
+     "p50": 4194,
+     "p95": 10475.2
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 1.857223,
+     "judge": 0.04974
+    },
+    "total_usd": 1.906963
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.baseline-full-context.baseline-a1-6420dfac",
+    "usd": 2.23,
+    "committed_usd": 1.907,
+    "cell_exit_code": 4
+   },
+   "configuration": "baseline",
+   "system": "baseline-full-context",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 248,
+     "p50": 248,
+     "p95": 248
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 1,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "not-measurable",
+    "write_start_to_queryable_ms": {
+     "p50": null,
+     "p95": null,
+     "probes": 21,
+     "found": 0,
+     "missed": 0,
+     "not_measurable": 21
+    }
+   },
+   "usage": {
+    "input": 481920,
+    "output": 21865,
+    "cache_read": 1329790,
+    "cache_write": 75988
+   },
+   "executor": "local (Capy machine, Docker)"
+  },
+  {
+   "cell_id": "s3-smoke.baseline-hybrid.baseline.component-b8000",
+   "run_cell": "s3-smoke.baseline-hybrid.baseline",
+   "config_sha256": "adb14061ebc278cb9f4b8b72c7fd8679b09d178d75974cead3f6eecc85a1ec30",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.8,
+    "openai:gpt-6.1-sol": 0.7,
+    "anthropic:claude-sonnet-5-5": 0.75
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 234.1,
+     "p95": 311.8
+    },
+    "answer_ms": {
+     "p50": 4827.5,
+     "p95": 10813.8
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.002836,
+     "retrieval": 3.5e-05,
+     "reader": 2.193494,
+     "judge": 0.05623
+    },
+    "total_usd": 2.252595
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.baseline-hybrid.baseline-a1-a5c50f33",
+    "usd": 3.98,
+    "committed_usd": 2.2526,
+    "cell_exit_code": 0
+   },
+   "configuration": "baseline",
+   "system": "baseline-hybrid",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 8605,
+     "p50": 8605,
+     "p95": 8605
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 6676,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 438.3,
+     "p95": 616.1,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 647067,
+    "output": 26108,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "local (Capy machine, Docker)"
+  },
+  {
+   "cell_id": "s3-smoke.baseline-none.baseline.component-b8000",
+   "run_cell": "s3-smoke.baseline-none.baseline",
+   "config_sha256": "c079415699f8c23a824913878d75f1f86f096cfef58794a2a08363aaa4e425b9",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.3,
+    "openai:gpt-6.1-sol": 0.3,
+    "anthropic:claude-sonnet-5-5": 0.3
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 2.1,
+     "p95": 2.6
+    },
+    "answer_ms": {
+     "p50": 2503,
+     "p95": 6378.2
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 0.162222,
+     "judge": 0.028687
+    },
+    "total_usd": 0.190909
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.baseline-none.baseline-a1-51213ff3",
+    "usd": 3.98,
+    "committed_usd": 0.1909,
+    "cell_exit_code": 0
+   },
+   "configuration": "baseline",
+   "system": "baseline-none",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 137,
+     "p50": 137,
+     "p95": 137
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 0,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "not-measurable",
+    "write_start_to_queryable_ms": {
+     "p50": null,
+     "p95": null,
+     "probes": 21,
+     "found": 0,
+     "missed": 0,
+     "not_measurable": 21
+    }
+   },
+   "usage": {
+    "input": 9937,
+    "output": 10655,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "local (Capy machine, Docker)"
+  },
+  {
+   "cell_id": "s3-smoke.baseline-recency.baseline.component-b8000",
+   "run_cell": "s3-smoke.baseline-recency.baseline",
+   "config_sha256": "68e9213829810f68b5fa7912b13211c9cdfecddd24fe28ae0d96b32d243a28d1",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.65,
+    "openai:gpt-6.1-sol": 0.5,
+    "anthropic:claude-sonnet-5-5": 0.55
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 2.1,
+     "p95": 2.3
+    },
+    "answer_ms": {
+     "p50": 4541.5,
+     "p95": 10897.4
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 2.181988,
+     "judge": 0.054862
+    },
+    "total_usd": 2.23685
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.baseline-recency.baseline-a1-89c05af6",
+    "usd": 3.98,
+    "committed_usd": 2.2369,
+    "cell_exit_code": 0
+   },
+   "configuration": "baseline",
+   "system": "baseline-recency",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 137,
+     "p50": 137,
+     "p95": 137
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 1,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "not-measurable",
+    "write_start_to_queryable_ms": {
+     "p50": null,
+     "p95": null,
+     "probes": 21,
+     "found": 0,
+     "missed": 0,
+     "not_measurable": 21
+    }
+   },
+   "usage": {
+    "input": 646697,
+    "output": 25126,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "local (Capy machine, Docker)"
+  },
+  {
+   "cell_id": "s3-smoke.gbrain-defaults.shipped-defaults.component-b8000",
+   "run_cell": "s3-smoke.gbrain-defaults.shipped-defaults",
+   "config_sha256": "da5287622b098883a854def47fa7346a0bbacf8eb7da3a1bb38c8ec04a48f928",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.8,
+    "openai:gpt-6.1-sol": 0.7,
+    "anthropic:claude-sonnet-5-5": 0.85
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 1718.5,
+     "p95": 2363.3
+    },
+    "answer_ms": {
+     "p50": 4299.5,
+     "p95": 11857.9
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 1.193727,
+     "retrieval": 0.035115,
+     "reader": 5.959382,
+     "judge": 0.078155
+    },
+    "total_usd": 7.266379
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.gbrain-defaults.shipped-defaults-a1-5ae550ad",
+    "usd": 10.1,
+    "committed_usd": 7.2683,
+    "cell_exit_code": 0
+   },
+   "configuration": "shipped-defaults",
+   "system": "gbrain-defaults",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 947018,
+     "p50": 947018,
+     "p95": 947018
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 64665,
+    "finish": {
+     "ready": true,
+     "waited_ms": 4644,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 4723.5,
+     "p95": 6711,
+     "probes": 21,
+     "found": 18,
+     "missed": 3,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 608456,
+    "output": 24158,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "local (Capy machine, Docker)"
+  },
+  {
+   "cell_id": "s3-smoke.gbrain-defaults.shipped-defaults.whole-synthesize",
+   "run_cell": "s3-smoke.gbrain-defaults.shipped-defaults",
+   "config_sha256": "205d0c67014c0262cbda1a288cb403a6f92d4aae1b2ef746eca399604bc5db14",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "own:anthropic:claude-opus-4-7"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 20,
+    "answers_promised": 20,
+    "judgments": 20,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 20
+    }
+   },
+   "per_reader_mean": {
+    "own:anthropic:claude-opus-4-7": 0.85
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": null,
+     "p95": null
+    },
+    "answer_ms": {
+     "p50": 12491,
+     "p95": 26949
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 1.193727,
+     "retrieval": 0.035115,
+     "reader": 5.959382,
+     "judge": 0.078155
+    },
+    "total_usd": 7.266379
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.gbrain-defaults.shipped-defaults-a1-5ae550ad",
+    "usd": 10.1,
+    "committed_usd": 7.2683,
+    "cell_exit_code": 0
+   },
+   "configuration": "shipped-defaults",
+   "system": "gbrain-defaults",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 947018,
+     "p50": 947018,
+     "p95": 947018
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 64665,
+    "finish": {
+     "ready": true,
+     "waited_ms": 4644,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 4723.5,
+     "p95": 6711,
+     "probes": 21,
+     "found": 18,
+     "missed": 3,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 693434,
+    "output": 16940,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "local (Capy machine, Docker)"
+  },
+  {
+   "cell_id": "s3-smoke.baseline-file-agent.baseline.whole-agent",
+   "run_cell": "s3-smoke.baseline-file-agent.baseline",
+   "config_sha256": "047c07ef47aee2922fc38bed793e8c27aa8f7afbc2d1a00d22503b4b503e3515",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.85,
+    "openai:gpt-6.1-sol": 0.7,
+    "anthropic:claude-sonnet-5-5": 0.8
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": null,
+     "p95": null
+    },
+    "answer_ms": {
+     "p50": 8597.6,
+     "p95": 17499.4
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 1.763183,
+     "judge": 0.03346
+    },
+    "total_usd": 1.796643
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.baseline-file-agent.baseline-a1-942e6c6a",
+    "usd": 8,
+    "committed_usd": 1.7966,
+    "cell_exit_code": 0
+   },
+   "configuration": "baseline",
+   "system": "baseline-file-agent",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 140,
+     "p50": 140,
+     "p95": 140
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 0,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "not-measurable",
+    "write_start_to_queryable_ms": {
+     "p50": null,
+     "p95": null,
+     "probes": 21,
+     "found": 0,
+     "missed": 0,
+     "not_measurable": 21
+    }
+   },
+   "usage": {
+    "input": 145801,
+    "output": 30503,
+    "cache_read": 574623,
+    "cache_write": 214860
+   },
+   "executor": "local (Capy machine, Docker)"
+  },
+  {
+   "cell_id": "s3-smoke.baseline-full-context.baseline.whole-full-context",
+   "run_cell": "s3-smoke.baseline-full-context.baseline",
+   "config_sha256": "3223b88131bbee5366f63b8516c2c592ad296cc6adcb0ec66ad436833a0825ad",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.75,
+    "openai:gpt-6.1-sol": 0.75,
+    "anthropic:claude-sonnet-5-5": 0.75
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": null,
+     "p95": null
+    },
+    "answer_ms": {
+     "p50": 4651,
+     "p95": 10534.2
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 0.987869,
+     "judge": 0.05266
+    },
+    "total_usd": 1.040529
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.baseline-full-context.baseline-a1-44a670e1",
+    "usd": 5,
+    "committed_usd": 1.0405,
+    "cell_exit_code": 0
+   },
+   "configuration": "baseline",
+   "system": "baseline-full-context",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 128,
+     "p50": 128,
+     "p95": 128
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 1,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "not-measurable",
+    "write_start_to_queryable_ms": {
+     "p50": null,
+     "p95": null,
+     "probes": 21,
+     "found": 0,
+     "missed": 0,
+     "not_measurable": 21
+    }
+   },
+   "usage": {
+    "input": 2424,
+    "output": 23033,
+    "cache_read": 1923445,
+    "cache_write": 75988
+   },
+   "executor": "local (Capy machine, Docker)"
+  },
+  {
+   "cell_id": "s2b-ingest.ext-graph-pipeline.common.retrieval-only",
+   "run_cell": "s2b-ingest.ext-graph-pipeline.common",
+   "config_sha256": "38eb22c5d65fcc6c71a7fc6db184405196fd37d4144eef34e5bb4b99a315e8f8",
+   "run_status": "complete",
+   "set": "S2b-ingest",
+   "benchmark": "beam-1m",
+   "split": "dev",
+   "block": "T2-S2b",
+   "readers": [],
+   "counts": {
+    "rows": 10,
+    "answers": 0,
+    "answers_promised": 0,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {},
+   "timings": {
+    "retrieval_ms": {
+     "p50": 826.7,
+     "p95": 2384.6
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.300389,
+     "retrieval": 5.7e-05,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 0.300446
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s2b-ingest.ext-graph-pipeline.common-a1-df516819",
+    "usd": 2.6,
+    "committed_usd": 0.3005,
+    "cell_exit_code": 0
+   },
+   "configuration": "common",
+   "system": "ext-graph-pipeline",
+   "ingest": {
+    "conversations": 1,
+    "messages": 220,
+    "ingested_tokens": 75368,
+    "wall_ms": {
+     "total": 840278,
+     "p50": 840278,
+     "p95": 840278
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 838437,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 9180.4,
+     "p95": 13670.2,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-temporal-graph.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-temporal-graph.recipe",
+   "config_sha256": "78295dd99c8a3e418b3345bde9552d99b885b8ae6ff0b191dcba2378dc07a272",
+   "run_status": "partial",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 0,
+    "answers": 0,
+    "answers_promised": 60,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": null,
+    "openai:gpt-6.1-sol": null,
+    "anthropic:claude-sonnet-5-5": null
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": null,
+     "p95": null
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 0
+   },
+   "stopped": "budget: POST /ingest: InternalServerError: Error code: 503 - {'error': {'kind': 'budget', 'type': 'budget', 'message': \"metering proxy: OPENAI_API_KEY is not se",
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.ext-temporal-graph.recipe-a1-2ed475de",
+    "usd": 4.49,
+    "committed_usd": 0,
+    "cell_exit_code": 4
+   },
+   "configuration": "recipe",
+   "system": "ext-temporal-graph",
+   "ingest": {
+    "conversations": 0,
+    "messages": 0,
+    "ingested_tokens": 0,
+    "wall_ms": {
+     "total": 0,
+     "p50": null,
+     "p95": null
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": null,
+    "finish": null,
+    "readiness_probe": null,
+    "write_start_to_queryable_ms": {
+     "p50": null,
+     "p95": null,
+     "probes": 0,
+     "found": 0,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-verbatim-session.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-verbatim-session.recipe",
+   "config_sha256": "41ef7678595bd67d4ffd419d03cb5ca5c7aff52cc8778f65345d930ea6af9c90",
+   "run_status": "partial",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 1,
+    "answers": 0,
+    "answers_promised": 60,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": null,
+    "openai:gpt-6.1-sol": null,
+    "anthropic:claude-sonnet-5-5": null
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 341.1,
+     "p95": 341.1
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 0
+   },
+   "stopped": "budget: anthropic 503: {\"kind\":\"budget\",\"type\":\"budget\",\"message\":\"metering proxy: ANTHROPIC_API_KEY is not set in the proxy's environment\"}",
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.ext-verbatim-session.recipe-a1-e609476f",
+    "usd": 3.98,
+    "committed_usd": 0,
+    "cell_exit_code": 4
+   },
+   "configuration": "recipe",
+   "system": "ext-verbatim-session",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 12005,
+     "p50": 12005,
+     "p95": 12005
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 10391,
+    "finish": {
+     "ready": true,
+     "waited_ms": 196,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 681.2,
+     "p95": 888.2,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s2b-ingest.ext-extract-first.common.retrieval-only",
+   "run_cell": "s2b-ingest.ext-extract-first.common",
+   "config_sha256": "3e934a25220b53db9b87c95717f76b41417ff160c43d0655187072bb50601a4e",
+   "run_status": "complete",
+   "set": "S2b-ingest",
+   "benchmark": "beam-1m",
+   "split": "dev",
+   "block": "T2-S2b",
+   "readers": [],
+   "counts": {
+    "rows": 10,
+    "answers": 0,
+    "answers_promised": 0,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {},
+   "timings": {
+    "retrieval_ms": {
+     "p50": 789.7,
+     "p95": 1604.9
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.442061,
+     "retrieval": 3.4e-05,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 0.442095
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s2b-ingest.ext-extract-first.common-a1-f0426c1f",
+    "usd": 3.52,
+    "committed_usd": 0.4422,
+    "cell_exit_code": 0
+   },
+   "configuration": "common",
+   "system": "ext-extract-first",
+   "ingest": {
+    "conversations": 1,
+    "messages": 2182,
+    "ingested_tokens": 926773,
+    "wall_ms": {
+     "total": 906907,
+     "p50": 906907,
+     "p95": 906907
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 1,
+    "write_ms_total": 86,
+    "finish": {
+     "ready": false,
+     "waited_ms": 600006,
+     "completeness": "unknown"
+    },
+    "readiness_probe": "skipped",
+    "write_start_to_queryable_ms": {
+     "p50": 249894,
+     "p95": 503656.7,
+     "probes": 21,
+     "found": 5,
+     "missed": 16,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s2b-ingest.ext-memory-bank.recipe.retrieval-only",
+   "run_cell": "s2b-ingest.ext-memory-bank.recipe",
+   "config_sha256": "bfc771587c6417b40845e317d8a8a663d7eb042a39e5589b35dff5c831f170bf",
+   "run_status": "complete",
+   "set": "S2b-ingest",
+   "benchmark": "beam-1m",
+   "split": "dev",
+   "block": "T2-S2b",
+   "readers": [],
+   "counts": {
+    "rows": 10,
+    "answers": 0,
+    "answers_promised": 0,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {},
+   "timings": {
+    "retrieval_ms": {
+     "p50": 6608.8,
+     "p95": 7569.2
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 1.597516,
+     "retrieval": 0,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 1.597516
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s2b-ingest.ext-memory-bank.recipe-a1-dca72daa",
+    "usd": 2.6,
+    "committed_usd": 1.6228,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-memory-bank",
+   "ingest": {
+    "conversations": 1,
+    "messages": 2182,
+    "ingested_tokens": 926773,
+    "wall_ms": {
+     "total": 7755762,
+     "p50": 7755762,
+     "p95": 7755762
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 7731322,
+    "finish": {
+     "ready": true,
+     "waited_ms": 19,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 15479.6,
+     "p95": 23154.5,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-extract-first.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-extract-first.recipe",
+   "config_sha256": "87df905d463a39016e74c89c3621484978af1111b2e526aa187139b124e750b2",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "ingest_degraded": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.55,
+    "openai:gpt-6.1-sol": 0.4,
+    "anthropic:claude-sonnet-5-5": 0.4
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 789.1,
+     "p95": 1064.1
+    },
+    "answer_ms": {
+     "p50": 4609.5,
+     "p95": 10118.1
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.208859,
+     "retrieval": 7e-06,
+     "reader": 1.335482,
+     "judge": 0.055428
+    },
+    "total_usd": 1.599776
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.ext-extract-first.recipe-a1-cd9025d7",
+    "usd": 4.06,
+    "committed_usd": 1.5998,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-extract-first",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 903934,
+     "p50": 903934,
+     "p95": 903934
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 1,
+    "write_ms_total": 3,
+    "finish": {
+     "ready": false,
+     "waited_ms": 600001,
+     "completeness": "unknown"
+    },
+    "readiness_probe": "skipped",
+    "write_start_to_queryable_ms": {
+     "p50": 475530.1,
+     "p95": 782172.3,
+     "probes": 21,
+     "found": 3,
+     "missed": 18,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 359152,
+    "output": 23021,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-graph-pipeline.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-graph-pipeline.recipe",
+   "config_sha256": "50053998d059df8f11e6b3e9fd4850b9cd3b5c661ca9fffa9d3e1dc1152fa52b",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.9,
+    "openai:gpt-6.1-sol": 0.65,
+    "anthropic:claude-sonnet-5-5": 0.75
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 1303.5,
+     "p95": 1647.2
+    },
+    "answer_ms": {
+     "p50": 4543.5,
+     "p95": 12457.4
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.376223,
+     "retrieval": 7.1e-05,
+     "reader": 1.404018,
+     "judge": 0.057003
+    },
+    "total_usd": 1.837315
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.ext-graph-pipeline.recipe-a1-ac4f1c19",
+    "usd": 4.04,
+    "committed_usd": 1.8373,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-graph-pipeline",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 416957,
+     "p50": 416957,
+     "p95": 416957
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 413998,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 15878.7,
+     "p95": 19314.2,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 353642,
+    "output": 26872,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-markdown-kb.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-markdown-kb.recipe",
+   "config_sha256": "ad771d37df18892e83db42e8c325e4e78ff483200ebb9cd8f65925a8c0aae21e",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.85,
+    "openai:gpt-6.1-sol": 0.75,
+    "anthropic:claude-sonnet-5-5": 0.8
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 158.2,
+     "p95": 276.7
+    },
+    "answer_ms": {
+     "p50": 5202,
+     "p95": 13185.2
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 1.929792,
+     "judge": 0.05578
+    },
+    "total_usd": 1.985572
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.ext-markdown-kb.recipe-a1-05e898c4",
+    "usd": 3.98,
+    "committed_usd": 1.9856,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-markdown-kb",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 45884,
+     "p50": 45884,
+     "p95": 45884
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 14,
+    "finish": {
+     "ready": true,
+     "waited_ms": 39326,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 10316,
+     "p95": 10849.9,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 527661,
+    "output": 25898,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-memory-bank.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-memory-bank.recipe",
+   "config_sha256": "e4eb16786a7befff30ef972229c23ff87143b53bb46cd2992ec3817d4149960f",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.85,
+    "openai:gpt-6.1-sol": 0.65,
+    "anthropic:claude-sonnet-5-5": 0.7
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 2553.2,
+     "p95": 3292
+    },
+    "answer_ms": {
+     "p50": 5156.5,
+     "p95": 11659.1
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.034489,
+     "retrieval": 0,
+     "reader": 2.016702,
+     "judge": 0.05576
+    },
+    "total_usd": 2.106951
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.ext-memory-bank.recipe-a1-58d11ee2",
+    "usd": 4.04,
+    "committed_usd": 2.107,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-memory-bank",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 210511,
+     "p50": 210511,
+     "p95": 210511
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 201403,
+    "finish": {
+     "ready": true,
+     "waited_ms": 11,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 9320.5,
+     "p95": 13503.8,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 593974,
+    "output": 25477,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-verbatim-session.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-verbatim-session.recipe",
+   "config_sha256": "41ef7678595bd67d4ffd419d03cb5ca5c7aff52cc8778f65345d930ea6af9c90",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.65,
+    "openai:gpt-6.1-sol": 0.55,
+    "anthropic:claude-sonnet-5-5": 0.55
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 219.8,
+     "p95": 279.8
+    },
+    "answer_ms": {
+     "p50": 4846,
+     "p95": 11127.3
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 2.155808,
+     "judge": 0.05412
+    },
+    "total_usd": 2.209928
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.ext-verbatim-session.recipe-a1-56368068",
+    "usd": 3.98,
+    "committed_usd": 2.2099,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-verbatim-session",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 12619,
+     "p50": 12619,
+     "p95": 12619
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 11271,
+    "finish": {
+     "ready": true,
+     "waited_ms": 238,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 714.2,
+     "p95": 767.6,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 641959,
+    "output": 24616,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s2b-ingest.ext-temporal-graph.common.retrieval-only",
+   "run_cell": "s2b-ingest.ext-temporal-graph.common",
+   "config_sha256": "46224950103181bcd2a68188e48215b7eaf8feaaeb5c012625b288c3e8bbc2a6",
+   "run_status": "complete",
+   "set": "S2b-ingest",
+   "benchmark": "beam-1m",
+   "split": "dev",
+   "block": "T2-S2b",
+   "readers": [],
+   "counts": {
+    "rows": 10,
+    "answers": 0,
+    "answers_promised": 0,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {},
+   "timings": {
+    "retrieval_ms": {
+     "p50": 5444,
+     "p95": 7217.1
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 1.4503,
+     "retrieval": 0.062027,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 1.512327
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s2b-ingest.ext-temporal-graph.common-a1-6f834687",
+    "usd": 22.24,
+    "committed_usd": 1.5194,
+    "cell_exit_code": 0
+   },
+   "configuration": "common",
+   "system": "ext-temporal-graph",
+   "ingest": {
+    "conversations": 1,
+    "messages": 220,
+    "ingested_tokens": 75368,
+    "wall_ms": {
+     "total": 969108,
+     "p50": 969108,
+     "p95": 969108
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 956957,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 13544.2,
+     "p95": 21931.8,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-temporal-graph.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-temporal-graph.recipe",
+   "config_sha256": "78295dd99c8a3e418b3345bde9552d99b885b8ae6ff0b191dcba2378dc07a272",
+   "run_status": "invalid",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 0,
+    "answers_promised": 60,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": null,
+    "openai:gpt-6.1-sol": null,
+    "anthropic:claude-sonnet-5-5": null
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": null,
+     "p95": null
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 1.987749,
+     "retrieval": 0,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 1.987749
+   },
+   "stopped": null,
+   "invalid_reasons": [
+    "sanitizer tripwire during retrieval: POST /retrieve: 1 forbidden marker(s) would leave the harness; the request was not sent",
+    "sanitizer tripwire during retrieval: POST /retrieve: 1 forbidden marker(s) would leave the harness; the request was not sent",
+    "sanitizer tripwire during retrieval: POST /retrieve: 1 forbidden marker(s) would leave the harness; the request was not sent"
+   ],
+   "lease": {
+    "id": "s3-smoke.ext-temporal-graph.recipe-a1-ffd337a1",
+    "usd": 20,
+    "committed_usd": 1.9877,
+    "cell_exit_code": 4
+   },
+   "configuration": "recipe",
+   "system": "ext-temporal-graph",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 1375111,
+     "p50": 1375111,
+     "p95": 1375111
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 1,
+    "write_ms_total": 502096,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "missed",
+    "write_start_to_queryable_ms": {
+     "p50": null,
+     "p95": null,
+     "probes": 21,
+     "found": 0,
+     "missed": 21,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke-default.baseline-hybrid.baseline.whole-default",
+   "run_cell": "s3-smoke-default.baseline-hybrid.baseline",
+   "config_sha256": "ca6c1f1b80f850b9cc88f11a2f2634437157a604f558d9152da2faf8e51b63eb",
+   "run_status": "complete",
+   "set": "S3-smoke-default",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 20,
+    "answers_promised": 20,
+    "judgments": 20,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 20
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-sonnet-5-5": 0.7
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 362.9,
+     "p95": 418.8
+    },
+    "answer_ms": {
+     "p50": 3599.5,
+     "p95": 6332
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.00283,
+     "retrieval": 3.5e-05,
+     "reader": 0.515116,
+     "judge": 0.019478
+    },
+    "total_usd": 0.537459
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke-default.baseline-hybrid.baseline-a1-79142e2e",
+    "usd": 0.96,
+    "committed_usd": 0.5375,
+    "cell_exit_code": 0
+   },
+   "configuration": "baseline",
+   "system": "baseline-hybrid",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 13118,
+     "p50": 13118,
+     "p95": 13118
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 10684,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 736,
+     "p95": 901.4,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 220348,
+    "output": 7442,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke-default.ext-extract-first.recipe.whole-default",
+   "run_cell": "s3-smoke-default.ext-extract-first.recipe",
+   "config_sha256": "8a350c40b2e0a791e16abb4b4b482a4f6895eccccaddf7c70f39b892d80a52bb",
+   "run_status": "complete",
+   "set": "S3-smoke-default",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 20,
+    "answers_promised": 20,
+    "judgments": 20,
+    "unjudged": 0,
+    "outcomes": {
+     "ingest_degraded": 20
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-sonnet-5-5": 0.4
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 811.7,
+     "p95": 2100.7
+    },
+    "answer_ms": {
+     "p50": 3581.5,
+     "p95": 4612.4
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.197312,
+     "retrieval": 7e-06,
+     "reader": 0.142102,
+     "judge": 0.01907
+    },
+    "total_usd": 0.358491
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke-default.ext-extract-first.recipe-a1-b1e012a0",
+    "usd": 1.04,
+    "committed_usd": 0.3633,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-extract-first",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 904129,
+     "p50": 904129,
+     "p95": 904129
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 1,
+    "write_ms_total": 2,
+    "finish": {
+     "ready": false,
+     "waited_ms": 600000,
+     "completeness": "unknown"
+    },
+    "readiness_probe": "skipped",
+    "write_start_to_queryable_ms": {
+     "p50": 545327.9,
+     "p95": 843635.8,
+     "probes": 21,
+     "found": 3,
+     "missed": 18,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 35646,
+    "output": 7081,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke-default.ext-graph-pipeline.recipe.whole-default",
+   "run_cell": "s3-smoke-default.ext-graph-pipeline.recipe",
+   "config_sha256": "46a835c930bf7ddee1e2f2a847e1e730b25dd5db5d63bc867586399631c350ee",
+   "run_status": "complete",
+   "set": "S3-smoke-default",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 20,
+    "answers_promised": 20,
+    "judgments": 20,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 20
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-sonnet-5-5": 0.75
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 1091,
+     "p95": 1502.8
+    },
+    "answer_ms": {
+     "p50": 3668,
+     "p95": 4578.4
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.447955,
+     "retrieval": 7.1e-05,
+     "reader": 0.223288,
+     "judge": 0.020253
+    },
+    "total_usd": 0.691567
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke-default.ext-graph-pipeline.recipe-a1-0b3aadc9",
+    "usd": 1.02,
+    "committed_usd": 0.6916,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-graph-pipeline",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 447901,
+     "p50": 447901,
+     "p95": 447901
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 445393,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 16962.3,
+     "p95": 20927.1,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 71904,
+    "output": 7948,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke-default.ext-markdown-kb.recipe.whole-default",
+   "run_cell": "s3-smoke-default.ext-markdown-kb.recipe",
+   "config_sha256": "c664787aa8b7baf2fa144f920b87d6523cbb104768f4b5bd772e28eeae7e234a",
+   "run_status": "complete",
+   "set": "S3-smoke-default",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 20,
+    "answers_promised": 20,
+    "judgments": 20,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 20
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-sonnet-5-5": 0.75
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 173.9,
+     "p95": 268.6
+    },
+    "answer_ms": {
+     "p50": 4060,
+     "p95": 5380.7
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 0.219366,
+     "judge": 0.020105
+    },
+    "total_usd": 0.239471
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke-default.ext-markdown-kb.recipe-a1-59d51554",
+    "usd": 0.96,
+    "committed_usd": 0.2395,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-markdown-kb",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 43323,
+     "p50": 43323,
+     "p95": 43323
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 11,
+    "finish": {
+     "ready": true,
+     "waited_ms": 36814,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 10254.3,
+     "p95": 10766.2,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 70908,
+    "output": 7755,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke-default.ext-memory-bank.recipe.whole-default",
+   "run_cell": "s3-smoke-default.ext-memory-bank.recipe",
+   "config_sha256": "be5e5a461fed3fdc96b9d26657ef5a7ba54fdd658df85e0f1fb6c2457517072c",
+   "run_status": "complete",
+   "set": "S3-smoke-default",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 20,
+    "answers_promised": 20,
+    "judgments": 20,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 20
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-sonnet-5-5": 0.6
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 3390.9,
+     "p95": 3752.3
+    },
+    "answer_ms": {
+     "p50": 3864,
+     "p95": 7540
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.03481,
+     "retrieval": 0,
+     "reader": 0.653238,
+     "judge": 0.020348
+    },
+    "total_usd": 0.708396
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke-default.ext-memory-bank.recipe-a1-82f303e9",
+    "usd": 1.02,
+    "committed_usd": 0.7084,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-memory-bank",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 237109,
+     "p50": 237109,
+     "p95": 237109
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 223224,
+    "finish": {
+     "ready": true,
+     "waited_ms": 18,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 11362.2,
+     "p95": 16089,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 286769,
+    "output": 7970,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke-default.ext-verbatim-session.recipe.whole-default",
+   "run_cell": "s3-smoke-default.ext-verbatim-session.recipe",
+   "config_sha256": "59181ffdaba3af7478288bb42f4e3959f745f23b179ae84f5ee13508683cfcb8",
+   "run_status": "complete",
+   "set": "S3-smoke-default",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 20,
+    "answers_promised": 20,
+    "judgments": 20,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 20
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-sonnet-5-5": 0.6
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 253.6,
+     "p95": 277
+    },
+    "answer_ms": {
+     "p50": 3743.5,
+     "p95": 5108.7
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0,
+     "retrieval": 0,
+     "reader": 0.564986,
+     "judge": 0.019517
+    },
+    "total_usd": 0.584503
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke-default.ext-verbatim-session.recipe-a1-e313e8f1",
+    "usd": 0.96,
+    "committed_usd": 0.5845,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-verbatim-session",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 11669,
+     "p50": 11669,
+     "p95": 11669
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 10335,
+    "finish": {
+     "ready": true,
+     "waited_ms": 188,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 643.5,
+     "p95": 814.7,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 245128,
+    "output": 7473,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke-default.gbrain-defaults.shipped-defaults.whole-default",
+   "run_cell": "s3-smoke-default.gbrain-defaults.shipped-defaults",
+   "config_sha256": "cfd7befdcafc0e2e272e2dea3759e8e20ef68b4f85bf8dc5882cf688d0dfdbca",
+   "run_status": "partial",
+   "set": "S3-smoke-default",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 18,
+    "answers_promised": 20,
+    "judgments": 18,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 18
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-sonnet-5-5": 0.722222
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 2170.9,
+     "p95": 3127.9
+    },
+    "answer_ms": {
+     "p50": 3669,
+     "p95": 6387.5
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.685516,
+     "retrieval": 0.033494,
+     "reader": 1.262028,
+     "judge": 0.01741
+    },
+    "total_usd": 1.998448
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke-default.gbrain-defaults.shipped-defaults-a1-39b214e4",
+    "usd": 2.28,
+    "committed_usd": 2.0004,
+    "cell_exit_code": 4
+   },
+   "configuration": "shipped-defaults",
+   "system": "gbrain-defaults",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 953557,
+     "p50": 953557,
+     "p95": 953557
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 70083,
+    "finish": {
+     "ready": true,
+     "waited_ms": 4607,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 5961.1,
+     "p95": 8990.5,
+     "probes": 21,
+     "found": 19,
+     "missed": 2,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 598524,
+    "output": 6498,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s2b-ingest.ext-extract-first.common.retrieval-only",
+   "run_cell": "s2b-ingest.ext-extract-first.common",
+   "config_sha256": "3e934a25220b53db9b87c95717f76b41417ff160c43d0655187072bb50601a4e",
+   "run_status": "complete",
+   "set": "S2b-ingest",
+   "benchmark": "beam-1m",
+   "split": "dev",
+   "block": "T2-S2b",
+   "readers": [],
+   "counts": {
+    "rows": 10,
+    "answers": 0,
+    "answers_promised": 0,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {},
+   "timings": {
+    "retrieval_ms": {
+     "p50": 811.3,
+     "p95": 1731.2
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 2.591969,
+     "retrieval": 3.4e-05,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 2.592003
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s2b-ingest.ext-extract-first.common-a1-c0d53aa2",
+    "usd": 3.52,
+    "committed_usd": 2.6127,
+    "cell_exit_code": 0
+   },
+   "configuration": "common",
+   "system": "ext-extract-first",
+   "ingest": {
+    "conversations": 1,
+    "messages": 2182,
+    "ingested_tokens": 926773,
+    "wall_ms": {
+     "total": 5798947,
+     "p50": 5798947,
+     "p95": 5798947
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 234,
+    "finish": {
+     "ready": true,
+     "waited_ms": 5793361,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 229577.1,
+     "p95": 488435.8,
+     "probes": 21,
+     "found": 5,
+     "missed": 16,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-extract-first.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-extract-first.recipe",
+   "config_sha256": "0ca150720c1f901b5acce9a5cc00d3c3d953b72638b35b66750c4df0ac1edd1b",
+   "run_status": "partial",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 57,
+    "answers_promised": 60,
+    "judgments": 57,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 57
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.894737,
+    "openai:gpt-6.1-sol": 0.684211,
+    "anthropic:claude-sonnet-5-5": 0.842105
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 802.4,
+     "p95": 1156.7
+    },
+    "answer_ms": {
+     "p50": 5634,
+     "p95": 14961.8
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 1.943342,
+     "retrieval": 7e-06,
+     "reader": 1.985954,
+     "judge": 0.057335
+    },
+    "total_usd": 3.986638
+   },
+   "stopped": "budget: anthropic 402: {\"kind\":\"budget\",\"type\":\"budget\",\"message\":\"metering proxy: anthropic:claude-opus-5-5 chat [read:c84ded66aa3f9e45]: reserving $0.1604 wou",
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.ext-extract-first.recipe-a1-6d46bc7e",
+    "usd": 4.06,
+    "committed_usd": 3.9866,
+    "cell_exit_code": 4
+   },
+   "configuration": "recipe",
+   "system": "ext-extract-first",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 8105662,
+     "p50": 8105662,
+     "p95": 8105662
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 2,
+    "finish": {
+     "ready": true,
+     "waited_ms": 8104718,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 520421.8,
+     "p95": 828696.3,
+     "probes": 21,
+     "found": 3,
+     "missed": 18,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 574855,
+    "output": 26090,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s3-smoke.ext-temporal-graph.recipe.component-b8000",
+   "run_cell": "s3-smoke.ext-temporal-graph.recipe",
+   "config_sha256": "78295dd99c8a3e418b3345bde9552d99b885b8ae6ff0b191dcba2378dc07a272",
+   "run_status": "complete",
+   "set": "S3-smoke",
+   "benchmark": "locomo",
+   "split": "dev",
+   "block": "T2-S3",
+   "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+   ],
+   "counts": {
+    "rows": 20,
+    "answers": 60,
+    "answers_promised": 60,
+    "judgments": 60,
+    "unjudged": 0,
+    "outcomes": {
+     "scored": 60
+    }
+   },
+   "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.85,
+    "openai:gpt-6.1-sol": 0.65,
+    "anthropic:claude-sonnet-5-5": 0.9
+   },
+   "timings": {
+    "retrieval_ms": {
+     "p50": 3980,
+     "p95": 5370.5
+    },
+    "answer_ms": {
+     "p50": 5001,
+     "p95": 10891.8
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 1.920984,
+     "retrieval": 0.073821,
+     "reader": 2.245302,
+     "judge": 0.05637
+    },
+    "total_usd": 4.296477
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s3-smoke.ext-temporal-graph.recipe-a1-2c4654d2",
+    "usd": 15,
+    "committed_usd": 4.3013,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-temporal-graph",
+   "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+     "total": 497488,
+     "p50": 497488,
+     "p95": 497488
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 488959,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 21240.1,
+     "p95": 31472,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 664325,
+    "output": 26133,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  },
+  {
+   "cell_id": "s2b-ingest.ext-graph-pipeline.recipe.retrieval-only",
+   "run_cell": "s2b-ingest.ext-graph-pipeline.recipe",
+   "config_sha256": "a4832f6e162c0de06bdeac032217d14261cbf78868c11f6dd7ca041d1ffa856f",
+   "run_status": "complete",
+   "set": "S2b-ingest",
+   "benchmark": "beam-1m",
+   "split": "dev",
+   "block": "T2-S2b",
+   "readers": [],
+   "counts": {
+    "rows": 10,
+    "answers": 0,
+    "answers_promised": 0,
+    "judgments": 0,
+    "unjudged": 0,
+    "outcomes": {}
+   },
+   "per_reader_mean": {},
+   "timings": {
+    "retrieval_ms": {
+     "p50": 1392.3,
+     "p95": 3852.3
+    },
+    "answer_ms": {
+     "p50": null,
+     "p95": null
+    }
+   },
+   "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+     "ingest": 0.265388,
+     "retrieval": 5.7e-05,
+     "reader": 0,
+     "judge": 0
+    },
+    "total_usd": 0.265445
+   },
+   "stopped": null,
+   "invalid_reasons": [],
+   "lease": {
+    "id": "s2b-ingest.ext-graph-pipeline.recipe-a1-c74ae607",
+    "usd": 2.6,
+    "committed_usd": 0.2655,
+    "cell_exit_code": 0
+   },
+   "configuration": "recipe",
+   "system": "ext-graph-pipeline",
+   "ingest": {
+    "conversations": 1,
+    "messages": 220,
+    "ingested_tokens": 75368,
+    "wall_ms": {
+     "total": 1341348,
+     "p50": 1341348,
+     "p95": 1341348
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "write_ms_total": 1337996,
+    "finish": {
+     "ready": true,
+     "waited_ms": 0,
+     "completeness": "known"
+    },
+    "readiness_probe": "found",
+    "write_start_to_queryable_ms": {
+     "p50": 15008,
+     "p95": 21979.6,
+     "probes": 21,
+     "found": 21,
+     "missed": 0,
+     "not_measurable": 0
+    }
+   },
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "executor": "ubicloud standard-4"
+  }
+ ]
+}

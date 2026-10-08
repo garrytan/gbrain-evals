@@ -3,10 +3,11 @@
 #
 # Run from the repository root on a fresh Ubuntu 24.04 Ubicloud VM. Subcommands:
 #
-#   setup  [--system NAME] [--datasets locomo,lme-s,beam-100k]
-#          Once per VM (ubi-runner --setup): Docker with the compose plugin, Bun 1.3.14, `bun install --frozen-lockfile`,
+#   setup  [--system NAME] [--datasets locomo,lme-s,beam-100k] [--conversations id,id]
+#          Once per VM (ubi-runner --setup): Docker with the compose plugin, Bun 1.4.2 (as CI), `bun install --frozen-lockfile`,
 #          the pinned datasets through `bun run eval:decide fetch` (each file checked against its SHA-256), and the
-#          system's pinned images (`docker compose pull`, then `build` for the shim image).
+#          system's pinned images (`docker compose pull`, then `build` for the shim image). --conversations fetches
+#          only those BEAM conversations' files (a dev smoke never downloads a sealed conversation).
 #   proxy  --lease-id ID --lease-usd N [--max-output-tokens M] [--port 8787] [--out DIR]
 #          Start the metering proxy for the cell's lease, detached, and wait for its status endpoint. A cell launched
 #          by `bun eval/runner/shootout-cell.ts` already runs the proxy (SHOOTOUT_PROXY is set), so `up` skips this.
@@ -39,12 +40,12 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
-BUN_VERSION=1.3.14
+BUN_VERSION=1.4.2
 die() { echo "bootstrap: $*" >&2; exit 1; }
 log() { echo "bootstrap: $*" >&2; }
 
 cmd=${1:-}; shift || true
-SYSTEM="" CONFIG=recipe PORT="" PROXY_PORT=8787 TIMEOUT=900 DATASETS="" LEASE_ID="" LEASE_USD="" MAX_OUT="" OUT="" FROM=""
+SYSTEM="" CONFIG=recipe PORT="" PROXY_PORT=8787 TIMEOUT=900 DATASETS="" CONVERSATIONS="" LEASE_ID="" LEASE_USD="" MAX_OUT="" OUT="" FROM=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --system) SYSTEM=$2; shift 2 ;;
@@ -53,6 +54,7 @@ while [ $# -gt 0 ]; do
     --proxy-port) PROXY_PORT=$2; shift 2 ;;
     --timeout) TIMEOUT=$2; shift 2 ;;
     --datasets) DATASETS=$2; shift 2 ;;
+    --conversations) CONVERSATIONS=$2; shift 2 ;;
     --lease-id) LEASE_ID=$2; shift 2 ;;
     --lease-usd) LEASE_USD=$2; shift 2 ;;
     --max-output-tokens) MAX_OUT=$2; shift 2 ;;
@@ -134,7 +136,7 @@ case "$cmd" in
     bun install --frozen-lockfile
     for b in ${DATASETS//,/ }; do
       log "dataset $b (pinned revision, SHA-256 checked)"
-      bun run eval:decide fetch --benchmark "$b"
+      bun run eval:decide fetch --benchmark "$b" ${CONVERSATIONS:+--conversations "$CONVERSATIONS"}
     done
     if [ -n "$SYSTEM" ] && [ "$SYSTEM" != gbrain ]; then
       f=$(compose_file)

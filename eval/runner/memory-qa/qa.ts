@@ -146,8 +146,8 @@ export function chatCacheKey(model: string, prompt: string, opts: ChatOptions): 
     ...(opts.effort !== undefined ? { effort: opts.effort } : {}), ...(opts.system !== undefined ? { system: opts.system } : {}), ...(opts.attempt ? { attempt: opts.attempt } : {}) })).digest('hex');
 }
 
-/** OpenAI's GPT-5-and-later reasoning models take only their default temperature. */
-export const defaultTemperatureOnly = (model: string) => /^(?:openai:)?(gpt-[5-9]|o\d)/.test(model);
+/** OpenAI's GPT-5-and-later reasoning models and Anthropic's Claude 5 generation take only their default temperature (Anthropic: "`temperature` is deprecated for this model"). */
+export const defaultTemperatureOnly = (model: string) => /^(?:openai:)?(gpt-[5-9]|o\d)|^(?:anthropic:)?claude-[a-z]+-[5-9]/.test(model);
 
 export class ChatClient implements ChatLike {
   constructor(private cacheDir: string) { mkdirSync(cacheDir, { recursive: true }); }
@@ -193,7 +193,7 @@ async function openaiChat(model: string, prompt: string, opts: ChatOptions): Pro
 async function anthropicChat(model: string, prompt: string, opts: ChatOptions): Promise<Omit<ChatResult, 'cached'>> {
   const res = await fetch(`${(process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com').replace(/\/$/, '')}/v1/messages`, {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: opts.maxTokens, ...(opts.temperature === null ? {} : { temperature: opts.temperature ?? 0 }), ...(opts.system !== undefined ? { system: opts.system } : {}),
+    body: JSON.stringify({ model, max_tokens: opts.maxTokens, ...(opts.temperature === null || defaultTemperatureOnly(model) ? {} : { temperature: opts.temperature ?? 0 }), ...(opts.system !== undefined ? { system: opts.system } : {}),
       ...(opts.effort !== undefined ? { output_config: { effort: opts.effort } } : {}), messages: [{ role: 'user', content: prompt }] }),
     signal: AbortSignal.timeout(300_000),
   });

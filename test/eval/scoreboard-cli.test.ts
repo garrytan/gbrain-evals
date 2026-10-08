@@ -159,6 +159,18 @@ describe('doctor', () => {
     expect(priceProbe('voyage:rerank-2.5').url).toContain('/rerank');
   });
 
+  test('dataset checks cover only the named cells, and a dev smoke only its own conversations\' files', async () => {
+    const empty = join(tmp, 'no-datasets');
+    mkdirSync(empty, { recursive: true });
+    const c = campaign([cell('smoke', { benchmark: 'beam-1m', conversations: ['1m-16'], smoke: true }), cell('sealed', { benchmark: 'beam-100k', sealed: true })]);
+    const p = Bun.spawnSync([process.execPath, 'eval/runner/scoreboard-cli.ts', 'doctor', '--campaign', c.manifest, '--cell', 'smoke', '--for', 'local', '--json'], { cwd: ROOT, env: { ...process.env, GBRAIN_EVALS_DATASETS: empty } });
+    const checks = JSON.parse(p.stdout.toString()).checks as Array<{ id: string; detail: string; fix?: { argv?: string[] } }>;
+    expect(checks.map(x => x.id).filter(id => id.startsWith('dataset:'))).toEqual(['dataset:beam-1m']);
+    const beam = checks.find(x => x.id === 'dataset:beam-1m')!;
+    expect(beam.detail).toContain('2 of 2 files');
+    expect(beam.fix?.argv).toEqual(['bun', 'run', 'eval:decide', 'fetch', '--benchmark', 'beam-1m', '--conversations', '1m-16']);
+  });
+
   test('sealed preflight needs the custodian host', async () => {
     const r = await doctor(['--for', 'sealed'], { GBRAIN_EVALS_CUSTODY_LOG: '/nope/custody.log' });
     expect(r.checks.find(c => c.id === 'custody')).toMatchObject({ ok: false, code: 'CUSTODY_REQUIRED' });

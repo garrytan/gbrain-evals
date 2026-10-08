@@ -44,7 +44,9 @@ export class HttpMemorySystem implements OwnAnswerSystem {
   private async call(method: 'GET' | 'POST', path: string, body?: Record<string, unknown>, timeoutMs?: number): Promise<Record<string, any>> {
     const text = body === undefined ? undefined : JSON.stringify(body);
     if (text !== undefined) {
-      const leaks = findLeaks(text, this.options.markers ?? []);
+      // The system's own public name travels in every policy (`<system>:<mode>`); a marker inside it (the category
+      // `temporal` inside ext-temporal-graph) is the harness's vocabulary, not a leak, so the name is scanned out first.
+      const leaks = findLeaks(this.options.name ? text.replaceAll(this.options.name, '') : text, this.options.markers ?? []);
       if (leaks.length) throw new SanitizerLeakError(`${method} ${path}`, leaks.length);
       this.options.onRequest?.(path, text);
     }

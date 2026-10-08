@@ -54,6 +54,12 @@ before any spend and tells the agent to look up the provider's current list pric
 waves that keep concurrent vCPUs under the daytime cap (128 by default); each block's estimate, hard cap and leases; and
 the exact commands, in order.
 
+**`smoke`** runs the campaign's paid dev smokes (`plan --campaign-out <file> --with-smoke` adds them): one LoCoMo dev
+conversation per system for the 8k arm, the whole-system rows and each system's own default amount, and retrieval-only
+ingest probes on one BEAM-1M dev conversation. A smoke cell reads, fetches and checks only its dev conversations,
+never a sealed one; [the 2026-10-07 smokes](benchmarks/2026-10-06-scoreboard/dev-smokes/README.md) re-priced the
+manifest from them.
+
 **`run`** reserves a lease and launches each named cell (`--cell`, `--cells a,b` or `--wave N`). Without `--local` the
 cell runs on its own Ubicloud VM through the repository runner; the launcher stops the VM run half an hour after the
 cell's `timeout_hours`, pulls the cell's row checkpoint every pull interval, and exits non-zero when any cell fails.
@@ -71,8 +77,9 @@ cells launch only with `--sealed` from the custodian's host, where dataset cache
 - **Metering.** Every provider call leaves through the cell's metering proxy, which holds the only real keys. A request
   that does not present the cell's token is refused, wherever it comes from: the runners present the token as their
   provider key and the compose stacks as their dummy key (`${SHOOTOUT_CELL_TOKEN:-dummy}`). Each request has a stable id, the slot it arrived on, the brain and phase the harness bound, and a bucket;
-  calls nobody bound land in an explicit unattributed-background bucket. Output is capped per route (extraction 4,096
-  tokens, readers 2,048, judges 1,024, configurable in the manifest). Billed dollars and dollars charged at a reservation
+  calls nobody bound land in an explicit unattributed-background bucket. Output caps bind only the harness's own calls
+  (readers 2,048 tokens, the file agent's loop 16,000, judges 1,024, configurable in the manifest); a system's own
+  requests pass unmodified (preregistration amendment A3). Billed dollars and dollars charged at a reservation
   because no usage came back are reported separately. Cells on one provider key share its requests-per-minute,
   tokens-per-minute and concurrency limits, and a provider's `retry-after` pauses every cell on that key. A 429 counts
   as provider trouble and is retried like a 5xx.
@@ -181,6 +188,12 @@ preregistration.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-07: Dev-only smokes, harness output caps
+
+`smoke` now runs dev-only smoke cells (one LoCoMo dev conversation, one BEAM-1M dev conversation) instead of
+20-question copies of counted cells, which would have opened sealed data. The metering paragraph states the caps as
+amendment A3 left them, including the file agent's 16,000-token loop cap.
 
 ### 2026-10-06: Strict cell token, store snapshots
 

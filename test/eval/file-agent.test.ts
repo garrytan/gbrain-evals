@@ -317,6 +317,7 @@ describe('true full context', () => {
     expect(a2.usage.cache_read).toBe(900);
     expect(a1.cache_key).toBe(a2.cache_key);
     expect(bodies.every(b => b.output_config?.effort === 'medium' && b.reasoning_effort === undefined)).toBe(true);
+    expect(bodies.some(b => 'temperature' in b)).toBe(false);
     const high = await answerFullContext({ reader: 'anthropic:claude-sonnet-5-5', prompt, conversation: conv.id, fetchImpl, effort: 'high' });
     expect(bodies[2].output_config).toEqual({ effort: 'high' });
     expect(high.cache_key).not.toBe(a1.cache_key);

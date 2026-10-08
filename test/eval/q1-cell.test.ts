@@ -25,7 +25,7 @@ import { FRONTIER_READERS, FullContextSystem } from '../../eval/runner/systems/b
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
 import type { ScriptedModel } from '../../eval/runner/cat40/loop.ts';
 import { CAMPAIGN_SCHEMA, type CampaignManifest } from '../../eval/runner/scoreboard.ts';
-import { loadCampaign, planWaves } from '../../eval/runner/shootout-cell.ts';
+import { Campaign, loadCampaign, planWaves } from '../../eval/runner/shootout-cell.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'q1-cell-'));
@@ -645,9 +645,99 @@ describe('the generated cell manifest', () => {
     expect(waves.length).toBeGreaterThanOrEqual(t1.size + 4);
     expect(units.every(u => u.lease_usd > 0 && u.command.includes('eval/runner/q1/cell.ts run --cell'))).toBe(true);
     expect(units.filter(u => u.sealed).every(u => ['beam-10m', 'beam-100k', 'beam-1m', 'locomo'].includes(u.benchmark))).toBe(true);
+    for (const u of units) expect(u.pass).toEqual(u.system === 'gbrain-defaults' ? ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY'] : ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY']);
+    const argv = new Campaign(path, join(tmp, 'pass-state')).launchArgv({ lease_id: 'l', cell: units[0].id, attempt: 1, usd: units[0].lease_usd, entry_id: 'e', max_output_tokens: null, status: 'reserved' }, { vm: 'ubirun-test-1-abc' });
+    expect(argv.join(' ')).toContain('--pass OPENAI_API_KEY --pass ANTHROPIC_API_KEY');
     const fd = Bun.spawnSync(['bun', 'eval/runner/scoreboard-cli.ts', 'plan', '--campaign', path, '--json'], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
     expect(fd.exitCode).toBe(0);
     expect(JSON.parse(fd.stdout.toString()).cells).toHaveLength(units.length);
     mkdirSync(join(tmp, 'x'), { recursive: true });
+  });
+});
+
+describe('paid dev smokes', () => {
+  const m = loadManifest();
+
+  test('smoke cells are dev-only: one LoCoMo dev conversation for every system, one BEAM-1M dev conversation for the ingest probes', () => {
+    const kinds = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
+    expect(m.smoke_cells.length).toBe(24);
+    for (const c of m.smoke_cells) {
+      expect(definitionProblems(c, kinds)).toEqual([]);
+      expect(c.split).toBe('dev');
+      expect(c.only_conversations).toEqual(c.benchmark === 'locomo' ? ['conv-44'] : ['1m-16']);
+    }
+    expect(m.smoke_cells.filter(c => c.set === 'S3-smoke-default').map(c => [c.system, c.arms.map(a => `${a.mode}:${a.readers.join(',')}`)])).toEqual(['gbrain-defaults', 'ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-markdown-kb', 'ext-verbatim-session', 'baseline-hybrid'].map(s => [s, ['native-default:anthropic:claude-sonnet-5-5']]));
+    const locomo = m.smoke_cells.filter(c => c.set === 'S3-smoke');
+    expect(new Set(locomo.map(c => c.system))).toEqual(new Set([...kinds].filter(k => k !== 'ext-agent-runtime')));
+    expect(locomo.find(c => c.system === 'gbrain-defaults')!.arms.map(a => a.id)).toEqual(['component-b8000', 'whole-synthesize']);
+    expect(m.smoke_cells.filter(c => c.set === 'S2b-ingest').map(c => `${c.system}:${c.configuration}:${c.ingest_sessions ?? 'all'}`)).toEqual(['ext-extract-first:common:all', 'ext-memory-bank:recipe:all', 'ext-graph-pipeline:recipe:93', 'ext-graph-pipeline:common:93', 'ext-temporal-graph:common:93']);
+    expect(m.total_usd).toBe(Math.round(m.blocks.reduce((s, b) => s + b.estimate_usd, 0) * 100) / 100);
+  });
+
+  test('smoke campaign units are never sealed, fetch only their conversations and lease twice the estimate', () => {
+    const smokes = campaignCells(m, { smoke: true }).filter(u => u.smoke);
+    expect(smokes.map(u => u.id)).toEqual(m.smoke_cells.map(c => c.id));
+    for (const u of smokes) {
+      const c = m.smoke_cells.find(x => x.id === u.id)!;
+      expect(u.sealed).toBe(false);
+      expect(u.setup_command).toEndWith(`--datasets ${c.benchmark} --conversations ${c.only_conversations!.join(',')}`);
+      expect(u.command).not.toContain('--limit');
+      expect(u.lease_usd).toBeCloseTo(Math.ceil(2 * c.estimate.usd * 100) / 100, 2);
+    }
+  });
+
+  test('an ingest probe with ingest_sessions writes only that prefix of each conversation and counts only its tokens', async () => {
+    const fake = new FakeMemorySystem();
+    const written: string[] = [];
+    const ingest = fake.ingestSession.bind(fake);
+    fake.ingestSession = async (ns, s, t) => { written.push(s.source_id); return ingest(ns, s, t); };
+    const conv = corpus.conversations[0];
+    const def = cellDef('ext-temporal-graph', 'shim', [{ id: 'retrieval-only', mode: 'retrieval-only', policy: 'fixed-evidence', readers: [] }], { ingest_sessions: 2, only_conversations: [conv.id] });
+    const res = await runCell(def, { out: join(tmp, 'ingest-prefix'), ...quiet }, { corpus, system: fake });
+    expect(written).toHaveLength(2);
+    const receipt = JSON.parse(readFileSync(join(res.arms[0].dir, 'receipt.json'), 'utf8'));
+    expect(receipt.ingest.messages).toBe(conv.sessions.slice(0, 2).reduce((n, x) => n + x.turns.length, 0));
+    expect(definitionProblems({ ...def, ingest_sessions: 0 }, new Set(['ext-temporal-graph']))).toContain('ingest_sessions must be a positive whole number of sessions');
+  });
+
+  test('ingest waits for background work up to 1.5x the cell\'s expected hours by default, never just ten minutes on a long cell', async () => {
+    const { finishTimeoutFor } = await import('../../eval/runner/q1/cell.ts');
+    expect(finishTimeoutFor({ expected_hours: 0.01 })).toBe(600);
+    expect(finishTimeoutFor({ expected_hours: 4 })).toBe(21_600);
+    const fake = new FakeMemorySystem();
+    const asked: number[] = [];
+    const finish = fake.finishIngest.bind(fake);
+    (fake as { finishIngest: (ns: string, timeoutS?: number) => ReturnType<typeof finish> }).finishIngest = async (_ns: string, t?: number) => { asked.push(t ?? -1); return finish(); };
+    const def = cellDef('ext-extract-first', 'shim', [{ id: 'retrieval-only', mode: 'retrieval-only', policy: 'fixed-evidence', readers: [] }], { expected_hours: 3, only_conversations: [corpus.conversations[0].id] });
+    await runCell(def, { out: join(tmp, 'finish-timeout'), ...quiet }, { corpus, system: fake });
+    expect(asked).toEqual([16_200]);
+  });
+
+  test('a probe that still misses once /finish reports ready is missed at once, not polled to its deadline', async () => {
+    const fake = new FakeMemorySystem();
+    fake.retrieve = async () => ({ items: [], applied_settings: {}, truncated: false });
+    const def = cellDef('ext-markdown-kb', 'shim', [{ id: 'retrieval-only', mode: 'retrieval-only', policy: 'fixed-evidence', readers: [] }], { only_conversations: [corpus.conversations[0].id] });
+    const t0 = performance.now();
+    await runCell(def, { out: join(tmp, 'probe-drain'), probeIntervalMs: 5, probeTimeoutMs: 120_000 }, { corpus, system: fake });
+    expect(performance.now() - t0).toBeLessThan(60_000);
+    const ingested = ndjson(join(tmp, 'probe-drain', 'runs', def.id, 'realizations.ndjson')).find(e => e.event === 'ingested');
+    expect(ingested.probes.length).toBeGreaterThan(0);
+    expect(ingested.probes.every((p: { status: string }) => p.status === 'missed')).toBe(true);
+  });
+
+  test('a dev cell never names a conversation outside the dev split; the corpus keeps only its conversations', async () => {
+    const { devOnly } = await import('../../eval/runner/q1/cell.ts');
+    const { beamFiles } = await import('../../eval/runner/memory-qa/corpus.ts');
+    expect([...devOnly({ benchmark: 'locomo', split: 'dev', only_conversations: ['conv-44'] })!]).toEqual(['conv-44']);
+    expect(devOnly({ benchmark: 'beam-1m', split: 'dev' })!.size).toBe(11);
+    expect(devOnly({ benchmark: 'locomo', split: 'all' })).toBeNull();
+    expect(() => devOnly({ benchmark: 'locomo', split: 'dev', only_conversations: ['conv-26'] })).toThrow(/not in locomo's dev split/);
+    expect(beamFiles('1m', new Set(['1m-16'])).map(f => f.path)).toEqual(['beam/chats/1M/16/chat.json', 'beam/chats/1M/16/probing_questions/probing_questions.json']);
+    expect(() => beamFiles('1m', new Set(['1m-99']))).toThrow(/no conversation 1m-99/);
+    const def = cellDef('baseline-none', 'in-process', [component({ readers: [SONNET], reader_replicates: {} })], { configuration: 'baseline', only_conversations: [corpus.conversations[0].id] });
+    const res = await runCell(def, { out: join(tmp, 'dev-only') }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+    const rows = ndjson(join(res.arms[0].dir, 'rows.ndjson'));
+    expect(rows.length).toBeGreaterThan(0);
+    expect(new Set(rows.map(r => r.conversation))).toEqual(new Set([corpus.conversations[0].id]));
   });
 });
