@@ -1,0 +1,1141 @@
+{
+  "note": "BEAM-1M dev (11 conversations, 220 questions), committed 2026-10-06 bridge rows at gbrain 6622a119e: hybridSearch, balanced, reranker off, openai:text-embedding-3-large 1536, top 10; reader and judge openai:gpt-4.1-mini, top 5 turn groups. Free recount; no model call.",
+  "answers_overall": {
+    "n": 220,
+    "mean_score": 0.5348,
+    "all_items_met": 75,
+    "zero": 60,
+    "answerable": {
+      "n": 198,
+      "mean_score": 0.5614,
+      "all_items_met": 69,
+      "zero": 45
+    },
+    "abstention": {
+      "n": 22,
+      "mean_score": 0.2955,
+      "all_items_met": 6,
+      "zero": 15
+    }
+  },
+  "feasibility": {
+    "answerable_questions": 198,
+    "answerable_with_gold": 194,
+    "answerable_without_gold": [
+      "1m-16:summarization:0",
+      "1m-16:summarization:1",
+      "1m-20:summarization:1",
+      "1m-3:preference_following:1"
+    ],
+    "gold_turn_groups": {
+      "histogram": {
+        "1": 41,
+        "2": 40,
+        "3": 32,
+        "4": 24,
+        "5": 8,
+        ">10": 34,
+        "6-10": 15
+      },
+      "max": 38,
+      "median": 3
+    },
+    "strict_at_5": {
+      "feasible": 145,
+      "infeasible": 49,
+      "strict_hits": 36
+    },
+    "strict_at_10": {
+      "feasible": 160,
+      "infeasible": 34,
+      "strict_hits": 57
+    },
+    "strict_at_5_by_gold_count": {
+      "1": {
+        "n": 41,
+        "at_5": 18,
+        "at_10": 21
+      },
+      "2": {
+        "n": 40,
+        "at_5": 13,
+        "at_10": 20
+      },
+      "3": {
+        "n": 32,
+        "at_5": 5,
+        "at_10": 9
+      },
+      "4": {
+        "n": 24,
+        "at_5": 0,
+        "at_10": 6
+      },
+      "5": {
+        "n": 8,
+        "at_5": 0,
+        "at_10": 0
+      }
+    },
+    "answers_on_infeasible_at_5": {
+      "n": 49,
+      "mean_score": 0.4108,
+      "all_items_met": 2,
+      "zero": 7
+    },
+    "answers_on_feasible_at_5": {
+      "n": 145,
+      "mean_score": 0.6106,
+      "all_items_met": 65,
+      "zero": 38
+    }
+  },
+  "batches": {
+    "batches_per_conversation": {
+      "1m-2": 10,
+      "1m-3": 10,
+      "1m-16": 10,
+      "1m-20": 10,
+      "1m-21": 10,
+      "1m-22": 10,
+      "1m-24": 9,
+      "1m-25": 7,
+      "1m-28": 10,
+      "1m-30": 10,
+      "1m-32": 10
+    },
+    "turn_groups_per_conversation": {
+      "1m-2": 628,
+      "1m-3": 623,
+      "1m-16": 928,
+      "1m-20": 851,
+      "1m-21": 872,
+      "1m-22": 928,
+      "1m-24": 797,
+      "1m-25": 649,
+      "1m-28": 870,
+      "1m-30": 929,
+      "1m-32": 928
+    },
+    "gold_batches_histogram": {
+      "1": 123,
+      "2": 21,
+      "3": 9,
+      "4": 8,
+      "5": 3,
+      "6": 3,
+      "7": 6,
+      "8": 7,
+      "9": 9,
+      "10": 5
+    },
+    "top5_turn_groups_cover_every_gold_batch": 124,
+    "top5_turn_groups_touch_any_gold_batch": 181,
+    "top10_turn_groups_cover_every_gold_batch": 146,
+    "top5_distinct_batches_cover_every_gold_batch": 142,
+    "feasible_at_5_by_batch": 164,
+    "denominator": 194
+  },
+  "none_at_5": {
+    "n": 57,
+    "rule": "lexical_gap when under half of the question's content words appear anywhere in its gold turn groups; else date_scoped when the question names a date or a time relation; else semantic_drift (the words are in the gold text but other turn groups outranked it)",
+    "by_label": {
+      "semantic_drift": 30,
+      "lexical_gap": 15,
+      "date_scoped": 12
+    },
+    "by_label_and_category": {
+      "semantic_drift / event_ordering": 8,
+      "lexical_gap / instruction_following": 9,
+      "date_scoped / multi_session_reasoning": 2,
+      "date_scoped / temporal_reasoning": 3,
+      "lexical_gap / contradiction_resolution": 1,
+      "lexical_gap / event_ordering": 2,
+      "date_scoped / information_extraction": 4,
+      "semantic_drift / summarization": 8,
+      "semantic_drift / information_extraction": 5,
+      "lexical_gap / information_extraction": 3,
+      "semantic_drift / instruction_following": 3,
+      "semantic_drift / preference_following": 3,
+      "semantic_drift / multi_session_reasoning": 2,
+      "semantic_drift / knowledge_update": 1,
+      "date_scoped / instruction_following": 3
+    },
+    "date_scoped_any_label": 18,
+    "distractors_lexically_closer": 42,
+    "hash_arm_finds_some_gold_at_5": 10,
+    "hash_arm_finds_some_gold_by_label": {
+      "semantic_drift": 6,
+      "date_scoped": 4
+    },
+    "answers": {
+      "n": 57,
+      "mean_score": 0.4094,
+      "all_items_met": 14,
+      "zero": 19
+    },
+    "questions": [
+      {
+        "id": "1m-16:event_ordering:1",
+        "category": "event_ordering",
+        "gold_count": 30,
+        "question_terms": 9,
+        "gold_term_coverage": 0.778,
+        "top5_term_coverage": 0.778,
+        "date_scoped": false,
+        "hash_any_at_5": true,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-16:instruction_following:0",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 6,
+        "gold_term_coverage": 0.333,
+        "top5_term_coverage": 0.667,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-16:instruction_following:1",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 5,
+        "gold_term_coverage": 0.2,
+        "top5_term_coverage": 1,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-16:multi_session_reasoning:1",
+        "category": "multi_session_reasoning",
+        "gold_count": 2,
+        "question_terms": 7,
+        "gold_term_coverage": 0.857,
+        "top5_term_coverage": 1,
+        "date_scoped": true,
+        "hash_any_at_5": true,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-16:temporal_reasoning:0",
+        "category": "temporal_reasoning",
+        "gold_count": 2,
+        "question_terms": 11,
+        "gold_term_coverage": 0.909,
+        "top5_term_coverage": 0.818,
+        "date_scoped": true,
+        "hash_any_at_5": true,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-2:contradiction_resolution:0",
+        "category": "contradiction_resolution",
+        "gold_count": 2,
+        "question_terms": 11,
+        "gold_term_coverage": 0,
+        "top5_term_coverage": 1,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-2:event_ordering:0",
+        "category": "event_ordering",
+        "gold_count": 11,
+        "question_terms": 9,
+        "gold_term_coverage": 0.556,
+        "top5_term_coverage": 0.444,
+        "date_scoped": false,
+        "hash_any_at_5": true,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-2:event_ordering:1",
+        "category": "event_ordering",
+        "gold_count": 14,
+        "question_terms": 8,
+        "gold_term_coverage": 0.375,
+        "top5_term_coverage": 0.5,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-2:information_extraction:1",
+        "category": "information_extraction",
+        "gold_count": 1,
+        "question_terms": 10,
+        "gold_term_coverage": 0.6,
+        "top5_term_coverage": 0.8,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-2:summarization:0",
+        "category": "summarization",
+        "gold_count": 15,
+        "question_terms": 16,
+        "gold_term_coverage": 0.75,
+        "top5_term_coverage": 0.75,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-20:event_ordering:0",
+        "category": "event_ordering",
+        "gold_count": 24,
+        "question_terms": 10,
+        "gold_term_coverage": 0.8,
+        "top5_term_coverage": 0.6,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-20:information_extraction:0",
+        "category": "information_extraction",
+        "gold_count": 1,
+        "question_terms": 5,
+        "gold_term_coverage": 0.8,
+        "top5_term_coverage": 1,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-20:information_extraction:1",
+        "category": "information_extraction",
+        "gold_count": 2,
+        "question_terms": 18,
+        "gold_term_coverage": 0.611,
+        "top5_term_coverage": 0.944,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-20:instruction_following:0",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 5,
+        "gold_term_coverage": 0.4,
+        "top5_term_coverage": 1,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-20:instruction_following:1",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 4,
+        "gold_term_coverage": 0.25,
+        "top5_term_coverage": 1,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-20:summarization:0",
+        "category": "summarization",
+        "gold_count": 32,
+        "question_terms": 9,
+        "gold_term_coverage": 0.889,
+        "top5_term_coverage": 0.667,
+        "date_scoped": false,
+        "hash_any_at_5": true,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-21:event_ordering:0",
+        "category": "event_ordering",
+        "gold_count": 27,
+        "question_terms": 9,
+        "gold_term_coverage": 0.778,
+        "top5_term_coverage": 0.556,
+        "date_scoped": false,
+        "hash_any_at_5": true,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-21:information_extraction:1",
+        "category": "information_extraction",
+        "gold_count": 2,
+        "question_terms": 15,
+        "gold_term_coverage": 0.467,
+        "top5_term_coverage": 0.8,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-21:instruction_following:0",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 5,
+        "gold_term_coverage": 0.4,
+        "top5_term_coverage": 1,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-21:instruction_following:1",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 5,
+        "gold_term_coverage": 0.6,
+        "top5_term_coverage": 1,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-21:preference_following:0",
+        "category": "preference_following",
+        "gold_count": 2,
+        "question_terms": 7,
+        "gold_term_coverage": 0.714,
+        "top5_term_coverage": 0.857,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-21:summarization:1",
+        "category": "summarization",
+        "gold_count": 12,
+        "question_terms": 8,
+        "gold_term_coverage": 0.875,
+        "top5_term_coverage": 1,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-22:event_ordering:0",
+        "category": "event_ordering",
+        "gold_count": 38,
+        "question_terms": 9,
+        "gold_term_coverage": 0.778,
+        "top5_term_coverage": 0.556,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-22:event_ordering:1",
+        "category": "event_ordering",
+        "gold_count": 30,
+        "question_terms": 11,
+        "gold_term_coverage": 0.909,
+        "top5_term_coverage": 0.182,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-22:information_extraction:0",
+        "category": "information_extraction",
+        "gold_count": 1,
+        "question_terms": 7,
+        "gold_term_coverage": 0.286,
+        "top5_term_coverage": 0.857,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-22:information_extraction:1",
+        "category": "information_extraction",
+        "gold_count": 1,
+        "question_terms": 11,
+        "gold_term_coverage": 0.455,
+        "top5_term_coverage": 0.727,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-22:instruction_following:0",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 4,
+        "gold_term_coverage": 0.5,
+        "top5_term_coverage": 1,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-22:instruction_following:1",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 5,
+        "gold_term_coverage": 0.2,
+        "top5_term_coverage": 0.6,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-22:multi_session_reasoning:1",
+        "category": "multi_session_reasoning",
+        "gold_count": 8,
+        "question_terms": 16,
+        "gold_term_coverage": 0.813,
+        "top5_term_coverage": 0.75,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-22:summarization:1",
+        "category": "summarization",
+        "gold_count": 7,
+        "question_terms": 10,
+        "gold_term_coverage": 0.8,
+        "top5_term_coverage": 0.7,
+        "date_scoped": false,
+        "hash_any_at_5": true,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-24:event_ordering:0",
+        "category": "event_ordering",
+        "gold_count": 9,
+        "question_terms": 9,
+        "gold_term_coverage": 0.667,
+        "top5_term_coverage": 0.556,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-24:information_extraction:0",
+        "category": "information_extraction",
+        "gold_count": 1,
+        "question_terms": 3,
+        "gold_term_coverage": 1,
+        "top5_term_coverage": 1,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-24:information_extraction:1",
+        "category": "information_extraction",
+        "gold_count": 4,
+        "question_terms": 10,
+        "gold_term_coverage": 0.7,
+        "top5_term_coverage": 0.9,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-24:instruction_following:0",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 5,
+        "gold_term_coverage": 0.2,
+        "top5_term_coverage": 0.8,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-24:instruction_following:1",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 5,
+        "gold_term_coverage": 0.2,
+        "top5_term_coverage": 0.8,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-24:knowledge_update:0",
+        "category": "knowledge_update",
+        "gold_count": 4,
+        "question_terms": 9,
+        "gold_term_coverage": 0.556,
+        "top5_term_coverage": 0.778,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-24:preference_following:0",
+        "category": "preference_following",
+        "gold_count": 3,
+        "question_terms": 10,
+        "gold_term_coverage": 0.5,
+        "top5_term_coverage": 0.8,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-24:summarization:0",
+        "category": "summarization",
+        "gold_count": 10,
+        "question_terms": 22,
+        "gold_term_coverage": 0.727,
+        "top5_term_coverage": 0.636,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-24:temporal_reasoning:0",
+        "category": "temporal_reasoning",
+        "gold_count": 6,
+        "question_terms": 8,
+        "gold_term_coverage": 1,
+        "top5_term_coverage": 0.5,
+        "date_scoped": true,
+        "hash_any_at_5": true,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-25:event_ordering:0",
+        "category": "event_ordering",
+        "gold_count": 24,
+        "question_terms": 10,
+        "gold_term_coverage": 0.9,
+        "top5_term_coverage": 0.7,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-25:information_extraction:0",
+        "category": "information_extraction",
+        "gold_count": 1,
+        "question_terms": 8,
+        "gold_term_coverage": 0.5,
+        "top5_term_coverage": 0.75,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-25:instruction_following:0",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 3,
+        "gold_term_coverage": 1,
+        "top5_term_coverage": 1,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-25:instruction_following:1",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 5,
+        "gold_term_coverage": 0.6,
+        "top5_term_coverage": 0.6,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-25:multi_session_reasoning:1",
+        "category": "multi_session_reasoning",
+        "gold_count": 7,
+        "question_terms": 20,
+        "gold_term_coverage": 0.9,
+        "top5_term_coverage": 0.8,
+        "date_scoped": false,
+        "hash_any_at_5": true,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-25:preference_following:1",
+        "category": "preference_following",
+        "gold_count": 3,
+        "question_terms": 8,
+        "gold_term_coverage": 0.625,
+        "top5_term_coverage": 0.75,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-25:summarization:1",
+        "category": "summarization",
+        "gold_count": 9,
+        "question_terms": 17,
+        "gold_term_coverage": 0.824,
+        "top5_term_coverage": 0.882,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-28:information_extraction:1",
+        "category": "information_extraction",
+        "gold_count": 3,
+        "question_terms": 12,
+        "gold_term_coverage": 0.583,
+        "top5_term_coverage": 0.75,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-3:event_ordering:0",
+        "category": "event_ordering",
+        "gold_count": 15,
+        "question_terms": 8,
+        "gold_term_coverage": 0.375,
+        "top5_term_coverage": 0.5,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-3:information_extraction:0",
+        "category": "information_extraction",
+        "gold_count": 1,
+        "question_terms": 7,
+        "gold_term_coverage": 0.857,
+        "top5_term_coverage": 1,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-3:instruction_following:1",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 3,
+        "gold_term_coverage": 0.667,
+        "top5_term_coverage": 1,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-30:information_extraction:1",
+        "category": "information_extraction",
+        "gold_count": 1,
+        "question_terms": 13,
+        "gold_term_coverage": 0.538,
+        "top5_term_coverage": 0.769,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-30:instruction_following:0",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 4,
+        "gold_term_coverage": 0.75,
+        "top5_term_coverage": 1,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-32:instruction_following:1",
+        "category": "instruction_following",
+        "gold_count": 1,
+        "question_terms": 4,
+        "gold_term_coverage": 0.25,
+        "top5_term_coverage": 1,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "lexical_gap"
+      },
+      {
+        "id": "1m-32:multi_session_reasoning:0",
+        "category": "multi_session_reasoning",
+        "gold_count": 12,
+        "question_terms": 5,
+        "gold_term_coverage": 1,
+        "top5_term_coverage": 1,
+        "date_scoped": true,
+        "hash_any_at_5": true,
+        "label": "date_scoped"
+      },
+      {
+        "id": "1m-32:summarization:0",
+        "category": "summarization",
+        "gold_count": 24,
+        "question_terms": 24,
+        "gold_term_coverage": 0.708,
+        "top5_term_coverage": 0.792,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-32:summarization:1",
+        "category": "summarization",
+        "gold_count": 3,
+        "question_terms": 6,
+        "gold_term_coverage": 0.667,
+        "top5_term_coverage": 1,
+        "date_scoped": false,
+        "hash_any_at_5": false,
+        "label": "semantic_drift"
+      },
+      {
+        "id": "1m-32:temporal_reasoning:1",
+        "category": "temporal_reasoning",
+        "gold_count": 3,
+        "question_terms": 9,
+        "gold_term_coverage": 0.778,
+        "top5_term_coverage": 0.667,
+        "date_scoped": true,
+        "hash_any_at_5": false,
+        "label": "date_scoped"
+      }
+    ]
+  },
+  "committed_wrong": {
+    "zero_score_answers": 60,
+    "labels": {
+      "answerable / committed": 35,
+      "answerable / undetermined": 5,
+      "abstention / committed": 15,
+      "answerable / declined": 5
+    },
+    "committed_wrong": {
+      "all": 50,
+      "answerable": 35,
+      "abstention": 15,
+      "of": 220
+    },
+    "committed_wrong_upper_bound_with_undetermined": 55,
+    "false_abstention_on_answerable": 5,
+    "partial_credit_answers": 85,
+    "stored_answers_cut_at_2000_chars": 151,
+    "detector_agreement_on_decided_labels": {
+      "agree": 52,
+      "of": 55
+    }
+  },
+  "category_bucket": {
+    "abstention": {
+      "n": 22,
+      "median_gold": 0,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.2955,
+        "all_items_met": 6,
+        "zero": 15
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.2955,
+        "all_items_met": 6,
+        "zero": 15
+      }
+    },
+    "contradiction_resolution": {
+      "n": 22,
+      "median_gold": 3,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.6591,
+        "all_items_met": 4,
+        "zero": 0
+      },
+      "all@5": {
+        "n": 4,
+        "mean_score": 0.625,
+        "all_items_met": 1,
+        "zero": 0
+      },
+      "some@5": {
+        "n": 17,
+        "mean_score": 0.6618,
+        "all_items_met": 3,
+        "zero": 0
+      },
+      "none@5": {
+        "n": 1,
+        "mean_score": 0.75,
+        "all_items_met": 0,
+        "zero": 0
+      }
+    },
+    "event_ordering": {
+      "n": 22,
+      "median_gold": 24,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.4683,
+        "all_items_met": 1,
+        "zero": 1
+      },
+      "some@5": {
+        "n": 12,
+        "mean_score": 0.6095,
+        "all_items_met": 1,
+        "zero": 0
+      },
+      "none@5": {
+        "n": 10,
+        "mean_score": 0.2989,
+        "all_items_met": 0,
+        "zero": 1
+      }
+    },
+    "information_extraction": {
+      "n": 22,
+      "median_gold": 1,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.4124,
+        "all_items_met": 7,
+        "zero": 10
+      },
+      "all@5": {
+        "n": 8,
+        "mean_score": 0.625,
+        "all_items_met": 5,
+        "zero": 3
+      },
+      "some@5": {
+        "n": 2,
+        "mean_score": 0.6071,
+        "all_items_met": 0,
+        "zero": 0
+      },
+      "none@5": {
+        "n": 12,
+        "mean_score": 0.2382,
+        "all_items_met": 2,
+        "zero": 7
+      }
+    },
+    "instruction_following": {
+      "n": 22,
+      "median_gold": 1,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.7121,
+        "all_items_met": 14,
+        "zero": 5
+      },
+      "all@5": {
+        "n": 6,
+        "mean_score": 0.9167,
+        "all_items_met": 5,
+        "zero": 0
+      },
+      "some@5": {
+        "n": 1,
+        "mean_score": 1,
+        "all_items_met": 1,
+        "zero": 0
+      },
+      "none@5": {
+        "n": 15,
+        "mean_score": 0.6111,
+        "all_items_met": 8,
+        "zero": 5
+      }
+    },
+    "knowledge_update": {
+      "n": 22,
+      "median_gold": 3,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.4545,
+        "all_items_met": 10,
+        "zero": 12
+      },
+      "all@5": {
+        "n": 5,
+        "mean_score": 0.6,
+        "all_items_met": 3,
+        "zero": 2
+      },
+      "some@5": {
+        "n": 16,
+        "mean_score": 0.4375,
+        "all_items_met": 7,
+        "zero": 9
+      },
+      "none@5": {
+        "n": 1,
+        "mean_score": 0,
+        "all_items_met": 0,
+        "zero": 1
+      }
+    },
+    "multi_session_reasoning": {
+      "n": 22,
+      "median_gold": 4,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.6005,
+        "all_items_met": 7,
+        "zero": 4
+      },
+      "all@5": {
+        "n": 3,
+        "mean_score": 0.6667,
+        "all_items_met": 2,
+        "zero": 1
+      },
+      "some@5": {
+        "n": 15,
+        "mean_score": 0.623,
+        "all_items_met": 4,
+        "zero": 2
+      },
+      "none@5": {
+        "n": 4,
+        "mean_score": 0.4667,
+        "all_items_met": 1,
+        "zero": 1
+      }
+    },
+    "preference_following": {
+      "n": 22,
+      "median_gold": 3,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.9242,
+        "all_items_met": 17,
+        "zero": 0
+      },
+      "all@5": {
+        "n": 5,
+        "mean_score": 0.9333,
+        "all_items_met": 4,
+        "zero": 0
+      },
+      "some@5": {
+        "n": 13,
+        "mean_score": 0.9167,
+        "all_items_met": 10,
+        "zero": 0
+      },
+      "none@5": {
+        "n": 3,
+        "mean_score": 0.9167,
+        "all_items_met": 2,
+        "zero": 0
+      },
+      "no_gold": {
+        "n": 1,
+        "mean_score": 1,
+        "all_items_met": 1,
+        "zero": 0
+      }
+    },
+    "summarization": {
+      "n": 22,
+      "median_gold": 14,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.3972,
+        "all_items_met": 1,
+        "zero": 2
+      },
+      "some@5": {
+        "n": 11,
+        "mean_score": 0.4805,
+        "all_items_met": 0,
+        "zero": 0
+      },
+      "none@5": {
+        "n": 8,
+        "mean_score": 0.2442,
+        "all_items_met": 0,
+        "zero": 2
+      },
+      "no_gold": {
+        "n": 3,
+        "mean_score": 0.5,
+        "all_items_met": 1,
+        "zero": 0
+      }
+    },
+    "temporal_reasoning": {
+      "n": 22,
+      "median_gold": 3,
+      "answers": {
+        "n": 22,
+        "mean_score": 0.4242,
+        "all_items_met": 8,
+        "zero": 11
+      },
+      "all@5": {
+        "n": 5,
+        "mean_score": 0.7,
+        "all_items_met": 3,
+        "zero": 1
+      },
+      "some@5": {
+        "n": 14,
+        "mean_score": 0.3452,
+        "all_items_met": 4,
+        "zero": 8
+      },
+      "none@5": {
+        "n": 3,
+        "mean_score": 0.3333,
+        "all_items_met": 1,
+        "zero": 2
+      }
+    }
+  },
+  "overall_bucket": {
+    "all@5": {
+      "n": 36,
+      "mean_score": 0.7269,
+      "all_items_met": 23,
+      "zero": 7
+    },
+    "some@5": {
+      "n": 101,
+      "mean_score": 0.5857,
+      "all_items_met": 30,
+      "zero": 19
+    },
+    "none@5": {
+      "n": 57,
+      "mean_score": 0.4094,
+      "all_items_met": 14,
+      "zero": 19
+    },
+    "no_gold": {
+      "n": 4,
+      "mean_score": 0.625,
+      "all_items_met": 2,
+      "zero": 0
+    },
+    "abstention": {
+      "n": 22,
+      "mean_score": 0.2955,
+      "all_items_met": 6,
+      "zero": 15
+    }
+  },
+  "hash_arm": {
+    "build": "6622a119e",
+    "retrieval": "hybridSearch with hash bag-of-words vectors (keyword arm plus a lexical vector arm; no provider)",
+    "strict_at_5": 9,
+    "any_at_5": 70,
+    "strict_at_10": 17,
+    "of": 194,
+    "real_embedding_any_at_5": 137
+  }
+}
