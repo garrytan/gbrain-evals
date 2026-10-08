@@ -27,6 +27,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFil
 import { join } from 'path';
 import { tmpdir } from 'os';
 import {
+  BASE_SUITES,
+  MEMORY_TRUST_SUITES,
+  expectedSuites,
   CAT34_CATEGORY,
   resolveGbrainRepo,
   runCat34,
@@ -333,4 +336,22 @@ describe('missing checkout', () => {
     expect(run.exitCode).toBe(0);
     expect(run.receipt.run_status).toBe('skipped');
   }, RUN_TIMEOUT);
+});
+
+describe('expected suites follow the checkout fixture schema (gbrain #5575 lane I1)', () => {
+  const repoWith = (enumValues: unknown) => {
+    const dir = mkdtempSync(join(tmpdir(), 'cat34-suites-'));
+    mkdirSync(join(dir, 'evals/brainbench/schema'), { recursive: true });
+    writeFileSync(join(dir, 'evals/brainbench/schema/fixture.schema.json'), JSON.stringify({ properties: { suites: { items: { enum: enumValues } } } }));
+    return dir;
+  };
+  test('a checkout that declares the memory trust suites requires all eight', () => {
+    const r = expectedSuites(repoWith([...BASE_SUITES, ...MEMORY_TRUST_SUITES]));
+    expect(r).toEqual({ suites: [...BASE_SUITES, ...MEMORY_TRUST_SUITES], source: 'fixture-schema' });
+  });
+  test('a checkout without them, an unreadable schema or a schema missing a base suite falls back to the four base suites', () => {
+    expect(expectedSuites(repoWith([...BASE_SUITES])).suites).toEqual([...BASE_SUITES]);
+    expect(expectedSuites(mkdtempSync(join(tmpdir(), 'cat34-none-')))).toEqual({ suites: [...BASE_SUITES], source: 'default' });
+    expect(expectedSuites(repoWith(['push', 'trust'])).source).toBe('default');
+  });
 });
