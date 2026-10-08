@@ -406,9 +406,16 @@ export function runConfigText(def: CellDefinition, arm: ArmDefinition, ctx: { in
  */
 export function probedConversation(convId: string, all: readonly string[], probes: { seed: string; conversations?: number | null }): boolean {
   if (probes.conversations == null || probes.conversations >= all.length) return true;
-  const keep = [...all].sort((a, b) => (hashKey(`${probes.seed}|conversations`, a) < hashKey(`${probes.seed}|conversations`, b) ? -1 : 1)).slice(0, probes.conversations);
-  return keep.includes(convId);
+  const memo = `${probes.seed}\u0000${probes.conversations}\u0000${all.join('\u0001')}`;
+  let keep = PROBED.get(memo);
+  if (!keep) {
+    const keyed = all.map(c => ({ c, k: hashKey(`${probes.seed}|conversations`, c) })).sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : 0));
+    keep = new Set(keyed.slice(0, probes.conversations).map(x => x.c));
+    PROBED.set(memo, keep);
+  }
+  return keep.has(convId);
 }
+const PROBED = new Map<string, Set<string>>();
 
 export function probeSample(plan: ReadonlyArray<{ input: SessionInput }>, sample: number, seed: string): Map<number, 'last' | 'sample'> {
   const out = new Map<number, 'last' | 'sample'>();
