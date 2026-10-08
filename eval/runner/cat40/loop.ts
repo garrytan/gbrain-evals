@@ -13,6 +13,7 @@
  * OpenAI: Responses API with `previous_response_id`, automatic caching.
  */
 import { CHAT_PRICE_OVERRIDES } from '../budget-ledger.ts';
+import { normalizeUsage, type NormalizedUsage } from '../q1/usage.ts';
 
 export interface ToolSpec {
   name: string;
@@ -43,6 +44,7 @@ export interface SubmitPayload {
 
 export interface ToolEvent { name: string; args: Record<string, unknown>; ms: number; chars: number; truncated: boolean; error?: string; result: string }
 
+/** Summed over the run's model calls, normalized by eval/runner/q1/usage.ts: `input` is uncached input for every provider. */
 export interface Usage { input: number; output: number; cache_read: number; cache_write: number; requests: number }
 
 export interface AgentRun {
@@ -188,6 +190,12 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
   return run;
 }
 
+function addUsage(run: AgentRun, u: NormalizedUsage) {
+  run.usage.input += u.uncached_input; run.usage.output += u.output;
+  run.usage.cache_read += u.cache_read; run.usage.cache_write += u.cache_write;
+  run.usage.requests++;
+}
+
 type Exec = (name: string, args: Record<string, unknown>) => Promise<{ text: string; submitted: boolean }>;
 
 /** Rebuilds the provider tool list when the arm's tools changed since the last turn. */
@@ -228,10 +236,7 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
       ...(cfg.effort !== undefined ? { output_config: { effort: cfg.effort } } : {}),
     });
     run.model_ms += Date.now() - s;
-    const u = (res.usage ?? {}) as Record<string, number>;
-    run.usage.input += u.input_tokens ?? 0; run.usage.output += u.output_tokens ?? 0;
-    run.usage.cache_read += u.cache_read_input_tokens ?? 0; run.usage.cache_write += u.cache_creation_input_tokens ?? 0;
-    run.usage.requests++;
+    addUsage(run, normalizeUsage('anthropic', res.usage as object | undefined));
     const content = (res.content ?? []) as Array<Record<string, unknown>>;
     messages.push({ role: 'assistant', content });
     const calls = content.filter(c => c.type === 'tool_use');
@@ -268,11 +273,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
       ...(previous ? { previous_response_id: previous } : {}), ...(cfg.effort !== undefined ? { reasoning: { effort: cfg.effort } } : {}),
     });
     run.model_ms += Date.now() - s;
-    const u = (res.usage ?? {}) as Record<string, unknown>;
-    const cached = ((u.input_tokens_details ?? {}) as Record<string, number>).cached_tokens ?? 0;
-    run.usage.input += ((u.input_tokens as number) ?? 0) - cached; run.usage.cache_read += cached;
-    run.usage.output += (u.output_tokens as number) ?? 0;
-    run.usage.requests++;
+    addUsage(run, normalizeUsage('openai', res.usage as object | undefined));
     previous = String(res.id);
     const output = (res.output ?? []) as Array<Record<string, unknown>>;
     const calls = output.filter(o => o.type === 'function_call');

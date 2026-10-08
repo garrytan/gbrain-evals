@@ -19,10 +19,10 @@ const ROOT = resolve(import.meta.dir, '../..');
 const COMPOSE = 'eval/systems/gbrain-defaults/docker-compose.yml';
 const ON = process.env.SHOOTOUT_DOCKER_TESTS === '1';
 const PROJECT = `gbrain-defaults-test-${process.pid}`;
-const NS_A = 'ns-00000000000000a1', NS_B = 'ns-00000000000000b2', NS_C = 'ns-00000000000000c3';
-const S1 = 'src-1111111111111111', S2 = 'src-2222222222222222', S3 = 'src-3333333333333333';
+const NS_A = 'ns-00000000000000a1', NS_B = 'ns-00000000000000b2', NS_C = 'ns-00000000000000c3', NS_D = 'ns-00000000000000d4';
+const S1 = 'src-1111111111111111', S2 = 'src-2222222222222222', S3 = 'src-3333333333333333', S4 = 'src-4444444444444444';
 const CANARY = 'zephyrquokka';
-const STARTER_CALLS = ['put_page', 'get_write_request', 'query', 'list_pages', 'synthesize'];
+const STARTER_CALLS = ['put_page', 'get_write_request', 'list_write_requests', 'query', 'list_pages', 'synthesize'];
 
 const free = () => { const s = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response('') }); const p = s.port as number; s.stop(true); return p; };
 const port = ON ? free() : 0;
@@ -112,10 +112,46 @@ describe.skipIf(!ON)('gbrain-defaults container (keyless)', () => {
     const fin = await ok('POST', '/finish', { ns: NS_A, timeout_s: 300 });
     expect(fin).toMatchObject({ ready: true, completeness: 'known', expected_pages: 2, absent_pages: 0 });
     expect(fin.doctor).toMatchObject({ clean: true, embeddings_missing: 0, pages: 2 });
+    expect(fin.background_liabilities).toMatchObject({ pending_jobs: {}, oldest_pending_age_s: null, pending_effects: {}, drained: true, drain_rounds: 0 });
+    expect(fin.background_liabilities.doctor.facts_backlog).toEqual({ waiting: 0, delayed: 0, active: 0 });
     expect((await ok('POST', '/finish', { ns: NS_B, timeout_s: 300 })).ready).toBe(true);
     const finishes = inShim('cat', '/data/logs/receipts.ndjson').stdout.toString().trim().split('\n').map(l => JSON.parse(l)).filter(x => x.kind === 'finish');
     for (const f of finishes) for (const round of f.rounds) expect(round.reasons.join(' ')).not.toContain('live_serve');
   }, 900_000);
+
+  test('finish: a facts-absorb job queued by a note page written past the shim (serve stopped right after) is drained or recorded as a liability, never dropped', async () => {
+    await ok('POST', '/reset', { ns: NS_D });
+    await ok('POST', '/ingest', { ns: NS_D, session: session(S4, '2023-07-04T08:00:00', 'We watched the fireworks over the harbor from the roof.') });
+    const r = pyInShim([
+      'import importlib.util, json, os, signal, time',
+      'spec = importlib.util.spec_from_file_location("gd", "/app/gbrain-defaults/shim.py"); gd = importlib.util.module_from_spec(spec); spec.loader.exec_module(gd)',
+      'for p in [p for p in os.listdir("/proc") if p.isdigit()]:',
+      '    try: cmd = open(f"/proc/{p}/cmdline", "rb").read().split(b"\\0")',
+      '    except OSError: continue',
+      '    if b"serve" in cmd and b"--surface" in cmd: os.kill(int(p), signal.SIGTERM)',
+      'time.sleep(3)',
+      'env = {**os.environ, "GBRAIN_HOME": "/data/home", "HOME": "/data/home", "NO_COLOR": "1"}',
+      'm = gd.McpStdio(["gbrain", "serve", "--surface", "starter"], env, "/data/work", "/tmp/probe-serve.log")',
+      'm.request("initialize", {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "probe", "version": "1"}}, timeout_s=300)',
+      'm.notify("notifications/initialized")',
+      'text = "Jane Doe joined Acme Corp as head of research in March. She previously led the robotics lab at Initech and lives in Boston."',
+      'r = m.request("tools/call", {"name": "put_page", "arguments": {"slug": "notes/probe-queued-job", "content": "---\\ntype: note\\ntitle: Probe note\\n---\\n\\n" + text + "\\n", "wait_ms": 30000}})',
+      'print(json.dumps(gd.tool_payload(r)[0]["facts_backstop"]))',
+      'm.close()',
+    ].join('\n'));
+    expect(r.exitCode, r.stderr.toString()).toBe(0);
+    expect(JSON.parse(r.stdout.toString().trim().split('\n').pop()!)).toEqual({ queued: true });
+    const fin = await ok('POST', '/finish', { ns: NS_D, timeout_s: 40 });
+    expect(fin.ready).toBe(true);
+    const liab = fin.background_liabilities;
+    expect(liab.pending_jobs).toEqual({ 'facts-absorb': 1 });
+    expect(liab.oldest_pending_age_s).toBeGreaterThanOrEqual(0);
+    expect(liab.drained).toBe(false);
+    expect(liab.drain_rounds).toBeGreaterThanOrEqual(1);
+    expect(fin.waited_ms).toBeLessThan(120_000);
+    const last = inShim('cat', '/data/logs/receipts.ndjson').stdout.toString().trim().split('\n').map(l => JSON.parse(l)).filter(x => x.kind === 'finish').pop();
+    expect(last.background_liabilities.pending_jobs).toEqual({ 'facts-absorb': 1 });
+  }, 600_000);
 
   test('retrieve: bare query with auto delivery, never token_budget, exact provenance, meta and notices kept', async () => {
     const r = await ok('POST', '/retrieve', { ns: NS_A, question: 'How much did the vet visit for Pebble cost?', query_time: '2023-07-01T00:00:00', policy: policy('vendor-default') });

@@ -28,6 +28,12 @@ import type { MemoryQaRow } from './run.ts';
 
 export { OUTCOMES };
 
+/**
+ * Reader tokens of one answer, normalized by `normalizeUsage` (eval/runner/q1/usage.ts) for every provider: `input`
+ * is the uncached input only, never a count that already holds the cached tokens (OpenAI's `prompt_tokens` and
+ * Responses `input_tokens` do; Anthropic's `input_tokens` does not). `cache_read` and `cache_write` are the cached
+ * buckets, so the reader's total input is `input + cache_read + cache_write`.
+ */
 export interface Usage { input: number; output: number; cache_read: number; cache_write: number }
 
 /** Mirrors eval/runner/q1/hedge.ts HEDGE_VERDICTS without importing it, so the classifier stays out of the cell's executed tree. */
@@ -52,7 +58,7 @@ export interface AnswerRecord {
   /** The full answer text. */
   text: string;
   usage: Usage;
-  /** The provider's own input count, the truth for every reader call; null when the provider reported none. */
+  /** The provider's own total input count (uncached plus cache reads and writes, counted once), the truth for every reader call; null when the provider reported none. */
   provider_input_tokens: number | null;
   latency_ms: number;
   outcome: Outcome;

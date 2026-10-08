@@ -40,6 +40,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../budget-ledger.ts';
 import { decideError } from '../decisions/errors.ts';
+import { answerUsage, normalizeUsage } from '../q1/usage.ts';
 import { FILE_AGENT_MAX_TURNS, layoutSessions, parseReader, type AgentAnswer, type AnswerOptions, type AnsweringSystem, type StoredSession, type TreeFile } from './file-agent.ts';
 import { SystemError, type CapabilityRecord, type DeleteResult, type FinishResult, type IngestResult, type PublicQuestion, type RetrieveResult, type SessionInput } from './types.ts';
 
@@ -106,6 +107,7 @@ export function dockerHost(container = cellConfig().container): RuntimeHost {
   };
 }
 
+/** `usage` is the runtime's own report for every reader: `prompt_tokens` includes `cached_input_tokens` and `cache_write_tokens` (the OpenAI convention, eval/runner/q1/usage.ts). */
 export interface RuntimeTranscript {
   text: string;
   /** `success`, `max_steps`, `error`, `timeout` or `no_result`. */
@@ -234,17 +236,17 @@ export class AgentRuntimeSystem implements AnsweringSystem {
     const latency_ms = performance.now() - t0;
     const t = parseTranscript(r.stdout);
     if (r.timed_out) { t.stop = 'timeout'; t.error = `no answer within ${(this.opts.timeoutMs ?? 1_800_000) / 1000} s`; }
-    const cache_read = t.usage.cached_input_tokens, cache_write = t.usage.cache_write_tokens;
-    const usage = { input: Math.max(0, t.usage.prompt_tokens - cache_read - cache_write), output: t.usage.completion_tokens, cache_read, cache_write };
+    const u = normalizeUsage('openai', t.usage);
+    const usage = answerUsage(u);
     const p = CHAT_PRICE_OVERRIDES[opts.reader];
-    const usd = this.opts.keyless || !p ? 0 : (usage.input * p.input + cache_read * (p.cache_read ?? p.input) + cache_write * (p.cache_write ?? p.input) + usage.output * p.output) / 1e6;
+    const usd = this.opts.keyless || !p ? 0 : (usage.input * p.input + usage.cache_read * (p.cache_read ?? p.input) + usage.cache_write * (p.cache_write ?? p.input) + usage.output * p.output) / 1e6;
     const providerFailure = /\b(429|5\d\d)\b|rate.?limit|overloaded|ECONNREFUSED|ETIMEDOUT|budget/i.test(t.error ?? '');
     const verdict = t.stop === 'success' && t.text.trim() ? { stop_reason: 'submitted', outcome: 'scored' as const }
       : t.stop === 'max_steps' ? { stop_reason: 'turn_cap', outcome: 'turn_cap' as const }
       : t.stop === 'timeout' ? { stop_reason: 'wall_time', outcome: 'retrieval_error' as const }
       : providerFailure || t.stop === 'no_result' ? { stop_reason: 'provider_error', outcome: 'reader_error' as const }
       : { stop_reason: t.stop === 'success' ? 'empty_answer' : 'product_error', outcome: 'retrieval_error' as const };
-    return { text: verdict.outcome === 'scored' ? t.text : '', ...verdict, usage, provider_input_tokens: t.usage.prompt_tokens, latency_ms, turns: t.steps, usd,
+    return { text: verdict.outcome === 'scored' ? t.text : '', ...verdict, usage, provider_input_tokens: u.total_input, latency_ms, turns: t.steps, usd,
       opened_source_ids: openedFiles(t, workdir, files), ...(t.error || (t.stop === 'no_result' && r.stderr) ? { error: (t.error ?? r.stderr).slice(0, 2000) } : {}) };
   }
 }

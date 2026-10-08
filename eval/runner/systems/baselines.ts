@@ -38,6 +38,7 @@ import { PG_EMBED_DIMS, PG_EMBED_MODEL, type Embedder } from '../cat40/pg-arm.ts
 import { decideError } from '../decisions/errors.ts';
 import type { Outcome } from '../memory-qa/outcomes.ts';
 import { defaultTemperatureOnly } from '../memory-qa/qa.ts';
+import { answerUsage, normalizeUsage } from '../q1/usage.ts';
 import { SystemError, type CapabilityRecord, type DeleteResult, type FinishResult, type IngestResult, type Item, type MemorySystem, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from './types.ts';
 
 const sessionText = (s: SessionInput) => s.turns.map(t => `${t.speaker}: ${t.content}`).join('\n');
@@ -265,12 +266,9 @@ export async function answerFullContext(opts: { reader: string; prompt: string; 
     const res = await fetchImpl(request.url, { method: 'POST', headers: { 'content-type': 'application/json', ...request.headers }, body: JSON.stringify(request.body), signal: AbortSignal.timeout(600_000) });
     const json = await res.json().catch(() => ({})) as any;
     if (res.ok) {
-      const u = json.usage ?? {};
-      const usage = prov === 'anthropic'
-        ? { input: u.input_tokens ?? 0, output: u.output_tokens ?? 0, cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0 }
-        : { input: (u.prompt_tokens ?? 0) - (u.prompt_tokens_details?.cached_tokens ?? 0), output: u.completion_tokens ?? 0, cache_read: u.prompt_tokens_details?.cached_tokens ?? 0, cache_write: 0 };
+      const u = normalizeUsage(prov === 'anthropic' ? 'anthropic' : 'openai', json.usage);
       const text = prov === 'anthropic' ? (json.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('') : String(json.choices?.[0]?.message?.content ?? '');
-      return { text, outcome: 'scored', fit, usage, provider_input_tokens: usage.input + usage.cache_read + usage.cache_write, latency_ms: performance.now() - t0, cache_key };
+      return { text, outcome: 'scored', fit, usage: answerUsage(u), provider_input_tokens: u.total_input, latency_ms: performance.now() - t0, cache_key };
     }
     last = `${prov} ${res.status}: ${JSON.stringify(json?.error ?? json).slice(0, 300)}`;
     if (res.status === 400 && TOO_LONG.test(last)) return { text: '', outcome: 'does_not_fit', fit: { ...fit, fits: false }, usage: empty, provider_input_tokens: 0, latency_ms: performance.now() - t0, cache_key, error: last };

@@ -16,7 +16,9 @@ place and restarts serve.
 Sessions are written with `put_page` as `type: conversation` pages under `conversations/<date>/<source id>` with a
 deterministic request id (uuidv5 of namespace|source_id), so a replay returns gbrain's stored receipt. /finish is the
 quiesce barrier: stop serve, run `gbrain doctor --json` with the brain to itself, require every expected page and
-100% embedding coverage, restart serve. /retrieve calls `query` (never with `token_budget`, which switches gbrain to
+100% embedding coverage, then read gbrain's job queue (`gbrain jobs list --json`): pending jobs (a facts-absorb job can
+be queued after its outbox effect completed, src/core/persistence/effect-facts.ts) are drained by a resident serve or
+outlast the finish horizon, and whatever is left is recorded as `background_liabilities`; restart serve. /retrieve calls `query` (never with `token_budget`, which switches gbrain to
 chunk delivery) and classifies the response meta; /answer is gbrain's own answer (`synthesize`, or `think` on the
 full surface when GBRAIN_FULL_SURFACE=1).
 """
@@ -56,9 +58,20 @@ REQUEST_NS = uuid.UUID("6f1c3d4e-5a2b-4c8d-9e0f-1a2b3c4d5e6f")
 
 # The ops this shim calls. Every one must appear in the starter surface's tools/list (checked at every install and
 # at every serve start); `think` is called only on the labeled full surface.
-STARTER_CALLS = ("put_page", "get_write_request", "query", "list_pages", "synthesize")
+STARTER_CALLS = ("put_page", "get_write_request", "list_write_requests", "query", "list_pages", "synthesize")
 FULL_SURFACE_CALLS = ("think",)
 PENDING_STATES = {"queued", "running", "recovering"}
+# gbrain job states from which a job can still run (src/core/minions/types.ts MinionJobStatus).
+PENDING_JOB_STATES = ("waiting", "delayed", "paused", "waiting-children", "active")
+JOBS_LIST_LIMIT = 1000
+# A resident stdio serve runs queued facts-absorb jobs from its own drain timer, which first ticks 10 minutes after
+# start (src/core/facts/drain-scheduler.ts FACTS_DRAIN_TICK_MS), so each drain round keeps serve up a tick and a minute.
+DRAIN_WAIT_S = float(os.environ.get("GBRAIN_DRAIN_WAIT_S", "660"))
+# A round with only outbox effects pending (serve's persistence consumer dispatches them at start) is short.
+OUTBOX_WAIT_S = 10.0
+# Write-receipt effect states that still need serve's consumer (src/core/persistence/effect-model.ts; `dispatched`
+# means a facts effect queued its job, which the job queue then shows).
+PENDING_EFFECT_STATES = ("queued", "running")
 FORBIDDEN_QUERY_KEYS = {"token_budget", "return_unit"}
 QUERY_KNOBS = {"limit", "autocut", "expand"}
 # Evidence-delivery fallbacks that are gbrain's shipped, content-driven behavior (preregistered): `redaction_unmapped`
@@ -305,8 +318,21 @@ def doctor_gate(report: dict[str, Any], expected_pages: int) -> dict[str, Any]:
     if stale and stale.get("status") not in ("ok", None):
         reasons.append(f"stale_embedding_effects:{stale.get('status')}")
     failing = sorted(n for n, c in checks.items() if c.get("status") == "fail")
-    return {"clean": not reasons and not failing, "reasons": reasons, "failing_checks": failing, "pages": pages, "embeddings_missing": missing,
+    background = {"facts_backlog": ((checks.get("facts_drain") or {}).get("details") or {}).get("backlog"),
+                  "chronicle_pending_pages": ((checks.get("auto_chronicle") or {}).get("details") or {}).get("pending"),
+                  "queue_waiting": ((checks.get("queue_health") or {}).get("details") or {}).get("depth")}
+    return {"clean": not reasons and not failing, "background": background, "reasons": reasons, "failing_checks": failing, "pages": pages, "embeddings_missing": missing,
             "warnings": sorted(n for n, c in checks.items() if c.get("status") == "warn"), "status": report.get("status"), "health_score": report.get("health_score")}
+
+
+def job_liabilities(jobs: list[dict[str, Any]], now: datetime) -> dict[str, Any]:
+    """Pending gbrain jobs (any state a job can still run from) by kind, and the age of the oldest."""
+    pending = [j for j in jobs if j.get("status") in PENDING_JOB_STATES]
+    by_kind: dict[str, int] = {}
+    for j in pending:
+        by_kind[str(j.get("name"))] = by_kind.get(str(j.get("name")), 0) + 1
+    ages = [(now - created).total_seconds() for j in pending if (created := parse_time(str(j.get("created_at") or "")))]
+    return {"pending_jobs": dict(sorted(by_kind.items())), "oldest_pending_age_s": round(max(ages)) if ages else None}
 
 
 class GbrainDefaultsAdapter(Adapter):
@@ -362,6 +388,39 @@ class GbrainDefaultsAdapter(Adapter):
             return json.loads(text[text.index("{"):]) if "{" in text else json.loads(text)
         except (ValueError, json.JSONDecodeError) as e:
             raise ShimError("product_error", f"gbrain {' '.join(args)} printed no JSON (exit {r.returncode}): {(r.stderr or text)[-300:]}") from e
+
+    def jobs(self) -> list[dict[str, Any]]:
+        """Every job that can still run, with serve stopped: the newest JOBS_LIST_LIMIT jobs, or each pending state's
+        full list when the queue holds more."""
+        def listed(*args: str) -> list[dict[str, Any]]:
+            r = self.cli("jobs", "list", "--json", *args, timeout_s=300, check=False)
+            try:
+                out = json.loads(r.stdout)
+            except json.JSONDecodeError as e:
+                raise ShimError("product_error", f"gbrain jobs list printed no JSON (exit {r.returncode}): {(r.stderr or r.stdout)[-300:]}") from e
+            if not isinstance(out, list):
+                raise ShimError("product_error", f"gbrain jobs list printed {type(out).__name__}, not a list")
+            return out
+        jobs = listed("--limit", str(JOBS_LIST_LIMIT))
+        if len(jobs) < JOBS_LIST_LIMIT:
+            return jobs
+        return [j for state in PENDING_JOB_STATES for j in listed("--status", state, "--limit", "1000000")]
+
+    def outbox_pending(self) -> dict[str, int]:
+        """Write effects still in gbrain's outbox, by kind, through starter `list_write_requests` on the live serve.
+        Receipts come newest first and the consumer claims effects in request order, so paging stops at the first page
+        with none pending."""
+        by_kind: dict[str, int] = {}
+        before = None
+        while True:
+            body, _m, _n, _ms = self.call("list_write_requests", {"limit": 100, **({"before": before} if before else {})})
+            body = body if isinstance(body, dict) else {}
+            pending = [e for r in body.get("requests") or [] for e in r.get("effects") or [] if e.get("state") in PENDING_EFFECT_STATES]
+            for e in pending:
+                by_kind[str(e.get("kind"))] = by_kind.get(str(e.get("kind")), 0) + 1
+            before = body.get("next")
+            if not pending or not before:
+                return dict(sorted(by_kind.items()))
 
     def receipt(self, kind: str, **fields: Any) -> None:
         self.receipts.write(json.dumps({"at": now_iso(), "kind": kind, "ns": self.active, **fields}) + "\n")
@@ -698,9 +757,20 @@ class GbrainDefaultsAdapter(Adapter):
     def finish(self, ns: str, timeout_s: float) -> dict[str, Any]:
         """The quiesce barrier: stop serve, doctor with the brain to itself, require every expected page and 100%
         embedding coverage; while coverage is short, restart serve (its persistence consumer drains embedding effects)
-        and look again, bounded by timeout_s; then restart serve and confirm every expected page through list_pages."""
+        and look again, bounded by timeout_s. Then drain or horizon for gbrain's job queue: while any job can still run,
+        keep serve up for a drain round and read the queue again, bounded by the same timeout_s. Write effects still in
+        the outbox when the barrier began (read on the live serve first) count the same way, since dispatching one can
+        queue a job. What is left is the realization's `background_liabilities`, recorded and never dropped. Finally
+        restart serve and confirm every expected page through list_pages."""
         with self.lock:
             t0 = time.monotonic()
+            self.activate(ns)
+            read_errors: list[str] = []
+            try:
+                outbox = self.outbox_pending()
+            except ShimError as e:
+                outbox = {}
+                read_errors.append(f"outbox: {str(e)[:300]}")
             self.place(ns)
             expected = {v["slug"]: sid for sid, v in self.state()["sessions"].items()}
             rounds = []
@@ -713,16 +783,33 @@ class GbrainDefaultsAdapter(Adapter):
                 self.start_serve()
                 time.sleep(min(10.0, max(1.0, timeout_s / 60)))
                 self.stop_serve()
+            liabilities: dict[str, Any] = {"pending_jobs": None, "oldest_pending_age_s": None}
+            drain_rounds = 0
+            if not live:
+                try:
+                    liabilities = job_liabilities(self.jobs(), datetime.now(timezone.utc))
+                    while (liabilities["pending_jobs"] or outbox) and time.monotonic() - t0 < timeout_s:
+                        self.start_serve()
+                        time.sleep(max(1.0, min(DRAIN_WAIT_S if liabilities["pending_jobs"] else OUTBOX_WAIT_S, timeout_s - (time.monotonic() - t0))))
+                        outbox = self.outbox_pending()
+                        self.stop_serve()
+                        drain_rounds += 1
+                        liabilities = job_liabilities(self.jobs(), datetime.now(timezone.utc))
+                except ShimError as e:
+                    read_errors.append(str(e)[:300])
+            liabilities = {**liabilities, **({"read_errors": read_errors} if read_errors else {}), "pending_effects": outbox, "drained": liabilities["pending_jobs"] == {} and not outbox, "drain_rounds": drain_rounds,
+                           "doctor": gate.get("background")}
             self.start_serve()
             seen = self.listed_conversation_slugs()
             absent = sorted(s for s in expected if s not in seen)
             waited = round((time.monotonic() - t0) * 1000)
             ready = gate["clean"] and not absent
-            self.receipt("finish", rounds=rounds, absent=absent[:20], ready=ready, waited_ms=waited)
+            self.receipt("finish", rounds=rounds, absent=absent[:20], ready=ready, waited_ms=waited, background_liabilities=liabilities)
             if any(r.startswith("live_serve") for r in gate["reasons"]):
                 raise ShimError("product_error", "doctor ran under a live gbrain serve (details.reason live_serve); its database checks did not run, so the barrier cannot pass")
             return {"ready": ready, "waited_ms": waited, "completeness": "known" if ready else "degraded",
-                    "doctor": gate, "doctor_rounds": len(rounds), "rounds": rounds, "absent_pages": len(absent), "expected_pages": len(expected)}
+                    "doctor": gate, "doctor_rounds": len(rounds), "rounds": rounds, "absent_pages": len(absent), "expected_pages": len(expected),
+                    "background_liabilities": liabilities}
 
     def listed_conversation_slugs(self) -> set[str]:
         seen: set[str] = set()

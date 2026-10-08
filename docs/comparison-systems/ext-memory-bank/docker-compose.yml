@@ -18,6 +18,9 @@ services:
       POSTGRES_USER: hindsight
       POSTGRES_PASSWORD: hindsight
       POSTGRES_DB: hindsight
+    # Docker's 64 MB default /dev/shm makes parallel queries fail ("could not resize shared memory segment"), which
+    # surfaces as HTTP 500 on bank creates under load.
+    shm_size: 1g
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hindsight -d hindsight"]
       interval: 2s
