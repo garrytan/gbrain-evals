@@ -2,6 +2,16 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.44] - 2026-10-08
+
+### gbrain #6317 mirror: the sync wedge is a pooler round trip that never completes; two consumers were a multiplier
+
+Paired with gbrain #6330 (branch `capy/6317-reliability-contract`, merged as `b5f12b12e`, v0.60.117.0) and the mechanism fix #6329 (v0.60.114.0). No paid call ($0 here); this mirror reruns nothing.
+
+- **Two-consumer and partition arms (mirror, $0 here).** [Report](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md). On 16-vCPU Ubicloud VMs behind PgBouncer in transaction mode at 57 ms: 2 h 49 min of `gbrain serve --http` beside a 6-lane `gbrain sync` on v0.60.110.0 published 4,951 pages with no wedge (three arms: plain; adoption load plus CLI restarts; dual direct pool plus restarts), while one `gbrain sync --no-lanes` with no serve wedged within one sample once the client→pooler half of its connections was dropped: backend `active`/`ClientRead`, the consumer's `expired_claims` round trip parked 135 s past its 5 s deadline, renewals lapsing, zero commits, until the network came back. The named await is postgres.js's query promise in `runUnsafe`; the v0.60.112.0 preparation budget does not cover it (run F: 16 members parked 166 s, nothing cut or held).
+- **Reading.** `persistence.single_consumer` ships off in gbrain v0.60.117.0 per the preregistered reading (the single-process arm wedged). The fix is the bounded client-side settle in v0.60.114.0; v0.60.117.0 adds direct-lane routing for the consumer's round trips, `owner.backend[]` in `writer status`, and movement-based health.
+- **Version.** Main is at 0.10.43, so this release is 0.10.44.
+
 ## [0.10.43] - 2026-10-08
 
 ### One usage receipt for every reading lane, the reading headroom recount, and model rules that match the project rule

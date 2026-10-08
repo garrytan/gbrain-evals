@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.43, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
+gbrain-evals v0.10.44, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -82,6 +82,7 @@ gap does not isolate the effect of a graph alone.
 | Does fix wave 12's move of the `forget` caveat into the memory clause, or its restored put_page request_id UUID line, change how agents do? | [October 7 wave 12 agent smoke (Cat 40, GBRA-57)](benchmarks/2026-10-07-wave12-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave12-agent-smoke-preregistration.md)): the caveat move regresses Opus 5.5 write-back (20/20 to 15/20; the old instructions on the wave 12 build give 19/20) and was reverted before merge; the UUID line does no harm, does not measurably cut non-UUID first writes (17/30 to 14/30), and shipped in gbrain v0.60.106.0 ([`7aa2caa`](https://github.com/garrytan/gbrain/commit/7aa2caa0aa2a9f031730cd351cd516cf4f9f5802), #6269) |
 | How fast does a managed Postgres brain catch up a backlog far from its database, and how long does a page save take meanwhile? | [October 7 lanes and foreground mirror](benchmarks/2026-10-07-managed-sync-lanes-foreground.md) (follows the [October 5 catch-up mirror](benchmarks/2026-10-05-managed-sync-catchup.md)) |
 | Does a managed Postgres catch-up still stop when one write cannot finish preparing, and what happens to that write? | [October 8 preparation stall mirror](benchmarks/2026-10-08-managed-sync-preparation-stall.md) (gbrain #6298, v0.60.112.0): a stuck write is cut off and held in 240 s and a 15,000-entry catch-up drains in two to three passes where v0.60.105.0 never did; a table lock still pins the pool |
+| Why did a managed Postgres sync behind a transaction-mode pooler wedge for eighteen days, and were two consumers on one host the cause? | [October 8 ClientRead wedge mirror](benchmarks/2026-10-08-managed-sync-clientread-wedge.md) (gbrain #6278, #6317; the two-consumer arms, the on-demand reproduction and the named await) |
 | Which MCP tool surface should gbrain register for agents: seven verbs, `starter` or `full`? | [October 5 registration-surface cell](benchmarks/2026-10-05-registration-surface.md) ([preregistration](benchmarks/2026-10-05-registration-surface-preregistration.md)) |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
 | What did the earlier ingestion worker comparisons measure? | [Subagent comparison](benchmarks/2026-04-18-minions-vs-openclaw-subagents.md), [production comparison](benchmarks/2026-04-18-minions-vs-openclaw-production.md) |
