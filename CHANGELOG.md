@@ -2,6 +2,15 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.48] - 2026-10-08
+
+### gbrain managed catch-up follow-up: first page at 15.5 s, page saves within a second of idle
+
+Paired with gbrain's follow-up wave (branch `capy/next-wave-g3-g6-g7`, measured at `d6d9d5956` against master `b5f12b12e`, v0.60.117.0). Mirror, $0 here.
+
+- **Catch-up and page saves, three runs per head.** [Report](docs/benchmarks/2026-10-08-managed-sync-followup-wave.md), [`results.json`](docs/benchmarks/2026-10-08-managed-sync-followup-wave/results.json) and the raw bench JSON for every run. First commit 15.5 to 15.6 s (master 19.0 to 19.6 s; target 15 s, missed by 0.5 s); slowest page saves during a catch-up +0.52 to +0.77 s over idle with none failed (master +0.52 to +2.28 s, one failed); catch-up while saving every 5 s 55 to 64% of idle (target 50%).
+- **Correction.** The October 7 report's catch-up-while-saving row (45%, one run) was low; three more runs of that code measured 60.6 to 63.2%. The October 7 report carries the correction in its changelog.
+
 ## [0.10.47] - 2026-10-08
 
 ### Facts-absorb quality gate: Claude Haiku 5.5 passes as gbrain's background fact-extraction model, GPT-6 Luna does not; write cost of three extraction models
