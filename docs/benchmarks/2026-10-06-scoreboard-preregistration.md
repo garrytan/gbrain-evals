@@ -254,7 +254,16 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   failure, `row_limit`, `unsealed_page`, `anchor_not_located`, any unknown reason) counts, and is a harness failure in
   every cell.
 - **Otherwise** the S1 row is `gbrain-defaults` on Postgres, following gbrain's own advice, and says so.
-- `pglite_scale` is an allowed S1 doctor warning. OPEN: the pilot's measurements and the resulting engine.
+- `pglite_scale` is an allowed S1 doctor warning.
+- **Result (2026-10-07): PGLite.** On the 11 BEAM-1M dev conversations in one brain (9,003 sessions, about 12M
+  tokens; receipt in [`2026-10-06-scoreboard/dev-stress-pilot/`](2026-10-06-scoreboard/dev-stress-pilot/receipt.json)):
+  - ingest: 39 minutes with 0 failures; the embedding barrier finished 43 minutes after the last write;
+  - query p95 6.0 seconds (p50 4.3) with expansion applied;
+  - no rerank or counted delivery fallbacks; 27 of 220 queries carried a shipped-behavior fallback;
+  - peak serve memory 0.82 GB, brain 1.07 GB on disk, restart 3.3 seconds.
+
+  Two earlier query phases ran without expansion because of the proxy bug amendment A3 fixes; they are kept as
+  `receipt-run1-expansion-refused.json` and do not count. Measured spend: $1.79 (embeddings, rerank and expansion).
 
 ## Budget and stop rules
 
