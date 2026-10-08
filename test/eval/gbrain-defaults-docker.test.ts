@@ -70,7 +70,7 @@ describe.skipIf(!ON)('gbrain-defaults container (keyless)', () => {
     const cap = await ok('GET', '/capabilities');
     expect(cap.protocol).toBe(1);
     const r = cap.resolved;
-    expect(r.gbrain_version).toBe('gbrain 0.60.95.0');
+    expect(r.gbrain_version).toBe('gbrain 0.60.106.0');
     expect([r.engine, r.embedding_model, r.embedding_dimensions, r.search_mode]).toEqual(['pglite', 'voyage:voyage-4', 1024, 'tokenmax']);
     expect([r.search.reranker_enabled, r.search.reranker_model, r.search.expansion, r.search.searchLimit]).toEqual([true, 'voyage:rerank-2.5', true, 50]);
     expect(r.model_tasks['models.expansion']).toBe('anthropic:claude-haiku-4-5-20251001');

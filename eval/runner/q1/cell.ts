@@ -69,7 +69,7 @@
  * counts, means and timings).
  */
 import { createHash } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { budgetOptionsFrom, startPaidRun } from '../budget-ledger.ts';
@@ -1029,9 +1029,27 @@ export function scoreboardCampaignCell(def: CellDefinition, arm: ArmDefinition, 
 
 // ─── Plan and the Q1 campaign manifest ───────────────────────────────
 
+/**
+ * Every upstream image a cell pulls or builds on, by digest: `image:` lines in the bundles' compose files and `FROM` /
+ * `COPY --from` references in their Dockerfiles that carry `@sha256:`. Images built from a bundle's own Dockerfile are
+ * covered by the executed tree (Dockerfile, lockfile) plus these base digests.
+ */
+export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Record<string, string> {
+  const out: Record<string, string> = {};
+  const dirs = ['eval/systems', 'docs/comparison-systems'].flatMap(d => readdirSync(join(root, d), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => join(root, d, e.name)));
+  for (const dir of dirs) for (const f of ['docker-compose.yml', 'Dockerfile']) {
+    const path = join(dir, f);
+    if (!existsSync(path)) continue;
+    for (const m of readFileSync(path, 'utf8').matchAll(/([a-z0-9][\w./:-]*)@(sha256:[0-9a-f]{64})/g)) out[m[1]] = `${m[1]}@${m[2]}`;
+  }
+  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => (a < b ? -1 : 1)));
+}
+
 /** Repository paths every Q1 cell executes (their git tree enters the campaign hash). */
 export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions',
   'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
+  'eval/runner/q1/hedge.ts', 'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
+  'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',
   'eval/systems', 'docs/comparison-systems', 'eval/decisions', 'package.json', 'bun.lock'];
 
 const VM_VCPU = 4;
@@ -1074,7 +1092,7 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean } = {}): Q
   const models = [...new Set([...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5'])].sort();
   return {
     kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: 'q1-scoreboard', cap_usd: m.cap_usd, ledger: 'eval/reports/scoreboard/q1-scoreboard/campaign.sqlite',
-    parameters: {}, cells: campaignCells(m, opts), executes: EXECUTES, images: {},
+    parameters: {}, cells: campaignCells(m, opts), executes: EXECUTES, images: pinnedImages(),
     blocks: Object.fromEntries(m.blocks.map(b => [b.id, { estimate_usd: b.estimate_usd, cap_usd: b.cap_usd }])),
     output_caps: { ...DEFAULT_ROUTE_CAPS }, route_classes: { ...DEFAULT_ROUTE_CLASSES }, schedule: { vcpu_cap_day: 128, vcpu_cap_night: 200 }, row_pull_every: ROW_FLUSH_EVERY, pull_interval_minutes: 10, models,
   };

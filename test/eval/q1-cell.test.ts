@@ -753,3 +753,14 @@ describe('probe conversation cap', () => {
     expect(all.filter(c => probedConversation(c, all, { seed: 't', conversations: 50 }))).not.toEqual(picked);
   });
 });
+
+describe('freeze coverage', () => {
+  test('every repository module the cell runner imports is under a path in EXECUTES', async () => {
+    const { EXECUTES } = await import('../../eval/runner/q1/cell.ts');
+    const out = (await import('node:fs')).mkdtempSync((await import('node:path')).join((await import('node:os')).tmpdir(), 'q1-meta-'));
+    const r = Bun.spawnSync([process.execPath, 'build', 'eval/runner/q1/cell.ts', '--target', 'bun', '--outdir', out, `--metafile=${out}/meta.json`], { cwd: (await import('node:path')).resolve(import.meta.dir, '../..') });
+    expect(r.exitCode).toBe(0);
+    const inputs = Object.keys(JSON.parse((await import('node:fs')).readFileSync(`${out}/meta.json`, 'utf8')).inputs).filter(k => k.startsWith('eval/') || k.startsWith('docs/'));
+    expect(inputs.filter(f => !EXECUTES.some((e: string) => f === e || f.startsWith(`${e}/`)))).toEqual([]);
+  });
+});

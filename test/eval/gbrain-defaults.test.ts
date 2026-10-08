@@ -218,7 +218,7 @@ describe('capability record', () => {
     const docker = readFileSync(`${ROOT}/${BUNDLE}/Dockerfile`, 'utf8');
     const compose = readFileSync(`${ROOT}/${BUNDLE}/docker-compose.yml`, 'utf8');
     expect(docker).toMatch(/oven\/bun:1\.4\.\d+-slim@sha256:[0-9a-f]{64}/);
-    expect(docker).toContain('ARG GBRAIN_SHA=c5fb0201d1960a0a5a81c35d77718311b03154b7');
+    expect(docker).toContain('ARG GBRAIN_SHA=7aa2caa0aa2a9f031730cd351cd516cf4f9f5802');
     expect(docker).toContain('bun install -g "github:garrytan/gbrain#${GBRAIN_SHA}"');
     expect(compose).toMatch(/sandbox: \{ internal: true \}/);
     for (const key of ['VOYAGE_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY']) expect(compose).toMatch(new RegExp(`${key}: \\S*dummy`));

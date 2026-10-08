@@ -368,7 +368,19 @@ questions) and BEAM-1M dev ingest probes, $53.75, receipts in
   temporal-graph common $193 and 39 h. The graph pipeline keeps its recipe on BEAM-100K and BEAM-1M sealed.
 - Claude 5 readers reject a temperature parameter, so no temperature is sent to them.
 
+**A5 (2026-10-08, before freeze): plan lines reset at the re-price; the graph pipeline runs on BEAM-10M.** The
+program owner decided on 2026-10-08 that the block and per-system lines in "Budget and stop rules" are reset to the
+re-priced cell manifest (`eval/runner/q1/cells/q1-cells.json`, $6,732 in cells, about $6,990 with shared work,
+under the $8,500 cap), and every later stop rule is judged against the new lines. The graph pipeline's recipe setup
+projects 54 hours per BEAM-10M conversation, over the 48-hour limit, so under the rule its S1 row runs the common
+setup (34 hours and $44 per conversation) and is labeled "common setup" wherever it appears. A field-wide claim
+needs every external kind on S1, so it runs.
+
 ## Changelog
+
+### 2026-10-08: amendment A5
+
+Plan lines reset at the re-price; the graph pipeline runs its common setup on BEAM-10M.
 
 ### 2026-10-07: amendment A4
 

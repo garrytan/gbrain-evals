@@ -1,7 +1,7 @@
 {
   "system": "gbrain-defaults",
   "versions": {
-    "package": "gbrain (github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7, 0.60.95.0), installed with bun install -g",
+    "package": "gbrain (github:garrytan/gbrain#7aa2caa0aa2a9f031730cd351cd516cf4f9f5802, 0.60.106.0), installed with bun install -g",
     "runtime": "Bun 1.4.2 (oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61)",
     "image": "shim built from eval/systems/gbrain-defaults/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
     "lock_sha256": null,

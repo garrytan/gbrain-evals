@@ -22,7 +22,7 @@ services:
       context: ../../..
       dockerfile: eval/systems/gbrain-defaults/Dockerfile
       args:
-        GBRAIN_SHA: ${GBRAIN_SHA:-c5fb0201d1960a0a5a81c35d77718311b03154b7}
+        GBRAIN_SHA: ${GBRAIN_SHA:-7aa2caa0aa2a9f031730cd351cd516cf4f9f5802}
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
       SHIM_PORT: "8700"

@@ -4,7 +4,7 @@
 # Bun >= 1.4.0 (gbrain's engines floor) lives in this image only; the harness host keeps its own Bun.
 FROM oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61 AS bun
 FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
-ARG GBRAIN_SHA=c5fb0201d1960a0a5a81c35d77718311b03154b7
+ARG GBRAIN_SHA=7aa2caa0aa2a9f031730cd351cd516cf4f9f5802
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 ENV BUN_INSTALL=/opt/bun PATH=/opt/bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin PYTHONUNBUFFERED=1 GBRAIN_SHA=${GBRAIN_SHA}
 RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx \
