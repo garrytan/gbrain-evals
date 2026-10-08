@@ -1,6 +1,6 @@
 # Preregistration: the head-to-head memory scoreboard (2026-10-06)
 
-**Status: frozen on 2026-10-08** at gbrain-evals commit `9ed3612cec20da6d76c58b83f508d17eb60302a2` (after A7), before any counted
+**Status: frozen on 2026-10-08** at gbrain-evals commit `51cdb2b833a1f143f88548537606823cb4f0dbe8` (after A8), before any counted
 cell reserved a lease. The freeze checklist below fills every value that was open. Nothing below changes after the
 first counted cell runs; a later change is a dated amendment at the end of this file, written before any cell it
 affects, and a change to a bar or a family needs the program owner's approval first. The D8 reserve's hash-list SHA
@@ -338,9 +338,10 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
   cell executes (156 files) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
-    from the custodian's host. Hash `f7278f3bacb96d3f8a082f797ad3a6d695a2e2a9f24ef581ef8d41a7c1092481`.
+    from the custodian's host. Hash `e50d96aaf160c5fae67e54f24ebd0373d6bdd70fc221720db2e4d3db2fdfba36`.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
-    `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2`.
+    `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` at its launch tree (`a22e3d81`); `12d3e767…1753` at
+    the A8 tree, where its prompts are byte-identical (A8).
   The two caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
   digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
@@ -476,6 +477,11 @@ S3 sessions in alphabetical order of the month name, with a current date that is
   images, executed paths) are unchanged.
 
 ## Changelog
+
+### 2026-10-08: amendment A8
+
+Reader dates follow parsed event time; LongMemEval prompts byte-identical. Freeze commit `51cdb2b8`; sealed hash
+`e50d96aa`; the public campaign keeps its launch hash `52757aab`.
 
 ### 2026-10-08: LongMemEval-M launches as public
 
