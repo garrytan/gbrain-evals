@@ -12,6 +12,7 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Harness names.** The shims' own environment variables (`EXTRACT_FIRST_CHUNK_TURNS`, `MEMORY_BANK_LLM_PROVIDER`, `MEMORY_BANK_URL`, `AGENT_RUNTIME_APP_SERVER_PORT`, `AGENT_RUNTIME_WS_TOKEN_FILE`), the memory-bank Postgres credentials and the shim classes use the labels. Vendor imports, vendor-read environment variables, Dockerfiles, lock files and compose image references keep the upstream identifiers that pinning needs.
 - **Plan, reviews, preregistrations, shim READMEs and pilot notes** describe the systems by kind and link the table instead of the projects. The docs index gains the comparison report.
 - **Evidence that only labels changed.** `scripts/verify-a6b-rename.py` checks the before and after sha256 of every changed file and that every JSON, NDJSON and gzipped NDJSON file in both campaigns, the sealed aggregates included, keeps the same shape, numbers, booleans and nulls. Both campaign hashes move because the extract-first cell commands name the renamed variable (`36ba918f` to `f7a22503`, `ae18af15` to `90c4956c`); the PrecisionMemBench system test pins the new hash.
+- **Version.** Main is at 0.10.48, so this release is 0.10.49.
 
 ## [0.10.48] - 2026-10-08
 
