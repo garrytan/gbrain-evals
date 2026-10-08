@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.44, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
+gbrain-evals v0.10.43, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -183,7 +183,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-10-08: Reading headroom row and the usage receipt page
 
-gbrain-evals v0.10.44. The retrieval table gained a row for the October 8 reading headroom recount (wave 0 item A2 of the 10x memory advantage plan, gbrain-evals #97): from the committed W10a and W10b receipts, the answer's own sessions are 41% of what gbrain delivers, readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value. "Checking the evidence" links the new usage receipt page (item A1), which documents the shared record of tokens, cache use and answers per model call. The opening line names v0.10.44 instead of v0.10.42.
+gbrain-evals v0.10.43. The retrieval table gained a row for the October 8 reading headroom recount (wave 0 item A2 of the 10x memory advantage plan, gbrain-evals #97): from the committed W10a and W10b receipts, the answer's own sessions are 41% of what gbrain delivers, readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value. "Checking the evidence" links the new usage receipt page (item A1), which documents the shared record of tokens, cache use and answers per model call. The opening line names v0.10.43 instead of v0.10.42.
 
 ### 2026-10-08: Preparation stall row
 

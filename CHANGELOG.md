@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.44] - 2026-10-08
+## [0.10.43] - 2026-10-08
 
 ### One usage receipt for every reading lane, the reading headroom recount, and model rules that match the project rule
 
@@ -12,7 +12,7 @@ Wave 0 items A1, A2 and R1 of the 10x memory advantage plan (gbrain-evals #97, G
 - **Reading headroom recount (A2).** [Report](docs/benchmarks/2026-10-08-reading-headroom.md), [`headroom.json`](docs/benchmarks/2026-10-08-reading-headroom/headroom.json) and [`eval/runner/reading-headroom.ts`](eval/runner/reading-headroom.ts), from the committed W10a and W10b receipts; exploratory, not preregistered. The answer's own sessions are 41% of the 15,823 chars/4 tokens gbrain delivers (8,981 on multi-session questions); readers' notes run 138.5 (Sonnet 5.5), 150.8 (Opus 5.5) and 62.5 (`gpt-6.1-sol`) tokens; committed wrong answers are 25 of 470 answerable for Sonnet 5.5 (W10a) and 19 for Opus 5.5, and 29 and 24 for Sonnet 5.5 and `gpt-6.1-sol` on the W10b text. The commitment counts rest on agent-written labels ([`commitment-labels.json`](docs/benchmarks/2026-10-08-reading-headroom/commitment-labels.json)) that no person has reviewed.
 - **Model rules and prices (R1).** CLAUDE.md "Choose models" and AGENTS.md follow the 2026-10-07 project rule: counted runs use the newest Opus, Sonnet and GPT (`claude-opus-5-5`, `claude-sonnet-5-5`, `gpt-6.1-sol`), Fable runs only in smoke tests, `gpt-4.1-mini` only as the bridge to earlier BEAM runs, never `gpt-5.4-mini`. `scripts/model-freshness.ts` blocks `gpt-5.4-mini` and flags Fable and `gpt-4.1-mini`. The budget ledger prices `claude-haiku-5-5` ($0.10 / $0.50, and $0.50 / $2.50 above 100,000 input tokens) and the GPT-6 long-prompt rates above 272K input tokens, reserving and settling at the long rates only when a prompt crosses the threshold.
 - **Ledger correction.** `usageCost` settled OpenAI cache writes (`cache_write_tokens`) at the uncached input price; it now uses the cache-write price. The committed `gpt-6.1-sol` arms of W10b and W10c were settled the old way and are understated by about $6 in total if the batch discount applies to cache writes; their receipts are left as recorded.
-- **Version.** Main is at 0.10.42 and #89 takes 0.10.43, so this release is 0.10.44.
+- **Version.** Main is at 0.10.42, so this release is 0.10.43.
 
 ## [0.10.42] - 2026-10-08
 
