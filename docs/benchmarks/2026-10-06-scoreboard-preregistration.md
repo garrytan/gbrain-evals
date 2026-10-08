@@ -87,6 +87,9 @@ descriptive row.
   Until that decision is recorded, every BEAM-1M sealed row, answer, judgment and context stays in custody. Only
   pooled aggregates come back: system-level means, intervals and cost and speed columns, with no per-conversation or
   per-question numbers. Per-question rows publish only after Q2's decision is in its record.
+- **The newer open-source shootout (gbrain-evals#89).** On 2026-10-08 its sealed batch ran LoCoMo's 7 sealed
+  conversations and the 14 BEAM-100K sealed conversations, with only aggregates returned. It did not touch BEAM-10M,
+  BEAM-1M or LongMemEval-M. Both sets are already public, descriptive rows here (S2a, S3), so no claim changes (A7).
 - **LongMemEval.** It has no sealed split, and gbrain's retrieval configuration was chosen on it. Every LongMemEval
   number carries that sentence.
 - **External systems** were also developed against these public benchmarks. "Held out" in this campaign means held
@@ -103,7 +106,8 @@ descriptive row.
   3. Neither: one disclosed synthetic monotone date sequence for every system, with sessions synthesized at
      message-pair boundaries so gold mapping holds.
 
-  Sessions over 24,000 tokens are counted and reported.
+  A session still undated when the rest of its conversation is dated takes the harness's shared rule: one minute
+  after the previous dated session in data order (A7). Sessions over 24,000 tokens are counted and reported.
 - **Retirement.** Publishing per-question rows retires S1 (and S2b once Q2 clears). A fresh held-out supply minted by
   the custodian starts before S1 opens.
 
@@ -409,7 +413,52 @@ in the campaign). The correct-abstention column stays: it uses each benchmark's 
 classifier. Each answer record still carries its delivered tokens. The three validation aggregates are in
 [`2026-10-06-scoreboard/dev-smokes/`](2026-10-06-scoreboard/dev-smokes/README.md).
 
+**A7 (2026-10-08, before any counted cell): BEAM-10M manifest, structure rules and pre-cell harness fixes.** No
+counted cell had run, public or sealed, and no BEAM-10M question had opened.
+- **Dataset manifest.** The custodian filled `eval/decisions/datasets/beam-10m-9b20961.json` on the custody host
+  (diff SHA-256 `8d1dbec41172d2c269e0046aa9dc98f1028a915baf2db523bd6ee7b0b9d33c62`, applied unchanged). Shards at
+  revision `9b209619`, checked against the hub's LFS hashes: `data/10M-00000-of-00002.parquet` 153,844,664 bytes,
+  `31d96fd47ec56221d202e68792f26c00e49467dd4b36ee105c36ebd19ef78ad5`; `data/10M-00001-of-00002.parquet` 189,980,875
+  bytes, `a4f13fe25af51d57405ae41008689c31d1421377f3efde56a024b441deb2ee65`. Extraction script
+  `eval/runner/q1/beam10m_extract.py` `f579fdde9d38b5ed8b53a6bd48274e64d3c6d6ae7c86f72779aa72d4b82eca75`; each of
+  the ten conversations has a pinned corpus file and question file hash. Custody log: one open at
+  2026-10-08T07:16:59Z, purpose "beam-10m manifest: extract corpus and question files and hash them", and ten
+  corpus-only opens for the structure check. No question text came back.
+- **Structure check (counts only).** 6,227 to 9,290 sessions and 9.66M to 13.0M `cl100k` tokens per conversation; no
+  sessions synthesized at message pairs. Nine conversations are dated entirely by their own or batch anchors. In
+  10m-7, one batch of 93 sessions (of 9,236) carries no anchor. 10m-5 has one session over 24,000 tokens (26,731);
+  no other conversation has any. Anchors go backwards somewhere in data order in 10m-1, 10m-3, 10m-4 and 10m-5.
+- **Rule: undated sessions inside a dated conversation.** The loader used to give a whole conversation the synthetic
+  sequence when any session was undated; for 10m-7 that would discard 9,143 real anchors and leave every time
+  question in that conversation without dates for every system. The loader now leaves only the undated sessions
+  undated (`date_source: partial`), and the harness's sanitizer, which every dataset already goes through, dates
+  each one minute after the previous dated session in data order and counts it as synthetic in the ingest plan.
+  The whole-conversation synthetic sequence stays for a conversation with no parseable date. A question without its
+  own date gets the conversation's latest event time as its query time, the existing rule.
+- **Rule: anchors out of data order.** Sessions are ingested in event-time order, ties in data order, the existing
+  harness rule for every dataset; every system gets the same order and each session's event time. 10m-1, 10m-3,
+  10m-4 and 10m-5 are disclosed as reordered relative to data order.
+- **Rule: the oversized session.** The 26,731-token session in 10m-5 is delivered whole to every system, as every
+  session is; nothing splits it. It is counted and reported, as the opening-order rule says.
+- **Pre-cell harness fixes, ported from the newer shootout's review (gbrain-evals#89):** one provider usage
+  normalizer, so an OpenAI reader's cached input tokens are counted once (OpenAI's input totals include cached
+  tokens; Anthropic's do not), with `usage.input` meaning uncached input for every provider and the dev-smoke
+  calibration factors unchanged on recompute; the memory-bank kind's Postgres container gets `shm_size: 1g`; and
+  gbrain's `/finish` drains or waits out its background job queue and outbox, records `background_liabilities` in
+  the result and receipt, and meters calls after the cell's own work as `background_tail` spend per realization.
+- **Exposure.** The newer shootout's sealed LoCoMo and BEAM-100K batch is added to the exposure section.
+
+The campaign manifests are regenerated and both hashes change; the new hashes and freeze commit replace the old ones
+in the freeze checklist.
+
 ## Changelog
+
+### 2026-10-08: amendment A7
+
+BEAM-10M manifest hashes and structure findings; undated sessions inside a dated conversation take the sanitizer's
+per-session rule; reordered anchors and the oversized session disclosed; usage normalizer, memory-bank `shm_size` and
+gbrain background closure ported from gbrain-evals#89; that thread's sealed LoCoMo and BEAM-100K batch disclosed.
+Campaign hashes recomputed.
 
 ### 2026-10-08: frozen
 

@@ -23,9 +23,12 @@
  *     message-pair boundaries (a new session at every user message,
  *     `...-s<n>`), so `source_chat_ids` still map message ids to sessions;
  *   - dates: a group's own `time_anchor`, else its batch's (the batch field or
- *     the first anchored message, as BEAM dates a batch once). If any session
- *     is still undated or an anchor does not parse, every session of the
- *     conversation gets the one disclosed synthetic monotone sequence
+ *     the first anchored message, as BEAM dates a batch once). A session that
+ *     is still undated, or whose anchor does not parse, keeps no date, and the
+ *     harness's sanitizer gives it the disclosed time one minute after the
+ *     previous dated session in data order, the rule every dataset uses
+ *     (amendment A7: `date_source: partial`). Only a conversation with no
+ *     parseable date at all gets the one synthetic monotone sequence
  *     (`SYNTHETIC_DATES`), identical for every system.
  * BEAM's `->-> batch,bullet` plan markers are stripped from message text.
  */
@@ -93,12 +96,12 @@ export interface BeamStructure {
   duplicate_message_ids: number;
   sessions: number;
   synthesized_sessions: number;
-  date_source: 'anchor' | 'synthetic';
+  date_source: 'anchor' | 'partial' | 'synthetic';
   sessions_with_own_anchor: number;
   sessions_with_batch_anchor: number;
   sessions_without_anchor: number;
   unparseable_anchors: number;
-  /** Whether anchored dates never go backwards in data order; null when synthetic. */
+  /** Whether the dated sessions' dates never go backwards in data order; null when synthetic. */
   anchors_monotone: boolean | null;
 }
 
@@ -178,15 +181,16 @@ export function beamChatSessions(conversation: string, chat: unknown, opts: { da
   }
   const parsed = sessions.map(s => s.rawAnchor ? parseAnchor(s.rawAnchor) : null);
   const unparseable = sessions.filter((s, i) => s.rawAnchor && !parsed[i]).length;
-  const anchored = opts.dates !== 'synthetic' && sessions.length > 0 && parsed.every(Boolean);
-  const dates = anchored ? parsed as string[] : sessions.map((_, k) => syntheticDate(k));
+  const anyDate = opts.dates !== 'synthetic' && parsed.some(Boolean);
+  const anchored = anyDate && parsed.every(Boolean);
+  const dates: Array<string | undefined> = anyDate ? parsed.map(d => d ?? undefined) : sessions.map((_, k) => syntheticDate(k));
   const structure: BeamStructure = {
     conversation, shape, plans, batches: batches.length, turn_groups: turnGroups, groups_with_time_anchor: groupsAnchored, batches_with_time_anchor: batchesAnchored,
     messages, messages_without_id: withoutId, duplicate_message_ids: [...seen.values()].filter(c => c > 1).length,
-    sessions: sessions.length, synthesized_sessions: synthesized, date_source: anchored ? 'anchor' : 'synthetic',
+    sessions: sessions.length, synthesized_sessions: synthesized, date_source: anchored ? 'anchor' : anyDate ? 'partial' : 'synthetic',
     sessions_with_own_anchor: sessions.filter(s => s.anchor === 'own').length, sessions_with_batch_anchor: sessions.filter(s => s.anchor === 'batch').length,
     sessions_without_anchor: sessions.filter(s => !s.anchor).length, unparseable_anchors: unparseable,
-    anchors_monotone: anchored ? dates.every((d, i) => i === 0 || d >= dates[i - 1]) : null,
+    anchors_monotone: anyDate ? (dates.filter(Boolean) as string[]).every((d, i, a) => i === 0 || d >= a[i - 1]) : null,
   };
   return { sessions: sessions.map(({ anchor: _a, rawAnchor: _r, ...s }, i) => ({ ...s, date: dates[i] })), sessionsOfMessage, structure };
 }

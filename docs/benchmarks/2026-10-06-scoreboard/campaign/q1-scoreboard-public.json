@@ -328,6 +328,7 @@
     "eval/runner/q1/cell.ts",
     "eval/runner/q1/cells",
     "eval/runner/q1/scoreboard-errors.ts",
+    "eval/runner/q1/usage.ts",
     "eval/runner/memory-qa",
     "eval/runner/systems",
     "eval/runner/cat40",

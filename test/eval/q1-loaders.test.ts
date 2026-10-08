@@ -21,6 +21,8 @@ import { answerProblems, answerRecord, type AnswerPayload } from '../../eval/run
 import { fillManifest, main as manifestMain, pythonExtractor, type Beam10mManifest } from '../../eval/runner/q1/beam10m-manifest.ts';
 import { main as structureMain } from '../../eval/runner/q1/beam10m-structure.ts';
 import type { AgentAnswer } from '../../eval/runner/systems/file-agent.ts';
+import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
+import type { Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const sha = (b: string | Uint8Array) => createHash('sha256').update(b).digest('hex');
@@ -154,14 +156,22 @@ describe('BEAM-10M sessions and dates', () => {
     expect(s.sessionsOfMessage.get(3)).toEqual(['p1-b1-g1', 'p2-b1-s1']);
   });
 
-  test('one undated session makes the whole conversation synthetic; a 1M-shaped chat keeps loadBeam ids', () => {
+  test('an undated session keeps no date (partial; the sanitizer dates it) while the rest keep theirs; a 1M-shaped chat keeps loadBeam ids', () => {
     const chat = tenMChat();
     (chat[0]['plan-1'] as Array<{ time_anchor: string | null }>)[0].time_anchor = 'not a date';
-    expect(beamChatSessions('x', chat).structure).toMatchObject({ date_source: 'synthetic', unparseable_anchors: 1 });
+    const p = beamChatSessions('x', chat);
+    expect(p.structure).toMatchObject({ date_source: 'partial', unparseable_anchors: 1 });
+    expect(p.sessions.filter(x => x.date === undefined).length).toBeGreaterThan(0);
+    expect(p.sessions.filter(x => x.date !== undefined).length).toBeGreaterThan(0);
+    const conv = { id: 'x', sessions: p.sessions } as unknown as Corpus['conversations'][number];
+    const plan = new Sanitizer({ conversations: [conv], questions: [] } as unknown as Corpus, 'q1-loaders').ingestPlan(conv);
+    expect(plan.filter(s => s.synthetic_time).length).toBe(p.sessions.filter(x => x.date === undefined).length);
+    expect(plan.every(s => s.event_time !== null)).toBe(true);
     const oneM = [{ batch_number: 1, time_anchor: 'January-02-2024', turns: [[msg('user', 1, 'a'), msg('assistant', 2, 'b')]] }, { batch_number: 2, turns: [[msg('user', 3, 'c')]] }];
     const s = beamChatSessions('1m-x', oneM);
     expect(s.sessions.map(x => x.id)).toEqual(['b1-g0', 'b2-g0']);
-    expect(s.structure).toMatchObject({ shape: 'batches', date_source: 'synthetic', sessions_without_anchor: 1 });
+    expect(s.structure).toMatchObject({ shape: 'batches', date_source: 'partial', sessions_without_anchor: 1 });
+    expect(s.sessions.map(x => x.date)).toEqual(['2024-01-02T00:00:00', undefined]);
     expect(parseAnchor('March-15-2024')).toBe('2024-03-15T00:00:00');
     expect(parseAnchor('15 Mar 2024')).toBe('2024-03-15T00:00:00');
     expect(parseAnchor('February-30-2024')).toBeNull();
@@ -229,11 +239,16 @@ describe('BEAM-10M corpus-only loading', () => {
     expect(loadBeam10mCorpus({ root, manifestPath }).conversations.length).toBe(2);
   });
 
-  test('the committed manifest is unfilled, so loading refuses and names the custodian step', () => {
-    expect(beam10mCorpusManifest().conversations.every(c => c.chat_sha256 === null)).toBe(true);
-    try { loadBeam10mCorpus(); throw new Error('loaded'); } catch (e) {
-      expect((e as DecideError).op).toMatchObject({ code: 'NOT_YET_AVAILABLE', fix: { next: 'tell_user_to_run', argv: ['bun', 'eval/runner/q1/beam10m-manifest.ts', 'fetch', '--write'] } });
-    }
+  test('the committed manifest carries the custodian\'s hashes; off the custody host loading refuses and names the custodian step', () => {
+    const m = beam10mCorpusManifest();
+    expect(m.status).toBe('filled');
+    expect(m.conversations.every(c => /^[0-9a-f]{64}$/.test(c.chat_sha256 ?? ''))).toBe(true);
+    expect(JSON.stringify(m)).not.toContain('questions');
+    const saved = process.env.GBRAIN_EVALS_DATASETS;
+    process.env.GBRAIN_EVALS_DATASETS = tmp();
+    try { loadBeam10mCorpus({ root: process.env.GBRAIN_EVALS_DATASETS }); throw new Error('loaded'); } catch (e) {
+      expect((e as DecideError).op).toMatchObject({ code: 'DATASET_MISSING', fix: { next: 'tell_user_to_run', argv: ['bun', 'eval/runner/q1/beam10m-manifest.ts', 'fetch', '--write'] } });
+    } finally { if (saved === undefined) delete process.env.GBRAIN_EVALS_DATASETS; else process.env.GBRAIN_EVALS_DATASETS = saved; }
   });
 
   test('a corpus file that differs from its pin refuses', () => {
@@ -290,8 +305,10 @@ describe('BEAM structure check and manifest generator', () => {
 
   const fakeShards = (d: string) => ['a', 'b'].map((x, i) => { const p = join(d, `shard-${i}.parquet`); writeFileSync(p, `shard ${x}`); return p; });
   const manifestFor = (paths: string[]): Beam10mManifest => {
+    // The unfilled template of the committed manifest: the generator fills it.
     const m = JSON.parse(readFileSync(join(ROOT, 'eval/decisions/datasets/beam-10m-9b20961.json'), 'utf8')) as Beam10mManifest;
-    return { ...m, shards: m.shards.map((s, i) => ({ ...s, bytes: readFileSync(paths[i]).length })) };
+    return { ...m, status: 'unfilled', shards: m.shards.map((s, i) => ({ ...s, sha256: null, bytes: readFileSync(paths[i]).length })),
+      conversations: m.conversations.map(c => ({ ...c, chat_sha256: null, chat_bytes: null, questions_sha256: null, questions_bytes: null })) } as unknown as Beam10mManifest;
   };
   const fakeExtract = (ids: string[]) => (_shards: string[], out: string) => {
     for (const id of ids) {
@@ -323,7 +340,7 @@ describe('BEAM structure check and manifest generator', () => {
 
   test('CLI: status costs nothing; fetch outside custody refuses with the custodian\'s command', async () => {
     const s = await capture(() => manifestMain(['status']));
-    expect(JSON.parse(s.out)).toEqual({ status: 'unfilled', revision: '9b2096193fe74e2837e4713e483351e19817773c', shards: 2, conversations: 10, unfilled: 22 });
+    expect(JSON.parse(s.out)).toEqual({ status: 'filled', revision: '9b2096193fe74e2837e4713e483351e19817773c', shards: 2, conversations: 10, unfilled: 0 });
     const saved = process.env.GBRAIN_EVALS_CUSTODY_LOG;
     delete process.env.GBRAIN_EVALS_CUSTODY_LOG;
     try {

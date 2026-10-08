@@ -4,29 +4,131 @@
  "revision": "9b2096193fe74e2837e4713e483351e19817773c",
  "license": "CC BY-SA 4.0",
  "resolve_base": "https://huggingface.co/datasets/Mohammadta/BEAM-10M/resolve/9b2096193fe74e2837e4713e483351e19817773c/",
- "status": "unfilled",
+ "status": "filled",
  "note": "Every sha256 and byte count below the shards is null until the custodian runs `bun eval/runner/q1/beam10m-manifest.ts fetch --write` on the custody host, which downloads the two parquet shards at this revision, checks them against the hub's LFS hashes, extracts each conversation into a corpus file (the `chat` column only) and a separate question file (the `probing_questions` column only), and records every hash here. Shard paths and sizes come from the hub's public file listing; no BEAM-10M file was downloaded or opened to write this manifest. Conversation ids assume the hub's `conversation_id` values are 1 to 10; the generator refuses if they are not. Corpus loaders read only `chat_path`; only the custodian's question loader reads `questions_path`. Hashes only; no dataset text is committed.",
  "shards": [
-  { "path": "data/10M-00000-of-00002.parquet", "bytes": 153844664, "sha256": null },
-  { "path": "data/10M-00001-of-00002.parquet", "bytes": 189980875, "sha256": null }
+  {
+   "path": "data/10M-00000-of-00002.parquet",
+   "bytes": 153844664,
+   "sha256": "31d96fd47ec56221d202e68792f26c00e49467dd4b36ee105c36ebd19ef78ad5"
+  },
+  {
+   "path": "data/10M-00001-of-00002.parquet",
+   "bytes": 189980875,
+   "sha256": "a4f13fe25af51d57405ae41008689c31d1421377f3efde56a024b441deb2ee65"
+  }
  ],
  "extraction": {
   "script": "eval/runner/q1/beam10m_extract.py",
-  "script_sha256": null,
+  "script_sha256": "f579fdde9d38b5ed8b53a6bd48274e64d3c6d6ae7c86f72779aa72d4b82eca75",
   "runner": "uv run --no-project --python 3.12 --with pyarrow==21.0.0",
   "layout": "beam-10m/9b20961/<conversation>/chat.json and questions.json under the dataset root"
  },
  "conversations": [
-  { "conversation": "10m-1", "hf_conversation_id": "1", "chat_path": "beam-10m/9b20961/10m-1/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-1/questions.json", "questions_sha256": null, "questions_bytes": null },
-  { "conversation": "10m-2", "hf_conversation_id": "2", "chat_path": "beam-10m/9b20961/10m-2/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-2/questions.json", "questions_sha256": null, "questions_bytes": null },
-  { "conversation": "10m-3", "hf_conversation_id": "3", "chat_path": "beam-10m/9b20961/10m-3/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-3/questions.json", "questions_sha256": null, "questions_bytes": null },
-  { "conversation": "10m-4", "hf_conversation_id": "4", "chat_path": "beam-10m/9b20961/10m-4/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-4/questions.json", "questions_sha256": null, "questions_bytes": null },
-  { "conversation": "10m-5", "hf_conversation_id": "5", "chat_path": "beam-10m/9b20961/10m-5/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-5/questions.json", "questions_sha256": null, "questions_bytes": null },
-  { "conversation": "10m-6", "hf_conversation_id": "6", "chat_path": "beam-10m/9b20961/10m-6/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-6/questions.json", "questions_sha256": null, "questions_bytes": null },
-  { "conversation": "10m-7", "hf_conversation_id": "7", "chat_path": "beam-10m/9b20961/10m-7/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-7/questions.json", "questions_sha256": null, "questions_bytes": null },
-  { "conversation": "10m-8", "hf_conversation_id": "8", "chat_path": "beam-10m/9b20961/10m-8/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-8/questions.json", "questions_sha256": null, "questions_bytes": null },
-  { "conversation": "10m-9", "hf_conversation_id": "9", "chat_path": "beam-10m/9b20961/10m-9/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-9/questions.json", "questions_sha256": null, "questions_bytes": null },
-  { "conversation": "10m-10", "hf_conversation_id": "10", "chat_path": "beam-10m/9b20961/10m-10/chat.json", "chat_sha256": null, "chat_bytes": null, "questions_path": "beam-10m/9b20961/10m-10/questions.json", "questions_sha256": null, "questions_bytes": null }
+  {
+   "conversation": "10m-1",
+   "hf_conversation_id": "1",
+   "chat_path": "beam-10m/9b20961/10m-1/chat.json",
+   "chat_sha256": "71301276fa422bfbd733115415491359786630c1aceae1a9f731a6159ddee612",
+   "chat_bytes": 52899409,
+   "questions_path": "beam-10m/9b20961/10m-1/questions.json",
+   "questions_sha256": "26b9740899f788a674e31fa733fc245b1af00735e2adb1cbaa1702074837219d",
+   "questions_bytes": 27563
+  },
+  {
+   "conversation": "10m-2",
+   "hf_conversation_id": "2",
+   "chat_path": "beam-10m/9b20961/10m-2/chat.json",
+   "chat_sha256": "7b651205905e64d7050d529a626227ec13f946c18bfe5d9d4f89ede0827b8fef",
+   "chat_bytes": 50146321,
+   "questions_path": "beam-10m/9b20961/10m-2/questions.json",
+   "questions_sha256": "683d83f1b1073ac5ca21b4e2a8fd0d0f54b96e6999f8d582a265f0bf79a5b37e",
+   "questions_bytes": 26143
+  },
+  {
+   "conversation": "10m-3",
+   "hf_conversation_id": "3",
+   "chat_path": "beam-10m/9b20961/10m-3/chat.json",
+   "chat_sha256": "e359b615d4c8233c4c3830e8adcff1c287d04c5f754e26d15e47e8c6bd99f677",
+   "chat_bytes": 54207321,
+   "questions_path": "beam-10m/9b20961/10m-3/questions.json",
+   "questions_sha256": "ad5e4f4743296b683a6dbc2ba4905fc8753f43aa4f2ea585b2eaf7f0882955c1",
+   "questions_bytes": 27212
+  },
+  {
+   "conversation": "10m-4",
+   "hf_conversation_id": "4",
+   "chat_path": "beam-10m/9b20961/10m-4/chat.json",
+   "chat_sha256": "c76d2fa72a0780005285eb389b49e58a2f7c600ac72df9a2e1382db8e0053da4",
+   "chat_bytes": 44052572,
+   "questions_path": "beam-10m/9b20961/10m-4/questions.json",
+   "questions_sha256": "17e2ba739bf7a22ad2b28a1323e7c3f30ba8681ec0d40dd2a6f468dba72fcfc8",
+   "questions_bytes": 24643
+  },
+  {
+   "conversation": "10m-5",
+   "hf_conversation_id": "5",
+   "chat_path": "beam-10m/9b20961/10m-5/chat.json",
+   "chat_sha256": "1cc95e8b1cbede50345ae147fbaf47fc0a2aeb2ed33652c05dae3d0f75663e58",
+   "chat_bytes": 37825589,
+   "questions_path": "beam-10m/9b20961/10m-5/questions.json",
+   "questions_sha256": "c27121a2c8c203d39f98ff9c4f32dc6b890af4d16be1c63c83283b5485fbc0c2",
+   "questions_bytes": 28199
+  },
+  {
+   "conversation": "10m-6",
+   "hf_conversation_id": "6",
+   "chat_path": "beam-10m/9b20961/10m-6/chat.json",
+   "chat_sha256": "9c1b3704804165a2c74d644e7b4a968c1f81e08c2d278f238428cc8391c6c666",
+   "chat_bytes": 47821919,
+   "questions_path": "beam-10m/9b20961/10m-6/questions.json",
+   "questions_sha256": "de7a1bbdfdbf35c933a0dd77bd4c90f47982678c3a77421ce22fe84133eadd12",
+   "questions_bytes": 27587
+  },
+  {
+   "conversation": "10m-7",
+   "hf_conversation_id": "7",
+   "chat_path": "beam-10m/9b20961/10m-7/chat.json",
+   "chat_sha256": "3037cc41e59a7d26be08026d81bfbe7e43f794655185e53b572e05522c500149",
+   "chat_bytes": 52633882,
+   "questions_path": "beam-10m/9b20961/10m-7/questions.json",
+   "questions_sha256": "3b06ee11024fc649621aa86a3f9a9c44cf9dea5fdca724a1a1b6af80d00d07cc",
+   "questions_bytes": 24216
+  },
+  {
+   "conversation": "10m-8",
+   "hf_conversation_id": "8",
+   "chat_path": "beam-10m/9b20961/10m-8/chat.json",
+   "chat_sha256": "7eb0a6d7644c42e843ae5cd61ebbdba063411c7e7780174d1392efb4df7044b9",
+   "chat_bytes": 49552539,
+   "questions_path": "beam-10m/9b20961/10m-8/questions.json",
+   "questions_sha256": "8bccc815b9a3692bd4563f82972efec1578c344ff7ec662be6526d2098a29b39",
+   "questions_bytes": 25208
+  },
+  {
+   "conversation": "10m-9",
+   "hf_conversation_id": "9",
+   "chat_path": "beam-10m/9b20961/10m-9/chat.json",
+   "chat_sha256": "b58ab8366c29a76e092f879f0dfc1938fce3121f8725f3470327fd35edb50bcb",
+   "chat_bytes": 48645131,
+   "questions_path": "beam-10m/9b20961/10m-9/questions.json",
+   "questions_sha256": "b20c77d2d059320e289ff94f295743645f72065c6b5b3b165ab7399faced2956",
+   "questions_bytes": 25366
+  },
+  {
+   "conversation": "10m-10",
+   "hf_conversation_id": "10",
+   "chat_path": "beam-10m/9b20961/10m-10/chat.json",
+   "chat_sha256": "a2704ee395f9f6a2ddaa1de12c6dcb4d171a24451d77aad3fd395e9a11f05abf",
+   "chat_bytes": 60343347,
+   "questions_path": "beam-10m/9b20961/10m-10/questions.json",
+   "questions_sha256": "33afb47a986aa986ebd83e035e690a24389bb2b3f30850f8a2e8e769f5522238",
+   "questions_bytes": 24399
+  }
  ],
- "filled": null
+ "filled": {
+  "at": "2026-10-08T07:17:09.801Z",
+  "hub_lfs_verified": true,
+  "conversation_id_source": "column"
+ }
 }
