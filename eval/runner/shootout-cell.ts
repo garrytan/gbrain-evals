@@ -174,7 +174,7 @@ export interface CampaignManifest {
 }
 
 export const isQ1 = (m: Pick<CampaignManifest, 'kind'>) => m.kind === Q1_KIND;
-export const DEFAULT_ROUTE_CLASSES: Record<string, string> = { harness: 'reader', judge: 'judge' };
+export const DEFAULT_ROUTE_CLASSES: Record<string, string> = { harness: 'reader', judge: 'judge', agent: 'agent' };
 export const ROW_PULL_EVERY = 20;
 
 const subst = (text: string, params: Record<string, ParamValue>, where: string) => text.replace(/\{\{([a-z0-9_]+)\}\}/g, (_, k: string) => {

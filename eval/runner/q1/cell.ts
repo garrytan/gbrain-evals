@@ -55,9 +55,9 @@
  * Metering (with a lease proxy, SHOOTOUT_PROXY or --provider-proxy): provider
  * keys become SHOOTOUT_CELL_TOKEN (or a dummy), the system's calls run on its
  * slot with proxy phases `commit` (each /ingest), `background` (last ingest
- * to finish ready) and `query` (retrieval); readers run on the `harness` slot
- * and judges on the `judge` slot, so judge spend and its output cap are apart
- * from answers. Without a proxy the run needs `--paid --budget-run-id`
+ * to finish ready) and `query` (retrieval); readers run on the `harness` slot,
+ * answering baselines' agent loops (file agent) on the `agent` slot and judges
+ * on the `judge` slot, so each has its own output cap and spend line. Without a proxy the run needs `--paid --budget-run-id`
  * (eval/runner/paid-arm.ts) and the budget ledger guards every call.
  *
  * Custody (contract 10): a cell whose split is sealed (or all, on a benchmark
@@ -844,7 +844,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           continue;
         }
         const pq = sanitizer.question(q, lastEventTime);
-        const res = await meter.around('harness', `answer:${aid.slice(0, 16)}`, 'reader', () => (system as AnsweringSystem).answer(ns, pq, { reader: rd, replicate: rep }));
+        const res = await meter.around('agent', `answer:${aid.slice(0, 16)}`, 'reader', () => (system as AnsweringSystem).answer(ns, pq, { reader: rd, replicate: rep }));
         if (res.error !== undefined) { appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: 0, provider_input_tokens: null }), String((res.error as Error).message)); continue; }
         const a = res.value!;
         const gold = q.gold.map(g => sanitizer.source(q.conversation, g));
