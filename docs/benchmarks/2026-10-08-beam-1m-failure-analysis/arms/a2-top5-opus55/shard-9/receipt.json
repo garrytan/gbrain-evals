@@ -1,0 +1,163 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-1m",
+  "split": "dev",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "started_at": "2026-10-08T15:27:39.629Z",
+  "finished_at": "2026-10-08T15:31:36.893Z",
+  "run_config_hash": "d6d8cf716b5f4d0319f956ec64d05bd53a3221f76988fa10595f31f4c365be58",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "declared_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "version": "0.60.104.0",
+    "package_sha256": "99add9ef401b69dc23b807aa66889af7aa836ec136896322f1ab5ff67fb83ef0",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "retrieval_path": "frozen ranked lists replayed from <repo>/docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline",
+  "retrieved_from": [
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-0/rows.ndjson.gz",
+      "sha256": "9f552b54ae24df47e8681298633a9973c5aa2718e4aea69fd15d96824713315a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-1/rows.ndjson.gz",
+      "sha256": "aad9a2812f4736abfa0d4044be324fa7d965d8f501f5e559cbe423fffc427b41"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-10/rows.ndjson.gz",
+      "sha256": "b40fd2026ec215c66399a27450bcb1e85fcb7d90978272ea4aefe35b910bd01b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-2/rows.ndjson.gz",
+      "sha256": "5a52d01741ddda3fde463db9a1ca581c0bac9c122411f745169dc2b79f0bd897"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-3/rows.ndjson.gz",
+      "sha256": "718505a6d78d6f822ab6000900ac6225c09ed6a9003835c1d63a5829b951780c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-4/rows.ndjson.gz",
+      "sha256": "75f7dc313d45fc965dd972fff063fb24cd4aa056dabcf2b982f8f0b26a12050b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-5/rows.ndjson.gz",
+      "sha256": "1e5018c44087b585027a8e5685b41c36d7d454aa0ec8621c450670e7eecf326d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-6/rows.ndjson.gz",
+      "sha256": "290971953d5d380b9a59677f724937bfbf4fc23e463fd97872e756ff2d8f0f73"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-7/rows.ndjson.gz",
+      "sha256": "19ed877e2c370fd19e58825f41bca43e6b01b99fa4445bf18c09f3b830091837"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-8/rows.ndjson.gz",
+      "sha256": "7b5eeeaa7bd62fb75ba77ff5ea2a4b38daffdbd2ee3b543a341370a43fc8f55a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-9/rows.ndjson.gz",
+      "sha256": "c0abe4881b6470f4f905f5edd519c769b09ac5f8a413c4b83c7e2980b6abce1c"
+    }
+  ],
+  "search_knobs": {
+    "limit": null,
+    "poolDepth": null,
+    "maxPerSession": null
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "BEAM 1m",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 9,
+      "count": 11
+    },
+    "conversations": 1,
+    "questions_expected": 20
+  },
+  "counts": {
+    "rows": 20,
+    "scored": 18,
+    "errors": 0,
+    "abstention": 2
+  },
+  "summary": {
+    "recall_all_at_5": 0.1111111111111111,
+    "recall_any_at_5": 0.8888888888888888,
+    "recall_all_at_10": 0.16666666666666666,
+    "ndcg_at_10": 0.43980696667767183,
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "qa_score": 0.4527777777777778,
+    "qa_rows": 20,
+    "qa_errors": 0
+  },
+  "facts": null,
+  "qa": {
+    "mode": "reader",
+    "reader": "anthropic:claude-opus-5-5",
+    "judge": "openai:gpt-4.1-mini",
+    "runs": 1,
+    "sessions": 5,
+    "budgetTokens": null,
+    "thinkModel": "anthropic:claude-sonnet-5-5",
+    "context": "sessions",
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "temperature_sent": {
+      "reader": "none (provider default)",
+      "judge": 0
+    },
+    "session_order": "chronological (BEAM Month-DD-YYYY dates compared as dates since 2026-10-08; other formats as strings)",
+    "judge_prompts": "per-rubric-item yes/no"
+  },
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0,
+    "rerank_degraded_queries": 0,
+    "rerank_provider_requests": null
+  },
+  "cost": {
+    "usd": 1.266749,
+    "input_tokens": 253345,
+    "output_tokens": 18007,
+    "basis": "budget ledger b2-a2-top5-opus55-2026-10-08T15-27-39-482Z-de36ab6d: 89 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<repo>/.budget/b2-beam-1m-2026-10-08.sqlite",
+    "program_cap_usd": 60,
+    "overshoot_usd": 0.081652,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 1,
+      "max": 596.7
+    }
+  },
+  "rows_file": "rows.ndjson"
+}

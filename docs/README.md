@@ -16,7 +16,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md) |
 | How do I run the benchmarks? | [Evaluation guide](../eval/README.md), [troubleshooting](../eval/RUNBOOK.md) |
 | How do I get a dev or held-out verdict for a gbrain change? | [Decision kit](decisions.md) (`bun run eval:decide`) |
-| Where does gbrain master start, and which feature ideas won or lost their held-out tests? | [October 5 nine-plan held-out program: starting line, verdicts and scorecard](benchmarks/2026-10-05-heldout-program.md); [October 6 BEAM-1M rerun with every session dated](benchmarks/2026-10-06-beam-1m-dates.md) |
+| Where does gbrain master start, and which feature ideas won or lost their held-out tests? | [October 5 nine-plan held-out program: starting line, verdicts and scorecard](benchmarks/2026-10-05-heldout-program.md); [October 6 BEAM-1M rerun with every session dated](benchmarks/2026-10-06-beam-1m-dates.md); [October 8 BEAM-1M failure analysis: the 1M no-memory floor, frontier readers, the oracle ceiling and the reranker](benchmarks/2026-10-08-beam-1m-failure-analysis.md) |
 | Which agent-written labels has a person checked? | [October 6 review packets and their rules](benchmarks/2026-10-06-w11-review/README.md) ([preregistration](benchmarks/2026-10-06-w11-review-preregistration.md)): awaiting human review |
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
@@ -173,6 +173,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-08: BEAM-1M failure analysis row
+
+The held-out program row gained the October 8 BEAM-1M failure analysis (plan item B2): the 1M no-memory floor is 26.2% with the bridge reader and 28.6% to 31.3% with frontier readers, `gpt-6.1-sol` scores 62.0% on the published top 5 and 84.9% with only the gold turns, and the shipped reranker raises strict recall at 5 from 47 to 57 of 198.
 
 ### 2026-10-07: Fix wave 12 agent smoke row
 

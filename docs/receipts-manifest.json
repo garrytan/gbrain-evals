@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-07",
+  "updated": "2026-10-08",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -4677,6 +4677,55 @@
         "/gbrain_shipped_in/merge_commit": "7aa2caa0"
       },
       "note": "Preregistered (5ee10126, amendment c8042a27) Cat 40 gbrain-arm smoke, capy/fix-wave-11 027d3c69f vs capy/fix-wave-12 209b20a96, same window; counts recomputable from the committed results.jsonl and transcripts.jsonl.gz in each set directory. The attribution set runs the wave 12 build with the baseline served instructions. Shipped in gbrain v0.60.106.0 (7aa2caa0, #6269) with W4.6 reverted (instructions identical to the baseline) and W4.16 kept."
+    },
+    {
+      "claim_id": "beam-1m-failure-analysis-decomposition",
+      "readme_anchor": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis.md: 1. Free decomposition of the published row",
+      "artifact_path": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis/decomposition.json",
+      "artifact_sha256": "467eafdfcd9bdcd8dda6f0b77bdbc262ae34c10b3736f333e4022d4bdbc4f39f",
+      "status": "covered",
+      "expected": {
+        "/feasibility/strict_at_5/feasible": 145,
+        "/feasibility/strict_at_5/strict_hits": 36,
+        "/feasibility/strict_at_10/feasible": 160,
+        "/feasibility/strict_at_10/strict_hits": 57,
+        "/feasibility/strict_at_5/infeasible": 49,
+        "/answers_overall/all_items_met": 75,
+        "/none_at_5/n": 57,
+        "/none_at_5/by_label/semantic_drift": 30,
+        "/none_at_5/by_label/lexical_gap": 15,
+        "/none_at_5/by_label/date_scoped": 12,
+        "/committed_wrong/committed_wrong/all": 50,
+        "/batches/top5_turn_groups_cover_every_gold_batch": 124
+      },
+      "golden_test": "bun docs/benchmarks/2026-10-08-beam-1m-failure-analysis/decompose.ts --check (needs the free BEAM-1M dev files)",
+      "note": "Free recount of the committed 2026-10-06 BEAM-1M bridge rows (gbrain 6622a119e, gpt-4.1-mini reader and judge) joined with the dataset gold and the keyless hash arm; committed-wrong counts are labels by a model reader (committed-wrong-labels.json), not human labels."
+    },
+    {
+      "claim_id": "beam-1m-failure-analysis-arms",
+      "readme_anchor": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms-summary.json",
+      "artifact_sha256": "22c307790fc3e582a1a998886a64e87d98fd7311c305e24d05a46b45ecb3c771",
+      "status": "covered",
+      "expected": {
+        "/answers/a1-nomem-gpt41mini/all/mean_score": 0.2621,
+        "/answers/a1-nomem-sonnet55/all/mean_score": 0.3127,
+        "/answers/a1-nomem-opus55/all/mean_score": 0.3101,
+        "/answers/a1-nomem-gpt61sol/all/mean_score": 0.2857,
+        "/answers/a0-bridge-top5/all/mean_score": 0.5387,
+        "/answers/a2-top5-gpt61sol/all/mean_score": 0.6196,
+        "/answers/a2-top5-gpt61sol/all/all_items_met": 96,
+        "/answers/a3-top10-gpt61sol/all/mean_score": 0.6488,
+        "/answers/a4-oracle-gpt61sol/all/mean_score": 0.8489,
+        "/answers/a5-r1-top5-gpt61sol/all/mean_score": 0.6605,
+        "/retrieval/r0-voyage4/strict_at_5": 47,
+        "/retrieval/r1-voyage4-rerank/strict_at_5": 57,
+        "/retrieval/r3-voyage4-rerank-deep/strict_at_10": 83,
+        "/retrieval/r1-voyage4-rerank/fidelity/rerank_provider_requests/voyage:rerank-2.5": 220,
+        "/spend_usd/total": 52.0122
+      },
+      "golden_test": "bun docs/benchmarks/2026-10-08-beam-1m-failure-analysis/analyze.ts --check",
+      "note": "Preregistered (46013ab, amendments 05a7cbb, 593b557, 1d28760) BEAM-1M dev arms: no-memory floors for four readers, frozen top-5/top-10 replays, the oracle ceiling, voyage-4 retrieval at gbrain 7aa2caa0 with and without the reranker, and reranker answers; judge gpt-4.1-mini. The A2 reader ranking is confounded by unequal output limits (amendment 3)."
     }
   ]
 }
