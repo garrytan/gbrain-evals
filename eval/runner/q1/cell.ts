@@ -56,7 +56,11 @@
  * Metering (with a lease proxy, SHOOTOUT_PROXY or --provider-proxy): provider
  * keys become SHOOTOUT_CELL_TOKEN (or a dummy), the system's calls run on its
  * slot with proxy phases `commit` (each /ingest), `background` (last ingest
- * to finish ready) and `query` (retrieval); readers run on the `harness` slot,
+ * to finish ready) and `query` (retrieval); outside those calls the slot stays
+ * bound to the background tail of the realization whose namespace the cell
+ * last touched (`tail:<realization>`, phase `background`), so late background
+ * work after /finish lands in the receipt's `background_tail` spend, never in
+ * retrieval and never unattributed; readers run on the `harness` slot,
  * answering baselines' agent loops (file agent) on the `agent` slot and judges
  * on the `judge` slot, so each has its own output cap and spend line. Without a proxy the run needs `--paid --budget-run-id`
  * (eval/runner/paid-arm.ts) and the budget ledger guards every call.
@@ -98,6 +102,7 @@ import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
 import { definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, SETS, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type Selection } from './cells/definitions.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
+import { answerUsage, normalizeUsage, readerConvention } from './usage.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const RUN_CONFIG_SCHEMA = 'gbrain-evals/q1-run-config/v1';
@@ -240,9 +245,12 @@ interface RealizationEvent {
   realization_id: string; conversation: string; attempt: number; event: 'started' | 'ingested' | 'invalidated'; at: string;
   reason?: string; restored_from?: string; ingest?: IngestSummary; probes?: ProbeRecord[];
 }
+/** Background work a system reported still queued when its /finish returned (gbrain-defaults: pending gbrain jobs by kind); never dropped, published per realization. */
+export interface BackgroundLiabilities { pending_jobs: Record<string, number> | null; oldest_pending_age_s: number | null; [k: string]: unknown }
 export interface IngestSummary {
   sessions: number; failed_sessions: number; synthetic_times: number; messages: number; ingested_tokens: number;
-  wall_ms: number; write_ms: { p50: number | null; p95: number | null; total: number }; finish: { ready: boolean; waited_ms: number; completeness: string };
+  wall_ms: number; write_ms: { p50: number | null; p95: number | null; total: number };
+  finish: { ready: boolean; waited_ms: number; completeness: string; background_liabilities?: BackgroundLiabilities };
   readiness_probe: string; degraded: boolean; errors: Array<{ source_id: string; kind: string; message: string }>;
 }
 export interface ProbeRecord { realization_id: string; source_id: string; kind: 'last' | 'sample'; status: 'found' | 'missed' | 'not-measurable'; write_start_to_queryable_ms: number | null; polls: number }
@@ -250,7 +258,9 @@ interface StagedRetrieval {
   key: string; question_id: string; policy: string; attempt: number; outcome: Outcome; error?: string; error_kind?: string;
   items: Item[]; applied_settings: Record<string, unknown>; truncated: boolean; latency_ms: number | null; harness_ms: number; query_time: string | null; at: string;
 }
-interface MeterLine { phase: 'ingest' | 'retrieval' | 'reader' | 'judge'; key: string; usd: number; requests: number; unpriced: number }
+/** `background_tail` is a realization's system-slot spend after its /finish and outside retrieval and own-answer calls (key `tail:<realization>`). */
+interface MeterLine { phase: 'ingest' | 'retrieval' | 'reader' | 'judge' | 'background_tail'; key: string; usd: number; requests: number; unpriced: number }
+const SPEND_PHASES = ['ingest', 'retrieval', 'reader', 'judge', 'background_tail'] as const;
 
 class Staging {
   readonly root: string;
@@ -310,6 +320,12 @@ interface Metering {
   slotEnv<T>(slot: string, fn: () => Promise<T>): Promise<T>;
   around<T>(slot: string, key: string, phase: MeterLine['phase'], fn: () => Promise<T>): Promise<{ value?: T; error?: unknown; meter: Meter | null }>;
   phase(slot: string, phase: Phase | null): Promise<void>;
+  /**
+   * Between harness calls, charge the system slot to a realization's background tail (key `tail:<realization>`,
+   * phase `background`, brain = its namespace) instead of leaving it unbound; null unbinds. The previous tail's spend
+   * so far is written as a `background_tail` meter line first.
+   */
+  tail(slot: string, realization: { id: string; ns: string } | null): Promise<void>;
 }
 
 function metering(proxy: string | null, staging: Staging, env: Record<string, string | undefined>): Metering {
@@ -317,6 +333,7 @@ function metering(proxy: string | null, staging: Staging, env: Record<string, st
     slotEnv: (_slot, fn) => fn(),
     async around(_slot, _key, _phase, fn) { try { return { value: await fn(), meter: null }; } catch (error) { return { error, meter: null }; } },
     async phase() {},
+    async tail() {},
   };
   const ctl = new ProxyControl(proxy);
   for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) env[k] = env.SHOOTOUT_CELL_TOKEN || 'dummy-key-the-proxy-replaces';
@@ -325,14 +342,30 @@ function metering(proxy: string | null, staging: Staging, env: Record<string, st
     env.OPENAI_BASE_URL = `${proxy}/${slot}/openai/v1`; env.ANTHROPIC_BASE_URL = `${proxy}/${slot}/anthropic`; env.VOYAGE_BASE_URL = `${proxy}/${slot}/voyage/v1`;
     try { return await fn(); } finally { env.OPENAI_BASE_URL = prior.o; env.ANTHROPIC_BASE_URL = prior.a; env.VOYAGE_BASE_URL = prior.v; }
   };
+  const tails = new Map<string, { key: string; brain: string }>();
+  const rebind = async (slot: string) => {
+    const t = tails.get(slot);
+    if (t) await ctl.bind(slot, t.key, { brain: t.brain, phase: 'background' }); else await ctl.unbind(slot);
+  };
+  const record = (phase: MeterLine['phase'], key: string, m: Meter) => staging.meter({ phase, key, usd: m.usd, requests: m.requests, unpriced: m.unpriced });
   return {
     slotEnv,
     async around(slot, key, phase, fn) {
-      const r = await ctl.around(slot, key, () => slotEnv(slot, fn));
-      staging.meter({ phase, key, usd: r.meter.usd, requests: r.meter.requests, unpriced: r.meter.unpriced });
-      return r;
+      await ctl.bind(slot, key);
+      let value: Awaited<ReturnType<typeof fn>> | undefined, error: unknown;
+      try { value = await slotEnv(slot, fn); } catch (e) { error = e; }
+      await rebind(slot);
+      const meter = await ctl.finalize(key);
+      record(phase, key, meter);
+      return { value, error, meter };
     },
     async phase(slot, phase) { await ctl.phase(slot, phase); },
+    async tail(slot, realization) {
+      const prior = tails.get(slot);
+      if (realization) tails.set(slot, { key: `tail:${realization.id}`, brain: realization.ns }); else tails.delete(slot);
+      await rebind(slot);
+      if (prior) { const m = await ctl.finalize(prior.key); if (m.requests) record('background_tail', prior.key, m); }
+    },
   };
 }
 
@@ -598,9 +631,11 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     for (const convId of convIds) {
       const rid = realizations.get(convId);
       if (!rid || stopped) break;
+      if (live.has(rid)) await meter.tail(slot, { id: rid, ns: sanitizer.ns(convId) });
       await runQuestions(rid, convId);
     }
   } finally {
+    try { await meter.tail(slot, null); } catch { /* the proxy is gone; its own summary keeps the slot's spend */ }
     try { await system.close?.(); } catch { /* closing is best effort */ }
   }
 
@@ -641,6 +676,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     };
     const t0 = performance.now();
     let importError: string | null = null;
+    await meter.tail(slot, { id: rid, ns });
     const ran = await meter.around(slot, `ingest:${ns}`, 'ingest', async () => {
       await system.reset(ns);
       await meter.phase(slot, 'commit');
@@ -663,8 +699,14 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         if (kind) probes.push(probe(step, kind, w0));
       }
       await meter.phase(slot, 'background');
-      let finish = { ready: false, waited_ms: 0, completeness: 'not reached' };
-      if (!importError) { try { const f = await system.finishIngest(ns, opts.finishTimeoutS ?? finishTimeoutFor(def)); finish = { ready: f.ready, waited_ms: f.waited_ms, completeness: f.completeness }; } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; } }
+      let finish: IngestSummary['finish'] = { ready: false, waited_ms: 0, completeness: 'not reached' };
+      if (!importError) {
+        try {
+          const f = await system.finishIngest(ns, opts.finishTimeoutS ?? finishTimeoutFor(def));
+          const liabilities = f.raw?.background_liabilities as BackgroundLiabilities | undefined;
+          finish = { ready: f.ready, waited_ms: f.waited_ms, completeness: f.completeness, ...(liabilities ? { background_liabilities: liabilities } : {}) };
+        } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; }
+      }
       if (finish.ready) drained = true;
       const probeRecords = await Promise.all(probes);
       await meter.phase(slot, null);
@@ -674,7 +716,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     if (importError?.startsWith('budget:')) { stopped = importError; return 'stopped'; }
     const finish = ran.value?.finish ?? { ready: false, waited_ms: 0, completeness: `error: ${importError}` };
     const probeRecords = ran.value?.probeRecords ?? [];
-    const barrier = !canProbe ? 'not-measurable' : !importError && finish.ready ? await readinessProbe(system, ns, plan.at(-1)?.input, fixed, capabilities) : 'skipped';
+    const probed = canProbe && !importError && finish.ready ? await meter.around(slot, `probe:${ns}`, 'ingest', () => readinessProbe(system, ns, plan.at(-1)?.input, fixed, capabilities)) : null;
+    const barrier = !canProbe ? 'not-measurable' : probed ? probed.value ?? 'missed' : 'skipped';
     const ingest: IngestSummary = {
       sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, messages, ingested_tokens: tokens, wall_ms: Math.round(performance.now() - t0),
       write_ms: { p50: pct(writes, 50), p95: pct(writes, 95), total: Math.round(writes.reduce((s, x) => s + x, 0)) }, finish, readiness_probe: barrier,
@@ -823,8 +866,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           continue;
         }
         const c = res.value!;
-        appendAnswer(answerRecord(id, { text: c.text, outcome: r!.outcome, usage: { input: c.input_tokens, output: c.output_tokens, cache_read: c.cache_read_tokens ?? 0, cache_write: c.cache_write_tokens ?? 0 },
-          latency_ms: Math.round(performance.now() - t0), provider_input_tokens: c.input_tokens + (c.cache_read_tokens ?? 0) + (c.cache_write_tokens ?? 0) }), undefined, pack);
+        const u = normalizeUsage(readerConvention(rd), c);
+        appendAnswer(answerRecord(id, { text: c.text, outcome: r!.outcome, usage: answerUsage(u), latency_ms: Math.round(performance.now() - t0), provider_input_tokens: u.total_input }), undefined, pack);
       }
       return pack;
     };
@@ -955,7 +998,9 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
     return { conv, ...c, rows: latestBy<Q1Row>(join(dir, 'attempts.ndjson'), r => `${r.cell_id}|${r.id}`), answers: readRecords(join(dir, 'answers.ndjson'), 'answer'), judgments: readRecords(join(dir, 'judgments.ndjson'), 'judgment') };
   });
   const meters = roots.flatMap(r => new Staging(r, def.id).meters());
-  const spend = meters.length ? Object.fromEntries((['ingest', 'retrieval', 'reader', 'judge'] as const).map(p => [p, Math.round(meters.filter(m => m.phase === p).reduce((s, m) => s + m.usd, 0) * 1e6) / 1e6])) : null;
+  const spend = meters.length ? Object.fromEntries(SPEND_PHASES.map(p => [p, Math.round(meters.filter(m => m.phase === p).reduce((s, m) => s + m.usd, 0) * 1e6) / 1e6])) : null;
+  const tailByRealization: Record<string, number> = {};
+  for (const m of meters.filter(x => x.phase === 'background_tail')) tailByRealization[m.key.slice('tail:'.length)] = Math.round(((tailByRealization[m.key.slice('tail:'.length)] ?? 0) + m.usd) * 1e6) / 1e6;
   const ingests = staged.map(s => s.ingest).filter((x): x is IngestSummary => !!x);
   const probes = staged.flatMap(s => s.probes);
   const found = probes.filter(p => p.write_start_to_queryable_ms !== null).map(p => p.write_start_to_queryable_ms!);
@@ -995,7 +1040,8 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
       selection: { questions: qs.size, conversations: new Set(rows.map(r => r.conversation)).size, scheduled_sha256: sha256([...qs].join('\n')) },
       counts: { rows: rows.length, answers: answers.length, answers_promised: promised, judgments: judgments.length, unjudged, outcomes },
       per_reader_mean: Object.fromEntries(readers.map(r => [r, scores(r)])),
-      realizations: staged.map(s => ({ conversation: s.conv, realization_id: s.rid, attempts: s.attempts, restored_from: s.restored_from ?? null, degraded: s.ingest?.degraded ?? null })).sort((a, b) => (a.conversation < b.conversation ? -1 : 1)),
+      realizations: staged.map(s => ({ conversation: s.conv, realization_id: s.rid, attempts: s.attempts, restored_from: s.restored_from ?? null, degraded: s.ingest?.degraded ?? null,
+        background_liabilities: s.ingest?.finish.background_liabilities ?? null })).sort((a, b) => (a.conversation < b.conversation ? -1 : 1)),
       ingest: {
         conversations: ingests.length, messages: ingests.reduce((s, x) => s + x.messages, 0), ingested_tokens: ingests.reduce((s, x) => s + x.ingested_tokens, 0),
         wall_ms: { total: ingests.reduce((s, x) => s + x.wall_ms, 0), p50: pct(ingests.map(x => x.wall_ms), 50), p95: pct(ingests.map(x => x.wall_ms), 95) },
@@ -1005,7 +1051,8 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
       timings: { retrieval_ms: { p50: pct(rows.map(r => r.latency_ms).filter((x): x is number => typeof x === 'number'), 50), p95: pct(rows.map(r => r.latency_ms).filter((x): x is number => typeof x === 'number'), 95) },
         answer_ms: { p50: pct(answers.map(a => a.latency_ms), 50), p95: pct(answers.map(a => a.latency_ms), 95) } },
       usage: { input: answers.reduce((s, a) => s + a.usage.input, 0), output: answers.reduce((s, a) => s + a.usage.output, 0), cache_read: answers.reduce((s, a) => s + a.usage.cache_read, 0), cache_write: answers.reduce((s, a) => s + a.usage.cache_write, 0) },
-      spend: spend ? { source: 'metering proxy (whole cell, every arm)', usd: spend, total_usd: Math.round(Object.values(spend).reduce((s, x) => s + x, 0) * 1e6) / 1e6 } : { source: null, note: 'no metering proxy: the budget ledger holds this run\'s spend' },
+      spend: spend ? { source: 'metering proxy (whole cell, every arm)', usd: spend, total_usd: Math.round(Object.values(spend).reduce((s, x) => s + x, 0) * 1e6) / 1e6,
+        background_tail_usd_by_realization: tailByRealization } : { source: null, note: 'no metering proxy: the budget ledger holds this run\'s spend' },
       files: { rows: 'rows.ndjson', answers: 'answers.ndjson', judgments: 'judgments.ndjson', run_config: 'run-config.json', readiness: 'readiness.ndjson', contexts: `../../runs/${def.id}/contexts.ndjson` },
     };
     writeAtomic(join(dir, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
@@ -1058,7 +1105,7 @@ export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Recor
 }
 
 /** Repository paths every Q1 cell executes (their git tree enters the campaign hash). */
-export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions',
+export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions',
   'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
   'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
   'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',

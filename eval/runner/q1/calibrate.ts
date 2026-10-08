@@ -2,7 +2,7 @@
  * Per-reader token calibration from dev smoke cells (preregistration "Arms": each reader's factor is measured on dev
  * packs against provider-reported input tokens).
  *
- *   bun eval/runner/q1/calibrate.ts <cell output dir>... [--json]
+ *   bun eval/runner/q1/calibrate.ts <cell output dir>... [--json] [--pre-normalizer]
  *
  * A cell output dir is what `bun eval/runner/q1/cell.ts run` writes (`runs/<cell>/contexts.ndjson` holds every packed
  * prompt, `runs/<cell>/r/<realization>/answers.ndjson` the provider-reported input tokens of each reader call). For
@@ -10,17 +10,23 @@
  * tokens); `measureCalibration` (eval/runner/systems/render.ts) turns each reader's samples into its factor and the
  * largest per-call error under it. Only packed component contexts count: whole-history and agent prompts are not
  * the bytes the packer budgets.
+ *
+ * `--pre-normalizer` reads cells written before the usage normalizer (eval/runner/q1/usage.ts, 2026-10-08): their
+ * packed answers stored the reader's raw buckets in `usage` and added OpenAI's cached tokens to `provider_input_tokens`
+ * a second time, so the provider total is re-derived from `usage` under each reader's convention.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { Usage } from '../memory-qa/records.ts';
 import { encodingCount, measureCalibration, readerTokenizer } from '../systems/render.ts';
+import { normalizeUsage, readerConvention } from './usage.ts';
 
 const lines = <T>(path: string): T[] => existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l) as T) : [];
 
 export interface CalibrationSample { reader: string; local: number; provider: number }
 
 /** Samples from one cell output dir: each packed answer's prompt counted locally against its provider input tokens. */
-export function calibrationSamples(out: string): CalibrationSample[] {
+export function calibrationSamples(out: string, opts: { preNormalizer?: boolean } = {}): CalibrationSample[] {
   const samples: CalibrationSample[] = [];
   const runs = join(out, 'runs');
   if (!existsSync(runs)) return samples;
@@ -29,10 +35,13 @@ export function calibrationSamples(out: string): CalibrationSample[] {
     const rdir = join(runs, cell, 'r');
     if (!existsSync(rdir)) continue;
     for (const rid of readdirSync(rdir).sort()) {
-      for (const a of lines<{ reader: string; context_sha256: string; provider_input_tokens: number | null; outcome: string }>(join(rdir, rid, 'answers.ndjson'))) {
+      for (const a of lines<{ reader: string; context_sha256: string; provider_input_tokens: number | null; usage: Usage; outcome: string }>(join(rdir, rid, 'answers.ndjson'))) {
         const prompt = prompts.get(a.context_sha256);
         if (!prompt || !a.provider_input_tokens || a.outcome !== 'scored') continue;
-        samples.push({ reader: a.reader, local: encodingCount(readerTokenizer(a.reader).encoding, prompt), provider: a.provider_input_tokens });
+        const provider = opts.preNormalizer
+          ? normalizeUsage(readerConvention(a.reader), { input_tokens: a.usage.input, cache_read_tokens: a.usage.cache_read, cache_write_tokens: a.usage.cache_write }).total_input
+          : a.provider_input_tokens;
+        samples.push({ reader: a.reader, local: encodingCount(readerTokenizer(a.reader).encoding, prompt), provider });
       }
     }
   }
@@ -50,7 +59,7 @@ export function calibrate(samples: readonly CalibrationSample[]) {
 
 if (import.meta.main) {
   const dirs = process.argv.slice(2).filter(a => !a.startsWith('--'));
-  if (!dirs.length) { console.error('usage: bun eval/runner/q1/calibrate.ts <cell output dir>... [--json]'); process.exit(2); }
-  const result = calibrate(dirs.flatMap(calibrationSamples));
+  if (!dirs.length) { console.error('usage: bun eval/runner/q1/calibrate.ts <cell output dir>... [--json] [--pre-normalizer]'); process.exit(2); }
+  const result = calibrate(dirs.flatMap(d => calibrationSamples(d, { preNormalizer: process.argv.includes('--pre-normalizer') })));
   console.log(process.argv.includes('--json') ? JSON.stringify(result, null, 2) : Object.entries(result).map(([r, x]) => `${r}: ${x.encoding} x ${x.factor} (max error ${(x.max_error * 100).toFixed(1)}%, ${x.samples} packs)`).join('\n'));
 }

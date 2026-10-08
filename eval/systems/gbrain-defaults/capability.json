@@ -43,7 +43,7 @@
   },
   "delete": "unsupported",
   "delete_notes": "The starter surface has no page delete; delete_page is a full-surface op and the scoreboard calls only starter ops.",
-  "readiness": "put_page returns when the write commits (pending receipts are polled with get_write_request until terminal; a failed or conflicting receipt is a product error, and a replay with the same request id returns gbrain's stored receipt); embeddings are a later persistence effect. /finish stops serve, runs gbrain doctor --json with the brain to itself (a doctor under a live serve reports details.reason live_serve and fails the barrier), requires every expected page and 0 chunks missing embeddings, restarts serve while coverage is short (its persistence consumer drains the effects) until timeout_s, and confirms every page through list_pages.",
+  "readiness": "put_page returns when the write commits (pending receipts are polled with get_write_request until terminal; a failed or conflicting receipt is a product error, and a replay with the same request id returns gbrain's stored receipt); embeddings are a later persistence effect. /finish stops serve, runs gbrain doctor --json with the brain to itself (a doctor under a live serve reports details.reason live_serve and fails the barrier), requires every expected page and 0 chunks missing embeddings, restarts serve while coverage is short (its persistence consumer drains the effects) until timeout_s, then reads gbrain's job queue (gbrain jobs list --json) and the outbox effects still pending (list_write_requests) and keeps serve up for drain rounds while any can still run, up to the same timeout_s, recording what is left as background_liabilities, and confirms every page through list_pages.",
   "namespace": "one brain per namespace: a clean scripted install per namespace at one fixed GBRAIN_HOME, verified against the stack's reference install (resolved configuration, config hash without its install timestamp, starter tools/list). Brains move between /data/ns/<ns> and GBRAIN_HOME by rename and are never copied: gbrain binds a brain's content checkout to its inode and birth time, so a copied brain refuses writes with recovery_required.",
   "parallel_namespaces": false,
   "retrieval_policies": {
@@ -96,6 +96,6 @@
     "GET /stats": "serve resident memory (VmRSS, VmHWM from /proc) and the active brain's size on disk, for the stress pilot",
     "POST /restart {ns}": "stop and start serve on the namespace's brain; restart_ms",
     "GET /health": "adds called_ops (every MCP tool called since start), checked against resolved.starter_tools, and shipped_fallbacks (shipped-behavior delivery fallbacks counted per reason)",
-    "POST /finish": "adds doctor (the last doctor gate), doctor_rounds (their count), rounds (every doctor gate of the barrier), absent_pages and expected_pages"
+    "POST /finish": "adds doctor (the last doctor gate), doctor_rounds (their count), rounds (every doctor gate of the barrier), absent_pages, expected_pages and background_liabilities (pending_jobs by kind, oldest_pending_age_s, pending_effects by kind, drained, drain_rounds, the doctor's facts and queue backlog)"
   }
 }

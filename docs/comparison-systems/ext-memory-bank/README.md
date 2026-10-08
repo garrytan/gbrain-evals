@@ -10,7 +10,7 @@ the facts that fit a token budget, ranked by semantic, keyword, graph and tempor
 
 | Container | Image | Role |
 |---|---|---|
-| `db` | `pgvector/pgvector:0.8.1-pg18`, digest pinned | Postgres with pgvector, the documented external database |
+| `db` | `pgvector/pgvector:0.8.1-pg18`, digest pinned | Postgres with pgvector, the documented external database, with a 1 GB `/dev/shm` |
 | `hindsight` | `ghcr.io/vectorize-io/hindsight:0.10.2`, digest pinned, unmodified | the Hindsight API server with its local embedder and reranker |
 | `shim` | built from `Dockerfile` (`hindsight-client==0.10.2`, `uv.lock`) | `shim.py`, the protocol adapter |
 | `egress` | `alpine/socat`, digest pinned | the only container with a route out: publishes the shim and relays to the metering proxy |
@@ -108,6 +108,11 @@ LongMemEval-S haystack, one BEAM-100K conversation): costs per ingested item, re
 outcomes and the Phase 4 cost extrapolation. Its scores are setup evidence, not results.
 
 ## Changelog
+
+### 2026-10-08: database shared memory
+
+The `db` service gets `shm_size: 1g`. With Docker's 64 MB default, Postgres runs out of shared memory under parallel
+load and bank creates fail with HTTP 500, as another campaign measured.
 
 ### 2026-10-05: Phase 2 pilot, policy settings
 

@@ -299,6 +299,42 @@ describe('whole-system arms through the cell runner', () => {
   });
 });
 
+describe('reader usage (eval/runner/q1/usage.ts)', () => {
+  test('packed readers: OpenAI cached tokens count once, Anthropic buckets add up; usage.input is uncached for both', async () => {
+    const def = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {} })], { configuration: 'baseline' });
+    const reader: ChatLike = {
+      async chat(model): Promise<ChatResult> {
+        return model.startsWith('anthropic:') ? { text: 'The history does not say.', input_tokens: 40, output_tokens: 5, cache_read_tokens: 50, cache_write_tokens: 10, cached: false }
+          : { text: 'The history does not say.', input_tokens: 100, output_tokens: 5, cache_read_tokens: 60, cache_write_tokens: 0, cached: false };
+      },
+    };
+    const out = join(tmp, 'usage-packed');
+    expect((await runCell(def, { out, ...quiet }, { corpus, system: new FullContextSystem('recency'), reader, judge: scriptedJudge() })).status).toBe('complete');
+    const answers = ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+    const gpt = answers.filter(a => a.reader.startsWith('openai:')), claude = answers.filter(a => a.reader.startsWith('anthropic:'));
+    expect(gpt.length).toBeGreaterThan(0);
+    expect(claude.length).toBeGreaterThan(0);
+    for (const a of gpt) expect([a.usage, a.provider_input_tokens]).toEqual([{ input: 40, output: 5, cache_read: 60, cache_write: 0 }, 100]);
+    for (const a of claude) expect([a.usage, a.provider_input_tokens]).toEqual([{ input: 40, output: 5, cache_read: 50, cache_write: 10 }, 100]);
+  });
+
+  test('full context: an OpenAI reader\'s cached prompt tokens are not added twice', async () => {
+    const def = cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context' }], { configuration: 'baseline' });
+    const fetchImpl = (async (url: string) => Response.json(String(url).includes('anthropic')
+      ? { content: [{ type: 'text', text: 'x' }], usage: { input_tokens: 10, output_tokens: 3, cache_read_input_tokens: 500 } }
+      : { choices: [{ message: { content: 'x' } }], usage: { prompt_tokens: 510, completion_tokens: 3, prompt_tokens_details: { cached_tokens: 500 } } })) as unknown as typeof fetch;
+    const out = join(tmp, 'usage-full');
+    await runCell(def, { out, ...quiet }, { corpus, system: new FullContextSystem('whole-history'), judge: scriptedJudge(), fullContextFetch: fetchImpl });
+    const answers = ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+    expect(answers.length).toBeGreaterThan(0);
+    for (const a of answers) {
+      expect(a.provider_input_tokens).toBe(510);
+      expect(a.usage).toMatchObject({ input: 10, cache_read: 500, cache_write: 0 });
+      expect(a.delivered_tokens).toEqual({ reader_input: 510 });
+    }
+  });
+});
+
 describe('resume', () => {
   test('a killed in-process cell re-ingests every conversation with pending store work as a new realization; nothing is duplicated', async () => {
     const def = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {} })], { configuration: 'baseline' });
@@ -441,6 +477,79 @@ describe('metering through a lease proxy', () => {
       for (const k of Object.keys(process.env)) if (!(k in saved)) delete process.env[k];
       Object.assign(process.env, saved);
       proxy.stop(true);
+    }
+  });
+});
+
+describe('background tail spend after /finish (gbrain-defaults closure)', () => {
+  /**
+   * gbrain-defaults' shape: one namespace at a time, model jobs queued behind /finish run only while their namespace is
+   * active. Two probes: a job that starts after vector readiness (finish already returned ready), and a model call
+   * whose first attempt failed inside finish and whose delayed retry runs after the cell switched to another
+   * namespace and came back. The scripted reader starts the active namespace's queued work, so it runs between
+   * harness calls, outside every retrieval.
+   */
+  class QueuedJobsFake extends FakeMemorySystem {
+    active: string | null = null;
+    readonly queued = new Map<string, number>();
+    constructor(private readonly provider: string) { super(); }
+    private chat(content: string) {
+      return fetch(`${this.provider}/fake/openai/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer dummy' }, body: JSON.stringify({ model: 'gpt-4.1-mini', max_tokens: 200, messages: [{ role: 'user', content }] }) });
+    }
+    async ingestSession(ns: string, session: Parameters<FakeMemorySystem['ingestSession']>[1], when: string | null) { this.active = ns; return super.ingestSession(ns, session, when); }
+    async finishIngest() {
+      const r = await super.finishIngest();
+      await this.chat('fail');
+      this.queued.set(this.active!, 2);
+      return r;
+    }
+    async retrieve(ns: string, q: Parameters<FakeMemorySystem['retrieve']>[1], policy: Parameters<FakeMemorySystem['retrieve']>[2]) { this.active = ns; return super.retrieve(ns, q, policy); }
+    async runQueued() {
+      const ns = this.active!;
+      for (let i = 0; i < (this.queued.get(ns) ?? 0); i++) await this.chat('ok');
+      this.queued.delete(ns);
+    }
+  }
+
+  test('a job after vector readiness and a delayed retry after a namespace switch land in their own realization\'s background tail, never in retrieval', async () => {
+    const { BudgetRun } = await import('../../eval/runner/budget-ledger.ts');
+    const { MeteringProxy } = await import('../../eval/runner/metering-proxy.ts');
+    const upstream = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body));
+      return body.messages[0].content === 'fail' ? new Response('overloaded', { status: 503 }) : Response.json({ choices: [{ message: { content: 'x' } }], usage: { prompt_tokens: 1000, completion_tokens: 100 } });
+    }) as unknown as typeof fetch;
+    const usageLog = join(tmp, 'tail-usage.ndjson');
+    const lease = BudgetRun.openLease({ runId: 'tail-probe', leaseUsd: 1, ledgerPath: join(tmp, 'tail-lease.sqlite') });
+    const proxy = new MeteringProxy({ fetchImpl: upstream, policy: { lease, env: { OPENAI_API_KEY: 'placeholder', ANTHROPIC_API_KEY: 'placeholder', VOYAGE_API_KEY: 'placeholder' }, usageLog } });
+    proxy.start();
+    const base = `http://127.0.0.1:${proxy.port}`;
+    const fake = new QueuedJobsFake(base);
+    const reader: ChatLike = { async chat(model, prompt, opts) { await fake.runQueued(); return scriptedReader().chat(model, prompt, opts); } };
+    const saved = { ...process.env };
+    try {
+      const def = cellDef('ext-graph-pipeline', 'shim', [component({ reader_replicates: {} })]);
+      const out = join(tmp, 'tail-probe');
+      const res = await runCell(def, { out, providerProxy: base, ...quiet }, { corpus, system: fake, reader, judge: scriptedJudge() });
+      expect(res.status).toBe('complete');
+      const rec = JSON.parse(readFileSync(join(out, 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8'));
+      const perCall = (1000 * 0.4 + 100 * 1.6) / 1e6;
+      const rids = ['conv-a', 'conv-b', 'conv-c'].map(c => realizationId(def.id, c, 0));
+      expect(Object.keys(rec.spend.background_tail_usd_by_realization).sort()).toEqual([...rids].sort());
+      for (const rid of rids) expect(rec.spend.background_tail_usd_by_realization[rid]).toBeCloseTo(2 * perCall, 9);
+      expect(rec.spend.usd.background_tail).toBeCloseTo(6 * perCall, 9);
+      expect(rec.spend.usd.retrieval).toBe(0);
+      expect(rec.spend.total_usd).toBeCloseTo(rec.spend.usd.ingest + rec.spend.usd.background_tail, 6);
+      const lines = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+      const ok = lines.filter(l => l.status === 200);
+      expect(ok).toHaveLength(6);
+      for (const l of ok) expect([l.key.startsWith('tail:'), l.phase, l.bucket]).toEqual([true, 'background', 'attributed']);
+      expect(new Set(ok.map(l => `${l.key}|${l.brain}`)).size).toBe(3);
+      expect(lines.filter(l => l.status === 503).every(l => l.key.startsWith('ingest:') && l.phase === 'background')).toBe(true);
+      expect(lines.some(l => l.bucket === 'unattributed-background' || l.phase === 'query')).toBe(false);
+    } finally {
+      for (const k of Object.keys(process.env)) if (!(k in saved)) delete process.env[k];
+      Object.assign(process.env, saved);
+      proxy.stop();
     }
   });
 });
