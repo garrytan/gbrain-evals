@@ -25,10 +25,10 @@ The manifests and campaign hash are in [manifests/](../manifests/) and the rules
 | `hindsight-common-lme-s` | `a1-b6bfb19c` | as above, closed at $0 |
 | `gbrain-shootout-common-lme-s` | `a1-7b217224` | as above, closed at $0 |
 
-| `cognee-common-locomo-r2` | `a1-3aa83ae3` | harness failure: the $2 lease was smaller than the metering proxy's in-flight reservations during Cognee's parallel ingest ($0.053 per chat call at the 32,768-token output bound), so 19 calls were refused and every row is `budget_not_run`; rerun under amendment A7 |
-| `cognee-recipe-locomo-r2` | `a1-acf4475f` | as above, 16 calls refused |
-| `hindsight-common-lme-s` | `a2` | 340 of 400 rows `retrieval_error`: after each shard's first haystack, the server answered every bank reset with HTTP 500 while the other shards were ingesting; cause under investigation |
-| `basic-memory-common-beam-100k` | `a1-b180b106` | one of six conversations hit the runner's 600-second `/finish` default (`ingest_degraded`, 20 questions per arm) |
+| `cognee-common-locomo-r2` | `a1-3aa83ae3` | harness failure: the $2 lease was smaller than the metering proxy's in-flight reservations during Cognee's parallel ingest ($0.053 per chat call at the 32,768-token output bound), so 19 calls were refused and every row is `budget_not_run`; rerun under amendment A7; attempt `a2-1295319b` completed |
+| `cognee-recipe-locomo-r2` | `a1-acf4475f` | as above, 16 calls refused; attempt `a2-04920c35` completed |
+| `hindsight-common-lme-s` | `a2` | 340 of 400 rows `retrieval_error`: after each shard's first haystack, the server answered every bank reset with HTTP 500 while the other shards were ingesting. Cause: the database container's 64 MB `/dev/shm` (amendment A7); attempt `a3-7c90ca22` with `shm_size: 1g` scored 98 of 100 rows (2 `ingest_degraded`) |
+| `basic-memory-common-beam-100k` | `a1-b180b106` | one of six conversations hit the runner's 600-second `/finish` default (`ingest_degraded`, 20 questions per arm); attempt `a2-bf2d30ca` with the four-hour wait completed |
 
 Every other directory here is a complete cell. Directories with `shard-<i>/` hold one receipt per parallel shard of a
 LongMemEval-S cell; `pmb/` holds a PrecisionMemBench run (rows without the fixture's query and description text,
@@ -44,6 +44,7 @@ as spend and tripped Graphiti's stop at $535.78; Graphiti's measured spend was $
 
 ## Changelog
 
+- 2026-10-08: Phase 4 complete: the A7 reruns of the two Cognee LoCoMo r2 cells, Basic Memory BEAM and Hindsight LongMemEval-S.
 - 2026-10-07: The per-system stop counts measured spend only; Graphiti's stop trip from the unknown-actual reservation cleared.
 
 - 2026-10-07: Phase 4 and Phase 5 cells as they settled, with the harness failures above.
