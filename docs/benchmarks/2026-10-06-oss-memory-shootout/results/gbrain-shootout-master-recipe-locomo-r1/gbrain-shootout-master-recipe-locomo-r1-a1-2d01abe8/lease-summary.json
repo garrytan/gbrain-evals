@@ -1,0 +1,8 @@
+{
+  "run_id": "gbrain-shootout-master-recipe-locomo-r1-a1-2d01abe8",
+  "lease_usd": 9,
+  "committed_usd": 6.79498263000001,
+  "requests": 6458,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

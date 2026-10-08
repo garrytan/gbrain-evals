@@ -2,6 +2,41 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.46] - 2026-10-08
+
+### Open-source memory comparison: gbrain and five open-source memory systems through one harness
+
+[Report](docs/benchmarks/2026-10-06-oss-memory-shootout.md), [preregistration](docs/benchmarks/2026-10-06-oss-memory-shootout-preregistration.md) (frozen 2026-10-06, amendments A1 to A8), [update-and-forget preregistration](docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md), per-cell receipts and text-free rows. The systems are named by kind (`memory-bank`, `graph-pipeline`, `extract-first`, `markdown-notes`, `temporal-graph`, `agent-runtime`); [docs/comparison-systems.md](docs/comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project.
+
+- **Primary family (LongMemEval-S, 100 questions, 8,000 tokens of each system's evidence, `gpt-4o` reader).** gbrain at master `c5fb0201`, measured through an adapter that hands the reader bare chunks without titles or dates, answered 59%; `memory-bank` 91%, `graph-pipeline` 83% and `extract-first` 79% are ahead after Holm, `markdown-notes` 69% is not distinguishable and `temporal-graph` 37% is behind. gbrain's strict `recall_all@5` is 97.9%, tied for the top, and its answers reach 78% on the original sessions behind its hits, so the gap is delivery through this adapter, not retrieval. A `gbrain-query` adapter is planned.
+- **Also measured.** LoCoMo dev, BEAM-100K dev, the custodian's sealed LoCoMo and BEAM-100K batch (aggregates only, gbrain's pin as the blind row), PrecisionMemBench on the upstream contract (S3) and update-and-forget (lifecycle-lite, report-only). The frontier-reader replays (D2) await a scope decision.
+- **Harness.** Ubicloud cell runner with durable leases and a fail-closed metering proxy (`eval/runner/shootout-cell.ts`), the shim protocol and six vendor shims (`eval/systems/`), multi-arm memory QA, the sealed execution profile, the PrecisionMemBench system path and S3 analysis, lifecycle-lite with its mutation kit, and `eval/runner/shootout-report.ts`.
+- **Frontier readers (D2).** On the LongMemEval-S primary arm, Opus 5.5, Sonnet 5.5 and `gpt-6.1-sol` lift every system; gbrain gains 7 to 9 points and the order holds. Fable 5.1 is descriptive only.
+- **Spend.** $1,079.48 measured across Phases 4 to 7 and D2, plus a $283 reservation with unknown actual spend held against the $1,450 cap.
+- **Version.** Main is at 0.10.45, so this release is 0.10.46.
+
+## [0.10.45] - 2026-10-08
+
+### gbrain #6317 mirror: the sync wedge is a pooler round trip that never completes; two consumers were a multiplier
+
+Paired with gbrain #6330 (branch `capy/6317-reliability-contract`, merged as `b5f12b12e`, v0.60.117.0) and the mechanism fix #6329 (v0.60.114.0). No paid call ($0 here); this mirror reruns nothing.
+
+- **Two-consumer and partition arms (mirror, $0 here).** [Report](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md). On 16-vCPU Ubicloud VMs behind PgBouncer in transaction mode at 57 ms: 2 h 49 min of `gbrain serve --http` beside a 6-lane `gbrain sync` on v0.60.110.0 published 4,951 pages with no wedge (three arms: plain; adoption load plus CLI restarts; dual direct pool plus restarts), while one `gbrain sync --no-lanes` with no serve wedged within one sample once the client→pooler half of its connections was dropped: backend `active`/`ClientRead`, the consumer's `expired_claims` round trip parked 135 s past its 5 s deadline, renewals lapsing, zero commits, until the network came back. The named await is postgres.js's query promise in `runUnsafe`; the v0.60.112.0 preparation budget does not cover it (run F: 16 members parked 166 s, nothing cut or held).
+- **Reading.** `persistence.single_consumer` ships off in gbrain v0.60.117.0 per the preregistered reading (the single-process arm wedged). The fix is the bounded client-side settle in v0.60.114.0; v0.60.117.0 adds direct-lane routing for the consumer's round trips, `owner.backend[]` in `writer status`, and movement-based health.
+- **Version.** Main is at 0.10.44, so this release is 0.10.45.
+
+## [0.10.44] - 2026-10-08
+
+### BEAM-1M failure analysis on the development split: the 1M no-memory floor, frontier readers, the oracle ceiling and the reranker; the BEAM date order in the reader prompt fixed
+
+Wave 0 item B2 / E5.3 of the 10x memory advantage plan (gbrain-evals #97, GBRA-60). No gbrain change. Paid: $52.42 of a $60 ledger cap, preregistered before any paid request (46013ab, amendments 05a7cbb, 593b557 and 1d28760). Development split only; no sealed conversation was read.
+
+- **Report.** [BEAM-1M failure analysis](docs/benchmarks/2026-10-08-beam-1m-failure-analysis.md), with [`decomposition.json`](docs/benchmarks/2026-10-08-beam-1m-failure-analysis/decomposition.json) and [`arms-summary.json`](docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms-summary.json) recomputed keyless by `decompose.ts --check` and `analyze.ts --check`, and every arm's receipts, rows and full answers under `arms/`. The 1M no-memory floor is 26.2% with the `gpt-4.1-mini` bridge and 28.6% to 31.3% with Sonnet 5.5, Opus 5.5 and `gpt-6.1-sol`. On the published top 5, `gpt-6.1-sol` scores 62.0% against the bridge's 53.9% (+8.1 points, 95% interval [4.4, 12.2]); with only the gold turns it reaches 84.9%. The shipped reranker raises strict recall at 5 from 47 to 57 of 198 at gbrain `7aa2caa0` with voyage-4; its answer gain (+3.2) is not distinguished. The three-reader ranking is confounded by unequal output limits (preregistration amendment 3).
+- **Free decomposition.** 49 of 194 answerable questions can never pass strict recall at 5; strict recall is 36 of 145 feasible at 5 and 57 of 160 at 10. The 57 questions with no gold in the top 5 are 30 semantic drift, 15 lexical gap and 12 date-scoped. 50 of 220 published answers commit to a wrong value regardless of hedge (model-read labels).
+- **Reader prompt date order (fix).** `renderHistory` sorted BEAM's `Month-DD-YYYY` dates as strings, so sessions reached the reader alphabetically by month name, and the fallback "Current Date" was the alphabetically last date, earlier than the true latest session in 8 of 11 BEAM-1M dev conversations. `sessionDateKey` and `latestDate` in `eval/runner/memory-qa/qa.ts` compare BEAM dates as dates; other date formats keep their string keys, so LongMemEval and LoCoMo prompts are byte-identical. Rerun with the fix, the published 53.5% bridge row is 53.9%.
+- **Runner.** `memory-qa/run.ts` gains `--retrieved-from` (replay another arm's ranked lists without building a brain), `--qa-context none|oracle` (the no-memory floor and the gold-evidence ceiling), and `--search-limit`, `--pool-depth` and `--max-per-session`. A dev run loads only its split's conversation files. With the reranker pinned on, a run is `invalid` unless every query carries rerank scores, none reports a rerank degradation, and the budget ledger holds a request to the configured reranker model for every reranked query. Claude 5 readers are sent no `temperature`, which they reject. Tests: `test/eval/memory-qa-arms.test.ts`.
+- **Version.** Main is at 0.10.43, so this release is 0.10.44.
+
 ## [0.10.43] - 2026-10-08
 
 ### One usage receipt for every reading lane, the reading headroom recount, and model rules that match the project rule

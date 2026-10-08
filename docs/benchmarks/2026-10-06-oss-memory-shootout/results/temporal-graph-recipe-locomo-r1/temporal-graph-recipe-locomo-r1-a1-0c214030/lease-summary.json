@@ -1,0 +1,8 @@
+{
+  "run_id": "temporal-graph-recipe-locomo-r1-a1-0c214030",
+  "lease_usd": 32,
+  "committed_usd": 18.90360833999845,
+  "requests": 179450,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

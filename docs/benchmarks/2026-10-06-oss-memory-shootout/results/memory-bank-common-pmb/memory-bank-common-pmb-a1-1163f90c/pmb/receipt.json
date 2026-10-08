@@ -1,0 +1,788 @@
+{
+  "kind": "precisionmembench-system",
+  "schema_version": 1,
+  "benchmark": "precisionmembench",
+  "contract": "PrecisionMemBench upstream contract",
+  "started_at": "2026-10-07T20:56:17.929Z",
+  "finished_at": "2026-10-07T20:59:30.092Z",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "d6d903e513c2cc7dff72b3fc336fff714952ac0484d2e77c2c2cc5023098837e",
+  "upstream": {
+    "repo": "tenurehq/precisionmembench",
+    "commit": "c9689ca63d83f8979b235fd2c0a6ddf2d28ca850",
+    "fixture_sha256": {
+      "fixtures/beliefs.seed.json": "35659b3b9a581b644fc6746e1b4e902c3e7b56c0973b546bf7b0816a69e3de98",
+      "fixtures/retrieval.cases.json": "09e99f0852280538abe34b03570f65583fdb10df3c554b7150f0f665d5db709c"
+    },
+    "scorer_sha256": {
+      "scorer/baseAdapter.ts": "0aa2bf9ec4544b548e8bd6ffbf47a23a2fa78eb236b3a60c9b46593d80c35356",
+      "scorer/belief.ts": "c3a992066d452cd6b80865640782c31d201a14e1f3fde44cd25953c0d6459353",
+      "scorer/buildRetrievalReport.ts": "809c77fccbf0e3b3001a2c396f4c6dc515d4f1f19b293373c8abca9239fcfa9b",
+      "scorer/runCases.ts": "e0e9c7bfcff2999955989e27127698cc9f4ed57284dbd9d3b87d2bbc46e61958",
+      "providers.config.json": "3b5a7fef80f5272f9b0f8d67c9a96249ee30ade34b28fcb77a44b34e7204a8eb"
+    }
+  },
+  "evaluator": "vendored BaseAdapter.buildContext and scoreCases, unchanged: persona, pinned facts, open questions, relation expansion and the budget come from the shared evaluator; only searchText calls the system (eval/precisionmembench/systemAdapter.ts)",
+  "ingestion": {
+    "unit": "one session per belief, one user turn with upstream's /add text (BaseAdapter.beliefToText)",
+    "superseded": "seeded live; no supersession field crosses",
+    "event_time": "synthetic and disclosed: 2026-05-29T00:00:00 plus one minute per fixture index (arrival order), never the belief's own dates",
+    "query_time": "the namespace's last event time",
+    "namespaces": "one per (user, scope) a case searches: that user's beliefs of that scope plus the user's universal beliefs; a belief no searched namespace holds gets its owner's own namespace"
+  },
+  "belief_mapping": "distinct cited sources in first-appearance order over items in rank order, whole items, cut at the case limit (maxBeliefs, default 20); one source is one belief of that namespace; items with provenance unavailable cite nothing; a retrieval whose items all lack provenance is not measurable",
+  "families": {
+    "search-only": "every category the vendored scorer does not list as structural (the S3 headline)",
+    "structural": "the scorer's STRUCTURAL_CATEGORIES, reported separately"
+  },
+  "selection": {
+    "cases_expected": 77,
+    "full_case_count": 77,
+    "limit": null,
+    "partial": false
+  },
+  "system": {
+    "name": "http:http://127.0.0.1:8700",
+    "capability_system": "memory-bank",
+    "identity": {
+      "system": "memory-bank",
+      "config": "common",
+      "versions": {
+        "package": "memory-bank server 0.10.2 (vectorize-io/hindsight@5fc4ce20917b916240cef27c212c387a177f115b, tag v0.10.2) + hindsight-client==0.10.2",
+        "lock_sha256": "f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8",
+        "image": "ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
+        "backend_image": "pgvector/pgvector:0.8.1-pg18@sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c",
+        "shim_base_image": "python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "vendor_benchmark_code": "vectorize-io/agent-memory-benchmark@f618ed7b1f0eb9cad7b42e876f91a42f0eadb150 (src/memory_bench/memory/hindsight.py, provider hindsight-http; the ref memory-bank's own hindsight-system-evals runs, AMB_REF=main); vectorize-io/hindsight-benchmarks@55c51f1d6e2477ee69c0a730a80b96a1596ff475 benchmarks the extraction LLM directly, not server ingestion, so it is not used"
+      },
+      "health": {
+        "ok": true,
+        "config": "common",
+        "llm_provider": "openai",
+        "readiness": {
+          "status": "healthy",
+          "database": "connected",
+          "db_acquire_ms": 1,
+          "db_pool_waiting": 0,
+          "db_pool_in_use": 0,
+          "db_pool_max": 100,
+          "db_pool_idle": 5
+        },
+        "server_version": {
+          "api_version": "0.10.2",
+          "features": {
+            "observations": true,
+            "mcp": true,
+            "worker": true,
+            "bank_config_api": true,
+            "bank_llm_health": false,
+            "file_upload_api": true,
+            "document_export_api": true,
+            "document_import_api": true,
+            "audit_log": false,
+            "llm_trace": true,
+            "store_document_text": true
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "protocol": 1,
+      "system": "memory-bank",
+      "versions": {
+        "package": "memory-bank server 0.10.2 (vectorize-io/hindsight@5fc4ce20917b916240cef27c212c387a177f115b, tag v0.10.2) + hindsight-client==0.10.2",
+        "lock_sha256": "f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8",
+        "image": "ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
+        "backend_image": "pgvector/pgvector:0.8.1-pg18@sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c",
+        "shim_base_image": "python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "vendor_benchmark_code": "vectorize-io/agent-memory-benchmark@f618ed7b1f0eb9cad7b42e876f91a42f0eadb150 (src/memory_bench/memory/hindsight.py, provider hindsight-http; the ref memory-bank's own hindsight-system-evals runs, AMB_REF=main); vectorize-io/hindsight-benchmarks@55c51f1d6e2477ee69c0a730a80b96a1596ff475 benchmarks the extraction LLM directly, not server ingestion, so it is not used"
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": "gpt-4o-mini",
+            "small": null,
+            "embedder": "BAAI/bge-small-en-v1.5 (local, in the vendor image)",
+            "dims": 384,
+            "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2 (local, in the vendor image)"
+          },
+          "provider": "openai (HINDSIGHT_API_LLM_PROVIDER default)",
+          "notes": "Documented self-hosted install (docker/docker-compose/external-pg: server image + pgvector). Every value is the server default at v0.10.2: config.py DEFAULT_LLM_PROVIDER='openai', PROVIDER_DEFAULT_MODELS['openai']='gpt-4o-mini', DEFAULT_EMBEDDINGS_PROVIDER='local' with BAAI/bge-small-en-v1.5 (DEFAULT_EMBEDDING_DIMENSION=384), DEFAULT_RERANKER_PROVIDER='local' with cross-encoder/ms-marco-MiniLM-L-6-v2. One LLM serves every role (retain, reflect, consolidation); only retain runs here. Embedding and reranking make no provider calls."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": "gpt-4.1-mini",
+            "small": null,
+            "embedder": "text-embedding-3-large",
+            "dims": 1536,
+            "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2 (local, unchanged)"
+          },
+          "settings": "HINDSIGHT_API_LLM_MODEL=gpt-4.1-mini; HINDSIGHT_API_EMBEDDINGS_PROVIDER=openai, HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL=text-embedding-3-large, HINDSIGHT_API_EMBEDDINGS_OPENAI_DIMENSIONS=1536 (sent as the API's dimensions parameter, engine/embeddings.py)",
+          "unsettable": [],
+          "notes": "The reranker is outside the common contract and stays at the recipe's local cross-encoder."
+        }
+      },
+      "time": "native",
+      "time_notes": "retain item `timestamp` = session event_time (AMB passes Document.timestamp the same way); recall `query_timestamp` = query_time, the anchor for relative dates and recency. An event_time or query_time without a UTC offset is read as UTC.",
+      "granularity": "one retain item per session (content = JSON of the session's turns, as AMB serializes LoCoMo and LongMemEval sessions), document_id = source_id",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "every recall result carries `document_id`, which is the source_id the shim passed to retain; a chunk item takes the document_id of the fact that cites it. Observations (consolidated facts) would carry no document_id and report unavailable, but they are disabled per bank (see deviations)."
+      },
+      "delete": "native",
+      "delete_notes": "DocumentsApi.delete_document(bank, document_id): deletes the document and every memory unit and link extracted from it in one transaction, and invalidates observations built on them (memory_engine.py delete_document). Re-retaining the same document_id replaces it (update_mode default 'replace').",
+      "readiness": "retain is submitted with retain_async=true (as AMB does); /ingest polls OperationsApi.get_operation_status until completed or failed and then reads DocumentsApi.get_document().memory_unit_count; /finish polls OperationsApi.list_operations totals until in_flight = total - completed - failed is 0 (AMB `_in_flight_ops`), failed > 0 => degraded",
+      "namespace": "bank (bank_id = ns); reset = BanksApi.delete_bank + create_bank",
+      "parallel_namespaces": true,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "budget": "mid",
+            "max_tokens": 4096,
+            "include_chunks": false
+          },
+          "notes": "hindsight-client 0.10.2 `recall` defaults (hindsight_client.py:618-639): token-budgeted, not top-k. budget mid, max_tokens 4096 of fact text, chunks off, entities off, all fact types. query_timestamp is always the question date."
+        },
+        "fixed-evidence": {
+          "settings": {
+            "budget": "mid",
+            "max_tokens": 8000,
+            "include_chunks": false
+          },
+          "notes": "Same call with the fact-token cap raised to the shootout's 8,000-token evidence budget, so the harness packer, not memory-bank's 4,096 cap, decides what fits. memory-bank counts tokens with its own tokenizer, the harness with approxTokens; the packer truncates."
+        },
+        "allowed_settings_overrides": [
+          "budget",
+          "max_tokens",
+          "include_chunks",
+          "max_chunk_tokens",
+          "types"
+        ],
+        "vendor_benchmark_reference": {
+          "recall": {
+            "budget": "high",
+            "max_tokens": 32768,
+            "include_chunks": true,
+            "max_chunk_tokens": 16384,
+            "include_entities": false
+          },
+          "notes": "What AMB's memory-bank provider sends for LoCoMo (`_recall_kwargs`); BEAM uses max_tokens 12288 and max_chunk_tokens 8192. Recorded for reference, not a shootout policy."
+        },
+        "item_mapping": "recall results in memory-bank's rank order: world and experience facts -> type fact, observations -> type observation, text = AMB `_format_result` ('**[type]** text' plus an occurred/mentioned line); with include_chunks, each chunk follows the first fact that cites it as a type chunk item (AMB inlines it there). valid_from/valid_to stay null: occurred_start/occurred_end are when an event happened, not a validity window, so they live in the text."
+      },
+      "streaming": "disabled",
+      "provider_routes": [
+        "POST /v1/chat/completions (retain extraction, OpenAI-compatible provider)",
+        "POST /v1/embeddings (common config only)"
+      ],
+      "telemetry_off": [
+        "HINDSIGHT_API_OTEL_TRACES_ENABLED=false",
+        "HINDSIGHT_ENABLE_CP=false (control plane UI not started)",
+        "HF_HUB_OFFLINE=1",
+        "TRANSFORMERS_OFFLINE=1"
+      ],
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "http",
+        "version": "memory-bank server 0.10.2, mounted at /mcp/{bank_id} (api/mcp.py), HINDSIGHT_API_MCP_ENABLED"
+      },
+      "deviations_from_vendor_code": [
+        "No raw dataset ids anywhere: AMB sets document_id and metadata.doc_id to '<sample_id>_<session>' and context to '... (session_N of conv-26)' or 'Session <question_id>_<session_id> ...'; the shim sends document_id = opaque source_id, no metadata at all (metadata influences extraction), and context = 'Conversation between <speakers>'.",
+        "No per-user tags: AMB tags items 'user:<id>' when it shares one bank; the shim uses one bank per namespace, which AMB also does in per-unit mode.",
+        "Turns are serialized as the harness sends them ({role, speaker, content}) instead of the dataset's own JSON keys (LoCoMo {speaker, dia_id, text}, LongMemEval {role, content}).",
+        "One retain request per session, waited on before the next session, instead of AMB's async batches of 20 items; ordering and per-session receipts follow the shootout's ingestion contract.",
+        "No retries: AMB retries failed submissions and failed operations up to 5 times; the shim reports a failed operation as a degraded session and the harness accounts for it.",
+        "Retrieval amount follows the shootout's two policies (client defaults, and an 8,000-token cap) rather than AMB's per-dataset recall settings, which are recorded under vendor_benchmark_reference.",
+        "Observations off in both configs: enable_observations=false per bank, as AMB's `_bank_kwargs` sets for every dataset, memory-bank's own benchmark setting. The server default (DEFAULT_ENABLE_OBSERVATIONS) is on.",
+        "HINDSIGHT_API_SKIP_LLM_VERIFICATION=true, so the server does not spend a provider call checking the key at boot (operational only)."
+      ]
+    }
+  },
+  "policy": {
+    "name": "memory-bank:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "budget": "mid",
+      "max_tokens": 4096,
+      "include_chunks": false
+    },
+    "settings_source": "settings"
+  },
+  "product": null,
+  "overlay": null,
+  "gbrain_config": null,
+  "embedding": null,
+  "fidelity": null,
+  "cost": null,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "memory-bank",
+    "lease_id": "memory-bank-common-pmb-a1-1163f90c",
+    "retry_upstream_5xx": true
+  },
+  "sanitizer": {
+    "forbidden_markers": 146
+  },
+  "ingest": {
+    "namespaces": 6,
+    "sessions": 50,
+    "failed_sessions": 0,
+    "degraded_namespaces": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "usd": 0.0379,
+    "requests": 105
+  },
+  "namespaces": [
+    {
+      "ns": "ns-64572f3ac1a12f45",
+      "user": "other-user",
+      "scope": "domain:code",
+      "beliefs": 1,
+      "searched": false,
+      "ingest": {
+        "ns": "ns-64572f3ac1a12f45",
+        "sessions": 1,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.0008341500000000001,
+          "requests": 3,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 2
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-7f59f9b8ef03be76",
+      "user": "test-user",
+      "scope": "domain:code",
+      "beliefs": 27,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-7f59f9b8ef03be76",
+        "sessions": 27,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.022353540000000005,
+          "requests": 55,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 54
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-f76c532fff107eac",
+      "user": "test-user",
+      "scope": "domain:hobby",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-f76c532fff107eac",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.00303197,
+          "requests": 11,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 10
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-e57948d7afe934ab",
+      "user": "test-user",
+      "scope": "domain:writing",
+      "beliefs": 12,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-e57948d7afe934ab",
+        "sessions": 12,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.008913400000000002,
+          "requests": 25,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 24
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-291d740a2be8605f",
+      "user": "brand-new-user",
+      "scope": "domain:code",
+      "beliefs": 0,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-291d740a2be8605f",
+        "sessions": 0,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "skipped",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0,
+          "requests": 0,
+          "unpriced": 0
+        }
+      }
+    },
+    {
+      "ns": "ns-c63980b35a75cb44",
+      "user": "test-user",
+      "scope": "user:universal",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-c63980b35a75cb44",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.0027747600000000002,
+          "requests": 11,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 10
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    }
+  ],
+  "costs": {
+    "ingest_usd": 0.0379,
+    "retrieval_usd": 0.0001,
+    "total_usd": 0.038,
+    "source": "metering proxy"
+  },
+  "latency": {
+    "system_calls": 72,
+    "p50_ms": 571.85,
+    "p95_ms": 743.84
+  },
+  "outcomes": {
+    "scored": 77,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 77,
+  "comparison_complete": true,
+  "summary": {
+    "search-only": {
+      "cases": 43,
+      "counted": 43,
+      "harness_failures": 0,
+      "passed": 4,
+      "mean_precision": 0.0887,
+      "n_precision": 39,
+      "mean_recall": 0.9412,
+      "n_recall": 34,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "structural": {
+      "cases": 34,
+      "counted": 34,
+      "harness_failures": 0,
+      "passed": 10,
+      "mean_precision": 0.0293,
+      "n_precision": 25,
+      "mean_recall": 0.9444,
+      "n_recall": 9,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "all": {
+      "cases": 77,
+      "counted": 77,
+      "harness_failures": 0,
+      "passed": 14,
+      "mean_precision": 0.0655,
+      "n_precision": 64,
+      "mean_recall": 0.9419,
+      "n_recall": 43,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "categories": [
+      {
+        "category": "Type routing and open questions",
+        "family": "structural",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0093,
+        "n_precision": 6,
+        "mean_recall": 1,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Alias resolution",
+        "family": "search-only",
+        "cases": 23,
+        "counted": 23,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.1117,
+        "n_precision": 23,
+        "mean_recall": 0.9091,
+        "n_recall": 22,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Scope disambiguation",
+        "family": "structural",
+        "cases": 12,
+        "counted": 12,
+        "harness_failures": 0,
+        "passed": 2,
+        "mean_precision": 0.0289,
+        "n_precision": 10,
+        "mean_recall": 0.875,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Supersession chain exclusion",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0,
+        "n_precision": 3,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Design boundary cases",
+        "family": "search-only",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 3,
+        "mean_precision": 0.0185,
+        "n_precision": 3,
+        "mean_recall": 1,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cross-user isolation",
+        "family": "structural",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0,
+        "n_precision": 1,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Persona prelude content",
+        "family": "structural",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 3,
+        "mean_precision": 0,
+        "n_precision": 1,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Ranking stability",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0.0833,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Fuzzy matching and prefix guards",
+        "family": "search-only",
+        "cases": 7,
+        "counted": 7,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0397,
+        "n_precision": 7,
+        "mean_recall": 1,
+        "n_recall": 5,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cold start behavior",
+        "family": "search-only",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": null,
+        "n_precision": 0,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Budget eviction and capacity",
+        "family": "structural",
+        "cases": 5,
+        "counted": 5,
+        "harness_failures": 0,
+        "passed": 3,
+        "mean_precision": 0.1111,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Counter-signal retrieval",
+        "family": "search-only",
+        "cases": 2,
+        "counted": 2,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0556,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Relation expansion",
+        "family": "search-only",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.1111,
+        "n_precision": 4,
+        "mean_recall": 1,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      }
+    ],
+    "upstream": {
+      "meanLatencyMs": 520.48,
+      "p50LatencyMs": 570.67,
+      "p95LatencyMs": 759.23,
+      "caseCount": 77,
+      "meanPrecision": 0.0655,
+      "meanRecall": 0.9419,
+      "totalPassed": 14,
+      "totalCases": 77,
+      "passRate": 0.1818,
+      "activeRetrievalPasses": 0,
+      "passTypes": {
+        "activeRetrieval": 0,
+        "structural": 10,
+        "triviallyEmpty": 4
+      },
+      "categories": [
+        {
+          "category": "Alias resolution",
+          "caseCount": 23,
+          "passed": 0,
+          "failed": 23,
+          "meanPrecision": 0.1117,
+          "meanRecall": 0.9091
+        },
+        {
+          "category": "Scope disambiguation",
+          "caseCount": 12,
+          "passed": 2,
+          "failed": 10,
+          "meanPrecision": 0.0289,
+          "meanRecall": 0.875
+        },
+        {
+          "category": "Fuzzy matching and prefix guards",
+          "caseCount": 7,
+          "passed": 0,
+          "failed": 7,
+          "meanPrecision": 0.0397,
+          "meanRecall": 1
+        },
+        {
+          "category": "Type routing and open questions",
+          "caseCount": 6,
+          "passed": 0,
+          "failed": 6,
+          "meanPrecision": 0.0093,
+          "meanRecall": 1
+        },
+        {
+          "category": "Design boundary cases",
+          "caseCount": 6,
+          "passed": 3,
+          "failed": 3,
+          "meanPrecision": 0.0185,
+          "meanRecall": 1
+        },
+        {
+          "category": "Budget eviction and capacity",
+          "caseCount": 5,
+          "passed": 3,
+          "failed": 2,
+          "meanPrecision": 0.1111,
+          "meanRecall": 1
+        },
+        {
+          "category": "Persona prelude content",
+          "caseCount": 4,
+          "passed": 3,
+          "failed": 1,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Relation expansion",
+          "caseCount": 4,
+          "passed": 0,
+          "failed": 4,
+          "meanPrecision": 0.1111,
+          "meanRecall": 1
+        },
+        {
+          "category": "Supersession chain exclusion",
+          "caseCount": 3,
+          "passed": 0,
+          "failed": 3,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Ranking stability",
+          "caseCount": 3,
+          "passed": 1,
+          "failed": 2,
+          "meanPrecision": 0.0833,
+          "meanRecall": 1
+        },
+        {
+          "category": "Counter-signal retrieval",
+          "caseCount": 2,
+          "passed": 0,
+          "failed": 2,
+          "meanPrecision": 0.0556,
+          "meanRecall": 1
+        },
+        {
+          "category": "Cross-user isolation",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Cold start behavior",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": null,
+          "meanRecall": null
+        }
+      ]
+    }
+  },
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson",
+    "report": "report.json"
+  }
+}
