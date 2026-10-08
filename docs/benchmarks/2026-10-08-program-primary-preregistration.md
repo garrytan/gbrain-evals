@@ -281,3 +281,25 @@ envelope and PW are unchanged. The scorer audit stays as preregistered, on v2.
 cells), both mutants (64), baseline repeat 2 (96), then the ablation (32). Four personas run in parallel (one serve
 per persona), so latency is measured under that load; a candidate's envelope comparison runs under the same
 concurrency.
+
+### Amendment 2 (October 8, 2026, before the parity slice runs): the native-harness parity slice
+
+**What runs.** `eval/runner/t0/parity.ts`: the first task of each development persona (`p20261008-t1` to
+`p20261015-t1`, 8 tasks: 4 prep, 4 reply), reader Sonnet 5.5, one repeat, through a real Claude Code process
+(version 2.1.285, the version Cat 41 pins) with gbrain's SessionStart and UserPromptSubmit hooks registered in its
+settings (release default timeouts 5 s and 3 s) and `gbrain serve --surface starter` in its MCP config. Each
+session is a separate `claude -p` process, so Claude Code spawns a new MCP server per session on the same brain.
+The persona line of the carrier's system prompt (who the user is, today's date) is passed with
+`--append-system-prompt`, as a user's CLAUDE.md would. Claude Code keeps its own system prompt and built-in tools.
+The deliverable is Claude Code's final result text, scored by `t0-score-v2`. Claude Code's and gbrain's provider
+requests go through the metering proxy and the budget ledger; streamed responses now settle from their usage events
+(`sseUsage` in `eval/runner/budget-ledger.ts`) instead of at their reservation.
+
+**Agreement rule (frozen).** The comparison is with the baseline's Sonnet 5.5 repeat-1 cells on the same 8 tasks.
+The "injected-context component test" label is lifted for Sonnet 5.5 on this workload at this release only when
+(a) the native and injected outcomes (failed or not) agree on at least 7 of the 8 tasks and (b) Claude Code recorded
+gbrain's UserPromptSubmit context in every native session-2 transcript. Otherwise the label stands for every T0
+number. When both arms pass nearly every task, agreement says little about failures; the report says so.
+
+**Execution order.** The parity slice runs after the mutants and before the baseline's second repeat, so the
+budget fallback (ablation first, then the second repeat) still applies.

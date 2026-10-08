@@ -1235,6 +1235,27 @@ globalThis.fetch = delegatingFetch;
 const CHAIN_MEMORY = 100_000;
 
 /**
+ * Usage from a server-sent-events body: Anthropic's message_start usage (input and cache buckets) merged with the
+ * last message_delta usage (output tokens), or OpenAI Responses' response.completed usage. Null when no event
+ * carries usage, so the reservation stands.
+ */
+export function sseUsage(body: string): Record<string, unknown> | null {
+  let merged: Record<string, unknown> | null = null;
+  for (const line of body.split('\n')) {
+    if (!line.startsWith('data:')) continue;
+    let ev: Record<string, unknown>;
+    try { ev = JSON.parse(line.slice(5).trim()) as Record<string, unknown>; } catch { continue; }
+    const start = (ev.message as { usage?: Record<string, unknown> } | undefined)?.usage;
+    const completed = (ev.response as { usage?: Record<string, unknown> } | undefined)?.usage;
+    const delta = ev.type === 'message_delta' ? ev.usage as Record<string, unknown> | undefined : undefined;
+    if (ev.type === 'message_start' && start) merged = { ...start };
+    else if (delta) merged = { ...(merged ?? {}), ...Object.fromEntries(Object.entries(delta).filter(([, v]) => v !== null && v !== undefined)) };
+    else if (ev.type === 'response.completed' && completed) merged = { ...completed };
+  }
+  return merged;
+}
+
+/**
  * Route every fetch to a paid host through the ledger: price, reserve, send,
  * then reconcile from the response usage. A refused reservation rejects the
  * fetch with BudgetExceededError before anything is sent. One guard at a time.
@@ -1248,7 +1269,13 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
   const chain = new Map<string, number>();
   const pricing: PriceOptions = { chainContextTokens: id => chain.get(id) };
   const measure = async (price: RequestPrice, response: Response) => {
-    if ((response.headers.get('content-type') ?? '').includes('event-stream')) return null;
+    if ((response.headers.get('content-type') ?? '').includes('event-stream')) {
+      // A streamed response is read to its end (the caller still gets the whole stream) and settled from its usage events.
+      let text: string;
+      try { text = await response.clone().text(); } catch { return null; }
+      const usage = sseUsage(text);
+      return usage ? usageCost(price, { usage }) : null;
+    }
     let parsed: unknown;
     try { parsed = await response.clone().json(); } catch { return null; }
     const cost = usageCost(price, parsed);
