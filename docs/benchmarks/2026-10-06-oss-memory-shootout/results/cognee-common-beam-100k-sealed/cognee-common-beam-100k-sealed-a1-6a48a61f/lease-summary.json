@@ -1,0 +1,8 @@
+{
+  "run_id": "cognee-common-beam-100k-sealed-a1-6a48a61f",
+  "lease_usd": 21,
+  "committed_usd": 9.568752739999965,
+  "requests": 17193,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}
