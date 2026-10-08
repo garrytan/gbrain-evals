@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "experiment": "pgvector hnsw.iterative_scan relaxed_order vs strict_order on filtered vector search (gbrain fix wave 11 W6.3, #6132 idea)",
+  "measured": "2026-10-07",
+  "mirrored": "2026-10-07",
+  "source": {
+    "repo": "garrytan/gbrain",
+    "branch": "capy/fix-wave-11",
+    "wave_head": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+    "implementing_commit": "f7f08506f",
+    "lane_head": "8e2c720b935e8e180fdc102b7216c30e1e445526",
+    "bench_script": "scripts/bench/hnsw-iterative-scan.ts",
+    "bench_script_copy": "bench/hnsw-iterative-scan.ts",
+    "bench_script_sha256": "eb138d4b7160825d1afe637cbc3293616fe3860117daf09e495fcb30b503ecf4",
+    "bench_script_identical_at": [
+      "8e2c720b9",
+      "b5c8fd5e8"
+    ],
+    "contributor_idea": "garrytan/gbrain#6132 (@MarvinDontPanic), relaxed_order only"
+  },
+  "rerun_here": false,
+  "paid_runs_here": 0,
+  "cost_usd_here": 0,
+  "environment": {
+    "postgres": "16 (pgvector/pgvector:pg16 container)",
+    "pgvector": "0.8.7",
+    "hnsw_index": "vector_cosine_ops, pgvector default m and ef_construction",
+    "ef_search": "gbrain's hnswEfSearchFor(candidateLimit) sizing, unchanged",
+    "machine": "the W6 lane's Capy cloud machine, local Docker container",
+    "per_run_repeats": 1
+  },
+  "method": {
+    "corpus": "this gbrain checkout's own docs/, skills/, src/ and test/ text (fixtures excluded), one page per file, chunks of up to 800 characters (at most 60 per page), stopped at about 60,000 chunks",
+    "sources": "three sources by slug hash: bench-a 10%, bench-b 40%, bench-c 50%",
+    "filters": {
+      "10%": [
+        "bench-a"
+      ],
+      "50%": [
+        "bench-a",
+        "bench-b"
+      ]
+    },
+    "queries": "100 first sentences of randomly chosen chunks (fixed seed 6132), embedded as queries",
+    "truth": "exact max-pooled scan with the same filter (per-page best chunk), top k pages",
+    "metric": "recall@k of pages against truth; p50 and p95 wall time of PostgresEngine.searchVector; underfilled exits",
+    "order": "5-query warm-up per mode, then modes alternate first and second per query",
+    "command_line_recorded": false
+  },
+  "lanes": {
+    "voyage_1024": {
+      "embedding_model": "voyage-4",
+      "dimensions": 1024,
+      "pages": 4766,
+      "chunks": 60022,
+      "queries": 100,
+      "raw": [
+        "raw/voyage-1024.log",
+        "raw/voyage-1024.md"
+      ],
+      "cells": [
+        {
+          "filter": "10%",
+          "k": 10,
+          "strict_order": {
+            "recall": 1,
+            "p50": 63.4,
+            "p95": 84.5,
+            "underfilled": 0
+          },
+          "relaxed_order": {
+            "recall": 1,
+            "p50": 63,
+            "p95": 85.1,
+            "underfilled": 0
+          },
+          "recall_delta_pts": 0,
+          "p50_delta_ms": -0.4,
+          "p95_delta_ms": 0.6,
+          "p50_delta_pct": -0.6,
+          "p95_delta_pct": 0.7
+        },
+        {
+          "filter": "10%",
+          "k": 50,
+          "strict_order": {
+            "recall": 1,
+            "p50": 65.8,
+            "p95": 81,
+            "underfilled": 0
+          },
+          "relaxed_order": {
+            "recall": 1,
+            "p50": 66.2,
+            "p95": 86.7,
+            "underfilled": 0
+          },
+          "recall_delta_pts": 0,
+          "p50_delta_ms": 0.4,
+          "p95_delta_ms": 5.7,
+          "p50_delta_pct": 0.6,
+          "p95_delta_pct": 7.0
+        },
+        {
+          "filter": "50%",
+          "k": 10,
+          "strict_order": {
+            "recall": 0.962,
+            "p50": 10.6,
+            "p95": 17.7,
+            "underfilled": 0
+          },
+          "relaxed_order": {
+            "recall": 0.983,
+            "p50": 11.2,
+            "p95": 16.3,
+            "underfilled": 0
+          },
+          "recall_delta_pts": 2.1,
+          "p50_delta_ms": 0.6,
+          "p95_delta_ms": -1.4,
+          "p50_delta_pct": 5.7,
+          "p95_delta_pct": -7.9
+        },
+        {
+          "filter": "50%",
+          "k": 50,
+          "strict_order": {
+            "recall": 0.951,
+            "p50": 16.3,
+            "p95": 24.4,
+            "underfilled": 0
+          },
+          "relaxed_order": {
+            "recall": 0.952,
+            "p50": 16.3,
+            "p95": 24.5,
+            "underfilled": 0
+          },
+          "recall_delta_pts": 0.1,
+          "p50_delta_ms": 0.0,
+          "p95_delta_ms": 0.1,
+          "p50_delta_pct": 0.0,
+          "p95_delta_pct": 0.4
+        }
+      ]
+    },
+    "openai_1536": {
+      "embedding_model": "text-embedding-3-small",
+      "dimensions": 1536,
+      "pages": 4766,
+      "chunks": 60003,
+      "queries": 100,
+      "raw": [
+        "raw/openai-1536.log",
+        "raw/openai-1536.md"
+      ],
+      "cells": [
+        {
+          "filter": "10%",
+          "k": 10,
+          "strict_order": {
+            "recall": 1,
+            "p50": 70.7,
+            "p95": 89,
+            "underfilled": 0
+          },
+          "relaxed_order": {
+            "recall": 1,
+            "p50": 74.4,
+            "p95": 89.3,
+            "underfilled": 0
+          },
+          "recall_delta_pts": 0,
+          "p50_delta_ms": 3.7,
+          "p95_delta_ms": 0.3,
+          "p50_delta_pct": 5.2,
+          "p95_delta_pct": 0.3
+        },
+        {
+          "filter": "10%",
+          "k": 50,
+          "strict_order": {
+            "recall": 1,
+            "p50": 77.2,
+            "p95": 90.2,
+            "underfilled": 0
+          },
+          "relaxed_order": {
+            "recall": 1,
+            "p50": 76.1,
+            "p95": 89.6,
+            "underfilled": 0
+          },
+          "recall_delta_pts": 0,
+          "p50_delta_ms": -1.1,
+          "p95_delta_ms": -0.6,
+          "p50_delta_pct": -1.4,
+          "p95_delta_pct": -0.7
+        },
+        {
+          "filter": "50%",
+          "k": 10,
+          "strict_order": {
+            "recall": 0.95,
+            "p50": 12.3,
+            "p95": 17.5,
+            "underfilled": 0
+          },
+          "relaxed_order": {
+            "recall": 0.967,
+            "p50": 12.3,
+            "p95": 18.7,
+            "underfilled": 0
+          },
+          "recall_delta_pts": 1.7,
+          "p50_delta_ms": 0.0,
+          "p95_delta_ms": 1.2,
+          "p50_delta_pct": 0.0,
+          "p95_delta_pct": 6.9
+        },
+        {
+          "filter": "50%",
+          "k": 50,
+          "strict_order": {
+            "recall": 0.937,
+            "p50": 18.9,
+            "p95": 28.4,
+            "underfilled": 0
+          },
+          "relaxed_order": {
+            "recall": 0.937,
+            "p50": 18.9,
+            "p95": 28,
+            "underfilled": 0
+          },
+          "recall_delta_pts": 0.0,
+          "p50_delta_ms": 0.0,
+          "p95_delta_ms": -0.4,
+          "p50_delta_pct": 0.0,
+          "p95_delta_pct": -1.4
+        }
+      ]
+    }
+  },
+  "summary": {
+    "recall_50pct_k10_delta_pts": {
+      "voyage_1024": 2.1,
+      "openai_1536": 1.7
+    },
+    "recall_never_lower": true,
+    "max_abs_p50_delta_pct": 5.7,
+    "max_abs_p95_delta_pct": 7.9,
+    "p50_deltas_up_down_equal": [
+      3,
+      2,
+      3
+    ],
+    "p95_deltas_up_down_equal": [
+      5,
+      3,
+      0
+    ],
+    "ten_pct_filter_at_ceiling": true,
+    "underfilled_any": false,
+    "max_p50_rise_pct": 5.7,
+    "max_p95_rise_pct": 7.0
+  },
+  "limit_128d_synthetic": {
+    "source": "fix wave 11 lane E review of #6132",
+    "vectors": "128-d clustered synthetic",
+    "corpus": "25,000 pages x 8 chunks = 200,000 chunks",
+    "queries": 60,
+    "postgres": "16",
+    "pgvector": "0.8.7",
+    "script_published": false,
+    "rows": {
+      "unfiltered_k10": {
+        "strict_order": {
+          "recall": 0.927,
+          "p50": 5.4
+        },
+        "relaxed_order": {
+          "recall": 0.925,
+          "p50": 5.9
+        }
+      },
+      "unfiltered_k50": {
+        "strict_order": {
+          "recall": 0.986,
+          "p50": 7.5
+        },
+        "relaxed_order": {
+          "recall": 0.987,
+          "p50": 7.7
+        }
+      },
+      "filtered_10pct_k10": {
+        "strict_order": {
+          "recall": 0.867,
+          "p50": 7.0
+        },
+        "relaxed_order": {
+          "recall": 0.95,
+          "p50": 6.6
+        }
+      }
+    },
+    "note": "recorded as a stated limit: synthetic vectors at a dimension no production embedder uses; the +8.3 point filtered gain there is larger than anything measured on real embeddings"
+  },
+  "decision_rule": "PLAN W6.3: the default changes only if a paired gbrain-evals record at 1024 and 1536 dimensions with real embeddings and two filter selectivities shows no latency regression beyond noise; otherwise the item leaves the wave",
+  "verdict": "ships default-on",
+  "decision": "relaxed_order is gbrain's default for filtered pgvector iterative scans. Recall at the 50% filter rises 2.1 points (1024-d) and 1.7 points (1536-d) at k=10 and is never lower. In single runs, latency moves in both directions: the largest rises are +5.7% at p50 and +7.0% at p95, the largest fall is -7.9% at p95, and no lane-filter-k cell rises at both p50 and p95 by more than 1 ms. search.hnsw_iterative_scan strict_order (or GBRAIN_HNSW_ITERATIVE_SCAN) restores the old mode after a restart."
+}

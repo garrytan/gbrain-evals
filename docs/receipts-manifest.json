@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-06",
+  "updated": "2026-10-07",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -4620,6 +4620,63 @@
       "golden_test": "test/eval/fence-repair-tier3-recount.test.ts: round 2 Tier 3 counts recounted from the raw per-fixture rows of both sets",
       "status": "covered",
       "note": "1,950 fixture runs (5 models x 3 runs x 130 fences: the 78 round 1 fixtures and a 52-fence held-out set frozen in amendment 1 at 40fd5e1) through gbrain's production Tier 3 path at 7d75e08c with the harness from ead0b0c9; shipped in gbrain v0.60.102.0 (5b5891069, #6229), where only h-spl-04 routes differently (to manual). $13.67."
+    },
+    {
+      "claim_id": "fix-wave-11-hnsw-relaxed-order",
+      "readme_anchor": "docs/benchmarks/2026-10-07-hnsw-relaxed-order.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-07-hnsw-relaxed-order/verdict.json",
+      "artifact_sha256": "5a447e65f01e2dabbffad351df3cb1bff8aaf132e8eb260e487e3e460a8a83b9",
+      "status": "covered",
+      "expected": {
+        "/lanes/voyage_1024/cells/2/strict_order/recall": 0.962,
+        "/lanes/voyage_1024/cells/2/relaxed_order/recall": 0.983,
+        "/lanes/openai_1536/cells/2/strict_order/recall": 0.95,
+        "/lanes/openai_1536/cells/2/relaxed_order/recall": 0.967,
+        "/summary/recall_never_lower": true,
+        "/verdict": "ships default-on",
+        "/source/wave_head": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e",
+        "/rerun_here": false
+      },
+      "note": "Mirror of gbrain fix wave 11 W6.3 (branch capy/fix-wave-11, pending merge at b5c8fd5e8): one pass per lane on the W6 lane's machine; raw tables and logs in raw/, the bench script copied byte-identical from gbrain scripts/bench/hnsw-iterative-scan.ts. The 128-d synthetic lane is a stated limit."
+    },
+    {
+      "claim_id": "fix-wave-11-d12-agent-smoke",
+      "readme_anchor": "docs/benchmarks/2026-10-07-wave11-agent-smoke.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-07-wave11-agent-smoke/verdict.json",
+      "artifact_sha256": "7a257fa13fb3c8ef7ce7cd00a45bdb239423e7d290c909847d0c5eafe9aa7dd3",
+      "status": "covered",
+      "expected": {
+        "/per_build/master/C/success": 60,
+        "/per_build/wave11/C/success": 60,
+        "/per_build/master/F/success": 55,
+        "/per_build/wave11/F/success": 56,
+        "/per_build/wave11/C/output_leaks": 0,
+        "/per_build/wave11/F/unsafe_writes": 0,
+        "/per_build/wave11/F/put_page_calls": 0,
+        "/verdict": "pass",
+        "/builds/wave11/commit": "b5c8fd5e8b0bbeef43606796e884de73ccfb292e"
+      },
+      "note": "Preregistered (dade12c6, amendment c1e9ed4f) Cat 40 gbrain-arm smoke, master 5b5891069 vs wave b5c8fd5e8, same window; counts recomputable from the committed results.jsonl and transcripts.jsonl.gz in each set directory. claude-fable-5-1 cells are smoke-only and outside the gate."
+    },
+    {
+      "claim_id": "fix-wave-12-agent-smoke",
+      "readme_anchor": "docs/benchmarks/2026-10-07-wave12-agent-smoke.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-07-wave12-agent-smoke/verdict.json",
+      "artifact_sha256": "cb01c26b404776826fbf61853c4f6009d4141cd5895fc5748284a50626cacced",
+      "status": "covered",
+      "expected": {
+        "/per_build/baseline/C/success": 60,
+        "/per_build/wave12/C/success": 60,
+        "/per_build/baseline/F/success": 60,
+        "/per_build/wave12/F/success": 55,
+        "/per_build/wave12/F/unsafe_writes": 0,
+        "/attribution/success": 19,
+        "/w46_verdict": "regress",
+        "/w416/verdict": "pass on its own measures (no harm); improvement not shown",
+        "/builds/wave12/commit": "209b20a961fc4d64bbaf7ac37597b37dbaf00d76",
+        "/gbrain_shipped_in/merge_commit": "7aa2caa0"
+      },
+      "note": "Preregistered (5ee10126, amendment c8042a27) Cat 40 gbrain-arm smoke, capy/fix-wave-11 027d3c69f vs capy/fix-wave-12 209b20a96, same window; counts recomputable from the committed results.jsonl and transcripts.jsonl.gz in each set directory. The attribution set runs the wave 12 build with the baseline served instructions. Shipped in gbrain v0.60.106.0 (7aa2caa0, #6269) with W4.6 reverted (instructions identical to the baseline) and W4.16 kept."
     }
   ]
 }

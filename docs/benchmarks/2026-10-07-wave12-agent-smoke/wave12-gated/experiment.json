@@ -1,0 +1,32 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "209b20a961fc4d64bbaf7ac37597b37dbaf00d76",
+  "slot_commit": "209b20a961fc4d64bbaf7ac37597b37dbaf00d76",
+  "world_digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "wave12",
+  "flags": {
+    "--models": "claude-opus-5-5,claude-sonnet-5-5,gpt-6.1-sol",
+    "--arms": "gbrain",
+    "--gbrain": "/workspace/gbrain@209b20a961fc4d64bbaf7ac37597b37dbaf00d76",
+    "--gbrain-root": "~/.capy/work/cat40/gbrain-wave12",
+    "--gbrain-label": "wave12",
+    "--slots": "4",
+    "--surface": "starter",
+    "--max-tool-chars": "none",
+    "--judge": "none",
+    "--transcripts": true,
+    "--budget-ledger": ".budget/w12-smoke.sqlite",
+    "--families": "C,F",
+    "--repeat": "2",
+    "--out": "eval/reports/cat40/w12-smoke/wave12-gated"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-07T20-42-47-453Z-99587fa8"
+}

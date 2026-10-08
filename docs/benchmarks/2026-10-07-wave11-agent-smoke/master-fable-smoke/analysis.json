@@ -1,0 +1,144 @@
+{
+  "models": [
+    "claude-fable-5-1"
+  ],
+  "arms": [
+    "master"
+  ],
+  "tasks": [
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10"
+  ],
+  "families": [
+    "F"
+  ],
+  "success": {
+    "claude-fable-5-1": {
+      "master": 1
+    }
+  },
+  "by_family": {
+    "F": {
+      "claude-fable-5-1": {
+        "master": 1
+      }
+    }
+  },
+  "by_stratum": {
+    "page-authoring": {
+      "claude-fable-5-1": {
+        "master": 1
+      }
+    }
+  },
+  "capability": {
+    "claude-fable-5-1": null
+  },
+  "advantage": {},
+  "pooled_advantage": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ]
+  },
+  "slope": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ],
+    "n_models": 0
+  },
+  "family_slopes": {
+    "F": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "master": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 0
+    }
+  },
+  "efficiency": {
+    "claude-fable-5-1": {
+      "master": {
+        "usd_per_task": 0.7251354310000001,
+        "usd_per_success": 0.7251354310000001,
+        "p50_s": 138.518,
+        "p95_s": 170.464,
+        "turns": 3
+      }
+    }
+  },
+  "claims": {
+    "master": {
+      "unsupported_per_answer": null,
+      "contradicted_per_answer": null,
+      "judged": 0
+    }
+  },
+  "missed_evidence": {
+    "master": null
+  },
+  "cost_split": {
+    "claude-fable-5-1": {
+      "master": {
+        "uncached_input": 0.00024400000000000002,
+        "cache_write": 0.49065374999999994,
+        "cache_read": 0.0512203,
+        "output": 0.18287,
+        "gbrain_provider_calls": 0.00014738099999999998,
+        "unsplit": 0,
+        "total": 0.725135431
+      }
+    }
+  },
+  "tool_chars": {
+    "claude-fable-5-1": {
+      "master": {
+        "entity": 28229.000000000004,
+        "get_page": 7607.900000000001,
+        "edit_page": 6032.2,
+        "add_timeline_entry": 4522.6,
+        "remember": 3197.5,
+        "search": 14675.699999999999,
+        "whoami": 821.4,
+        "forget": 1058.4,
+        "recall": 1134.6000000000001,
+        "get_write_request": 79.8
+      }
+    }
+  },
+  "cells": 10,
+  "usd": 7.251354310000001,
+  "reconciliation": [
+    {
+      "budget_run_id": "cat40-model-ladder-2026-10-07T16-13-37-963Z-bc39d1d4",
+      "cells": 10,
+      "cells_usd": 7.251354310000001,
+      "judge_usd": 0,
+      "slot_builds_usd": 0,
+      "attributed_usd": 7.251354310000001,
+      "ledger_usd": 7.251358989999998,
+      "gap_usd": 0.00000467999999731461,
+      "gap_pct": 6.453962634822761e-7,
+      "flagged": false
+    }
+  ]
+}
