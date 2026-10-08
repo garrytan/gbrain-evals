@@ -21,7 +21,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
-| What is the plan for the next round: fewer wrong answers, fewer tokens, cheaper and bigger brains, and capabilities nobody else has? | [October 7 10x memory advantage plan and audits](plans/2026-10-07-10x-memory-advantage/README.md) (draft, awaiting approval) |
+| What is the plan for the next round: fewer wrong answers, fewer tokens, cheaper and bigger brains, and capabilities nobody else has? | [October 7 10x memory advantage plan and audits](plans/2026-10-07-10x-memory-advantage/README.md) (approved 2026-10-08) |
 | What will the next categories measure, and what does gbrain implement for each of them? | [October 1 eval-category wave plan](plans/2026-10-01-eval-category-wave/README.md), [capability and entrypoint matrix](benchmarks/2026-10-01-capability-matrix.md) |
 
 ## Retrieval experiments

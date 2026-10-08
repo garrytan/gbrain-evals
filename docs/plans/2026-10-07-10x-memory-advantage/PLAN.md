@@ -2,7 +2,7 @@
 ## Implementation plan
 # Build the 10x memory advantage: the wave plan
 
-Date: 2026-10-07 (Pacific; thread, commit and PR events quoted as 2026-10-08 are UTC). Thread: GBRA-60. Status: draft for the maintainer's approval, amended by the autoplan CEO, DX and eng phases on 2026-10-07 (section 11); no code, no paid run and no sealed opening is authorized by this document.
+Date: 2026-10-07 (Pacific; thread, commit and PR events quoted as 2026-10-08 are UTC). Thread: GBRA-60. Status: approved by the maintainer on 2026-10-08 (section 10, gate result), amended by the autoplan CEO, DX and eng phases on 2026-10-07 (section 11); no code, no paid run and no sealed opening is authorized by this document.
 
 Scope: gbrain master `7aa2caa0` (v0.60.106.0) and gbrain-evals main `f1ce49fe` (v0.10.40). These pins are the frozen baseline for every number in this plan; by the time of the eng review master had moved to `dcd0207a` (v0.60.107.0, after #6284), and each wave's candidate tree and gate provenance follow the actual integration heads (section 9), not the pins.
 Inputs: the maintainer's brief "Pick the right thing to 10x" (2026-10-07), five read-only audits run on 2026-10-07 against those pins (`audit/A-evidence-brief.md`, `audit/B-benchmark-scale-cost.md`, `audit/C-time-travel.md`, `audit/D-proactive-distribution.md`, `audit/E-scale-production.md`), the approved 2026-09-28 10x plan and its amendments ([`../2026-09-28-gbrain-10x/PLAN.md`](../2026-09-28-gbrain-10x/PLAN.md)), the in-flight threads listed in section 9, the two CEO-phase reviews (`ceo-review-native.md`, `ceo-review-outside.md`), the two DX-phase reviews (`dx-review-native.md`, `dx-review-outside.md`), the two eng-phase reviews (`eng-review-native.md`, `eng-review-outside.md`) and the eng test plan (`eng-test-plan.md`).
@@ -422,6 +422,23 @@ Every paid run goes through the budget ledger with its cap set from a smoke run 
 ---
 
 ## 10. Decisions for the maintainer at the approval gate (one list)
+
+**Gate result, 2026-10-08 (Pacific).** The maintainer approved the plan ("continue", then "d10 yes"), taking the recommendation on every item:
+
+| # | Decision | Recorded choice |
+|---|---|---|
+| 1 | Phase 7 hold | Moot: #89's sealed batch opened at about 01:30 UTC on 2026-10-08, before the hold request arrived. Its report discloses that gbrain was measured through raw snippets. B1 becomes a new, preregistered diagnostic on development data; no sealed cell is rerun with the fixed adapter. |
+| 2 | Write-path default | Option (c), a current cheap extraction model, if R2's facts-absorb quality gate passes before Q1's freeze; otherwise option (a), keep and publish both cost rows. |
+| 3 | Advertised surface | Option (c), no narrowing: S0 aligns every install path on callable and advertised `full`; D1, D4 and `gbrain setup` ship; D3's sealed narrowing run is not scheduled. |
+| 4 | Headline metric | The program-level end-to-end task-failure factor (section 3.1) is the headline; dollars per correct answer at a matched budget is the second number. |
+| 5 | Scale | Defined at production size, with `baseline-file-agent` and plain hybrid in every scale comparison; the 10M curve is labelled below production scale. |
+| 6 | Public ranking | Deferred behind a private forecast journal and an independently adjudicated grading gate. |
+| 7 | Recorded time | Presented as parity; the ledger is canonical audit state; V1 is page-at-time plus the weekly cited change diff. |
+| 8 | Sealed set and caps | Sealed-confirmation v2 for wave 1's one decision; caps: wave 0 $200, wave 1 $400 (re-requested after A11's repricing if needed), wave 2 $350, wave 3 $1,100 with only the cheap systems and the file agent at 10M, wave 4 $150, wave 5 $250, wave 6 $350. |
+| 9 | Living pages | Dollars or review minutes per correct fresh task against entity-anchored retrieval, with a no-refresh control. |
+| 10 | Backlog drain | Consent given: up to $12.60 at Voyage (hard cap `--max-usd 15`) and page text sent to the embedding provider from Garry's OpenClaw; this thread runs the read-only diagnosis and the drain on the brain host under a device grant. |
+
+The text below keeps each challenge as it was presented at the gate.
 
 These are the places where the evidence or the reviews disagree with the brief's wording, or where only the maintainer can decide. The brief's direction stands in the text above unless he changes it. Items 1 to 8 are User Challenges from the CEO phase; items 9 and 10 are consent and taste decisions carried over from the first draft.
 
