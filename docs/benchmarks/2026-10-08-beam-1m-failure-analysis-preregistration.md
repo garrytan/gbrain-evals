@@ -98,4 +98,7 @@ A reader whose answers finish at the output limit with empty text on more than 5
 
 ## Amendments
 
-None yet.
+Both amendments were written after the smoke (arm S, 2 questions per reader, $0.37) and before any counted cell.
+
+1. **2026-10-08, sampling.** The smoke's Sonnet 5.5 and Opus 5.5 calls were refused with "`temperature` is deprecated for this model". The reading lane now sends no `temperature` to Claude 5-family models (`sendsTemperature` in `qa.ts`, the repository's existing `acceptsTemperature` rule), so both sample at the provider default, as `gpt-6.1-sol` already did. `gpt-4.1-mini` (reader and judge) keeps temperature 0. Every receipt records `temperature_sent`.
+2. **2026-10-08, single-reader arms.** The smoke measured Anthropic input tokens at 1.64 times OpenAI's for the same prompts (10,510 against 6,380), and `gpt-6.1-sol` used 156 to 236 output tokens per answer. Re-estimated with those numbers, the plan above costs about $58 against the $60 cap. A3, A4 and A5 therefore use **`openai:gpt-6.1-sol`** instead of Sonnet 5.5 (estimates $7.2, $3.7 and $6.6 including the judge; plan total about $49). The comparisons in the table change reader accordingly: A3, A4 and A5 are compared with A2's `gpt-6.1-sol` cell and with `gpt-6.1-sol`'s A1 floor. The three-reader comparison (A2) and the four floors (A1) are unchanged.
