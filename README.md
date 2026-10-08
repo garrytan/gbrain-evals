@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain master [`a865f8f`](https://github.com/garrytan/gbrain/tree/a865f8f8b7c95b9f8c30690702797bafcfef537a) (v0.60.104.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.42 (`VERSION`) |
+| This repository | gbrain-evals v0.10.43 (`VERSION`) |
 
 This repository installs gbrain master `a865f8f`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -247,6 +247,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-08: Repository row names v0.10.43
+
+gbrain-evals v0.10.43. The repository row names v0.10.43 (was v0.10.42). This release adds the shared usage receipt, the reading headroom recount and the model-rule and price updates (wave 0 items A1, A2 and R1 of the 10x memory advantage plan); none of them changes a row in the results table, so no other row changes.
 
 ### 2026-10-08: Managed Postgres preparation stall row for gbrain #6298
 

@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.42, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
+gbrain-evals v0.10.43, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -36,6 +36,7 @@ describe current behavior first, then the older work behind a decision.
 | What does today's gbrain answer on LongMemEval end to end? | [October 7 current-pin run](benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) ([preregistration](benchmarks/2026-10-06-longmemeval-w10-preregistration.md)) |
 | Which reader should read gbrain's results? | [October 7 reader replay on frozen retrieval](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
 | Is gbrain worth it compared with pasting the whole history into the reader? | [October 7 full-context comparison](benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
+| How much of what gbrain delivers to the reader does the answer need, how much does a reader write down, and how often does a wrong answer commit to a wrong value? | [October 8 reading headroom recount](benchmarks/2026-10-08-reading-headroom.md) ($0, from the W10 receipts, not preregistered): the answer's own sessions are 41% of the 15,823 chars/4 tokens delivered (8,981 on multi-session questions), frontier readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value, by reader |
 | Does the LongMemEval answer score notice broken retrieval? | [October 6 LongMemEval negative control](benchmarks/2026-10-06-w8-longmemeval-control.md) ([preregistration](benchmarks/2026-10-06-w8-longmemeval-control-preregistration.md)) |
 | Do the published LongMemEval retrieval and reading-notes numbers hold with opaque session ids, and what does a frontier reader score on gbrain's retrieval? | [October 4 opaque-id follow-ups and frontier reader](benchmarks/2026-10-04-longmemeval-opaque-followups.md) ([preregistration](benchmarks/2026-10-04-longmemeval-opaque-followups-preregistration.md)) |
 | With the answer key hidden, how accurate are gbrain's answers, and does the reader prompt or the amount of evidence matter more? | [September 29 opaque-id answer re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
@@ -162,6 +163,10 @@ that record; the two should agree.
 (`eval/runner/compare.ts`), the three decision gates, and how the evaluator keeps
 the answer key away from the system under test.
 
+The [usage receipt](usage-receipt.md) is the one record every reading lane writes per model call: total,
+uncached, cache-read and cache-write input under each provider's convention, output and reasoning tokens, the
+full answer and the finish reason, with one record per replicate and per attempt.
+
 The [September 6 evidence guide](benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/README.md)
 explains the saved LongMemEval files and what their compacted records retain.
 
@@ -177,6 +182,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-08: Reading headroom row and the usage receipt page
+
+gbrain-evals v0.10.43. The retrieval table gained a row for the October 8 reading headroom recount (wave 0 item A2 of the 10x memory advantage plan, gbrain-evals #97): from the committed W10a and W10b receipts, the answer's own sessions are 41% of what gbrain delivers, readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value. "Checking the evidence" links the new usage receipt page (item A1), which documents the shared record of tokens, cache use and answers per model call. The opening line names v0.10.43 instead of v0.10.42.
 
 ### 2026-10-08: Preparation stall row
 

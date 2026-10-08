@@ -4758,6 +4758,28 @@
         "/gbrain_shipped_in/merge_commit": "7aa2caa0"
       },
       "note": "Preregistered (5ee10126, amendment c8042a27) Cat 40 gbrain-arm smoke, capy/fix-wave-11 027d3c69f vs capy/fix-wave-12 209b20a96, same window; counts recomputable from the committed results.jsonl and transcripts.jsonl.gz in each set directory. The attribution set runs the wave 12 build with the baseline served instructions. Shipped in gbrain v0.60.106.0 (7aa2caa0, #6269) with W4.6 reverted (instructions identical to the baseline) and W4.16 kept."
+    },
+    {
+      "claim_id": "reading-headroom-recount",
+      "readme_anchor": "docs/benchmarks/2026-10-08-reading-headroom.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-08-reading-headroom/headroom.json",
+      "artifact_sha256": "cd10b9ac0b778efd31577acd968c7367fc72cad4859a1e2044525b887d7571b4",
+      "status": "covered",
+      "expected": {
+        "/delivered/mean_delivered_chars4": 15822.9,
+        "/delivered/mean_gold_chars4": 6489.6,
+        "/delivered/gold_share_chars4": 0.41,
+        "/delivered/by_type/multi-session/mean_gold_chars4": 8981.1,
+        "/notes_length/w10a-sonnet55-notes/mean_chars4": 138.5,
+        "/notes_length/w10b-opus55-notes/mean_chars4": 150.8,
+        "/commitment/arms/w10a-sonnet55-notes/committed_wrong": 25,
+        "/commitment/arms/w10b-opus55-notes/committed_wrong": 19,
+        "/commitment/arms/w10b-sonnet55-notes/committed_wrong": 29,
+        "/commitment/arms/w10b-sol-notes/committed_wrong": 24,
+        "/status": "recount: exploratory, from committed receipts, not preregistered"
+      },
+      "golden_test": "test/eval/reading-headroom.test.ts",
+      "note": "$0 keyless recount over committed W10a and W10b receipts (eval/runner/reading-headroom.ts); exploratory, not preregistered; commitment counts rest on agent-written labels (commitment-labels.json) that no person has reviewed."
     }
   ]
 }
