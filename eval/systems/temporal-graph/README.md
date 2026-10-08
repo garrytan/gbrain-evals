@@ -1,7 +1,8 @@
 # temporal-graph shim
 
-This directory runs [temporal-graph](https://github.com/getzep/graphiti) (the open-source `graphiti-core` 0.30.2, not
-Zep Cloud) on Neo4j 5.26 behind the shootout's shim protocol ([PROTOCOL.md](../PROTOCOL.md)) for the
+This directory runs temporal-graph (the open-source library, not the vendor's hosted service; the
+[comparison table](../../../docs/comparison-systems.md#systems-in-the-open-source-comparison) names the project and its
+pin) on Neo4j 5.26 behind the shootout's shim protocol ([PROTOCOL.md](../PROTOCOL.md)) for the
 [open-source memory shootout](../../../docs/plans/2026-10-05-oss-memory-shootout/PLAN.md). temporal-graph turns each
 conversation into a temporal knowledge graph: an LLM extracts entities and the facts between them, and each fact
 carries the time it became true and, once contradicted, the time it stopped being true.
@@ -11,11 +12,11 @@ carries the time it became true and, once contradicted, the time it stopped bein
 | Container | Image | Role |
 |---|---|---|
 | `neo4j` | `neo4j:5.26.2`, digest pinned (the tag in temporal-graph's own compose file) | the graph database |
-| `shim` | built from `Dockerfile` (`graphiti-core==0.30.2`, `uv.lock`) | `shim.py`, which runs graphiti-core in process |
+| `shim` | built from `Dockerfile` (the pinned library, `uv.lock`) | `shim.py`, which runs the library in process |
 | `egress` | `alpine/socat`, digest pinned | the only container with a route out: publishes the shim and relays to the metering proxy |
 
-The lock resolves graphiti-core's dependencies to the versions in temporal-graph's own `uv.lock` at v0.30.2 (through
-`constraint-dependencies`): the newest `openai` on PyPI no longer ships `httpx`, which graphiti-core imports.
+The lock resolves the library's dependencies to the versions in temporal-graph's own `uv.lock` at the pinned tag
+(through `constraint-dependencies`): the newest `openai` on PyPI no longer ships `httpx`, which the library imports.
 
 One `group_id` per namespace. Ingestion calls `add_episode(reference_time=<session date>)`. Retrieval calls
 `search_()`, which returns separate ranked lists of facts (edges), entities (nodes), episodes and communities; the
@@ -26,12 +27,12 @@ class and the evidence for each value at the pinned tag.
 
 ## Configurations
 
-- `SHIM_CONFIG=recipe`: graphiti-core's defaults. Main LLM `gpt-5.5` (reasoning effort `none`), small LLM
+- `SHIM_CONFIG=recipe`: the library's defaults. Main LLM `gpt-5.5` (reasoning effort `none`), small LLM
   `gpt-4.1-nano`, embedder `text-embedding-3-small` truncated to 1,024 dimensions (`EMBEDDING_DIM` default),
   cross-encoder `gpt-4.1-nano`.
 - `SHIM_CONFIG=common`: both LLM roles `gpt-4.1-mini`, embedder `text-embedding-3-large` truncated to 1,536
   dimensions, cross-encoder unchanged.
-- `SHIM_GRANULARITY=session` (default) adds one episode per session; `message` adds one per turn as Zep's LoCoMo
+- `SHIM_GRANULARITY=session` (default) adds one episode per session; `message` adds one per turn as the vendor's LoCoMo
   harness does, with millisecond offsets so temporal-graph sees the turn order.
 
 ## Build and run
@@ -62,19 +63,18 @@ evidence only. `test_shim.py` (stdlib) is the same protocol smoke test as memory
 
 ## Deviations from the vendor's benchmark code
 
-The adapter starts from Zep's LoCoMo harness
-([zep-papers@4b7f26c](https://github.com/getzep/zep-papers/tree/4b7f26cc76cca20743314ba9acb8c2cb6adc42f6/kg_architecture_agent_memory/locomo_eval)),
-written for Zep Cloud and translated to the graphiti-core calls it wraps. The full list is in `capability.json`
+The adapter starts from the vendor's LoCoMo harness (commit `4b7f26c`; the comparison table links it), written for
+the hosted service and translated to the library calls that service's client wraps. The full list is in `capability.json`
 (`deviations_from_vendor_code`); in short:
 
-- Zep Cloud's `graph.add(type='message')` becomes `add_episode(source=EpisodeType.message)`.
+- The hosted service's `graph.add(type='message')` becomes `add_episode(source=EpisodeType.message)`.
 - One episode per session by default instead of one per message: per-message ingestion costs about 30 times the
   extraction calls on LoCoMo, and turns sharing the session time make temporal-graph's previous-episode window pick
-  tied episodes in arbitrary order. `SHIM_GRANULARITY=message` keeps Zep's granularity.
-- `source_description='chat conversation'`, which graphiti-core requires; episode names are opaque source ids so
+  tied episodes in arbitrary order. `SHIM_GRANULARITY=message` keeps the vendor harness's granularity.
+- `source_description='chat conversation'`, which the library requires; episode names are opaque source ids so
   provenance and deletion map back through public node APIs.
 - Retrieval follows the shootout's two policies over `search_()` (its default recipe at limit 10, and at limit 50
-  for the 8,000-token budget) instead of Zep's two searches, recorded under `vendor_benchmark_reference`.
+  for the 8,000-token budget) instead of the vendor harness's two searches, recorded under `vendor_benchmark_reference`.
 - `search_` takes no query time; the shim ignores `query_time` and says so in `applied_settings`.
 
 ## Metered smoke (2026-10-05)
@@ -106,7 +106,7 @@ What the numbers mean for the counted runs:
 - Message episodes cost about 3 times session episodes here, on three-turn sessions. The ratio grows with turns
   per session (LoCoMo sessions run about 20 to 30 turns), because each turn becomes its own extraction.
 - The recipe's `gpt-5.5` extraction costs about 13 times `gpt-4.1-mini` per run. Each `gpt-5.5` request reserves
-  up to $0.54 against the lease before forwarding (graphiti-core asks for 16,384 output tokens at $30 per million),
+  up to $0.54 against the lease before forwarding (the library asks for 16,384 output tokens at $30 per million),
   so a lease must cover the concurrent reservations, not only the expected spend.
 - Retrieval is not free: the default recipe's cross-encoder makes one `gpt-4.1-nano` call per candidate, about
   7 to 12 calls per retrieval on this tiny graph, plus one embedding call.
@@ -117,10 +117,10 @@ namespace); they are warnings, not failures. Raw proxy usage lines and step logs
 
 ## Provenance and deletion
 
-Facts cite the sessions in their edge's `episodes` list (exact). Entity nodes have no `episodes` field at 0.30.2;
+Facts cite the sessions in their edge's `episodes` list (exact). Entity nodes have no `episodes` field at the pinned release;
 the shim uses the public `EpisodicNode.get_by_entity_node_uuid` (episodes with a `MENTIONS` edge to the node) and
 reports `partial`, or `unavailable` with `settings.node_provenance = "none"`. Episodes cite themselves.
-Deletion calls `Graphiti.remove_episode` for each episode of the source and keeps its semantics: an edge goes only
+Deletion calls the library's `remove_episode` for each episode of the source and keeps its semantics: an edge goes only
 if the removed episode created it, and a node goes only if no other episode mentions it.
 
 ## Phase 2 pilot

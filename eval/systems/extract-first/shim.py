@@ -1,6 +1,6 @@
-"""extract-first OSS 2.2.1 behind shim protocol v1 (eval/systems/PROTOCOL.md).
+"""extract-first, open source at the pinned release, behind shim protocol v1 (eval/systems/PROTOCOL.md).
 
-Ingestion follows mem0ai/memory-benchmarks (commit 4b61c5d3): each session is split into chunks of turns, each turn
+Ingestion follows the vendor's benchmark code (commit 4b61c5d3): each session is split into chunks of turns, each turn
 becomes one message whose content is "Speaker: text", and every chunk is one `Memory.add` call scoped by user_id.
 Search is `Memory.search(question, filters={"user_id": ...})`. README.md lists every deviation from that code.
 """
@@ -25,7 +25,7 @@ from shim import Adapter, Item, ShimError, serve  # noqa: E402
 HERE = Path(__file__).resolve().parent
 DATA = Path(os.environ.get("SHIM_DATA_DIR", "/data"))
 CONFIG = os.environ.get("SHIM_CONFIG", "recipe")
-CHUNK_TURNS = int(os.environ.get("MEM0_CHUNK_TURNS", "2"))
+CHUNK_TURNS = int(os.environ.get("EXTRACT_FIRST_CHUNK_TURNS", "2"))
 NS_RE = re.compile(r"^ns-[A-Za-z0-9_-]{1,80}$")
 LIST_PAGE = 1000
 
@@ -38,7 +38,7 @@ def render_date(event_time: str | None) -> str:
     return f"{dt.hour % 12 or 12}:{dt.minute:02d} {'am' if dt.hour < 12 else 'pm'} on {dt.day} {dt:%B}, {dt.year}"
 
 
-def mem0_config() -> dict[str, Any]:
+def memory_config() -> dict[str, Any]:
     qdrant = {"host": os.environ.get("QDRANT_HOST", "qdrant"), "port": int(os.environ.get("QDRANT_PORT", "6333")),
               "collection_name": f"memories_{CONFIG}", "embedding_model_dims": 1536}
     cfg: dict[str, Any] = {
@@ -80,12 +80,12 @@ class Lane:
     budget: str | None = None
 
 
-class Mem0Adapter(Adapter):
+class ExtractFirstAdapter(Adapter):
     def __init__(self) -> None:
         from mem0 import Memory
 
         DATA.mkdir(parents=True, exist_ok=True)
-        self.memory = Memory.from_config(mem0_config())
+        self.memory = Memory.from_config(memory_config())
         self.record = json.loads((HERE / "capability.json").read_text())
         lock = HERE / "uv.lock"
         self.record["versions"]["lock_sha256"] = hashlib.sha256(lock.read_bytes()).hexdigest() if lock.exists() else None
@@ -217,7 +217,7 @@ class Mem0Adapter(Adapter):
                               source_ids=[sid] if sid else [], valid_from=meta.get("session_date"),
                               provenance_status="partial" if sid else "unavailable"))
         applied = {"top_k": k, "threshold": 0.1, "rerank": False, "reranker": None,
-                   "query_time": "not sent: Memory.search rejects a non-null reference_date in OSS 2.2.1",
+                   "query_time": "not sent: Memory.search rejects a non-null reference_date in the pinned open-source release",
                    **self.resolved}
         return {"items": items, "applied_settings": applied, "truncated": len(items) >= k, "raw": res}
 
@@ -247,4 +247,4 @@ class Mem0Adapter(Adapter):
 
 
 if __name__ == "__main__":
-    serve(Mem0Adapter())
+    serve(ExtractFirstAdapter())

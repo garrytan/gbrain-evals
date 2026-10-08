@@ -157,7 +157,7 @@ describe.skipIf(!haveLocomo)('sealed cells end to end through runRemote (keyless
     const shim = serveProtocol(new FakeMemorySystem(), { config: 'common' });
     let r;
     try {
-      r = await runSealed('extract-first-common-locomo-sealed', cmd => cmd.replace(/MEM0_CHUNK_TURNS=1 bash eval\/systems\/bootstrap\.sh up [^&]*&&/, 'true &&').replace('bash eval/systems/bootstrap.sh down --system extract-first', 'true')
+      r = await runSealed('extract-first-common-locomo-sealed', cmd => cmd.replace(/EXTRACT_FIRST_CHUNK_TURNS=1 bash eval\/systems\/bootstrap\.sh up [^&]*&&/, 'true &&').replace('bash eval/systems/bootstrap.sh down --system extract-first', 'true')
         .replace('http://127.0.0.1:8700', shim.url).replace('--split sealed', '--split sealed --limit 24'), 'sealed-shim-lease');
     } finally { shim.stop(); }
     expect(r.code, readFileSync(join(r.custody, 'memory-qa.log'), 'utf8').slice(-2000)).toBe(0);

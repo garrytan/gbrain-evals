@@ -20,6 +20,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | Which agent-written labels has a person checked? | [October 6 review packets and their rules](benchmarks/2026-10-06-w11-review/README.md) ([preregistration](benchmarks/2026-10-06-w11-review-preregistration.md)): awaiting human review |
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
+| How does gbrain compare with open-source memory systems run through one harness, with one reader? | [October 6 to 8 open-source comparison](benchmarks/2026-10-06-oss-memory-shootout.md) ([preregistration](benchmarks/2026-10-06-oss-memory-shootout-preregistration.md), [update-and-forget preregistration](benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md)): gbrain finds the right sessions as well as or better than every system, but as measured through this adapter its evidence leads the reader to fewer correct answers than three of the five. Systems are named by kind; [one table](comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
 | What will the next categories measure, and what does gbrain implement for each of them? | [October 1 eval-category wave plan](plans/2026-10-01-eval-category-wave/README.md), [capability and entrypoint matrix](benchmarks/2026-10-01-capability-matrix.md) |
 
@@ -181,6 +182,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-08: Open-source comparison row
+
+Added the open-source comparison report and its two preregistrations, which the index did not list. The row
+describes the systems by kind and links the one table that names them.
 
 ### 2026-10-08: BEAM-1M failure analysis row
 
