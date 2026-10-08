@@ -451,6 +451,30 @@ counted cell had run, public or sealed, and no BEAM-10M question had opened.
 The campaign manifests are regenerated and both hashes change; the new hashes and freeze commit replace the old ones
 in the freeze checklist.
 
+**A8 (2026-10-08, before any sealed cell): reader dates follow parsed event time.** Another thread's BEAM-1M failure
+analysis (gbrain-evals#100) found that the shared reader prompt orders sessions, and picks the "Current Date" a
+question without its own date gets, by sorting raw date strings. Q1's packer used the same path. BEAM-100K and
+BEAM-1M write `Month-DD-YYYY`, and LoCoMo writes "1:56 pm on 8 May, 2023", so the reader would have seen S2a, S2b and
+S3 sessions in alphabetical order of the month name, with a current date that is often not the latest session (8 of
+11 BEAM-1M dev conversations in that analysis). No sealed cell had run.
+- Rehydrated packs now order sessions by the event time the ingest plan parses (`eventTimeOf`), with undated
+  sessions first and ties in pack order. The fallback current date is the raw date of the latest session by event
+  time. A session with no date of its own shows the time the ingest plan gave it, which covers 10m-7's 93 undated
+  sessions under A7. Native packs already ordered items by their event time; only their current date changes.
+- LongMemEval prompts are unchanged byte for byte. All 96,364 distinct session dates in LongMemEval-S and -M parse,
+  their string order equals their event-time order with no ties between distinct strings, and all 1,000 questions
+  carry their own date. BEAM-10M's ISO dates already sorted correctly, so apart from 10m-7's undated sessions S1 is
+  unchanged too.
+- The public campaign (`q1-scoreboard-public`) launched on 2026-10-08 at hash
+  `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` (tree at `a22e3d81`, before this
+  amendment). By the check above its prompts are identical under A8, so its cells stand and it renders from its
+  launch tree. At the A8 tree the same manifest hashes
+  `12d3e7674389727b2b14f2354688c5dec0754d60896c6a1cad7911c2194e1753`.
+- The LoCoMo dev smoke (A4) used the string order. Its reader calibration factors don't depend on order. Its
+  ranking of the four shrink comparators, which affected every system the same way, stands as recorded.
+- The sealed campaign's hash changes; the freeze checklist records it. The campaign manifests themselves (cells,
+  images, executed paths) are unchanged.
+
 ## Changelog
 
 ### 2026-10-08: LongMemEval-M launches as public

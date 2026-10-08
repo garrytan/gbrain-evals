@@ -4,7 +4,9 @@
  * packing loss. Keyless; local tokenizers only.
  */
 import { describe, expect, test } from 'bun:test';
-import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
+import type { Corpus, MemoryQuestion, Session } from '../../eval/runner/memory-qa/corpus.ts';
+import { readerSessions } from '../../eval/runner/q1/cell.ts';
+import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
 import { APPROX_COUNTER, RENDERER_VERSION, bodyLines, encodingCount, measureCalibration, packContext, packNative, readerCounter, readerTokenizer, renderItem, strictSources } from '../../eval/runner/systems/render.ts';
 import type { Item } from '../../eval/runner/systems/types.ts';
 
@@ -162,5 +164,30 @@ describe('one byte string for every reader', () => {
   test('special-token strings count as text, and body lines drop blank lines only', () => {
     expect(encodingCount('cl100k_base', 'see <|endoftext|> here')).toBeGreaterThan(3);
     expect(bodyLines('a\n\n  b   c \r\n')).toEqual(['a', 'b c']);
+  });
+});
+
+describe('reader dates follow parsed event time (A8)', () => {
+  const sess = (id: string, date: string | undefined) => ({ id, date, turns: [{ speaker: 'user', content: `said ${id}` }] }) as unknown as Session;
+
+  test('rehydrated history orders BEAM and LoCoMo dates by time, not spelling; LongMemEval dates keep the string order', () => {
+    const order = (sessions: Session[]) => {
+      const items = sessions.map((s, i) => item(i + 1, s.id, { source_ids: [s.id] }));
+      const p = packContext('rehydrated', q, items, { budgetTokens: null, sessionOf: id => sessions.find(s => s.id === id) });
+      return [...p.prompt.matchAll(/Session Date: (.+)/g)].map(m => m[1]);
+    };
+    expect(order([sess('a', 'March-05-2024'), sess('b', 'January-10-2025'), sess('c', 'December-01-2024')])).toEqual(['March-05-2024', 'December-01-2024', 'January-10-2025']);
+    expect(order([sess('a', '1:56 pm on 8 May, 2023'), sess('b', '10:00 am on 2 August, 2023'), sess('c', '9:15 am on 20 January, 2023')])).toEqual(['9:15 am on 20 January, 2023', '1:56 pm on 8 May, 2023', '10:00 am on 2 August, 2023']);
+    const lme = ['2023/05/30 (Tue) 22:10', '2023/05/20 (Sat) 02:21', '2023/05/20 (Sat) 02:21', '2022/12/01 (Thu) 09:00'];
+    expect(order(lme.map((d, i) => sess(`l${i}`, d)))).toEqual([...lme].sort((a, b) => a.localeCompare(b)));
+  });
+
+  test('the fallback current date is the latest session by event time, and an undated session shows its ingest-plan time', () => {
+    const conv = { id: 'c', sessions: [sess('s1', 'March-05-2024'), sess('s3', undefined), sess('s2', 'January-10-2025'), sess('s4', 'December-01-2024')] } as unknown as Corpus['conversations'][number];
+    const plan = new Sanitizer({ conversations: [conv], questions: [] } as unknown as Corpus, 'a8').ingestPlan(conv);
+    const { fallbackDate, sessById } = readerSessions(conv, plan);
+    expect(fallbackDate).toBe('January-10-2025');
+    expect(sessById.get('s3')!.date).toBe('2024-03-05T00:01:00');
+    expect(sessById.get('s1')).toBe(conv.sessions[0]);
   });
 });

@@ -82,7 +82,7 @@ import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
-import { loadCorpus, type Corpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
+import { loadCorpus, type Corpus, type MemoryQuestion, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, type Outcome } from '../memory-qa/outcomes.ts';
@@ -98,7 +98,7 @@ import { answerFullContext, FullContextSystem, NoMemorySystem, PlainHybridSystem
 import { FILE_AGENT_SYSTEM, FileAgentSystem, type AnsweringSystem } from '../systems/file-agent.ts';
 import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render.ts';
-import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
+import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
 import { definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, SETS, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type Selection } from './cells/definitions.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
@@ -461,6 +461,21 @@ export function probeSample(plan: ReadonlyArray<{ input: SessionInput }>, sample
 const probeable = (cap: CapabilityRecord) => cap.retrieval_metrics !== 'not-applicable' && cap.provenance?.status !== 'unavailable' && !passiveUnsupported(cap)
   && (cap.retrieval_policies?.['fixed-evidence'] as { supported?: boolean } | undefined)?.supported !== false;
 
+/**
+ * What the reader sees of a conversation's dates (amendment A8): the current
+ * date when a question has none is the raw date of the latest session by
+ * parsed event time (not the alphabetically last date string), and a session
+ * with no date of its own shows the time the ingest plan gave it.
+ */
+export function readerSessions(conv: Corpus['conversations'][number], plan: IngestStep[]): { fallbackDate: string | undefined; sessById: Map<string, Session> } {
+  const timeOf = new Map(plan.map(p => [p.session.id, p.event_time]));
+  const latest = [...plan].reverse().find(p => p.event_time);
+  return {
+    fallbackDate: latest ? latest.session.date ?? latest.event_time ?? undefined : undefined,
+    sessById: new Map(conv.sessions.map(s => [s.id, s.date === undefined && timeOf.get(s.id) ? { ...s, date: timeOf.get(s.id)! } : s])),
+  };
+}
+
 const passageOf = (s: SessionInput) => [...s.turns].sort((x, y) => y.content.length - x.content.length)[0]?.content.slice(0, 300) ?? '';
 
 // ─── Rows ────────────────────────────────────────────────────────────
@@ -736,9 +751,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const isLive = live.has(rid);
     const plan = ingestPlan(conv);
     const lastEventTime = plan.map(p => p.event_time).filter((t): t is string => !!t).sort().pop() ?? null;
-    const fallbackDate = conv.sessions.map(x => x.date ?? '').sort().pop() || undefined;
+    const { fallbackDate, sessById } = readerSessions(conv, plan);
     const ingested = new Set(plan.map(p => p.input.source_id));
-    const sessById = new Map(conv.sessions.map(s => [s.id, s]));
     const sessionOf = (src: string) => { const id = sanitizer.sessionOf(ns, src); return id ? sessById.get(id) : undefined; };
     const degraded = staging.latest(convId)?.ingest?.degraded ?? false;
     const retrievalsPath = join(dir, 'retrievals.ndjson');

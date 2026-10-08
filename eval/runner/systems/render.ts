@@ -53,7 +53,8 @@
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import type { MemoryQuestion, Session } from '../memory-qa/corpus.ts';
-import { READER_TEMPLATE, approxTokens, renderHistory } from '../memory-qa/qa.ts';
+import { READER_TEMPLATE, approxTokens } from '../memory-qa/qa.ts';
+import { eventTimeOf } from './sanitize.ts';
 import { SystemError, type Item } from './types.ts';
 
 export const TOKENIZER = { id: 'approx-chars-div-4', count: approxTokens } as const;
@@ -324,6 +325,18 @@ export function packNative(items: readonly Item[], budgetTokens: number | null, 
     delivered: Object.fromEntries(counter.channels.map((c, i) => [c, raw[i]])), cut, loss };
 }
 
+/**
+ * The rehydrated history: sessions in event-time order, parsed the way the
+ * ingest plan parses them, so `Month-DD-YYYY` and LoCoMo dates order by time
+ * rather than spelling (amendment A8). Undated sessions come first and ties keep
+ * pack order, as the string sort did; for LongMemEval's `YYYY/MM/DD` dates the
+ * order, and so the prompt, is unchanged byte for byte.
+ */
+export function renderHistoryByEventTime(sessions: readonly Session[]): string {
+  const keyed = sessions.map((s, k) => ({ s, k, t: eventTimeOf(s) ?? '' })).sort((a, b) => (a.t === b.t ? a.k - b.k : a.t < b.t ? -1 : 1));
+  return keyed.map(({ s }, i) => `\n### Session ${i + 1}:\nSession Date: ${s.date ?? 'unknown'}\nSession Content:\n\n${JSON.stringify(s.turns.map(t => ({ role: t.speaker, content: t.content })))}\n`).join('');
+}
+
 /** Rehydrated mode: sessions behind the items' sources in first-appearance order, whole sessions, until the budget or `maxSessions`. */
 export function packRehydrated(items: readonly Item[], sessionOf: (sourceId: string) => Session | undefined, budgetTokens: number | null, maxSessions: number | null = null, counter: PackCounter = APPROX_COUNTER): { sessions: Session[]; source_ids: string[]; tokens: number; reader_tokens: Record<string, number>; delivered: Record<string, number> } {
   const order: string[] = [];
@@ -334,7 +347,7 @@ export function packRehydrated(items: readonly Item[], sessionOf: (sourceId: str
   for (const src of maxSessions === null ? order : order.slice(0, maxSessions)) {
     const s = sessionOf(src);
     if (!s) continue;
-    const next = addRaw(raw, counter.measure(renderHistory([s])));
+    const next = addRaw(raw, counter.measure(renderHistoryByEventTime([s])));
     if (budgetTokens !== null && budgetCount(counter, next) > budgetTokens) break;
     sessions.push(s); used.push(src); raw = next;
   }
@@ -389,6 +402,6 @@ export function packContext(mode: ContextMode, q: MemoryQuestion, items: readonl
     return finish({ tokens: p.tokens, item_ids: p.items.map(i => i.id), source_ids: [...new Set(p.items.flatMap(i => i.source_ids))], prompt, reader_tokens: p.reader_tokens, delivered: p.delivered, cut: p.cut, packing_loss: p.loss });
   }
   const p = packRehydrated(items, opts.sessionOf, opts.budgetTokens, opts.maxUnits ?? null, counter);
-  const prompt = READER_TEMPLATE.replace('{history}', renderHistory(p.sessions)).replace('{date}', date).replace('{question}', q.question);
+  const prompt = READER_TEMPLATE.replace('{history}', renderHistoryByEventTime(p.sessions)).replace('{date}', date).replace('{question}', q.question);
   return finish({ tokens: p.tokens, item_ids: items.filter(i => i.source_ids.some(s => p.source_ids.includes(s))).map(i => i.id), source_ids: p.source_ids, prompt, reader_tokens: p.reader_tokens, delivered: p.delivered, cut: null, packing_loss: null });
 }
