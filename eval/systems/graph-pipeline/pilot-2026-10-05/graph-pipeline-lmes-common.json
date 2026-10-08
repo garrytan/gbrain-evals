@@ -1,0 +1,100 @@
+{
+  "run": "pilots/graph-pipeline-lmes-common",
+  "status": "complete",
+  "invalid_reasons": [],
+  "selection": {
+    "categories": [
+      "multi-session"
+    ],
+    "limit": 1,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 1,
+    "questions_expected": 1
+  },
+  "ingest_receipt": {
+    "conversations": 1,
+    "sessions": 41,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0
+  },
+  "counts": {
+    "rows": 1,
+    "scored": 1,
+    "errors": 0,
+    "abstention": 0
+  },
+  "outcomes": {
+    "scored": 1
+  },
+  "summary": {
+    "recall_all_at_5": 1,
+    "recall_any_at_5": 1,
+    "recall_all_at_10": 1,
+    "ndcg_at_10": 1,
+    "latency_p50_ms": 808.2,
+    "latency_p95_ms": 808.2,
+    "qa_score": 1,
+    "qa_rows": 1,
+    "qa_errors": 0,
+    "qa_service_score": 1,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "ingest_window": {
+    "from": "2026-10-05T20:43:04.690Z",
+    "to": "2026-10-05T20:51:32.883Z"
+  },
+  "ingest_usage": {
+    "text-embedding-3-large /v1/embeddings": {
+      "requests": 464,
+      "input_tokens": 284715,
+      "output_tokens": 0,
+      "usd": 0.03701
+    },
+    "gpt-4.1-mini /v1/chat/completions": {
+      "requests": 527,
+      "input_tokens": 501164,
+      "output_tokens": 226643,
+      "usd": 0.56309
+    },
+    "total_usd": 0.60011
+  },
+  "query_usage": {
+    "total_usd": 0
+  },
+  "reader_judge_usage": {
+    "gpt-4o-2024-08-06 /v1/chat/completions": {
+      "requests": 2,
+      "input_tokens": 7414,
+      "output_tokens": 203,
+      "usd": 0.02056
+    },
+    "total_usd": 0.02056
+  },
+  "reader_judge_usd_per_question": 0.02056,
+  "query_usd_per_question": 0.0,
+  "latency_ms": {
+    "p50": 808.2,
+    "p95": 808.2,
+    "mean": 808.2
+  },
+  "items_per_question": 30.0,
+  "provenance_mix": {
+    "exact": 10,
+    "partial": 0,
+    "unavailable": 20
+  },
+  "item_types": {
+    "chunk": 10,
+    "entity": 10,
+    "fact": 10
+  },
+  "refusals": 0,
+  "context_tokens_mean": 7575
+}

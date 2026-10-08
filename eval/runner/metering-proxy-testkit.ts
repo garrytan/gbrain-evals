@@ -32,7 +32,7 @@ import { mkdtempSync, readFileSync, existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger, ledgerStatus } from './budget-ledger.ts';
-import { startMeteringProxy, type MeteringProxy, type RequestLogLine } from './metering-proxy.ts';
+import { startMeteringProxy, type MeteringProxy, type RequestLogLine } from './harness-metering-proxy.ts';
 import { startStubUpstream, type StubUpstream } from './stub-upstream.ts';
 
 export interface MeteredTestCell {

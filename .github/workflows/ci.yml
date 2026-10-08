@@ -136,4 +136,4 @@ jobs:
         run: bun run harness:test
 
       - name: Metering proxy and launcher tests
-        run: bun test test/eval/metering-proxy.test.ts test/eval/harness-cell.test.ts test/eval/harness-cell-e2e.test.ts
+        run: bun test test/eval/harness-metering-proxy.test.ts test/eval/harness-cell.test.ts test/eval/harness-cell-e2e.test.ts

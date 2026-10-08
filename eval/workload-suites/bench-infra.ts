@@ -19,7 +19,7 @@ import type { GbrainUnderTest } from '../runner/gbrain-under-test.ts';
 export const DEFAULT_LEDGER = join(REPO_ROOT, '.budget/workload-suites.sqlite');
 export const PROGRAM_CAP_USD = 720;
 
-type Proxy = Awaited<ReturnType<typeof import('../runner/metering-proxy.ts')['startMeteringProxy']>>;
+type Proxy = Awaited<ReturnType<typeof import('../runner/harness-metering-proxy.ts')['startMeteringProxy']>>;
 
 export interface Bench {
   proxy: Proxy;
@@ -41,7 +41,7 @@ export async function startBench(opts: { runner: string; budgetUsd: number; outD
   const log = opts.log ?? (l => process.stderr.write(l + '\n'));
   const stub = opts.stub ?? false;
   mkdirSync(opts.outDir, { recursive: true });
-  const { startMeteringProxy } = await import('../runner/metering-proxy.ts');
+  const { startMeteringProxy } = await import('../runner/harness-metering-proxy.ts');
   let upstreams;
   let realKeys;
   let ledgerPath = opts.ledgerPath ?? DEFAULT_LEDGER;

@@ -1,395 +1,444 @@
 /**
- * Metering proxy: the one paid-request boundary for every process in a
- * harness cell (eval/harness-provider/CONTRACTS.md, "Metering proxy").
+ * Metering proxy: the only network exit for provider calls a memory system
+ * (or a gbrain subprocess) makes. Requests arrive at
+ * `/<slot>/<provider>/<path>` (or `/<provider>/<path>`, slot `default`) and
+ * are forwarded to the provider after they are priced.
  *
- * The launcher starts it in-process on 127.0.0.1. Each child process gets a
- * proxy token per provider (`mpwp-<label>-<hex>`) and base URLs that point
- * here, never a real key. For every request the proxy
+ * Every mode fails closed on price: a request to a paid provider that the
+ * budget ledger cannot price (unknown model, no model) is refused with HTTP
+ * 402 and never forwarded.
  *
- *   1. checks the token (Authorization Bearer, x-api-key, x-goog-api-key or
- *      ?key=); an unknown token answers 401 and nothing is sent;
- *   2. saves the exact request body to `bodiesDir/<sha256>.json`;
- *   3. prices it with the shared ledger's `priceRequest` and reserves the
- *      worst case on the cell's BudgetRun; a refused reservation, or a
- *      request that cannot be priced, answers HTTP 402 with
- *      `{"error":{"type":"mpw_budget_refused",...}}` and nothing is sent;
- *   4. swaps the token for the real key and forwards the request;
- *   5. streams the response back (server-sent events are teed, not
- *      buffered), decodes the provider's usage and settles the reservation.
+ * Two modes:
+ *   in-process (Cat 40, chronicle, P4 stream, P8): the client is a gbrain
+ *     child process of this harness. Its credentials are forwarded and the
+ *     process-wide paid-request guard (or a slot allowance) reserves each
+ *     request, as before the extraction.
+ *   lease (the shootout cell, `policy` set): the proxy holds a lease run in
+ *     its own ledger (`BudgetRun.openLease`) and enforces it itself. It strips
+ *     inbound credentials and injects the real key from its own environment,
+ *     allows only listed provider routes and priced models, bounds input
+ *     tokens by request bytes (a token covers at least one byte), injects or
+ *     enforces an output-token cap so the provider enforces the bound,
+ *     reserves the worst case before forwarding (concurrent requests serialize
+ *     on the ledger, so they cannot overspend the lease), meters streamed
+ *     responses from their usage events (or charges the reservation), settles
+ *     a 4xx answer without usage at $0 (providers do not bill rejected
+ *     requests; a 5xx, a timeout or a lost connection keeps the reservation), refuses
+ *     bodies carrying a forbidden marker (the sanitizer's leak tripwire), and
+ *     appends one usage line per request (never a body or a key).
  *
- * Settlement: decoded usage reconciles the entry. A 4xx answer without usage
- * is a request the provider rejected before doing any work, so it settles at
- * $0. Anything else without decodable usage (a 5xx, a network failure after
- * sending, an unreadable stream) is charged at its reservation.
+ * Attribution across processes (lease mode): the harness binds a slot (the
+ * path segment a shim's base URL carries) to a key around each question or
+ * namespace ingest and reads the key's meter afterwards, through
+ * `POST /__proxy/bind {slot, key}`, `POST /__proxy/unbind {slot}` and
+ * `POST /__proxy/finalize {key}`. With `--control-token` (or
+ * SHOOTOUT_PROXY_CONTROL_TOKEN) these need the `x-proxy-control` header, so a
+ * vendor container cannot move charges.
  *
- * Refusal messages never contain the substrings 429, 500, 502, 503, 504,
- * 529 or "rate": the harness's Gemini, OpenAI and Groq clients retry any
- * error whose text contains them. Where a value (a cap, a path, an id) would
- * contain one, a zero-width space is inserted; `lastRefusal` keeps the exact
- * text for the launcher.
+ * Standalone (lease mode):
+ *   bun eval/runner/metering-proxy.ts --listen 0.0.0.0:8787 --budget-ledger <file> --lease-usd <n> --run-id <id>
+ *     [--usage-log <file>] [--allow-models openai:gpt-4.1-mini,...] [--max-output-tokens 32768]
+ *     [--forbidden-markers <file>] [--streaming meter|refuse] [--upstream openai=http://...] [--new-run] [--control-token <t>]
+ *   bun eval/runner/metering-proxy.ts summary --budget-ledger <file> --run-id <id>
  *
- * Every request appends one JSON line to `requestLogPath`.
- *
- * CLI (a standalone proxy joined to an open budget run; prints nothing
- * secret, writes the child environments to the ready file with mode 0600):
- *
- *   bun eval/runner/metering-proxy.ts --budget-ledger <path> --budget-run-id <id> --cell-id <id> \
- *     --labels harness,gbrain --ready-file <json> [--request-log <jsonl>] [--bodies-dir <dir>] [--port <n>] \
- *     [--upstream <provider>=<url> ...]
- *
- * `--upstream` points a provider at a stub (tests); without it requests go
- * to the real provider with the key from this process's environment.
+ * One lease ledger can hold a cell's reruns: each run id is its own lease, the
+ * output cap is recorded with the lease, and `--new-run` closes a lease still
+ * open in the file before opening the next one.
  */
-import { createHash, randomBytes } from 'node:crypto';
-import { appendFileSync, chmodSync, existsSync, mkdirSync, renameSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import {
-  BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, streamUsageCost, unguardedFetch, usageCost,
-} from './budget-ledger.ts';
+import { appendFileSync, readFileSync } from 'node:fs';
+import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, usageCost, type BudgetAllowance } from './budget-ledger.ts';
+import { findLeaks } from './systems/sanitize.ts';
 
-export type MeteredProvider = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'voyage';
-type RequestPrice = NonNullable<ReturnType<typeof priceRequest>>;
+export const UPSTREAM: Record<string, string> = { anthropic: 'https://api.anthropic.com', openai: 'https://api.openai.com', voyage: 'https://api.voyageai.com' };
+export type ProviderName = 'anthropic' | 'openai' | 'voyage';
+type Send = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
-/** Path prefix, real upstream and launcher key variables per provider (CONTRACTS.md table). */
-export const METERED_PROVIDERS: Record<MeteredProvider, { prefix: string; upstream: string; keyEnv: string[] }> = {
-  openai: { prefix: '/openai', upstream: 'https://api.openai.com', keyEnv: ['OPENAI_API_KEY'] },
-  anthropic: { prefix: '/anthropic', upstream: 'https://api.anthropic.com', keyEnv: ['ANTHROPIC_API_KEY'] },
-  gemini: { prefix: '/gemini', upstream: 'https://generativelanguage.googleapis.com', keyEnv: ['GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY'] },
-  groq: { prefix: '/groq', upstream: 'https://api.groq.com', keyEnv: ['GROQ_API_KEY'] },
-  voyage: { prefix: '/voyage', upstream: 'https://api.voyageai.com', keyEnv: ['VOYAGE_API_KEY'] },
+/** Lease mode forwards only these routes. GET model listings are free metadata reads. */
+const ROUTES: Record<ProviderName, Array<{ method: string; path: RegExp }>> = {
+  openai: [
+    { method: 'POST', path: /^\/v1\/chat\/completions$/ }, { method: 'POST', path: /^\/v1\/responses$/ }, { method: 'POST', path: /^\/v1\/embeddings$/ },
+    { method: 'GET', path: /^\/v1\/models(\/[^/]+)?$/ },
+  ],
+  anthropic: [{ method: 'POST', path: /^\/v1\/messages$/ }],
+  voyage: [{ method: 'POST', path: /^\/v1\/embeddings$/ }, { method: 'POST', path: /^\/v1\/rerank$/ }],
 };
-const PROVIDER_IDS = Object.keys(METERED_PROVIDERS) as MeteredProvider[];
+const KEY_ENV: Record<ProviderName, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY' };
+const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-organization', 'openai-project', 'cookie', 'proxy-authorization'];
+export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
+/** A provider call may run this long (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */
+export const UPSTREAM_DEADLINE_MS = 900_000;
 
-/** Sent upstream in place of a key when a test points a provider at a stub and the launcher has no key for it. */
-const STUB_CREDENTIAL = 'mpw-stub-upstream-no-key';
-const STATUS_CLI = 'bun eval/runner/budget-ledger.ts status';
+export interface Meter {
+  usd: number;
+  requests: number;
+  /** Requests whose cost came from their reservation because the response reported no usage (charged, not free). */
+  unpriced: number;
+  /** Requests still in flight when the meter was finalized after its timeout (their cost is missing here, not in the ledger). */
+  undrained?: number;
+  byModel: Record<string, { usd: number; requests: number }>;
+  /** Lease mode: what the provider answered (HTTP status counts, connection failures, 200 bodies that were not JSON), so a report can tell provider outages from product bugs. */
+  upstream?: { statuses: Record<string, number>; failed: number; unparseable: number };
+}
+export const newMeter = (): Meter => ({ usd: 0, requests: 0, unpriced: 0, byModel: {} });
 
-export const REFUSAL_TYPE = 'mpw_budget_refused';
+/** True when the provider itself misbehaved during a meter's requests: a 5xx, a lost connection, or a 200 that was not JSON. */
+export const upstreamTrouble = (m: Meter | null | undefined) => !!m?.upstream && (m.upstream.failed > 0 || m.upstream.unparseable > 0 || Object.keys(m.upstream.statuses).some(s => Number(s) >= 500));
 
-export interface MeteringProxyOptions {
-  run: BudgetRun;
-  cellId: string;
-  requestLogPath: string;
-  bodiesDir: string;
-  labels: string[];
-  upstreams?: Partial<Record<MeteredProvider, string>>;
-  realKeys?: Record<string, string | undefined>;
-  port?: number;
+export interface LeasePolicy {
+  /** The lease this proxy spends; every request is reserved against it before it is forwarded. */
+  lease: BudgetRun;
+  /** Where real keys come from (defaults to process.env). */
+  env?: Record<string, string | undefined>;
+  /** When set, only these `provider:model` ids may be called (they must also be priced). */
+  allowModels?: string[] | null;
+  /** Output-token cap injected when a request names none; a request naming more is refused. */
+  maxOutputTokens?: number;
+  /** Strings that must never leave the cell (raw dataset ids, labels); a body containing one is refused. */
+  forbiddenMarkers?: string[];
+  streaming?: 'meter' | 'refuse';
+  /** Append-only per-request usage log (ndjson). */
+  usageLog?: string;
 }
 
-export interface RequestLogLine {
-  ts: string;
-  cell_id: string;
-  label: string | null;
-  tag: string | null;
-  provider: MeteredProvider;
-  model: string | null;
-  kind: string | null;
-  method: string;
-  path: string;
-  body_sha256: string;
-  stream: boolean;
-  reserved_usd: number;
-  actual_usd: number | null;
-  input_tokens: number | null;
-  output_tokens: number | null;
-  /** HTTP status returned to the client. */
-  status: number;
-  refused: boolean;
-  /** free (not priced), reconciled, charged-reservation, rejected-unbilled, or null when nothing was reserved. */
-  settlement: 'free' | 'reconciled' | 'charged-reservation' | 'rejected-unbilled' | null;
-  error: string | null;
+export interface UsageLine {
+  at: string; key: string; provider: string; route: string; model: string | null;
+  outcome: 'forwarded' | 'refused' | 'failed';
+  reason?: string; status?: number; reserved_usd?: number; actual_usd?: number; input_tokens?: number; output_tokens?: number; charged_reservation?: boolean; streamed?: boolean;
 }
 
-export interface ProxyTotals { requests: number; refused: number; reserved_usd: number; actual_usd: number; input_tokens: number; output_tokens: number }
+const json = (status: number, kind: string, message: string) =>
+  new Response(JSON.stringify({ error: { kind, type: kind, message: `metering proxy: ${message}` } }), { status, headers: { 'content-type': 'application/json' } });
 
-export interface ProxyStats {
-  total: ProxyTotals;
-  byLabel: Record<string, ProxyTotals>;
-  byProvider: Record<string, ProxyTotals>;
-  exhausted: boolean;
+/** Provider usage from a server-sent-events body: OpenAI `usage` chunks and `response.completed`, Anthropic `message_start` and `message_delta`. */
+export function sseUsage(text: string): Record<string, unknown> | null {
+  const merged: Record<string, unknown> = {};
+  let found = false;
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('data:')) continue;
+    const data = line.slice(5).trim();
+    if (!data || data === '[DONE]') continue;
+    let obj: any;
+    try { obj = JSON.parse(data); } catch { continue; }
+    for (const u of [obj?.usage, obj?.response?.usage, obj?.message?.usage]) {
+      if (!u || typeof u !== 'object') continue;
+      for (const [k, v] of Object.entries(u)) if (typeof v === 'number' || (v && typeof v === 'object')) { merged[k] = v; found = true; }
+    }
+  }
+  return found ? merged : null;
 }
 
-export interface MeteringProxy {
-  url: string;
-  port: number;
-  /** label -> proxy token. */
-  tokens: Record<string, string>;
-  /** Proxy base URL per provider, for config files (gbrain `provider_base_urls.voyage`). */
-  baseUrls: Record<MeteredProvider, string>;
-  /** Child environment variables for `label`: base URLs and that label's token, for providers with a key or an upstream override. */
-  envFor(label: string): Record<string, string>;
-  stats(): ProxyStats;
-  /** True once any request was refused for budget or price. */
-  readonly exhausted: boolean;
-  /** The exact text of the latest refusal (no retry-safe escaping). */
-  readonly lastRefusal: string | null;
-  /** Wait for in-flight settlements, then stop listening. */
-  close(): Promise<void>;
+/** The output-token field a request uses, by provider and route. */
+function outputField(provider: ProviderName, route: string): string | null {
+  if (provider === 'anthropic') return 'max_tokens';
+  if (provider === 'openai' && route === '/v1/chat/completions') return 'max_completion_tokens';
+  if (provider === 'openai' && route === '/v1/responses') return 'max_output_tokens';
+  return null;
 }
-
-const RETRY_TRIGGERS = /429|50[0234]|529|rate/i;
 
 /**
- * Break every substring a client's retry check looks for (429, 500, 502,
- * 503, 504, 529, "rate") with a zero-width space, so a refusal is final.
+ * Forwards provider requests (each slot's base URL names the slot) and meters
+ * them. A request is charged to the cell bound to its slot when it arrives, so
+ * a request that finishes after the cell moved on still lands on the right
+ * cell; `finalize` waits for a cell's in-flight requests to drain. Requests
+ * with no bound cell are metered under `slot:<id>`.
  */
-export function retrySafe(text: string): string {
-  let out = text;
-  while (RETRY_TRIGGERS.test(out)) out = out.replace(new RegExp(RETRY_TRIGGERS.source, 'gi'), m => `${m[0]}\u200b${m.slice(1)}`);
-  return out;
-}
-
-const usd = (n: number) => `$${n.toFixed(n !== 0 && Math.abs(n) < 0.01 ? 6 : 2)}`;
-const sha256 = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
-const emptyTotals = (): ProxyTotals => ({ requests: 0, refused: 0, reserved_usd: 0, actual_usd: 0, input_tokens: 0, output_tokens: 0 });
-
-function bearer(header: string | null): string | null {
-  const m = header?.match(/^Bearer\s+(.+)$/i);
-  return m ? m[1].trim() : null;
-}
-
-export async function startMeteringProxy(options: MeteringProxyOptions): Promise<MeteringProxy> {
-  const { run, cellId } = options;
-  const realKeys = options.realKeys ?? process.env;
-  const upstreams = options.upstreams ?? {};
-  mkdirSync(dirname(resolve(options.requestLogPath)), { recursive: true });
-  mkdirSync(options.bodiesDir, { recursive: true });
-
-  const tokens: Record<string, string> = {};
-  const labelOf = new Map<string, string>();
-  for (const label of options.labels) {
-    if (!/^[a-z0-9][a-z0-9_.]*$/.test(label)) throw new Error(`metering proxy label ${JSON.stringify(label)} must be lower-case letters, digits, '_' or '.'`);
-    const token = `mpwp-${label}-${randomBytes(24).toString('hex')}`;
-    tokens[label] = token;
-    labelOf.set(token, label);
+export class MeteringProxy {
+  private server: ReturnType<typeof Bun.serve> | null = null;
+  readonly meters = new Map<string, Meter>();
+  /** Slots whose provider requests are charged to a ledger allowance (slot builds), not one ledger entry each. */
+  readonly allowances = new Map<string, BudgetAllowance>();
+  readonly counts = { forwarded: 0, refused: 0, failed: 0, tripwires: 0 };
+  private bindings = new Map<string, string>();
+  private inflight = new Map<string, number>();
+  private waiters = new Map<string, Array<() => void>>();
+  constructor(private options: { fetchImpl?: typeof fetch; hostname?: string; port?: number; upstream?: Partial<Record<ProviderName, string>>; policy?: LeasePolicy; controlToken?: string | null } = {}) {}
+  get port(): number { return this.server!.port as number; }
+  /** Charge the slot's provider requests to `key` (a cell id) from now on. */
+  bind(slot: string, key: string) { this.bindings.set(slot, key); }
+  unbind(slot: string) { this.bindings.delete(slot); }
+  private meter(key: string): Meter { let m = this.meters.get(key); if (!m) this.meters.set(key, m = newMeter()); return m; }
+  private settled(key: string) {
+    const n = (this.inflight.get(key) ?? 1) - 1;
+    if (n > 0) { this.inflight.set(key, n); return; }
+    this.inflight.delete(key);
+    for (const w of this.waiters.get(key) ?? []) w();
+    this.waiters.delete(key);
   }
-  const keyFor = (provider: MeteredProvider) => METERED_PROVIDERS[provider].keyEnv.map(k => realKeys[k]).find(v => typeof v === 'string' && v.length > 0);
-  const served = (provider: MeteredProvider) => Boolean(keyFor(provider) || upstreams[provider]);
-
-  const totals = emptyTotals();
-  const byLabel: Record<string, ProxyTotals> = {};
-  const byProvider: Record<string, ProxyTotals> = {};
-  const pending = new Set<Promise<void>>();
-  let exhausted = false;
-  let lastRefusal: string | null = null;
-
-  function record(line: RequestLogLine): void {
-    appendFileSync(options.requestLogPath, JSON.stringify(line) + '\n');
-    for (const t of [totals, byLabel[line.label ?? '(unknown)'] ??= emptyTotals(), byProvider[line.provider] ??= emptyTotals()]) {
-      t.requests++;
-      if (line.refused) t.refused++;
-      t.reserved_usd += line.reserved_usd;
-      t.actual_usd += line.actual_usd ?? 0;
-      t.input_tokens += line.input_tokens ?? 0;
-      t.output_tokens += line.output_tokens ?? 0;
+  /** Wait for `key`'s in-flight requests (at most `timeoutMs`), then remove and return its meter. */
+  async finalize(key: string, timeoutMs = 120_000): Promise<Meter> {
+    if (this.inflight.get(key)) {
+      await Promise.race([new Promise<void>(r => { const list = this.waiters.get(key) ?? []; list.push(r); this.waiters.set(key, list); }), Bun.sleep(timeoutMs)]);
     }
+    const m = this.meters.get(key) ?? newMeter();
+    this.meters.delete(key);
+    if (this.inflight.get(key)) m.undrained = this.inflight.get(key);
+    return m;
   }
-
-  function errorResponse(status: number, type: string, message: string): Response {
-    const safe = retrySafe(message);
-    return Response.json({ type: 'error', error: { type, code: status, status: type.toUpperCase(), message: safe } }, { status });
+  private log(line: UsageLine) {
+    if (line.outcome === 'refused') this.counts.refused++; else if (line.outcome === 'failed') this.counts.failed++; else this.counts.forwarded++;
+    if (this.options.policy?.usageLog) appendFileSync(this.options.policy.usageLog, JSON.stringify(line) + '\n');
   }
+  start() {
+    const send: Send = this.options.fetchImpl ?? ((input, init) => fetch(input, init));
+    this.server = Bun.serve({
+      port: this.options.port ?? 0, hostname: this.options.hostname ?? '127.0.0.1', idleTimeout: 0,
+      fetch: async req => {
+        const url = new URL(req.url);
+        if (url.pathname === '/__proxy/status' && req.method === 'GET') return Response.json(this.status());
+        if (url.pathname.startsWith('/__proxy/') && req.method === 'POST') return this.control(url.pathname, req);
+        const m = url.pathname.match(/^\/(?:([^/]+)\/)?(anthropic|openai|voyage)(\/.*)$/);
+        if (!m) return json(404, 'invalid_request', `no provider route ${url.pathname}`);
+        const [, slot = 'default', prov, rest] = m as unknown as [string, string | undefined, ProviderName, string];
+        const key = this.bindings.get(slot) ?? `slot:${slot}`;
+        this.inflight.set(key, (this.inflight.get(key) ?? 0) + 1);
+        let streaming = false;
+        try {
+          const r = this.options.policy
+            ? await this.forwardLeased(req, prov, rest, url.search, key, send, () => { streaming = true; return () => this.settled(key); })
+            : await this.forwardInProcess(req, slot, prov, rest, url.search, key, send);
+          return r;
+        } finally { if (!streaming) this.settled(key); }
+      },
+    });
+  }
+  stop() { this.server?.stop(true); }
 
-  function refusal(what: string, label: string, reason: string): { response: Response; message: string } {
-    exhausted = true;
-    const status = ledgerStatus({ ledgerPath: run.ledgerPath, runId: run.runId });
-    const r = status.run;
-    const message = `metering proxy refused ${what} for cell ${cellId} (process ${label}): ${reason}. `
-      + `Committed spend: ${r ? `${usd(r.committed_usd)} of budget run ${run.runId}'s ${usd(r.budget_usd)} budget` : `budget run ${run.runId} not found`}; `
-      + `${usd(status.totals.committed_usd)} of the ${status.totals.program_cap_usd === null ? 'unrecorded' : usd(status.totals.program_cap_usd)} program cap. Nothing was sent upstream. `
-      + `Next step, which spends nothing: ${STATUS_CLI} --budget-ledger ${run.ledgerPath}. `
-      + 'Stop scheduling paid work for this cell; a larger budget or cap needs the user\'s approval.';
-    lastRefusal = message;
-    return { response: errorResponse(402, REFUSAL_TYPE, message), message };
+  status() {
+    const p = this.options.policy;
+    const run = p ? ledgerStatus({ ledgerPath: p.lease.ledgerPath, runId: p.lease.runId }).run : null;
+    return { mode: p ? 'lease' : 'in-process', run_id: p?.lease.runId ?? null, lease_usd: p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
+      max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts };
   }
 
-  async function handle(req: Request): Promise<Response> {
-    const url = new URL(req.url);
-    const provider = PROVIDER_IDS.find(p => url.pathname === METERED_PROVIDERS[p].prefix || url.pathname.startsWith(`${METERED_PROVIDERS[p].prefix}/`));
-    if (!provider) return errorResponse(404, 'mpw_proxy_no_route', `metering proxy: no provider is mounted at ${url.pathname}; use one of ${PROVIDER_IDS.map(p => METERED_PROVIDERS[p].prefix).join(', ')}`);
-    const rest = url.pathname.slice(METERED_PROVIDERS[provider].prefix.length) || '/';
-    const presented = bearer(req.headers.get('authorization')) ?? req.headers.get('x-api-key') ?? req.headers.get('x-goog-api-key') ?? url.searchParams.get('key');
-    const label = presented ? labelOf.get(presented) ?? null : null;
-    const tag = req.headers.get('x-mpw-tag');
-    const raw: Uint8Array<ArrayBuffer> = req.method === 'GET' || req.method === 'HEAD' ? new Uint8Array() : new Uint8Array(await req.arrayBuffer());
-    const bodySha = sha256(raw);
-    const query = new URLSearchParams(url.searchParams);
-    query.delete('key');
-    const search = query.size ? `?${query}` : '';
-    const line: RequestLogLine = {
-      ts: new Date().toISOString(), cell_id: cellId, label, tag, provider, model: null, kind: null, method: req.method, path: rest, body_sha256: bodySha,
-      stream: false, reserved_usd: 0, actual_usd: null, input_tokens: null, output_tokens: null, status: 0, refused: false, settlement: null, error: null,
-    };
-    const finish = (response: Response, patch: Partial<RequestLogLine> = {}) => { record({ ...line, ...patch, status: response.status }); return response; };
+  private async control(path: string, req: Request): Promise<Response> {
+    if (this.options.controlToken && req.headers.get('x-proxy-control') !== this.options.controlToken) return json(403, 'invalid_request', 'control endpoints need the x-proxy-control token');
+    let body: { slot?: string; key?: string; timeout_ms?: number };
+    try { body = await req.json() as typeof body; } catch { return json(400, 'invalid_request', 'control body is not JSON'); }
+    if (path === '/__proxy/bind' && body.slot && body.key) { this.bind(body.slot, body.key); return Response.json({ ok: true }); }
+    if (path === '/__proxy/unbind' && body.slot) { this.unbind(body.slot); return Response.json({ ok: true }); }
+    if (path === '/__proxy/finalize' && body.key) return Response.json(await this.finalize(body.key, Math.min(Number(body.timeout_ms ?? 30_000), 120_000)));
+    return json(404, 'invalid_request', `no control route ${path}`);
+  }
 
-    if (!label) {
-      return finish(errorResponse(401, 'mpw_proxy_unknown_token', `metering proxy: the request to ${provider} carries no proxy token this cell issued. Use the credentials the launcher put in this process's environment; nothing was sent upstream.`),
-        { error: 'unknown or missing proxy token' });
-    }
-    if (raw.length) {
-      const bodyPath = join(options.bodiesDir, `${bodySha}.json`);
-      if (!existsSync(bodyPath)) writeFileSync(bodyPath, raw);
-    }
-    if (!served(provider)) {
-      return finish(errorResponse(401, 'mpw_proxy_no_key', `metering proxy: the launcher has no ${METERED_PROVIDERS[provider].keyEnv[0]} for ${provider}, so this cell cannot call it. Declare the key for the cell or use another provider.`),
-        { error: 'no launcher key for provider' });
-    }
-    let body: unknown;
-    if (raw.length) { try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; } }
-    const canonical = `${METERED_PROVIDERS[provider].upstream}${rest}${search}`;
+  private observe(key: string, status: number | 'failed' | 'unparseable') {
+    const m = this.meter(key);
+    m.upstream ??= { statuses: {}, failed: 0, unparseable: 0 };
+    if (status === 'failed') m.upstream.failed++;
+    else if (status === 'unparseable') m.upstream.unparseable++;
+    else m.upstream.statuses[String(status)] = (m.upstream.statuses[String(status)] ?? 0) + 1;
+  }
 
-    let price: RequestPrice | null;
-    try {
-      price = priceRequest(canonical, body);
-    } catch (error) {
-      if (!(error instanceof BudgetExceededError)) throw error;
-      const model = typeof (body as { model?: unknown } | null)?.model === 'string' ? String((body as { model: string }).model) : rest;
-      const { response, message } = refusal(`${provider} ${model}`, label,
-        `${error.message}. If this is a new or unpriced model, look up its current list price (USD per 1M input and output tokens) on the provider's pricing page and register it, with the date checked, in HARNESS_CHAT_PRICES in eval/runner/budget-ledger.ts, then resume the cell`);
-      return finish(response, { refused: true, error: message });
-    }
-    line.model = price?.model ?? null;
-    line.kind = price?.kind ?? null;
-    let id: string | null = null;
-    if (price) {
-      line.reserved_usd = reservationUsd(price);
-      try {
-        id = run.reserve(line.reserved_usd, `${price.provider}:${price.model} ${price.kind} (proxy ${cellId}/${label})`);
-      } catch (error) {
-        if (!(error instanceof BudgetExceededError)) throw error;
-        const { response, message } = refusal(`${price.provider}:${price.model} ${price.kind}`, label, error.message);
-        return finish(response, { refused: true, reserved_usd: 0, error: message });
-      }
-    }
+  private charge(key: string, prov: string, model: string | null, usd: number, unpriced: boolean) {
+    const meter = this.meter(key);
+    meter.requests++;
+    meter.usd += usd;
+    if (unpriced) meter.unpriced++;
+    if (model) { const k = `${prov}:${model}`; meter.byModel[k] ??= { usd: 0, requests: 0 }; meter.byModel[k].usd += usd; meter.byModel[k].requests++; }
+  }
 
+  /** In-process mode: the client is this harness's own gbrain child; its credentials are forwarded and the paid-request guard or a slot allowance reserves. */
+  private async forwardInProcess(req: Request, slot: string, prov: ProviderName, rest: string, search: string, key: string, send: Send): Promise<Response> {
+    const target = `${this.options.upstream?.[prov] ?? UPSTREAM[prov]}${rest}${search}`;
     const headers = new Headers(req.headers);
-    for (const h of ['host', 'content-length', 'connection', 'accept-encoding', 'x-mpw-tag', 'authorization', 'x-api-key', 'x-goog-api-key']) headers.delete(h);
-    const credential = keyFor(provider) ?? STUB_CREDENTIAL;
-    if (provider === 'anthropic') headers.set('x-api-key', credential);
-    else if (provider === 'gemini') headers.set('x-goog-api-key', credential);
-    else headers.set('authorization', `Bearer ${credential}`);
-    const target = `${upstreams[provider] ?? METERED_PROVIDERS[provider].upstream}${rest}${search}`;
-
-    const settle = (cost: { usd: number; input_tokens: number; output_tokens: number } | null, status: number, error: string | null) => {
-      if (!price || id === null) return { settlement: 'free' as const };
-      if (cost) { run.settle(id, cost); return { settlement: 'reconciled' as const, actual_usd: cost.usd, input_tokens: cost.input_tokens, output_tokens: cost.output_tokens }; }
-      if (status >= 400 && status < 500 && !error) { run.settle(id, { usd: 0, input_tokens: 0, output_tokens: 0 }); return { settlement: 'rejected-unbilled' as const, actual_usd: 0 }; }
-      run.settle(id, null);
-      return { settlement: 'charged-reservation' as const, actual_usd: line.reserved_usd };
-    };
-
-    let upstream: Response;
-    try {
-      upstream = await unguardedFetch(target, { method: req.method, headers, body: raw.length ? raw : undefined, redirect: 'manual' });
-    } catch (error) {
-      const message = `metering proxy could not reach ${provider}: ${(error as Error).message}`;
-      return finish(errorResponse(502, 'mpw_proxy_upstream_unreachable', message), { ...settle(null, 0, message), error: message });
+    for (const h of ['host', 'content-length', 'accept-encoding', 'connection']) headers.delete(h);
+    const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await req.text();
+    let price: ReturnType<typeof priceRequest>;
+    try { price = priceRequest(`${UPSTREAM[prov]}${rest}${search}`, body ? JSON.parse(body) : undefined); }
+    catch (e) { return json(402, 'budget', `refused before forwarding: ${(e as Error).message}`); }
+    let res: Response;
+    const allowance = this.allowances.get(slot);
+    const forward = () => send(target, { method: req.method, headers, body });
+    try { res = await (allowance ? allowance.run(forward) : forward()); }
+    catch (e) {
+      // A refused reservation never left the process; any other failure after sending is charged at its reservation, as the ledger does.
+      if ((e as Error).name !== 'BudgetExceededError' && price) this.charge(key, prov, price.model, reservationUsd(price), true);
+      return json(502, (e as Error).name === 'BudgetExceededError' ? 'budget' : 'product_error', (e as Error).message);
     }
-    const outHeaders = new Headers(upstream.headers);
-    for (const h of ['content-encoding', 'content-length', 'transfer-encoding', 'connection']) outHeaders.delete(h);
-    const isStream = (upstream.headers.get('content-type') ?? '').includes('event-stream');
-
-    if (!isStream || !upstream.body) {
-      let bytes: Uint8Array<ArrayBuffer>;
-      try { bytes = new Uint8Array(await upstream.arrayBuffer()); } catch (error) {
-        const message = `metering proxy lost the ${provider} response: ${(error as Error).message}`;
-        return finish(errorResponse(502, 'mpw_proxy_upstream_unreachable', message), { ...settle(null, upstream.status, message), error: message });
-      }
-      let parsed: unknown = null;
-      try { parsed = JSON.parse(new TextDecoder().decode(bytes)); } catch {}
-      const cost = price && parsed !== null ? usageCost(price, parsed) : null;
-      return finish(new Response(bytes, { status: upstream.status, statusText: upstream.statusText, headers: outHeaders }), settle(cost, upstream.status, null));
-    }
-
-    const [toClient, toMeter] = upstream.body.tee();
-    const status = upstream.status;
-    const metering = (async () => {
-      let patch: Partial<RequestLogLine>;
-      try {
-        const text = await new Response(toMeter).text();
-        patch = settle(price ? streamUsageCost(price, text) : null, status, null);
-      } catch (error) {
-        const message = `stream from ${provider} ended early: ${(error as Error).message}`;
-        patch = { ...settle(null, status, message), error: message };
-      }
-      record({ ...line, ...patch, stream: true, status });
-    })();
-    pending.add(metering);
-    void metering.finally(() => pending.delete(metering));
-    return new Response(toClient, { status, statusText: upstream.statusText, headers: outHeaders });
+    const text = await res.text();
+    if (price) {
+      let cost: ReturnType<typeof usageCost> = null;
+      try { cost = usageCost(price, JSON.parse(text)); } catch { cost = null; }
+      this.charge(key, prov, price.model, cost ? cost.usd : reservationUsd(price), !cost);
+    } else this.charge(key, prov, null, 0, false);
+    const out = new Headers(res.headers);
+    for (const h of ['content-encoding', 'content-length', 'transfer-encoding']) out.delete(h);
+    return new Response(text, { status: res.status, headers: out });
   }
 
-  const server = Bun.serve({
-    hostname: '127.0.0.1',
-    port: options.port ?? 0,
-    idleTimeout: 255,
-    async fetch(req) {
-      try { return await handle(req); } catch (error) {
-        return Response.json({ type: 'error', error: { type: 'mpw_proxy_error', message: retrySafe(`metering proxy error: ${(error as Error).message}`) } }, { status: 400 });
-      }
-    },
+  /** Lease mode: allowlist, tripwire, output cap, price, reserve, inject the key, forward, settle. Every refusal happens before forwarding. */
+  private async forwardLeased(req: Request, prov: ProviderName, route: string, search: string, key: string, send: Send, beginStream: () => () => void): Promise<Response> {
+    const p = this.options.policy!;
+    const at = new Date().toISOString();
+    const refuse = (status: number, kind: string, reason: string, model: string | null = null) => {
+      this.log({ at, key, provider: prov, route, model, outcome: 'refused', reason, status });
+      return json(status, kind, reason);
+    };
+    if (!ROUTES[prov].some(r => r.method === req.method && r.path.test(route))) return refuse(403, 'invalid_request', `route ${req.method} /${prov}${route} is not allowlisted`);
+    const realKey = (p.env ?? process.env)[KEY_ENV[prov]];
+    if (!realKey) return refuse(503, 'budget', `${KEY_ENV[prov]} is not set in the proxy's environment`);
+    const raw = req.method === 'GET' ? undefined : await req.text();
+    const markers = p.forbiddenMarkers ?? [];
+    if (raw && markers.length) {
+      const leaks = findLeaks(raw, markers);
+      if (leaks.length) { this.counts.tripwires++; return refuse(403, 'invalid_request', `tripwire: the request body carries ${leaks.length} forbidden marker(s); the cell is invalid`); }
+    }
+    let body: Record<string, any> | undefined;
+    if (raw !== undefined) {
+      try { body = JSON.parse(raw); } catch { return refuse(400, 'invalid_request', 'request body is not JSON'); }
+      if (!body || typeof body !== 'object' || Array.isArray(body)) return refuse(400, 'invalid_request', 'request body must be a JSON object');
+    }
+    const model = typeof body?.model === 'string' ? body.model : null;
+    const streamed = body?.stream === true;
+    if (streamed && (p.streaming ?? 'meter') === 'refuse') return refuse(400, 'invalid_request', 'streaming is disabled for this cell', model);
+    if (streamed && prov === 'openai' && route === '/v1/chat/completions') body!.stream_options = { ...(body!.stream_options ?? {}), include_usage: true };
+    const field = body ? outputField(prov, route) : null;
+    const cap = p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
+    if (field && body) {
+      const stated = [body.max_tokens, body.max_completion_tokens, body.max_output_tokens].filter((v): v is number => typeof v === 'number');
+      if (stated.some(v => v > cap)) return refuse(400, 'invalid_request', `requested ${Math.max(...stated)} output tokens, above this cell's cap of ${cap}`, model);
+      if (!stated.length) body[field] = cap;
+    }
+    const target = `${this.options.upstream?.[prov] ?? UPSTREAM[prov]}${route}${search}`;
+    const outBody = body === undefined ? undefined : JSON.stringify(body);
+    let price: ReturnType<typeof priceRequest>;
+    try { price = priceRequest(`${UPSTREAM[prov]}${route}${search}`, body); }
+    catch (e) { return refuse(402, 'budget', `unpriced request refused: ${(e as Error).message}`, model); }
+    if (price && p.allowModels && !p.allowModels.includes(`${prov}:${price.model}`)) return refuse(403, 'budget', `${prov}:${price.model} is not on this cell's model allowlist`, model);
+    const bounded = price ? { ...price, inputTokens: Math.max(price.inputTokens, Buffer.byteLength(outBody ?? '') + 64) } : null;
+    const reserved = bounded ? reservationUsd(bounded) : 0;
+    let entry: string | null = null;
+    if (bounded) {
+      try { entry = p.lease.reserve(reserved, `${prov}:${bounded.model} ${bounded.kind} [${key}]`); }
+      catch (e) { return refuse(402, 'budget', (e as Error).message, model); }
+    }
+    const headers = new Headers(req.headers);
+    for (const h of ['host', 'content-length', 'accept-encoding', 'connection', ...CREDENTIAL_HEADERS]) headers.delete(h);
+    if (prov === 'anthropic') { headers.set('x-api-key', realKey); if (!headers.has('anthropic-version')) headers.set('anthropic-version', '2023-06-01'); }
+    else headers.set('authorization', `Bearer ${realKey}`);
+    if (outBody !== undefined) headers.set('content-type', 'application/json');
+    const settle = (cost: ReturnType<typeof usageCost>, status: number, isStream: boolean) => {
+      if (entry) p.lease.settle(entry, cost);
+      const usd = cost ? cost.usd : reserved;
+      this.charge(key, prov, bounded?.model ?? null, usd, !!bounded && !cost);
+      this.log({ at, key, provider: prov, route, model: bounded?.model ?? model, outcome: 'forwarded', status, reserved_usd: reserved, actual_usd: usd,
+        input_tokens: cost?.input_tokens, output_tokens: cost?.output_tokens, charged_reservation: !!bounded && !cost, streamed: isStream });
+    };
+    let res: Response;
+    try { res = await send(target, { method: req.method, headers, body: outBody, timeout: false, signal: AbortSignal.timeout(UPSTREAM_DEADLINE_MS) } as RequestInit); }
+    catch (e) {
+      if (entry) p.lease.settle(entry, null);
+      this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded);
+      this.observe(key, 'failed');
+      this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: (e as Error).message.slice(0, 300), reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded });
+      return json(502, 'product_error', `upstream failed: ${(e as Error).message}`);
+    }
+    const out = new Headers(res.headers);
+    for (const h of ['content-encoding', 'content-length', 'transfer-encoding']) out.delete(h);
+    if ((res.headers.get('content-type') ?? '').includes('event-stream') && res.body) {
+      const done = beginStream();
+      const [client, meterBranch] = res.body.tee();
+      this.observe(key, res.status);
+      void new Response(meterBranch).text().then(
+        text => { const u = sseUsage(text); settle(bounded && u ? usageCost(bounded, { usage: u }) : null, res.status, true); },
+        () => settle(null, res.status, true),
+      ).finally(done);
+      return new Response(client, { status: res.status, headers: out });
+    }
+    const text = await res.text();
+    let cost: ReturnType<typeof usageCost> = null;
+    let parsed = true;
+    try { JSON.parse(text); } catch { parsed = false; }
+    this.observe(key, res.ok && !parsed ? 'unparseable' : res.status);
+    if (bounded && parsed) cost = usageCost(bounded, JSON.parse(text));
+    if (!cost && bounded && res.status >= 400 && res.status < 500) cost = { usd: 0, input_tokens: 0, output_tokens: 0 };
+    settle(cost, res.status, false);
+    return new Response(text, { status: res.status, headers: out });
+  }
+}
+
+/** The harness side of cross-process attribution: bind a slot to a key around a question or an ingest, then read its meter. */
+export class ProxyControl {
+  constructor(private base: string, private token: string | null = process.env.SHOOTOUT_PROXY_CONTROL_TOKEN ?? null) {}
+  private async post(path: string, body: unknown): Promise<unknown> {
+    const res = await fetch(`${this.base.replace(/\/$/, '')}${path}`, { method: 'POST', headers: { 'content-type': 'application/json', ...(this.token ? { 'x-proxy-control': this.token } : {}) }, body: JSON.stringify(body), keepalive: false });
+    if (!res.ok) throw new Error(`metering proxy ${path}: HTTP ${res.status}`);
+    return res.json();
+  }
+  bind(slot: string, key: string) { return this.post('/__proxy/bind', { slot, key }); }
+  unbind(slot: string) { return this.post('/__proxy/unbind', { slot }); }
+  finalize(key: string, timeoutMs = 30_000) { return this.post('/__proxy/finalize', { key, timeout_ms: timeoutMs }) as Promise<Meter>; }
+  /** Run `fn` with the slot's provider calls charged to `key`; returns its result and the key's meter. */
+  async around<T>(slot: string, key: string, fn: () => Promise<T>): Promise<{ value?: T; error?: unknown; meter: Meter }> {
+    await this.bind(slot, key);
+    let value: T | undefined, error: unknown;
+    try { value = await fn(); } catch (e) { error = e; }
+    await this.unbind(slot);
+    return { value, error, meter: await this.finalize(key) };
+  }
+}
+
+export interface ProxyCliArgs {
+  host: string; port: number; ledger: string; leaseUsd: number; runId: string; usageLog: string | null;
+  allowModels: string[] | null; maxOutputTokens: number | null; forbiddenMarkers: string[]; streaming: 'meter' | 'refuse'; upstream: Partial<Record<ProviderName, string>>; newRun: boolean;
+  controlToken: string | null;
+}
+
+export function parseProxyArgs(argv: string[]): ProxyCliArgs {
+  const one = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const listen = one('--listen') ?? '127.0.0.1:8787';
+  const at = listen.lastIndexOf(':');
+  const port = Number(listen.slice(at + 1));
+  if (at <= 0 || !Number.isInteger(port) || port < 0 || port > 65535) throw new Error('--listen must look like host:port');
+  const ledger = one('--budget-ledger'), runId = one('--run-id'), lease = one('--lease-usd');
+  if (!ledger || !runId || !lease) throw new Error('the proxy needs --budget-ledger <file>, --lease-usd <n> and --run-id <id>; it never forwards without a lease');
+  const streaming = (one('--streaming') ?? 'meter') as 'meter' | 'refuse';
+  if (!['meter', 'refuse'].includes(streaming)) throw new Error('--streaming must be meter or refuse');
+  const upstream: Partial<Record<ProviderName, string>> = {};
+  argv.forEach((a, i) => {
+    if (a !== '--upstream') return;
+    const [prov, base] = [argv[i + 1].slice(0, argv[i + 1].indexOf('=')), argv[i + 1].slice(argv[i + 1].indexOf('=') + 1)];
+    if (!(prov in UPSTREAM) || !/^https?:\/\//.test(base)) throw new Error('--upstream must look like openai=http://host:port');
+    upstream[prov as ProviderName] = base.replace(/\/$/, '');
   });
-  const url = `http://127.0.0.1:${server.port}`;
-  const baseUrls: Record<MeteredProvider, string> = {
-    openai: `${url}/openai/v1`, anthropic: `${url}/anthropic`, gemini: `${url}/gemini`, groq: `${url}/groq`, voyage: `${url}/voyage/v1`,
-  };
+  const markersFile = one('--forbidden-markers');
   return {
-    url,
-    port: server.port as number,
-    tokens,
-    baseUrls,
-    envFor(label) {
-      const token = tokens[label];
-      if (!token) throw new Error(`metering proxy has no token for label ${label}; labels: ${options.labels.join(', ')}`);
-      const env: Record<string, string> = {};
-      if (served('openai')) Object.assign(env, { OPENAI_BASE_URL: baseUrls.openai, OPENAI_API_KEY: token });
-      if (served('anthropic')) Object.assign(env, { ANTHROPIC_BASE_URL: baseUrls.anthropic, ANTHROPIC_API_KEY: token });
-      if (served('gemini')) Object.assign(env, { GOOGLE_GEMINI_BASE_URL: baseUrls.gemini, GEMINI_API_KEY: token, GOOGLE_GENERATIVE_AI_API_KEY: token });
-      if (served('groq')) Object.assign(env, { GROQ_BASE_URL: baseUrls.groq, GROQ_API_KEY: token });
-      if (served('voyage')) Object.assign(env, { VOYAGE_API_KEY: token });
-      return env;
-    },
-    stats() {
-      const copy = (t: ProxyTotals) => ({ ...t });
-      return {
-        total: copy(totals),
-        byLabel: Object.fromEntries(Object.entries(byLabel).map(([k, v]) => [k, copy(v)])),
-        byProvider: Object.fromEntries(Object.entries(byProvider).map(([k, v]) => [k, copy(v)])),
-        exhausted,
-      };
-    },
-    get exhausted() { return exhausted; },
-    get lastRefusal() { return lastRefusal; },
-    async close() {
-      await Promise.allSettled([...pending]);
-      server.stop(true);
-    },
+    host: listen.slice(0, at), port, ledger, leaseUsd: Number(lease), runId, usageLog: one('--usage-log') ?? null,
+    allowModels: one('--allow-models') ? one('--allow-models')!.split(',').map(s => s.trim()).filter(Boolean) : null,
+    maxOutputTokens: one('--max-output-tokens') ? Number(one('--max-output-tokens')) : null,
+    forbiddenMarkers: markersFile ? readFileSync(markersFile, 'utf8').split('\n').map(s => s.trim()).filter(Boolean) : [],
+    streaming, upstream, newRun: argv.includes('--new-run'), controlToken: one('--control-token') ?? process.env.SHOOTOUT_PROXY_CONTROL_TOKEN ?? null,
   };
+}
+
+export function startLeaseProxy(a: ProxyCliArgs, env: Record<string, string | undefined> = process.env): MeteringProxy {
+  const lease = BudgetRun.openLease({ runId: a.runId, leaseUsd: a.leaseUsd, ledgerPath: a.ledger, runner: 'metering-proxy', maxOutputTokens: a.maxOutputTokens, newRun: a.newRun });
+  const proxy = new MeteringProxy({ hostname: a.host, port: a.port, upstream: a.upstream, controlToken: a.controlToken,
+    policy: { lease, env, allowModels: a.allowModels, maxOutputTokens: a.maxOutputTokens ?? undefined, forbiddenMarkers: a.forbiddenMarkers, streaming: a.streaming, usageLog: a.usageLog ?? `${lease.ledgerPath}.usage.ndjson` } });
+  proxy.start();
+  return proxy;
 }
 
 if (import.meta.main) {
   const argv = process.argv.slice(2);
-  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
-  const need = (name: string) => flag(name) ?? (console.error(`metering-proxy: ${name} is required\n\nusage: bun eval/runner/metering-proxy.ts --budget-ledger <path> --budget-run-id <id> --cell-id <id> --labels a,b --ready-file <json> [--request-log <jsonl>] [--bodies-dir <dir>] [--port <n>] [--upstream <provider>=<url> ...]`), process.exit(2));
-  const readyFile = resolve(need('--ready-file'));
-  const run = BudgetRun.join({ runId: need('--budget-run-id'), ledgerPath: need('--budget-ledger') });
-  const proxy = await startMeteringProxy({
-    run,
-    cellId: need('--cell-id'),
-    labels: need('--labels').split(',').map(s => s.trim()).filter(Boolean),
-    requestLogPath: resolve(flag('--request-log') ?? join(dirname(readyFile), 'proxy-requests.jsonl')),
-    bodiesDir: resolve(flag('--bodies-dir') ?? join(dirname(readyFile), 'proxy-bodies')),
-    port: flag('--port') ? Number(flag('--port')) : 0,
-    upstreams: Object.fromEntries(argv.flatMap((a, i) => (a === '--upstream' ? [argv[i + 1].split(/=(.*)/s).slice(0, 2)] : []))),
-  });
-  mkdirSync(dirname(readyFile), { recursive: true });
-  const ready = { url: proxy.url, port: proxy.port, pid: process.pid, base_urls: proxy.baseUrls, env: Object.fromEntries(Object.keys(proxy.tokens).map(l => [l, proxy.envFor(l)])) };
-  writeFileSync(`${readyFile}.tmp`, JSON.stringify(ready, null, 2), { mode: 0o600 });
-  chmodSync(`${readyFile}.tmp`, 0o600);
-  renameSync(`${readyFile}.tmp`, readyFile);
-  console.error(`[metering-proxy] listening on ${proxy.url}; child environments in ${readyFile}`);
-  const stop = async () => { await proxy.close(); console.log(JSON.stringify(proxy.stats())); process.exit(0); };
-  process.on('SIGTERM', stop);
-  process.on('SIGINT', stop);
+  try {
+    if (argv[0] === 'summary') {
+      const one = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+      const s = ledgerStatus({ ledgerPath: one('--budget-ledger'), runId: one('--run-id') });
+      if (!s.run) throw new Error(`no lease ${one('--run-id')} in ${s.ledger}`);
+      const requests = BudgetRun.runRequests(s.ledger, s.run.run_id);
+      console.log(JSON.stringify({ run_id: s.run.run_id, lease_usd: s.run.budget_usd, committed_usd: s.run.committed_usd, overshoot_usd: s.run.overshoot_usd, requests,
+        max_output_tokens: BudgetRun.leaseMaxOutputTokens(s.ledger, s.run.run_id) ?? DEFAULT_MAX_OUTPUT_TOKENS, finished_at: s.run.finished_at }));
+    } else {
+      const a = parseProxyArgs(argv);
+      const proxy = startLeaseProxy(a);
+      const keys = (Object.keys(KEY_ENV) as ProviderName[]).filter(p => process.env[KEY_ENV[p]]);
+      process.stderr.write(`[metering-proxy] lease ${a.runId} $${a.leaseUsd.toFixed(2)} on ${a.host}:${proxy.port}; providers with keys: ${keys.join(', ') || 'none'}; ledger ${a.ledger}\n`);
+      const stop = () => { proxy.stop(); process.stderr.write(`[metering-proxy] stopped: ${JSON.stringify(proxy.status())}\n`); process.exit(0); };
+      process.on('SIGTERM', stop);
+      process.on('SIGINT', stop);
+    }
+  } catch (e) {
+    process.stderr.write(`[metering-proxy] ${(e as Error).message}\n`);
+    process.exit(e instanceof BudgetExceededError ? 3 : 2);
+  }
 }

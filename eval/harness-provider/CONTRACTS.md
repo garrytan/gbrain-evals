@@ -36,7 +36,7 @@ and costs nothing. Base URLs:
 | Groq | `GROQ_BASE_URL=<proxy>/groq`, `GROQ_API_KEY` | `/groq` | `https://api.groq.com` |
 | Voyage | gbrain `provider_base_urls.voyage=<proxy>/voyage/v1`, `VOYAGE_API_KEY` | `/voyage` | `https://api.voyageai.com` |
 
-## Metering proxy (`eval/runner/metering-proxy.ts`)
+## Metering proxy (`eval/runner/harness-metering-proxy.ts`)
 
 ```ts
 startMeteringProxy({

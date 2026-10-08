@@ -13,7 +13,9 @@
  * Files that held a dated citation before this guard existed are allowed for
  * the names they already contain (docs/comparison-systems.md stays as is by
  * decision). The harness locks may name the harness repository, which carries
- * the maker's organisation name.
+ * the maker's organisation name. Other evaluations' artifact trees, merged from
+ * main, name the systems they measure by design and are outside this guard's
+ * scope (OUT_OF_SCOPE); the guard covers everything else, README included.
  *
  *   bun scripts/check-comparator-name.ts            exit 1 on any hit
  *   bun scripts/check-comparator-name.ts --list     also print every allowed hit
@@ -41,6 +43,13 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
   'docs/benchmarks/2026-10-03-agent-operator/after-b3f4e8b/runs.tar.gz': ['product'],
 };
 
+/** Path prefixes of other evaluations' artifacts (open-source memory shootout, BEAM-1M failure analysis), not this wave's. */
+export const OUT_OF_SCOPE: readonly string[] = [
+  'docs/benchmarks/2026-10-06-oss-memory-shootout',
+  'docs/plans/2026-10-05-oss-memory-shootout/',
+  'docs/benchmarks/2026-10-08-beam-1m-failure-analysis',
+  'eval/systems/',
+];
 /**
  * Both names are also ordinary English. The product name is skipped in the
  * idioms "in/with/of <name>" and "<name> bias"; the maker name counts only in its organisation
@@ -98,6 +107,7 @@ export function scan(root: string, files = repoFiles(root)): { violations: Hit[]
   const violations: Hit[] = [];
   const allowed: Hit[] = [];
   for (const rel of files) {
+    if (OUT_OF_SCOPE.some(prefix => rel.startsWith(prefix))) continue;
     const path = join(root, rel);
     let bytes: Uint8Array;
     try {
