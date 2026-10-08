@@ -2,6 +2,17 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.47] - 2026-10-08
+
+### Facts-absorb quality gate: Claude Haiku 5.5 passes as gbrain's background fact-extraction model, GPT-6 Luna does not; write cost of three extraction models
+
+[Report](docs/benchmarks/2026-10-08-facts-extraction-model.md), [preregistration](docs/benchmarks/2026-10-08-facts-extraction-model/PREREGISTRATION.md) (SHA-256 `8f9be0d9…` frozen before any counted cell; post-run scorer amendments disclosed), gate and write-cost receipts. Item R2 of the 10x plan, wave 0; paired with gbrain #6338. $23.30 of the $40 cap.
+
+- **Gate (gbrain master `1935c74a`, v0.60.110.0).** The real `facts-absorb` job behind `gbrain serve`, on 170 pages of a seeded chat world (529 planted claims) and the 20 Cat 35 transcripts. Under the preregistered rule Claude Haiku 5.5 passes every check against Sonnet 4.6 and GPT-6 Luna fails attribution (−6.6 points); the extractor-disabled and drop-all-output mutants both fail. After the disclosed scorer fixes, the templated world is at a ceiling for all three models; on natural transcripts Haiku 5.5 covers 4.6 points fewer planted items (95% interval −9.0 to −0.6), inside the 10-point harm margin.
+- **Write cost (P8 protocol, 1,000 LongMemEval-S sessions).** Extraction off $0.32, today's Sonnet 4.6 default $15.94 (P8 measured $9.94 at v0.60.48), Haiku 5.5 $1.38 per 1,000 pages; GPT-6 Luna's arm hit the 3-hour drain limit (about $1.23, an estimate).
+- **Harness.** `eval/runner/facts-absorb-gate.ts` with its scorer and generator, `--rescore` / `--reread` modes, a write-cost arm for an explicit extraction model, and a response-transform hook on the shared metering proxy for the drop mutant. The lifecycle `freePort` test now holds an OS-assigned port instead of fixed port 47998, which sits in the ephemeral range.
+- **Version.** Main is at 0.10.46, so this release is 0.10.47.
+
 ## [0.10.46] - 2026-10-08
 
 ### Open-source memory comparison: gbrain and five open-source memory systems through one harness
