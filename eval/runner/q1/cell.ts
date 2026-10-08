@@ -7,7 +7,7 @@
  *   bun eval/runner/q1/cell.ts show --cell <id> [--json]
  *   bun eval/runner/q1/cell.ts run --cell <id> [--paid --budget-run-id <id>] [--limit N] [--out <dir>] [--arms a,b]
  *     [--shard i/n] [--system-url <shim URL>] [--provider-proxy <url>] [--aggregates <file>] [--max-attempts 3]
- *     [--no-frontier] [--finish-timeout-s 600] [--probe-timeout-s 900]
+ *     [--no-frontier] [--finish-timeout-s <default: the cell's expected hours, at least 600>] [--probe-timeout-s 900]
  *   bun eval/runner/q1/cell.ts merge --cell <id> --from <out dir>... --out <dir>
  *
  * A cell (eval/runner/q1/cells/definitions.ts) is one system x configuration
@@ -180,6 +180,13 @@ export function devOnly(def: Pick<CellDefinition, 'benchmark' | 'split' | 'only_
     why: 'a dev cell runs dev conversations only (eval/decisions/splits)', fix: { next: 'run', argv: ['bun', 'eval/runner/q1/cells/definitions.ts'] } });
   return new Set(def.only_conversations ?? dev);
 }
+
+/**
+ * How long ingest waits for a system's background work (/finish) by default: the cell's expected hours, at least ten
+ * minutes. A queued system drains for hours at scale (the extract-first server's recipe /finish took 185 minutes on the
+ * shootout's LoCoMo), and questions that start before it drains read a half-built store.
+ */
+export const finishTimeoutFor = (def: Pick<CellDefinition, 'expected_hours'>) => Math.max(600, Math.round(def.expected_hours * 3600));
 
 export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): boolean {
   if (def.split === 'dev' || def.benchmark === 'lme-m') return false;
@@ -635,7 +642,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       }
       await meter.phase(slot, 'background');
       let finish = { ready: false, waited_ms: 0, completeness: 'not reached' };
-      if (!importError) { try { const f = await system.finishIngest(ns, opts.finishTimeoutS ?? 600); finish = { ready: f.ready, waited_ms: f.waited_ms, completeness: f.completeness }; } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; } }
+      if (!importError) { try { const f = await system.finishIngest(ns, opts.finishTimeoutS ?? finishTimeoutFor(def)); finish = { ready: f.ready, waited_ms: f.waited_ms, completeness: f.completeness }; } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; } }
       const probeRecords = await Promise.all(probes);
       await meter.phase(slot, null);
       return { finish, probeRecords };
