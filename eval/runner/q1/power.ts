@@ -311,10 +311,13 @@ export function decide(results: readonly SimResult[], devMeans: Record<string, n
     full_family: { comparisons: FAMILY1_SIZE, mdd_points: full.mdd_points_single, rows_over_threshold: rowsOver },
     shrunk_family: shrink ? { comparisons: SHRUNK_SIZE, mdd_points: shrunk.mdd_points_single } : null,
     family1,
-    shrunk_comparators: family1 === 'shrunk' && devMeans ? strongestDevRows(devMeans) : null,
+    // The shrink happens whenever the full family is underpowered; a still-underpowered shrunk family is published
+    // descriptively, and its detectable difference is the four named comparisons'.
+    shrunk_comparators: shrink && devMeans ? strongestDevRows(devMeans) : null,
     detectable_difference_points: used.mdd_points_single,
-    note: family1 === 'shrunk' && !devMeans
+    note: shrink && !devMeans
       ? 'The four comparators are chosen from the dev smokes\' three-reader means (rerun with --dev-strength) and written into the preregistration before any S1 cell runs.'
+      : shrink ? `The four comparators are the strongest dev rows by three-reader mean; ${family1 === 'descriptive' ? 'their comparisons are still underpowered, so S1 is published descriptively with this detectable difference' : 'Family 1 tests gbrain-defaults against them'}. Comparator rows are exchangeable under these inputs, so one detectable difference applies to every row.`
       : 'Comparator rows are exchangeable under these inputs, so one detectable difference applies to every row; rerun when dev smokes give paired cross-system rows.',
   };
 }

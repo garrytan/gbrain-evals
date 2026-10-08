@@ -8,7 +8,7 @@ import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { decide, DEFAULT_OUTPUT, DEFAULT_SIM, DESIGNS, devInputs, minimumDetectable, PUBLIC_10M_CONVERSATION_SD, readDevRows, scenarios, simulate, strongestDevRows, type PowerReport, type SimResult } from '../../eval/runner/q1/power.ts';
+import { decide, DEFAULT_OUTPUT, DEFAULT_SIM, DESIGNS, devInputs, minimumDetectable, PUBLIC_10M_CONVERSATION_SD, READERS, readDevRows, scenarios, simulate, strongestDevRows, type PowerReport, type SimResult } from '../../eval/runner/q1/power.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const { rows, sources } = readDevRows();
@@ -59,6 +59,8 @@ describe('rules', () => {
   test('descriptive only when even the shrunk family cannot detect 10 points', () => {
     expect(decide([result('balanced', 15), result('shrunk', 12)], null)).toMatchObject({ family1: 'descriptive', detectable_difference_points: 12 });
     expect(decide([result('balanced', null), result('shrunk', null)], null).family1).toBe('descriptive');
+    expect(decide([result('balanced', 15), result('shrunk', 12)], { 'ext-a': 0.6, 'ext-b': 0.5, 'ext-c': 0.4, 'ext-d': 0.3, 'ext-e': 0.2 })).toMatchObject({ family1: 'descriptive', shrunk_comparators: ['ext-a', 'ext-b', 'ext-c', 'ext-d'] });
+    expect(decide([result('balanced', 8), result('shrunk', 6)], { 'ext-a': 0.6 }).shrunk_comparators).toBeNull();
   });
 });
 
@@ -88,7 +90,7 @@ describe('committed power.json', () => {
 
   test('was produced from the committed dev rows with the default counts', () => {
     expect(report.schema).toBe('gbrain-evals/q1-power/v1');
-    expect(report.options).toMatchObject({ sims: DEFAULT_SIM.sims, draws: DEFAULT_SIM.draws, seed: DEFAULT_SIM.seed, weights: 'webb', readers: 4 });
+    expect(report.options).toMatchObject({ sims: DEFAULT_SIM.sims, draws: DEFAULT_SIM.draws, seed: DEFAULT_SIM.seed, weights: 'webb', readers: READERS });
     for (const s of report.inputs.sources) expect(createHash('sha256').update(readFileSync(join(ROOT, s.path))).digest('hex')).toBe(s.sha256);
     expect(report.results.length).toBe(DESIGNS.length * 3);
   });
