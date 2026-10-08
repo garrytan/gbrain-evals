@@ -1,0 +1,18 @@
+{
+  "schema": "gbrain-evals.mirror.managed-sync-catchup/v1",
+  "measured_by": "gbrain scripts/bench/managed-sync-catchup.ts and foreground-put-page.ts (toxiproxy 57 ms, Docker Postgres pg16, Ubicloud standard-16 VM, Ubuntu 24.04)",
+  "mirrors": ["https://github.com/garrytan/gbrain/pull/6279"],
+  "upstream_doc": "docs/eval/managed-sync-catchup.md (gbrain), section 'Feeder, lanes to 16 and foreground priority'",
+  "before": "master a865f8f8 (v0.60.104.0)",
+  "after": "capy/sync-feeder-fast-writes d00f4d035 (#6279, ships as v0.60.107.0)",
+  "gates": {
+    "G1_steady_pages_per_min_10k_57ms": { "before": 174.8, "after": 372.7, "target": ">= 300", "met": true },
+    "G2_backlog_10k_wall_min_57ms": { "before": 74.5, "after": 33.5, "target": "<= 40", "met": true },
+    "G3_first_commit_s_1500_57ms": { "before": 78.9, "after": 20.3, "target": "<= 15", "met": false },
+    "G4_steady_by_lanes_pool20_57ms": { "lanes": [4, 6, 8, 12, 16], "after": [333.5, 369.4, 399.9, 406.6, 408.5], "runs": { "8": [418.1, 384.8, 396.9], "12": [418.8, 392.5, 408.4], "16": [409.3, 398.5, 417.6] }, "default6_repeats": [381.3, 378.9, 374.5], "target": "non-decreasing in lanes 4..16", "met": true },
+    "G5_put_page_idle_ms_p50_p95": { "before": [8615.6, 11645.1], "after": [2527.4, 2775.5], "target": "<= 3000 / 4000", "met": true },
+    "G6_put_page_during_catchup_ms_p50_p95": { "before": [11304.9, 17120.4], "after": [6852.4, 8375.4], "target": "<= idle + 1000 (provisional)", "met": false },
+    "G7_catchup_pages_per_min_with_write_every_5s": { "before": 4.6, "after": 58.2, "idle_steady_1500": 395.7, "target": ">= 50% of idle", "met": false },
+    "G8_steady_pages_per_min_0ms": { "before": 2404.5, "after": 2862, "target": ">= 700", "met": true }
+  }
+}
