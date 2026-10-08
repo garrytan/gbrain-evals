@@ -74,6 +74,15 @@ describe('arms file', () => {
   });
 });
 
+describe('reader policies', () => {
+  test('a reader limited to one policy adds arms only for that policy; an undefined policy is refused', () => {
+    const spec = parseArms(JSON.stringify({ policies: { 'vendor-default': { budget_tokens: null }, 'fixed-evidence': { budget_tokens: 8000 } }, contexts: ['native', 'rehydrated'],
+      readers: [{ id: 'opus', model: 'anthropic:claude-opus-5-5', policies: ['fixed-evidence'] }] }));
+    expect(expandArms(spec).map(a => a.id)).toEqual(['fixed-evidence.native.b8000.opus', 'fixed-evidence.rehydrated.b8000.opus']);
+    expect(() => parseArms(JSON.stringify({ policies: { 'fixed-evidence': { budget_tokens: 8000 } }, contexts: ['native'], readers: [{ id: 'x', model: 'm', policies: ['vendor-default'] }] }))).toThrow(/policies must name policies the file defines/);
+  });
+});
+
 describe('one ingest, many arms', () => {
   test('ingests once, retrieves once per policy, freezes one context per policy and mode, and replays it for a reader added later', async () => {
     const shim = countingShim();

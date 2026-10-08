@@ -499,7 +499,24 @@ The hash of each campaign is recomputed after this amendment because cell files,
 name changed; each earlier hash stays recorded above as history. Applied after every counted cell had settled, so no
 lease was reserved under one name and settled under the other.
 
+**A9 (2026-10-08), the D2 scope.** The arms file `arms/d2-frontier-<benchmark>.json` applied the four frontier readers
+to all four arms of every cell, which costs more than the campaign has left. The plan's D2-A (about $230) meant the
+frontier readers on a 100-question slice on the primary arm. D2 therefore runs, by Garry's choice on 2026-10-08, on
+LongMemEval-S only, `fixed-evidence` native, for the five open-source systems at common and gbrain-shootout common at
+frozen master: 100 questions each, with `anthropic:claude-opus-5-5`, `anthropic:claude-sonnet-5-5` and
+`openai:gpt-6.1-sol` counted and `anthropic:claude-fable-5-1` descriptive (A8). The arms file is
+`arms/d2-frontier-lme-s-primary.json`; no cell names it, so the campaign hash is unchanged. Two harness changes make
+the replay possible, and neither changes a counted row: a reader in an arms file may name the policies it reads
+(`policies`), and the retrievals a cell expects come from the policies the arms file defines rather than from the
+arms it expands; a replay of an in-process gbrain cell also no longer needs the live system's fidelity counters.
+D2 replays the frozen contexts on the host through the campaign ledger (about $90 to $100). D2 results are descriptive
+per reader; they enter no Holm family. Recorded before any D2 call.
+
 ## Changelog
+
+### 2026-10-08: amendment A9
+
+D2 runs on the LongMemEval-S primary arm for six systems, Fable descriptive; the arms file had over-applied D2.
 
 ### 2026-10-08: amendment A6, systems named by kind
 

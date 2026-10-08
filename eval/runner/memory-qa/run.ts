@@ -523,7 +523,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   };
   const { policy, source: knobsSource } = policyFor(a.policy);
   const brain = () => (system as GbrainLegacySystem).brain;
-  const fidelity = inProcessGbrain ? (system as GbrainLegacySystem).fidelity : { embedding_deferred_pages: 0, rerank_missing_queries: 0, reranked_queries: 0 };
+  const fidelity = (inProcessGbrain ? (system as GbrainLegacySystem).fidelity : undefined) ?? { embedding_deferred_pages: 0, rerank_missing_queries: 0, reranked_queries: 0 };
   const ingestStats = { conversations: 0, sessions: 0, failed_sessions: 0, synthetic_times: 0, degraded_conversations: 0, finish_timeouts: 0, readiness_probe_misses: 0, error_kinds: {} as Record<string, number>, usd: 0, upstream_trouble: 0 };
   const allIngestErrors: Array<IngestError & { conversation_ns: string }> = [];
   const invalidReasons: string[] = [];
@@ -537,7 +537,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
 
   // Multi-arm state: one canonical retrieval per (question, policy), one row set per arm, frozen reader contexts.
   const arms = a.arms ? expandArms(a.arms) : [];
-  const policies = [...new Set(arms.map(x => x.policy))];
+  const policies = a.arms ? (Object.keys(a.arms.policies).sort() as Array<(typeof arms)[number]['policy']>) : [];
   const judgeModel = a.arms?.judge ?? a.qa.judge;
   const rDir = retrievalsDir(a.output);
   if (arms.length) mkdirSync(rDir, { recursive: true });
