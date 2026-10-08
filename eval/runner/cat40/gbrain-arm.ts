@@ -346,8 +346,14 @@ export class GbrainSlot {
     git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '-m', staged ? 'first batch' : 'corpus']);
     const steps: SlotBuild['steps'] = [];
     const op = async (step: string, args: string[]) => {
-      const r = await runCli(this.run, args, 3_600_000);
+      let r = await runCli(this.run, args, 3_600_000);
       steps.push({ step, code: r.code, ms: r.ms, tail: (r.stdout + '\n' + r.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
+      // A provider 5xx on one chunk fails the whole embed, and gbrain quarantines that page for the rest of the
+      // process. A fresh process retries only the stale chunks, so one retry absorbs a transient provider error.
+      if (r.code !== 0 && args[0] === 'embed' && /failed to embed/.test(r.stdout + r.stderr)) {
+        r = await runCli(this.run, args, 3_600_000);
+        steps.push({ step: `${step}-retry`, code: r.code, ms: r.ms, tail: (r.stdout + '\n' + r.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
+      }
       if (r.code !== 0) throw new Error(`gbrain ${step} failed (exit ${r.code}): ${steps.at(-1)!.tail}`);
     };
     await op('init', ['init', '--pglite', '--path', join(this.dir, 'home', 'brain.pglite'), '--embedding-model', GBRAIN_EMBED_MODEL, '--non-interactive']);
@@ -395,7 +401,8 @@ export class GbrainSlot {
       await op('embed', [...embedArgs, '--yes']);
     } else {
       steps.push({ step: 'embed', code: first.code, ms: first.ms, tail: (first.stdout + '\n' + first.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
-      if (first.code !== 0) throw new Error(`gbrain embed failed (exit ${first.code}): ${steps.at(-1)!.tail}`);
+      if (first.code !== 0 && /failed to embed/.test(first.stdout + first.stderr)) await op('embed-retry', embedArgs);
+      else if (first.code !== 0) throw new Error(`gbrain embed failed (exit ${first.code}): ${steps.at(-1)!.tail}`);
     }
     if (staged) {
       await op('embed-verify', ['embed', '--stale', '--dry-run']);
