@@ -44,7 +44,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { generateLadderWorld, worldDigest, DEFAULT_LADDER_DIR, WIDE_FAMILIES, stratumOf, openCustodianTemplates, assertDevWorld, type LadderTask, type LadderWorld, type Family, type Stratum } from '../generators/model-ladder-gen.ts';
 import { gbrainSpecFrom, parseGbrainSpec } from './gbrain-under-test.ts';
-import { runAgent, runAgentText, provider, type AgentRun, type Arm, type ScriptedModel } from './cat40/loop.ts';
+import { runAgent, runAgentText, provider, HarnessError, type AgentRun, type Arm, type ScriptedModel } from './cat40/loop.ts';
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, type ArmName } from './cat40/arms.ts';
 import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
@@ -304,6 +304,23 @@ export interface ExperimentManifest {
   runner_commits?: string[];
   /** Hard worlds: identity, behavior settings and the evaluator's code hashes (DX-F14); a resume must match them. */
   hard?: { identity: ReturnType<typeof identityOf>; max_turns: number; tool_limits: string; judge: string | null; scorer: string; judge_prompt: string; settings_digest: string; code: Record<string, string>; runner_commit: string | null };
+}
+
+type ProbeSlot = { id: string; client: { call(name: string, args: Record<string, unknown>): Promise<string> } | null; restore(): Promise<void> };
+type ProbeProxy = { bind(slot: string, key: string): void; unbind(slot: string): void; finalize(key: string, timeoutMs?: number): Promise<{ byModel: Record<string, { requests: number }> }> };
+
+/** One search per slot must reach a reranker through this process's proxy (Cat 40 Hard R0); otherwise fail closed. */
+export async function rerankProbe(slots: ProbeSlot[], proxy: ProbeProxy, query: string): Promise<void> {
+  for (const s of slots) {
+    const key = `rerank-probe:${s.id}`;
+    proxy.bind(s.id, key);
+    try { await s.client!.call('search', { query }); }
+    finally { proxy.unbind(s.id); }
+    const m = await proxy.finalize(key, 30_000);
+    const reranks = Object.entries(m.byModel).filter(([k]) => /rerank/i.test(k)).reduce((n, [, v]) => n + v.requests, 0);
+    if (!reranks) throw new HarnessError(`gbrain ${s.id}: a probe search made no rerank request (provider calls: ${JSON.stringify(m.byModel)}); the reranker is unreachable or off, so the arm would run degraded. Fix the provider endpoint, or pass --gbrain-config search.reranker.enabled=false to measure without reranking on purpose.`);
+    await s.restore();
+  }
 }
 
 export function experimentFlags(argv: readonly string[]): Record<string, string | true> {
@@ -629,6 +646,13 @@ export async function main(argv = process.argv.slice(2)) {
         await s.restore();
       }
       log('write probe passed on every slot');
+      // A rerank probe (Cat 40 Hard R0): one search per slot must reach the reranker through this process's proxy,
+      // unless the run turned reranking off. A slot whose reranker is unreachable fails closed before any cell.
+      const rerankOff = gbrainConfig.some(([k, v]) => k === 'search.reranker.enabled' && /^(false|0|off)$/i.test(v));
+      if (!rerankOff && ctx.proxy) {
+        await rerankProbe(slots, ctx.proxy, world.docs?.[0]?.title ?? 'account');
+        log('rerank probe passed on every slot');
+      }
       ctx.pool = new GbrainPool(slots, hard ? { minHealthy: nSlots } : {});
       log(`gbrain ${gbrainBuild.version} (${gbrainBuild.commit.slice(0, 12)}) ready on ${nSlots} slots, surface ${surface}`);
     }

@@ -28,7 +28,7 @@ import {
 import { project, stepPlan, loadCostBasis, checkRoster, budgetCheck, STEPS } from '../../eval/runner/cat40/hard-ops.ts';
 import { runAgent, ProviderError, HarnessError, type Arm, type AgentRun } from '../../eval/runner/cat40/loop.ts';
 import { OracleArm, FsArm, FileStore } from '../../eval/runner/cat40/arms.ts';
-import { main, checkRunnerFlags, experimentFlags, bindExperiment } from '../../eval/runner/cat40-model-ladder.ts';
+import { main, checkRunnerFlags, experimentFlags, bindExperiment, rerankProbe } from '../../eval/runner/cat40-model-ladder.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { canonicalCells, readRecords, type CellRecordV2 } from '../../eval/runner/cat40/records.ts';
 import { closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -552,6 +552,16 @@ describe('operator tools (T1, T3, T5, T11: DX-F1, DX-F4, DX-F7, DX-F13, CEO-F4, 
     expect(() => bindExperiment(out, { ...manifest, hard: { ...hard, runner_commit: 'c3', code: { 'a.ts': 'h2' } } }, () => run('r1'))).toThrow('different experiment');
     expect(experimentFlags(['--retire-models', 'm2', '--per-family', '10'])).toEqual({ '--per-family': '10' });
     expect(() => checkRunnerFlags(['--retire-models', 'm2'])).not.toThrow();
+  });
+  test('the rerank probe fails closed when a slot\'s search reaches no reranker (Cat 40 Hard R0) and passes when it does', async () => {
+    const meters: Record<string, Record<string, { requests: number }>> = {};
+    let bound = '';
+    const proxy = { bind: (_s: string, k: string) => { bound = k; }, unbind: () => { bound = ''; }, finalize: async (k: string) => ({ byModel: meters[k] ?? {} }) };
+    const slot = (id: string, rerank: boolean) => ({ id, restored: 0, client: { call: async () => { meters[bound] = rerank ? { 'voyage:rerank-2.5': { requests: 1 }, 'openai:text-embedding-3-large': { requests: 1 } } : { 'openai:text-embedding-3-large': { requests: 1 } }; return '[]'; } }, async restore() { this.restored++; } });
+    const ok = slot('slot0', true);
+    await rerankProbe([ok], proxy, 'q');
+    expect(ok.restored).toBe(1);
+    await expect(rerankProbe([slot('slot1', false)], proxy, 'q')).rejects.toThrow('made no rerank request');
   });
   test('ledger roster: allocations within the $4,600 authorization (amendment A5); the Hard ledger is at $2,044; a missing or different ledger refuses', () => {
     const roster = JSON.parse(readFileSync(join(ROOT, 'docs/benchmarks/cat40-hard/ledger-roster.json'), 'utf8'));
