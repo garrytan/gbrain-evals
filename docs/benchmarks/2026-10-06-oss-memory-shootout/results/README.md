@@ -9,7 +9,7 @@ One directory per cell and lease (`<cell>/<lease>/`), copied from the cell VM af
   strict recall, retrieved session ids, tokens, latency and cost. Reader answers, retrieved item text and the packed
   contexts are left out: they carry dataset text. They are kept outside the repository with the pulled run.
 - Receipts are byte-for-byte as the VM wrote them, except that the VM home directory `/home/ubi/` in the gbrain overlay
-  path (`overlay.requested`) is written as `~/`, the rewrite the receipt writer applies to every other path.
+  path (`overlay.requested`) is written as `~/`, the rewrite the receipt writer applies to every other path. The D2 reader arms ran on the host, and their receipts write the host home directory (`/home/user/`) the same way.
 
 The manifests and campaign hash are in [manifests/](../manifests/) and the rules in the
 [preregistration](../../2026-10-06-oss-memory-shootout-preregistration.md).
@@ -63,7 +63,21 @@ the guard now does the same (`a165ef57`). The campaign ledger keeps the 1,800 en
 `correction-a165ef575f7e`, of −$144.38 naming the rows, the rule and the commit (amendment A9). The rejected rows were
 `reader_error` (harness failures) and were retried on resume.
 
+### Harness code after main's v0.10.44 runner changes
+
+Main's memory-qa changes (#100) arrived after every counted cell had run. The memory-system harness that ran the cells
+now lives verbatim in `eval/runner/memory-qa/run-systems.ts`, and `run.ts` (main's runner) dispatches any run with a
+memory-system flag (`--system`, `--arms`, `--replay`, `--sealed-profile`, `--provider-proxy` and the rest) to it, so
+the cells' runner code is unchanged. Three changes in the shared reading helpers (`qa.ts`) would differ from what ran
+if a cell were rerun today: the legacy LongMemEval reading prompt (`readerPrompt`, used by the `gbrain-legacy` cells)
+now orders BEAM sessions by date rather than by month name; reader and judge token counts are provider-normalized
+input totals with a usage receipt per call; and `temperature` is withheld from every Claude 5-family model (main's
+rule), which matches the fix the D2 replays used for Opus 5.5, Sonnet 5.5 and Fable 5.1. The multi-arm cells render
+their own evidence and the D2 replays read the frozen prompts byte for byte, so neither is affected.
+
 ## Changelog
+
+- 2026-10-08: Main's runner changes noted (harness moved verbatim to run-systems.ts; three shared-helper differences).
 
 - 2026-10-08: D2 frontier-reader arms (Opus 5.5, Sonnet 5.5, `gpt-6.1-sol`, Fable 5.1) on the six LongMemEval-S primary cells, added beside each cell's existing arms; the original arms' files are unchanged.
 

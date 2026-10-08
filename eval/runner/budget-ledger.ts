@@ -1066,14 +1066,22 @@ const RERANK_PRICES: Record<string, number> = {
   'voyage:rerank-2.5-lite': 0.02,
 };
 
+interface TokenPrices { input: number; output: number; cache_read?: number; cache_write?: number }
+/** A model whose prompts over `above_input_tokens` (cache reads and writes included) are billed at other rates for the whole request. */
+export interface ChatPrice extends TokenPrices { long?: TokenPrices & { above_input_tokens: number } }
+
 /**
  * Chat list prices, USD per 1M tokens, checked against the providers' pricing
- * pages on 2026-10-02 (claude-fable-5-1 on 2026-10-05). They take precedence over the pinned gbrain table,
+ * pages on 2026-10-02 (claude-fable-5-1 on 2026-10-05; claude-haiku-5-5 and the
+ * GPT-6 long-prompt tiers on 2026-10-08). They take precedence over the pinned gbrain table,
  * which lacks newer models and lists stale prices for some (gpt-5.5, gpt-5.2).
  * Cache prices apply when the response reports cached tokens.
  */
-export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: number; cache_read?: number; cache_write?: number }> = {
+export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
   'anthropic:claude-haiku-4-5': { input: 1, output: 5, cache_read: 0.1, cache_write: 1.25 },
+  // platform.claude.com/docs/en/models/haiku-5-5/overview (checked 2026-10-08): 5-minute cache writes; prompts over
+  // 100,000 tokens pay the long-prompt rates.
+  'anthropic:claude-haiku-5-5': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125, long: { above_input_tokens: 100_000, input: 0.5, output: 2.5, cache_read: 0.05, cache_write: 0.625 } },
   'anthropic:claude-sonnet-4-5': { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 },
   'anthropic:claude-sonnet-4-6': { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 },
   'anthropic:claude-sonnet-5': { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5 },
@@ -1097,10 +1105,12 @@ export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: numbe
   'openai:gpt-5.4-mini': { input: 0.75, output: 4.5, cache_read: 0.075 },
   'openai:gpt-5.5': { input: 5, output: 30, cache_read: 0.5 },
   'openai:gpt-6-sol': { input: 2, output: 10, cache_read: 0.2 },
-  'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5 },
-  // developers.openai.com/api/docs/pricing, checked 2026-10-05 (short-context standard rates).
-  'openai:gpt-6-luna': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 },
-  'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5 },
+  // developers.openai.com/api/docs/pricing, short-context standard rates checked 2026-10-05; the long-prompt tier
+  // ("Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full
+  // request", developers.openai.com/api/docs/models/<model>) checked 2026-10-08.
+  'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5, long: { above_input_tokens: 272_000, input: 4, output: 15, cache_read: 0.2, cache_write: 5 } },
+  'openai:gpt-6-luna': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125, long: { above_input_tokens: 272_000, input: 0.2, output: 0.75, cache_read: 0.02, cache_write: 0.25 } },
+  'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5, long: { above_input_tokens: 272_000, input: 20, output: 75, cache_read: 2, cache_write: 25 } },
 };
 
 /** A dated API snapshot (`gpt-4o-2024-08-06`) is billed at its family's list price. */
@@ -1121,6 +1131,8 @@ export interface RequestPrice {
   cache_write?: number;
   /** True when the request may write the prompt cache at a price above `input`; the reservation then prices all input at `cache_write`. */
   cacheWritePremium?: boolean;
+  /** Long-prompt rates, used when the input estimate (reservation) or the reported input (settlement) exceeds the threshold. */
+  long?: ChatPrice['long'];
   /** Conservative input-token estimate (3 bytes per token), including tool schemas and continuation context. */
   inputTokens: number;
   maxOutputTokens: number;
@@ -1186,13 +1198,14 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
   // OpenAI caches automatically; Anthropic writes its cache only where a request sets cache_control.
   const cacheWritePremium = price.cache_write !== undefined && price.cache_write > price.input
     && (provider !== 'anthropic' || JSON.stringify(b).includes('"cache_control"'));
-  return { provider, model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, cache_write: price.cache_write, cacheWritePremium, inputTokens, maxOutputTokens };
+  return { provider, model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, cache_write: price.cache_write, cacheWritePremium, inputTokens, maxOutputTokens, ...(price.long ? { long: price.long } : {}) };
 }
 
-/** Worst-case reservation: input estimate (at the cache-write price when it applies) plus the full output allowance. */
+/** Worst-case reservation: input estimate (at the cache-write price when it applies) plus the full output allowance, at long-prompt rates when the estimate crosses the model's threshold. */
 export function reservationUsd(price: RequestPrice): number {
-  const inputPrice = price.cacheWritePremium ? Math.max(price.input, price.cache_write ?? 0) : price.input;
-  return (price.inputTokens * inputPrice + price.maxOutputTokens * price.output) / 1e6;
+  const rates = price.long && price.inputTokens > price.long.above_input_tokens ? price.long : price;
+  const inputPrice = price.cacheWritePremium ? Math.max(rates.input, rates.cache_write ?? 0) : rates.input;
+  return (price.inputTokens * inputPrice + price.maxOutputTokens * rates.output) / 1e6;
 }
 
 /** Cost from provider-reported usage, or null when the response carries none. */
@@ -1206,13 +1219,14 @@ export function usageCost(price: RequestPrice, responseBody: unknown): { usd: nu
   if (inputTokens === 0 && outputTokens === 0) return null;
   const reported = price.provider === 'openrouter' && typeof usage.cost === 'number' ? usage.cost as number : null;
   if (reported !== null) return { usd: reported, input_tokens: inputTokens, output_tokens: outputTokens };
-  // Cached input: Anthropic reports reads and writes beside input_tokens; OpenAI counts cached tokens inside input_tokens.
+  // Cached input: Anthropic reports reads and writes beside input_tokens; OpenAI counts cache reads and writes inside input_tokens.
   const details = (usage.input_tokens_details ?? usage.prompt_tokens_details) as Record<string, unknown> | undefined;
-  const openaiCached = typeof details?.cached_tokens === 'number' ? details.cached_tokens as number : 0;
-  const cacheRead = n('cache_read_input_tokens') + openaiCached;
-  const cacheWrite = n('cache_creation_input_tokens');
-  const usd = ((inputTokens - cacheRead - cacheWrite) * price.input + cacheRead * (price.cache_read ?? price.input)
-    + cacheWrite * (price.cache_write ?? price.input) + outputTokens * price.output) / 1e6;
+  const detail = (key: string) => (typeof details?.[key] === 'number' ? details[key] as number : 0);
+  const cacheRead = n('cache_read_input_tokens') + detail('cached_tokens');
+  const cacheWrite = n('cache_creation_input_tokens') + detail('cache_write_tokens');
+  const rates = price.long && inputTokens > price.long.above_input_tokens ? price.long : price;
+  const usd = ((inputTokens - cacheRead - cacheWrite) * rates.input + cacheRead * (rates.cache_read ?? rates.input)
+    + cacheWrite * (rates.cache_write ?? rates.input) + outputTokens * rates.output) / 1e6;
   return { usd, input_tokens: inputTokens, output_tokens: outputTokens };
 }
 

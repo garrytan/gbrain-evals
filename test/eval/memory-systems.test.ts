@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { loadFixture, type Conversation, type MemoryQuestion, type Session } from '../../eval/runner/memory-qa/corpus.ts';
 import { canonicalize, crossSystemExclusion, freezeManifest, outcomeOf, type Manifest } from '../../eval/runner/memory-qa/outcomes.ts';
 import { readerPrompt } from '../../eval/runner/memory-qa/qa.ts';
-import { parseRunArgs, runArm } from '../../eval/runner/memory-qa/run.ts';
+import { parseRunArgs, runArm } from '../../eval/runner/memory-qa/run-systems.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { pairObservations } from '../../eval/runner/stats/paired.ts';
 import { toObservation } from '../../eval/runner/stats/rows.ts';
@@ -386,5 +386,16 @@ describe('memory-qa with a MemorySystem', () => {
     await expect(runArm(args(join(tmp, 'y'), '--system', 'fake', '--facts', 'conversation'))).rejects.toThrow(/need --system gbrain/);
     await expect(runArm(args(join(tmp, 'z'), '--context', 'native'))).rejects.toThrow(/legacy rehydrated/);
     await expect(runArm(args(join(tmp, 'w'), '--system', 'nonsense'))).rejects.toThrow(/--system must be/);
+  });
+});
+
+describe('run.ts dispatch', () => {
+  test('memory-system flags send a run to run-systems.ts; a plain gbrain run stays on run.ts', async () => {
+    const main = await import('../../eval/runner/memory-qa/run.ts');
+    const cell = main.parseRunArgs(['--benchmark', 'fixture', '--system', 'gbrain', '--output', '/tmp/x']) as unknown as Record<string, unknown>;
+    expect(cell.system).toBe('gbrain');
+    const plain = main.parseRunArgs(['--benchmark', 'fixture', '--output', '/tmp/x']) as unknown as Record<string, unknown>;
+    expect('system' in plain).toBe(false);
+    expect(main.isSystemsArgv(['--arms', 'a.json'])).toBe(true);
   });
 });

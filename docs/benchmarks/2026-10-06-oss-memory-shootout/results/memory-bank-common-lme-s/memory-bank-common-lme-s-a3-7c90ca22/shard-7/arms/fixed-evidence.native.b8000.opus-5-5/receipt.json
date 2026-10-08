@@ -48,7 +48,7 @@
     "input_tokens": 456506,
     "output_tokens": 21628,
     "basis": "budget ledger oss-shootout:oss-memory-shootout-p1-2026-10-06T17-09-14-317Z-5a190893: 72 paid requests, 0 charged at their reservation because usage was unavailable",
-    "ledger": "/home/user/.capy/work/shootout/budget/oss-memory-shootout.sqlite",
+    "ledger": "~/.capy/work/shootout/budget/oss-memory-shootout.sqlite",
     "program_cap_usd": 1450,
     "overshoot_usd": 0.127352,
     "event_loop_lag_ms": {

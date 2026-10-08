@@ -9,7 +9,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { homedir, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { checkSealedDestinations, exportAggregates, exportCell, sealedPaths } from '../../eval/runner/memory-qa/sealed-profile.ts';
-import { parseRunArgs, runArm } from '../../eval/runner/memory-qa/run.ts';
+import { parseRunArgs, runArm } from '../../eval/runner/memory-qa/run-systems.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const custody = mkdtempSync(join(tmpdir(), 'custody-'));
