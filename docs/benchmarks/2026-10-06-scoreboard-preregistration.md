@@ -458,7 +458,8 @@ question without its own date gets, by sorting raw date strings. Q1's packer use
 BEAM-1M write `Month-DD-YYYY`, and LoCoMo writes "1:56 pm on 8 May, 2023", so the reader would have seen S2a, S2b and
 S3 sessions in alphabetical order of the month name, with a current date that is often not the latest session (8 of
 11 BEAM-1M dev conversations in that analysis). No sealed cell had run.
-- Rehydrated packs now order sessions by the event time the ingest plan parses (`eventTimeOf`), with undated
+- Rehydrated packs now order sessions by the event time the ingest plan parses (`eventTimeOf`, whose BEAM parse is
+  the same `Month-DD-YYYY` mapping as #100's `sessionDateKey`; Q1 also parses LoCoMo, ISO and undated sessions), with undated
   sessions first and ties in pack order. The fallback current date is the raw date of the latest session by event
   time. A session with no date of its own shows the time the ingest plan gave it, which covers 10m-7's 93 undated
   sessions under A7. Native packs already ordered items by their event time; only their current date changes.
@@ -466,22 +467,51 @@ S3 sessions in alphabetical order of the month name, with a current date that is
   their string order equals their event-time order with no ties between distinct strings, and all 1,000 questions
   carry their own date. BEAM-10M's ISO dates already sorted correctly, so apart from 10m-7's undated sessions S1 is
   unchanged too.
-- The public campaign (`q1-scoreboard-public`) launched on 2026-10-08 at hash
-  `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` (tree at `a22e3d81`, before this
-  amendment). By the check above its prompts are identical under A8, so its cells stand and it renders from its
-  launch tree. At the A8 tree the same manifest hashes
-  `12d3e7674389727b2b14f2354688c5dec0754d60896c6a1cad7911c2194e1753`.
 - The LoCoMo dev smoke (A4) used the string order. Its reader calibration factors don't depend on order. Its
   ranking of the four shrink comparators, which affected every system the same way, stands as recorded.
-- The sealed campaign's hash changes; the freeze checklist records it. The campaign manifests themselves (cells,
-  images, executed paths) are unchanged.
+- **gbrain-evals main merged before the re-freeze** (v0.10.46: #89 the open-source comparison, #99 usage receipts,
+  #100 the BEAM-1M analysis), with conflicts resolved toward this campaign's frozen behavior:
+  - Sampling (#100's Claude 5 rule, `sendsTemperature`) replaces Q1's own rule. For all eight models the campaign
+    names, the send-or-omit temperature decision is identical; Q1's effort, system message, judge retry and
+    null-temperature options are kept, as are the proxy base URLs.
+  - Reranker fidelity checks (#100) live in the classic gbrain path of `memory-qa/run.ts`; no Q1 cell runs it
+    (gbrain-defaults answers through its shim).
+  - Usage receipts (#99): a chat result's `input_tokens` is now the provider's total and the raw usage is kept. Q1
+    still writes its answer records with its own normalizer (`q1/usage.ts`), now fed the raw provider usage, which
+    gives the same buckets; the test fixtures were rewritten as raw usage objects and expect the same numbers.
+    Reconciling `q1/usage.ts` with #99's receipt waits for landing.
+  - The shared harness files (`systems/*`, `shootout-cell.ts`, `metering-proxy.ts`, the shims, `bootstrap.sh`) keep
+    Q1's versions; #89's later additions are ported where they do not touch Q1 cells (reader policies in arms files,
+    `export-cell`, the fake provider's status route, a VM custody root for the open-source comparison's sealed
+    cells, never set for Q1). #89's runners now run on these modules (for example the multi-line item renderer), so
+    its published numbers reproduce at its merge commit `ccd49e01`.
+  - Main's price table adds GPT-6.1 Sol's long-prompt tier (over 272,000 input tokens). No Q1 estimate changes; the
+    metering proxy charges such calls at that rate.
+  - The executed tree names the `eval/systems` paths Q1 runs (the open-source comparison's own bundles there are
+    not Q1's) and adds `usage-receipt.ts` and `openai-judge-shim.ts`, which `qa.ts` now imports. Cells and images
+    are unchanged.
+- The public campaign (`q1-scoreboard-public`) launched on 2026-10-08 at hash
+  `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` (tree at `a22e3d81`, before this
+  amendment). Its LongMemEval prompts are identical under the date rule above, and its reader and judge requests are
+  built the same way after the merge, so its cells stand; it renders from its launch tree.
+- The sealed campaign's hash changes; the freeze checklist records it.
+
+**A9 (2026-10-08): the verbatim-session shim's open-file limit.** On the public run, `ext-verbatim-session` returned
+`retrieval_error` ("Too many open files") for all 100 LongMemEval-S slice questions. The shim keeps one persistent
+store per haystack in one container, and a 100-haystack cell holds about 1,000 open files, past the container
+default of 1,024; reproduced locally (73 of 120 namespaces failed). The bundle's compose file now sets the shim's
+`nofile` limit to 65,536 (300 namespaces, 0 errors). It is a harness limit, not the product's behavior, so the
+failed cell is not a counted result. Its S5 cell was stopped during setup, before its command ran, and closed at $0.
+Both verbatim-session cells rerun as `q1-scoreboard-public-r2` ($16.96 in leases, $20 cap) at the A8 tree. Sealed
+cells use the same bundle, so the sealed campaign carries the fix.
 
 ## Changelog
 
-### 2026-10-08: amendment A8
+### 2026-10-08: amendments A8 and A9
 
-Reader dates follow parsed event time; LongMemEval prompts byte-identical. Freeze commit `51cdb2b8`; sealed hash
-`e50d96aa`; the public campaign keeps its launch hash `52757aab`.
+Reader dates follow parsed event time (LongMemEval prompts byte-identical); gbrain-evals main (v0.10.46) merged before
+the re-freeze; the verbatim-session shim's open-file limit raised and its two public cells rerun as
+`q1-scoreboard-public-r2`.
 
 ### 2026-10-08: LongMemEval-M launches as public
 
