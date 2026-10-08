@@ -1,11 +1,12 @@
 # What gbrain hands the reader under a token budget: plan (v3)
 
-Status: v3, the final autoplan version, awaiting Garry's approval. It integrates the CEO phase
-([Claude](reviews/ceo-claude.md), [Astra](reviews/ceo-astra.md)) and the engineering phase
-([Claude](reviews/eng-claude.md), [Astra](reviews/eng-astra.md)), each with two independent voices. Still planning
-only: no paid call was made and no gbrain or harness code changed. Eight calls are open for Garry under
-[Decisions for Garry](#decisions-for-garry); each has a recommended default, and nothing that depends on one runs
-before he answers it.
+Status: v3, approved by Garry on 2026-10-08 with all eight recommended defaults (G1 to G8 as written below) and with
+every cap doubled: program $700 (was $350), E1 $100, E2 $270, E3 $10, E4 $80, H1 $240. Expected costs are unchanged;
+the extra is headroom, not new scope. It integrates the CEO phase ([Claude](reviews/ceo-claude.md),
+[Astra](reviews/ceo-astra.md)) and the engineering phase ([Claude](reviews/eng-claude.md),
+[Astra](reviews/eng-astra.md)), each with two independent voices. The approval record is under
+[Decisions for Garry](#decisions-for-garry). Lane A (E1's harness work and its paid run) can start; gbrain PR 1 and E2
+wait for E1's readings.
 
 The diagnosis comes from the committed shootout rows and a keyless replay ($0, hash vectors, no provider key in the
 environment). Written 2026-10-08 against gbrain-evals `f1ce49fe` (main), the shootout results at `9c07b7e2` (branch
@@ -1002,15 +1003,15 @@ Estimates are cold cache and priced per arm from each arm's own token envelope, 
 and a margin. Caps are proposals for approval; the budget ledger's reservations enforce them, and a spreadsheet
 estimate is not a spending limit.
 
-| Step | What it buys | v2 expected / cap | v3 expected / cap | Approval |
-|---|---|---:|---:|---|
-| E1 | adapter-or-product split; dates, rendering, hit count, depth, each on a matched pair; facts probe | $44 / $50 | $47 / $50 | G2 |
-| E2 | dev verdict on the C2 family on the LongMemEval-S 500, frontier check, sweep, C5 | $110 / $160 | $110 / $135 | G4 |
-| E3 | C3 retrieval gate | $1.20 / $5 | $1.20 / $5 | with E2 |
-| E4 | C4 stage 1, budgeted facts lane on LoCoMo and BEAM dev | $27 / $40 | $27 / $40 | G6 |
-| H1 | held-out decision on sealed v2, one opening | $85 / $120 | $85 / $120 | after dev, with custody |
-| **Program total** | | **about $267 / $375** | **about $270 / $350** | G4 |
-| Separate approvals | C4 slice stage (about $110); C4 production candidate; C5 on the 500 ($9.25) | | | each its own |
+| Step | What it buys | v2 expected / cap | v3 expected / cap | Approved cap (2026-10-08) | Approval |
+|---|---|---:|---:|---:|---|
+| E1 | adapter-or-product split; dates, rendering, hit count, depth, each on a matched pair; facts probe | $44 / $50 | $47 / $50 | $100 | G2 |
+| E2 | dev verdict on the C2 family on the LongMemEval-S 500, frontier check, sweep, C5 | $110 / $160 | $110 / $135 | $270 | G4 |
+| E3 | C3 retrieval gate | $1.20 / $5 | $1.20 / $5 | $10 | with E2 |
+| E4 | C4 stage 1, budgeted facts lane on LoCoMo and BEAM dev | $27 / $40 | $27 / $40 | $80 | G6 |
+| H1 | held-out decision on sealed v2, one opening | $85 / $120 | $85 / $120 | $240 | after dev, with custody |
+| **Program total** | | **about $267 / $375** | **about $270 / $350** | **$700** | G4 |
+| Separate approvals | C4 slice stage (about $110); C4 production candidate; C5 on the 500 ($9.25) | | | | each its own |
 
 What moved and why. E1 adds two matched Sonnet controls (+$3.70) and replaces two `query` retrievals with one frozen
 list and one live parity call (−$0.60). E2's cap drops by the $25 v2 reserved for reader calls on the default-budget
@@ -1126,6 +1127,23 @@ this plan.
 
 Each needs Garry's call because it changes a product contract, the direction of the plan or its budget. The
 recommended default is what the plan does if he accepts it.
+
+**Approved 2026-10-08.** Garry accepted all eight recommended defaults as written in the table below, G1 to G8, and
+doubled every cap. The table keeps the v3 wording; where it names a cap, the doubled value applies:
+
+| Step | Expected (unchanged) | Cap in v3 | Approved cap |
+|---|---:|---:|---:|
+| E1 | $47 | $50 | $100 |
+| E2 | $110 | $135 | $270 |
+| E3 | $1.20 | $5 | $10 |
+| E4 | $27 | $40 | $80 |
+| H1 | $85 | $120 | $240 |
+| **Program** | **about $270** | **$350** | **$700** |
+
+The extra is headroom against cost overruns, not new scope: no arm, reader or benchmark is added because of it, and
+E1's preregistered drop order now applies near $100. G8's default stands, so E1's frontier reader is
+`claude-sonnet-5-5` alone, with the frozen shootout readers kept as the reproduction link; `claude-fable-5-1` may run
+smoke checks only and is never a counted reader in E1 (Garry's 2026-10-07 rule).
 
 | # | Decision | Recommended default | Why | Blocks |
 |---|---|---|---|---|
@@ -1345,6 +1363,13 @@ before the E1 preregistration is committed.
 | A55 | Guard 9 from live handler calls with reranker time separate; local measurement labeled; held-out ratio overrun terminal | Mechanical | Eng Claude performance review, Astra test plan | Applied | Replay omits retrieval, the reranker dominates handler latency, and a sealed set cannot be used to retune a budget. |
 
 ## Changelog
+
+### 2026-10-08: approved, caps doubled
+
+Garry approved v3 with all eight recommended defaults (G1 to G8) and doubled every cap: program $350 to $700, E1 $50
+to $100, E2 $135 to $270, E3 $5 to $10, E4 $40 to $80, H1 $120 to $240. Expected costs and scope are unchanged.
+Recorded in the status line and under Decisions for Garry, and as an approved-cap column in the cost table. The
+decision rows keep their v3 wording; the approved caps supersede the caps they name.
 
 ### 2026-10-08: v3 after the autoplan engineering phase (both voices)
 
