@@ -1,6 +1,6 @@
 # Preregistration: the head-to-head memory scoreboard (2026-10-06)
 
-**Status: frozen on 2026-10-08** at gbrain-evals commit `8842b7784a34924e9ee07b1de0600012303c7c4b`, before any counted
+**Status: frozen on 2026-10-08** at gbrain-evals commit `a769e231be08b28bd664c570213db25fd334b0cb`, before any counted
 cell reserved a lease. The freeze checklist below fills every value that was open. Nothing below changes after the
 first counted cell runs; a later change is a dated amendment at the end of this file, written before any cell it
 affects, and a change to a bar or a family needs the program owner's approval first. The D8 reserve's hash-list SHA
@@ -334,11 +334,12 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
   cell executes (155 files) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
-    from the custodian's host. Hash `5112e4b2a838007030bb4e1f694a963bd70d4e0502a412427a9a975b786c6d6e`.
+    from the custodian's host. Hash `39e41e54f2e5aade445dc1adc2f565ce35346970c93bd531a167fb0b2e2c37d0`.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
-    `ed0c6638f6d2f36b424101fd1ee2bf410b33b6df5145387d3b25be8b6871ae5a`.
+    `c2529091984b9245e006f48083c15f162fed3cbe071bd3816c2755f8cb8aa5a9`.
   The two caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
-- **Images:** the 12 upstream images in each campaign's `images` map, every one by `sha256` digest; images the
+- **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
+  digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
   bundles build are covered by their Dockerfiles and lockfiles in the hashed tree.
 - **Engine:** PGLite (rule result, rechecked at the freeze commit).
 - **Token calibration:** Opus 5.5 1.4708 and Sonnet 5.5 1.4524 times `cl100k_base`; GPT-6.1 Sol 1.0009 times
