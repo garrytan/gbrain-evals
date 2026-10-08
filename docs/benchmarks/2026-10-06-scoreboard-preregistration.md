@@ -1,6 +1,6 @@
 # Preregistration: the head-to-head memory scoreboard (2026-10-06)
 
-**Status: frozen on 2026-10-08** at gbrain-evals commit `a769e231be08b28bd664c570213db25fd334b0cb`, before any counted
+**Status: frozen on 2026-10-08** at gbrain-evals commit `9ed3612cec20da6d76c58b83f508d17eb60302a2` (after A7), before any counted
 cell reserved a lease. The freeze checklist below fills every value that was open. Nothing below changes after the
 first counted cell runs; a later change is a dated amendment at the end of this file, written before any cell it
 affects, and a change to a bar or a family needs the program owner's approval first. The D8 reserve's hash-list SHA
@@ -336,11 +336,11 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   `6349524a…0554`, starter tool list `08403fb2…483c58d`): PGLite, `voyage:voyage-4` at 1,024 dimensions, `tokenmax`
   search, `voyage:rerank-2.5`, query expansion on (`claude-haiku-4-5`), `synthesize` and `think` on `claude-opus-4-7`.
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
-  cell executes (155 files) and the pinned images:
+  cell executes (156 files) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
-    from the custodian's host. Hash `39e41e54f2e5aade445dc1adc2f565ce35346970c93bd531a167fb0b2e2c37d0`.
+    from the custodian's host. Hash `f7278f3bacb96d3f8a082f797ad3a6d695a2e2a9f24ef581ef8d41a7c1092481`.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
-    `c2529091984b9245e006f48083c15f162fed3cbe071bd3816c2755f8cb8aa5a9`.
+    `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2`.
   The two caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
   digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
@@ -455,10 +455,10 @@ in the freeze checklist.
 
 ### 2026-10-08: amendment A7
 
-BEAM-10M manifest hashes and structure findings; undated sessions inside a dated conversation take the sanitizer's
+Freeze commit `9ed3612c`; campaign hashes `f7278f3b` sealed and `52757aab` public. BEAM-10M manifest hashes and
+structure findings; undated sessions inside a dated conversation take the sanitizer's
 per-session rule; reordered anchors and the oversized session disclosed; usage normalizer, memory-bank `shm_size` and
 gbrain background closure ported from gbrain-evals#89; that thread's sealed LoCoMo and BEAM-100K batch disclosed.
-Campaign hashes recomputed.
 
 ### 2026-10-08: frozen
 
