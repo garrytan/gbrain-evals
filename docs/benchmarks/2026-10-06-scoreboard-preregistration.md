@@ -1,6 +1,6 @@
 # Preregistration: the head-to-head memory scoreboard (2026-10-06)
 
-**Status: frozen on 2026-10-08** at gbrain-evals commit `51cdb2b833a1f143f88548537606823cb4f0dbe8` (after A8), before any counted
+**Status: frozen on 2026-10-08** at gbrain-evals commit `cb6119cc3f2279f693945262621b2b318b02a550` (after A8 and A9), before any counted
 cell reserved a lease. The freeze checklist below fills every value that was open. Nothing below changes after the
 first counted cell runs; a later change is a dated amendment at the end of this file, written before any cell it
 affects, and a change to a bar or a family needs the program owner's approval first. The D8 reserve's hash-list SHA
@@ -336,13 +336,15 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   `6349524a…0554`, starter tool list `08403fb2…483c58d`): PGLite, `voyage:voyage-4` at 1,024 dimensions, `tokenmax`
   search, `voyage:rerank-2.5`, query expansion on (`claude-haiku-4-5`), `synthesize` and `think` on `claude-opus-4-7`.
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
-  cell executes (156 files) and the pinned images:
+  cell executes (159 files at the A9 tree) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
-    from the custodian's host. Hash `e50d96aaf160c5fae67e54f24ebd0373d6bdd70fc221720db2e4d3db2fdfba36`.
+    from the custodian's host. Hash `9bf88a3f4bb968cc6537abd9f8c0d15e6d5dbecc68470d39d8725521ea40b857`.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
-    `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` at its launch tree (`a22e3d81`); `12d3e767…1753` at
-    the A8 tree, where its prompts are byte-identical (A8).
-  The two caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
+    `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` at its launch tree (`a22e3d81`, 156 files); it
+    renders from that tree (A8).
+  - `q1-scoreboard-public-r2`: the two verbatim-session reruns (A9); cap $20. Hash
+    `8da287a424a121e2039ff184ab22b493b642082b25c31f86948538ba27ae9d35`.
+  The three caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
   digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
   bundles build are covered by their Dockerfiles and lockfiles in the hashed tree.
@@ -511,7 +513,8 @@ cells use the same bundle, so the sealed campaign carries the fix.
 
 Reader dates follow parsed event time (LongMemEval prompts byte-identical); gbrain-evals main (v0.10.46) merged before
 the re-freeze; the verbatim-session shim's open-file limit raised and its two public cells rerun as
-`q1-scoreboard-public-r2`.
+`q1-scoreboard-public-r2`. Freeze commit `cb6119cc`; sealed hash `9bf88a3f`; public-r2 hash `8da287a4`; the public
+campaign keeps its launch hash `52757aab`.
 
 ### 2026-10-08: LongMemEval-M launches as public
 
