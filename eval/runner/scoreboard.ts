@@ -108,10 +108,18 @@
  *     pooled per system by summing counts over its head cells on every set.
  *   - `check` recomputes every cell's derived/hedge.ndjson and compares it
  *     byte for byte.
+ *   - `hedge_classifier: "none"` (preregistration amendment A6: no classifier
+ *     met its validation bar) runs no classifier: render writes no
+ *     derived/hedge.ndjson (and check refuses a leftover one), scoreboard.json
+ *     and the report carry only the correct-abstention column with
+ *     `derived.withheld` naming why, and the README line names only correct
+ *     abstention. Answers keep their delivered_tokens either way.
  *
- * scoreboard.json, schema `gbrain-evals/scoreboard/v4` (interface Scoreboard; v2 adds each cell's `not_applicable`;
+ * scoreboard.json, schema `gbrain-evals/scoreboard/v5` (interface Scoreboard; v2 adds each cell's `not_applicable`;
  * v3 adds each cell's `derived` and the top-level `derived`; v4 takes the classifier from campaign.json
- * `hedge_classifier` and adds `derived.classifier.source` and `derived.classifier.per_answer`):
+ * `hedge_classifier` and adds `derived.classifier.source` and `derived.classifier.per_answer`; v5 adds
+ * `derived.withheld` and, with `hedge_classifier: "none"`, sets `derived.classifier` to null and drops the
+ * classifier-based fields from every DerivedColumns):
  *   schema, generator, campaign {id, hash, campaign_sha256, gbrain, measured, readers},
  *   inputs [{path, sha256}] (every file the derivation read),
  *   statistics {alpha, draws, descriptive_draws, seed, method},
@@ -120,12 +128,12 @@
  *   cells [CellAggregate], comparisons [Comparison], families [FamilyResult],
  *   field {required, ran, missing, complete}, verdict, headline [HeadlineRow],
  *   size_curve {sets, rows}, losses [comparison ids], disclosures, staleness,
- *   derived {classifier {file, version, rules_sha256, source, per_answer}, pass_threshold, rule, systems [{system, sets, pooled}], headline}.
+ *   derived {classifier {file, version, rules_sha256, source, per_answer} | null, withheld, pass_threshold, rule, systems [{system, sets, pooled}], headline}.
  * Numbers are rounded to six decimals; arrays are in campaign order. A field
  * may be added only with a schema version bump.
  */
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { renderOperatorMessage, type OperatorFix, type OperatorMessage } from './decisions/errors.ts';
@@ -138,13 +146,16 @@ import { HEDGE_CLASSIFIERS, hedgeClassifier, type HedgeVerdict } from './q1/hedg
 import { PASS_THRESHOLD } from './memory-qa/instruments.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
-export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v4';
+export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v5';
 export const CAMPAIGN_SCHEMA = 'gbrain-evals/q1-campaign/v1';
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 export const MAX_TREE_BYTES = 60 * 1024 * 1024;
 export const MIN_COVERAGE = 0.95;
 /** Per-answer hedge verdicts, rendered under each run cell (see the header). */
 export const HEDGE_FILE = 'cells/<cell_id>/derived/hedge.ndjson';
+/** campaign.json `hedge_classifier` value that publishes no classifier-based column (amendment A6). */
+export const HEDGE_NONE = 'none';
+export const HEDGE_WITHHELD = 'the hedge classifier did not meet its preregistered validation bar; see the receipt';
 export const CLUSTER_RETAINED_SHARE = 0.5;
 export const CEILING = 0.95;
 export const README_BEGIN = '<!-- scoreboard:headline:begin -->';
@@ -213,7 +224,7 @@ export interface CampaignManifest {
   measured: { from: string; to: string };
   readers: string[];
   statistics: { alpha: number; draws: number; descriptive_draws: number; seed: number };
-  /** The eval/runner/q1/hedge.ts version the derived columns use (HEDGE_CLASSIFIERS), fixed by amendment before render. */
+  /** The eval/runner/q1/hedge.ts version the derived columns use (HEDGE_CLASSIFIERS), or "none", fixed by amendment before render. */
   hedge_classifier: string;
   sets: CampaignSet[]; cells: CampaignCell[]; families: CampaignFamily[];
   pins: Array<{ system: string; version: string; latest_release: string | null }>;
@@ -288,7 +299,7 @@ function validateCampaign(receipt: string, c: CampaignManifest): void {
   const cells = new Map<string, CampaignCell>();
   const why = 'campaign.json must describe every cell, set and family unambiguously before anything is derived from it';
   if (c.sets.filter(s => s.role === 'headline').length !== 1) throw invalid(receipt, 'exactly one set must have role "headline"', why);
-  if (!HEDGE_CLASSIFIERS[c.hedge_classifier]) throw invalid(receipt, `campaign.json hedge_classifier is ${JSON.stringify(c.hedge_classifier ?? null)}, not one of ${Object.keys(HEDGE_CLASSIFIERS).join(', ')}`, 'the derived columns run the hedge classifier version the preregistration fixes by amendment before render', { next: 'report', user_message: 'set campaign.json hedge_classifier to the version the preregistration names (an amendment changes it, never an edit after render)' });
+  if (c.hedge_classifier !== HEDGE_NONE && !HEDGE_CLASSIFIERS[c.hedge_classifier]) throw invalid(receipt, `campaign.json hedge_classifier is ${JSON.stringify(c.hedge_classifier ?? null)}, not one of ${[...Object.keys(HEDGE_CLASSIFIERS), HEDGE_NONE].join(', ')}`, 'the derived columns run the hedge classifier version the preregistration fixes by amendment before render', { next: 'report', user_message: 'set campaign.json hedge_classifier to the version the preregistration names (an amendment changes it, never an edit after render)' });
   for (const s of c.sets) {
     const ids = new Set<string>();
     for (const q of s.scheduled) { if (ids.has(q.question_id)) throw invalid(receipt, `set ${s.id} schedules ${q.question_id} twice`, why); ids.add(q.question_id); }
@@ -344,7 +355,9 @@ interface CellData {
 
 /** Counts behind the derived columns (see the header); every rate is a ratio of two of them. */
 export interface DerivedCounts { answers: number; wrong: number; confident_wrong: number; abstention_answers: number; correct_abstentions: number; answerable_answers: number; false_abstentions: number }
-export interface DerivedColumns extends DerivedCounts { confident_error_rate: number | null; correct_abstention_rate: number | null; false_abstention_rate: number | null }
+/** The published columns; without a classifier (hedge_classifier "none") only the correct-abstention fields. */
+export type DerivedColumns = Pick<DerivedCounts, 'answers' | 'abstention_answers' | 'correct_abstentions'> & { correct_abstention_rate: number | null }
+  & Partial<Pick<DerivedCounts, 'wrong' | 'confident_wrong' | 'answerable_answers' | 'false_abstentions'> & { confident_error_rate: number | null; false_abstention_rate: number | null }>;
 const NO_DERIVED: DerivedCounts = { answers: 0, wrong: 0, confident_wrong: 0, abstention_answers: 0, correct_abstentions: 0, answerable_answers: 0, false_abstentions: 0 };
 
 const mean = (xs: readonly number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null);
@@ -376,9 +389,9 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
     byQuestion.set(a.question_id, [...(byQuestion.get(a.question_id) ?? []), a]);
   }
   if (problems.length) throw invalid(r.root, `cell ${cell.cell_id}: ${problems.slice(0, 3).join('; ')}`, 'answers are immutable records keyed by their content id');
-  const classifier = hedgeClassifier(campaign.hedge_classifier);
-  const verdicts = new Map(answers.map(a => [a.answer_id, classifier.classify(a.text)]));
-  const hedgeLines = answers.filter(a => JUDGED_OUTCOMES.has(a.outcome))
+  const classifier = campaign.hedge_classifier === HEDGE_NONE ? null : hedgeClassifier(campaign.hedge_classifier);
+  const verdicts = new Map(classifier ? answers.map(a => [a.answer_id, classifier.classify(a.text)]) : []);
+  const hedgeLines = !classifier ? '' : answers.filter(a => JUDGED_OUTCOMES.has(a.outcome))
     .map(a => JSON.stringify({ answer_id: a.answer_id, verdict: verdicts.get(a.answer_id), classifier_version: classifier.version, rules_sha256: classifier.rules_sha256, delivered_tokens: a.delivered_tokens ?? null }) + '\n').join('');
   const excluded = new Map(set.exclusions.map(e => [e.question_id, e.reason]));
   const seenReaders = new Set(answers.map(a => a.reader));
@@ -437,7 +450,7 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
       const a = qa.find(x => x.reader === reader && x.replicate === 0);
       const canonical = a && !NOT_APPLICABLE.has(a.outcome) && !PRODUCT_FAILURES.has(a.outcome) && !HARNESS_FAILURES.has(a.outcome) ? byAnswer.get(a.answer_id)?.find(j => j.judge_replicate === 0) : undefined;
       if (!a || !canonical?.parse_ok || canonical.outcome !== 'scored' || typeof canonical.score !== 'number') continue;
-      const verdict = verdicts.get(a.answer_id)!, pass = canonical.score >= PASS_THRESHOLD;
+      const verdict = verdicts.get(a.answer_id), pass = canonical.score >= PASS_THRESHOLD;
       derived.answers++;
       if (!pass) { derived.wrong++; if (verdict === 'confident') derived.confident_wrong++; }
       if (row?.abstention) { derived.abstention_answers++; if (pass) derived.correct_abstentions++; }
@@ -506,15 +519,19 @@ export interface Scoreboard {
   size_curve: { sets: Array<{ id: string; label: string }>; rows: Array<{ system: string; label: string; values: string[] }> };
   losses: string[]; disclosures: string[]; staleness: string;
   derived: {
-    classifier: { file: string; version: string; rules_sha256: string; source: string; per_answer: string }; pass_threshold: number; rule: string;
+    classifier: { file: string; version: string; rules_sha256: string; source: string; per_answer: string } | null;
+    /** Why the classifier-based columns are not published (hedge_classifier "none"), else null. */
+    withheld: string | null;
+    pass_threshold: number; rule: string;
     systems: Array<{ system: string; sets: Array<{ set: string; cell: string } & DerivedColumns>; pooled: DerivedColumns }>;
-    /** The one line under the README headline: each headline system's confident-error and correct-abstention rates on the headline set. */
+    /** The one line under the README headline: each headline system's confident-error and correct-abstention rates on the headline set (correct abstention only without a classifier). */
     headline: string;
   };
 }
 
-export function derivedColumns(c: DerivedCounts): DerivedColumns {
+export function derivedColumns(c: DerivedCounts, classified = true): DerivedColumns {
   const rate = (k: number, n: number) => (n ? r6(k / n) : null);
+  if (!classified) return { answers: c.answers, abstention_answers: c.abstention_answers, correct_abstentions: c.correct_abstentions, correct_abstention_rate: rate(c.correct_abstentions, c.abstention_answers) };
   return { ...c, confident_error_rate: rate(c.confident_wrong, c.wrong), correct_abstention_rate: rate(c.correct_abstentions, c.abstention_answers), false_abstention_rate: rate(c.false_abstentions, c.answerable_answers) };
 }
 
@@ -675,6 +692,7 @@ export const derive = (receipt: string): Scoreboard => deriveAll(receipt).scoreb
 
 export function deriveAll(receipt: string): Derivation {
   const { campaign, reader } = loadCampaign(receipt);
+  const classifier = campaign.hedge_classifier === HEDGE_NONE ? null : hedgeClassifier(campaign.hedge_classifier);
   const powerPath = join(receipt, 'power.json');
   if (!existsSync(powerPath)) throw invalid(receipt, 'power.json is missing', 'Family 1 may claim only under the preregistered power result (plan §4.6)', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
   const powerBuf = readInput(reader, powerPath);
@@ -750,7 +768,7 @@ export function deriveAll(receipt: string): Derivation {
       fill_rate: rmean('fill_rate'), delivered_tokens: Object.fromEntries(Object.keys(tokens).sort().map(k => [k, r6(tokens[k] / tokenCounts[k])])),
       latency_p50_ms: lat === null ? null : r6(lat),
       exclusions: vals.filter(v => v.reason !== null).map(v => ({ question_id: v.question_id, reason: v.reason! })),
-      derived: derivedColumns(d.derived),
+      derived: derivedColumns(d.derived, !!classifier),
     };
   });
 
@@ -789,11 +807,13 @@ export function deriveAll(receipt: string): Derivation {
   const derivedSystems = [...new Set(campaign.cells.map(c => c.system))].map(system => {
     const heads = campaign.sets.map(s => headCellOf(campaign, s.id, system)).filter((c): c is CampaignCell => !!c);
     const pooled = heads.reduce((acc, c) => { const d = data.get(c.cell_id)!.derived; return Object.fromEntries(Object.keys(acc).map(k => [k, acc[k as keyof DerivedCounts] + d[k as keyof DerivedCounts]])) as unknown as DerivedCounts; }, { ...NO_DERIVED });
-    return { system, sets: heads.map(c => ({ set: c.set, cell: c.cell_id, ...cells.find(x => x.cell_id === c.cell_id)!.derived })), pooled: derivedColumns(pooled) };
+    return { system, sets: heads.map(c => ({ set: c.set, cell: c.cell_id, ...cells.find(x => x.cell_id === c.cell_id)!.derived })), pooled: derivedColumns(pooled, !!classifier) };
   });
   const derivedLine = (() => {
-    const rows = headline.filter(h => h.cell && cells.find(c => c.cell_id === h.cell)!.status !== 'not-run').map(h => { const d = cells.find(c => c.cell_id === h.cell)!.derived; return `\`${h.system}\` ${d.confident_error_rate === null ? 'n/a' : pct(d.confident_error_rate)} / ${d.correct_abstention_rate === null ? 'n/a' : pct(d.correct_abstention_rate)}`; });
-    return `Descriptive, not tested: confident-error rate (wrong answers with no hedge or abstention) / correct-abstention rate on ${headSet.label}: ${rows.length ? rows.join('; ') : 'no system ran'}.`;
+    const rate = (x: number | null | undefined) => (x === null || x === undefined ? 'n/a' : pct(x));
+    const rows = headline.filter(h => h.cell && cells.find(c => c.cell_id === h.cell)!.status !== 'not-run').map(h => { const d = cells.find(c => c.cell_id === h.cell)!.derived; return `\`${h.system}\` ${classifier ? `${rate(d.confident_error_rate)} / ` : ''}${rate(d.correct_abstention_rate)}`; });
+    const what = classifier ? 'confident-error rate (wrong answers with no hedge or abstention) / correct-abstention rate' : 'correct-abstention rate (abstention-question answers the benchmark\'s own judgment passes)';
+    return `Descriptive, not tested: ${what} on ${headSet.label}: ${rows.length ? rows.join('; ') : 'no system ran'}.`;
   })();
 
   const losses = comparisons.filter(c => c.metric === 'answer' && c.delta !== null && c.delta < 0 && c.ci95 && c.ci95[1] < 0).sort((a, b) => a.delta! - b.delta! || (a.id < b.id ? -1 : 1)).map(c => c.id);
@@ -802,7 +822,6 @@ export function deriveAll(receipt: string): Derivation {
   const pinText = campaign.pins.map(p => `\`${p.system}\` ${p.version}${p.latest_release && p.latest_release !== p.version ? ` (newer release available: ${p.latest_release})` : ''}`).join('; ');
   const staleness = `Measured ${campaign.measured.from} to ${campaign.measured.to} with gbrain ${campaign.gbrain.version} (\`${campaign.gbrain.commit.slice(0, 7)}\`)${pinText ? `; pinned systems: ${pinText}` : ''}.`;
 
-  const classifier = hedgeClassifier(campaign.hedge_classifier);
   const scoreboard: Scoreboard = {
     schema: SCOREBOARD_SCHEMA, generator: 'eval/runner/scoreboard.ts',
     campaign: { id: campaign.campaign_id, hash: campaign.campaign_hash, campaign_sha256: reader.inputs.get('campaign.json')!, gbrain: campaign.gbrain, measured: campaign.measured, readers: campaign.readers },
@@ -814,12 +833,13 @@ export function deriveAll(receipt: string): Derivation {
     size_curve: { sets: curveSets.map(s => ({ id: s.id, label: s.label })), rows: curveRows },
     losses, disclosures: campaign.disclosures, staleness,
     derived: {
-      classifier: { file: 'eval/runner/q1/hedge.ts', version: classifier.version, rules_sha256: classifier.rules_sha256, source: 'campaign.json hedge_classifier, computed at render time', per_answer: HEDGE_FILE }, pass_threshold: PASS_THRESHOLD,
-      rule: 'replicate-0 answers of every promised reader with a scored canonical judgment; wrong = canonical score below the pass threshold; confident-error rate = wrong answers the classifier calls confident / wrong answers; correct-abstention rate = abstention-question answers the canonical instrument passes / abstention-question answers; false-abstention rate = answers to questions with gold evidence the classifier calls abstain / those answers; pooled sums counts over the system\'s head cells on every set; descriptive, no Holm family',
+      classifier: classifier && { file: 'eval/runner/q1/hedge.ts', version: classifier.version, rules_sha256: classifier.rules_sha256, source: 'campaign.json hedge_classifier, computed at render time', per_answer: HEDGE_FILE },
+      withheld: classifier ? null : `confident-error and false-abstention rates not published: ${HEDGE_WITHHELD}`, pass_threshold: PASS_THRESHOLD,
+      rule: !classifier ? 'replicate-0 answers of every promised reader with a scored canonical judgment; correct-abstention rate = abstention-question answers the canonical instrument passes (score at or above the pass threshold) / abstention-question answers; pooled sums counts over the system\'s head cells on every set; descriptive, no Holm family' : 'replicate-0 answers of every promised reader with a scored canonical judgment; wrong = canonical score below the pass threshold; confident-error rate = wrong answers the classifier calls confident / wrong answers; correct-abstention rate = abstention-question answers the canonical instrument passes / abstention-question answers; false-abstention rate = answers to questions with gold evidence the classifier calls abstain / those answers; pooled sums counts over the system\'s head cells on every set; descriptive, no Holm family',
       systems: derivedSystems, headline: derivedLine,
     },
   };
-  return { scoreboard, hedge: campaign.cells.filter(c => c.status !== 'not-run').map(c => ({ cell_id: c.cell_id, text: data.get(c.cell_id)!.hedgeLines })) };
+  return { scoreboard, hedge: !classifier ? [] : campaign.cells.filter(c => c.status !== 'not-run').map(c => ({ cell_id: c.cell_id, text: data.get(c.cell_id)!.hedgeLines })) };
 }
 
 /** A system's row on a set: the cell marked `headline`, else its 8k component cell, else its first whole-system cell. */
@@ -869,16 +889,18 @@ export function renderHeadline(sb: Scoreboard, base: string): string {
 
 export function renderReport(sb: Scoreboard): string {
   const out = [`# Scoreboard tables: ${sb.campaign.id}`, '', 'Generated by `bun eval/runner/scoreboard.ts render` from this directory\'s rows, answers and judgments; `bun eval/runner/scoreboard.ts check` regenerates it byte for byte.', '', '## Headline', '', renderHeadline(sb, '.').trimEnd(), ''];
-  out.push('## Cells', '', '| Cell | Set | System | Arm | Budget | Accuracy | Scored | Product failures | Harness failures | Judge SD | recall_all@10 | Fill rate | Confident-error rate | Correct abstention | False abstention | Status |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+  const dv = sb.derived, classified = dv.classifier !== null;
+  const dhead = classified ? ['Confident-error rate', 'Correct abstention', 'False abstention'] : ['Correct abstention'];
+  out.push('## Cells', '', `| Cell | Set | System | Arm | Budget | Accuracy | Scored | Product failures | Harness failures | Judge SD | recall_all@10 | Fill rate | ${dhead.join(' | ')} | Status |`, `|---|---|---|---|---|---|---|---|---|---|---|---|${dhead.map(() => '---|').join('')}---|`);
   const num = (x: number | null, f: (x: number) => string) => (x === null ? 'n/a' : f(x));
-  const ratio = (r: number | null, k: number, n: number) => (r === null ? 'n/a' : `${pct(r)} (${k}/${n})`);
-  const dcols = (d: DerivedColumns) => `${ratio(d.confident_error_rate, d.confident_wrong, d.wrong)} | ${ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers)} | ${ratio(d.false_abstention_rate, d.false_abstentions, d.answerable_answers)}`;
+  const ratio = (r: number | null | undefined, k = 0, n = 0) => (r === null || r === undefined ? 'n/a' : `${pct(r)} (${k}/${n})`);
+  const dcols = (d: DerivedColumns) => (classified ? `${ratio(d.confident_error_rate, d.confident_wrong, d.wrong)} | ${ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers)} | ${ratio(d.false_abstention_rate, d.false_abstentions, d.answerable_answers)}` : ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers));
   for (const c of sb.cells) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${dcols(c.derived)} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`);
   out.push('', '## Per-reader accuracy', '', `| Cell | ${sb.campaign.readers.join(' | ')} |`, `|---|${sb.campaign.readers.map(() => '---|').join('')}`);
   for (const c of sb.cells.filter(x => x.status !== 'not-run')) out.push(`| \`${c.cell_id}\` | ${sb.campaign.readers.map(r => (r in c.per_reader ? num(c.per_reader[r], pct) : 'not promised')).join(' | ')} |`);
-  const dv = sb.derived;
-  out.push('', '## Derived columns by system and set', '', `Descriptive only, with no family and no Holm correction. Classifier \`${dv.classifier.file}\` ${dv.classifier.version}, rule table sha256 \`${dv.classifier.rules_sha256}\` (${dv.classifier.source}; per-answer verdicts in \`${dv.classifier.per_answer}\`); an answer is wrong below a canonical score of ${dv.pass_threshold}. Counted: ${dv.rule}.`, '');
-  out.push('| System | Set | Cell | Confident-error rate | Correct abstention | False abstention |', '|---|---|---|---|---|---|');
+  const source = dv.classifier ? `Classifier \`${dv.classifier.file}\` ${dv.classifier.version}, rule table sha256 \`${dv.classifier.rules_sha256}\` (${dv.classifier.source}; per-answer verdicts in \`${dv.classifier.per_answer}\`); an answer is wrong below a canonical score of ${dv.pass_threshold}.` : `The confident-error and false-abstention columns are not published: ${HEDGE_WITHHELD}. An answer passes at a canonical score of ${dv.pass_threshold} or above.`;
+  out.push('', '## Derived columns by system and set', '', `Descriptive only, with no family and no Holm correction. ${source} Counted: ${dv.rule}.`, '');
+  out.push(`| System | Set | Cell | ${dhead.join(' | ')} |`, `|---|---|---|${dhead.map(() => '---|').join('')}`);
   for (const s of dv.systems) {
     for (const x of s.sets) out.push(`| \`${s.system}\` | ${x.set} | \`${x.cell}\` | ${dcols(x)} |`);
     if (s.sets.length > 1) out.push(`| \`${s.system}\` | all sets, pooled | | ${dcols(s.pooled)} |`);
@@ -914,6 +936,12 @@ function replaceBlock(text: string, block: string): string | null {
 }
 
 export interface Rendered { files: Array<{ path: string; text: string }> }
+
+/** cells/<cell_id>/derived/hedge.ndjson files on disk that this render does not write (all of them with hedge_classifier "none"). */
+export function strayHedgeFiles(receipt: string, campaign: CampaignManifest, rendered: Rendered): string[] {
+  const written = new Set(rendered.files.map(f => f.path));
+  return campaign.cells.map(c => join(receipt, HEDGE_FILE.replace('<cell_id>', c.cell_id))).filter(p => existsSync(p) && !written.has(p));
+}
 
 export function renderAll(receipt: string, d: Derivation, campaign: CampaignManifest): Rendered {
   const sb = d.scoreboard;
@@ -1036,7 +1064,9 @@ export function checkReceipt(receipt: string, env: Record<string, string | undef
     const assets = checkAssets(receipt, campaign);
     messages.push(...assets.messages);
     notes.push(`release assets: ${assets.verified} verified, ${assets.absent} not present locally`);
-    for (const f of renderAll(receipt, deriveAll(receipt), campaign).files) {
+    const rendered = renderAll(receipt, deriveAll(receipt), campaign);
+    for (const path of strayHedgeFiles(receipt, campaign, rendered)) messages.push({ code: 'SCOREBOARD_STALE', message: `${rel(path)} should not exist: campaign.json hedge_classifier is ${JSON.stringify(campaign.hedge_classifier)}`, why: 'per-answer hedge verdicts exist only for a cell the classifier the campaign names ran on; a leftover file would publish verdicts the preregistration withholds', fix: { next: 'run', argv: ['bun', 'eval/runner/scoreboard.ts', 'render', '--receipt', rel(receipt)], user_message: 'render removes it; commit the removal', verify: checkArgv(receipt) } });
+    for (const f of rendered.files) {
       const committed = existsSync(f.path) ? readFileSync(f.path, 'utf8') : null;
       if (committed === f.text) continue;
       const detail = committed === null ? 'is missing' : f.path.endsWith('.json') ? `differs at ${firstDifference(safeJson(committed), JSON.parse(f.text))}` : `differs from the regenerated text at line ${firstLine(committed, f.text)}`;
@@ -1073,7 +1103,8 @@ export function explain(receipt: string, row: string, column: string): Record<st
       : column === 'cost' || column === 'queryable' ? { personal_month_usd: head?.personal_month_usd ?? null, write_to_queryable_p50_ms: head?.write_to_queryable_p50_ms ?? null, source: 'cost-speed.json' }
         : column === 'recall' ? { recall_all_at_10: cell.recall_all_at_10, rule: 'mean of rows.ndjson recall_all_at_10 over rows with gold sessions' }
           : column === 'comparison' ? cmp
-            : column === 'confident-error' || column === 'abstention' ? { ...cell.derived, classifier: sb.derived.classifier, per_answer: HEDGE_FILE.replace('<cell_id>', cellId), pass_threshold: sb.derived.pass_threshold, rule: sb.derived.rule }
+            : column === 'confident-error' && !sb.derived.classifier ? { withheld: sb.derived.withheld }
+              : column === 'confident-error' || column === 'abstention' ? { ...cell.derived, classifier: sb.derived.classifier, ...(sb.derived.classifier ? { per_answer: HEDGE_FILE.replace('<cell_id>', cellId) } : { withheld: sb.derived.withheld }), pass_threshold: sb.derived.pass_threshold, rule: sb.derived.rule }
               : { receipt: `cells/${cellId}/receipt.json` };
   const inputs = sb.inputs.filter(i => i.path.startsWith(`cells/${cellId}/`) || i.path === 'campaign.json' || i.path === 'power.json');
   return {
@@ -1120,8 +1151,9 @@ if (import.meta.main) {
       if (!receipts.length) throw new ScoreboardError({ code: 'RECEIPT_MISSING', message: 'no scoreboard receipt found under docs/benchmarks', why: 'render writes scoreboard.json and the tables from a receipt\'s campaign.json', fix: { next: 'report', user_message: 'pass --receipt <dir> for the receipt to render', verify: ['bun', 'eval/runner/scoreboard.ts', 'check'] } });
       for (const r of receipts) {
         const { campaign } = loadCampaign(r);
-        const d = deriveAll(r);
-        for (const f of renderAll(r, d, campaign).files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); }
+        const d = deriveAll(r), rendered = renderAll(r, d, campaign);
+        for (const p of strayHedgeFiles(r, campaign, rendered)) rmSync(p);
+        for (const f of rendered.files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); }
         if (json) console.log(JSON.stringify({ receipt: rel(r), verdict: d.scoreboard.verdict }, null, 2)); else console.log(`rendered ${rel(r)}: ${d.scoreboard.verdict}`);
       }
     } else if (command === 'explain') {

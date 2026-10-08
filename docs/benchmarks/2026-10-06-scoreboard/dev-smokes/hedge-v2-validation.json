@@ -1,5 +1,5 @@
 {
-  "note": "hedge-v2 on a fresh blind 200-answer sample of the 678 dev-smoke answers outside the hedge-v1 sample (seed q1-hedge-v2-validation, stratified by hedge-v2 verdict), labeled by an independent labeler. Abstain precision missed the 0.90 bar.",
+  "note": "hedge-v2 on a fresh blind 200-answer sample of the 678 answers outside the first sample, labeled by labeler 2. Abstain precision missed the 0.90 bar.",
   "schema": "gbrain-evals/hedge-validation/v1",
   "classifier_version": "hedge-v2",
   "rules_sha256": "8a3f60ce1668af9e06b9838d989f82e42a48818d8b9e754931608870cf2260b0",
@@ -52,5 +52,51 @@
       "confident": 0.9148
     }
   },
-  "misclassified_count": 29
+  "misclassified_count": 29,
+  "label_counts": {
+    "abstain": 64,
+    "hedged": 54,
+    "confident": 82
+  },
+  "sample_design": {
+    "schema": "gbrain-evals/hedge-sample-design/v2",
+    "classifier_version": "hedge-v2",
+    "rules_sha256": "8a3f60ce1668af9e06b9838d989f82e42a48818d8b9e754931608870cf2260b0",
+    "seed": "q1-hedge-v2-validation",
+    "n": 200,
+    "answers": [
+      {
+        "path": "answers.ndjson",
+        "sha256": "a18cfdadbed8fd83876223f1d7b31a03e5d8f853fb442461abc349f76694497e"
+      }
+    ],
+    "excluded": {
+      "files": [
+        {
+          "path": "hedge/labeled.csv",
+          "sha256": "5e624aaeac97bccfbf69943386c8bb0b592187d279b1d797aa68d240bfc82694"
+        }
+      ],
+      "answers": 200
+    },
+    "blind": {
+      "path": "blind.csv",
+      "sha256": "e7b182990b4828d760fb3c26083f0e04c6a40a2a801bd40e426ec2990c663a53"
+    },
+    "eligible": 678,
+    "strata": {
+      "abstain": {
+        "population": 139,
+        "sampled": 67
+      },
+      "hedged": {
+        "population": 116,
+        "sampled": 67
+      },
+      "confident": {
+        "population": 423,
+        "sampled": 66
+      }
+    }
+  }
 }

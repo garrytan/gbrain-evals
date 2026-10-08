@@ -22,12 +22,14 @@ points between systems is noise (one question is 5 points). Nothing here is a sc
 - **Files.** [`aggregates.json`](aggregates.json) holds the allowlisted receipt fields of every arm (counts, per-reader
   means, timings, spend, ingest), with no answer or context text. [`calibration.json`](calibration.json) and
   [`dev-strength.json`](dev-strength.json) hold the calibration and power inputs.
-  The hedge classifiers' aggregate numbers on blind, hand-labeled samples of these answers (labels and answer text
-  stay outside the repository): [`hedge-v1-validation.json`](hedge-v1-validation.json) on the first 200-answer
-  sample, [`hedge-v2-validation.json`](hedge-v2-validation.json) on a fresh 200 from the other 678, and the
-  development numbers [`hedge-v2-dev.json`](hedge-v2-dev.json) (first sample) and
-  [`hedge-v3-dev.json`](hedge-v3-dev.json) (both samples, 400 answers). hedge-v3's validation is a fresh sample of
-  the 478 answers in neither.
+  The hedge classifiers' aggregate numbers on three blind, hand-labeled 200-answer samples of these answers, each
+  drawn fresh and labeled by a different labeler (labels and answer text stay outside the repository; each file
+  carries its sample design and label counts): [`hedge-v1-validation.json`](hedge-v1-validation.json),
+  [`hedge-v2-validation.json`](hedge-v2-validation.json) and [`hedge-v3-validation.json`](hedge-v3-validation.json).
+  None met the 0.90 abstain-precision bar (0.42, 0.881, 0.893), so under amendment A6 the confident-error and
+  false-abstention columns are not published (`hedge_classifier: none`). The development numbers are
+  [`hedge-v2-dev.json`](hedge-v2-dev.json) (first sample) and [`hedge-v3-dev.json`](hedge-v3-dev.json) (first two
+  samples, 400 answers).
 
 ## Spend
 

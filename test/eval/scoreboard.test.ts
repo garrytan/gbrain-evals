@@ -353,7 +353,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
 
   test('per cell, per system and set, and pooled over sets, from replicate-0 answers with a scored canonical judgment', () => {
     const { dir, sb } = fresh({ cells: scripted() });
-    expect(sb.schema).toBe('gbrain-evals/scoreboard/v4');
+    expect(sb.schema).toBe('gbrain-evals/scoreboard/v5');
     const s1 = sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived;
     expect(s1).toEqual({ answers: 177, wrong: 107, confident_wrong: 40, abstention_answers: 30, correct_abstentions: 10, answerable_answers: 147, false_abstentions: 27, confident_error_rate: Number((40 / 107).toFixed(6)), correct_abstention_rate: Number((10 / 30).toFixed(6)), false_abstention_rate: Number((27 / 147).toFixed(6)) });
     const s2a = sb.cells.find(c => c.cell_id === 's2a-gbrain-8k')!.derived;
@@ -363,6 +363,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     expect([gb.pooled.abstention_answers, gb.pooled.correct_abstentions, gb.pooled.correct_abstention_rate]).toEqual([42, 14, Number((14 / 42).toFixed(6))]);
     expect([gb.pooled.wrong, gb.pooled.confident_wrong, gb.pooled.answerable_answers, gb.pooled.false_abstentions]).toEqual([151, 56, 207, 39]);
     expect(sb.derived.classifier).toEqual({ file: 'eval/runner/q1/hedge.ts', version: CLASSIFIER_VERSION_V3, rules_sha256: RULES_SHA256_V3, source: 'campaign.json hedge_classifier, computed at render time', per_answer: 'cells/<cell_id>/derived/hedge.ndjson' });
+    expect(sb.derived.withheld).toBeNull();
     expect(sb.cells.find(c => c.cell_id === 's1-temporal-graph-8k')!.derived.confident_error_rate).toBeNull();
     expect(checkReceipt(dir, {}).messages).toEqual([]);
     rmSync(dir, { recursive: true });
@@ -441,13 +442,13 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     expect(long.map(id => h1.find(h => h.answer_id === id).verdict)).toEqual(long.map(() => classify(texts(2, READERS[2]))));
     expect(classify(texts(2, READERS[2]))).toBe('abstain');
     expect(long.map(id => h2.find(h => h.answer_id === id).verdict)).toEqual(long.map(() => 'confident'));
-    expect(v1.sb.derived.classifier.version).toBe(CLASSIFIER_VERSION);
-    expect(v1.sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.false_abstentions).toBeGreaterThan(v2.sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.false_abstentions);
+    expect(v1.sb.derived.classifier!.version).toBe(CLASSIFIER_VERSION);
+    expect(v1.sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.false_abstentions!).toBeGreaterThan(v2.sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.false_abstentions!);
     expect(checkReceipt(v1.dir, {}).messages).toEqual([]);
     editJson(join(v1.dir, 'campaign.json'), x => { x.hedge_classifier = CLASSIFIER_VERSION_V3; });
     expect(codes(v1.dir)).toContain('SCOREBOARD_STALE');
     editJson(join(v1.dir, 'campaign.json'), x => { x.hedge_classifier = 'hedge-v0'; });
-    expect(checkReceipt(v1.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('campaign.json hedge_classifier is "hedge-v0", not one of hedge-v1, hedge-v2, hedge-v3');
+    expect(checkReceipt(v1.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('campaign.json hedge_classifier is "hedge-v0", not one of hedge-v1, hedge-v2, hedge-v3, none');
     editJson(join(v1.dir, 'campaign.json'), x => { delete (x as Partial<CampaignManifest>).hedge_classifier; });
     expect(checkReceipt(v1.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('hedge_classifier is null');
     rmSync(v1.dir, { recursive: true }); rmSync(v2.dir, { recursive: true });
@@ -459,6 +460,50 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     expect(sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.confident_wrong).toBe(40);
     expect(lines(join(dir, 'cells/s1-gbrain-8k/answers.ndjson'))[0].hedge).toEqual({ verdict: 'hedged', classifier_version: 'hedge-v0' });
     expect(checkReceipt(dir, {}).messages).toEqual([]);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('hedge_classifier "none": no derived/hedge.ndjson, only correct abstention published with the reason, delivered_tokens kept, check clean', () => {
+    const { dir, sb } = fresh({ cells: scripted(), hedgeClassifier: 'none' });
+    const reason = 'the hedge classifier did not meet its preregistered validation bar; see the receipt';
+    expect(sb.derived.classifier).toBeNull();
+    expect(sb.derived.withheld).toBe(`confident-error and false-abstention rates not published: ${reason}`);
+    expect(sb.derived.rule).not.toContain('confident');
+    const s1 = sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived;
+    expect(s1).toEqual({ answers: 177, abstention_answers: 30, correct_abstentions: 10, correct_abstention_rate: Number((10 / 30).toFixed(6)) });
+    const gb = sb.derived.systems.find(s => s.system === 'gbrain-defaults')!;
+    expect(gb.pooled).toEqual({ answers: 249, abstention_answers: 42, correct_abstentions: 14, correct_abstention_rate: Number((14 / 42).toFixed(6)) });
+    expect(Object.keys(gb.sets[0]).sort()).toEqual(['abstention_answers', 'answers', 'cell', 'correct_abstention_rate', 'correct_abstentions', 'set']);
+    for (const c of sb.cells) expect(() => readFileSync(join(dir, 'cells', c.cell_id, 'derived', 'hedge.ndjson'))).toThrow();
+    expect(lines(join(dir, 'cells/s1-gbrain-8k/answers.ndjson')).filter(a => a.outcome === 'scored').every(a => a.delivered_tokens && !a.hedge)).toBe(true);
+    const json = readFileSync(join(dir, 'scoreboard.json'), 'utf8'), md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
+    expect(json).not.toMatch(/confident_error|false_abstention|confident_wrong/);
+    expect(md).not.toMatch(/Confident-error rate|False abstention/);
+    expect(md).toContain('| Fill rate | Correct abstention | Status |');
+    expect(md).toContain('| `gbrain-defaults` | S1 | `s1-gbrain-8k` | 33.3% (10/30) |');
+    expect(md).toContain(`The confident-error and false-abstention columns are not published: ${reason}.`);
+    const line = renderHeadline(sb, '.').split('\n').find(l => l.startsWith('Descriptive, not tested:'))!;
+    expect(line).toStartWith("Descriptive, not tested: correct-abstention rate (abstention-question answers the benchmark's own judgment passes) on BEAM-10M: `gbrain-defaults` 33.3%;");
+    expect(line).not.toContain('confident');
+    expect(explain(dir, 'gbrain-defaults', 'confident-error')).toMatchObject({ value: { withheld: sb.derived.withheld } });
+    expect((explain(dir, 'gbrain-defaults', 'abstention') as Record<string, any>).value).toMatchObject({ correct_abstentions: 10, classifier: null, withheld: sb.derived.withheld });
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('switching a rendered receipt to "none" leaves stale verdict files that check refuses and render removes; switching back re-renders them', () => {
+    const { dir } = fresh({ cells: scripted() });
+    const path = join(dir, 'cells/s1-gbrain-8k/derived/hedge.ndjson');
+    expect(readFileSync(path, 'utf8').length).toBeGreaterThan(0);
+    editJson(join(dir, 'campaign.json'), x => { x.hedge_classifier = 'none'; });
+    const m = checkReceipt(dir, {}).messages;
+    expect(m.some(x => x.code === 'SCOREBOARD_STALE' && x.message.includes('cells/s1-gbrain-8k/derived/hedge.ndjson should not exist: campaign.json hedge_classifier is "none"'))).toBe(true);
+    const render = Bun.spawnSync(['bun', 'eval/runner/scoreboard.ts', 'render', '--receipt', dir], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
+    expect(render.exitCode).toBe(0);
+    expect(() => readFileSync(path)).toThrow();
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    editJson(join(dir, 'campaign.json'), x => { x.hedge_classifier = CLASSIFIER_VERSION_V3; });
+    expect(checkReceipt(dir, {}).messages.some(x => x.message.includes('derived/hedge.ndjson is missing'))).toBe(true);
     rmSync(dir, { recursive: true });
   });
 

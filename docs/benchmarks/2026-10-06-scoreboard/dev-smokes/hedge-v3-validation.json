@@ -1,0 +1,106 @@
+{
+  "note": "hedge-v3 on a fresh blind 200-answer sample of the 478 answers in neither earlier sample, labeled by labeler 3 following the labeling guide. Abstain precision missed the 0.90 bar by one answer (67 of 75). Under amendment A6 no classifier-based column is published.",
+  "schema": "gbrain-evals/hedge-validation/v1",
+  "classifier_version": "hedge-v3",
+  "rules_sha256": "b89477b86d1953e30bcf3628d4f533b99e1a8aab6514f25ca555ac845936987a",
+  "labels_sha256": "7b52e4f5734cd47803fa27e72888a69304ba69fe9244d941c723eeab0615d6d0",
+  "n": 200,
+  "unlabeled": 0,
+  "accuracy": 0.945,
+  "per_class": {
+    "abstain": {
+      "support": 68,
+      "predicted": 75,
+      "precision": 0.8933,
+      "recall": 0.9853
+    },
+    "hedged": {
+      "support": 52,
+      "predicted": 50,
+      "precision": 0.98,
+      "recall": 0.9423
+    },
+    "confident": {
+      "support": 80,
+      "predicted": 75,
+      "precision": 0.9733,
+      "recall": 0.9125
+    }
+  },
+  "confusion": {
+    "abstain": {
+      "abstain": 67,
+      "hedged": 0,
+      "confident": 1
+    },
+    "hedged": {
+      "abstain": 2,
+      "hedged": 49,
+      "confident": 1
+    },
+    "confident": {
+      "abstain": 6,
+      "hedged": 1,
+      "confident": 73
+    }
+  },
+  "population_weighted": {
+    "accuracy": 0.9611,
+    "recall": {
+      "abstain": 0.9363,
+      "hedged": 0.8792,
+      "confident": 0.9795
+    }
+  },
+  "misclassified_count": 11,
+  "label_counts": {
+    "abstain": 68,
+    "hedged": 52,
+    "confident": 80
+  },
+  "sample_design": {
+    "schema": "gbrain-evals/hedge-sample-design/v2",
+    "classifier_version": "hedge-v3",
+    "rules_sha256": "b89477b86d1953e30bcf3628d4f533b99e1a8aab6514f25ca555ac845936987a",
+    "seed": "q1-hedge-v3-validation",
+    "n": 200,
+    "answers": [
+      {
+        "path": "answers.ndjson",
+        "sha256": "a18cfdadbed8fd83876223f1d7b31a03e5d8f853fb442461abc349f76694497e"
+      }
+    ],
+    "excluded": {
+      "files": [
+        {
+          "path": "hedge/labeled.csv",
+          "sha256": "5e624aaeac97bccfbf69943386c8bb0b592187d279b1d797aa68d240bfc82694"
+        },
+        {
+          "path": "hedge-v2/labeled.csv",
+          "sha256": "1fc7a69840334fa5e56a57b263a6179c71f553f736268bfa54913ad331505775"
+        }
+      ],
+      "answers": 400
+    },
+    "blind": {
+      "path": "blind.csv",
+      "sha256": "b80f34197ce048b0a963155a90cbb2c0f996733dc0aa0be265b2ac5252ded1f9"
+    },
+    "eligible": 478,
+    "strata": {
+      "abstain": {
+        "population": 77,
+        "sampled": 75
+      },
+      "hedged": {
+        "population": 50,
+        "sampled": 50
+      },
+      "confident": {
+        "population": 351,
+        "sampled": 75
+      }
+    }
+  }
+}
