@@ -27,6 +27,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { officialJudgePrompt } from '../evidence-delivery/calls.ts';
+import { acceptsTemperature } from '../openai-judge-shim.ts';
 import type { MemoryQuestion, Session } from './corpus.ts';
 import { normalizeFinish, normalizeUsage, receipt, type UsageReceipt } from '../usage-receipt.ts';
 
@@ -53,8 +54,25 @@ export interface ChatResult {
 /** Approximate token count used for packing (4 characters per token). */
 export const approxTokens = (s: string) => Math.ceil(s.length / 4);
 
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+
+/**
+ * Sort key for a session date. BEAM dates sessions as `Month-DD-YYYY` ("March-05-2024"), which sorts alphabetically by
+ * month name as a string, so it maps to `YYYY-MM-DD`. Every other format is its own key, as before.
+ */
+export function sessionDateKey(date: string | undefined): string {
+  const m = /^([A-Za-z]+)-(\d{1,2})-(\d{4})$/.exec(date ?? '');
+  const month = m ? MONTHS.indexOf(m[1].toLowerCase()) : -1;
+  return m && month >= 0 ? `${m[3]}-${String(month + 1).padStart(2, '0')}-${m[2].padStart(2, '0')}` : date ?? '';
+}
+
+/** The conversation's latest session date as written, the reader's fallback "Current Date". */
+export function latestDate(sessions: Session[]): string | undefined {
+  return sessions.map(x => x.date ?? '').sort((a, b) => sessionDateKey(a).localeCompare(sessionDateKey(b))).pop() || undefined;
+}
+
 export function renderHistory(sessions: Session[]): string {
-  const sorted = [...sessions].sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''));
+  const sorted = [...sessions].sort((a, b) => sessionDateKey(a.date).localeCompare(sessionDateKey(b.date)));
   return sorted.map((s, i) => `\n### Session ${i + 1}:\nSession Date: ${s.date ?? 'unknown'}\nSession Content:\n\n${JSON.stringify(s.turns.map(t => ({ role: t.speaker, content: t.content })))}\n`).join('');
 }
 
@@ -124,6 +142,15 @@ export function repeatsTrap(response: string, trap: string | undefined): boolean
   return t.length > 3 && norm(response).includes(t);
 }
 
+/**
+ * Whether the reading lane sends `temperature` to a `provider:model`: not to OpenAI GPT-5-and-later or o-series reasoning
+ * models, nor to Claude 5-family models, which reject it; those sample at the provider default.
+ */
+export function sendsTemperature(model: string): boolean {
+  const [provider, name] = model.includes(':') ? [model.slice(0, model.indexOf(':')), model.slice(model.indexOf(':') + 1)] : ['openai', model];
+  return provider === 'anthropic' ? acceptsTemperature(name) : !/^(gpt-[5-9]|o\d)/.test(name);
+}
+
 type ProviderReply = Omit<ChatResult, 'cached' | 'attempt_errors'>;
 
 export class ChatClient {
@@ -158,7 +185,7 @@ async function openaiChat(model: string, prompt: string, opts: { maxTokens: numb
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     // GPT-5 and later reasoning models take max_completion_tokens and only their default temperature.
-    body: JSON.stringify(/^(gpt-[5-9]|o\d)/.test(model)
+    body: JSON.stringify(!sendsTemperature(`openai:${model}`)
       ? { model, messages: [{ role: 'user', content: prompt }], n: 1, max_completion_tokens: Math.max(opts.maxTokens, 2000) }
       : { model, messages: [{ role: 'user', content: prompt }], n: 1, temperature: opts.temperature ?? 0, max_tokens: opts.maxTokens }),
     signal: AbortSignal.timeout(300_000),
@@ -173,7 +200,7 @@ async function openaiChat(model: string, prompt: string, opts: { maxTokens: numb
 async function anthropicChat(model: string, prompt: string, opts: { maxTokens: number; temperature?: number }): Promise<ProviderReply> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: opts.maxTokens, temperature: opts.temperature ?? 0, messages: [{ role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model, max_tokens: opts.maxTokens, ...(sendsTemperature(`anthropic:${model}`) ? { temperature: opts.temperature ?? 0 } : {}), messages: [{ role: 'user', content: prompt }] }),
     signal: AbortSignal.timeout(300_000),
   });
   const json = await res.json() as any;

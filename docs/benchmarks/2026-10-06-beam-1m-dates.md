@@ -91,3 +91,9 @@ bun eval/runner/memory-qa/run.ts --benchmark beam-1m --split dev --embed real --
 ```
 
 Receipts are in [`2026-10-06-beam-1m-dates/`](2026-10-06-beam-1m-dates/). `runs/beam-1m/{baseline,candidate}/shard-*` hold the retrieval receipts and rows, `qa/baseline/shard-*` the answer receipts and rows (answers included), `verdict.json` the paired comparison, and `beam-summary.json` every number with both preregistration attestations. Spend is in the round ledger: run `decide:beam-1m-dates-2026-10-06-2026-10-06T19-11-47-672Z-e8724dda` ($1.62) and run `w13-beam-1m-answer-half-2026-10-06T19-53-29-629Z-f22e9aa3` ($1.14, 995 requests).
+
+## Changelog
+
+### 2026-10-08: failure analysis, the 1M no-memory floor and a reader-prompt correction
+
+The numbers above are unchanged. The [BEAM-1M failure analysis](2026-10-08-beam-1m-failure-analysis.md) measures what this report did not: the no-memory floor on these 220 questions (26.2% with the same `gpt-4.1-mini` reader and judge; 0.278 was BEAM-100K's), the strict all-items-met rate (75 of 220 for the 53.5% row), how many questions strict recall at 5 can never pass (49 of 194 answerable questions with gold), and current frontier readers on the same top 5. It also found that "sessions in date order" above was alphabetical by month name for BEAM's `Month-DD-YYYY` dates, and that the reader's "Current Date" was the alphabetically last date (earlier than the true latest session in 8 of 11 conversations). gbrain-evals now sorts those dates as dates; rerun with the fix, the bridge row moves from 53.5% to 53.9%, within reader noise.

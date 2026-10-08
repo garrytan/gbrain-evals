@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain master [`a865f8f`](https://github.com/garrytan/gbrain/tree/a865f8f8b7c95b9f8c30690702797bafcfef537a) (v0.60.104.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.44 (`VERSION`) |
+| This repository | gbrain-evals v0.10.45 (`VERSION`) |
 
 This repository installs gbrain master `a865f8f`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -245,9 +245,12 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 ## Changelog
 
-### 2026-10-08: ClientRead wedge row; repository row names v0.10.44
+### 2026-10-08: ClientRead wedge row; repository row names v0.10.45
 
-gbrain-evals v0.10.44. New row: a managed Postgres sync behind a transaction-mode pooler wedges with one process and no lanes when one round trip never completes, and two consumers on one host were a multiplier, not the cause (0 wedges in 2 h 49 min of the two-consumer shape), mirrored from gbrain's Phase 0 record for #6317 in [the ClientRead wedge report](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md). The repository row names v0.10.44 (was v0.10.43).
+gbrain-evals v0.10.45. New row: a managed Postgres sync behind a transaction-mode pooler wedges with one process and no lanes when one round trip never completes, and two consumers on one host were a multiplier, not the cause (0 wedges in 2 h 49 min of the two-consumer shape), mirrored from gbrain's Phase 0 record for #6317 in [the ClientRead wedge report](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md). The repository row names v0.10.45 (was v0.10.43).
+### 2026-10-08: Repository row names v0.10.44
+
+gbrain-evals v0.10.44. The repository row names v0.10.44 (was v0.10.43). This release adds the BEAM-1M failure analysis on the development split (wave 0 item B2 of the 10x memory advantage plan) and fixes the BEAM date order in the memory-qa reader prompt; the results table has no BEAM-1M row, so no other row changes.
 
 ### 2026-10-08: Repository row names v0.10.43
 
