@@ -1018,6 +1018,8 @@ const RERANK_PRICES: Record<string, number> = {
  */
 export const CHAT_PRICE_OVERRIDES: Record<string, { input: number; output: number; cache_read?: number; cache_write?: number }> = {
   'anthropic:claude-haiku-4-5': { input: 1, output: 5, cache_read: 0.1, cache_write: 1.25 },
+  // platform.claude.com/docs/en/about-claude/pricing, checked 2026-10-08 (prompts up to 100,000 tokens).
+  'anthropic:claude-haiku-5-5': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 },
   'anthropic:claude-sonnet-4-5': { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 },
   'anthropic:claude-sonnet-4-6': { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 },
   'anthropic:claude-sonnet-5': { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5 },

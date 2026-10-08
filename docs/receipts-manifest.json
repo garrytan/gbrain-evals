@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-07",
+  "updated": "2026-10-08",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -4677,6 +4677,61 @@
         "/gbrain_shipped_in/merge_commit": "7aa2caa0"
       },
       "note": "Preregistered (5ee10126, amendment c8042a27) Cat 40 gbrain-arm smoke, capy/fix-wave-11 027d3c69f vs capy/fix-wave-12 209b20a96, same window; counts recomputable from the committed results.jsonl and transcripts.jsonl.gz in each set directory. The attribution set runs the wave 12 build with the baseline served instructions. Shipped in gbrain v0.60.106.0 (7aa2caa0, #6269) with W4.6 reverted (instructions identical to the baseline) and W4.16 kept."
+    },
+    {
+      "claim_id": "r2-facts-absorb-gate",
+      "readme_anchor": "docs/benchmarks/2026-10-08-facts-extraction-model.md: The preregistered verdict",
+      "artifact_path": "docs/benchmarks/2026-10-08-facts-extraction-model/gate/receipt.json",
+      "artifact_sha256": "4c96346032069a39c3ef311f8dc1dd087b8514cb6407d4fd99bf2536f8e00ec2",
+      "status": "covered",
+      "expected": {
+        "/preregistration/sha256": "8f9be0d9f872ad4bf47b7a019ec4eb850aba47951e51958f594cff4e9f6e7c11",
+        "/gbrain/commit": "1935c74a9e217b276c7bbf3075ddd3c220e96a09",
+        "/verdicts/0/label": "luna",
+        "/verdicts/0/verdict/pass": false,
+        "/verdicts/1/label": "haiku55",
+        "/verdicts/1/verdict/pass": true,
+        "/mutants_fail": true,
+        "/arms/0/resolved_models_at_facts_invocation/0": "anthropic:claude-sonnet-4-6",
+        "/arms/0/totals/recalled": 516,
+        "/arms/2/totals/recalled": 515,
+        "/drop_mutant_responses/dropped": 190
+      },
+      "golden_test": "test/eval/facts-absorb-gate.test.ts",
+      "note": "Preregistered facts-absorb gate (R2, 10x plan wave 0). Per-arm stored facts in gate/arm-*.json reproduce every score with `bun eval/runner/facts-absorb-gate.ts --rescore --out <copy of gate/>` (amended scorer, see the preregistration's Amendments)."
+    },
+    {
+      "claim_id": "r2-write-cost-sonnet46",
+      "readme_anchor": "docs/benchmarks/2026-10-08-facts-extraction-model.md: Write cost on P8's sessions",
+      "artifact_path": "docs/benchmarks/2026-10-08-facts-extraction-model/write-cost/receipt-on-sonnet46.json",
+      "artifact_sha256": "24c088ba32a6e66d498ead2049d597e99769e51c1b041fe7e90623b42138fcc1",
+      "status": "covered",
+      "expected": {
+        "/arms/0/arm": "on",
+        "/arms/0/usd": 15.9359,
+        "/arms/0/generative_calls": 999,
+        "/arms/0/resolved_extraction_models/0": "anthropic:claude-sonnet-4-6",
+        "/gbrain/commit": "1935c74a9e217b276c7bbf3075ddd3c220e96a09"
+      },
+      "note": "P8 write-cost protocol, 1,000 LongMemEval-S sessions, default extraction model."
+    },
+    {
+      "claim_id": "r2-write-cost-off-cheap",
+      "readme_anchor": "docs/benchmarks/2026-10-08-facts-extraction-model.md: Write cost on P8's sessions",
+      "artifact_path": "docs/benchmarks/2026-10-08-facts-extraction-model/write-cost/receipt-off-luna-haiku55.json",
+      "artifact_sha256": "5276c51877890deae2c6656e4e931f641996eb204211b0a4bd6293d99280c69c",
+      "status": "covered",
+      "expected": {
+        "/arms/0/arm": "off",
+        "/arms/0/usd": 0.3152,
+        "/arms/1/arm": "on:openai:gpt-6-luna",
+        "/arms/1/jobs_after_drain/facts-absorb/waiting": 372,
+        "/arms/2/arm": "on:anthropic:claude-haiku-5-5",
+        "/arms/2/usd": 1.3849,
+        "/arms/2/generative_calls": 996,
+        "/arms/2/resolved_extraction_models/0": "anthropic:claude-haiku-5-5"
+      },
+      "note": "The GPT-6 Luna arm hit the 3-hour drain limit with 372 jobs queued; its dollar row is partial and the report labels the extrapolation as an estimate."
     }
   ]
 }

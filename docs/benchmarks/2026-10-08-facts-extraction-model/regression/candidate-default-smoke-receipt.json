@@ -1,0 +1,180 @@
+{
+  "schema": "facts-absorb-gate-v1",
+  "gbrain": {
+    "repo": "/home/user/.capy/work/r2/gbrain-candidate",
+    "ref": "HEAD",
+    "commit": "4600f47a8c5792d669017c5c37136571160508cc",
+    "version": "0.60.110.0",
+    "tree": "7b6c4706dbf7f7c4a51faea28740de41d131b274",
+    "verified": {
+      "copy_tree": "7b6c4706dbf7f7c4a51faea28740de41d131b274",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.110.0",
+      "cli_version_matches": true
+    }
+  },
+  "preregistration": null,
+  "smoke": true,
+  "natural": {
+    "corpus": "transcript-distill-v1",
+    "transcripts": [],
+    "items": 0,
+    "judge_model": "openai:gpt-6.1-sol"
+  },
+  "world": {
+    "generator": "facts-absorb-gen@1",
+    "seeds": [
+      60
+    ],
+    "fingerprint": "2b3735ab474bad44ec07bfeef7446aa37bf35a4bab664eb630a6da139dd178a2",
+    "pages": 10,
+    "claims": 35,
+    "rejections": 1,
+    "asides": 5
+  },
+  "embedding_model": "openai:text-embedding-3-large",
+  "drop_mutant_responses": {
+    "chat_responses": 0,
+    "dropped": 0
+  },
+  "baseline": "candidate-default",
+  "verdicts": [],
+  "mutants_fail": true,
+  "arms": [
+    {
+      "arm": {
+        "label": "candidate-default",
+        "kind": "default",
+        "model": null
+      },
+      "expected_model": "anthropic:claude-sonnet-4-6",
+      "resolved_models_at_facts_invocation": [
+        "anthropic:claude-haiku-5-5"
+      ],
+      "pages": 10,
+      "write_errors": 0,
+      "write_wall_s": 1.978,
+      "job_drain_s": 67.64,
+      "extraction_calls": 10,
+      "extraction_input_tokens": 24396,
+      "extraction_output_tokens": 10723,
+      "extraction_outcomes": {
+        "ok": 10
+      },
+      "other_chat_calls": [],
+      "parse": {
+        "jobs": 10,
+        "completed": 10,
+        "not_completed": [],
+        "parse_failures": 0,
+        "parse_failures_logged": 0,
+        "unhandled_parse_failures": 0,
+        "skipped_reasons": {}
+      },
+      "extractor_warnings": 0,
+      "extractor_warning_samples": [],
+      "facts_stored": 53,
+      "facts_active": 53,
+      "inserted_by_jobs": 53,
+      "unreadable_after_restart": [],
+      "sample_reads": {
+        "checked": 3,
+        "all_found": 3,
+        "rows": [
+          {
+            "claim": "c0020",
+            "page": "conversations/fa60-006",
+            "token": "sintra",
+            "expected": [
+              28
+            ],
+            "found": [
+              28
+            ]
+          },
+          {
+            "claim": "c0011",
+            "page": "conversations/fa60-004",
+            "token": "tomar",
+            "expected": [
+              15
+            ],
+            "found": [
+              15
+            ]
+          },
+          {
+            "claim": "c0027",
+            "page": "conversations/fa60-008",
+            "token": "tomar",
+            "expected": [
+              42
+            ],
+            "found": [
+              42
+            ]
+          }
+        ]
+      },
+      "validity": {
+        "unhandled_parse_failures": 0,
+        "resolved_model_matches": false,
+        "unreadable_after_restart": 0,
+        "jobs_not_completed": 0
+      },
+      "totals": {
+        "claims": 35,
+        "recalled": 35,
+        "facts": 53,
+        "supported": 52,
+        "wrong": 0,
+        "unmatched": 1,
+        "attribution_cases": 3,
+        "attribution_correct": 3,
+        "correction_cases": 4,
+        "correction_correct": 4,
+        "recall": 1,
+        "precision": 1,
+        "attribution": 1,
+        "correction": 1,
+        "unmatched_rate": 0.018867924528301886
+      },
+      "natural": [],
+      "user_claims_attributed_to_assistant": 0,
+      "facts_without_page": 0,
+      "usd": 0.0083,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00045968,
+          "requests": 64
+        },
+        "anthropic:claude-haiku-5-5": {
+          "usd": 0.0078011,
+          "requests": 10
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0
+    }
+  ],
+  "budget": {
+    "run_id": "facts-absorb-gate-2026-10-08T18-23-27-210Z-5dc751b2",
+    "budget_usd": 0.5,
+    "reserved_usd": 0.3,
+    "actual_usd": 0.008260910000000005,
+    "charged_reservations": 0,
+    "requests": 1,
+    "input_tokens": 27933,
+    "output_tokens": 10723,
+    "overshoot_usd": 0,
+    "ledger_path": "/home/user/.capy/work/r2/budget/ledger.sqlite",
+    "program_cap_usd": 40,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 805.1
+    }
+  }
+}

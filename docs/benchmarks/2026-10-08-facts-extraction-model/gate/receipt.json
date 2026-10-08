@@ -1,0 +1,4367 @@
+{
+  "schema": "facts-absorb-gate-v1",
+  "gbrain": {
+    "repo": "/workspace/gbrain",
+    "ref": "1935c74a9e217b276c7bbf3075ddd3c220e96a09",
+    "commit": "1935c74a9e217b276c7bbf3075ddd3c220e96a09",
+    "version": "0.60.110.0",
+    "tree": "37f8d71c15b24b2bca455426d81f03e15cd62c0b",
+    "verified": {
+      "copy_tree": "37f8d71c15b24b2bca455426d81f03e15cd62c0b",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.110.0",
+      "cli_version_matches": true
+    }
+  },
+  "preregistration": {
+    "path": "docs/benchmarks/2026-10-08-facts-extraction-model/PREREGISTRATION.md",
+    "sha256": "8f9be0d9f872ad4bf47b7a019ec4eb850aba47951e51958f594cff4e9f6e7c11"
+  },
+  "smoke": false,
+  "natural": {
+    "corpus": "transcript-distill-v1",
+    "transcripts": [
+      "coding-reflection-01",
+      "coding-reflection-02",
+      "coding-reflection-03",
+      "coding-reflection-04",
+      "emotional-processing-01",
+      "emotional-processing-02",
+      "emotional-processing-03",
+      "emotional-processing-04",
+      "mixed-routine-signal-01",
+      "mixed-routine-signal-02",
+      "mixed-routine-signal-03",
+      "mixed-routine-signal-04",
+      "people-deal-01",
+      "people-deal-02",
+      "people-deal-03",
+      "people-deal-04",
+      "startup-ideation-01",
+      "startup-ideation-02",
+      "startup-ideation-03",
+      "startup-ideation-04"
+    ],
+    "items": 173,
+    "judge_model": "openai:gpt-6.1-sol"
+  },
+  "world": {
+    "generator": "facts-absorb-gen@1",
+    "seeds": [
+      60,
+      61
+    ],
+    "fingerprint": "2b3735ab474bad44ec07bfeef7446aa37bf35a4bab664eb630a6da139dd178a2+016811f4b668b02bdbfaeca5b32f77a8171b8bf6030412c37fabbbdc539f699b",
+    "pages": 170,
+    "claims": 529,
+    "rejections": 64,
+    "asides": 86
+  },
+  "embedding_model": "openai:text-embedding-3-large",
+  "drop_mutant_responses": {
+    "chat_responses": 190,
+    "dropped": 190
+  },
+  "baseline": "sonnet46",
+  "verdicts": [
+    {
+      "label": "luna",
+      "mutant": false,
+      "verdict": {
+        "pass": false,
+        "checks": [
+          {
+            "name": "recall non-inferior",
+            "pass": true,
+            "detail": "0.6 pts [-1.3 pts, 2.8 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "precision non-inferior",
+            "pass": true,
+            "detail": "0.0 pts [0.0 pts, 0.0 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "attribution no worse",
+            "pass": false,
+            "detail": "-6.6 pts [-13.9 pts, 0.1 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "correction no worse",
+            "pass": true,
+            "detail": "2.1 pts [0.0 pts, 7.0 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "zero unhandled parse failures",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "resolved model at the facts invocation is the requested model",
+            "pass": true,
+            "detail": "true"
+          },
+          {
+            "name": "every inserted fact readable after restart",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "every facts-absorb job completed",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "natural-prose recall harm check",
+            "pass": true,
+            "detail": "covered items -6.4 pts [-11.6 pts, -1.7 pts] vs harm margin -10.0 pts; judge-failed share 0.0 pts"
+          }
+        ]
+      }
+    },
+    {
+      "label": "haiku55",
+      "mutant": false,
+      "verdict": {
+        "pass": true,
+        "checks": [
+          {
+            "name": "recall non-inferior",
+            "pass": true,
+            "detail": "-0.2 pts [-2.1 pts, 1.9 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "precision non-inferior",
+            "pass": true,
+            "detail": "0.0 pts [0.0 pts, 0.0 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "attribution no worse",
+            "pass": true,
+            "detail": "-1.9 pts [-6.9 pts, 3.4 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "correction no worse",
+            "pass": true,
+            "detail": "2.1 pts [0.0 pts, 7.0 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "zero unhandled parse failures",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "resolved model at the facts invocation is the requested model",
+            "pass": true,
+            "detail": "true"
+          },
+          {
+            "name": "every inserted fact readable after restart",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "every facts-absorb job completed",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "natural-prose recall harm check",
+            "pass": true,
+            "detail": "covered items -4.6 pts [-9.0 pts, -0.6 pts] vs harm margin -10.0 pts; judge-failed share 0.0 pts"
+          }
+        ]
+      }
+    },
+    {
+      "label": "disabled",
+      "mutant": true,
+      "verdict": {
+        "pass": false,
+        "checks": [
+          {
+            "name": "recall non-inferior",
+            "pass": false,
+            "detail": "-97.5 pts [-99.0 pts, -95.7 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "precision non-inferior",
+            "pass": false,
+            "detail": "-100.0 pts [-100.0 pts, -100.0 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "attribution no worse",
+            "pass": true,
+            "detail": "8.4 pts [4.2 pts, 13.4 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "correction no worse",
+            "pass": false,
+            "detail": "-97.9 pts [-100.0 pts, -93.0 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "zero unhandled parse failures",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "resolved model at the facts invocation is the requested model",
+            "pass": true,
+            "detail": "true"
+          },
+          {
+            "name": "every inserted fact readable after restart",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "every facts-absorb job completed",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "natural-prose recall harm check",
+            "pass": false,
+            "detail": "covered items -75.7 pts [-86.9 pts, -64.4 pts] vs harm margin -10.0 pts; judge-failed share 0.0 pts"
+          }
+        ]
+      }
+    },
+    {
+      "label": "drop",
+      "mutant": true,
+      "verdict": {
+        "pass": false,
+        "checks": [
+          {
+            "name": "recall non-inferior",
+            "pass": false,
+            "detail": "-97.5 pts [-99.0 pts, -95.7 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "precision non-inferior",
+            "pass": false,
+            "detail": "-100.0 pts [-100.0 pts, -100.0 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "attribution no worse",
+            "pass": true,
+            "detail": "8.4 pts [4.2 pts, 13.4 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "correction no worse",
+            "pass": false,
+            "detail": "-97.9 pts [-100.0 pts, -93.0 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "zero unhandled parse failures",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "resolved model at the facts invocation is the requested model",
+            "pass": true,
+            "detail": "true"
+          },
+          {
+            "name": "every inserted fact readable after restart",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "every facts-absorb job completed",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "natural-prose recall harm check",
+            "pass": false,
+            "detail": "covered items -75.7 pts [-86.9 pts, -64.4 pts] vs harm margin -10.0 pts; judge-failed share 0.0 pts"
+          }
+        ]
+      }
+    }
+  ],
+  "mutants_fail": true,
+  "arms": [
+    {
+      "arm": {
+        "label": "sonnet46",
+        "kind": "default",
+        "model": null
+      },
+      "expected_model": "anthropic:claude-sonnet-4-6",
+      "resolved_models_at_facts_invocation": [
+        "anthropic:claude-sonnet-4-6"
+      ],
+      "pages": 170,
+      "write_errors": 0,
+      "write_wall_s": 10.905,
+      "job_drain_s": 1604.754,
+      "extraction_calls": 191,
+      "extraction_input_tokens": 374575,
+      "extraction_output_tokens": 85881,
+      "extraction_outcomes": {
+        "ok": 191
+      },
+      "other_chat_calls": [],
+      "parse": {
+        "jobs": 190,
+        "completed": 190,
+        "not_completed": [],
+        "parse_failures": 1,
+        "parse_failures_logged": 1,
+        "unhandled_parse_failures": 0,
+        "skipped_reasons": {
+          "malformed_output": 1
+        }
+      },
+      "extractor_warnings": 1,
+      "extractor_warning_samples": [
+        "[facts-extract] WARN: extractor returned malformed output (model=anthropic:claude-sonnet-4-6); retrying once with an explicit JSON-only reminder"
+      ],
+      "facts_stored": 1063,
+      "facts_active": 1063,
+      "inserted_by_jobs": 1112,
+      "unreadable_after_restart": [],
+      "sample_reads": {
+        "checked": 24,
+        "all_found": 12,
+        "rows": [
+          {
+            "claim": "c0256",
+            "token": "bouldering",
+            "expected": [
+              864
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0206",
+            "token": "convento branco",
+            "expected": [
+              346
+            ],
+            "found": [
+              346
+            ]
+          },
+          {
+            "claim": "c0065",
+            "token": "cascais",
+            "expected": [
+              107
+            ],
+            "found": [
+              107
+            ]
+          },
+          {
+            "claim": "c0214",
+            "token": "torre alva",
+            "expected": [
+              362,
+              363
+            ],
+            "found": [
+              362,
+              363
+            ]
+          },
+          {
+            "claim": "c0180",
+            "token": "palacio sol",
+            "expected": [
+              740
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0252",
+            "token": "tallow hosting",
+            "expected": [
+              859
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0007",
+            "token": "tomar",
+            "expected": [
+              463
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0254",
+            "token": "kitesurfing",
+            "expected": [
+              430
+            ],
+            "found": [
+              430
+            ]
+          },
+          {
+            "claim": "c0158",
+            "token": "copper",
+            "expected": [
+              262
+            ],
+            "found": [
+              262
+            ]
+          },
+          {
+            "claim": "c0181",
+            "token": "braga",
+            "expected": [
+              297
+            ],
+            "found": [
+              297
+            ]
+          },
+          {
+            "claim": "c0174",
+            "token": "guarda",
+            "expected": [
+              731,
+              732
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0236",
+            "token": "leiria",
+            "expected": [
+              395
+            ],
+            "found": [
+              395
+            ]
+          },
+          {
+            "claim": "c0140",
+            "token": "cais dourado",
+            "expected": [
+              682
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0228",
+            "token": "birdwatching",
+            "expected": [
+              822
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0040",
+            "token": "tomar",
+            "expected": [
+              66
+            ],
+            "found": [
+              66
+            ]
+          },
+          {
+            "claim": "c0058",
+            "token": "beja",
+            "expected": [
+              552
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0153",
+            "token": "tidewater",
+            "expected": [
+              256
+            ],
+            "found": [
+              256
+            ]
+          },
+          {
+            "claim": "c0092",
+            "token": "sailing",
+            "expected": [
+              605
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0083",
+            "token": "quarry",
+            "expected": [
+              592
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0136",
+            "token": "shellfish",
+            "expected": [
+              228
+            ],
+            "found": [
+              228
+            ]
+          },
+          {
+            "claim": "c0019",
+            "token": "sintra",
+            "expected": [
+              30
+            ],
+            "found": [
+              30
+            ]
+          },
+          {
+            "claim": "c0087",
+            "token": "sintra",
+            "expected": [
+              598
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0024",
+            "token": "northgate",
+            "expected": [
+              41
+            ],
+            "found": [
+              41
+            ]
+          },
+          {
+            "claim": "c0028",
+            "token": "cascais",
+            "expected": [
+              500
+            ],
+            "found": []
+          }
+        ]
+      },
+      "validity": {
+        "unhandled_parse_failures": 0,
+        "resolved_model_matches": true,
+        "unreadable_after_restart": 0,
+        "jobs_not_completed": 0
+      },
+      "totals": {
+        "claims": 529,
+        "recalled": 516,
+        "facts": 868,
+        "supported": 841,
+        "wrong": 0,
+        "unmatched": 27,
+        "attribution_cases": 166,
+        "attribution_correct": 152,
+        "correction_cases": 96,
+        "correction_correct": 94,
+        "recall": 0.9754253308128544,
+        "precision": 1,
+        "attribution": 0.9156626506024096,
+        "correction": 0.9791666666666666,
+        "unmatched_rate": 0.03110599078341014
+      },
+      "natural": [
+        {
+          "page": "conversations/td-coding-reflection-01",
+          "items": 9,
+          "full": 6,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-01-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g08",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g09",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-coding-reflection-02",
+          "items": 8,
+          "full": 6,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g02",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-coding-reflection-03",
+          "items": 8,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-coding-reflection-04",
+          "items": 10,
+          "full": 5,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-04-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-01",
+          "items": 8,
+          "full": 5,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-01-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-01-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-01-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-02",
+          "items": 8,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-02-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-02-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-02-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-03",
+          "items": 8,
+          "full": 6,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-03-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-03-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-04",
+          "items": 10,
+          "full": 2,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-04-g01",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-04-g03",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-04-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-01",
+          "items": 8,
+          "full": 6,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g06",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g08",
+              "status": "PARTIAL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-02",
+          "items": 8,
+          "full": 7,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g07",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-03",
+          "items": 8,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-03-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-04",
+          "items": 10,
+          "full": 3,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 8,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-04-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-01",
+          "items": 9,
+          "full": 7,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-01-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g08",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g09",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-02",
+          "items": 8,
+          "full": 5,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-02-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-02-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-03",
+          "items": 8,
+          "full": 5,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g03",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-03-g06",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-04",
+          "items": 10,
+          "full": 2,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-04-g01",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-04-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-04-g04",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-04-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-01",
+          "items": 9,
+          "full": 7,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-01-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g08",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g09",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-02",
+          "items": 8,
+          "full": 7,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g06",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-03",
+          "items": 8,
+          "full": 5,
+          "partial": 3,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g04",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-03-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-03-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-04",
+          "items": 10,
+          "full": 1,
+          "partial": 3,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-04-g01",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-04-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-04-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-04-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        }
+      ],
+      "user_claims_attributed_to_assistant": 0,
+      "facts_without_page": 0,
+      "usd": 2.4272,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.015284229999999966,
+          "requests": 1303
+        },
+        "anthropic:claude-sonnet-4-6": {
+          "usd": 2.4119399999999995,
+          "requests": 191
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0
+    },
+    {
+      "arm": {
+        "label": "luna",
+        "kind": "model",
+        "model": "openai:gpt-6-luna"
+      },
+      "expected_model": "openai:gpt-6-luna",
+      "resolved_models_at_facts_invocation": [
+        "openai:gpt-6-luna"
+      ],
+      "pages": 170,
+      "write_errors": 0,
+      "write_wall_s": 11.063,
+      "job_drain_s": 3223.856,
+      "extraction_calls": 190,
+      "extraction_input_tokens": 80147,
+      "extraction_output_tokens": 266393,
+      "extraction_outcomes": {
+        "ok": 190
+      },
+      "other_chat_calls": [],
+      "parse": {
+        "jobs": 190,
+        "completed": 190,
+        "not_completed": [],
+        "parse_failures": 0,
+        "parse_failures_logged": 0,
+        "unhandled_parse_failures": 0,
+        "skipped_reasons": {}
+      },
+      "extractor_warnings": 0,
+      "extractor_warning_samples": [],
+      "facts_stored": 1232,
+      "facts_active": 1232,
+      "inserted_by_jobs": 1403,
+      "unreadable_after_restart": [],
+      "sample_reads": {
+        "checked": 24,
+        "all_found": 13,
+        "rows": [
+          {
+            "claim": "c0240",
+            "token": "fencing",
+            "expected": [
+              501
+            ],
+            "found": [
+              501
+            ]
+          },
+          {
+            "claim": "c0179",
+            "token": "faro",
+            "expected": [
+              871
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0165",
+            "token": "coimbra",
+            "expected": [
+              338
+            ],
+            "found": [
+              338
+            ]
+          },
+          {
+            "claim": "c0115",
+            "token": "setubal",
+            "expected": [
+              770
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0242",
+            "token": "ferrous legal",
+            "expected": [
+              508
+            ],
+            "found": [
+              508
+            ]
+          },
+          {
+            "claim": "c0231",
+            "token": "tidewater",
+            "expected": [
+              976
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0006",
+            "token": "bluefin",
+            "expected": [
+              8
+            ],
+            "found": [
+              8
+            ]
+          },
+          {
+            "claim": "c0154",
+            "token": "falconry",
+            "expected": [
+              833
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0194",
+            "token": "sintra",
+            "expected": [
+              404
+            ],
+            "found": [
+              404
+            ]
+          },
+          {
+            "claim": "c0180",
+            "token": "palacio sol",
+            "expected": [
+              872
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0052",
+            "token": "northgate",
+            "expected": [
+              102
+            ],
+            "found": [
+              102
+            ]
+          },
+          {
+            "claim": "c0047",
+            "token": "lisbon",
+            "expected": [
+              92
+            ],
+            "found": [
+              92
+            ]
+          },
+          {
+            "claim": "c0114",
+            "token": "walnuts",
+            "expected": [
+              768
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0068",
+            "token": "meadow",
+            "expected": [
+              145
+            ],
+            "found": [
+              145
+            ]
+          },
+          {
+            "claim": "c0036",
+            "token": "beja",
+            "expected": [
+              72
+            ],
+            "found": [
+              72
+            ]
+          },
+          {
+            "claim": "c0243",
+            "token": "penicillin",
+            "expected": [
+              1011
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0145",
+            "token": "woodworking",
+            "expected": [
+              306
+            ],
+            "found": [
+              306
+            ]
+          },
+          {
+            "claim": "c0039",
+            "token": "casa lumen",
+            "expected": [
+              75
+            ],
+            "found": [
+              75
+            ]
+          },
+          {
+            "claim": "c0079",
+            "token": "copper",
+            "expected": [
+              712
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0170",
+            "token": "harbor",
+            "expected": [
+              350
+            ],
+            "found": [
+              350
+            ]
+          },
+          {
+            "claim": "c0048",
+            "token": "northgate",
+            "expected": [
+              647
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0259",
+            "token": "rowing",
+            "expected": [
+              541
+            ],
+            "found": [
+              541
+            ]
+          },
+          {
+            "claim": "c0203",
+            "token": "glassblowing",
+            "expected": [
+              919
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0142",
+            "token": "orchard",
+            "expected": [
+              813
+            ],
+            "found": []
+          }
+        ]
+      },
+      "validity": {
+        "unhandled_parse_failures": 0,
+        "resolved_model_matches": true,
+        "unreadable_after_restart": 0,
+        "jobs_not_completed": 0
+      },
+      "totals": {
+        "claims": 529,
+        "recalled": 519,
+        "facts": 1043,
+        "supported": 983,
+        "wrong": 0,
+        "unmatched": 60,
+        "attribution_cases": 166,
+        "attribution_correct": 141,
+        "correction_cases": 96,
+        "correction_correct": 96,
+        "recall": 0.9810964083175804,
+        "precision": 1,
+        "attribution": 0.8493975903614458,
+        "correction": 1,
+        "unmatched_rate": 0.05752636625119847
+      },
+      "natural": [
+        {
+          "page": "conversations/td-coding-reflection-01",
+          "items": 9,
+          "full": 5,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-01-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-01-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-01-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-01-g09",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-coding-reflection-02",
+          "items": 8,
+          "full": 6,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g02",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-coding-reflection-03",
+          "items": 8,
+          "full": 4,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-03-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-03-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-coding-reflection-04",
+          "items": 10,
+          "full": 4,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-04-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-04-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-01",
+          "items": 8,
+          "full": 4,
+          "partial": 3,
+          "judge_failed": 0,
+          "facts": 8,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-01-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-01-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-01-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g07",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-01-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-02",
+          "items": 8,
+          "full": 4,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 7,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-02-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-02-g02",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-02-g06",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-03",
+          "items": 8,
+          "full": 7,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-03-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-04",
+          "items": 10,
+          "full": 2,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-04-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-04-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-04-g03",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-04-g06",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-01",
+          "items": 8,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g06",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g08",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-02",
+          "items": 8,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g07",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-03",
+          "items": 8,
+          "full": 4,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g08",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-04",
+          "items": 10,
+          "full": 2,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-04-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-01",
+          "items": 9,
+          "full": 5,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-01-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-01-g09",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-02",
+          "items": 8,
+          "full": 7,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-03",
+          "items": 8,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-03-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-04",
+          "items": 10,
+          "full": 1,
+          "partial": 3,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-04-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-04-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-04-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-04-g04",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-04-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-01",
+          "items": 9,
+          "full": 7,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-01-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g08",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g09",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-02",
+          "items": 8,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-02-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-02-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-03",
+          "items": 8,
+          "full": 7,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g04",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-03-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-04",
+          "items": 10,
+          "full": 1,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-04-g01",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-04-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-04-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        }
+      ],
+      "user_claims_attributed_to_assistant": 0,
+      "facts_without_page": 0,
+      "usd": 0.1596,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.01578772000000002,
+          "requests": 1593
+        },
+        "openai:gpt-6-luna": {
+          "usd": 0.14378190000000002,
+          "requests": 190
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0
+    },
+    {
+      "arm": {
+        "label": "haiku55",
+        "kind": "model",
+        "model": "anthropic:claude-haiku-5-5"
+      },
+      "expected_model": "anthropic:claude-haiku-5-5",
+      "resolved_models_at_facts_invocation": [
+        "anthropic:claude-haiku-5-5"
+      ],
+      "pages": 170,
+      "write_errors": 0,
+      "write_wall_s": 10.711,
+      "job_drain_s": 1348.127,
+      "extraction_calls": 190,
+      "extraction_input_tokens": 506949,
+      "extraction_output_tokens": 232787,
+      "extraction_outcomes": {
+        "ok": 190
+      },
+      "other_chat_calls": [],
+      "parse": {
+        "jobs": 190,
+        "completed": 190,
+        "not_completed": [],
+        "parse_failures": 0,
+        "parse_failures_logged": 0,
+        "unhandled_parse_failures": 0,
+        "skipped_reasons": {}
+      },
+      "extractor_warnings": 0,
+      "extractor_warning_samples": [],
+      "facts_stored": 1018,
+      "facts_active": 1018,
+      "inserted_by_jobs": 1069,
+      "unreadable_after_restart": [],
+      "sample_reads": {
+        "checked": 20,
+        "all_found": 8,
+        "rows": [
+          {
+            "claim": "c0181",
+            "token": "braga",
+            "expected": [
+              705
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0078",
+            "token": "evora",
+            "expected": [
+              561
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0063",
+            "token": "bluefin",
+            "expected": [
+              97
+            ],
+            "found": [
+              97
+            ]
+          },
+          {
+            "claim": "c0178",
+            "token": "faro",
+            "expected": [
+              702
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0140",
+            "token": "cais dourado",
+            "expected": [
+              650
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0013",
+            "token": "meadow",
+            "expected": [
+              455
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0204",
+            "token": "orchard",
+            "expected": [
+              320
+            ],
+            "found": [
+              320
+            ]
+          },
+          {
+            "claim": "c0166",
+            "token": "lantern",
+            "expected": [
+              687
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0198",
+            "token": "harbor",
+            "expected": [
+              312
+            ],
+            "found": [
+              312
+            ]
+          },
+          {
+            "claim": "c0208",
+            "token": "leiria",
+            "expected": [
+              754
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0209",
+            "token": "porto",
+            "expected": [
+              328
+            ],
+            "found": [
+              328
+            ]
+          },
+          {
+            "claim": "c0061",
+            "token": "peanuts",
+            "expected": [
+              95
+            ],
+            "found": [
+              95
+            ]
+          },
+          {
+            "claim": "c0254",
+            "token": "kitesurfing",
+            "expected": [
+              833
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0256",
+            "token": "bouldering",
+            "expected": [
+              839,
+              840
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0229",
+            "token": "bouldering",
+            "expected": [
+              787
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0014",
+            "token": "granite",
+            "expected": [
+              456
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0141",
+            "token": "cascais",
+            "expected": [
+              223
+            ],
+            "found": [
+              223
+            ]
+          },
+          {
+            "claim": "c0035",
+            "token": "shellfish",
+            "expected": [
+              53
+            ],
+            "found": [
+              53
+            ]
+          },
+          {
+            "claim": "c0218",
+            "token": "orchard",
+            "expected": [
+              768,
+              769
+            ],
+            "found": []
+          },
+          {
+            "claim": "c0064",
+            "token": "beacon",
+            "expected": [
+              98
+            ],
+            "found": [
+              98
+            ]
+          }
+        ]
+      },
+      "validity": {
+        "unhandled_parse_failures": 0,
+        "resolved_model_matches": true,
+        "unreadable_after_restart": 0,
+        "jobs_not_completed": 0
+      },
+      "totals": {
+        "claims": 529,
+        "recalled": 515,
+        "facts": 843,
+        "supported": 816,
+        "wrong": 0,
+        "unmatched": 27,
+        "attribution_cases": 165,
+        "attribution_correct": 148,
+        "correction_cases": 96,
+        "correction_correct": 96,
+        "recall": 0.9735349716446124,
+        "precision": 1,
+        "attribution": 0.896969696969697,
+        "correction": 1,
+        "unmatched_rate": 0.03202846975088968
+      },
+      "natural": [
+        {
+          "page": "conversations/td-coding-reflection-01",
+          "items": 9,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 8,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-01-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-01-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g08",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-01-g09",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-coding-reflection-02",
+          "items": 8,
+          "full": 4,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 8,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g02",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-02-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-02-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-coding-reflection-03",
+          "items": 8,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-03-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-coding-reflection-04",
+          "items": 10,
+          "full": 3,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-04-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g03",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-04-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "coding-reflection-04-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "coding-reflection-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "coding-reflection-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-01",
+          "items": 8,
+          "full": 4,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 8,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-01-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-01-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-01-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-01-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-01-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-02",
+          "items": 8,
+          "full": 5,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-02-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-02-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-02-g06",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-03",
+          "items": 8,
+          "full": 6,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 7,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-03-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-03-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-emotional-processing-04",
+          "items": 10,
+          "full": 3,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 7,
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-04-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-04-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-04-g03",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g04",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "emotional-processing-04-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "emotional-processing-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "emotional-processing-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-01",
+          "items": 8,
+          "full": 6,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 7,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-01-g08",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-02",
+          "items": 8,
+          "full": 7,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g07",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-03",
+          "items": 8,
+          "full": 5,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 8,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-03-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-03-g08",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-04",
+          "items": 10,
+          "full": 3,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 8,
+          "verdicts": [
+            {
+              "item_id": "mixed-routine-signal-04-g01",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "mixed-routine-signal-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-01",
+          "items": 9,
+          "full": 7,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-01-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g08",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-01-g09",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-02",
+          "items": 8,
+          "full": 7,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g06",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-03",
+          "items": 8,
+          "full": 5,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "people-deal-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-03-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-people-deal-04",
+          "items": 10,
+          "full": 2,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 8,
+          "verdicts": [
+            {
+              "item_id": "people-deal-04-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-04-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-04-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "people-deal-04-g04",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "people-deal-04-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "people-deal-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-01",
+          "items": 9,
+          "full": 5,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 10,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-01-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-01-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-01-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-01-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g08",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-01-g09",
+              "status": "ABSENT"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-02",
+          "items": 8,
+          "full": 7,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-02-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g05",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-02-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-02-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-03",
+          "items": 8,
+          "full": 5,
+          "partial": 1,
+          "judge_failed": 0,
+          "facts": 8,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-03-g01",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g02",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g04",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-03-g05",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-03-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-03-g07",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-03-g08",
+              "status": "FULL"
+            }
+          ]
+        },
+        {
+          "page": "conversations/td-startup-ideation-04",
+          "items": 10,
+          "full": 2,
+          "partial": 2,
+          "judge_failed": 0,
+          "facts": 9,
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-04-g01",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g02",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-04-g03",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-04-g04",
+              "status": "FULL"
+            },
+            {
+              "item_id": "startup-ideation-04-g05",
+              "status": "PARTIAL"
+            },
+            {
+              "item_id": "startup-ideation-04-g06",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g07",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g08",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g09",
+              "status": "ABSENT"
+            },
+            {
+              "item_id": "startup-ideation-04-g10",
+              "status": "ABSENT"
+            }
+          ]
+        }
+      ],
+      "user_claims_attributed_to_assistant": 0,
+      "facts_without_page": 0,
+      "usd": 0.1823,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.015218969999999995,
+          "requests": 1260
+        },
+        "anthropic:claude-haiku-5-5": {
+          "usd": 0.16708840000000003,
+          "requests": 190
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0
+    },
+    {
+      "arm": {
+        "label": "disabled",
+        "kind": "disabled",
+        "model": null
+      },
+      "expected_model": null,
+      "resolved_models_at_facts_invocation": [],
+      "pages": 170,
+      "write_errors": 0,
+      "write_wall_s": 10.79,
+      "job_drain_s": 1.684,
+      "extraction_calls": 0,
+      "extraction_input_tokens": 0,
+      "extraction_output_tokens": 0,
+      "extraction_outcomes": {},
+      "other_chat_calls": [],
+      "parse": {
+        "jobs": 0,
+        "completed": 0,
+        "not_completed": [],
+        "parse_failures": 0,
+        "parse_failures_logged": 0,
+        "unhandled_parse_failures": 0,
+        "skipped_reasons": {}
+      },
+      "extractor_warnings": 0,
+      "extractor_warning_samples": [],
+      "facts_stored": 0,
+      "facts_active": 0,
+      "inserted_by_jobs": 0,
+      "unreadable_after_restart": [],
+      "sample_reads": {
+        "checked": 0,
+        "all_found": 0,
+        "rows": []
+      },
+      "validity": {
+        "unhandled_parse_failures": 0,
+        "resolved_model_matches": true,
+        "unreadable_after_restart": 0,
+        "jobs_not_completed": 0
+      },
+      "totals": {
+        "claims": 529,
+        "recalled": 0,
+        "facts": 0,
+        "supported": 0,
+        "wrong": 0,
+        "unmatched": 0,
+        "attribution_cases": 64,
+        "attribution_correct": 64,
+        "correction_cases": 96,
+        "correction_correct": 0,
+        "recall": 0,
+        "precision": 0,
+        "attribution": 1,
+        "correction": 0,
+        "unmatched_rate": 0
+      },
+      "natural": [
+        {
+          "page": "conversations/td-coding-reflection-01",
+          "items": 9,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-coding-reflection-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-coding-reflection-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-coding-reflection-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-emotional-processing-01",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-emotional-processing-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-emotional-processing-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-emotional-processing-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-01",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-people-deal-01",
+          "items": 9,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-people-deal-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-people-deal-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-people-deal-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-startup-ideation-01",
+          "items": 9,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-startup-ideation-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-startup-ideation-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-startup-ideation-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        }
+      ],
+      "user_claims_attributed_to_assistant": 0,
+      "facts_without_page": 0,
+      "usd": 0.0014,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00137839,
+          "requests": 38
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0
+    },
+    {
+      "arm": {
+        "label": "drop",
+        "kind": "drop",
+        "model": "openai:gpt-6-luna"
+      },
+      "expected_model": "openai:gpt-6-luna",
+      "resolved_models_at_facts_invocation": [
+        "openai:gpt-6-luna"
+      ],
+      "pages": 170,
+      "write_errors": 0,
+      "write_wall_s": 11.276,
+      "job_drain_s": 2656.807,
+      "extraction_calls": 190,
+      "extraction_input_tokens": 80147,
+      "extraction_output_tokens": 271391,
+      "extraction_outcomes": {
+        "ok": 190
+      },
+      "other_chat_calls": [],
+      "parse": {
+        "jobs": 190,
+        "completed": 190,
+        "not_completed": [],
+        "parse_failures": 0,
+        "parse_failures_logged": 0,
+        "unhandled_parse_failures": 0,
+        "skipped_reasons": {}
+      },
+      "extractor_warnings": 0,
+      "extractor_warning_samples": [],
+      "facts_stored": 0,
+      "facts_active": 0,
+      "inserted_by_jobs": 0,
+      "unreadable_after_restart": [],
+      "sample_reads": {
+        "checked": 0,
+        "all_found": 0,
+        "rows": []
+      },
+      "validity": {
+        "unhandled_parse_failures": 0,
+        "resolved_model_matches": true,
+        "unreadable_after_restart": 0,
+        "jobs_not_completed": 0
+      },
+      "totals": {
+        "claims": 529,
+        "recalled": 0,
+        "facts": 0,
+        "supported": 0,
+        "wrong": 0,
+        "unmatched": 0,
+        "attribution_cases": 64,
+        "attribution_correct": 64,
+        "correction_cases": 96,
+        "correction_correct": 0,
+        "recall": 0,
+        "precision": 0,
+        "attribution": 1,
+        "correction": 0,
+        "unmatched_rate": 0
+      },
+      "natural": [
+        {
+          "page": "conversations/td-coding-reflection-01",
+          "items": 9,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-coding-reflection-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-coding-reflection-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-coding-reflection-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-emotional-processing-01",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-emotional-processing-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-emotional-processing-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-emotional-processing-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-01",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-mixed-routine-signal-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-people-deal-01",
+          "items": 9,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-people-deal-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-people-deal-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-people-deal-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-startup-ideation-01",
+          "items": 9,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-startup-ideation-02",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-startup-ideation-03",
+          "items": 8,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        },
+        {
+          "page": "conversations/td-startup-ideation-04",
+          "items": 10,
+          "full": 0,
+          "partial": 0,
+          "judge_failed": 0,
+          "facts": 0,
+          "verdicts": []
+        }
+      ],
+      "user_claims_attributed_to_assistant": 0,
+      "facts_without_page": 0,
+      "usd": 0.1589,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.012639510000000003,
+          "requests": 191
+        },
+        "openai:gpt-6-luna": {
+          "usd": 0.1462809000000001,
+          "requests": 190
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0
+    }
+  ],
+  "budget": {
+    "run_id": "facts-absorb-gate-2026-10-08T15-29-22-182Z-1d0fb35d",
+    "budget_usd": 10,
+    "reserved_usd": 29.9907625,
+    "actual_usd": 3.2741326699999944,
+    "charged_reservations": 0,
+    "requests": 65,
+    "input_tokens": 2079143,
+    "output_tokens": 879072,
+    "overshoot_usd": 0,
+    "ledger_path": "/home/user/.capy/work/r2/budget/ledger.sqlite",
+    "program_cap_usd": 40,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 1267.9
+    }
+  }
+}

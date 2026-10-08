@@ -58,7 +58,8 @@ export class MeteringProxy {
   private bindings = new Map<string, string>();
   private inflight = new Map<string, number>();
   private waiters = new Map<string, Array<() => void>>();
-  constructor(private options: { fetchImpl?: typeof fetch } = {}) {}
+  /** `transform` rewrites a response body after it is metered (a mutant that drops a model's output, for example). */
+  constructor(private options: { fetchImpl?: typeof fetch; transform?: (slot: string, target: string, text: string) => string } = {}) {}
   get port(): number { return this.server!.port as number; }
   /** Charge the slot's provider requests to `key` (a cell id) from now on. */
   bind(slot: string, key: string) { this.bindings.set(slot, key); }
@@ -123,7 +124,7 @@ export class MeteringProxy {
           } else charge(0, false);
           const out = new Headers(res.headers);
           for (const h of ['content-encoding', 'content-length', 'transfer-encoding']) out.delete(h);
-          return new Response(text, { status: res.status, headers: out });
+          return new Response(this.options.transform ? this.options.transform(slot, target, text) : text, { status: res.status, headers: out });
         } finally { this.settled(key); }
       },
     });
