@@ -645,12 +645,13 @@ describe('paid dev smokes', () => {
 
   test('smoke cells are dev-only: one LoCoMo dev conversation for every system, one BEAM-1M dev conversation for the ingest probes', () => {
     const kinds = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
-    expect(m.smoke_cells.length).toBe(16);
+    expect(m.smoke_cells.length).toBe(23);
     for (const c of m.smoke_cells) {
       expect(definitionProblems(c, kinds)).toEqual([]);
       expect(c.split).toBe('dev');
       expect(c.only_conversations).toEqual(c.benchmark === 'locomo' ? ['conv-44'] : ['1m-16']);
     }
+    expect(m.smoke_cells.filter(c => c.set === 'S3-smoke-default').map(c => [c.system, c.arms.map(a => `${a.mode}:${a.readers.join(',')}`)])).toEqual(['gbrain-defaults', 'ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-markdown-kb', 'ext-verbatim-session', 'baseline-hybrid'].map(s => [s, ['native-default:anthropic:claude-sonnet-5-5']]));
     const locomo = m.smoke_cells.filter(c => c.set === 'S3-smoke');
     expect(new Set(locomo.map(c => c.system))).toEqual(new Set([...kinds].filter(k => k !== 'ext-agent-runtime')));
     expect(locomo.find(c => c.system === 'gbrain-defaults')!.arms.map(a => a.id)).toEqual(['component-b8000', 'whole-synthesize']);

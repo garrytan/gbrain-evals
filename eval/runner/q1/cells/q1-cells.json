@@ -316,6 +316,29 @@
       ]
     },
     {
+      "id": "S3-smoke-default",
+      "benchmark": "locomo",
+      "split": "dev",
+      "questions": 20,
+      "conversations": 1,
+      "corpus_tokens": 20474,
+      "messages": 675,
+      "block": "T2-S3",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "role": "smoke",
+      "exposure": "E2",
+      "label": "LoCoMo dev smoke, own default amount (conv-44, 20 questions, claude-sonnet-5-5)",
+      "only_conversations": [
+        "conv-44"
+      ]
+    },
+    {
       "id": "S2b-ingest",
       "benchmark": "beam-1m",
       "split": "dev",
@@ -8556,6 +8579,442 @@
         "lines": {
           "full_context": 1,
           "judges": 0.11
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.gbrain-defaults.shipped-defaults",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "shipped-defaults",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.gbrain-defaults.shipped-defaults.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 1.14,
+        "lines": {
+          "ingest": 0,
+          "judges": 0.04,
+          "readers": 1.08,
+          "system_queries": 0.02
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-extract-first.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-extract-first",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-extract-first.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.52,
+        "lines": {
+          "ingest": 0.04,
+          "judges": 0.04,
+          "readers": 0.44
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-memory-bank.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-memory-bank",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-memory-bank.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.51,
+        "lines": {
+          "ingest": 0.03,
+          "judges": 0.04,
+          "readers": 0.44
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-graph-pipeline.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-graph-pipeline",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-graph-pipeline.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.51,
+        "lines": {
+          "ingest": 0.03,
+          "judges": 0.04,
+          "readers": 0.44
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-markdown-kb.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-markdown-kb",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-markdown-kb.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.48,
+        "lines": {
+          "ingest": 0,
+          "judges": 0.04,
+          "readers": 0.44
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.ext-verbatim-session.recipe",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "ext-verbatim-session",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\"",
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.ext-verbatim-session.recipe.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.48,
+        "lines": {
+          "ingest": 0,
+          "judges": 0.04,
+          "readers": 0.44
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke-default.baseline-hybrid.baseline",
+      "set": "S3-smoke-default",
+      "block": "T2-S3",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "baseline-hybrid",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 20,
+        "seed": "q1-probes-s3-smoke-default"
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "whole-default",
+          "cell_id": "s3-smoke-default.baseline-hybrid.baseline.whole-default",
+          "set": "S3-smoke-default",
+          "arm": "whole-system",
+          "mode": "native-default",
+          "policy": "vendor-default",
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "whole system, own default amount (dev smoke, claude-sonnet-5-5)"
+        }
+      ],
+      "estimate": {
+        "usd": 0.48,
+        "lines": {
+          "ingest": 0,
+          "judges": 0.04,
+          "readers": 0.44
         }
       }
     },

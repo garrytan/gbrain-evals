@@ -39,7 +39,7 @@ export const MANIFEST_PATH = resolve(import.meta.dir, 'q1-cells.json');
 export const SCHEMA_PATH = resolve(import.meta.dir, 'schema.json');
 export const PREREGISTRATION = 'docs/benchmarks/2026-10-06-scoreboard-preregistration.md';
 
-export type SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S2b-ingest';
+export type SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S3-smoke-default' | 'S2b-ingest';
 export type BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
 export type Split = 'dev' | 'sealed' | 'all';
 
@@ -154,6 +154,7 @@ export const SETS: Record<SetId, SetFacts> = {
   'S4-slice': { id: 'S4-slice', benchmark: 'lme-s', split: 'dev', questions: 100, conversations: 100, corpus_tokens: 11_500_000, messages: 50_000, block: 'T2-S4-S5', selection: { kind: 'shootout-slice', limit: 100, seed: 42 }, exclusions: [], role: 'public', exposure: 'E3', label: 'LongMemEval-S, shootout slice' },
   S5: { id: 'S5', benchmark: 'lme-m', split: 'dev', questions: 100, conversations: 100, corpus_tokens: 150_000_000, messages: 500_000, block: 'T2-S4-S5', selection: { kind: 'all' }, exclusions: [], role: 'public', exposure: 'E3', label: 'LongMemEval-M' },
   'S3-smoke': { id: 'S3-smoke', benchmark: 'locomo', split: 'dev', questions: 20, conversations: 1, corpus_tokens: 20_474, messages: 675, block: 'T2-S3', selection: { kind: 'stratified', limit: 20, stratify: 'category', seed: 'q1-smoke' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'LoCoMo dev smoke (conv-44, 20 questions)', only_conversations: ['conv-44'] },
+  'S3-smoke-default': { id: 'S3-smoke-default', benchmark: 'locomo', split: 'dev', questions: 20, conversations: 1, corpus_tokens: 20_474, messages: 675, block: 'T2-S3', selection: { kind: 'stratified', limit: 20, stratify: 'category', seed: 'q1-smoke' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'LoCoMo dev smoke, own default amount (conv-44, 20 questions, claude-sonnet-5-5)', only_conversations: ['conv-44'] },
   'S2b-ingest': { id: 'S2b-ingest', benchmark: 'beam-1m', split: 'dev', questions: 10, conversations: 1, corpus_tokens: 926_773, messages: 2_182, block: 'T2-S2b', selection: { kind: 'stratified', limit: 10, stratify: 'category', seed: 'q1-ingest-probe' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BEAM-1M dev ingest probe (1m-16, retrieval only)', only_conversations: ['1m-16'] },
 };
 
@@ -406,6 +407,11 @@ export function generateSmokeCells(): CellDefinition[] {
     makeCell('S3-smoke', system, headlineConfig(system, 'locomo'), [b8({ label: 'component, 8,000 tokens (dev smoke)' }), ...(system === 'gbrain-defaults' ? [synthesize] : [])]));
   cells.push(makeCell('S3-smoke', 'baseline-file-agent', 'baseline', [{ id: 'whole-agent', mode: 'agent', label: 'file agent, uncapped grep, 40 turns (dev smoke)' }]));
   cells.push(makeCell('S3-smoke', 'baseline-full-context', 'baseline', [{ id: 'whole-full-context', mode: 'full-context', label: 'whole history (dev smoke)' }]));
+  // Each system's own default amount (the S1 whole-default arm's evidence size), read by claude-sonnet-5-5 only: the
+  // vendor-default token assumption. The temporal graph is left out: its LoCoMo recipe ingest costs many times the
+  // plan, and its S1 row runs the common configuration.
+  for (const system of ['gbrain-defaults', ...EXT_BEAM.filter(s => s !== 'ext-temporal-graph'), 'baseline-hybrid'])
+    cells.push(makeCell('S3-smoke-default', system, headlineConfig(system, 'locomo'), [{ id: 'whole-default', mode: 'native-default', readers: [SONNET], label: 'whole system, own default amount (dev smoke, claude-sonnet-5-5)' }]));
   for (const system of ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph']) {
     const cell = makeCell('S2b-ingest', system, headlineConfig(system, 'beam'), [{ id: 'retrieval-only', mode: 'retrieval-only', label: 'ingest-cost probe, retrieval only' }]);
     // The temporal graph's LoCoMo smoke ingested at many times the planned rate, so its BEAM-1M probe writes the first
