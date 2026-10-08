@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.42, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
+gbrain-evals v0.10.45, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -36,6 +36,7 @@ describe current behavior first, then the older work behind a decision.
 | What does today's gbrain answer on LongMemEval end to end? | [October 7 current-pin run](benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) ([preregistration](benchmarks/2026-10-06-longmemeval-w10-preregistration.md)) |
 | Which reader should read gbrain's results? | [October 7 reader replay on frozen retrieval](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
 | Is gbrain worth it compared with pasting the whole history into the reader? | [October 7 full-context comparison](benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
+| How much of what gbrain delivers to the reader does the answer need, how much does a reader write down, and how often does a wrong answer commit to a wrong value? | [October 8 reading headroom recount](benchmarks/2026-10-08-reading-headroom.md) ($0, from the W10 receipts, not preregistered): the answer's own sessions are 41% of the 15,823 chars/4 tokens delivered (8,981 on multi-session questions), frontier readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value, by reader |
 | Does the LongMemEval answer score notice broken retrieval? | [October 6 LongMemEval negative control](benchmarks/2026-10-06-w8-longmemeval-control.md) ([preregistration](benchmarks/2026-10-06-w8-longmemeval-control-preregistration.md)) |
 | Do the published LongMemEval retrieval and reading-notes numbers hold with opaque session ids, and what does a frontier reader score on gbrain's retrieval? | [October 4 opaque-id follow-ups and frontier reader](benchmarks/2026-10-04-longmemeval-opaque-followups.md) ([preregistration](benchmarks/2026-10-04-longmemeval-opaque-followups-preregistration.md)) |
 | With the answer key hidden, how accurate are gbrain's answers, and does the reader prompt or the amount of evidence matter more? | [September 29 opaque-id answer re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
@@ -82,6 +83,7 @@ gap does not isolate the effect of a graph alone.
 | Did fix wave 11's reordered MCP instructions and shorter put_page description hurt agents? | [October 7 wave 11 agent smoke (Cat 40, D12)](benchmarks/2026-10-07-wave11-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave11-agent-smoke-preregistration.md)): pass; permission tasks 60/60 on both builds, write-back 55/60 on master and 56/60 on the wave, most cells at the ceiling, and no model called put_page |
 | Does fix wave 12's move of the `forget` caveat into the memory clause, or its restored put_page request_id UUID line, change how agents do? | [October 7 wave 12 agent smoke (Cat 40, GBRA-57)](benchmarks/2026-10-07-wave12-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave12-agent-smoke-preregistration.md)): the caveat move regresses Opus 5.5 write-back (20/20 to 15/20; the old instructions on the wave 12 build give 19/20) and was reverted before merge; the UUID line does no harm, does not measurably cut non-UUID first writes (17/30 to 14/30), and shipped in gbrain v0.60.106.0 ([`7aa2caa`](https://github.com/garrytan/gbrain/commit/7aa2caa0aa2a9f031730cd351cd516cf4f9f5802), #6269) |
 | How fast does a managed Postgres brain catch up a backlog far from its database, and how long does a page save take meanwhile? | [October 7 lanes and foreground mirror](benchmarks/2026-10-07-managed-sync-lanes-foreground.md) (follows the [October 5 catch-up mirror](benchmarks/2026-10-05-managed-sync-catchup.md)) |
+| Does a managed Postgres catch-up still stop when one write cannot finish preparing, and what happens to that write? | [October 8 preparation stall mirror](benchmarks/2026-10-08-managed-sync-preparation-stall.md) (gbrain #6298, v0.60.112.0): a stuck write is cut off and held in 240 s and a 15,000-entry catch-up drains in two to three passes where v0.60.105.0 never did; a table lock still pins the pool |
 | Which MCP tool surface should gbrain register for agents: seven verbs, `starter` or `full`? | [October 5 registration-surface cell](benchmarks/2026-10-05-registration-surface.md) ([preregistration](benchmarks/2026-10-05-registration-surface-preregistration.md)) |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
 | What did the earlier ingestion worker comparisons measure? | [Subagent comparison](benchmarks/2026-04-18-minions-vs-openclaw-subagents.md), [production comparison](benchmarks/2026-04-18-minions-vs-openclaw-production.md) |
@@ -161,6 +163,10 @@ that record; the two should agree.
 (`eval/runner/compare.ts`), the three decision gates, and how the evaluator keeps
 the answer key away from the system under test.
 
+The [usage receipt](usage-receipt.md) is the one record every reading lane writes per model call: total,
+uncached, cache-read and cache-write input under each provider's convention, output and reasoning tokens, the
+full answer and the finish reason, with one record per replicate and per attempt.
+
 The [September 6 evidence guide](benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/README.md)
 explains the saved LongMemEval files and what their compacted records retain.
 
@@ -177,44 +183,52 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
 
+### 2026-10-08: Reading headroom row and the usage receipt page
+
+gbrain-evals v0.10.45. The retrieval table gained a row for the October 8 reading headroom recount (wave 0 item A2 of the 10x memory advantage plan, gbrain-evals #97): from the committed W10a and W10b receipts, the answer's own sessions are 41% of what gbrain delivers, readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value. "Checking the evidence" links the new usage receipt page (item A1), which documents the shared record of tokens, cache use and answers per model call. The opening line names v0.10.43 instead of v0.10.42.
+
+### 2026-10-08: Preparation stall row
+
+gbrain-evals v0.10.45. The memory table gained a row for the October 8 preparation stall mirror of gbrain #6298 (v0.60.112.0). The opening line names v0.10.42 instead of v0.10.41.
+
 ### 2026-10-08: Managed Postgres catch-up rows
 
-gbrain-evals v0.10.41. The memory table gained a row for the October 7 lanes and foreground mirror of gbrain #6279 (and links the October 5 catch-up mirror it follows). The opening line names v0.10.41 instead of v0.10.40.
+gbrain-evals v0.10.45. The memory table gained a row for the October 7 lanes and foreground mirror of gbrain #6279 (and links the October 5 catch-up mirror it follows). The opening line names v0.10.41 instead of v0.10.40.
 
 ### 2026-10-07: Fix wave 12 agent smoke row
 
-gbrain-evals v0.10.40. The memory table gained a row for the preregistered fix wave 12 agent smoke: moving the `forget` caveat into the memory clause (W4.6) fails the write-back gate on Opus 5.5, and an attribution set names the instruction change, so it was reverted before merge; the restored put_page UUID line (W4.16) does no harm and shipped in gbrain v0.60.106.0 (`7aa2caa`, #6269). The opening line names v0.10.40 instead of v0.10.39.
+gbrain-evals v0.10.45. The memory table gained a row for the preregistered fix wave 12 agent smoke: moving the `forget` caveat into the memory clause (W4.6) fails the write-back gate on Opus 5.5, and an attribution set names the instruction change, so it was reverted before merge; the restored put_page UUID line (W4.16) does no harm and shipped in gbrain v0.60.106.0 (`7aa2caa`, #6269). The opening line names v0.10.40 instead of v0.10.39.
 
 ### 2026-10-07: Fix wave 11 rows
 
-gbrain-evals v0.10.39. The retrieval table gained a row for the October 7 mirror of gbrain fix wave 11's W6.3 measurement: relaxed HNSW scan order raises recall@10 at a 50% source filter by 2.1 points (1024-d) and 1.7 points (1536-d) at unchanged latency, so it ships default-on. The memory table gained a row for the preregistered D12 agent smoke: the wave's reordered MCP instructions and shorter put_page description pass, with most cells at the ceiling and put_page never called. The opening line names v0.10.39 instead of v0.10.38.
+gbrain-evals v0.10.45. The retrieval table gained a row for the October 7 mirror of gbrain fix wave 11's W6.3 measurement: relaxed HNSW scan order raises recall@10 at a 50% source filter by 2.1 points (1024-d) and 1.7 points (1536-d) at unchanged latency, so it ships default-on. The memory table gained a row for the preregistered D12 agent smoke: the wave's reordered MCP instructions and shorter put_page description pass, with most cells at the ceiling and put_page never called. The opening line names v0.10.39 instead of v0.10.38.
 
 ### 2026-10-07: Re-pin to `a865f8f`
 
-gbrain-evals v0.10.37. The opening names gbrain master `a865f8f` (v0.60.104.0, was `c5fb0201`), the commit with gbrain's fix for N1-7. The re-pin route names both October pins.
+gbrain-evals v0.10.45. The opening names gbrain master `a865f8f` (v0.60.104.0, was `c5fb0201`), the commit with gbrain's fix for N1-7. The re-pin route names both October pins.
 
 ### 2026-10-06: The October follow-up round and the re-pin to `c5fb0201`
 
-gbrain-evals v0.10.37. The opening names gbrain master `c5fb0201` (v0.60.95.0, was `739e5cc`). The route table points to the October 6 re-pin (was October 4) and the round's plan, and to the review packets awaiting Garry's labels. New rows link the embedding-provider matrix, Cat 21 paraphrases, the frontier takes-bootstrap rerun, Cat 20 with four judges, N6 on Postgres over HTTP, the N8 privacy gate, the N2 judges on current models, the attendance world, A4 with S4 on, the October 6 negative controls, the BEAM-1M dated rerun, and the October 7 LongMemEval current-pin run, reader replay, full-context comparison and LongMemEval negative control.
+gbrain-evals v0.10.45. The opening names gbrain master `c5fb0201` (v0.60.95.0, was `739e5cc`). The route table points to the October 6 re-pin (was October 4) and the round's plan, and to the review packets awaiting Garry's labels. New rows link the embedding-provider matrix, Cat 21 paraphrases, the frontier takes-bootstrap rerun, Cat 20 with four judges, N6 on Postgres over HTTP, the N8 privacy gate, the N2 judges on current models, the attendance world, A4 with S4 on, the October 6 negative controls, the BEAM-1M dated rerun, and the October 7 LongMemEval current-pin run, reader replay, full-context comparison and LongMemEval negative control.
 
 How this index changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
 
 ### 2026-10-06: Tier 3 fence repair row covers round 2
 
-gbrain-evals v0.10.36. The Tier 3 fence repair row now answers which models write the repair correctly, with round 2 and its held-out set: `gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1` qualify, `claude-opus-4-7` and `claude-sonnet-5-5` do not. It had reported round 1 only (the default `claude-opus-4-7` at 8 of 198 wrong cells) and links amendment 1.
+gbrain-evals v0.10.45. The Tier 3 fence repair row now answers which models write the repair correctly, with round 2 and its held-out set: `gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1` qualify, `claude-opus-4-7` and `claude-sonnet-5-5` do not. It had reported round 1 only (the default `claude-opus-4-7` at 8 of 198 wrong cells) and links amendment 1.
 
 ### 2026-10-06: Tier 3 fence repair row
 
-gbrain-evals v0.10.36. The memory table gained a row for the October 6 Tier 3 fence-repair measurement (gbrain #6188, taste decision T4, branch `capy/6188-t4-eval`): every model passes the gates on 96.5-100% of repairs, the default `claude-opus-4-7` fails the preregistered 1% false-accept bar with 8 of 198, and `gpt-6.1-sol` and `claude-fable-5-1` meet it. The opening line names v0.10.36 (it had named v0.10.29 since the fix wave 9 row).
+gbrain-evals v0.10.45. The memory table gained a row for the October 6 Tier 3 fence-repair measurement (gbrain #6188, taste decision T4, branch `capy/6188-t4-eval`): every model passes the gates on 96.5-100% of repairs, the default `claude-opus-4-7` fails the preregistered 1% false-accept bar with 8 of 198, and `gpt-6.1-sol` and `claude-fable-5-1` meet it. The opening line names v0.10.36 (it had named v0.10.29 since the fix wave 9 row).
 
 ### 2026-10-05: Fix wave 9 mirror row
 
-gbrain-evals v0.10.29. The memory table gained a row for the October 5 mirror of gbrain fix wave 9 (#6111, pending merge): pinning `search_path` makes bulk fact inserts about 10-13% slower on a local timing, with fact fingerprints byte-identical, and takes-quality receipts move to protocol 2, so protocol 1 and 2 receipts are compared as dissimilar inputs. The opening line names v0.10.29.
+gbrain-evals v0.10.45. The memory table gained a row for the October 5 mirror of gbrain fix wave 9 (#6111, pending merge): pinning `search_path` makes bulk fact inserts about 10-13% slower on a local timing, with fact fingerprints byte-identical, and takes-quality receipts move to protocol 2, so protocol 1 and 2 receipts are compared as dissimilar inputs. The opening line names v0.10.29.
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
-gbrain-evals v0.10.23. The index opens with the repository version and the gbrain pin, and says the tables list current reports first. The route table points to the October 4 re-pin and to Cat 40 and Cat 41 instead of naming the September 9 refresh as "the latest controlled comparisons". The memory table gains a row for the October 5 registration-surface cell. This changelog section is new.
+gbrain-evals v0.10.45. The index opens with the repository version and the gbrain pin, and says the tables list current reports first. The route table points to the October 4 re-pin and to Cat 40 and Cat 41 instead of naming the September 9 refresh as "the latest controlled comparisons". The memory table gains a row for the October 5 registration-surface cell. This changelog section is new.
 
 ### 2026-10-05: Decision kit and held-out program rows
 
@@ -222,7 +236,7 @@ gbrain-evals v0.10.23. The index opens with the repository version and the gbrai
 
 ### 2026-10-05: Takes-bootstrap graduation verdict row
 
-[`bbce227`](https://github.com/garrytan/gbrain-evals/commit/bbce227), gbrain-evals v0.10.22. The memory table gained a row for the October 4 takes-bootstrap graduation verdict, mirrored from gbrain #6013: the classifier did not graduate, so its autopilot stays `manual_only`.
+[`bbce227`](https://github.com/garrytan/gbrain-evals/commit/bbce227), gbrain-evals v0.10.45. The memory table gained a row for the October 4 takes-bootstrap graduation verdict, mirrored from gbrain #6013: the classifier did not graduate, so its autopilot stays `manual_only`.
 
 ### 2026-10-04: `auto_chronicle` row links the rerun
 
@@ -266,7 +280,7 @@ gbrain-evals v0.10.23. The index opens with the repository version and the gbrai
 
 ### 2026-10-02: Row for sealed v2 release decision 1
 
-[`2eebf81`](https://github.com/garrytan/gbrain-evals/commit/2eebf81), gbrain-evals v0.10.8. The retrieval experiments table gained a row for the October 2 sealed v2 release decision 1 and its preregistration: does gbrain hold up on a harder held-out set where chunks fall short.
+[`2eebf81`](https://github.com/garrytan/gbrain-evals/commit/2eebf81), gbrain-evals v0.10.45. The retrieval experiments table gained a row for the October 2 sealed v2 release decision 1 and its preregistration: does gbrain hold up on a harder held-out set where chunks fall short.
 
 ### 2026-10-02: N1 and N5 rows link the CI slices
 
@@ -278,19 +292,19 @@ gbrain-evals v0.10.23. The index opens with the repository version and the gbrai
 
 ### 2026-10-01: Eval-category wave rows
 
-[`f94e98d`](https://github.com/garrytan/gbrain-evals/commit/f94e98d), gbrain-evals v0.10.5. The route table gained a row linking the October 1 eval-category wave plan and the capability and entrypoint matrix. The correctness and access table gained ten rows for the new categories: N12 format fidelity (report-only until gbrain fixes N12-1), N13 code-intelligence readiness, N7 open loops on Gmail-shaped threads, N8 unsolicited recall (report-only), N9 multi-hop, N1 knowledge update, N5 forgetting residue, N2 contradiction surfacing (with the N2 and A4 preregistration), A4 abstention, and the wave bug ledger.
+[`f94e98d`](https://github.com/garrytan/gbrain-evals/commit/f94e98d), gbrain-evals v0.10.45. The route table gained a row linking the October 1 eval-category wave plan and the capability and entrypoint matrix. The correctness and access table gained ten rows for the new categories: N12 format fidelity (report-only until gbrain fixes N12-1), N13 code-intelligence readiness, N7 open loops on Gmail-shaped threads, N8 unsolicited recall (report-only), N9 multi-hop, N1 knowledge update, N5 forgetting residue, N2 contradiction surfacing (with the N2 and A4 preregistration), A4 abstention, and the wave bug ledger.
 
 ### 2026-10-01: System One rows
 
-[`b13b219`](https://github.com/garrytan/gbrain-evals/commit/b13b219), gbrain-evals v0.10.4. The memory table gained a row for the September 30 System One v1 slots report: where a small decision model (TypeSafe Jev) helps or hurts gbrain triage, reranking, pruning, abstention and contradiction spotting. Data and methods gained a link to the System One datasets README, which says what each label is made from and which files are rebuilt instead of stored.
+[`b13b219`](https://github.com/garrytan/gbrain-evals/commit/b13b219), gbrain-evals v0.10.45. The memory table gained a row for the September 30 System One v1 slots report: where a small decision model (TypeSafe Jev) helps or hurts gbrain triage, reranking, pruning, abstention and contradiction spotting. Data and methods gained a link to the System One datasets README, which says what each label is made from and which files are rebuilt instead of stored.
 
 ### 2026-09-30: Evidence delivery rows and a correctness section
 
-[`1ec19a2`](https://github.com/garrytan/gbrain-evals/commit/1ec19a2), gbrain-evals v0.10.2. The retrieval experiments table gained rows for the September 30 auto v2 release check and the evidence-delivery study (neighbor chunks, sections or whole pages against bare chunks, and their token cost). A new section, "Correctness and access checks (keyless, synthetic worlds)", opened with three rows: N3 temporal and as-of, N4 entity resolution and N6 visibility leak fuzz.
+[`1ec19a2`](https://github.com/garrytan/gbrain-evals/commit/1ec19a2), gbrain-evals v0.10.45. The retrieval experiments table gained rows for the September 30 auto v2 release check and the evidence-delivery study (neighbor chunks, sections or whole pages against bare chunks, and their token cost). A new section, "Correctness and access checks (keyless, synthetic worlds)", opened with three rows: N3 temporal and as-of, N4 entity resolution and N6 visibility leak fuzz.
 
 ### 2026-09-29: Plan, protocols and corrections added
 
-[`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.1.
+[`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.45.
 
 - The route table gained a row for the September 28 plan and audits.
 - Retrieval experiments gained the September 29 opaque-id answer re-run and the relationship paraphrase check. The memory table gained the September 29 lifecycle experiment.
@@ -300,7 +314,7 @@ gbrain-evals v0.10.23. The index opens with the repository version and the gbrai
 
 ### 2026-09-26: Row for the reading-notes comparison
 
-[`b439f12`](https://github.com/garrytan/gbrain-evals/commit/b439f12), gbrain-evals v0.10.0. The retrieval experiments table gained a row for the September 25 reading-notes comparison: does taking brief notes before answering help when the original conversations remain available.
+[`b439f12`](https://github.com/garrytan/gbrain-evals/commit/b439f12), gbrain-evals v0.10.45. The retrieval experiments table gained a row for the September 25 reading-notes comparison: does taking brief notes before answering help when the original conversations remain available.
 
 ### 2026-09-09: Page created
 

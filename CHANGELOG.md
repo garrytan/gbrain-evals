@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.42] - 2026-10-08
+## [0.10.45] - 2026-10-08
 
 ### Cat 40 Hard result: gbrain trails plain files by 11.3 points on the 55,000-document company
 
@@ -113,6 +113,29 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.43] - 2026-10-08
+
+### One usage receipt for every reading lane, the reading headroom recount, and model rules that match the project rule
+
+Wave 0 items A1, A2 and R1 of the 10x memory advantage plan (gbrain-evals #97, GBRA-60). No gbrain change and no paid call ($0).
+
+- **Shared usage receipt (A1).** [`eval/runner/usage-receipt.ts`](eval/runner/usage-receipt.ts) defines `usage-receipt/v1`, documented in [docs/usage-receipt.md](docs/usage-receipt.md): total, uncached, cache-read and cache-write input, output and reasoning tokens, the full answer, a provider-neutral finish reason and delivered tokens with the tokenizer named, one record per replicate and per attempt. Anthropic's separate cache buckets are summed; OpenAI's cached and cache-write tokens are already inside `prompt_tokens` and are never added on top (the committed W10b `gpt-5.4` arm shows the size of that error: 17,004 against a billed 14,458 mean). memory-qa now writes the receipt for reader, `think` and judge calls (`readAndJudge` in `eval/runner/memory-qa/run.ts`): the `think` lane records `think`'s returned usage instead of the question's characters, every replicate keeps its full answer instead of the last one cut to 2,000 characters, a row with no provider usage says so instead of reporting a count, and reader rows carry cl100k delivered tokens. The W10 re-score reads committed usage through the same normalizer and still reproduces every committed summary byte for byte. New test: `test/eval/memory-qa-usage.test.ts` (recorded synthetic Anthropic and OpenAI responses, retries, failures, cache hits, `think` usage, a 5,000-character answer, and the committed W10 means 22,167, 22,077, 13,695 and 14,458).
+- **Reading headroom recount (A2).** [Report](docs/benchmarks/2026-10-08-reading-headroom.md), [`headroom.json`](docs/benchmarks/2026-10-08-reading-headroom/headroom.json) and [`eval/runner/reading-headroom.ts`](eval/runner/reading-headroom.ts), from the committed W10a and W10b receipts; exploratory, not preregistered. The answer's own sessions are 41% of the 15,823 chars/4 tokens gbrain delivers (8,981 on multi-session questions); readers' notes run 138.5 (Sonnet 5.5), 150.8 (Opus 5.5) and 62.5 (`gpt-6.1-sol`) tokens; committed wrong answers are 25 of 470 answerable for Sonnet 5.5 (W10a) and 19 for Opus 5.5, and 29 and 24 for Sonnet 5.5 and `gpt-6.1-sol` on the W10b text. The commitment counts rest on agent-written labels ([`commitment-labels.json`](docs/benchmarks/2026-10-08-reading-headroom/commitment-labels.json)) that no person has reviewed.
+- **Model rules and prices (R1).** CLAUDE.md "Choose models" and AGENTS.md follow the 2026-10-07 project rule: counted runs use the newest Opus, Sonnet and GPT (`claude-opus-5-5`, `claude-sonnet-5-5`, `gpt-6.1-sol`), Fable runs only in smoke tests, `gpt-4.1-mini` only as the bridge to earlier BEAM runs, never `gpt-5.4-mini`. `scripts/model-freshness.ts` blocks `gpt-5.4-mini` and flags Fable and `gpt-4.1-mini`. The budget ledger prices `claude-haiku-5-5` ($0.10 / $0.50, and $0.50 / $2.50 above 100,000 input tokens) and the GPT-6 long-prompt rates above 272K input tokens, reserving and settling at the long rates only when a prompt crosses the threshold.
+- **Ledger correction.** `usageCost` settled OpenAI cache writes (`cache_write_tokens`) at the uncached input price; it now uses the cache-write price. The committed `gpt-6.1-sol` arms of W10b and W10c were settled the old way and are understated by about $6 in total if the batch discount applies to cache writes; their receipts are left as recorded.
+- **Version.** Main is at 0.10.42, so this release is 0.10.43.
+
+## [0.10.42] - 2026-10-08
+
+### gbrain #6278 mirror: a stuck write is cut off and held within 240 s; a table lock still pins the pool
+
+Paired with gbrain #6298 (branch `capy/6278-preparation-deadline`, merged as `b65d4bae7`, v0.60.112.0), which fixes issue #6278.
+
+- **Preparation stall before and after (mirror, $0 here).** [Report](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md), [`results.json`](docs/benchmarks/2026-10-08-managed-sync-preparation-stall/results.json) and the raw captures (report, per-pass tables, stall captures, 30 s timelines; the lock runs keep their full samples). A 15,000-entry catch-up with heavy fact adoption behind a transaction-mode pooler at 57 ms, on 16-vCPU Ubicloud VMs: v0.60.105.0 never drained (102 pages in 47.6 min at pool 10, 62 at pool 3, with no page committed for 888 s and 668 s). The fixed head drained in 2 passes (91 min) at pool 10 and 3 passes at pool 3, with 0 failed fence receipts, 0 watchdog stops and 20 files held with their reason. The report records how the cause picture moved: a lock-wait class proven by a forced probe (`LOCK TABLE pages` through the pooler), a never-settling await found live by the reporter's managed brain (open as gbrain #6317), and two zero-progress modes (the lock wait, and adoption writes queued ahead of the sync).
+- **Goals.** G1 (one request never stops the catch-up) is partly met: a stuck write is cut off at 120 s and held at 240 s, but a table lock still pins 9 of 10 pool connections until it drops (gbrain #6318). G2 (writer status names the step) and G3 (fence defects never consume the write path) are met. G4 (`fence_repair` during a sync) is not met in this release: 22 candidates, none repaired. G5 meets its rate and watchdog parts (1,500-file bench 150.4 to 150.0 pages/min wall and 401.5 to 378.1 steady; 0 watchdog stops in 5 passes) but one pass does not drain 15,000 entries at a 3600 s timeout; it does at the reporter's 14,400 s by arithmetic, and no run used that timeout.
+- **What this mirror could not measure.** The 15,000-entry runs ran at `846bea442`, before the bounded reads and the two follow-up fixes; the merged head was checked by the 1,500-file bench and the lock runs only. Foreground `put_page` latency during the catch-up, a database outage and several poisoned entries in one run were not measured.
+- **Version.** Main is at 0.10.41, so this release is 0.10.42.
 
 ## [0.10.41] - 2026-10-08
 

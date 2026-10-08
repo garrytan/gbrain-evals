@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain master [`a865f8f`](https://github.com/garrytan/gbrain/tree/a865f8f8b7c95b9f8c30690702797bafcfef537a) (v0.60.104.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.42 (`VERSION`) |
+| This repository | gbrain-evals v0.10.45 (`VERSION`) |
 
 This repository installs gbrain master `a865f8f`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -65,6 +65,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
 | Managed Postgres catch-up 57 ms from the database (10,000-file backlog) | **367.9 pages/min** steady, **33.6 min** for the backlog (was 174.8 pages/min and 74.5 min on the same rig); a page save 2.5 s instead of 8.6 s | v0.60.111.0 (#6279) | [Lanes and foreground](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md) |
+| A managed Postgres catch-up when one write cannot finish preparing (15,000 entries, heavy fact adoption, 57 ms, transaction-mode pooler) | Drains in **2 passes (91 min, pool 10)** and 3 passes (pool 3), with **0** failed fence receipts and **0** watchdog stops; v0.60.105.0 never drained (102 pages in 47.6 min). A stuck write is held in **240 s**; a table lock still pins 9 of 10 connections | v0.60.112.0 (#6298; 15,000-entry runs at `846bea442`) | [Preparation stall](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md) |
 | Malformed facts/takes tables repaired by a model without a wrong cell (held-out set, model tier only) | **96.0%** repaired, **0** wrong cells (gpt-6.1-sol and claude-opus-5-5, the measured defaults); every other case held | v0.60.102.0 ([`5b58910`](https://github.com/garrytan/gbrain/commit/5b5891069)) | [Fence repair Tier 3](docs/benchmarks/2026-10-06-fence-repair-tier3.md) |
 | Useful material kept when a session becomes a memory page | **88.1%** judged (judge calibration awaiting a person's review); 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 
@@ -255,40 +256,48 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 ## Changelog
 
+### 2026-10-08: Repository row names v0.10.43
+
+gbrain-evals v0.10.45. The repository row names v0.10.43 (was v0.10.42). This release adds the shared usage receipt, the reading headroom recount and the model-rule and price updates (wave 0 items A1, A2 and R1 of the 10x memory advantage plan); none of them changes a row in the results table, so no other row changes.
+
+### 2026-10-08: Managed Postgres preparation stall row for gbrain #6298
+
+gbrain-evals v0.10.45. The repository row names v0.10.42 (was v0.10.41). The results table gained a row for the preparation stall fix in gbrain v0.60.112.0 (#6298): a 15,000-entry catch-up with heavy fact adoption that never drained on v0.60.105.0 drains in two passes at pool 10 and three at pool 3, a stuck write is held within 240 s, and a table lock still pins the connection pool (gbrain #6318). One pass at a 3600 s timeout is not met. Full verdicts are in [the report](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md). No other row changes.
+
 ### 2026-10-08: Managed Postgres catch-up row updated for gbrain #6279
 
-gbrain-evals v0.10.41. The catch-up row now reads 372.7 pages/min steady and 33.5 min for the 10,000-file backlog (was 152.8 pages/min and about 1.2 h on v0.60.73.0, from a 4-vCPU host), with a page save at 2.5 s instead of 8.6 s, mirrored from gbrain #6279's before-and-after on one 16-vCPU VM in [the lanes and foreground report](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md). Three of gbrain's targets missed and are named there: first commit (20 s against 15 s), page saves during a catch-up, and catch-up speed while an agent saves a page every 5 s (15% of idle against 50%).
+gbrain-evals v0.10.45. The catch-up row now reads 372.7 pages/min steady and 33.5 min for the 10,000-file backlog (was 152.8 pages/min and about 1.2 h on v0.60.73.0, from a 4-vCPU host), with a page save at 2.5 s instead of 8.6 s, mirrored from gbrain #6279's before-and-after on one 16-vCPU VM in [the lanes and foreground report](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md). Three of gbrain's targets missed and are named there: first commit (20 s against 15 s), page saves during a catch-up, and catch-up speed while an agent saves a page every 5 s (15% of idle against 50%).
 
 ### 2026-10-07: Version stamp for the fix wave 12 agent smoke
 
-gbrain-evals v0.10.40. The repository row names v0.10.40 (was v0.10.39). The release adds the fix wave 12 agent smoke, listed in the [docs index](docs/README.md). It is pinned to gbrain v0.60.106.0 (`7aa2caa`, #6269), which shipped the put_page UUID line and reverted the forget-caveat move. No result row on this page changes, because the pin stays at `a865f8f`.
+gbrain-evals v0.10.45. The repository row names v0.10.40 (was v0.10.39). The release adds the fix wave 12 agent smoke, listed in the [docs index](docs/README.md). It is pinned to gbrain v0.60.106.0 (`7aa2caa`, #6269), which shipped the put_page UUID line and reverted the forget-caveat move. No result row on this page changes, because the pin stays at `a865f8f`.
 
 ### 2026-10-07: Version stamp for the fix wave 11 records
 
-gbrain-evals v0.10.39. The repository row names v0.10.39 (was v0.10.38). The release adds two records paired with gbrain fix wave 11, listed in the [docs index](docs/README.md): the relaxed HNSW scan order mirror and the D12 agent smoke. No result row on this page changes, because both measure an unmerged gbrain branch rather than the pin.
+gbrain-evals v0.10.45. The repository row names v0.10.39 (was v0.10.38). The release adds two records paired with gbrain fix wave 11, listed in the [docs index](docs/README.md): the relaxed HNSW scan order mirror and the D12 agent smoke. No result row on this page changes, because both measure an unmerged gbrain branch rather than the pin.
 
 ### 2026-10-07: Re-pin to gbrain `a865f8f`; N1-7 fixed
 
-gbrain-evals v0.10.37. The pin moves from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0), which contains gbrain's fix for N1-7. The ledger sentence now says N1-7 is fixed (was: one open gbrain bug). The privacy and chat-format rows name `a865f8f`, where their keyless checks were rerun; the paid rows, the attendance world and the Postgres-over-HTTP privacy cells stay at `c5fb0201`, named as such.
+gbrain-evals v0.10.45. The pin moves from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0), which contains gbrain's fix for N1-7. The ledger sentence now says N1-7 is fixed (was: one open gbrain bug). The privacy and chat-format rows name `a865f8f`, where their keyless checks were rerun; the paid rows, the attendance world and the Postgres-over-HTTP privacy cells stay at `c5fb0201`, named as such.
 
 ### 2026-10-07: LongMemEval answers at the current pin, the full-context comparison, Fable smoke-only
 
-gbrain-evals v0.10.37. The LongMemEval answer row moves from 453 of 500 (Sonnet 4.6 house reader, v0.59.13.0) to 468 of 500 at `c5fb0201` with the Sonnet 5.5 benchmark notes reader; against the same reader on the old retrieval that is "no change shown" (462, p = 0.08), so the move reflects the reader and the current pin. The `gpt-5.4` frontier-reader row (447 of 500) is replaced by the best current reader on the same frozen retrieval, Opus 5.5 at 474. "How gbrain compares" gains the matched-reader full-context comparison. Takes and contradiction-judge rows count Opus 5.5 as the top Anthropic model; Fable 5.1 results are smoke-only under Garry's 2026-10-07 rule.
+gbrain-evals v0.10.45. The LongMemEval answer row moves from 453 of 500 (Sonnet 4.6 house reader, v0.59.13.0) to 468 of 500 at `c5fb0201` with the Sonnet 5.5 benchmark notes reader; against the same reader on the old retrieval that is "no change shown" (462, p = 0.08), so the move reflects the reader and the current pin. The `gpt-5.4` frontier-reader row (447 of 500) is replaced by the best current reader on the same frozen retrieval, Opus 5.5 at 474. "How gbrain compares" gains the matched-reader full-context comparison. Takes and contradiction-judge rows count Opus 5.5 as the top Anthropic model; Fable 5.1 results are smoke-only under Garry's 2026-10-07 rule.
 
 ### 2026-10-06: Re-pin to gbrain `c5fb0201` and the October follow-up round
 
-gbrain-evals v0.10.37. The pin moves from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), which contains every held-out-program plan, so the "newer builds also measured" row is gone. Results rows: privacy now covers Postgres over real HTTP and the N8 gate at `c5fb0201` (was N6 and N8 at `739e5cc`); chat formats 28 of 28 (was 27 of 27); new rows for attendance from documented lists, the contradiction judge on current models and the takes classifier on frontier models; the Cat 35 row says its judge calibration awaits a person's review; the ledger sentence names the October 6 re-pin and the open N1-7 bug it found. Reasons and receipts: the [round plan](docs/plans/2026-10-06-followups-round/PLAN.md) and its reports.
+gbrain-evals v0.10.45. The pin moves from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), which contains every held-out-program plan, so the "newer builds also measured" row is gone. Results rows: privacy now covers Postgres over real HTTP and the N8 gate at `c5fb0201` (was N6 and N8 at `739e5cc`); chat formats 28 of 28 (was 27 of 27); new rows for attendance from documented lists, the contradiction judge on current models and the takes classifier on frontier models; the Cat 35 row says its judge calibration awaits a person's review; the ledger sentence names the October 6 re-pin and the open N1-7 bug it found. Reasons and receipts: the [round plan](docs/plans/2026-10-06-followups-round/PLAN.md) and its reports.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.
 
 ### 2026-10-06: Fence repair accuracy added to current results
 
-gbrain-evals v0.10.36. New row: gbrain v0.60.102.0 ([`5b58910`](https://github.com/garrytan/gbrain/commit/5b5891069), #6229) repairs malformed facts and takes tables by itself, and its model tier ships with a measured default. On a 52-fence held-out set written before the repair fixes existed, gpt-6.1-sol and claude-opus-5-5 each repaired 96.0% of the fences that reach the model with zero wrong cells, and answered HOLD on the rest; claude-opus-4-7 and claude-sonnet-5-5 did not qualify. Details and both preregistered rounds are in [the fence repair report](docs/benchmarks/2026-10-06-fence-repair-tier3.md).
+gbrain-evals v0.10.45. New row: gbrain v0.60.102.0 ([`5b58910`](https://github.com/garrytan/gbrain/commit/5b5891069), #6229) repairs malformed facts and takes tables by itself, and its model tier ships with a measured default. On a 52-fence held-out set written before the repair fixes existed, gpt-6.1-sol and claude-opus-5-5 each repaired 96.0% of the fences that reach the model with zero wrong cells, and answered HOLD on the rest; claude-opus-4-7 and claude-sonnet-5-5 did not qualify. Details and both preregistered rounds are in [the fence repair report](docs/benchmarks/2026-10-06-fence-repair-tier3.md).
 
 ### 2026-10-05: Managed Postgres catch-up speed added to current results
 
-gbrain-evals v0.10.26. New row: a managed Postgres brain 57 ms from its database catches up at 152.8 pages per minute in steady state with gbrain v0.60.73.0 (a 10,000-file backlog in about 1.2 h), mirrored from gbrain's own bench in [the catch-up report](docs/benchmarks/2026-10-05-managed-sync-catchup.md). The page had no write-throughput row before.
+gbrain-evals v0.10.45. New row: a managed Postgres brain 57 ms from its database catches up at 152.8 pages per minute in steady state with gbrain v0.60.73.0 (a 10,000-file backlog in about 1.2 h), mirrored from gbrain's own bench in [the catch-up report](docs/benchmarks/2026-10-05-managed-sync-catchup.md). The page had no write-throughput row before.
 
 ### 2026-10-05: Other systems described by kind, not by name
 
@@ -296,7 +305,7 @@ The "How gbrain compares" section and the changelog entries below describe other
 
 ### 2026-10-05: Rewritten as what gbrain does, current results and how it compares
 
-gbrain-evals v0.10.23. The page now has three parts above the changelog, replacing a run of dated findings and "Update, October 2/3/4" blocks:
+gbrain-evals v0.10.45. The page now has three parts above the changelog, replacing a run of dated findings and "Update, October 2/3/4" blocks:
 
 - **What gbrain does:** the capabilities in plain words (hybrid retrieval, relationships, whole-conversation delivery, correctness, the agent operator contract, the write path), with a table naming the gbrain under test (pin `739e5cc`, v0.60.46.0, its aliases and the newer builds also measured).
 - **Current results:** one table of every headline number with its gbrain commit and report, including results the page had not carried: Cat 40 on five frontier models (95.6%, 0 of 100 finance leaks), the multi-relation planner's held-out pass (24 better, 0 worse) and PrecisionMemBench precision (0.586).
@@ -356,7 +365,7 @@ gbrain-evals v0.10.23. The page now has three parts above the changelog, replaci
 
 ### 2026-10-02: Sealed v2 release decision for `auto` evidence delivery
 
-[`2eebf81`](https://github.com/garrytan/gbrain-evals/commit/2eebf81), gbrain-evals v0.10.8. The evidence-delivery paragraph adds the first preregistered decision on the harder sealed v2 set (200 questions, histories of about 143,000 tokens). At gbrain `d44296c`, `auto` with a 24,000-token budget answered 192 of 200 against 132 for chunks (+60/−0, 95% interval +24 to +36 points), so the check passed. The cost is about four times the reader input.
+[`2eebf81`](https://github.com/garrytan/gbrain-evals/commit/2eebf81), gbrain-evals v0.10.45. The evidence-delivery paragraph adds the first preregistered decision on the harder sealed v2 set (200 questions, histories of about 143,000 tokens). At gbrain `d44296c`, `auto` with a 24,000-token budget answered 192 of 200 against 132 for chunks (+60/−0, 95% interval +24 to +36 points), so the check passed. The cost is about four times the reader input.
 
 ### 2026-10-02: All 20 October 1 bugs verified fixed
 
@@ -368,19 +377,19 @@ gbrain-evals v0.10.23. The page now has three parts above the changelog, replaci
 
 ### 2026-10-01: October 1 category wave results
 
-[`f94e98d`](https://github.com/garrytan/gbrain-evals/commit/f94e98d), gbrain-evals v0.10.5. A new block summarizes eleven keyless or cheap categories run at gbrain `3a284ae`. It lists where gbrain held up (N4, N6, N7 at 45/45, N12, N1, N5) and where it failed: `volunteer_context` leaked 4 private pages (N8), `ontology_propose` refusals cost 100 of 388 probes (N1), the contradiction judge found 105 of 150 (N2), and there was no multi-relation plan (N9). Of 20 bugs, 8 were in fix wave 5 and 10 were scheduled for wave 6. The installed pin moves from `6c8373c` (v0.60.13.0) to `3a284ae` (v0.60.26.0), with a note that its System One slots stay off without a TypeSafe key.
+[`f94e98d`](https://github.com/garrytan/gbrain-evals/commit/f94e98d), gbrain-evals v0.10.45. A new block summarizes eleven keyless or cheap categories run at gbrain `3a284ae`. It lists where gbrain held up (N4, N6, N7 at 45/45, N12, N1, N5) and where it failed: `volunteer_context` leaked 4 private pages (N8), `ontology_propose` refusals cost 100 of 388 probes (N1), the contradiction judge found 105 of 150 (N2), and there was no multi-relation plan (N9). Of 20 bugs, 8 were in fix wave 5 and 10 were scheduled for wave 6. The installed pin moves from `6c8373c` (v0.60.13.0) to `3a284ae` (v0.60.26.0), with a note that its System One slots stay off without a TypeSafe key.
 
 ### 2026-10-01: New section on System One (Jev)
 
-[`b13b219`](https://github.com/garrytan/gbrain-evals/commit/b13b219), gbrain-evals v0.10.4. A new "Where a small decision model helps" section reports matched pairs for nine Jev (`jev-1.13.0`) decision slots. Jev helped dream triage (0 of 18 buried items missed, against 10, but 57 of 109 transcripts sent to the page writer instead of 21) and contradiction proposals (94 of 97 updated facts, against none). Reranking, evidence trimming and abstention regressed, so `gbrain decide enable --recommended` turns on two slots only. The "What should you learn here?" table gains a System One row.
+[`b13b219`](https://github.com/garrytan/gbrain-evals/commit/b13b219), gbrain-evals v0.10.45. A new "Where a small decision model helps" section reports matched pairs for nine Jev (`jev-1.13.0`) decision slots. Jev helped dream triage (0 of 18 buried items missed, against 10, but 57 of 109 transcripts sent to the page writer instead of 21) and contradiction proposals (94 of 97 updated facts, against none). Reranking, evidence trimming and abstention regressed, so `gbrain decide enable --recommended` turns on two slots only. The "What should you learn here?" table gains a System One row.
 
 ### 2026-09-30: Evidence delivery and reranker-on answer accuracy
 
-[`1ec19a2`](https://github.com/garrytan/gbrain-evals/commit/1ec19a2), gbrain-evals v0.10.2. The answer-accuracy paragraph adds two reranker-on results: the notes reader at 453/500 (90.6%, +31/−17, p = 0.059), and the published configuration without the leak at 432/500 against the invalid 433/500 (+15/−16). A new evidence-delivery block reports that whole pages answered 361 of 400 held-out questions against 253 for chunks (p = 6e-27). Neighbor chunks closed only 30% to 36% of the gap, short of the preregistered 60%. The block also reports that the `auto` v2 release check failed on the sealed set (149 against 147 of 150). The Corrections entry and pin follow suit: `608a174` becomes "the previous pin" and the installed pin moves to `6c8373c` (v0.60.13.0).
+[`1ec19a2`](https://github.com/garrytan/gbrain-evals/commit/1ec19a2), gbrain-evals v0.10.45. The answer-accuracy paragraph adds two reranker-on results: the notes reader at 453/500 (90.6%, +31/−17, p = 0.059), and the published configuration without the leak at 432/500 against the invalid 433/500 (+15/−16). A new evidence-delivery block reports that whole pages answered 361 of 400 held-out questions against 253 for chunks (p = 6e-27). Neighbor chunks closed only 30% to 36% of the gap, short of the preregistered 60%. The block also reports that the `auto` v2 release check failed on the sealed set (149 against 147 of 150). The Corrections entry and pin follow suit: `608a174` becomes "the previous pin" and the installed pin moves to `6c8373c` (v0.60.13.0).
 
 ### 2026-09-29: "Where gbrain stands" comparison and a Corrections section
 
-[`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.1. This release reworked the page after the September 28 audit:
+[`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.45. This release reworked the page after the September 28 audit:
 
 - A new "Where gbrain stands" section adds a strict `recall_all@5` table. gbrain shows 449/470 with the reranker and 439/470 without. Other systems, from our strict recounts of saved rankings, show 423/470, 376/424 and 403/470, and one self-reports 411/470. Limits and an answer-accuracy paragraph follow; the paragraph gives the leak-free 439/500 (87.8%) and says we claim no answer ranking.
 - The 433/500 claim is marked invalid because the answer model saw `answer_` session ids. A new paragraph shows full sessions beat chunks (89/100 against 65/100).
@@ -390,7 +399,7 @@ gbrain-evals v0.10.23. The page now has three parts above the changelog, replaci
 
 ### 2026-09-26: Reading-notes study added
 
-[`b439f12`](https://github.com/garrytan/gbrain-evals/commit/b439f12), gbrain-evals v0.10.0. A new shortlist paragraph reports the September 24 matched reading study: brief notes before answering raised judged correct answers from 308/361 to 324/361 on fixed retrieved sessions. It is labeled as answer reading, not a retrieval gain. The pinned gbrain link moves from `2efaaf8f` to `939232f1`.
+[`b439f12`](https://github.com/garrytan/gbrain-evals/commit/b439f12), gbrain-evals v0.10.45. A new shortlist paragraph reports the September 24 matched reading study: brief notes before answering raised judged correct answers from 308/361 to 324/361 on fixed retrieved sessions. It is labeled as answer reading, not a retrieval gain. The pinned gbrain link moves from `2efaaf8f` to `939232f1`.
 
 ### 2026-09-09: Rewritten as a guide to retrieval evidence
 

@@ -1,0 +1,352 @@
+{
+  "schema_version": 2,
+  "status": "warnings",
+  "health_score": 95,
+  "brain_checks_score": 95,
+  "category_scores": {
+    "brain": 95,
+    "skill": 100,
+    "ops": 100,
+    "meta": 100
+  },
+  "checks": [
+    {
+      "name": "fence_integrity",
+      "status": "warn",
+      "details": {
+        "total": 40,
+        "partial": true,
+        "partial_sources": [
+          "bench"
+        ],
+        "sources": [
+          {
+            "source_id": "bench",
+            "total": 40,
+            "holds": {
+              "deterministic": 0,
+              "resolver": 0,
+              "llm": 0,
+              "manual": 20,
+              "total": 20
+            },
+            "pages": {
+              "deterministic": 0,
+              "resolver": 0,
+              "llm": 0,
+              "manual": 20,
+              "total": 20
+            },
+            "files": {
+              "deterministic": 0,
+              "resolver": 0,
+              "llm": 0,
+              "manual": 0,
+              "total": 0
+            },
+            "by_tier": {
+              "deterministic": 0,
+              "resolver": 0,
+              "llm": 0,
+              "manual": 40,
+              "total": 40
+            },
+            "oldest_hold_at": "2026-10-08T14:31:10.899Z",
+            "sample": [
+              {
+                "key": "companies/scale-0-12",
+                "path": "companies/scale-0-12.md",
+                "bucket": "page",
+                "tier": "manual",
+                "reasons": [
+                  "repeated_marker"
+                ]
+              },
+              {
+                "key": "companies/scale-0-1502",
+                "path": "companies/scale-0-1502.md",
+                "bucket": "hold",
+                "tier": "manual",
+                "reasons": [
+                  "repeated_marker"
+                ]
+              },
+              {
+                "key": "companies/scale-0-1512",
+                "path": "companies/scale-0-1512.md",
+                "bucket": "hold",
+                "tier": "manual",
+                "reasons": [
+                  "repeated_marker"
+                ]
+              },
+              {
+                "key": "companies/scale-0-2",
+                "path": "companies/scale-0-2.md",
+                "bucket": "page",
+                "tier": "manual",
+                "reasons": [
+                  "repeated_marker"
+                ]
+              },
+              {
+                "key": "companies/scale-0-22",
+                "path": "companies/scale-0-22.md",
+                "bucket": "page",
+                "tier": "manual",
+                "reasons": [
+                  "repeated_marker"
+                ]
+              }
+            ],
+            "scan": {
+              "complete": false,
+              "fresh_at": null,
+              "checked_at": "2026-10-08T15:23:20.345Z",
+              "backfill_done": false,
+              "walking": true
+            }
+          },
+          {
+            "source_id": "default",
+            "total": 0,
+            "holds": {
+              "deterministic": 0,
+              "resolver": 0,
+              "llm": 0,
+              "manual": 0,
+              "total": 0
+            },
+            "pages": {
+              "deterministic": 0,
+              "resolver": 0,
+              "llm": 0,
+              "manual": 0,
+              "total": 0
+            },
+            "files": {
+              "deterministic": 0,
+              "resolver": 0,
+              "llm": 0,
+              "manual": 0,
+              "total": 0
+            },
+            "by_tier": {
+              "deterministic": 0,
+              "resolver": 0,
+              "llm": 0,
+              "manual": 0,
+              "total": 0
+            },
+            "oldest_hold_at": null,
+            "sample": [],
+            "scan": {
+              "complete": true,
+              "fresh_at": "2026-10-08T15:23:20.776Z",
+              "checked_at": "2026-10-08T15:23:20.776Z",
+              "backfill_done": true,
+              "walking": false
+            }
+          }
+        ],
+        "trend": [
+          {
+            "source_id": "bench",
+            "normalized_7d": 0,
+            "by_day": [],
+            "top_writers": []
+          },
+          {
+            "source_id": "default",
+            "normalized_7d": 0,
+            "by_day": [],
+            "top_writers": []
+          }
+        ],
+        "warn_at_normalized_7d": 20,
+        "model_repair": {
+          "max_usd_per_page": 0.3,
+          "max_usd_per_day": 1,
+          "spent_today_usd": 0,
+          "reserved_today_usd": 0
+        },
+        "timeout_ms": 10000,
+        "docs": "docs/guides/write-refusals.md#invalid_fence",
+        "uncommitted_repairs": 0,
+        "unrenderable_legacy_facts": {
+          "total": 3,
+          "complete": true,
+          "pages": [
+            {
+              "source_id": "bench",
+              "slug": "companies/scale-0-82",
+              "rows": [
+                {
+                  "fact_id": 105,
+                  "reason": "fence_unrenderable",
+                  "class": "empty"
+                }
+              ]
+            },
+            {
+              "source_id": "bench",
+              "slug": "people/scale-0-100",
+              "rows": [
+                {
+                  "fact_id": 121,
+                  "reason": "fence_unrenderable",
+                  "class": "empty"
+                }
+              ]
+            },
+            {
+              "source_id": "bench",
+              "slug": "people/scale-0-71",
+              "rows": [
+                {
+                  "fact_id": 89,
+                  "reason": "fence_unrenderable",
+                  "class": "empty"
+                }
+              ]
+            }
+          ]
+        },
+        "auto_repair": {
+          "enabled": true,
+          "llm": true,
+          "last_maintenance_at": null,
+          "active": false
+        }
+      },
+      "fix": {
+        "argv": [
+          "gbrain",
+          "repair",
+          "fences",
+          "--source",
+          "bench",
+          "--brain",
+          "host"
+        ],
+        "command": "gbrain repair fences --source bench --brain host",
+        "consent": [],
+        "actor": "agent",
+        "next": "run",
+        "why": "Previews the repair of each malformed fence of bench (read-only, no model call): its planned tier and diff, the estimated model cost, or the exact edit for a fence gbrain will not guess; it prints the apply command with --expect <hash>. They are not repaired automatically (no maintenance run has completed in the last 24 h), so apply the plan with the command the preview prints. 40 need a manual edit: make the edit the preview names in the file (or the page), commit, then sync.",
+        "verify": {
+          "argv": [
+            "gbrain",
+            "doctor",
+            "--only",
+            "fence_integrity",
+            "--json",
+            "--brain",
+            "host"
+          ]
+        },
+        "docs": "https://github.com/garrytan/gbrain/blob/master/docs/guides/repair.md#fences",
+        "requires_exclusive": false,
+        "then": {
+          "argv": [
+            "gbrain",
+            "repair",
+            "fences",
+            "--source",
+            "bench",
+            "--apply",
+            "--brain",
+            "host"
+          ],
+          "command": "gbrain repair fences --source bench --apply --brain host",
+          "consent": [],
+          "actor": "agent",
+          "next": "run",
+          "why": "Applies the current repair plan of bench; the command the preview prints adds --expect <hash>, which applies exactly what it showed.",
+          "verify": {
+            "argv": [
+              "gbrain",
+              "doctor",
+              "--only",
+              "fence_integrity",
+              "--json",
+              "--brain",
+              "host"
+            ]
+          },
+          "requires_exclusive": false
+        }
+      },
+      "message": "40 malformed facts or takes fence(s) wait: bench: 20 held file(s), 20 stored page(s) (by tier: manual 40); oldest hold 1 h old. All of them need a manual edit. None of them blocks a sync. Preview: gbrain repair fences --source bench. PARTIAL CENSUS: the scan of bench did not finish within 10s, so more fences may be malformed; run gbrain doctor --only fence_integrity again to resume it (raise GBRAIN_DOCTOR_FENCE_TIMEOUT_MS for a larger share per run). 3 legacy fact row(s) on 3 page(s) cannot be adopted into their facts fence: companies/scale-0-82 (bench): empty; people/scale-0-100 (bench): empty; people/scale-0-71 (bench): empty. They stay active and searchable and nothing is lost: the fence codec would change their text (or the page already carries the claim), so gbrain leaves them as legacy rows and those pages skip destructive fact reconciliation. There is no safe automatic fix; report the pages and reason classes with the gbrain version. Do not forget or expire a row to clear this count.",
+      "category": "brain"
+    }
+  ],
+  "top_issues": [
+    {
+      "name": "fence_integrity",
+      "status": "warn",
+      "tier": "symptom",
+      "fix": "40 malformed facts or takes fence(s) wait: bench: 20 held file(s), 20 stored page(s) (by tier: manual 40); oldest hold 1 h old. All of them need a manual edit. None of them blocks a sync. Preview: gbrain repair fences --source bench. PARTIAL CENSUS: the scan of bench did not finish within 10s, so more fences may be malformed; run gbrain doctor --only fence_integrity again to resume it (raise GBRAIN_DOCTOR_FENCE_TIMEOUT_MS for a larger share per run). 3 legacy fact row(s) on 3 page(s) cannot be adopted into their facts fence: companies/scale-0-82 (bench): empty; people/scale-0-100 (bench): empty; people/scale-0-71 (bench): empty. They stay active and searchable and nothing is lost: the fence codec would change their text (or the page already carries the claim), so gbrain leaves them as legacy rows and those pages skip destructive fact reconciliation. There is no safe automatic fix; report the pages and reason classes with the gbrain version. Do not forget or expire a row to clear this count.",
+      "action": {
+        "argv": [
+          "gbrain",
+          "repair",
+          "fences",
+          "--source",
+          "bench",
+          "--brain",
+          "host"
+        ],
+        "command": "gbrain repair fences --source bench --brain host",
+        "consent": [],
+        "actor": "agent",
+        "next": "run",
+        "why": "Previews the repair of each malformed fence of bench (read-only, no model call): its planned tier and diff, the estimated model cost, or the exact edit for a fence gbrain will not guess; it prints the apply command with --expect <hash>. They are not repaired automatically (no maintenance run has completed in the last 24 h), so apply the plan with the command the preview prints. 40 need a manual edit: make the edit the preview names in the file (or the page), commit, then sync.",
+        "verify": {
+          "argv": [
+            "gbrain",
+            "doctor",
+            "--only",
+            "fence_integrity",
+            "--json",
+            "--brain",
+            "host"
+          ]
+        },
+        "docs": "https://github.com/garrytan/gbrain/blob/master/docs/guides/repair.md#fences",
+        "requires_exclusive": false,
+        "then": {
+          "argv": [
+            "gbrain",
+            "repair",
+            "fences",
+            "--source",
+            "bench",
+            "--apply",
+            "--brain",
+            "host"
+          ],
+          "command": "gbrain repair fences --source bench --apply --brain host",
+          "consent": [],
+          "actor": "agent",
+          "next": "run",
+          "why": "Applies the current repair plan of bench; the command the preview prints adds --expect <hash>, which applies exactly what it showed.",
+          "verify": {
+            "argv": [
+              "gbrain",
+              "doctor",
+              "--only",
+              "fence_integrity",
+              "--json",
+              "--brain",
+              "host"
+            ]
+          },
+          "requires_exclusive": false
+        }
+      }
+    }
+  ],
+  "engine": "postgres",
+  "db_url_source": null
+}

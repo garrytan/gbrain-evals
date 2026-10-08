@@ -45,7 +45,8 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { loadCorpus, occurrenceId, renderSessionPage, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { normalizeUsage, receipt, sumUsage, thinkFinish, USAGE_RECEIPT_SCHEMA, type UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
@@ -94,7 +95,14 @@ export interface MemoryQaRow {
   qa_output_tokens?: number;
   qa_context_tokens?: number;
   qa_sessions?: number;
+  /** Mean delivered tokens per answer (cl100k of the reader prompt; think's own delivery count). */
+  qa_delivered_tokens?: number;
+  /** Answers whose provider response carried no usage; qa_input_tokens and qa_output_tokens are then absent. */
+  qa_usage_missing?: number;
+  /** The final replicate's full answer; every replicate's answer is in qa_receipts. */
   qa_answer?: string;
+  /** One usage-receipt/v1 record per attempted reader, think and judge invocation, every replicate. */
+  qa_receipts?: UsageReceipt[];
   qa_error?: string;
   qa_facts?: number;
   facts_count?: number;
@@ -207,6 +215,72 @@ export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus):
   return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
 }
 
+/** cl100k counter from the gbrain build under test, or null when that build has no cl100k encoder (delivered tokens are then left out). */
+async function cl100kCounter(gut: GbrainUnderTest): Promise<((s: string) => number) | null> {
+  try {
+    const t = await importGbrain<{ estimateTokens: (s: string) => number; cl100kAvailable: () => boolean }>(gut, 'src/core/chunkers/token-estimate.ts');
+    return t.cl100kAvailable() ? t.estimateTokens : null;
+  } catch {
+    return null;
+  }
+}
+
+type ThinkFn = (engine: unknown, o: Record<string, unknown>) => Promise<{
+  answer: string; synthesis_status?: string; modelUsed?: string;
+  usage?: { input_tokens: number; output_tokens: number } | null;
+  evidence_delivery?: { tokens_delivered: number; tokenizer: string };
+}>;
+
+/**
+ * The reading lane for one question: answer (reader prompt or gbrain think)
+ * and judge, `qa.runs` times. Every attempted invocation leaves a receipt;
+ * token means come from provider usage (think's returned usage, never the
+ * question's length) and are left out when any answer lacked usage.
+ */
+export async function readAndJudge(p: {
+  benchmark: string; qa: RunArgs['qa']; q: MemoryQuestion; chat: ChatClient;
+  think: { fn: ThinkFn; engine: unknown } | null; prompt: string | null; countTokens: ((s: string) => number) | null;
+}): Promise<Partial<MemoryQaRow>> {
+  const receipts: UsageReceipt[] = [];
+  const scores: number[] = [];
+  let answer = '';
+  let trap = 0;
+  try {
+    for (let r = 0; r < p.qa.runs; r++) {
+      if (p.think) {
+        const base = { lane: 'memory-qa', role: 'think' as const, question_id: p.q.id, replicate: r, attempt: 0, model: p.qa.thinkModel, from_cache: false };
+        let res: Awaited<ReturnType<ThinkFn>>;
+        try {
+          res = await p.think.fn(p.think.engine, { question: p.q.question, model: p.qa.thinkModel, modelExplicit: true, remote: false });
+        } catch (e) {
+          receipts.push(receipt({ ...base, response_model: null, status: 'error', error: (e as Error).message.slice(0, 300), finish: null, finish_raw: null, answer: '', usage: null, usage_raw: null, delivered: null }));
+          throw e;
+        }
+        answer = res.answer ?? '';
+        const d = res.evidence_delivery;
+        receipts.push(receipt({ ...base, response_model: res.modelUsed ?? null, status: 'ok', error: null, finish: thinkFinish(res.synthesis_status), finish_raw: res.synthesis_status ?? null,
+          answer, usage: normalizeUsage('gbrain-think', res.usage), usage_raw: res.usage ?? null, delivered: d ? { tokenizer: d.tokenizer, tokens: d.tokens_delivered } : null }));
+      } else {
+        const delivered = p.countTokens ? { tokenizer: 'cl100k', tokens: p.countTokens(p.prompt!) } : null;
+        answer = (await chatWithReceipts(p.chat, { role: 'reader', question_id: p.q.id, replicate: r, model: p.qa.reader, delivered }, p.prompt!, { maxTokens: 1024, replicate: r }, receipts)).text;
+      }
+      scores.push(await judgeResponse(p.chat, p.benchmark, p.qa.judge, p.q, answer, r, receipts));
+      if (p.q.abstention && repeatsTrap(answer, p.q.trap)) trap++;
+    }
+  } catch (e) {
+    return { qa_error: (e as Error).message.slice(0, 300), qa_receipts: receipts };
+  }
+  const answers = receipts.filter(x => x.role !== 'judge' && x.status === 'ok');
+  const missing = answers.filter(x => !x.usage).length;
+  const mean = (xs: number[]) => Math.round(xs.reduce((s, x) => s + x, 0) / xs.length);
+  return {
+    qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length, ...(p.q.trap ? { qa_trap: trap / scores.length } : {}),
+    ...(missing ? { qa_usage_missing: missing } : { qa_input_tokens: mean(answers.map(x => x.usage!.input_total)), qa_output_tokens: mean(answers.map(x => x.usage!.output_total)) }),
+    ...(answers.every(x => x.delivered) ? { qa_delivered_tokens: mean(answers.map(x => x.delivered!.tokens)) } : {}),
+    qa_answer: answer, qa_receipts: receipts,
+  };
+}
+
 export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unknown>; rows: MemoryQaRow[] }> {
   const started = new Date().toISOString();
   mkdirSync(a.output, { recursive: true });
@@ -286,7 +360,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     ? (await importGbrain<{ runExtractConversationFactsCore: (e: unknown, o: Record<string, unknown>) => Promise<{ pages_processed: number; pages_failed: number; facts_extracted: number }> }>(gut, 'src/commands/extract-conversation-facts.ts')).runExtractConversationFactsCore
     : null;
   const factStats = { conversations: 0, pages_processed: 0, pages_failed: 0, facts: 0, unresolved: 0, errors: 0 };
-  const think = a.qa.mode === 'think' ? (await importGbrain<{ runThink: (e: unknown, o: Record<string, unknown>) => Promise<{ answer: string; synthesis_status?: string }> }>(gut, 'src/core/think/index.ts')).runThink : null;
+  const think = a.qa.mode === 'think' ? (await importGbrain<{ runThink: ThinkFn }>(gut, 'src/core/think/index.ts')).runThink : null;
+  const countTokens = a.qa.mode === 'reader' ? await cl100kCounter(gut) : null;
   const chat = a.qa.mode === 'none' ? null : new ChatClient(process.env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
   const lastDate = (sessions: Session[]) => sessions.map(x => x.date ?? '').sort().pop() || undefined;
   const openEngine = async () => {
@@ -368,32 +443,13 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             const retrieved = uniqueInOrder(results.map(r => bySlug.get(r.slug) ?? `?${r.slug}`)).slice(0, a.topK);
             row = { ...base, ...scoreRetrieval(retrieved, q.gold), retrieved, latency_ms: Math.round(latency * 10) / 10, error: null };
             if (chat) {
-              try {
-                const scores: number[] = [];
-                let tin = 0; let tout = 0; let answer = ''; let trap = 0;
-                const sessById = new Map(conv.sessions.map(x => [x.id, x]));
-                const pack = packSessions(retrieved.map(id => sessById.get(id)).filter((x): x is Session => !!x), a.qa.sessions, a.qa.budgetTokens);
-                const readFacts = a.qa.context === 'facts' ? retrieved.slice(0, a.qa.sessions).flatMap(id => factsBySession.get(id) ?? []) : [];
-                for (let r = 0; r < a.qa.runs; r++) {
-                  if (think) {
-                    const res = await think(engine, { question: q.question, model: a.qa.thinkModel, modelExplicit: true, remote: false });
-                    answer = res.answer ?? '';
-                    tin += approxTokens(q.question);
-                  } else {
-                    const prompt = a.qa.context === 'facts' ? factsReaderPrompt(q, readFacts, lastDate(conv.sessions)) : readerPrompt(q, pack.sessions, lastDate(conv.sessions));
-                    const out = await chat.chat(a.qa.reader, prompt, { maxTokens: 1024, replicate: r });
-                    answer = out.text; tin += out.input_tokens; tout += out.output_tokens;
-                  }
-                  scores.push(await judgeResponse(chat, a.benchmark, a.qa.judge, q, answer, r));
-                  if (q.abstention && repeatsTrap(answer, q.trap)) trap++;
-                }
-                row = { ...row, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length,
-                  ...(q.trap ? { qa_trap: trap / scores.length } : {}), qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length),
-                  qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
-                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length } : {}), qa_answer: answer.slice(0, 2000) };
-              } catch (e) {
-                row = { ...row, qa_error: (e as Error).message.slice(0, 300) };
-              }
+              const sessById = new Map(conv.sessions.map(x => [x.id, x]));
+              const pack = packSessions(retrieved.map(id => sessById.get(id)).filter((x): x is Session => !!x), a.qa.sessions, a.qa.budgetTokens);
+              const readFacts = a.qa.context === 'facts' ? retrieved.slice(0, a.qa.sessions).flatMap(id => factsBySession.get(id) ?? []) : [];
+              const prompt = think ? null : a.qa.context === 'facts' ? factsReaderPrompt(q, readFacts, lastDate(conv.sessions)) : readerPrompt(q, pack.sessions, lastDate(conv.sessions));
+              row = { ...row, ...await readAndJudge({ benchmark: a.benchmark, qa: a.qa, q, chat, think: think ? { fn: think, engine } : null, prompt, countTokens }),
+                qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
+                ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length } : {}) };
             }
           } catch (e) {
             row = { ...base, error: (e as Error).message, error_origin: /budget|BudgetExceeded/i.test((e as Error).message) ? 'harness' : 'sut' };
@@ -436,6 +492,10 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     facts: a.facts === 'none' ? null : { lane: a.facts, extractor: 'runExtractConversationFactsCore (product default model, force)', pages: 'conversation type, ISO session date', ...factStats,
       unresolved_share: factStats.facts ? factStats.unresolved / factStats.facts : null },
     qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'think' ? 'gbrain think' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions' : 'LongMemEval step-by-step reading prompt, sessions in date order', judge_prompts: a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts' },
+    usage: a.qa.mode === 'none' ? null : (() => {
+      const all = allRows.flatMap(r => r.qa_receipts ?? []);
+      return { schema: USAGE_RECEIPT_SCHEMA, by_role: Object.fromEntries([...new Set(all.map(r => r.role))].sort().map(role => [role, sumUsage(all.filter(r => r.role === role))])) };
+    })(),
     fidelity, cost, rows_file: 'rows.ndjson',
   };
   writeFileSync(join(a.output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
