@@ -200,7 +200,7 @@ describe('reading lane', () => {
     globalThis.fetch = (async (_u: string, init: RequestInit) => { bodies.push(JSON.parse(String(init.body))); return new Response(JSON.stringify({ content: [{ type: 'text', text: 'a' }], usage: { input_tokens: 1, output_tokens: 1 } }), { status: 200 }); }) as never;
     try {
       const c = new ChatClient(join(tmp, 'qa-cache-temp'));
-      for (const m of ['anthropic:claude-opus-5-5', 'anthropic:claude-sonnet-5-5', 'anthropic:claude-haiku-4-5']) await c.chat(m, 'p', { maxTokens: 5, effort: 'medium' });
+      for (const m of ['anthropic:claude-opus-5-5', 'anthropic:claude-sonnet-5-5', 'anthropic:claude-haiku-4-5']) await c.chat(m, 'p', { maxTokens: 5, replicate: 0, effort: 'medium' });
       expect(bodies.map(b => [b.model, b.temperature])).toEqual([['claude-opus-5-5', undefined], ['claude-sonnet-5-5', undefined], ['claude-haiku-4-5', 0]]);
       const { judgeTemperature } = await import('../../eval/runner/memory-qa/qa.ts');
       expect(judgeTemperature('anthropic:claude-opus-5-5', { temperature: 0 })).toBeNull();
