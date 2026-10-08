@@ -301,6 +301,9 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   - no rerank or counted delivery fallbacks; 27 of 220 queries carried a shipped-behavior fallback;
   - peak serve memory 0.82 GB, brain 1.07 GB on disk, restart 3.3 seconds.
 
+  Rechecked at the freeze commit (gbrain `7aa2caa0`, 0.60.106.0; receipt in `dev-stress-pilot/freeze-commit/`): query p95
+  5.7 seconds (p50 4.1), no rerank or counted delivery fallbacks, 37 shipped-behavior fallbacks on 220 queries, peak
+  serve memory 0.80 GB, brain 1.10 GB, restart 3.7 seconds. PGLite stands. Measured spend $1.22.
   Two earlier query phases ran without expansion because of the proxy bug amendment A3 fixes; they are kept as
   `receipt-run1-expansion-refused.json` and do not count. Measured spend: $1.79 (embeddings, rerank and expansion).
 
