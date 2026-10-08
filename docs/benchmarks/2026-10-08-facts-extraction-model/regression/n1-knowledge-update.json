@@ -1,0 +1,59 @@
+{
+  "master": {
+    "sha256": "26e24b4208baae9b476ef0ac70cd2183492092bfa55448017fa96c4f67f9a88e",
+    "gbrain": {
+      "version": "0.60.110.0",
+      "loaded_git_head": "1935c74a9e217b276c7bbf3075ddd3c220e96a09"
+    },
+    "run_status": "completed",
+    "metrics": {
+      "current_value_probes": 388,
+      "current_value_correct": 388,
+      "current_value_accuracy": 1,
+      "stale_served": 0,
+      "stale_served_rate": 0,
+      "history_probes": 385,
+      "history_retained": 385,
+      "history_retained_rate": 1,
+      "negative_controls": 124,
+      "negative_controls_passed": 124,
+      "private_value_leaks": 0,
+      "exposure_probes": 32,
+      "exposure_probes_with_signal": 32,
+      "acknowledged_writes_lost": 0,
+      "sut_errors": 0,
+      "cells": 3,
+      "void_cells": 0
+    },
+    "verdict": "pass"
+  },
+  "candidate": {
+    "sha256": "2263a1bff4b1e75298ce5f0ace1b3283aad5627e133cb8b7042a89e3274ae88d",
+    "gbrain": {
+      "version": "0.60.110.0",
+      "loaded_git_head": "4600f47a8c5792d669017c5c37136571160508cc"
+    },
+    "run_status": "completed",
+    "metrics": {
+      "current_value_probes": 388,
+      "current_value_correct": 388,
+      "current_value_accuracy": 1,
+      "stale_served": 0,
+      "stale_served_rate": 0,
+      "history_probes": 385,
+      "history_retained": 385,
+      "history_retained_rate": 1,
+      "negative_controls": 124,
+      "negative_controls_passed": 124,
+      "private_value_leaks": 0,
+      "exposure_probes": 32,
+      "exposure_probes_with_signal": 32,
+      "acknowledged_writes_lost": 0,
+      "sut_errors": 0,
+      "cells": 3,
+      "void_cells": 0
+    },
+    "verdict": "pass",
+    "note": "loaded_git_head is a scratch commit of master 1935c74a plus the prepared R2 change (never pushed); later edits to that change touched only the gbrain models report label, docs and tests"
+  }
+}

@@ -54,7 +54,7 @@ One row per idea. "Held-out verdict" is the custodian's sealed result against th
 | P7 | Multi-relation query planner | `search.relational_planner` | **PASS** (24 better, 0 worse; +27 points strict all-hit@10) | on in `balanced` and `tokenmax` | [#6019](https://github.com/garrytan/gbrain/pull/6019), merged, v0.60.60.0 |
 | P7 | One-hop orientation | `search.relational_orient_onehop` | does not meet its rule (1 better, 0 worse, p = 1.0) | off | #6019 |
 | P8 | Write guard, semantic withdrawal, quote grounding, advertised surface ([records](2026-10-05-heldout-program/p8.md)) | guard, `review_withdraw`, `think.quote_verify`, `mcp.advertised_surface` | write cost **PASS**, withdrawal **PASS**, quote grounding first run **FAIL** and fresh retest **PASS**, narrower surface **FAIL** | guard, withdrawal and quote grounding on; new installs advertise `full` | [#6027](https://github.com/garrytan/gbrain/pull/6027), merged, v0.60.77.0 |
-| Q2 (P5 follow-up) | Typed list-line guards, held-out grammar frame, relationship-phrasing units ([records](2026-10-05-heldout-program/q2.md)) | `line_grammar.enabled`; link-typing units U1, U25, U34, U6 | G1 **FAIL** (459 of 583 minted lines wrong, all but one from the stress stratum), G3 decoys **FAIL**; G2, G4, G5 **PASS**; G6 not run; units U34 and U1 **PASS** confirmation, U25 **FAIL**, U6 fails safety | typed relation lines stay off (opt-in); U34 and U1 kept; U25 and U6 reverted; guards and diagnostics ship | gbrain branch `capy/q2-parser-gaps`, PR pending |
+| Q2 (P5 follow-up) | Typed list-line guards, held-out grammar frame, relationship-phrasing units ([records](2026-10-05-heldout-program/q2.md)) | `line_grammar.enabled`; link-typing units U1, U25, U34, U6 | G1 **FAIL** (459 of 583 minted lines wrong, all but one from the stress stratum), G3 decoys **FAIL**; G2, G4, G5 **PASS**; G6 not run; units U34 and U1 **PASS** confirmation, U25 **FAIL**, U6 fails safety | typed relation lines stay off (opt-in); U34 and U1 kept; U25 and U6 reverted; guards and diagnostics ship | [#6343](https://github.com/garrytan/gbrain/pull/6343), open |
 
 The P3 raw-query routing guard in #6014 has no preregistered experiment and no default rides on it.
 
@@ -150,6 +150,7 @@ Head-to-head comparisons against external memory systems, a full-context baselin
 
 ## Changelog
 
+- 2026-10-08: The Q2 scorecard row names its gbrain pull request, #6343 (open).
 - 2026-10-08: Q2 (P5 follow-up) verdicts: G1 and G3 fail, so typed relation lines stay off; G6 not run; units U34 and U1 ship, U25 and U6 are reverted. Scorecard row and [records](2026-10-05-heldout-program/q2.md) added.
 - 2026-10-06: P4's core gate gains the complete `claude-opus-5-5` and `claude-fable-5-1` runs; P6's LongMemEval-M confirmation is recorded as not runnable (no sealed split exists).
 - 2026-10-06: P5 merged (gbrain#6017, v0.60.93.0): wanted pages ship on; typed relation lines (H3 fail) and the similar-page hint (H5b fail) ship off.
