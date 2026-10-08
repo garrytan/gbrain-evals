@@ -37,6 +37,13 @@
  * experiment (experiment.json): a rerun with the same command resumes and
  * joins the step's original budget run; a different build, world or flag set
  * is refused. `--order model` finishes each model's tasks before the next.
+ *
+ * Exploratory arm `gbrain-fs` (plan 2026-10-07-cat40-hard-fix C16; Hard development world only, never counted):
+ * does an agent with gbrain and the plain Markdown files do better than files alone? It serves every tool, the
+ * instructions, slots, probes and metering of the `gbrain` arm, plus the fs arm's list_dir, grep and read_file
+ * (same limits) over the same files; write_file is not served, so notes live only in gbrain. Its cells are
+ * labelled `<--gbrain-label>+fs`. It is refused on any world but the calibration seed and in any `--step`
+ * (HARD_ARM_EXPLORATORY), and its experiment.json and receipt record `exploratory: true`.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
@@ -45,10 +52,10 @@ import { createHash } from 'node:crypto';
 import { generateLadderWorld, worldDigest, DEFAULT_LADDER_DIR, WIDE_FAMILIES, stratumOf, openCustodianTemplates, assertDevWorld, type LadderTask, type LadderWorld, type Family, type Stratum } from '../generators/model-ladder-gen.ts';
 import { gbrainSpecFrom, parseGbrainSpec } from './gbrain-under-test.ts';
 import { runAgent, runAgentText, provider, HarnessError, type AgentRun, type Arm, type ScriptedModel } from './cat40/loop.ts';
-import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, type ArmName } from './cat40/arms.ts';
+import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall } from './cat40/arms.ts';
 import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
-import { GbrainArm, instructionsOverride, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
+import { GbrainArm, instructionsOverride, cellLabel, assertNoGbrainFsCollision, GBRAIN_FS_READ_TOOLS, type CellArm, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { HARD_FAMILIES, isHardWorld, type HardWorld, type HardTask } from '../generators/hard/schema.ts';
@@ -169,9 +176,9 @@ async function judgeClaims(ctx: Ctx, task: LadderTask, run: AgentRun): Promise<{
   return { claims: parseClaims(r.text), usd: r.usd };
 }
 
-async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTask, repeat: number): Promise<CellRecord> {
+async function runCell(ctx: Ctx, model: string, armName: CellArm, task: LadderTask, repeat: number): Promise<CellRecord> {
   const started = new Date();
-  const label = armName === 'gbrain' ? ctx.gbrainLabel : armName;
+  const label = cellLabel(armName, ctx.gbrainLabel);
   const runId = `${model}|${label}|${task.id}|${repeat}`;
   let arm: Arm;
   let slot: GbrainSlot | null = null;
@@ -180,6 +187,7 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
   else if (armName === 'memory') arm = new MemoryArm(new FileStore(ctx.files.all));
   else if (armName === 'oracle') arm = new OracleArm();
   else if (armName === 'pg') arm = new PgArm(ctx.pg!, runId);
+  else if (armName === 'gbrain-fs') throw new Error('gbrain-fs runs on Hard worlds only');
   else {
     slot = await ctx.pool!.acquire();
     // Every provider request the slot's server makes from now until its restore is charged to this cell.
@@ -258,7 +266,7 @@ export function parseMaxToolChars(raw: string | undefined): number | null {
 }
 
 export type CellOrder = 'task' | 'model';
-export interface PlannedCell { model: string; arm: ArmName; task: LadderTask; repeat: number }
+export interface PlannedCell { model: string; arm: CellArm; task: LadderTask; repeat: number }
 
 /** The cell key a results.jsonl line carries. */
 export const cellKey = (model: string, label: string, task: string, repeat: number) => `${model}|${label}|${task}|${repeat}`;
@@ -268,12 +276,12 @@ export const cellKey = (model: string, label: string, task: string, repeat: numb
  * each task; `model` order finishes every task and repeat of one model before
  * the next starts, so a run cut short by its budget leaves complete models.
  */
-export function scheduleCells(o: { tasks: LadderTask[]; models: string[]; arms: ArmName[]; repeats: number; order: CellOrder; gbrainLabel: string; done: Set<string> }): PlannedCell[] {
+export function scheduleCells(o: { tasks: LadderTask[]; models: string[]; arms: CellArm[]; repeats: number; order: CellOrder; gbrainLabel: string; done: Set<string> }): PlannedCell[] {
   const cells: PlannedCell[] = [];
   const add = (model: string, task: LadderTask, r: number) => {
     for (const arm of o.arms) {
       if (arm === 'fs-acl' && task.family !== 'C') continue;
-      if (!o.done.has(cellKey(model, arm === 'gbrain' ? o.gbrainLabel : arm, task.id, r))) cells.push({ model, arm, task, repeat: r });
+      if (!o.done.has(cellKey(model, cellLabel(arm, o.gbrainLabel), task.id, r))) cells.push({ model, arm, task, repeat: r });
     }
   };
   if (o.order === 'model') { for (const model of o.models) for (let r = 0; r < o.repeats; r++) for (const task of o.tasks) add(model, task, r); }
@@ -302,6 +310,8 @@ export interface ExperimentManifest {
   budget_runs?: string[];
   /** Every runner commit that ran cells in this directory, oldest first, once a resume ran from a later commit. */
   runner_commits?: string[];
+  /** Set when the run includes the exploratory gbrain-fs arm (development world only, never counted). */
+  exploratory?: true;
   /** Hard worlds: identity, behavior settings and the evaluator's code hashes (DX-F14); a resume must match them. */
   hard?: { identity: ReturnType<typeof identityOf>; max_turns: number; tool_limits: string; judge: string | null; scorer: string; judge_prompt: string; settings_digest: string; code: Record<string, string>; runner_commit: string | null };
 }
@@ -418,6 +428,7 @@ export const RUNNER_USAGE = `Usage: bun eval/runner/cat40-model-ladder.ts [flags
   v1:    --models <list> [--arms oracle,fs,fs-acl,memory,pg,gbrain] --budget-usd <n> [--world <world.json>] [--out <dir>] ...
   Hard:  --world <hard world.json> --models <list> --judge gpt-6.1-sol [--arms oracle,fs,pg,memory,gbrain] [--per-family N] [--max-turns N]
          [--hard-tool-limits hard|v1] [--preflight] [--step <step>] --budget-usd <n> --budget-ledger .budget/cat40-hard.sqlite --out <dir>
+         exploratory: --arms gbrain-fs (gbrain plus read-only files) on the calibration-seed world only, no --step
   $0:    --scripted [--arms fs,memory,oracle] [--world <world.json>] --out <dir>
   Slots: --build-slots --gbrain-ref <sha> --slots N --world <world.json> --budget-usd <n> --slot-build-allowance-usd 2
 Value flags: ${VALUE_FLAGS.join(' ')}
@@ -469,8 +480,10 @@ export async function main(argv = process.argv.slice(2)) {
   const world = raw as LadderWorld;
   const models = scripted ? ['scripted'] : buildSlots ? [] : (flag(argv, '--models') ?? '').split(',').filter(Boolean);
   if (!models.length && !buildSlots) throw new Error('--models is required (or --scripted, or --build-slots)');
-  const arms = (buildSlots ? 'gbrain' : flag(argv, '--arms') ?? (scripted ? 'oracle,fs,memory' : 'oracle,fs,pg,memory,gbrain')).split(',') as ArmName[];
-  if (hard && !buildSlots) hardRefusals({ models: scripted ? [] : models, judge: flag(argv, '--judge'), arms, scripted });
+  const arms = (buildSlots ? 'gbrain' : flag(argv, '--arms') ?? (scripted ? 'oracle,fs,memory' : 'oracle,fs,pg,memory,gbrain')).split(',') as CellArm[];
+  if (!hard && arms.includes('gbrain-fs')) throw new UsageError('gbrain-fs is an exploratory Hard arm: it runs only on the Hard calibration-seed (development) world');
+  if (hard && !buildSlots) hardRefusals({ models: scripted ? [] : models, judge: flag(argv, '--judge'), arms, scripted, seed: raw.seed, step: flag(argv, '--step') });
+  const exploratory = arms.includes('gbrain-fs');
   const families = (flag(argv, '--families') ?? (hard ? HARD_FAMILIES : WIDE_FAMILIES).join(',')).split(',') as Family[];
   const known = new Set<string>(hard ? HARD_FAMILIES : WIDE_FAMILIES);
   const badFamilies = families.filter(f => !known.has(f));
@@ -538,7 +551,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (!buildSlots && cells.length === 0) { log('nothing to run'); return; }
 
   // gbrain identity and the slot preflight come first, so a refusal opens no budget run.
-  const needsGbrain = buildSlots || cells.some(c => c.arm === 'gbrain');
+  const needsGbrain = buildSlots || cells.some(c => c.arm === 'gbrain' || c.arm === 'gbrain-fs');
   const analyze = !argv.includes('--no-pglite-analyze');
   const spec = gbrainSpecFrom(argv, {});
   if (spec && (flag(argv, '--gbrain-repo') || flag(argv, '--gbrain-ref'))) throw new Error('pass either --gbrain <checkout>@<ref> or --gbrain-repo/--gbrain-ref, not both');
@@ -572,7 +585,7 @@ export async function main(argv = process.argv.slice(2)) {
     }
   }
 
-  const exhausted = hard ? cells.filter(c => (priorAttempts.get(cellKey(c.model, c.arm === 'gbrain' ? ctx.gbrainLabel : c.arm, c.task.id, c.repeat)) ?? 0) > HARD_MAX_RETRIES) : [];
+  const exhausted = hard ? cells.filter(c => (priorAttempts.get(cellKey(c.model, cellLabel(c.arm, ctx.gbrainLabel), c.task.id, c.repeat)) ?? 0) > HARD_MAX_RETRIES) : [];
   if (exhausted.length) throw new HardStop('HARD_RETRIES_EXHAUSTED', `${exhausted.length} cells already had ${HARD_MAX_RETRIES + 1} harness-error attempts (first: ${cellKey(exhausted[0].model, exhausted[0].arm, exhausted[0].task.id, exhausted[0].repeat)})`,
     `read their errors in ${relative(process.cwd(), attemptsPath)}, fix the harness, and rerun those cells in a new --out`, 'Garry decides whether the step continues without them');
   if (hw && !buildSlots) {
@@ -593,7 +606,7 @@ export async function main(argv = process.argv.slice(2)) {
 
   const options = budgetOptionsFrom(argv);
   const estimateUsd = flag(argv, '--estimate-usd') ? Number(flag(argv, '--estimate-usd')) : null;
-  const { paid: budget } = bindExperiment(out, { gbrain_commit: gbrainCommit, slot_commit: slotCommit, world_digest: worldDigest(world), models, arms, label: ctx.gbrainLabel, flags: experimentFlags(argv), ...(hardManifest ? { hard: hardManifest } : {}) },
+  const { paid: budget } = bindExperiment(out, { gbrain_commit: gbrainCommit, slot_commit: slotCommit, world_digest: worldDigest(world), models, arms, label: ctx.gbrainLabel, flags: experimentFlags(argv), ...(exploratory ? { exploratory: true as const } : {}), ...(hardManifest ? { hard: hardManifest } : {}) },
     recorded => scripted ? null : startPaidRun(buildSlots ? 'cat40-slot-build' : 'cat40-model-ladder', { ...options, runId: recorded ?? options.runId, estimateUsd, log }),
     { newBudgetRun: argv.includes('--new-budget-run') });
   ctx.budgetRunId = budget?.run.runId ?? null;
@@ -646,6 +659,10 @@ export async function main(argv = process.argv.slice(2)) {
         await s.restore();
       }
       log('write probe passed on every slot');
+      if (exploratory) {
+        for (const s of slots) assertNoGbrainFsCollision(s.client!.tools.map(t => t.name).filter(n => !instructionsOverride.dropTools.includes(n)));
+        log(`gbrain-fs: no gbrain tool collides with ${GBRAIN_FS_READ_TOOLS.join(', ')}`);
+      }
       // A rerank probe (Cat 40 Hard R0): one search per slot must reach the reranker through this process's proxy,
       // unless the run turned reranking off. A slot whose reranker is unreachable fails closed before any cell.
       const rerankOff = gbrainConfig.some(([k, v]) => k === 'search.reranker.enabled' && /^(false|0|off)$/i.test(v));
@@ -665,7 +682,7 @@ export async function main(argv = process.argv.slice(2)) {
         maxToolChars: ctx.maxToolChars, maxTurns: maxTurns!, toolLimits, budgetRunId: ctx.budgetRunId, logJudge: e => appendFileSync(join(out, 'judge-requests.jsonl'), JSON.stringify(e) + '\n'),
       };
       await pool(cells, concurrency, async c => {
-        const key = cellKey(c.model, c.arm === 'gbrain' ? ctx.gbrainLabel : c.arm, c.task.id, c.repeat);
+        const key = cellKey(c.model, cellLabel(c.arm, ctx.gbrainLabel), c.task.id, c.repeat);
         const rec = await runWithRetries(priorAttempts.get(key) ?? 0, async attempt => {
           try { return await runHardCell(hctx, c.model, c.arm, c.task as unknown as HardTask, c.repeat, attempt); }
           catch (e) {
@@ -691,7 +708,7 @@ export async function main(argv = process.argv.slice(2)) {
       let rec: CellRecord;
       try { rec = await runCell(ctx, c.model, c.arm, c.task, c.repeat); }
       catch (e) {
-        const key = cellKey(c.model, c.arm === 'gbrain' ? ctx.gbrainLabel : c.arm, c.task.id, c.repeat);
+        const key = cellKey(c.model, cellLabel(c.arm, ctx.gbrainLabel), c.task.id, c.repeat);
         if (ctx.proxy) ctx.failedCellsProxyUsd += (await ctx.proxy.finalize(key, 30_000)).usd;
         log(`cell ${key} failed: ${(e as Error).message}`);
         if ((e as Error).name === 'BudgetExceededError' || /BudgetExceeded|exceed/i.test((e as Error).message)) throw e;
@@ -722,7 +739,8 @@ export async function main(argv = process.argv.slice(2)) {
     const summary = budget?.run.close({ finish: complete });
     budget?.guard.uninstall();
     const receipt = {
-      schema: 'cat40-receipt-v1', version: CAT40_VERSION, judge_prompt: hw ? HARD_JUDGE_PROMPT_VERSION : JUDGE_PROMPT_VERSION, judge: ctx.judge,
+      schema: 'cat40-receipt-v1', version: CAT40_VERSION,
+      ...(exploratory ? { exploratory: true, gbrain_fs: { label: cellLabel('gbrain-fs', ctx.gbrainLabel), fs_read_tools: GBRAIN_FS_READ_TOOLS, fs_tool_limits: toolLimits, write_file_served: false, writes: 'gbrain write tools only' } } : {}), judge_prompt: hw ? HARD_JUDGE_PROMPT_VERSION : JUDGE_PROMPT_VERSION, judge: ctx.judge,
       ...(hardManifest ? { hard: { ...hardManifest, attempts_path: 'attempts.jsonl', max_retries: HARD_MAX_RETRIES, quarantined: ctx.pool ? Object.fromEntries(ctx.pool.quarantined) : {}, pg_setup_embed_usd: ctx.pg?.setupEmbedUsd ?? 0 } } : {}),
       world: { path: relative(process.cwd(), worldPath), scale: world.scale ?? 'v1', digest: worldDigest(world), seed: world.seed, docs: world.docs.length, tasks: world.tasks.length,
         ...(hw ? {} : { templates: world.templates ?? 'A', templates_file_sha256: sealed?.sha256 ?? null,
@@ -755,7 +773,7 @@ export async function main(argv = process.argv.slice(2)) {
 function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: string[]; arms: string[]; cells: number; judge: string | null; maxTurns?: number; toolLimits: string; needsGbrain: boolean; slotDir: string | null; nSlots: number; step?: string; scripted: boolean; families: string[]; tasksPerFamily: number; repeats: number; done: Array<Record<string, unknown>> }) {
   const keyOf = (m: string) => { try { return provider(m) === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'; } catch { return '(unknown provider)'; } };
   const env: Record<string, string[]> = {};
-  for (const a of o.arms) env[a] = [...new Set([...(o.scripted ? [] : o.models.map(keyOf)), ...(a === 'pg' || a === 'gbrain' ? ['OPENAI_API_KEY (embeddings)'] : [])])];
+  for (const a of o.arms) env[a] = [...new Set([...(o.scripted ? [] : o.models.map(keyOf)), ...(a === 'pg' || a === 'gbrain' || a === 'gbrain-fs' ? ['OPENAI_API_KEY (embeddings)'] : [])])];
   if (o.judge) env.judge = [keyOf(o.judge)];
   const prices = Object.fromEntries([...o.models, ...(o.judge ? [o.judge] : [])].map(m => { try { return [m, CHAT_PRICE_OVERRIDES[`${provider(m)}:${m}`] ?? null]; } catch { return [m, null]; } }));
   const lines: string[] = ['Cat 40 preflight (no paid call)'];

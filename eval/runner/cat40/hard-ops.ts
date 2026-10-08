@@ -110,14 +110,14 @@ export function project(plan: StepPlan, o: { basis: CostBasis; measured?: CellVi
   const families = plan.families ?? FAMILIES5;
   const rows: Projection['rows'] = [];
   let agent = 0, judge = 0, cells = 0;
-  const doneCount = (model: string, arm: string, f: string) => new Set((o.done ?? []).filter(c => c.harness_clean && c.model === model && c.family === f && (c.arm === arm || (arm === 'gbrain' && c.arm.startsWith('gbrain')))).map(c => c.key)).size;
+  const doneCount = (model: string, arm: string, f: string) => new Set((o.done ?? []).filter(c => c.harness_clean && c.model === model && c.family === f && (c.arm === arm || (arm === 'gbrain' && c.arm.startsWith('gbrain') && !c.arm.endsWith('+fs')))).map(c => c.key)).size;
   for (const model of plan.models) for (const arm of plan.arms) {
     let rowUsd = 0, rowCells = 0;
     const sources = new Set<string>();
     for (const f of families) {
       const n = Math.max(0, plan.tasksPerFamily * plan.repeats - doneCount(model, arm, f));
       if (!n) continue;
-      const all = (o.measured ?? []).filter(c => c.model === model && c.family === f && (c.arm === arm || (arm === 'gbrain' && c.arm.startsWith('gbrain'))));
+      const all = (o.measured ?? []).filter(c => c.model === model && c.family === f && (c.arm === arm || (arm === 'gbrain' && c.arm.startsWith('gbrain') && !c.arm.endsWith('+fs'))));
       const same = all.filter(c => (o.measuredScale ?? c.scale ?? 'v1') === plan.scale);
       const ms = same.length ? same : all;
       const scale = plan.scale === 'large' && !same.length ? (o.basis.scale_50k_factor[arm] ?? o.basis.scale_50k_factor.default) : 1;

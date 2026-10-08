@@ -18,6 +18,9 @@
  * agent. Restores run as asynchronous subprocesses so they never block other
  * cells, and a slot whose restore or health check fails is quarantined by
  * GbrainPool (plan 2026-10-05, ENG-F10, ENG-F13).
+ *
+ * GbrainFsArm (`gbrain-fs`, exploratory, Hard development world only) serves this arm's tools on the same slot
+ * plus the fs arm's read tools over the corpus files; see the end of this file.
  */
 import { spawn, execFile, execFileSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -25,6 +28,7 @@ import { readdir, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { HarnessError, type Arm, type ToolSpec } from './loop.ts';
+import { FsArm, type ArmName, type FileStore, type FsArmOptions } from './arms.ts';
 import type { LadderWorld } from '../../generators/model-ladder-gen.ts';
 import { renderDoc } from '../../generators/model-ladder-gen.ts';
 import { runCli, type RunEnv } from '../lifecycle/drivers.ts';
@@ -583,4 +587,47 @@ export class GbrainArm implements Arm {
   toolsVersion() { return this.client.toolsVersion; }
   writeTools() { return this.client.tools.filter(t => t.annotations?.readOnlyHint !== true).map(t => t.name); }
   call(name: string, args: Record<string, unknown>) { return this.client.call(name, args); }
+}
+
+// ─── gbrain-fs (exploratory, development world only; plan 2026-10-07-cat40-hard-fix C16) ───
+
+/** Arms a cell can run: the frozen arm set plus the exploratory `gbrain-fs`, kept out of arms.ts so the freeze hash of the counted arms is unchanged. */
+export type CellArm = ArmName | 'gbrain-fs';
+
+/** The arm name a cell records: gbrain cells carry `--gbrain-label`, gbrain-fs cells that label plus `+fs`, so the two never mix. */
+export function cellLabel(arm: CellArm, gbrainLabel: string): string {
+  return arm === 'gbrain' ? gbrainLabel : arm === 'gbrain-fs' ? `${gbrainLabel}+fs` : arm;
+}
+
+/** The fs arm's read tools gbrain-fs serves beside gbrain's tools; write_file is not served, so notes live only in gbrain. */
+export const GBRAIN_FS_READ_TOOLS = ['list_dir', 'grep', 'read_file'];
+export const GBRAIN_FS_HINT = 'The raw Markdown files behind the gbrain are also readable with list_dir, grep and read_file; they are read-only, so save notes with the gbrain tools.';
+
+/** Refuses a gbrain tool list that already serves one of the fs read tools (the agent could not tell the two apart). */
+export function assertNoGbrainFsCollision(gbrainTools: string[]): void {
+  const clash = gbrainTools.filter(t => GBRAIN_FS_READ_TOOLS.includes(t));
+  if (clash.length) throw new Error(`gbrain-fs: the gbrain server serves ${clash.join(', ')}, which collides with the fs read tool of the same name; withhold it with --gbrain-drop-tools ${clash.join(',')} or drop the gbrain-fs arm`);
+}
+
+/**
+ * Exploratory arm: every tool, instruction and slot of the `gbrain` arm, plus the fs arm's read tools (the same
+ * limits as the fs arm) over the same corpus files. Writes go through gbrain's write tools only.
+ */
+export class GbrainFsArm implements Arm {
+  readonly name = 'gbrain-fs';
+  private gbrain: GbrainArm;
+  private fs: FsArm;
+  constructor(slot: GbrainSlot, files: FileStore, fsOptions: FsArmOptions = {}) {
+    this.gbrain = new GbrainArm(slot);
+    this.fs = new FsArm('fs', files, fsOptions);
+  }
+  systemHint() { return `${this.gbrain.systemHint()}\n${GBRAIN_FS_HINT}`; }
+  tools(): ToolSpec[] {
+    const gbrain = this.gbrain.tools();
+    assertNoGbrainFsCollision(gbrain.map(t => t.name));
+    return [...gbrain, ...this.fs.tools().filter(t => GBRAIN_FS_READ_TOOLS.includes(t.name))];
+  }
+  toolsVersion() { return this.gbrain.toolsVersion(); }
+  writeTools() { return this.gbrain.writeTools(); }
+  call(name: string, args: Record<string, unknown>) { return GBRAIN_FS_READ_TOOLS.includes(name) ? this.fs.call(name, args) : this.gbrain.call(name, args); }
 }

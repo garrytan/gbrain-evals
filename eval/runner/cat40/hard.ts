@@ -10,9 +10,9 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runAgent, provider, type AgentRun, type Arm, type ScriptedModel } from './loop.ts';
-import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, callTargets, type ArmName, type ToolLimits } from './arms.ts';
+import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, callTargets, type ToolLimits } from './arms.ts';
 import { PgArm, type PgStore } from './pg-arm.ts';
-import { GbrainArm, type GbrainPool, type GbrainSlot, type MeteringProxy } from './gbrain-arm.ts';
+import { GbrainArm, GbrainFsArm, cellLabel, type CellArm, type GbrainPool, type GbrainSlot, type MeteringProxy } from './gbrain-arm.ts';
 import { scoreHardTask, HARD_SCORER_VERSION } from './score-hard.ts';
 import { judgeHardClaims, type JudgeRequestLog } from './judge-hard.ts';
 import { CELL_SCHEMA_V2, HARD_MAX_RETRIES, type CellRecordV2, type SessionRecord, type StrippedRun } from './records.ts';
@@ -50,6 +50,7 @@ export const HARD_STOP_CODES = {
   HARD_SMOKE_FAILED: 'the gbrain smoke had harness errors',
   HARD_PREREG_MISSING: 'the preregistration lacks a field this step needs',
   HARD_STEP_RETIRED: 'amendment A2 retired the 4k held-out steps; the held-out run is 50k only',
+  HARD_ARM_EXPLORATORY: 'the exploratory gbrain-fs arm runs only on the development (calibration-seed) world, outside any program step',
 } as const;
 export type HardStopCode = keyof typeof HARD_STOP_CODES;
 
@@ -74,8 +75,16 @@ export function priceTableLocation(): string {
   return `eval/runner/budget-ledger.ts:${line}`;
 }
 
-/** The judge, model and arm refusals of a Hard run (CEO-F3). `scripted` runs are exempt from the judge rule. */
-export function hardRefusals(o: { models: string[]; judge: string | undefined; arms: string[]; scripted: boolean }): void {
+/**
+ * The judge, model and arm refusals of a Hard run (CEO-F3). `scripted` runs are exempt from the judge rule.
+ * `gbrain-fs` is exploratory (plan 2026-10-07-cat40-hard-fix C16): it runs only on the calibration seed, the
+ * development world, and never in a program step (`--step`: calibration, freeze, smoke, held-out or confirmation).
+ */
+export function hardRefusals(o: { models: string[]; judge: string | undefined; arms: string[]; scripted: boolean; seed?: number; step?: string }): void {
+  if (o.arms.includes('gbrain-fs') && (o.seed !== HARD_SEEDS.calibration || o.step !== undefined)) {
+    throw new HardStop('HARD_ARM_EXPLORATORY', o.step !== undefined ? `--arms includes gbrain-fs in program step ${o.step}` : `--arms includes gbrain-fs on seed ${o.seed}, which is not the development world (calibration seed ${HARD_SEEDS.calibration})`,
+      'run gbrain-fs only on the calibration-seed world without --step; preregistered, smoke and held-out runs use oracle, fs, pg, memory, gbrain');
+  }
   if (!o.scripted && (o.judge === undefined || o.judge === 'none')) {
     throw new HardStop('HARD_JUDGE_REQUIRED', o.judge === 'none' ? '--judge none does not satisfy the Hard judge rule' : 'no --judge was given',
       'pass --judge gpt-6.1-sol (every Hard command uses it, calibration included)');
@@ -204,6 +213,7 @@ export function scriptedHardAgent(task: HardTask, armName: string, session: numb
     if (history.length === 0) {
       if (recording) {
         const text = task.sessions![session];
+        if (armName === 'gbrain-fs') return { name: 'put_page', args: { slug: `notes/session-${session + 1}`, content: text } };
         return armName === 'memory' ? { name: 'memory', args: { command: 'create', path: `/memories/notes/session-${session + 1}.md`, file_text: text } } : { name: 'write_file', args: { path: `notes/session-${session + 1}.md`, content: text } };
       }
       return armName === 'memory' ? { name: 'memory', args: { command: 'view', path: '/memories/notes' } } : { name: 'list_dir', args: { path: 'notes' } };
@@ -264,9 +274,9 @@ function strip(r: AgentRun): StrippedRun {
 /** Tool calls with results per attempt, for --transcripts. */
 export const hardTranscripts = new Map<string, Array<{ session: number; name: string; args: Record<string, unknown>; result: string }>>();
 
-export async function runHardCell(ctx: HardCtx, model: string, armName: ArmName, task: HardTask, repeat: number, attempt: number): Promise<CellRecordV2 & { write_diagnostic?: WriteDiagnostic[] }> {
+export async function runHardCell(ctx: HardCtx, model: string, armName: CellArm, task: HardTask, repeat: number, attempt: number): Promise<CellRecordV2 & { write_diagnostic?: WriteDiagnostic[] }> {
   const started = new Date();
-  const label = armName === 'gbrain' ? ctx.gbrainLabel : armName;
+  const label = cellLabel(armName, ctx.gbrainLabel);
   const key = `${model}|${label}|${task.id}|${repeat}`;
   const attemptId = `${key}#${attempt}`;
   const timings = { queue_ms: 0, session_start_ms: 0, agent_ms: 0, restore_ms: 0, judge_ms: 0 };
@@ -277,11 +287,11 @@ export async function runHardCell(ctx: HardCtx, model: string, armName: ArmName,
   else if (armName === 'memory') arm = new MemoryArm(new FileStore(ctx.files.all));
   else if (armName === 'oracle') arm = new OracleArm();
   else if (armName === 'pg') arm = new PgArm(ctx.pg!, attemptId, { limits: ctx.toolLimits });
-  else if (armName === 'gbrain') {
+  else if (armName === 'gbrain' || armName === 'gbrain-fs') {
     slot = await ctx.pool!.acquire();
     timings.queue_ms = Date.now() - q0;
     ctx.proxy!.bind(slot.id, attemptId);
-    arm = new GbrainArm(slot);
+    arm = armName === 'gbrain' ? new GbrainArm(slot) : new GbrainFsArm(slot, new FileStore(ctx.files.all), { limits: ctx.toolLimits });
   } else throw new HardStop('HARD_ARM_NOT_APPLICABLE', `arm ${armName}`, 'use oracle,fs,pg,memory,gbrain');
   const messages = hardSessions(ctx.world, task, armName);
   const runs: AgentRun[] = [];

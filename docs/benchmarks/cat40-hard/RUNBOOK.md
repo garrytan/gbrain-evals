@@ -67,6 +67,10 @@ A runner or scorer fix that leaves every world digest unchanged proceeds with a 
 
 A failed claims judgment is re-judged without rerunning the agent: `bun eval/runner/cat40/judge-hard.ts --rejudge <run dir> --judge gpt-6.1-sol --budget-usd <n> --budget-ledger .budget/cat40-hard.sqlite`.
 
+### Exploratory arm: gbrain-fs
+
+The counted arms are oracle, fs, pg, memory and gbrain. `--arms gbrain-fs` (plan 2026-10-07-cat40-hard-fix, item C16) asks whether an agent with gbrain and the plain Markdown files does better than files alone. It is exploratory only: it runs on the calibration-seed development world, never in a program step, a confirmation or a held-out run (`HARD_ARM_EXPLORATORY`), and its results are never counted. The agent gets every gbrain tool, the server instructions, slots, probes and metering of the gbrain arm, plus the fs arm's `list_dir`, `grep` and `read_file` with the fs arm's limits over the same files. `write_file` is not served, so notes live only in gbrain. Its cells are labelled `<--gbrain-label>+fs`, a gbrain tool named like an fs read tool is refused before any cell, and `experiment.json` and the receipt record `exploratory: true`.
+
 ## Stop codes
 
 Every refusal and stop-for-Garry condition exits 3 and prints `STOP <code>`, what failed, the fix and, when it applies, the decision needed. Usage errors (an unknown flag, a missing value) exit 2.
@@ -93,6 +97,7 @@ Every refusal and stop-for-Garry condition exits 3 and prints `STOP <code>`, wha
 | `HARD_SMOKE_FAILED` | the gbrain smoke had harness errors | fix the harness and rerun the smoke |
 | `HARD_PREREG_MISSING` | the preregistration lacks a field this step needs | fill it and commit before the step |
 | `HARD_STEP_RETIRED` | a 4k held-out step (slots-4k, simple-4k, comparator, gbrain-4k), which amendment A2 retired | run the 50k path: heldout-world, slots-50k, cells-50k, oracle-50k, pg-50k, memory-50k, report |
+| `HARD_ARM_EXPLORATORY` | `--arms gbrain-fs` on a world other than the calibration seed, or with `--step` | run gbrain-fs only on the calibration-seed (development) world, outside the program steps |
 
 ## Runs, records and stop kinds
 
