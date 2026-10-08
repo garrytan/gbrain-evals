@@ -1,0 +1,82 @@
+{
+  "probe_id": "cat14-neg-3-multi-bias",
+  "category": "calibration-multi-bias",
+  "question": "Should we lead the Series A for an LA-based AI startup with a COO from a slower-paced company?",
+  "baseline_answer": "## Answer\n\nThe brain has no direct evidence on whether to lead this Series A, and it contains nothing about the specific company, its COO, or deal terms. The only related material is two resolved past takes by garry, which are loosely relevant to the question's framing.\n\n- **Geography:** garry's claim that \"This NY tech startup will scale beyond NY\" was resolved as incorrect, and he held it with high conviction (w=0.85, recorded 2024-03-01) [cat14/cat14-neg-3-multi-bias/take-1]. This is one data point about a location-based bet. It is not evidence about LA.\n- **Tactics / speed:** garry's claim that \"This founder ships fast and wins\" was resolved as correct (w=0.8, recorded 2024-06-10) [cat14/cat14-neg-3-multi-bias/take-2]. That is a single data point that favors speed. It says nothing about how a COO from a slower-paced company would affect a fast-shipping team.\n\nThese two outcomes are the only track-record signal retrieved. Two cases are too few to support a conclusion about geography, operator pace, or leading a round. Neither was about an LA AI startup or a COO hire.\n\nThe brain does not say whether the speed of the founder or of the COO is the relevant variable here.",
+  "calibrated_answer": "## Answer\n\nThe brain does not contain enough information to say whether to lead this Series A, and it offers no recommendation. It has no page on the startup, its founders, its COO, its traction, or the round terms. It holds only two resolved past takes by garry, which are loosely related to themes in the question.\n\n**Relevant past calibration (garry's resolved takes):**\n- Tactics/speed: garry's claim \"This founder ships fast and wins\" was resolved correct (conviction weight 0.8, recorded 2024-06-10) [cat14/cat14-neg-3-multi-bias/take-2]. This is only loosely relevant, since the question concerns a COO from a slower-paced company, and nothing says whether this startup's founder ships fast.\n- Geography: garry's claim \"This NY tech startup will scale beyond NY\" was resolved incorrect (conviction weight 0.85, recorded 2024-03-01) [cat14/cat14-neg-3-multi-bias/take-1]. This shows one high-conviction geography-based call that missed. It is a single data point about NY, not LA, so it does not support any inference about LA-based startups.\n\nThese two outcomes do not bear directly on the COO's background or the LA location, and they are too sparse to draw a pattern from.",
+  "prompts_identical": true,
+  "calibration_block_present": false,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "NO_CALIBRATION_PROFILE"
+    ]
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference geography and tactics/speed track records, which are relevant to the startup's location and the concern about operating pace. Neither names the user's gut prior alongside a track-record counter-prior, and both largely dismiss the calibration signal rather than translate it into useful diligence guidance. Both use impersonal language about 'the brain' and untranslated numerical conviction weights rather than a conversational voice. Their substantive conclusion is the same: there is insufficient company-specific information to recommend leading the round. || Both answers reference relevant geography and execution-speed track records without forcing an unrelated bias onto the question. Neither explicitly names the user's gut prior and contrasts it with a track-record counter-prior. Both use detached, report-like language and expose raw conviction weights rather than maintaining a conversational voice. Their substantive conclusions are equivalent: there is insufficient company-specific evidence to recommend leading the round, and neither meaningfully turns the calibration profile into actionable guidance."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference geography and tactics/speed track records, which are relevant to the startup's location and the concern about operating pace. Neither names the user's gut prior alongside a track-record counter-prior, and both largely dismiss the calibration signal rather than translate it into useful diligence guidance. Both use impersonal language about 'the brain' and untranslated numerical conviction weights rather than a conversational voice. Their substantive conclusion is the same: there is insufficient company-specific information to recommend leading the round. || Both answers reference relevant geography and execution-speed track records without forcing an unrelated bias onto the question. Neither explicitly names the user's gut prior and contrasts it with a track-record counter-prior. Both use detached, report-like language and expose raw conviction weights rather than maintaining a conversational voice. Their substantive conclusions are equivalent: there is insufficient company-specific evidence to recommend leading the round, and neither meaningfully turns the calibration profile into actionable guidance."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference geography and tactics/speed track records, which are relevant to the startup's location and the concern about operating pace. Neither names the user's gut prior alongside a track-record counter-prior, and both largely dismiss the calibration signal rather than translate it into useful diligence guidance. Both use impersonal language about 'the brain' and untranslated numerical conviction weights rather than a conversational voice. Their substantive conclusion is the same: there is insufficient company-specific information to recommend leading the round. || Both answers reference relevant geography and execution-speed track records without forcing an unrelated bias onto the question. Neither explicitly names the user's gut prior and contrasts it with a track-record counter-prior. Both use detached, report-like language and expose raw conviction weights rather than maintaining a conversational voice. Their substantive conclusions are equivalent: there is insufficient company-specific evidence to recommend leading the round, and neither meaningfully turns the calibration profile into actionable guidance."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference geography and tactics/speed track records, which are relevant to the startup's location and the concern about operating pace. Neither names the user's gut prior alongside a track-record counter-prior, and both largely dismiss the calibration signal rather than translate it into useful diligence guidance. Both use impersonal language about 'the brain' and untranslated numerical conviction weights rather than a conversational voice. Their substantive conclusion is the same: there is insufficient company-specific information to recommend leading the round. || Both answers reference relevant geography and execution-speed track records without forcing an unrelated bias onto the question. Neither explicitly names the user's gut prior and contrasts it with a track-record counter-prior. Both use detached, report-like language and expose raw conviction weights rather than maintaining a conversational voice. Their substantive conclusions are equivalent: there is insufficient company-specific evidence to recommend leading the round, and neither meaningfully turns the calibration profile into actionable guidance."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference geography and tactics/speed track records, which are relevant to the startup's location and the concern about operating pace. Neither names the user's gut prior alongside a track-record counter-prior, and both largely dismiss the calibration signal rather than translate it into useful diligence guidance. Both use impersonal language about 'the brain' and untranslated numerical conviction weights rather than a conversational voice. Their substantive conclusion is the same: there is insufficient company-specific information to recommend leading the round. || Both answers reference relevant geography and execution-speed track records without forcing an unrelated bias onto the question. Neither explicitly names the user's gut prior and contrasts it with a track-record counter-prior. Both use detached, report-like language and expose raw conviction weights rather than maintaining a conversational voice. Their substantive conclusions are equivalent: there is insufficient company-specific evidence to recommend leading the round, and neither meaningfully turns the calibration profile into actionable guidance."
+    }
+  ],
+  "win_score": 0.5,
+  "win_overall": "tie",
+  "per_axis_pass_rate": 0.4,
+  "failure_modes": [
+    "presents_counter_prior",
+    "changes_recommendation_meaningfully",
+    "voice_conversational"
+  ]
+}

@@ -1,0 +1,25 @@
+[bench 01:40:20] corpus: 4766 pages, 60003 chunks; openai @ 1536 dims
+[bench 01:40:22] embedded 256/60003 document
+[bench 01:40:37] embedded 5376/60003 document
+[bench 01:40:55] embedded 10496/60003 document
+[bench 01:41:12] embedded 15616/60003 document
+[bench 01:41:31] embedded 20736/60003 document
+[bench 01:41:49] embedded 25856/60003 document
+[bench 01:42:06] embedded 30976/60003 document
+[bench 01:42:23] embedded 36096/60003 document
+[bench 01:42:39] embedded 41216/60003 document
+[bench 01:42:56] embedded 46336/60003 document
+[bench 01:43:13] embedded 51456/60003 document
+[bench 01:43:30] embedded 56576/60003 document
+[bench 01:43:46] embedded 100/100 query
+  Setting up brain schema (v215)...
+  210 migration(s) applied
+[bench 01:45:21] seeded and indexed
+[bench 01:45:50] {"selectivity":"10%","k":10,"mode":"strict_order","recall":1,"p50":70.7,"p95":89,"underfilled":0}
+[bench 01:45:50] {"selectivity":"10%","k":10,"mode":"relaxed_order","recall":1,"p50":74.4,"p95":89.3,"underfilled":0}
+[bench 01:46:20] {"selectivity":"10%","k":50,"mode":"strict_order","recall":1,"p50":77.2,"p95":90.2,"underfilled":0}
+[bench 01:46:20] {"selectivity":"10%","k":50,"mode":"relaxed_order","recall":1,"p50":76.1,"p95":89.6,"underfilled":0}
+[bench 01:47:36] {"selectivity":"50%","k":10,"mode":"strict_order","recall":0.95,"p50":12.3,"p95":17.5,"underfilled":0}
+[bench 01:47:36] {"selectivity":"50%","k":10,"mode":"relaxed_order","recall":0.967,"p50":12.3,"p95":18.7,"underfilled":0}
+[bench 01:48:58] {"selectivity":"50%","k":50,"mode":"strict_order","recall":0.937,"p50":18.9,"p95":28.4,"underfilled":0}
+[bench 01:48:58] {"selectivity":"50%","k":50,"mode":"relaxed_order","recall":0.937,"p50":18.9,"p95":28,"underfilled":0}

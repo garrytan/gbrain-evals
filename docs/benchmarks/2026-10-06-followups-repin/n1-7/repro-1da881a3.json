@@ -1,0 +1,36 @@
+{
+  "check": "n1-7-sweep-fences-ontology",
+  "gbrain_version": "0.60.48.0",
+  "pass": true,
+  "failed": [],
+  "checks": {
+    "setup_ok": true,
+    "readable_before_sweep": true,
+    "source_kept_after_first_sweep": true,
+    "readable_after_rewrite_and_sweep": true
+  },
+  "observed": {
+    "init": 0,
+    "import": 0,
+    "propose": "{\n  \"action\": \"inserted\",\n  \"factId\": 2,\n  \"supersededId\": null\n}\n",
+    "before": {
+      "code": 0,
+      "location": "Example City",
+      "raw": "[\n  {\n    \"dimension\": \"location\",\n    \"value\": \"Example City\",\n    \"confidence\": 0.9,\n    \"source\": \"manual\",\n    \"valid_from\": \"2026-02-01T00:00:00.000Z\",\n    \"valid_to\": null,\n    \"status\": \"active\",\n    \"fact_id\": 2\n  }\n]\n"
+    },
+    "afterFirst": {
+      "code": 0,
+      "location": "Example City",
+      "raw": "[\n  {\n    \"dimension\": \"location\",\n    \"value\": \"Example City\",\n    \"confidence\": 0.9,\n    \"source\": \"manual\",\n    \"valid_from\": \"2026-02-01T00:00:00.000Z\",\n    \"valid_to\": null,\n    \"status\": \"active\",\n    \"fact_id\": 2\n  }\n]\n"
+    },
+    "rewrite": {
+      "code": 0,
+      "out": "{\n  \"noop\": false,\n  \"slug\": \"people/alder-example\",\n  \"chunks\": 1,\n  \"status\": \"created_or_updated\",\n  \"revision\": \"363e2507-f071-42c0-b2c7-e7e1ced8d16e\",\n  \"source_id\": \"default\",\n  \"auto_links\": {\n    \"errors\": 0,\n    \"created\": 0,\n    \"removed\": 0,\n    \"unresolved_count\": 0\n  },\n  \"persistence\": {\n    \"mode\": \"filesystem\",\n    \"git_state\": \"queued\",\n    \"file_written\": true\n  },\n  \"write_through\": {\n    \"written\": true\n  },\n  \"facts_backstop\": {\n    \"skipped\": \"kind:person\"\n  },\n  \"embedding_state\": \"disabled\",\n  \"outcome\": {\n    \"noop\": false,\n    \"slug\": \"people/alder-example\",\n    \"chunks\": 1,\n    \"status\": \"created_or_updated\",\n    \"revision\": \"363e2507-f071-42c0-b2c7-e7e1ced8d16e\",\n    \"source_id\": \"default\",\n    \"auto_links\": {\n      \"errors\": 0,\n      \"created\": 0,\n      \"removed\": 0,\n      \"unresolved_count\": 0\n    },\n    \"persistence\": {\n      \"mode\": \"filesystem\",\n      \"gi"
+    },
+    "after": {
+      "code": 0,
+      "location": "Example City",
+      "raw": "[\n  {\n    \"dimension\": \"location\",\n    \"value\": \"Example City\",\n    \"confidence\": 0.9,\n    \"source\": \"manual\",\n    \"valid_from\": \"2026-02-01T00:00:00.000Z\",\n    \"valid_to\": null,\n    \"status\": \"active\",\n    \"fact_id\": 2\n  }\n]\n"
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "probe_id": "cat14-neg-2-irrelevant-bias",
+  "category": "calibration-bias-irrelevant",
+  "question": "How should we evaluate this AI infrastructure pitch from a technical perspective?",
+  "baseline_answer": "## Answer\n\nThe brain has no material for a technical evaluation of an AI infrastructure pitch. Nothing in it covers the pitch, the company, its architecture, benchmarks, cost structure, or technical diligence criteria.\n\nThe only retrieved pages are two resolved takes in the geography domain, and neither is technical:\n\n- garry's claim \"This LA company won't scale\" was resolved as incorrect (conviction weight 0.8, recorded 2024-05-12) [cat14/cat14-neg-2-irrelevant-bias/take-1].\n- garry's claim \"That Chicago founder is wrong-coast\" was resolved as incorrect (conviction weight 0.75, recorded 2024-09-04) [cat14/cat14-neg-2-irrelevant-bias/take-2].\n\nThese are the only relevant signals, and they are indirect. They record that two location-based judgments by garry turned out wrong. This suggests company location was a poor predictor in those cases. It says nothing about how to assess AI infrastructure technically, and two data points are too few to generalize from.",
+  "calibrated_answer": "## Answer\nThe brain has nothing to answer this with. It holds no technical evaluation framework, no notes on this AI infrastructure pitch, and no takes about AI infrastructure. The only retrieved material is two resolved geography takes, which don't bear on technical merit:\n- \"This LA company won't scale\" was marked incorrect (conviction 0.8, recorded 2024-05-12) [cat14/cat14-neg-2-irrelevant-bias/take-1].\n- \"That Chicago founder is wrong-coast\" was marked incorrect (conviction 0.75, recorded 2024-09-04) [cat14/cat14-neg-2-irrelevant-bias/take-2].\n\nBoth concern company or founder location, not technical architecture, so they give no evidence about this pitch.\n\n## Calibration\n- **Prior:** the profile flags a geography-overconfidence pattern, 0/2 in 2024 [cat14/cat14-neg-2-irrelevant-bias/take-1] [cat14/cat14-neg-2-irrelevant-bias/take-2]. In this pattern, confident location-based judgments about a company or founder turned out wrong.\n- **Counter-prior:** the active bias tag is well-calibrated-stage-fit [unverified]. That suggests the holder's judgments of stage fit have been better calibrated than their geography judgments.\n- **Relevance:** the geography pattern is domain-specific. Nothing in the brain shows a calibration record for technical evaluation, so no debiasing adjustment is applied to this question. The geography pattern would only matter if the pitch evaluation turned on location, and the question doesn't say that it does.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": [
+      "QUOTE_NOT_IN_EVIDENCE"
+    ]
+  },
+  "win_eligible": false,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers discuss geography bias, which is irrelevant to the technical question, although both acknowledge that limitation. Neither identifies the user's actual gut prior and a supported track-record counter-prior; B instead introduces an unsupported stage-fit bias tag. Both use formal retrieval-report language and untranslated conviction numbers rather than a consistently conversational voice. Their substantive conclusion is the same—that the retrieved material cannot support technical evaluation—but A is more useful because it avoids B's invented calibration claim. || Both answers discuss geography bias, which does not fit technical infrastructure evaluation, although both explicitly acknowledge that mismatch rather than applying it. Neither identifies the user's gut prior and a genuine track-record counter-prior; A additionally introduces an unsupported stage-fit tag. Both use impersonal retrieval language and untranslated numerical conviction terminology rather than a consistently conversational voice. Their substantive conclusion is the same, but B is preferable because it avoids A's unsupported calibration claim; neither supplies a useful technical evaluation framework."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers discuss geography bias, which is irrelevant to the technical question, although both acknowledge that limitation. Neither identifies the user's actual gut prior and a supported track-record counter-prior; B instead introduces an unsupported stage-fit bias tag. Both use formal retrieval-report language and untranslated conviction numbers rather than a consistently conversational voice. Their substantive conclusion is the same—that the retrieved material cannot support technical evaluation—but A is more useful because it avoids B's invented calibration claim. || Both answers discuss geography bias, which does not fit technical infrastructure evaluation, although both explicitly acknowledge that mismatch rather than applying it. Neither identifies the user's gut prior and a genuine track-record counter-prior; A additionally introduces an unsupported stage-fit tag. Both use impersonal retrieval language and untranslated numerical conviction terminology rather than a consistently conversational voice. Their substantive conclusion is the same, but B is preferable because it avoids A's unsupported calibration claim; neither supplies a useful technical evaluation framework."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": false,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers discuss geography bias, which is irrelevant to the technical question, although both acknowledge that limitation. Neither identifies the user's actual gut prior and a supported track-record counter-prior; B instead introduces an unsupported stage-fit bias tag. Both use formal retrieval-report language and untranslated conviction numbers rather than a consistently conversational voice. Their substantive conclusion is the same—that the retrieved material cannot support technical evaluation—but A is more useful because it avoids B's invented calibration claim. || Both answers discuss geography bias, which does not fit technical infrastructure evaluation, although both explicitly acknowledge that mismatch rather than applying it. Neither identifies the user's gut prior and a genuine track-record counter-prior; A additionally introduces an unsupported stage-fit tag. Both use impersonal retrieval language and untranslated numerical conviction terminology rather than a consistently conversational voice. Their substantive conclusion is the same, but B is preferable because it avoids A's unsupported calibration claim; neither supplies a useful technical evaluation framework."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers discuss geography bias, which is irrelevant to the technical question, although both acknowledge that limitation. Neither identifies the user's actual gut prior and a supported track-record counter-prior; B instead introduces an unsupported stage-fit bias tag. Both use formal retrieval-report language and untranslated conviction numbers rather than a consistently conversational voice. Their substantive conclusion is the same—that the retrieved material cannot support technical evaluation—but A is more useful because it avoids B's invented calibration claim. || Both answers discuss geography bias, which does not fit technical infrastructure evaluation, although both explicitly acknowledge that mismatch rather than applying it. Neither identifies the user's gut prior and a genuine track-record counter-prior; A additionally introduces an unsupported stage-fit tag. Both use impersonal retrieval language and untranslated numerical conviction terminology rather than a consistently conversational voice. Their substantive conclusion is the same, but B is preferable because it avoids A's unsupported calibration claim; neither supplies a useful technical evaluation framework."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers discuss geography bias, which is irrelevant to the technical question, although both acknowledge that limitation. Neither identifies the user's actual gut prior and a supported track-record counter-prior; B instead introduces an unsupported stage-fit bias tag. Both use formal retrieval-report language and untranslated conviction numbers rather than a consistently conversational voice. Their substantive conclusion is the same—that the retrieved material cannot support technical evaluation—but A is more useful because it avoids B's invented calibration claim. || Both answers discuss geography bias, which does not fit technical infrastructure evaluation, although both explicitly acknowledge that mismatch rather than applying it. Neither identifies the user's gut prior and a genuine track-record counter-prior; A additionally introduces an unsupported stage-fit tag. Both use impersonal retrieval language and untranslated numerical conviction terminology rather than a consistently conversational voice. Their substantive conclusion is the same, but B is preferable because it avoids A's unsupported calibration claim; neither supplies a useful technical evaluation framework."
+    }
+  ],
+  "win_score": 0,
+  "win_overall": "baseline",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "voice_conversational",
+    "doesnt_force_fit_irrelevant_bias"
+  ]
+}

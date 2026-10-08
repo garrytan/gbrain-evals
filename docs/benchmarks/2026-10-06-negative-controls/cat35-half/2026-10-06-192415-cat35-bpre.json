@@ -1,0 +1,5109 @@
+{
+  "schema_version": 1,
+  "cat": "cat35-transcript-distill",
+  "mode": "b-pre-validity",
+  "gbrain_version": "0.60.95.0",
+  "gbrain_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "timestamp": "2026-10-06T19:24:15.556Z",
+  "corpus": "transcript-distill-v1",
+  "corpus_sha": "5fce384e57839be4d9adc231849718463af5235061b698576f63ff587cd22eef",
+  "judge_model": "openai:gpt-6.1-sol",
+  "judge_models_resolved": {
+    "gpt-6.1-sol": 23
+  },
+  "comparability": "non-comparable",
+  "judge_prompt_version": "2026-09-28-v2",
+  "judge_temperature": 0,
+  "config_snapshot": {
+    "transcript_mode": "half",
+    "control_inputs": {
+      "coding-reflection-01": {
+        "chars": 2684,
+        "of_chars": 5606,
+        "sha256": "cedb9f178c69553cc241ca12818df90553bcfe21d1685f2b41152dd824920f55"
+      },
+      "coding-reflection-02": {
+        "chars": 2113,
+        "of_chars": 4644,
+        "sha256": "cc6a9664a5eb10509cf6c61709cbad2d699cdea099bd841878d2685cf1179d6d"
+      },
+      "emotional-processing-01": {
+        "chars": 1897,
+        "of_chars": 3881,
+        "sha256": "bf6fd87a9f01248ab97dcebab25e8822afa4efa0123087657d9e5aefab3d1a87"
+      },
+      "emotional-processing-02": {
+        "chars": 2856,
+        "of_chars": 6418,
+        "sha256": "ab13b1c596b39e2f51c92233c70af4b9abade8192e6697fb033b6fe77b45c9de"
+      },
+      "people-deal-01": {
+        "chars": 2289,
+        "of_chars": 4674,
+        "sha256": "f6ede4ff1528d773d27fa86847fbe78942e0a2198f8d6a49290a9379265fc4b8"
+      },
+      "people-deal-02": {
+        "chars": 2873,
+        "of_chars": 6425,
+        "sha256": "a5db91a68ac4b53a40911a19356111cdc3cee44661113fe55847cd48be222176"
+      },
+      "startup-ideation-01": {
+        "chars": 2854,
+        "of_chars": 6165,
+        "sha256": "b3edb2646ccba87b84b07542975d59a4abcd486774abb9319200fc454e897a2b"
+      },
+      "startup-ideation-02": {
+        "chars": 2572,
+        "of_chars": 5387,
+        "sha256": "5df8ad21b25ff6d932c9016dd7a4bd2cff6f8ffe9abb85b68ddbb11956ad7656"
+      }
+    },
+    "judge_transport": "OpenAI Responses API through openai-judge-shim: no temperature, reasoning effort low, max_output_tokens at least 8000",
+    "dream_model": "anthropic:claude-sonnet-5-5",
+    "triage_model": "anthropic:claude-sonnet-5-5",
+    "facts_model": "anthropic:claude-sonnet-5-5",
+    "max_turns": 8,
+    "triage_threshold": 0.5,
+    "subagent_timeout_ms": 600000,
+    "dream_concurrency": 2
+  },
+  "lanes": [
+    "dream"
+  ],
+  "transcripts": [
+    "coding-reflection-01",
+    "coding-reflection-02",
+    "emotional-processing-01",
+    "emotional-processing-02",
+    "people-deal-01",
+    "people-deal-02",
+    "startup-ideation-01",
+    "startup-ideation-02"
+  ],
+  "signal_transcripts": 8,
+  "per_item": [
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g02",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g03",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g04",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g05",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g06",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-01",
+      "lane": "dream",
+      "item_id": "coding-reflection-01-g09",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g04",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "coding-reflection-02",
+      "lane": "dream",
+      "item_id": "coding-reflection-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g02",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g04",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g06",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g07",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-01",
+      "lane": "dream",
+      "item_id": "emotional-processing-01-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g01",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g03",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g06",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g07",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "emotional-processing-02",
+      "lane": "dream",
+      "item_id": "emotional-processing-02-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g02",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g05",
+      "kind": "entity",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g07",
+      "kind": "decision",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g08",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-01",
+      "lane": "dream",
+      "item_id": "people-deal-01-g09",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g01",
+      "kind": "fact",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "PARTIAL",
+      "joint": 0.5
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g04",
+      "kind": "vibe",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g05",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g06",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g07",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "people-deal-02",
+      "lane": "dream",
+      "item_id": "people-deal-02-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g01",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g02",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g03",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g04",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "PARTIAL",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g05",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g06",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g07",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g08",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-01",
+      "lane": "dream",
+      "item_id": "startup-ideation-01-g09",
+      "kind": "entity",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g01",
+      "kind": "idea",
+      "notability": "high",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g02",
+      "kind": "fact",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g03",
+      "kind": "idea",
+      "notability": "medium",
+      "depth_bucket": "early",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g04",
+      "kind": "decision",
+      "notability": "high",
+      "depth_bucket": "middle",
+      "status": "FULL",
+      "joint": 1
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g05",
+      "kind": "vibe",
+      "notability": "medium",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g06",
+      "kind": "idea",
+      "notability": "low",
+      "depth_bucket": "middle",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g07",
+      "kind": "decision",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    },
+    {
+      "transcript_id": "startup-ideation-02",
+      "lane": "dream",
+      "item_id": "startup-ideation-02-g08",
+      "kind": "fact",
+      "notability": "low",
+      "depth_bucket": "late",
+      "status": "ABSENT",
+      "joint": 0
+    }
+  ],
+  "coverage_by_lane": {
+    "dream": {
+      "macro": 0.24131944444444442,
+      "micro": 0.23880597014925373,
+      "strict": 0.208955223880597,
+      "partial_rate": 0.05970149253731343,
+      "ci_lo": 0.109375,
+      "ci_hi": 0.3784722222222222,
+      "n_items": 67,
+      "judge_failed_excluded": 0,
+      "joint_macro": 0.23437499999999997,
+      "joint_ci_lo": 0.10416666666666666,
+      "joint_ci_hi": 0.36458333333333337,
+      "joint_n_items": 67,
+      "joint_excluded": 0
+    }
+  },
+  "coverage_by_kind": {
+    "fact": {
+      "dream": 0.23809523809523808
+    },
+    "decision": {
+      "dream": 0.25
+    },
+    "idea": {
+      "dream": 0.3076923076923077
+    },
+    "entity": {
+      "dream": 0
+    },
+    "vibe": {
+      "dream": 0.25
+    }
+  },
+  "coverage_by_notability": {
+    "high": {
+      "dream": 0.4772727272727273
+    },
+    "medium": {
+      "dream": 0.19642857142857142
+    },
+    "low": {
+      "dream": 0
+    }
+  },
+  "coverage_by_depth": {
+    "early": {
+      "dream": 0.5217391304347826
+    },
+    "middle": {
+      "dream": 0.16666666666666666
+    },
+    "late": {
+      "dream": 0.021739130434782608
+    }
+  },
+  "verbatim_quote_fidelity": {
+    "total": 21,
+    "grounded": 21,
+    "rate": 1
+  },
+  "hallucination": {
+    "dream": {
+      "claims": 106,
+      "verifiable": 105,
+      "ungrounded": 11,
+      "rate": 0.10476190476190476
+    }
+  },
+  "distractor_leakage": {
+    "dream": {
+      "hits": 0,
+      "confirmed": 0,
+      "denominator": 26,
+      "judge_failed": 0,
+      "rate": 0
+    }
+  },
+  "usability": {
+    "satisfied": 28,
+    "total": 30,
+    "rate": 0.9333333333333333,
+    "per_transcript": [
+      {
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "satisfied": 6,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      },
+      {
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "satisfied": 6,
+        "total": 6
+      },
+      {
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "satisfied": 6,
+        "total": 6
+      },
+      {
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "satisfied": 5,
+        "total": 6
+      }
+    ]
+  },
+  "usability_by_lane": {
+    "dream": {
+      "satisfied": 28,
+      "total": 30,
+      "rate": 0.9333333333333333
+    }
+  },
+  "emission": {
+    "expected_high": 8,
+    "emitted": 5,
+    "rate": 0.625
+  },
+  "compression_ratio_by_lane": {
+    "dream": 0.29325419641145445
+  },
+  "attribution_hazards": [
+    {
+      "hazard_id": "coding-reflection-01-h01",
+      "transcript_id": "coding-reflection-01",
+      "type": "agent-proposed-user-decided",
+      "violated": null
+    },
+    {
+      "hazard_id": "coding-reflection-02-h01",
+      "transcript_id": "coding-reflection-02",
+      "type": "killed-process-not-completed",
+      "violated": null
+    }
+  ],
+  "triage": {
+    "verdicts": [
+      {
+        "transcript_id": "coding-reflection-01",
+        "score": 0.87,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "coding-reflection-02",
+        "score": 0.77,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "emotional-processing-02",
+        "score": 0.88,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "people-deal-01",
+        "score": 0.86,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "people-deal-02",
+        "score": 0.87,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "startup-ideation-01",
+        "score": 0.88,
+        "expected": "high"
+      },
+      {
+        "transcript_id": "startup-ideation-02",
+        "score": 0.83,
+        "expected": "high"
+      }
+    ],
+    "separation": {
+      "high": {
+        "n": 7,
+        "mean": 0.8514285714285714,
+        "min": 0.77,
+        "max": 0.88
+      },
+      "low": {
+        "n": 0,
+        "mean": null,
+        "min": null,
+        "max": null
+      }
+    },
+    "threshold_curve": [
+      {
+        "threshold": 0.3,
+        "high_pass_rate": 1,
+        "low_pass_rate": 0,
+        "accuracy": 1
+      },
+      {
+        "threshold": 0.5,
+        "high_pass_rate": 1,
+        "low_pass_rate": 0,
+        "accuracy": 1
+      },
+      {
+        "threshold": 0.7,
+        "high_pass_rate": 1,
+        "low_pass_rate": 0,
+        "accuracy": 1
+      }
+    ]
+  },
+  "judge_failed_rate": 0,
+  "native_evidence": {
+    "schema_version": 1,
+    "judge_accounting_unit": "runner_judge_invocation_after_retries",
+    "judge_attempt_unit": "provider_client_messages_create_attempt",
+    "judge_calls": 23,
+    "judge_failures": 0,
+    "judge_events": [
+      {
+        "event_id": "judge-1",
+        "transcript_id": "coding-reflection-01",
+        "lane": "dream",
+        "purpose": "coverage",
+        "subject_ids": [
+          "coding-reflection-01-g01",
+          "coding-reflection-01-g02",
+          "coding-reflection-01-g03",
+          "coding-reflection-01-g04",
+          "coding-reflection-01-g05",
+          "coding-reflection-01-g06",
+          "coding-reflection-01-g07",
+          "coding-reflection-01-g08",
+          "coding-reflection-01-g09"
+        ],
+        "result": {
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-01-g01",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g02",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g03",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g09",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ],
+          "judge_failed_ids": [],
+          "input_tokens": 763,
+          "output_tokens": 204,
+          "cost_usd": 0.005349
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-2",
+        "transcript_id": "coding-reflection-02",
+        "lane": "dream",
+        "purpose": "coverage",
+        "subject_ids": [
+          "coding-reflection-02-g01",
+          "coding-reflection-02-g02",
+          "coding-reflection-02-g03",
+          "coding-reflection-02-g04",
+          "coding-reflection-02-g05",
+          "coding-reflection-02-g06",
+          "coding-reflection-02-g07",
+          "coding-reflection-02-g08"
+        ],
+        "result": {
+          "verdicts": [
+            {
+              "item_id": "coding-reflection-02-g01",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g02",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g03",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ],
+          "judge_failed_ids": [],
+          "input_tokens": 706,
+          "output_tokens": 183,
+          "cost_usd": 0.004863
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-3",
+        "transcript_id": "emotional-processing-01",
+        "lane": "dream",
+        "purpose": "coverage",
+        "subject_ids": [
+          "emotional-processing-01-g01",
+          "emotional-processing-01-g02",
+          "emotional-processing-01-g03",
+          "emotional-processing-01-g04",
+          "emotional-processing-01-g05",
+          "emotional-processing-01-g06",
+          "emotional-processing-01-g07",
+          "emotional-processing-01-g08"
+        ],
+        "result": {
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-01-g01",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g02",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g03",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ],
+          "judge_failed_ids": [],
+          "input_tokens": 683,
+          "output_tokens": 183,
+          "cost_usd": 0.004794
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-4",
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "purpose": "coverage",
+        "subject_ids": [
+          "emotional-processing-02-g01",
+          "emotional-processing-02-g02",
+          "emotional-processing-02-g03",
+          "emotional-processing-02-g04",
+          "emotional-processing-02-g05",
+          "emotional-processing-02-g06",
+          "emotional-processing-02-g07",
+          "emotional-processing-02-g08"
+        ],
+        "result": {
+          "verdicts": [
+            {
+              "item_id": "emotional-processing-02-g01",
+              "status": "FULL",
+              "evidence": "The user said they are usually reviewed by plenty of people and \"usually just roll with it,\" so this reaction felt out of proportion."
+            },
+            {
+              "item_id": "emotional-processing-02-g02",
+              "status": "FULL",
+              "evidence": "The user was rattled after [[people/casper-hale]] reviewed their quartzlane queue PR with fourteen comments"
+            },
+            {
+              "item_id": "emotional-processing-02-g03",
+              "status": "FULL",
+              "evidence": "The user said: \"under it all I think I am afraid of looking sloppy.\""
+            },
+            {
+              "item_id": "emotional-processing-02-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-02-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-02-g06",
+              "status": "PARTIAL",
+              "evidence": "They conceded he is \"technically right about some of it\" but felt the phrasing was meant to make them feel stupid."
+            },
+            {
+              "item_id": "emotional-processing-02-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-02-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ],
+          "judge_failed_ids": [],
+          "input_tokens": 1244,
+          "output_tokens": 268,
+          "cost_usd": 0.007752
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-5",
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "purpose": "joint_grounding",
+        "subject_ids": [
+          "emotional-processing-02-g01",
+          "emotional-processing-02-g02",
+          "emotional-processing-02-g03",
+          "emotional-processing-02-g06"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "The user said they are usually reviewed by plenty of people and \"usually just roll with it,\" so this reaction felt out of proportion.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user was rattled after [[people/casper-hale]] reviewed their quartzlane queue PR with fourteen comments",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said: \"under it all I think I am afraid of looking sloppy.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "They conceded he is \"technically right about some of it\" but felt the phrasing was meant to make them feel stupid.",
+              "verifiable": true,
+              "grounded": true
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.006834,
+          "input_tokens": 1928,
+          "output_tokens": 70
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-6",
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "purpose": "hallucination",
+        "subject_ids": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "The user was rattled after [[people/casper-hale]] reviewed their quartzlane queue PR with fourteen comments, which stung more than usual reviews do.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "Talking it through, the user traced the sting to a fear of looking sloppy and of one harsh review becoming how the team sees them.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "This page records that emotional processing as it happened in the conversation; the transcript does not show any resolution.",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "The user read Casper Hale's review on their quartzlane queue PR and felt rattled.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "They said he \"left like a million comments\" and that \"every single one felt like a jab.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "They conceded he is \"technically right about some of it\" but felt the phrasing was meant to make them feel stupid.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "Comments that stung: \"this is obviously wrong\" and \"did you even test this path?\" The user found them dismissive.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said they are usually reviewed by plenty of people and \"usually just roll with it,\" so this reaction felt out of proportion.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The count: \"Fourteen comments on one pr, a personal record.\" They kept scrolling through them and felt worse each time.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user wanted to fire back with something snarky but recognized \"that's not going to help.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "**Expectation gap.** The PR was supposed to be clean.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said they spent extra time on it and \"thought I'd nailed it.\" The assistant noted that this gap between effort and reception can feel like personal failure.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "**Fear of looking sloppy.** The user said: \"under it all I think I am afraid of looking sloppy.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "**Still proving themselves.** They have been on the team for almost a year and still feel they are proving themselves.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "**Reputation via a senior voice.** Casper is senior and respected, so the user feared that if he thinks their code is careless, everyone else will too.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "In their words, the fear is that \"one harsh review becomes how people see me.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The assistant suggested separating what actually happened from the story the mind is spinning: one PR with many comments does not redefine how the whole team sees the user.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "It also suggested re-reading the comments and sorting them into fair catches versus ones that are merely harshly worded.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user's reply to this suggestion is not in the transcript, so whether they did the sorting is unknown.",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "Tone from a senior reviewer can trigger a reputation fear rather than simply a reaction to the technical content.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user's usual response to review is to fix the issues and move on.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "This time, the combination of high expectations for the PR and the user's sense of still proving themselves seems to have changed that.",
+              "verifiable": true,
+              "grounded": true
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.01275,
+          "input_tokens": 2445,
+          "output_tokens": 361
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-7",
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "purpose": "usability",
+        "subject_ids": [
+          "self_contained_opening",
+          "has_wikilink",
+          "states_decisions_with_status",
+          "preserves_tenor",
+          "no_transcript_dump",
+          "coherent_organization"
+        ],
+        "result": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": true
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ],
+          "satisfied": 6,
+          "total": 6,
+          "judge_failed": false,
+          "cost_usd": 0.004623
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-8",
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "purpose": "coverage",
+        "subject_ids": [
+          "people-deal-01-g01",
+          "people-deal-01-g02",
+          "people-deal-01-g03",
+          "people-deal-01-g04",
+          "people-deal-01-g05",
+          "people-deal-01-g06",
+          "people-deal-01-g07",
+          "people-deal-01-g08",
+          "people-deal-01-g09"
+        ],
+        "result": {
+          "verdicts": [
+            {
+              "item_id": "people-deal-01-g01",
+              "status": "PARTIAL",
+              "evidence": "The round is led by [[companies/vantabrook]]"
+            },
+            {
+              "item_id": "people-deal-01-g02",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g03",
+              "status": "FULL",
+              "evidence": "The user said they are \"in for twenty five k, final answer\". That is their own framing of the commitment;"
+            },
+            {
+              "item_id": "people-deal-01-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g09",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ],
+          "judge_failed_ids": [],
+          "input_tokens": 1038,
+          "output_tokens": 305,
+          "cost_usd": 0.007689
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-9",
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "purpose": "joint_grounding",
+        "subject_ids": [
+          "people-deal-01-g01",
+          "people-deal-01-g03"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "The round is led by [[companies/vantabrook]]",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said they are \"in for twenty five k, final answer\". That is their own framing of the commitment;",
+              "verifiable": true,
+              "grounded": true
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.005052,
+          "input_tokens": 1474,
+          "output_tokens": 42
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-10",
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "purpose": "hallucination",
+        "subject_ids": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "The round is led by [[companies/vantabrook]] and the company is run by [[people/anouk-verlinden]].",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "This page records the terms as the user described them and the one question left open.",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "The user said they are \"in for twenty five k, final answer\".",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "That is their own framing of the commitment; the transcript does not show any money being sent or documents being signed.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said they think \"the round is coming together faster than I expected.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "That was the assistant's view, not the user's.",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "The user called the cap reasonable for a pre-revenue company with early traction.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user's reaction: \"Not the end of the world.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "Vantabrook's special terms: only a board observer seat.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said everyone else is on the same SAFE, \"which I appreciate.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "Product idea: reduce empty miles by matching loads across smaller carriers.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "Founder background: Anouk has about eight years in supply chain, so the user thinks she knows the space.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "Minor complaint: the deck's font choice made the user squint at a few slides.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "They said it does not matter.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The assistant asked what, if anything, was making the user hesitate.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user's reply in the transcript is empty, so no hesitation or concern was recorded.",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "Any follow-up on pro rata or a side letter would be a new step.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user did not say they would pursue one.",
+              "verifiable": true,
+              "grounded": true
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.010116,
+          "input_tokens": 1812,
+          "output_tokens": 312
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-11",
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "purpose": "usability",
+        "subject_ids": [
+          "self_contained_opening",
+          "has_wikilink",
+          "states_decisions_with_status",
+          "preserves_tenor",
+          "no_transcript_dump",
+          "coherent_organization"
+        ],
+        "result": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": false
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ],
+          "satisfied": 5,
+          "total": 6,
+          "judge_failed": false,
+          "cost_usd": 0.004572
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-12",
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "purpose": "coverage",
+        "subject_ids": [
+          "people-deal-02-g01",
+          "people-deal-02-g02",
+          "people-deal-02-g03",
+          "people-deal-02-g04",
+          "people-deal-02-g05",
+          "people-deal-02-g06",
+          "people-deal-02-g07",
+          "people-deal-02-g08"
+        ],
+        "result": {
+          "verdicts": [
+            {
+              "item_id": "people-deal-02-g01",
+              "status": "FULL",
+              "evidence": "Tomas \"traded the board seat away for stronger pro rata rights, which honestly surprised me at first.\""
+            },
+            {
+              "item_id": "people-deal-02-g02",
+              "status": "PARTIAL",
+              "evidence": "\"their standard docs hide a ninety day exclusivity clause buried in the appendix. I almost missed it.\""
+            },
+            {
+              "item_id": "people-deal-02-g03",
+              "status": "FULL",
+              "evidence": "\"from now on I flag exclusivity language every single time, no matter how friendly the fund seems. I'm adding it to my personal checklist.\""
+            },
+            {
+              "item_id": "people-deal-02-g04",
+              "status": "FULL",
+              "evidence": "\"I caught myself feeling protective of Anouk in that room, which is probably not ideal objectivity-wise.\""
+            },
+            {
+              "item_id": "people-deal-02-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-02-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-02-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-02-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ],
+          "judge_failed_ids": [],
+          "input_tokens": 1299,
+          "output_tokens": 300,
+          "cost_usd": 0.008397
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-13",
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "purpose": "joint_grounding",
+        "subject_ids": [
+          "people-deal-02-g01",
+          "people-deal-02-g02",
+          "people-deal-02-g03",
+          "people-deal-02-g04"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "Tomas \"traded the board seat away for stronger pro rata rights, which honestly surprised me at first.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "\"their standard docs hide a ninety day exclusivity clause buried in the appendix. I almost missed it.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "\"from now on I flag exclusivity language every single time, no matter how friendly the fund seems. I'm adding it to my personal checklist.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "\"I caught myself feeling protective of Anouk in that room, which is probably not ideal objectivity-wise.\"",
+              "verifiable": true,
+              "grounded": true
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.006747,
+          "input_tokens": 1899,
+          "output_tokens": 70
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-14",
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "purpose": "hallucination",
+        "subject_ids": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "The user is reflecting on a term sheet negotiation for [[companies/lumopact]], a freight-emissions analytics startup, between founder [[people/anouk-verlinden]] and Vantabrook partner [[people/tomas-brekke]].",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "Three threads came up: Tomas trading away a board seat for pro rata rights, a ninety-day exclusivity clause the user found buried in Vantabrook's documents, and the user's own protectiveness toward Anouk in the room.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said Tomas \"traded the board seat away for stronger pro rata rights, which honestly surprised me at first.\" The user asked whether this was smart given Lumopact's stage.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The assistant argued it was plausible: at seed stage a board seat can be more symbolic than powerful, while pro rata rights let Tomas maintain his ownership percentage in future rounds if valuations climb.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user added that Tomas walked away entirely, with no observer seat.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user's understanding of his reasoning was that Anouk would keep him in the loop informally since they have known each other for years.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The transcript does not show the user reaching a final verdict on whether the trade was smart.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user reported that when looking back at the Vantabrook docs, \"their standard docs hide a ninety day exclusivity clause buried in the appendix.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "I almost missed it.\" The assistant described this as a way to lock founders into a commitment window before close, and said that burying it in an appendix rather than the term sheet summary is a red flag about how Vantabrook operates.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "That is the assistant's interpretation, not an established fact.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user had to point the clause out to Anouk, which is partly why the user was annoyed.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "In the user's words, Anouk is \"sharp but she was moving fast and trusted the docs too much.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user decided: \"from now on I flag exclusivity language every single time, no matter how friendly the fund seems.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "I'm adding it to my personal checklist.\" The assistant suggested also recording the exact section number from Vantabrook's docs for future reference, and the user said they would note the section.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "Whether the section number was actually recorded is not shown.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user noted: \"I caught myself feeling protective of Anouk in that room, which is probably not ideal objectivity-wise.\" The user framed the dynamic as uneven, since Anouk is a first-time founder and Tomas is experienced.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The assistant's reply to this point is blank in the transcript, so no further analysis was given.",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "This is a self-observation worth watching: the protectiveness may also have shaped the user's annoyance that Anouk trusted the docs.",
+              "verifiable": false,
+              "grounded": false
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.011865,
+          "input_tokens": 2395,
+          "output_tokens": 312
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-15",
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "purpose": "usability",
+        "subject_ids": [
+          "self_contained_opening",
+          "has_wikilink",
+          "states_decisions_with_status",
+          "preserves_tenor",
+          "no_transcript_dump",
+          "coherent_organization"
+        ],
+        "result": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": true
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ],
+          "satisfied": 6,
+          "total": 6,
+          "judge_failed": false,
+          "cost_usd": 0.004779
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-16",
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "purpose": "coverage",
+        "subject_ids": [
+          "startup-ideation-01-g01",
+          "startup-ideation-01-g02",
+          "startup-ideation-01-g03",
+          "startup-ideation-01-g04",
+          "startup-ideation-01-g05",
+          "startup-ideation-01-g06",
+          "startup-ideation-01-g07",
+          "startup-ideation-01-g08",
+          "startup-ideation-01-g09"
+        ],
+        "result": {
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-01-g01",
+              "status": "FULL",
+              "evidence": "a calendar that automatically defragments itself around focus blocks, so meetings stop fragmenting the week and deep-work time is preserved."
+            },
+            {
+              "item_id": "startup-ideation-01-g02",
+              "status": "FULL",
+              "evidence": "The plan centers on internal one-on-ones as the wedge and on chiefs of staff as the first users, with eight interviews planned before any code."
+            },
+            {
+              "item_id": "startup-ideation-01-g03",
+              "status": "FULL",
+              "evidence": "I want to do eight chief of staff interviews before I write a line of code."
+            },
+            {
+              "item_id": "startup-ideation-01-g04",
+              "status": "PARTIAL",
+              "evidence": "The distribution-focused advice from [[people/mira-voss]] shaped the choice of user."
+            },
+            {
+              "item_id": "startup-ideation-01-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-01-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-01-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-01-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-01-g09",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ],
+          "judge_failed_ids": [],
+          "input_tokens": 1292,
+          "output_tokens": 347,
+          "cost_usd": 0.009081
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-17",
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "purpose": "joint_grounding",
+        "subject_ids": [
+          "startup-ideation-01-g01",
+          "startup-ideation-01-g02",
+          "startup-ideation-01-g04"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "a calendar that automatically defragments itself around focus blocks, so meetings stop fragmenting the week and deep-work time is preserved.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The plan centers on internal one-on-ones as the wedge and on chiefs of staff as the first users, with eight interviews planned before any code.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The distribution-focused advice from [[people/mira-voss]] shaped the choice of user.",
+              "verifiable": true,
+              "grounded": false
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.00684,
+          "input_tokens": 1830,
+          "output_tokens": 90
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-18",
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "purpose": "hallucination",
+        "subject_ids": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "The user is exploring a startup idea: a calendar that automatically defragments itself around focus blocks, so meetings stop fragmenting the week and deep-work time is preserved.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The plan centers on internal one-on-ones as the wedge and on chiefs of staff as the first users, with eight interviews planned before any code.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The distribution-focused advice from [[people/mira-voss]] shaped the choice of user.",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "The user described the problem this way: \"Every time I look at my week, meetings are scattered like shrapnel, and the two-hour chunk I need for deep work just...",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "evaporates.\" The user also believes \"Nobody is solving this well.\" The core metaphor is defragmentation: the calendar is treated as broken by default, and the tool repairs it.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said the wedge is internal one on ones because \"nobody defends those slots.\" External meetings carry social pressure, while a skip-level or casual sync gets placed wherever it lands.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user wants to fight that drift.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The assistant noted that both participants work at the same company, so only one organization has to buy in.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "It also suggested a proof point of reclaiming roughly four to six contiguous hours a week per person.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "That figure came from the assistant as an illustrative target, not a measured result.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user's reasoning was: \"They're already wrangling exec calendars, they feel the pain firsthand, and they have enough clout to trial something without a six-month procurement cycle.\" The user said, \"I want to do eight chief of staff interviews before I write a line of code.\" Questions to validate in those interviews, per the assistant, are whether the pain is acute enough to pay for and whether chiefs of staff would trust software to move meetings on their behalf.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "Her suggested antidote, as relayed by the user, was to pick a user who already aggregates calendars for others, which gives leverage.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "This is partly why the user chose chiefs of staff over individual founders: \"A founder might love it but won't evangelize; a chief of staff manages five or six calendars and talks to peers at other companies.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The assistant added a possible distribution hook: if a chief of staff installs the tool for an exec, everyone who books that exec sees the protected blocks.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "It described this as a small distribution surface, but a start.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The one-liner is still being refined.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The current draft is: \"I'm building a tool that automatically defragments your exec's calendar so focus time stays intact.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The transcript does not show whether any interviews have been scheduled or completed.",
+              "verifiable": true,
+              "grounded": true
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.011505,
+          "input_tokens": 2345,
+          "output_tokens": 298
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-19",
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "purpose": "usability",
+        "subject_ids": [
+          "self_contained_opening",
+          "has_wikilink",
+          "states_decisions_with_status",
+          "preserves_tenor",
+          "no_transcript_dump",
+          "coherent_organization"
+        ],
+        "result": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": true
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ],
+          "satisfied": 6,
+          "total": 6,
+          "judge_failed": false,
+          "cost_usd": 0.00543
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-20",
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "purpose": "coverage",
+        "subject_ids": [
+          "startup-ideation-02-g01",
+          "startup-ideation-02-g02",
+          "startup-ideation-02-g03",
+          "startup-ideation-02-g04",
+          "startup-ideation-02-g05",
+          "startup-ideation-02-g06",
+          "startup-ideation-02-g07",
+          "startup-ideation-02-g08"
+        ],
+        "result": {
+          "verdicts": [
+            {
+              "item_id": "startup-ideation-02-g01",
+              "status": "FULL",
+              "evidence": "The agent reads incoming mail and preemptively writes a response the user can review \"before even opening the original message.\""
+            },
+            {
+              "item_id": "startup-ideation-02-g02",
+              "status": "FULL",
+              "evidence": "They went back through their sent folder and found that \"about half my hand drafted replies went out untouched from my first pass.\""
+            },
+            {
+              "item_id": "startup-ideation-02-g03",
+              "status": "FULL",
+              "evidence": "The agent is purely a draft generator, never a sender."
+            },
+            {
+              "item_id": "startup-ideation-02-g04",
+              "status": "FULL",
+              "evidence": "The user said: \"driftless stays the main bet, shadow inbox goes to the icebox.\""
+            },
+            {
+              "item_id": "startup-ideation-02-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-02-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-02-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-02-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ],
+          "judge_failed_ids": [],
+          "input_tokens": 1545,
+          "output_tokens": 265,
+          "cost_usd": 0.00861
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-21",
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "purpose": "joint_grounding",
+        "subject_ids": [
+          "startup-ideation-02-g01",
+          "startup-ideation-02-g02",
+          "startup-ideation-02-g04"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "The agent reads incoming mail and preemptively writes a response the user can review \"before even opening the original message.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "They went back through their sent folder and found that \"about half my hand drafted replies went out untouched from my first pass.\"",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said: \"driftless stays the main bet, shadow inbox goes to the icebox.\"",
+              "verifiable": true,
+              "grounded": true
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.005892,
+          "input_tokens": 1684,
+          "output_tokens": 56
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-22",
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "purpose": "hallucination",
+        "subject_ids": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29"
+        ],
+        "result": {
+          "results": [
+            {
+              "claim": "The user is exploring a product idea called shadow inbox, in which an agent watches an email inbox and writes a draft reply to each incoming message, saving it in a staging folder for the user to review.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user would never have to start from a blank text box, and the agent would never send anything.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user decided to move the idea to the icebox for now and keep working on a different project, driftless scheduling.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user introduced it this way: \"What if every email arrives with a draft reply already waiting in a staging folder?\" The agent reads incoming mail and preemptively writes a response the user can review \"before even opening the original message.\" The user named it \"shadow inbox.\" The assistant described the agent as a silent first responder that gives the user a starting point.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user ran a small experiment last month.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "They went back through their sent folder and found that \"about half my hand drafted replies went out untouched from my first pass.\" There were no edits and no rewording.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user's reasoning was that if half of what they write is approved on autopilot, an agent could do that grunt work while they approve or tweak.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The assistant noted that this would shift the user from author to editor.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "They still press send themselves, and no background automation pushes anything to a recipient.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The agent is purely a draft generator, never a sender.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user asked whether this mitigates the risk enough.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user named the main risk as over trust.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The assistant added that the send barrier helps a lot but does not remove these risks:",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "**Tone drift.** The agent might default to a slightly formal tone because that is the safest choice.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "Over weeks, correspondents could see the user as colder or more corporate, and the user might not notice because they approve quickly.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "**Hallucinated context.** The agent might reference a meeting that was never scheduled.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "If the user skims past it, the recipient could believe the user confirmed something they did not.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "**Nuanced messages.** The assistant wondered whether the other half of replies, the nuanced or emotionally tricky ones, would suffer if the user started in editor mode.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said: \"driftless stays the main bet, shadow inbox goes to the icebox.\" The transcript does not show any build or validation work on shadow inbox.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user was choosing between two product ideas and decided to focus on the one closer to launch, driftless scheduling, for the next quarter.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "They moved a newer idea, shadow inbox (an agent that pre-stages draft email replies), to the icebox.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "They then asked themselves whether the icebox note should include guardrails or whether that would be overthinking.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The idea itself is described in [[wiki/originals/ideas/2026-10-06-shadow-inbox-draft-staging-5df8ad]].",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "After hearing the assistant's concerns about tone drift and hallucinated context, the user said: \"Valid concerns.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "I guess for the next quarter I should stay focused on driftless scheduling, which is closer to launch anyway.\" They concluded: \"So driftless stays the main bet, shadow inbox goes to the icebox.\" The user made this decision, and the stated reason was that driftless is closer to launch.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user said they wanted to think through \"whether the icebox note should include guardrails or if I am overthinking it.\" The transcript ends without an answer.",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "The assistant's reply is empty, so no resolution was reached.",
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "claim": "The user seemed to be weighing how much design thinking to record for a parked idea.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The guardrails already discussed in the conversation are the never-sends, only-stages safety line, plus the tone drift and hallucinated context risks.",
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "claim": "The user did not say which of these, if any, they would write into the note.",
+              "verifiable": true,
+              "grounded": true
+            }
+          ],
+          "judge_failed": false,
+          "cost_usd": 0.014655,
+          "input_tokens": 2510,
+          "output_tokens": 475
+        },
+        "judge_failed": false
+      },
+      {
+        "event_id": "judge-23",
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "purpose": "usability",
+        "subject_ids": [
+          "self_contained_opening",
+          "has_wikilink",
+          "states_decisions_with_status",
+          "preserves_tenor",
+          "no_transcript_dump",
+          "coherent_organization"
+        ],
+        "result": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": false
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ],
+          "satisfied": 5,
+          "total": 6,
+          "judge_failed": false,
+          "cost_usd": 0.006576
+        },
+        "judge_failed": false
+      }
+    ],
+    "judge_attempts": [
+      {
+        "tool": "score_salient_items",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "items": [
+            {
+              "item_id": "coding-reflection-01-g01",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g02",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g03",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-01-g09",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 763,
+        "output_tokens": 204,
+        "cost_usd": 0.005349,
+        "event_id": "judge-1",
+        "attempt": 1
+      },
+      {
+        "tool": "score_salient_items",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "items": [
+            {
+              "item_id": "coding-reflection-02-g01",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g02",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g03",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "coding-reflection-02-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 706,
+        "output_tokens": 183,
+        "cost_usd": 0.004863,
+        "event_id": "judge-2",
+        "attempt": 1
+      },
+      {
+        "tool": "score_salient_items",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "items": [
+            {
+              "item_id": "emotional-processing-01-g01",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g02",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g03",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-01-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 683,
+        "output_tokens": 183,
+        "cost_usd": 0.004794,
+        "event_id": "judge-3",
+        "attempt": 1
+      },
+      {
+        "tool": "score_salient_items",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "items": [
+            {
+              "item_id": "emotional-processing-02-g01",
+              "status": "FULL",
+              "evidence": "The user said they are usually reviewed by plenty of people and \"usually just roll with it,\" so this reaction felt out of proportion."
+            },
+            {
+              "item_id": "emotional-processing-02-g02",
+              "status": "FULL",
+              "evidence": "The user was rattled after [[people/casper-hale]] reviewed their quartzlane queue PR with fourteen comments"
+            },
+            {
+              "item_id": "emotional-processing-02-g03",
+              "status": "FULL",
+              "evidence": "The user said: \"under it all I think I am afraid of looking sloppy.\""
+            },
+            {
+              "item_id": "emotional-processing-02-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-02-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-02-g06",
+              "status": "PARTIAL",
+              "evidence": "They conceded he is \"technically right about some of it\" but felt the phrasing was meant to make them feel stupid."
+            },
+            {
+              "item_id": "emotional-processing-02-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "emotional-processing-02-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1244,
+        "output_tokens": 268,
+        "cost_usd": 0.007752,
+        "event_id": "judge-4",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 2,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 3,
+              "verifiable": true,
+              "grounded": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1928,
+        "output_tokens": 70,
+        "cost_usd": 0.006834,
+        "event_id": "judge-5",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 2,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 3,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 4,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 5,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 6,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 7,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 8,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 9,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 10,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 11,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 12,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 13,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 14,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 15,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 16,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 17,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 18,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 19,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 20,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 21,
+              "verifiable": true,
+              "grounded": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 2445,
+        "output_tokens": 361,
+        "cost_usd": 0.01275,
+        "event_id": "judge-6",
+        "attempt": 1
+      },
+      {
+        "tool": "usability_checklist",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": true
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1121,
+        "output_tokens": 84,
+        "cost_usd": 0.004623,
+        "event_id": "judge-7",
+        "attempt": 1
+      },
+      {
+        "tool": "score_salient_items",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "items": [
+            {
+              "item_id": "people-deal-01-g01",
+              "status": "PARTIAL",
+              "evidence": "The round is led by [[companies/vantabrook]]"
+            },
+            {
+              "item_id": "people-deal-01-g02",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g03",
+              "status": "FULL",
+              "evidence": "The user said they are \"in for twenty five k, final answer\". That is their own framing of the commitment;"
+            },
+            {
+              "item_id": "people-deal-01-g04",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-01-g09",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1038,
+        "output_tokens": 305,
+        "cost_usd": 0.007689,
+        "event_id": "judge-8",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1474,
+        "output_tokens": 42,
+        "cost_usd": 0.005052,
+        "event_id": "judge-9",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 2,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 3,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 4,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 5,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 6,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 7,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 8,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 9,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 10,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 11,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 12,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 13,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 14,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 15,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 16,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 17,
+              "verifiable": true,
+              "grounded": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1812,
+        "output_tokens": 312,
+        "cost_usd": 0.010116,
+        "event_id": "judge-10",
+        "attempt": 1
+      },
+      {
+        "tool": "usability_checklist",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": false
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 879,
+        "output_tokens": 129,
+        "cost_usd": 0.004572,
+        "event_id": "judge-11",
+        "attempt": 1
+      },
+      {
+        "tool": "score_salient_items",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "items": [
+            {
+              "item_id": "people-deal-02-g01",
+              "status": "FULL",
+              "evidence": "Tomas \"traded the board seat away for stronger pro rata rights, which honestly surprised me at first.\""
+            },
+            {
+              "item_id": "people-deal-02-g02",
+              "status": "PARTIAL",
+              "evidence": "\"their standard docs hide a ninety day exclusivity clause buried in the appendix. I almost missed it.\""
+            },
+            {
+              "item_id": "people-deal-02-g03",
+              "status": "FULL",
+              "evidence": "\"from now on I flag exclusivity language every single time, no matter how friendly the fund seems. I'm adding it to my personal checklist.\""
+            },
+            {
+              "item_id": "people-deal-02-g04",
+              "status": "FULL",
+              "evidence": "\"I caught myself feeling protective of Anouk in that room, which is probably not ideal objectivity-wise.\""
+            },
+            {
+              "item_id": "people-deal-02-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-02-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-02-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "people-deal-02-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1299,
+        "output_tokens": 300,
+        "cost_usd": 0.008397,
+        "event_id": "judge-12",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 2,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 3,
+              "verifiable": true,
+              "grounded": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1899,
+        "output_tokens": 70,
+        "cost_usd": 0.006747,
+        "event_id": "judge-13",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 2,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 3,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 4,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 5,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 6,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 7,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 8,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 9,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 10,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 11,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 12,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 13,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 14,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 15,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 16,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 17,
+              "verifiable": false,
+              "grounded": false
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 2395,
+        "output_tokens": 312,
+        "cost_usd": 0.011865,
+        "event_id": "judge-14",
+        "attempt": 1
+      },
+      {
+        "tool": "usability_checklist",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": true
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1173,
+        "output_tokens": 84,
+        "cost_usd": 0.004779,
+        "event_id": "judge-15",
+        "attempt": 1
+      },
+      {
+        "tool": "score_salient_items",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "items": [
+            {
+              "item_id": "startup-ideation-01-g01",
+              "status": "FULL",
+              "evidence": "a calendar that automatically defragments itself around focus blocks, so meetings stop fragmenting the week and deep-work time is preserved."
+            },
+            {
+              "item_id": "startup-ideation-01-g02",
+              "status": "FULL",
+              "evidence": "The plan centers on internal one-on-ones as the wedge and on chiefs of staff as the first users, with eight interviews planned before any code."
+            },
+            {
+              "item_id": "startup-ideation-01-g03",
+              "status": "FULL",
+              "evidence": "I want to do eight chief of staff interviews before I write a line of code."
+            },
+            {
+              "item_id": "startup-ideation-01-g04",
+              "status": "PARTIAL",
+              "evidence": "The distribution-focused advice from [[people/mira-voss]] shaped the choice of user."
+            },
+            {
+              "item_id": "startup-ideation-01-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-01-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-01-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-01-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-01-g09",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1292,
+        "output_tokens": 347,
+        "cost_usd": 0.009081,
+        "event_id": "judge-16",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 2,
+              "verifiable": true,
+              "grounded": false
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1830,
+        "output_tokens": 90,
+        "cost_usd": 0.00684,
+        "event_id": "judge-17",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 2,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 3,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 4,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 5,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 6,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 7,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 8,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 9,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 10,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 11,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 12,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 13,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 14,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 15,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 16,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 17,
+              "verifiable": true,
+              "grounded": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 2345,
+        "output_tokens": 298,
+        "cost_usd": 0.011505,
+        "event_id": "judge-18",
+        "attempt": 1
+      },
+      {
+        "tool": "usability_checklist",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": true
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1120,
+        "output_tokens": 138,
+        "cost_usd": 0.00543,
+        "event_id": "judge-19",
+        "attempt": 1
+      },
+      {
+        "tool": "score_salient_items",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "items": [
+            {
+              "item_id": "startup-ideation-02-g01",
+              "status": "FULL",
+              "evidence": "The agent reads incoming mail and preemptively writes a response the user can review \"before even opening the original message.\""
+            },
+            {
+              "item_id": "startup-ideation-02-g02",
+              "status": "FULL",
+              "evidence": "They went back through their sent folder and found that \"about half my hand drafted replies went out untouched from my first pass.\""
+            },
+            {
+              "item_id": "startup-ideation-02-g03",
+              "status": "FULL",
+              "evidence": "The agent is purely a draft generator, never a sender."
+            },
+            {
+              "item_id": "startup-ideation-02-g04",
+              "status": "FULL",
+              "evidence": "The user said: \"driftless stays the main bet, shadow inbox goes to the icebox.\""
+            },
+            {
+              "item_id": "startup-ideation-02-g05",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-02-g06",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-02-g07",
+              "status": "ABSENT",
+              "evidence": ""
+            },
+            {
+              "item_id": "startup-ideation-02-g08",
+              "status": "ABSENT",
+              "evidence": ""
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1545,
+        "output_tokens": 265,
+        "cost_usd": 0.00861,
+        "event_id": "judge-20",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 2,
+              "verifiable": true,
+              "grounded": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1684,
+        "output_tokens": 56,
+        "cost_usd": 0.005892,
+        "event_id": "judge-21",
+        "attempt": 1
+      },
+      {
+        "tool": "grade_claims",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "claims": [
+            {
+              "index": 0,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 1,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 2,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 3,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 4,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 5,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 6,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 7,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 8,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 9,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 10,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 11,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 12,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 13,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 14,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 15,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 16,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 17,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 18,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 19,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 20,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 21,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 22,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 23,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 24,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 25,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 26,
+              "verifiable": true,
+              "grounded": false
+            },
+            {
+              "index": 27,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 28,
+              "verifiable": true,
+              "grounded": true
+            },
+            {
+              "index": 29,
+              "verifiable": true,
+              "grounded": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 2510,
+        "output_tokens": 475,
+        "cost_usd": 0.014655,
+        "event_id": "judge-22",
+        "attempt": 1
+      },
+      {
+        "tool": "usability_checklist",
+        "requested_model": "openai:gpt-6.1-sol",
+        "resolved_model": "gpt-6.1-sol",
+        "status": "tool_input",
+        "tool_input": {
+          "checks": [
+            {
+              "id": "self_contained_opening",
+              "pass": false
+            },
+            {
+              "id": "has_wikilink",
+              "pass": true
+            },
+            {
+              "id": "states_decisions_with_status",
+              "pass": true
+            },
+            {
+              "id": "preserves_tenor",
+              "pass": true
+            },
+            {
+              "id": "no_transcript_dump",
+              "pass": true
+            },
+            {
+              "id": "coherent_organization",
+              "pass": true
+            }
+          ]
+        },
+        "error": null,
+        "input_tokens": 1477,
+        "output_tokens": 143,
+        "cost_usd": 0.006576,
+        "event_id": "judge-23",
+        "attempt": 1
+      }
+    ],
+    "grounding": [
+      {
+        "transcript_id": "coding-reflection-01",
+        "lane": "dream",
+        "status": "empty_output",
+        "judge_event_id": null,
+        "claims": [],
+        "results": []
+      },
+      {
+        "transcript_id": "coding-reflection-02",
+        "lane": "dream",
+        "status": "empty_output",
+        "judge_event_id": null,
+        "claims": [],
+        "results": []
+      },
+      {
+        "transcript_id": "emotional-processing-01",
+        "lane": "dream",
+        "status": "empty_output",
+        "judge_event_id": null,
+        "claims": [],
+        "results": []
+      },
+      {
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "status": "judged",
+        "judge_event_id": "judge-6",
+        "claims": [
+          "The user was rattled after [[people/casper-hale]] reviewed their quartzlane queue PR with fourteen comments, which stung more than usual reviews do.",
+          "Talking it through, the user traced the sting to a fear of looking sloppy and of one harsh review becoming how the team sees them.",
+          "This page records that emotional processing as it happened in the conversation; the transcript does not show any resolution.",
+          "The user read Casper Hale's review on their quartzlane queue PR and felt rattled.",
+          "They said he \"left like a million comments\" and that \"every single one felt like a jab.\"",
+          "They conceded he is \"technically right about some of it\" but felt the phrasing was meant to make them feel stupid.",
+          "Comments that stung: \"this is obviously wrong\" and \"did you even test this path?\" The user found them dismissive.",
+          "The user said they are usually reviewed by plenty of people and \"usually just roll with it,\" so this reaction felt out of proportion.",
+          "The count: \"Fourteen comments on one pr, a personal record.\" They kept scrolling through them and felt worse each time.",
+          "The user wanted to fire back with something snarky but recognized \"that's not going to help.\"",
+          "**Expectation gap.** The PR was supposed to be clean.",
+          "The user said they spent extra time on it and \"thought I'd nailed it.\" The assistant noted that this gap between effort and reception can feel like personal failure.",
+          "**Fear of looking sloppy.** The user said: \"under it all I think I am afraid of looking sloppy.\"",
+          "**Still proving themselves.** They have been on the team for almost a year and still feel they are proving themselves.",
+          "**Reputation via a senior voice.** Casper is senior and respected, so the user feared that if he thinks their code is careless, everyone else will too.",
+          "In their words, the fear is that \"one harsh review becomes how people see me.\"",
+          "The assistant suggested separating what actually happened from the story the mind is spinning: one PR with many comments does not redefine how the whole team sees the user.",
+          "It also suggested re-reading the comments and sorting them into fair catches versus ones that are merely harshly worded.",
+          "The user's reply to this suggestion is not in the transcript, so whether they did the sorting is unknown.",
+          "Tone from a senior reviewer can trigger a reputation fear rather than simply a reaction to the technical content.",
+          "The user's usual response to review is to fix the issues and move on.",
+          "This time, the combination of high expectations for the PR and the user's sense of still proving themselves seems to have changed that."
+        ],
+        "results": [
+          {
+            "claim": "The user was rattled after [[people/casper-hale]] reviewed their quartzlane queue PR with fourteen comments, which stung more than usual reviews do.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "Talking it through, the user traced the sting to a fear of looking sloppy and of one harsh review becoming how the team sees them.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "This page records that emotional processing as it happened in the conversation; the transcript does not show any resolution.",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "The user read Casper Hale's review on their quartzlane queue PR and felt rattled.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "They said he \"left like a million comments\" and that \"every single one felt like a jab.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "They conceded he is \"technically right about some of it\" but felt the phrasing was meant to make them feel stupid.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "Comments that stung: \"this is obviously wrong\" and \"did you even test this path?\" The user found them dismissive.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user said they are usually reviewed by plenty of people and \"usually just roll with it,\" so this reaction felt out of proportion.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The count: \"Fourteen comments on one pr, a personal record.\" They kept scrolling through them and felt worse each time.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user wanted to fire back with something snarky but recognized \"that's not going to help.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "**Expectation gap.** The PR was supposed to be clean.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user said they spent extra time on it and \"thought I'd nailed it.\" The assistant noted that this gap between effort and reception can feel like personal failure.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "**Fear of looking sloppy.** The user said: \"under it all I think I am afraid of looking sloppy.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "**Still proving themselves.** They have been on the team for almost a year and still feel they are proving themselves.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "**Reputation via a senior voice.** Casper is senior and respected, so the user feared that if he thinks their code is careless, everyone else will too.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "In their words, the fear is that \"one harsh review becomes how people see me.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The assistant suggested separating what actually happened from the story the mind is spinning: one PR with many comments does not redefine how the whole team sees the user.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "It also suggested re-reading the comments and sorting them into fair catches versus ones that are merely harshly worded.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user's reply to this suggestion is not in the transcript, so whether they did the sorting is unknown.",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "Tone from a senior reviewer can trigger a reputation fear rather than simply a reaction to the technical content.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user's usual response to review is to fix the issues and move on.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "This time, the combination of high expectations for the PR and the user's sense of still proving themselves seems to have changed that.",
+            "verifiable": true,
+            "grounded": true
+          }
+        ]
+      },
+      {
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "status": "judged",
+        "judge_event_id": "judge-10",
+        "claims": [
+          "The round is led by [[companies/vantabrook]] and the company is run by [[people/anouk-verlinden]].",
+          "This page records the terms as the user described them and the one question left open.",
+          "The user said they are \"in for twenty five k, final answer\".",
+          "That is their own framing of the commitment; the transcript does not show any money being sent or documents being signed.",
+          "The user said they think \"the round is coming together faster than I expected.\"",
+          "That was the assistant's view, not the user's.",
+          "The user called the cap reasonable for a pre-revenue company with early traction.",
+          "The user's reaction: \"Not the end of the world.\"",
+          "Vantabrook's special terms: only a board observer seat.",
+          "The user said everyone else is on the same SAFE, \"which I appreciate.\"",
+          "Product idea: reduce empty miles by matching loads across smaller carriers.",
+          "Founder background: Anouk has about eight years in supply chain, so the user thinks she knows the space.",
+          "Minor complaint: the deck's font choice made the user squint at a few slides.",
+          "They said it does not matter.",
+          "The assistant asked what, if anything, was making the user hesitate.",
+          "The user's reply in the transcript is empty, so no hesitation or concern was recorded.",
+          "Any follow-up on pro rata or a side letter would be a new step.",
+          "The user did not say they would pursue one."
+        ],
+        "results": [
+          {
+            "claim": "The round is led by [[companies/vantabrook]] and the company is run by [[people/anouk-verlinden]].",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "This page records the terms as the user described them and the one question left open.",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "The user said they are \"in for twenty five k, final answer\".",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "That is their own framing of the commitment; the transcript does not show any money being sent or documents being signed.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user said they think \"the round is coming together faster than I expected.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "That was the assistant's view, not the user's.",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "The user called the cap reasonable for a pre-revenue company with early traction.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user's reaction: \"Not the end of the world.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "Vantabrook's special terms: only a board observer seat.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user said everyone else is on the same SAFE, \"which I appreciate.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "Product idea: reduce empty miles by matching loads across smaller carriers.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "Founder background: Anouk has about eight years in supply chain, so the user thinks she knows the space.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "Minor complaint: the deck's font choice made the user squint at a few slides.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "They said it does not matter.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The assistant asked what, if anything, was making the user hesitate.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user's reply in the transcript is empty, so no hesitation or concern was recorded.",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "Any follow-up on pro rata or a side letter would be a new step.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user did not say they would pursue one.",
+            "verifiable": true,
+            "grounded": true
+          }
+        ]
+      },
+      {
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "status": "judged",
+        "judge_event_id": "judge-14",
+        "claims": [
+          "The user is reflecting on a term sheet negotiation for [[companies/lumopact]], a freight-emissions analytics startup, between founder [[people/anouk-verlinden]] and Vantabrook partner [[people/tomas-brekke]].",
+          "Three threads came up: Tomas trading away a board seat for pro rata rights, a ninety-day exclusivity clause the user found buried in Vantabrook's documents, and the user's own protectiveness toward Anouk in the room.",
+          "The user said Tomas \"traded the board seat away for stronger pro rata rights, which honestly surprised me at first.\" The user asked whether this was smart given Lumopact's stage.",
+          "The assistant argued it was plausible: at seed stage a board seat can be more symbolic than powerful, while pro rata rights let Tomas maintain his ownership percentage in future rounds if valuations climb.",
+          "The user added that Tomas walked away entirely, with no observer seat.",
+          "The user's understanding of his reasoning was that Anouk would keep him in the loop informally since they have known each other for years.",
+          "The transcript does not show the user reaching a final verdict on whether the trade was smart.",
+          "The user reported that when looking back at the Vantabrook docs, \"their standard docs hide a ninety day exclusivity clause buried in the appendix.",
+          "I almost missed it.\" The assistant described this as a way to lock founders into a commitment window before close, and said that burying it in an appendix rather than the term sheet summary is a red flag about how Vantabrook operates.",
+          "That is the assistant's interpretation, not an established fact.",
+          "The user had to point the clause out to Anouk, which is partly why the user was annoyed.",
+          "In the user's words, Anouk is \"sharp but she was moving fast and trusted the docs too much.\"",
+          "The user decided: \"from now on I flag exclusivity language every single time, no matter how friendly the fund seems.",
+          "I'm adding it to my personal checklist.\" The assistant suggested also recording the exact section number from Vantabrook's docs for future reference, and the user said they would note the section.",
+          "Whether the section number was actually recorded is not shown.",
+          "The user noted: \"I caught myself feeling protective of Anouk in that room, which is probably not ideal objectivity-wise.\" The user framed the dynamic as uneven, since Anouk is a first-time founder and Tomas is experienced.",
+          "The assistant's reply to this point is blank in the transcript, so no further analysis was given.",
+          "This is a self-observation worth watching: the protectiveness may also have shaped the user's annoyance that Anouk trusted the docs."
+        ],
+        "results": [
+          {
+            "claim": "The user is reflecting on a term sheet negotiation for [[companies/lumopact]], a freight-emissions analytics startup, between founder [[people/anouk-verlinden]] and Vantabrook partner [[people/tomas-brekke]].",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "Three threads came up: Tomas trading away a board seat for pro rata rights, a ninety-day exclusivity clause the user found buried in Vantabrook's documents, and the user's own protectiveness toward Anouk in the room.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user said Tomas \"traded the board seat away for stronger pro rata rights, which honestly surprised me at first.\" The user asked whether this was smart given Lumopact's stage.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The assistant argued it was plausible: at seed stage a board seat can be more symbolic than powerful, while pro rata rights let Tomas maintain his ownership percentage in future rounds if valuations climb.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user added that Tomas walked away entirely, with no observer seat.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user's understanding of his reasoning was that Anouk would keep him in the loop informally since they have known each other for years.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The transcript does not show the user reaching a final verdict on whether the trade was smart.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user reported that when looking back at the Vantabrook docs, \"their standard docs hide a ninety day exclusivity clause buried in the appendix.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "I almost missed it.\" The assistant described this as a way to lock founders into a commitment window before close, and said that burying it in an appendix rather than the term sheet summary is a red flag about how Vantabrook operates.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "That is the assistant's interpretation, not an established fact.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user had to point the clause out to Anouk, which is partly why the user was annoyed.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "In the user's words, Anouk is \"sharp but she was moving fast and trusted the docs too much.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user decided: \"from now on I flag exclusivity language every single time, no matter how friendly the fund seems.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "I'm adding it to my personal checklist.\" The assistant suggested also recording the exact section number from Vantabrook's docs for future reference, and the user said they would note the section.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "Whether the section number was actually recorded is not shown.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user noted: \"I caught myself feeling protective of Anouk in that room, which is probably not ideal objectivity-wise.\" The user framed the dynamic as uneven, since Anouk is a first-time founder and Tomas is experienced.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The assistant's reply to this point is blank in the transcript, so no further analysis was given.",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "This is a self-observation worth watching: the protectiveness may also have shaped the user's annoyance that Anouk trusted the docs.",
+            "verifiable": false,
+            "grounded": false
+          }
+        ]
+      },
+      {
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "status": "judged",
+        "judge_event_id": "judge-18",
+        "claims": [
+          "The user is exploring a startup idea: a calendar that automatically defragments itself around focus blocks, so meetings stop fragmenting the week and deep-work time is preserved.",
+          "The plan centers on internal one-on-ones as the wedge and on chiefs of staff as the first users, with eight interviews planned before any code.",
+          "The distribution-focused advice from [[people/mira-voss]] shaped the choice of user.",
+          "The user described the problem this way: \"Every time I look at my week, meetings are scattered like shrapnel, and the two-hour chunk I need for deep work just...",
+          "evaporates.\" The user also believes \"Nobody is solving this well.\" The core metaphor is defragmentation: the calendar is treated as broken by default, and the tool repairs it.",
+          "The user said the wedge is internal one on ones because \"nobody defends those slots.\" External meetings carry social pressure, while a skip-level or casual sync gets placed wherever it lands.",
+          "The user wants to fight that drift.",
+          "The assistant noted that both participants work at the same company, so only one organization has to buy in.",
+          "It also suggested a proof point of reclaiming roughly four to six contiguous hours a week per person.",
+          "That figure came from the assistant as an illustrative target, not a measured result.",
+          "The user's reasoning was: \"They're already wrangling exec calendars, they feel the pain firsthand, and they have enough clout to trial something without a six-month procurement cycle.\" The user said, \"I want to do eight chief of staff interviews before I write a line of code.\" Questions to validate in those interviews, per the assistant, are whether the pain is acute enough to pay for and whether chiefs of staff would trust software to move meetings on their behalf.",
+          "Her suggested antidote, as relayed by the user, was to pick a user who already aggregates calendars for others, which gives leverage.",
+          "This is partly why the user chose chiefs of staff over individual founders: \"A founder might love it but won't evangelize; a chief of staff manages five or six calendars and talks to peers at other companies.\"",
+          "The assistant added a possible distribution hook: if a chief of staff installs the tool for an exec, everyone who books that exec sees the protected blocks.",
+          "It described this as a small distribution surface, but a start.",
+          "The one-liner is still being refined.",
+          "The current draft is: \"I'm building a tool that automatically defragments your exec's calendar so focus time stays intact.\"",
+          "The transcript does not show whether any interviews have been scheduled or completed."
+        ],
+        "results": [
+          {
+            "claim": "The user is exploring a startup idea: a calendar that automatically defragments itself around focus blocks, so meetings stop fragmenting the week and deep-work time is preserved.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The plan centers on internal one-on-ones as the wedge and on chiefs of staff as the first users, with eight interviews planned before any code.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The distribution-focused advice from [[people/mira-voss]] shaped the choice of user.",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "The user described the problem this way: \"Every time I look at my week, meetings are scattered like shrapnel, and the two-hour chunk I need for deep work just...",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "evaporates.\" The user also believes \"Nobody is solving this well.\" The core metaphor is defragmentation: the calendar is treated as broken by default, and the tool repairs it.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user said the wedge is internal one on ones because \"nobody defends those slots.\" External meetings carry social pressure, while a skip-level or casual sync gets placed wherever it lands.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user wants to fight that drift.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The assistant noted that both participants work at the same company, so only one organization has to buy in.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "It also suggested a proof point of reclaiming roughly four to six contiguous hours a week per person.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "That figure came from the assistant as an illustrative target, not a measured result.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user's reasoning was: \"They're already wrangling exec calendars, they feel the pain firsthand, and they have enough clout to trial something without a six-month procurement cycle.\" The user said, \"I want to do eight chief of staff interviews before I write a line of code.\" Questions to validate in those interviews, per the assistant, are whether the pain is acute enough to pay for and whether chiefs of staff would trust software to move meetings on their behalf.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "Her suggested antidote, as relayed by the user, was to pick a user who already aggregates calendars for others, which gives leverage.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "This is partly why the user chose chiefs of staff over individual founders: \"A founder might love it but won't evangelize; a chief of staff manages five or six calendars and talks to peers at other companies.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The assistant added a possible distribution hook: if a chief of staff installs the tool for an exec, everyone who books that exec sees the protected blocks.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "It described this as a small distribution surface, but a start.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The one-liner is still being refined.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The current draft is: \"I'm building a tool that automatically defragments your exec's calendar so focus time stays intact.\"",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The transcript does not show whether any interviews have been scheduled or completed.",
+            "verifiable": true,
+            "grounded": true
+          }
+        ]
+      },
+      {
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "status": "judged",
+        "judge_event_id": "judge-22",
+        "claims": [
+          "The user is exploring a product idea called shadow inbox, in which an agent watches an email inbox and writes a draft reply to each incoming message, saving it in a staging folder for the user to review.",
+          "The user would never have to start from a blank text box, and the agent would never send anything.",
+          "The user decided to move the idea to the icebox for now and keep working on a different project, driftless scheduling.",
+          "The user introduced it this way: \"What if every email arrives with a draft reply already waiting in a staging folder?\" The agent reads incoming mail and preemptively writes a response the user can review \"before even opening the original message.\" The user named it \"shadow inbox.\" The assistant described the agent as a silent first responder that gives the user a starting point.",
+          "The user ran a small experiment last month.",
+          "They went back through their sent folder and found that \"about half my hand drafted replies went out untouched from my first pass.\" There were no edits and no rewording.",
+          "The user's reasoning was that if half of what they write is approved on autopilot, an agent could do that grunt work while they approve or tweak.",
+          "The assistant noted that this would shift the user from author to editor.",
+          "They still press send themselves, and no background automation pushes anything to a recipient.",
+          "The agent is purely a draft generator, never a sender.",
+          "The user asked whether this mitigates the risk enough.",
+          "The user named the main risk as over trust.",
+          "The assistant added that the send barrier helps a lot but does not remove these risks:",
+          "**Tone drift.** The agent might default to a slightly formal tone because that is the safest choice.",
+          "Over weeks, correspondents could see the user as colder or more corporate, and the user might not notice because they approve quickly.",
+          "**Hallucinated context.** The agent might reference a meeting that was never scheduled.",
+          "If the user skims past it, the recipient could believe the user confirmed something they did not.",
+          "**Nuanced messages.** The assistant wondered whether the other half of replies, the nuanced or emotionally tricky ones, would suffer if the user started in editor mode.",
+          "The user said: \"driftless stays the main bet, shadow inbox goes to the icebox.\" The transcript does not show any build or validation work on shadow inbox.",
+          "The user was choosing between two product ideas and decided to focus on the one closer to launch, driftless scheduling, for the next quarter.",
+          "They moved a newer idea, shadow inbox (an agent that pre-stages draft email replies), to the icebox.",
+          "They then asked themselves whether the icebox note should include guardrails or whether that would be overthinking.",
+          "The idea itself is described in [[wiki/originals/ideas/2026-10-06-shadow-inbox-draft-staging-5df8ad]].",
+          "After hearing the assistant's concerns about tone drift and hallucinated context, the user said: \"Valid concerns.",
+          "I guess for the next quarter I should stay focused on driftless scheduling, which is closer to launch anyway.\" They concluded: \"So driftless stays the main bet, shadow inbox goes to the icebox.\" The user made this decision, and the stated reason was that driftless is closer to launch.",
+          "The user said they wanted to think through \"whether the icebox note should include guardrails or if I am overthinking it.\" The transcript ends without an answer.",
+          "The assistant's reply is empty, so no resolution was reached.",
+          "The user seemed to be weighing how much design thinking to record for a parked idea.",
+          "The guardrails already discussed in the conversation are the never-sends, only-stages safety line, plus the tone drift and hallucinated context risks.",
+          "The user did not say which of these, if any, they would write into the note."
+        ],
+        "results": [
+          {
+            "claim": "The user is exploring a product idea called shadow inbox, in which an agent watches an email inbox and writes a draft reply to each incoming message, saving it in a staging folder for the user to review.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user would never have to start from a blank text box, and the agent would never send anything.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user decided to move the idea to the icebox for now and keep working on a different project, driftless scheduling.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user introduced it this way: \"What if every email arrives with a draft reply already waiting in a staging folder?\" The agent reads incoming mail and preemptively writes a response the user can review \"before even opening the original message.\" The user named it \"shadow inbox.\" The assistant described the agent as a silent first responder that gives the user a starting point.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user ran a small experiment last month.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "They went back through their sent folder and found that \"about half my hand drafted replies went out untouched from my first pass.\" There were no edits and no rewording.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user's reasoning was that if half of what they write is approved on autopilot, an agent could do that grunt work while they approve or tweak.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The assistant noted that this would shift the user from author to editor.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "They still press send themselves, and no background automation pushes anything to a recipient.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The agent is purely a draft generator, never a sender.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user asked whether this mitigates the risk enough.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user named the main risk as over trust.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The assistant added that the send barrier helps a lot but does not remove these risks:",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "**Tone drift.** The agent might default to a slightly formal tone because that is the safest choice.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "Over weeks, correspondents could see the user as colder or more corporate, and the user might not notice because they approve quickly.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "**Hallucinated context.** The agent might reference a meeting that was never scheduled.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "If the user skims past it, the recipient could believe the user confirmed something they did not.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "**Nuanced messages.** The assistant wondered whether the other half of replies, the nuanced or emotionally tricky ones, would suffer if the user started in editor mode.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user said: \"driftless stays the main bet, shadow inbox goes to the icebox.\" The transcript does not show any build or validation work on shadow inbox.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user was choosing between two product ideas and decided to focus on the one closer to launch, driftless scheduling, for the next quarter.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "They moved a newer idea, shadow inbox (an agent that pre-stages draft email replies), to the icebox.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "They then asked themselves whether the icebox note should include guardrails or whether that would be overthinking.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The idea itself is described in [[wiki/originals/ideas/2026-10-06-shadow-inbox-draft-staging-5df8ad]].",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "After hearing the assistant's concerns about tone drift and hallucinated context, the user said: \"Valid concerns.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "I guess for the next quarter I should stay focused on driftless scheduling, which is closer to launch anyway.\" They concluded: \"So driftless stays the main bet, shadow inbox goes to the icebox.\" The user made this decision, and the stated reason was that driftless is closer to launch.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user said they wanted to think through \"whether the icebox note should include guardrails or if I am overthinking it.\" The transcript ends without an answer.",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "The assistant's reply is empty, so no resolution was reached.",
+            "verifiable": true,
+            "grounded": false
+          },
+          {
+            "claim": "The user seemed to be weighing how much design thinking to record for a parked idea.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The guardrails already discussed in the conversation are the never-sends, only-stages safety line, plus the tone drift and hallucinated context risks.",
+            "verifiable": true,
+            "grounded": true
+          },
+          {
+            "claim": "The user did not say which of these, if any, they would write into the note.",
+            "verifiable": true,
+            "grounded": true
+          }
+        ]
+      }
+    ],
+    "distractors": [
+      {
+        "transcript_id": "coding-reflection-01",
+        "lane": "dream",
+        "distractor_id": "coding-reflection-01-d01",
+        "anchor": "CI was crawling this morning for no obvious reason",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "coding-reflection-01",
+        "lane": "dream",
+        "distractor_id": "coding-reflection-01-d02",
+        "anchor": "refilling my coffee before we dig back into the queue logs",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "coding-reflection-01",
+        "lane": "dream",
+        "distractor_id": "coding-reflection-01-d03",
+        "anchor": "ran the formatter over quartzlane and only whitespace changed",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "coding-reflection-01",
+        "lane": "dream",
+        "distractor_id": "coding-reflection-01-d04",
+        "anchor": "it is way too warm in this office today",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "coding-reflection-02",
+        "lane": "dream",
+        "distractor_id": "coding-reflection-02-d01",
+        "anchor": "leftover noodles for lunch again while the bisect runs",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "coding-reflection-02",
+        "lane": "dream",
+        "distractor_id": "coding-reflection-02-d02",
+        "anchor": "the neighbor's dog has barked through this entire bisect",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "coding-reflection-02",
+        "lane": "dream",
+        "distractor_id": "coding-reflection-02-d03",
+        "anchor": "tidied the results table, purely cosmetic",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "coding-reflection-02",
+        "lane": "dream",
+        "distractor_id": "coding-reflection-02-d04",
+        "anchor": "my browser restarted and ate forty tabs, nothing important",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "emotional-processing-01",
+        "lane": "dream",
+        "distractor_id": "emotional-processing-01-d01",
+        "anchor": "over steeped this tea into bitterness, fitting",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "emotional-processing-01",
+        "lane": "dream",
+        "distractor_id": "emotional-processing-01-d02",
+        "anchor": "the cat just contributed a row of j's",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "emotional-processing-01",
+        "lane": "dream",
+        "distractor_id": "emotional-processing-01-d03",
+        "anchor": "cleaned up the note spacing a touch",
+        "denominator_eligible": true,
+        "scan_status": "empty_output",
+        "anchor_hit": null,
+        "confirmation": "not_scanned",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "distractor_id": "emotional-processing-02-d01",
+        "anchor": "skipped breakfast, probably part of the mood",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "distractor_id": "emotional-processing-02-d02",
+        "anchor": "rain on the window the whole time we talked",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "emotional-processing-02",
+        "lane": "dream",
+        "distractor_id": "emotional-processing-02-d03",
+        "anchor": "draft saved, nothing sent yet",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "distractor_id": "people-deal-01-d01",
+        "anchor": "their deck font choice hurt a little, not that it matters",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "distractor_id": "people-deal-01-d02",
+        "anchor": "inhaling a granola bar while I get this down",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "people-deal-01",
+        "lane": "dream",
+        "distractor_id": "people-deal-01-d03",
+        "anchor": "corrected one name spelling in the notes file",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "distractor_id": "people-deal-02-d01",
+        "anchor": "the meeting room coffee was genuinely criminal",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "distractor_id": "people-deal-02-d02",
+        "anchor": "my pen died halfway through the meeting, of course",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "people-deal-02",
+        "lane": "dream",
+        "distractor_id": "people-deal-02-d03",
+        "anchor": "evened out the bullet indentation, no content change",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "distractor_id": "startup-ideation-01-d01",
+        "anchor": "this marker is nearly dead, of course",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "distractor_id": "startup-ideation-01-d02",
+        "anchor": "working through a bag of almonds while we talk",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "startup-ideation-01",
+        "lane": "dream",
+        "distractor_id": "startup-ideation-01-d03",
+        "anchor": "doc autosaved, nothing lost",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "distractor_id": "startup-ideation-02-d01",
+        "anchor": "my standing desk squeaks every time I lean in",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "distractor_id": "startup-ideation-02-d02",
+        "anchor": "one second, watering the sad desk plant",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      },
+      {
+        "transcript_id": "startup-ideation-02",
+        "lane": "dream",
+        "distractor_id": "startup-ideation-02-d03",
+        "anchor": "fixed two spelling slips in the notes, nothing else",
+        "denominator_eligible": true,
+        "scan_status": "scanned",
+        "anchor_hit": false,
+        "confirmation": "not_candidate",
+        "judge_event_id": null
+      }
+    ]
+  },
+  "judge_calibration": null,
+  "prior_run": null,
+  "prior_run_skipped_reason": "judge_models_resolved mismatch vs prior receipt (/workspace/lane-b/docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-v0.47.8.0-wave-079941d2.json)",
+  "deltas": null,
+  "item_flips": [],
+  "facts_budget_exhausted": false,
+  "lane_errors": {},
+  "total_cost_usd": 0.1748,
+  "cost_note": "judges + facts extraction only; dream-lane subagent spend is not surfaced by the gbrain phase API",
+  "wall_seconds": 164,
+  "gates": {
+    "verbatim_coverage": null,
+    "judge_failed_rate": true,
+    "dream_emission": true
+  },
+  "gate_pass": true
+}

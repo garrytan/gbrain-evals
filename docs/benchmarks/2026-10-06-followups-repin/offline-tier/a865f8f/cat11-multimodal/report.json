@@ -1,0 +1,108 @@
+{
+  "schema_version": 2,
+  "ran_at": "2026-10-07T20:04:00.230Z",
+  "results": {
+    "markdown": {
+      "modality": "markdown",
+      "metric_name": "word_recall",
+      "threshold": 0.9,
+      "items": 3,
+      "items_scored": 3,
+      "mean_metric": 1,
+      "per_item": [
+        {
+          "name": "garden-irrigation",
+          "metric": 1,
+          "detail": {
+            "chunks": 1,
+            "canonical_words": 225,
+            "indexed_chars": 1264
+          }
+        },
+        {
+          "name": "bread-starter",
+          "metric": 1,
+          "detail": {
+            "chunks": 1,
+            "canonical_words": 222,
+            "indexed_chars": 1247
+          }
+        },
+        {
+          "name": "trail-survey",
+          "metric": 1,
+          "detail": {
+            "chunks": 2,
+            "canonical_words": 212,
+            "indexed_chars": 1510
+          }
+        }
+      ],
+      "skipped": false,
+      "verdict": "pass",
+      "negative_control": {
+        "real_mean": 1,
+        "control_mean": 0.22003475173286494,
+        "degradation_ok": true
+      }
+    },
+    "html": {
+      "modality": "html",
+      "metric_name": "word_recall",
+      "threshold": 0.8,
+      "items": 2,
+      "items_scored": 2,
+      "mean_metric": 1,
+      "per_item": [
+        {
+          "name": "tide-pools",
+          "metric": 1,
+          "detail": {
+            "chunks": 1,
+            "canonical_words": 198,
+            "indexed_chars": 1386
+          }
+        },
+        {
+          "name": "weather-glossary",
+          "metric": 1,
+          "detail": {
+            "chunks": 1,
+            "canonical_words": 198,
+            "indexed_chars": 1483
+          }
+        }
+      ],
+      "skipped": false,
+      "verdict": "pass",
+      "negative_control": {
+        "real_mean": 1,
+        "control_mean": 0.17676767676767677,
+        "degradation_ok": true
+      }
+    },
+    "pdf": {
+      "modality": "pdf",
+      "metric_name": "none",
+      "threshold": null,
+      "items": 0,
+      "items_scored": 0,
+      "mean_metric": null,
+      "per_item": [],
+      "skipped": true,
+      "skip_reason": "gbrain v0.47.6.0 has no PDF text-extraction/ingest path; the pre-audit runner benchmarked the eval's own pdf-parse wrapper, which measured nothing about gbrain (audit retrieval-cats-12). Deferred until gbrain ships PDF ingestion."
+    },
+    "audio": {
+      "modality": "audio",
+      "metric_name": "transcription_fidelity",
+      "threshold": null,
+      "items": 0,
+      "items_scored": 0,
+      "mean_metric": null,
+      "per_item": [],
+      "skipped": true,
+      "skip_reason": "No audio fixture manifest: binary clips are not committed to the repo (the fetch script the pre-audit header advertised never existed — audit retrieval-cats-03). Provide local fixtures + GROQ_API_KEY/OPENAI_API_KEY to run this modality."
+    }
+  },
+  "verdict": "pass"
+}

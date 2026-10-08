@@ -12,7 +12,7 @@
  * retries and write-side work. Environment variables never satisfy the guard:
  * an inherited BRAINBENCH_BUDGET_RUN_ID must not turn on spending by itself.
  */
-import { DEFAULT_LEDGER_PATH, ledgerStatus } from './budget-ledger.ts';
+import { budgetOptionsFrom, ledgerStatus } from './budget-ledger.ts';
 
 export const WAVE_CAP_USD = 150;
 export const WAVE_RUN_COMMAND = `bun eval/runner/budget-ledger.ts open --runner eval-category-wave --budget-usd ${WAVE_CAP_USD}`;
@@ -43,7 +43,8 @@ const usd = (n: number) => `$${n.toFixed(2)}`;
  * ledger run with money left. Returns the run id and what is left of it.
  */
 export function requirePaidArm(argv: readonly string[], options: { arm: string; estimateUsd: number | null; ledgerPath?: string }): { budgetRunId: string; remainingUsd: number } {
-  const ledgerPath = options.ledgerPath ?? DEFAULT_LEDGER_PATH;
+  // The ledger the run's own budget code will use (--budget-ledger, BRAINBENCH_BUDGET_LEDGER, else the default).
+  const ledgerPath = options.ledgerPath ?? budgetOptionsFrom(argv).ledgerPath;
   const runId = flagValue(argv, '--budget-run-id');
   const estimate = options.estimateUsd === null ? 'unmeasured' : usd(options.estimateUsd);
   if (!argv.includes('--paid') || !runId) {

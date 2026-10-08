@@ -1,0 +1,755 @@
+{
+ "kind": "w10b",
+ "arms": {
+  "w10b-sonnet55-notes": {
+   "n": 500,
+   "official": 462,
+   "secondary": 468,
+   "judges_agree": 488,
+   "judged_by_both": 500,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 30,
+     "official": 27,
+     "secondary": 26
+    },
+    "knowledge-update": {
+     "total": 72,
+     "official": 68,
+     "secondary": 69
+    },
+    "multi-session": {
+     "total": 121,
+     "official": 104,
+     "secondary": 109
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "official": 56,
+     "secondary": 56
+    },
+    "single-session-preference": {
+     "total": 30,
+     "official": 29,
+     "secondary": 29
+    },
+    "single-session-user": {
+     "total": 64,
+     "official": 63,
+     "secondary": 64
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "official": 115,
+     "secondary": 115
+    }
+   },
+   "usd": 11.772812,
+   "mean_input_tokens": 22077,
+   "mean_output_tokens": 203
+  },
+  "w10b-sonnet55-direct": {
+   "n": 500,
+   "official": 465,
+   "secondary": 470,
+   "judges_agree": 491,
+   "judged_by_both": 500,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 30,
+     "official": 29,
+     "secondary": 29
+    },
+    "knowledge-update": {
+     "total": 72,
+     "official": 71,
+     "secondary": 72
+    },
+    "multi-session": {
+     "total": 121,
+     "official": 104,
+     "secondary": 106
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "official": 56,
+     "secondary": 56
+    },
+    "single-session-preference": {
+     "total": 30,
+     "official": 28,
+     "secondary": 28
+    },
+    "single-session-user": {
+     "total": 64,
+     "official": 63,
+     "secondary": 63
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "official": 114,
+     "secondary": 116
+    }
+   },
+   "usd": 11.296856,
+   "mean_input_tokens": 22055,
+   "mean_output_tokens": 108
+  },
+  "w10b-sol-notes": {
+   "n": 500,
+   "official": 464,
+   "secondary": 464,
+   "judges_agree": 494,
+   "judged_by_both": 500,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 30,
+     "official": 27,
+     "secondary": 27
+    },
+    "knowledge-update": {
+     "total": 72,
+     "official": 71,
+     "secondary": 70
+    },
+    "multi-session": {
+     "total": 121,
+     "official": 102,
+     "secondary": 102
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "official": 56,
+     "secondary": 56
+    },
+    "single-session-preference": {
+     "total": 30,
+     "official": 29,
+     "secondary": 29
+    },
+    "single-session-user": {
+     "total": 64,
+     "official": 64,
+     "secondary": 64
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "official": 115,
+     "secondary": 116
+    }
+   },
+   "usd": 7.121915,
+   "mean_input_tokens": 13695,
+   "mean_output_tokens": 110
+  },
+  "w10b-gpt54-official": {
+   "n": 500,
+   "official": 460,
+   "secondary": 459,
+   "judges_agree": 491,
+   "judged_by_both": 500,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 30,
+     "official": 24,
+     "secondary": 22
+    },
+    "knowledge-update": {
+     "total": 72,
+     "official": 66,
+     "secondary": 68
+    },
+    "multi-session": {
+     "total": 121,
+     "official": 104,
+     "secondary": 102
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "official": 56,
+     "secondary": 56
+    },
+    "single-session-preference": {
+     "total": 30,
+     "official": 29,
+     "secondary": 29
+    },
+    "single-session-user": {
+     "total": 64,
+     "official": 63,
+     "secondary": 64
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "official": 118,
+     "secondary": 118
+    }
+   },
+   "usd": 9.529759,
+   "mean_input_tokens": 14458,
+   "mean_output_tokens": 452
+  },
+  "w10b-opus55-notes": {
+   "n": 500,
+   "official": 474,
+   "secondary": 480,
+   "judges_agree": 494,
+   "judged_by_both": 500,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 30,
+     "official": 29,
+     "secondary": 29
+    },
+    "knowledge-update": {
+     "total": 72,
+     "official": 70,
+     "secondary": 71
+    },
+    "multi-session": {
+     "total": 121,
+     "official": 109,
+     "secondary": 111
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "official": 55,
+     "secondary": 56
+    },
+    "single-session-preference": {
+     "total": 30,
+     "official": 30,
+     "secondary": 30
+    },
+    "single-session-user": {
+     "total": 64,
+     "official": 64,
+     "secondary": 64
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "official": 117,
+     "secondary": 119
+    }
+   },
+   "usd": 24.010314,
+   "mean_input_tokens": 22077,
+   "mean_output_tokens": 294
+  },
+  "w10b-fable51-notes": {
+   "n": 200,
+   "official": 181,
+   "secondary": 184,
+   "judges_agree": 197,
+   "judged_by_both": 200,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 13,
+     "official": 12,
+     "secondary": 12
+    },
+    "knowledge-update": {
+     "total": 33,
+     "official": 32,
+     "secondary": 33
+    },
+    "multi-session": {
+     "total": 49,
+     "official": 36,
+     "secondary": 37
+    },
+    "single-session-assistant": {
+     "total": 29,
+     "official": 29,
+     "secondary": 29
+    },
+    "single-session-preference": {
+     "total": 10,
+     "official": 9,
+     "secondary": 9
+    },
+    "single-session-user": {
+     "total": 26,
+     "official": 26,
+     "secondary": 26
+    },
+    "temporal-reasoning": {
+     "total": 40,
+     "official": 37,
+     "secondary": 38
+    }
+   },
+   "usd": 24.49443,
+   "mean_input_tokens": 21852,
+   "mean_output_tokens": 295
+  }
+ },
+ "comparators": {
+  "r1-sonnet46-notes": {
+   "n": 500,
+   "official": 451,
+   "secondary": 455,
+   "judges_agree": 486,
+   "judged_by_both": 500,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 30,
+     "official": 27,
+     "secondary": 27
+    },
+    "knowledge-update": {
+     "total": 72,
+     "official": 69,
+     "secondary": 69
+    },
+    "multi-session": {
+     "total": 121,
+     "official": 100,
+     "secondary": 99
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "official": 56,
+     "secondary": 56
+    },
+    "single-session-preference": {
+     "total": 30,
+     "official": 24,
+     "secondary": 24
+    },
+    "single-session-user": {
+     "total": 64,
+     "official": 63,
+     "secondary": 64
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "official": 112,
+     "secondary": 116
+    }
+   },
+   "usd": 0,
+   "mean_input_tokens": 0,
+   "mean_output_tokens": 0
+  },
+  "r2-sonnet46-direct": {
+   "n": 500,
+   "official": 437,
+   "secondary": 436,
+   "judges_agree": 487,
+   "judged_by_both": 500,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 30,
+     "official": 28,
+     "secondary": 24
+    },
+    "knowledge-update": {
+     "total": 72,
+     "official": 66,
+     "secondary": 66
+    },
+    "multi-session": {
+     "total": 121,
+     "official": 99,
+     "secondary": 99
+    },
+    "single-session-assistant": {
+     "total": 56,
+     "official": 55,
+     "secondary": 55
+    },
+    "single-session-preference": {
+     "total": 30,
+     "official": 19,
+     "secondary": 20
+    },
+    "single-session-user": {
+     "total": 64,
+     "official": 63,
+     "secondary": 63
+    },
+    "temporal-reasoning": {
+     "total": 127,
+     "official": 107,
+     "secondary": 109
+    }
+   },
+   "usd": 0,
+   "mean_input_tokens": 0,
+   "mean_output_tokens": 0
+  },
+  "r1-sonnet46-notes-on-fable200": {
+   "n": 200,
+   "official": 178,
+   "secondary": 183,
+   "judges_agree": 195,
+   "judged_by_both": 200,
+   "reader_errors": {},
+   "max_tokens_finishes": 0,
+   "by_type": {
+    "abstention": {
+     "total": 13,
+     "official": 11,
+     "secondary": 11
+    },
+    "knowledge-update": {
+     "total": 33,
+     "official": 31,
+     "secondary": 32
+    },
+    "multi-session": {
+     "total": 49,
+     "official": 40,
+     "secondary": 40
+    },
+    "single-session-assistant": {
+     "total": 29,
+     "official": 29,
+     "secondary": 29
+    },
+    "single-session-preference": {
+     "total": 10,
+     "official": 6,
+     "secondary": 7
+    },
+    "single-session-user": {
+     "total": 26,
+     "official": 26,
+     "secondary": 26
+    },
+    "temporal-reasoning": {
+     "total": 40,
+     "official": 35,
+     "secondary": 38
+    }
+   },
+   "usd": 0,
+   "mean_input_tokens": 0,
+   "mean_output_tokens": 0
+  }
+ },
+ "families": {
+  "official": {
+   "family_id": "w10b-reader-replay-official-judge",
+   "verdict": "inconclusive",
+   "holm_family": [
+    "correct__sonnet55_notes-vs-sonnet46",
+    "correct__sonnet55_direct-vs-sonnet46",
+    "correct__sol_notes-vs-sonnet46",
+    "correct__gpt54_official-vs-sonnet46",
+    "correct__opus55_notes-vs-sonnet46",
+    "correct__fable51_notes-vs-sonnet46"
+   ],
+   "comparisons": [
+    {
+     "id": "correct__sonnet55_notes-vs-sonnet46",
+     "status": "inconclusive",
+     "n_pairs": 500,
+     "mean_a": 0.902,
+     "mean_b": 0.924,
+     "delta": 0.022,
+     "ci95": [
+      0,
+      0.044
+     ],
+     "mcnemar": {
+      "losses": 11,
+      "wins": 22,
+      "both_pass": 440,
+      "both_fail": 27,
+      "discordant": 33,
+      "p_two_sided": 0.08014331245794892
+     },
+     "p_superiority": 0.0321967803219678,
+     "p_holm": 0.09659034096590341,
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0321; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__sonnet55_direct-vs-sonnet46",
+     "status": "pass",
+     "n_pairs": 500,
+     "mean_a": 0.874,
+     "mean_b": 0.93,
+     "delta": 0.056,
+     "ci95": [
+      0.03,
+      0.084
+     ],
+     "mcnemar": {
+      "losses": 10,
+      "wins": 38,
+      "both_pass": 427,
+      "both_fail": 25,
+      "discordant": 48,
+      "p_two_sided": 0.00006169640777642371
+     },
+     "p_superiority": 0.00009999000099990002,
+     "p_holm": 0.0005999400059994001,
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0382; the observed delta is at least that size; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__sol_notes-vs-sonnet46",
+     "status": "inconclusive",
+     "n_pairs": 500,
+     "mean_a": 0.902,
+     "mean_b": 0.928,
+     "delta": 0.026,
+     "ci95": [
+      0.004,
+      0.05
+     ],
+     "mcnemar": {
+      "losses": 11,
+      "wins": 24,
+      "both_pass": 440,
+      "both_fail": 25,
+      "discordant": 35,
+      "p_two_sided": 0.04095959151163697
+     },
+     "p_superiority": 0.0136986301369863,
+     "p_holm": 0.0547945205479452,
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0330; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__gpt54_official-vs-sonnet46",
+     "status": "inconclusive",
+     "n_pairs": 500,
+     "mean_a": 0.902,
+     "mean_b": 0.92,
+     "delta": 0.018,
+     "ci95": [
+      -0.006,
+      0.042
+     ],
+     "mcnemar": {
+      "losses": 14,
+      "wins": 23,
+      "both_pass": 437,
+      "both_fail": 26,
+      "discordant": 37,
+      "p_two_sided": 0.18774155899882317
+     },
+     "p_superiority": 0.0761923807619238,
+     "p_holm": 0.1523847615238476,
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0340; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__opus55_notes-vs-sonnet46",
+     "status": "pass",
+     "n_pairs": 500,
+     "mean_a": 0.902,
+     "mean_b": 0.948,
+     "delta": 0.046,
+     "ci95": [
+      0.026,
+      0.068
+     ],
+     "mcnemar": {
+      "losses": 5,
+      "wins": 28,
+      "both_pass": 446,
+      "both_fail": 21,
+      "discordant": 33,
+      "p_two_sided": 0.00006618769839406013
+     },
+     "p_superiority": 0.00009999000099990002,
+     "p_holm": 0.0005999400059994001,
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0317; the observed delta is at least that size; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__fable51_notes-vs-sonnet46",
+     "status": "inconclusive",
+     "n_pairs": 200,
+     "mean_a": 0.89,
+     "mean_b": 0.905,
+     "delta": 0.015,
+     "ci95": [
+      -0.02,
+      0.05
+     ],
+     "mcnemar": {
+      "losses": 5,
+      "wins": 8,
+      "both_pass": 173,
+      "both_fail": 14,
+      "discordant": 13,
+      "p_two_sided": 0.5810546875
+     },
+     "p_superiority": 0.24597540245975402,
+     "p_holm": 0.24597540245975402,
+     "power": "with 200 pairs in 200 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0505; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    }
+   ]
+  },
+  "secondary": {
+   "family_id": "w10b-reader-replay-secondary-judge",
+   "verdict": "report_only",
+   "holm_family": [],
+   "comparisons": [
+    {
+     "id": "correct__sonnet55_notes-vs-sonnet46",
+     "status": "report_only",
+     "n_pairs": 500,
+     "mean_a": 0.91,
+     "mean_b": 0.936,
+     "delta": 0.026,
+     "ci95": [
+      0.002,
+      0.05
+     ],
+     "mcnemar": {
+      "losses": 12,
+      "wins": 25,
+      "both_pass": 443,
+      "both_fail": 20,
+      "discordant": 37,
+      "p_two_sided": 0.04703102743951604
+     },
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0340; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__sonnet55_direct-vs-sonnet46",
+     "status": "report_only",
+     "n_pairs": 500,
+     "mean_a": 0.872,
+     "mean_b": 0.94,
+     "delta": 0.068,
+     "ci95": [
+      0.042,
+      0.096
+     ],
+     "mcnemar": {
+      "losses": 7,
+      "wins": 41,
+      "both_pass": 429,
+      "both_fail": 23,
+      "discordant": 48,
+      "p_two_sided": 6.240408438884515e-7
+     },
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0379; the observed delta is at least that size; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__sol_notes-vs-sonnet46",
+     "status": "report_only",
+     "n_pairs": 500,
+     "mean_a": 0.91,
+     "mean_b": 0.928,
+     "delta": 0.018,
+     "ci95": [
+      -0.004,
+      0.042
+     ],
+     "mcnemar": {
+      "losses": 13,
+      "wins": 22,
+      "both_pass": 442,
+      "both_fail": 23,
+      "discordant": 35,
+      "p_two_sided": 0.17546524899080396
+     },
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0331; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__gpt54_official-vs-sonnet46",
+     "status": "report_only",
+     "n_pairs": 500,
+     "mean_a": 0.91,
+     "mean_b": 0.918,
+     "delta": 0.008,
+     "ci95": [
+      -0.014,
+      0.03
+     ],
+     "mcnemar": {
+      "losses": 14,
+      "wins": 18,
+      "both_pass": 441,
+      "both_fail": 27,
+      "discordant": 32,
+      "p_two_sided": 0.5966148958541453
+     },
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0317; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__opus55_notes-vs-sonnet46",
+     "status": "report_only",
+     "n_pairs": 500,
+     "mean_a": 0.91,
+     "mean_b": 0.96,
+     "delta": 0.05,
+     "ci95": [
+      0.03,
+      0.072
+     ],
+     "mcnemar": {
+      "losses": 3,
+      "wins": 28,
+      "both_pass": 452,
+      "both_fail": 17,
+      "discordant": 31,
+      "p_two_sided": 0.000004649162292480469
+     },
+     "power": "with 500 pairs in 500 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0306; the observed delta is at least that size; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    },
+    {
+     "id": "correct__fable51_notes-vs-sonnet46",
+     "status": "report_only",
+     "n_pairs": 200,
+     "mean_a": 0.915,
+     "mean_b": 0.92,
+     "delta": 0.005,
+     "ci95": [
+      -0.03,
+      0.04
+     ],
+     "mcnemar": {
+      "losses": 5,
+      "wins": 6,
+      "both_pass": 178,
+      "both_fail": 11,
+      "discordant": 11,
+      "p_two_sided": 1
+     },
+     "power": "with 200 pairs in 200 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0466; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    }
+   ]
+  }
+ },
+ "notes_vs_direct_sonnet55": [
+  {
+   "judge": "official",
+   "losses": 10,
+   "wins": 7,
+   "both_pass": 455,
+   "both_fail": 28,
+   "discordant": 17,
+   "p_two_sided": 0.629058837890625
+  },
+  {
+   "judge": "secondary",
+   "losses": 12,
+   "wins": 10,
+   "both_pass": 458,
+   "both_fail": 20,
+   "discordant": 22,
+   "p_two_sided": 0.8318119049072266
+  }
+ ]
+}

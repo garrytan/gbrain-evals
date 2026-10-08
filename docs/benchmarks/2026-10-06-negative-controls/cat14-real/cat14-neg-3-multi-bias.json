@@ -1,0 +1,79 @@
+{
+  "probe_id": "cat14-neg-3-multi-bias",
+  "category": "calibration-multi-bias",
+  "question": "Should we lead the Series A for an LA-based AI startup with a COO from a slower-paced company?",
+  "baseline_answer": "## Answer\n\nThe brain does not contain enough information to say whether to lead this Series A, and it holds nothing on this company, its COO, or its terms. The only material is two resolved past takes by garry, and they bear on this question only indirectly.\n\n- **Tactics / speed:** garry's claim \"This founder ships fast and wins\" resolved as correct, with conviction weight 0.8, recorded 2024-06-10 [cat14/cat14-neg-3-multi-bias/take-2]. This is a general data point about fast-shipping founders. It says nothing about a COO from a slower-paced company, and nothing in the brain links it to this startup.\n- **Geography:** garry's claim \"This NY tech startup will scale beyond NY\" resolved as incorrect, with conviction weight 0.85, recorded 2024-03-01 [cat14/cat14-neg-3-multi-bias/take-1]. It concerns a NY startup, not an LA one, so applying it to an LA-based company would be an extrapolation. The brain gives no evidence for that.\n\nThe two outcomes point in different directions: one confident call proved right and one proved wrong. Two data points are too few to show a pattern, and neither addresses COO background or pace-of-company fit.\n\nThere are no take hits, no graph data, and no pages about the startup, the COO, the market, or the round.",
+  "calibrated_answer": "## Answer\n\nThe brain has no direct evidence on this LA-based AI startup, its COO, or the Series A terms, so it cannot say whether to lead. It holds two resolved past calls by garry that bear on the two dimensions of the question, geography and pace/tactics.\n\n- **Geography (LA location):** garry's earlier call that a NY tech startup would scale beyond NY was resolved incorrect (conviction weight 0.85, recorded 2024-03-01) [cat14/cat14-neg-3-multi-bias/take-1]. This is the only geography data point.\n- **Tactics (COO from a slower-paced company):** garry's call that a founder \"ships fast and wins\" was resolved correct (conviction weight 0.8, recorded 2024-06-10) [cat14/cat14-neg-3-multi-bias/take-2]. It is the closest proxy for execution speed, and it concerned a founder, not a COO.\n\nNeither record covers LA, AI startups, or COO hiring, so both are only loose analogies.\n\n## Calibration\n\n- **Prior (default reasoning):** garry tends to reason with high conviction. Both past calls were made at 0.8 or above [cat14/cat14-neg-3-multi-bias/take-1] [cat14/cat14-neg-3-multi-bias/take-2]. For this question that would mean a confident read on both the LA market and the team's pace.\n- **Counter-prior (hedged-domain self):** the calibration profile flags the geography prior as over-confident (0/1 in 2024), tagged `over-confident-geography`. Any strong view on LA as a location or market advantage fits that pattern and deserves discounting.\n- **Tactics:** the profile tags the tactics prior as sharp (`well-calibrated-tactics`). A read on whether a COO from a slower-paced company fits the team's operating tempo falls in the better-calibrated domain, and the one resolved tactics record was correct [cat14/cat14-neg-3-multi-bias/take-2].\n- **Sample size:** each domain has only one resolved data point, so both the over-confidence and the sharpness labels rest on very thin evidence. Both records are also about two years old as of 2026-10-06.\n\nThe brain does not substitute a debiased verdict. It reports the confident prior and the discounted one side by side, and the decision is left open.",
+  "prompts_identical": false,
+  "calibration_block_present": true,
+  "think_warnings": {
+    "baseline": [],
+    "calibrated": []
+  },
+  "win_eligible": true,
+  "judge_orders": 2,
+  "scores": [
+    {
+      "axis": "mentions_relevant_bias_tag",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference geography and execution-speed track records that are relevant to the question, while acknowledging the limited evidence. B explicitly pairs a confident default view with the geography overconfidence warning and distinguishes the better-calibrated tactics domain; A does not present that prior-and-counter-prior pairing. Both use impersonal language and untranslated conviction weights rather than a conversational voice. Neither recommends whether to lead the round, so their recommendations do not meaningfully differ, but B provides more useful calibration guidance. || A explicitly connects geography overconfidence and well-calibrated tactics to the investment question, while acknowledging that COO fit is only a loose analogy. B references the relevant geography miss and tactics success, but does not pair the user's gut prior with a track-record counter-prior. Both decline to recommend leading the round, and both use impersonal 'brain' language and untranslated conviction weights rather than a conversational voice. A is more useful because it preserves the profile's relevant calibration signal instead of dismissing it entirely, while still noting the thin evidence."
+    },
+    {
+      "axis": "presents_counter_prior",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference geography and execution-speed track records that are relevant to the question, while acknowledging the limited evidence. B explicitly pairs a confident default view with the geography overconfidence warning and distinguishes the better-calibrated tactics domain; A does not present that prior-and-counter-prior pairing. Both use impersonal language and untranslated conviction weights rather than a conversational voice. Neither recommends whether to lead the round, so their recommendations do not meaningfully differ, but B provides more useful calibration guidance. || A explicitly connects geography overconfidence and well-calibrated tactics to the investment question, while acknowledging that COO fit is only a loose analogy. B references the relevant geography miss and tactics success, but does not pair the user's gut prior with a track-record counter-prior. Both decline to recommend leading the round, and both use impersonal 'brain' language and untranslated conviction weights rather than a conversational voice. A is more useful because it preserves the profile's relevant calibration signal instead of dismissing it entirely, while still noting the thin evidence."
+    },
+    {
+      "axis": "changes_recommendation_meaningfully",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference geography and execution-speed track records that are relevant to the question, while acknowledging the limited evidence. B explicitly pairs a confident default view with the geography overconfidence warning and distinguishes the better-calibrated tactics domain; A does not present that prior-and-counter-prior pairing. Both use impersonal language and untranslated conviction weights rather than a conversational voice. Neither recommends whether to lead the round, so their recommendations do not meaningfully differ, but B provides more useful calibration guidance. || A explicitly connects geography overconfidence and well-calibrated tactics to the investment question, while acknowledging that COO fit is only a loose analogy. B references the relevant geography miss and tactics success, but does not pair the user's gut prior with a track-record counter-prior. Both decline to recommend leading the round, and both use impersonal 'brain' language and untranslated conviction weights rather than a conversational voice. A is more useful because it preserves the profile's relevant calibration signal instead of dismissing it entirely, while still noting the thin evidence."
+    },
+    {
+      "axis": "voice_conversational",
+      "expected": true,
+      "actual_by_order": [
+        false,
+        false
+      ],
+      "score": 0,
+      "outcome": "fail",
+      "rationale": "Both answers reference geography and execution-speed track records that are relevant to the question, while acknowledging the limited evidence. B explicitly pairs a confident default view with the geography overconfidence warning and distinguishes the better-calibrated tactics domain; A does not present that prior-and-counter-prior pairing. Both use impersonal language and untranslated conviction weights rather than a conversational voice. Neither recommends whether to lead the round, so their recommendations do not meaningfully differ, but B provides more useful calibration guidance. || A explicitly connects geography overconfidence and well-calibrated tactics to the investment question, while acknowledging that COO fit is only a loose analogy. B references the relevant geography miss and tactics success, but does not pair the user's gut prior with a track-record counter-prior. Both decline to recommend leading the round, and both use impersonal 'brain' language and untranslated conviction weights rather than a conversational voice. A is more useful because it preserves the profile's relevant calibration signal instead of dismissing it entirely, while still noting the thin evidence."
+    },
+    {
+      "axis": "doesnt_force_fit_irrelevant_bias",
+      "expected": true,
+      "actual_by_order": [
+        true,
+        true
+      ],
+      "score": 1,
+      "outcome": "pass",
+      "rationale": "Both answers reference geography and execution-speed track records that are relevant to the question, while acknowledging the limited evidence. B explicitly pairs a confident default view with the geography overconfidence warning and distinguishes the better-calibrated tactics domain; A does not present that prior-and-counter-prior pairing. Both use impersonal language and untranslated conviction weights rather than a conversational voice. Neither recommends whether to lead the round, so their recommendations do not meaningfully differ, but B provides more useful calibration guidance. || A explicitly connects geography overconfidence and well-calibrated tactics to the investment question, while acknowledging that COO fit is only a loose analogy. B references the relevant geography miss and tactics success, but does not pair the user's gut prior with a track-record counter-prior. Both decline to recommend leading the round, and both use impersonal 'brain' language and untranslated conviction weights rather than a conversational voice. A is more useful because it preserves the profile's relevant calibration signal instead of dismissing it entirely, while still noting the thin evidence."
+    }
+  ],
+  "win_score": 1,
+  "win_overall": "calibrated",
+  "per_axis_pass_rate": 0.6,
+  "failure_modes": [
+    "changes_recommendation_meaningfully",
+    "voice_conversational"
+  ]
+}

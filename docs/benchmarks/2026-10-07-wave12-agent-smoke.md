@@ -2,6 +2,8 @@
 
 **Measured October 7, 2026, on gbrain `capy/fix-wave-11` head `027d3c69f` (baseline) and fix wave 12 head `209b20a96` (GBRA-57), in the same window. Preregistered before any cell ran ([preregistration](2026-10-07-wave12-agent-smoke-preregistration.md), commit `5ee10126`; amendment 1 `c8042a27`, written after the preregistered cells and before the attribution set). Spend $38.88.**
 
+**Shipped in gbrain v0.60.106.0, merge commit [`7aa2caa0`](https://github.com/garrytan/gbrain/commit/7aa2caa0aa2a9f031730cd351cd516cf4f9f5802) ([#6269](https://github.com/garrytan/gbrain/pull/6269)), with W4.6 reverted and W4.16 kept.** At the merge commit, `src/mcp/instructions.ts` is byte-identical to the measured baseline `027d3c69f`, so agents get the instructions that the baseline and attribution sets served (Opus 5.5 write-back 48 of 50 in this run). The put_page description and content parameter match the measured wave 12 build. A variant placing the caveat in its own clause after clause 2 was not run: on the full surface, any clause before clause 7 pushes more of the "what is true now" sentence past 2,048 characters than the baseline does.
+
 [gbrain](https://github.com/garrytan/gbrain) gives an agent an operating contract (the **initialize instructions**) and a description for every tool when it connects over MCP. Fix wave 12 changes two of those texts:
 
 - **W4.6** moves the `forget` caveat ("`forget` withdraws a fact from active memory; it never erases source material, history or backups.") from a late clause of its own into the memory clause (clause 2), inside the first 2,048 characters some harnesses keep.

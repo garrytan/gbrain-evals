@@ -1,0 +1,19 @@
+{
+  "model": "anthropic:claude-opus-5-5",
+  "cases": 123,
+  "predictions": 123,
+  "aborted": false,
+  "estimate_usd": 0.936508,
+  "ceiling_usd": 5.118508,
+  "max_usd": 1.4,
+  "spent_usd": 0.582768,
+  "price_used": {
+    "input": 4,
+    "output": 20,
+    "cache_read": 0.2,
+    "cache_write": 5
+  },
+  "price_source": "gbrain canonicalLookup",
+  "case_errors": [],
+  "wall_ms": 322486
+}

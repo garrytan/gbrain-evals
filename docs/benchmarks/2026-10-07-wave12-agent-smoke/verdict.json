@@ -23,6 +23,15 @@
       "served_instructions_chars": 3612
     }
   },
+  "gbrain_shipped_in": {
+    "version": "0.60.106.0",
+    "merge_commit": "7aa2caa0",
+    "pull_request": 6269
+  },
+  "shipped_text": {
+    "instructions": "baseline order: W4.6 was reverted before merge; src/mcp/instructions.ts at 7aa2caa0 is byte-identical to the measured baseline 027d3c69f, so the shipped instructions are the ones the baseline and attribution sets served",
+    "put_page": "W4.16 shipped: the put_page description and content parameter at 7aa2caa0 are identical to the measured wave12 build 209b20a96"
+  },
   "served_text_differences": [
     "initialize instructions: forget caveat moved from clause 10 into clause 2 (W4.6)",
     "put_page description and content parameter (W4.16)"
@@ -344,5 +353,5 @@
     "ledger": ".budget/w12-smoke.sqlite (program cap $40)"
   },
   "failed_launch": "the first cell launch passed --gbrain-root with an unexpanded ~ and stopped at the slot-snapshot check before any cell or charge; logs in failed-launch/",
-  "verdict": "W4.6 regress (preregistered gate; attribution names the instruction change); W4.16 pass (no harm, improvement within noise)"
+  "verdict": "W4.6 regress (preregistered gate; attribution names the instruction change), reverted before merge; W4.16 pass (no harm, improvement within noise), shipped in gbrain v0.60.106.0 (7aa2caa0, #6269)"
 }

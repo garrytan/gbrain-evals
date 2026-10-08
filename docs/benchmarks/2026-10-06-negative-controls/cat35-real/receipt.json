@@ -1,0 +1,124 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat35-transcript-distill",
+  "gbrain_version": "0.60.95.0",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "started_at": "2026-10-06T19:14:50.157Z",
+  "finished_at": "2026-10-06T19:19:40.581Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 67,
+  "n_scored": 67,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "resolved_config": {
+    "mode": "b-pre-validity",
+    "lanes": [
+      "dream"
+    ],
+    "transcripts": 8,
+    "corpus_sha": "5fce384e57839be4d9adc231849718463af5235061b698576f63ff587cd22eef",
+    "judge_prompt_version": "2026-09-28-v2",
+    "input_allowlist": [
+      "cat35.sut.source@1",
+      "cat35.judge.coverage@1",
+      "cat35.judge.leak@1",
+      "cat35.judge.usability@1"
+    ],
+    "transcript_mode": "real",
+    "control_inputs": {},
+    "judge_transport": "OpenAI Responses API through openai-judge-shim: no temperature, reasoning effort low, max_output_tokens at least 8000",
+    "dream_model": "anthropic:claude-sonnet-5-5",
+    "triage_model": "anthropic:claude-sonnet-5-5",
+    "facts_model": "anthropic:claude-sonnet-5-5",
+    "max_turns": 8,
+    "triage_threshold": 0.5,
+    "subagent_timeout_ms": 600000,
+    "dream_concurrency": 2,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-10-06-191450-cat35-bpre.json"
+  },
+  "judge": {
+    "model": "openai:gpt-6.1-sol",
+    "temperature": 0,
+    "rubric_version": "2026-09-28-v2"
+  },
+  "data": {
+    "coverage_by_lane": {
+      "dream": {
+        "macro": 0.890625,
+        "micro": 0.8880597014925373,
+        "strict": 0.8208955223880597,
+        "partial_rate": 0.13432835820895522,
+        "ci_lo": 0.828125,
+        "ci_hi": 0.9409722222222222,
+        "n_items": 67,
+        "judge_failed_excluded": 0,
+        "joint_macro": 0.8385416666666667,
+        "joint_ci_lo": 0.7751736111111112,
+        "joint_ci_hi": 0.9071180555555556,
+        "joint_n_items": 67,
+        "joint_excluded": 0
+      }
+    },
+    "gates": {
+      "verbatim_coverage": null,
+      "judge_failed_rate": true,
+      "dream_emission": true
+    },
+    "judge_failed_rate": 0,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-10-06-191450-cat35-bpre.json"
+  },
+  "cost": {
+    "usd": 0.541758,
+    "input_tokens": 159039,
+    "output_tokens": 29866,
+    "basis": "budget ledger cat35-transcript-distill-2026-10-06T19-14-50-274Z-f983d197: 96 paid requests, 6 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/followups-2026-10.sqlite",
+    "program_cap_usd": 297,
+    "overshoot_usd": 0.000159,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 2554.2
+    }
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-06-negative-controls-preregistration.md",
+    "preregistration_commit": "16d787266a30c390983ea7beca542ba77183201c",
+    "runner_commit": "5e9d79974a2b0d701ce3dcf2cb82d449633b6885",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-06T19:14:50.170Z"
+  },
+  "delivered_tokens": {
+    "tokens": 159039,
+    "basis": "provider-reported input tokens of every paid request (judges, fact extraction, dream synthesis and subagents), from the budget ledger"
+  },
+  "accounting": {
+    "planned": 67,
+    "attempted": 67,
+    "scored": 67,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "3eef1f9a3dd8544008f668411e37903e9b7d9846f4d826caede0c03b4087ad5a",
+      "files": 3647,
+      "git_head": "5e9d79974a2b0d701ce3dcf2cb82d449633b6885",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "declared_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+      "version": "0.60.95.0",
+      "package_sha256": "9db19018eb83d4183f6dbf6f226639e3780a70ba825617a889f47b7bcd8199ae",
+      "loaded_git_head": null
+    }
+  }
+}
