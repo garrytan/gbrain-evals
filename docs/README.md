@@ -62,6 +62,7 @@ gap does not isolate the effect of a graph alone.
 
 | Engineering question | Report |
 |---|---|
+| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 7 memory trust harness results, Cats 37-39](benchmarks/2026-10-07-memory-trust-results-harness.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md)): keyless, on gbrain's unmerged #5575 branches, no model measured yet; state resolution is exact, poisoning is contained except two search-label bugs, and purge leaves claim text in stored write outcomes |
 | Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
@@ -173,6 +174,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-07: Memory trust categories row
+
+The memory table gained a row for Cats 37 (memory poisoning), 38 (state resolution) and 39 (deletion audit), added for gbrain #5575 with their preregistration and the keyless harness results on the feature branches: no model has been measured, and the paid run that sets gbrain's defaults follows the preregistration.
 
 ### 2026-10-07: Fix wave 12 agent smoke row
 
