@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.40, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
+gbrain-evals v0.10.41, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -80,6 +80,7 @@ gap does not isolate the effect of a graph alone.
 | Does gbrain help an agent finish company-knowledge tasks better than grep, a memory tool or plain Postgres, and does that hold as models improve? | [Model Ladder (Cat 40): what it measures](benchmarks/2026-10-02-model-ladder-protocol.md), [results](benchmarks/2026-10-02-model-ladder.md) |
 | Does gbrain help frontier agents on tasks plain files only half solve: many-record questions, long histories, look-alike customers, conflicting sources and five-session memory? | [Cat 40 Hard: operator guide](benchmarks/cat40-hard/RUNBOOK.md), [world contract](benchmarks/cat40-hard/WORLD_SCHEMA.md), [preregistration](benchmarks/cat40-hard/PREREGISTRATION.md) |
 | Did fix wave 11's reordered MCP instructions and shorter put_page description hurt agents? | [October 7 wave 11 agent smoke (Cat 40, D12)](benchmarks/2026-10-07-wave11-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave11-agent-smoke-preregistration.md)): pass; permission tasks 60/60 on both builds, write-back 55/60 on master and 56/60 on the wave, most cells at the ceiling, and no model called put_page |
+| Does fix wave 12's move of the `forget` caveat into the memory clause, or its restored put_page request_id UUID line, change how agents do? | [October 7 wave 12 agent smoke (Cat 40, GBRA-57)](benchmarks/2026-10-07-wave12-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave12-agent-smoke-preregistration.md)): the caveat move regresses Opus 5.5 write-back (20/20 to 15/20; the old instructions on the wave 12 build give 19/20) and was reverted before merge; the UUID line does no harm, does not measurably cut non-UUID first writes (17/30 to 14/30), and shipped in gbrain v0.60.106.0 ([`7aa2caa`](https://github.com/garrytan/gbrain/commit/7aa2caa0aa2a9f031730cd351cd516cf4f9f5802), #6269) |
 | Which MCP tool surface should gbrain register for agents: seven verbs, `starter` or `full`? | [October 5 registration-surface cell](benchmarks/2026-10-05-registration-surface.md) ([preregistration](benchmarks/2026-10-05-registration-surface-preregistration.md)) |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
 | What did the earlier ingestion worker comparisons measure? | [Subagent comparison](benchmarks/2026-04-18-minions-vs-openclaw-subagents.md), [production comparison](benchmarks/2026-04-18-minions-vs-openclaw-production.md) |
@@ -174,6 +175,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-07: Fix wave 12 agent smoke row
+
+gbrain-evals v0.10.40. The memory table gained a row for the preregistered fix wave 12 agent smoke: moving the `forget` caveat into the memory clause (W4.6) fails the write-back gate on Opus 5.5, and an attribution set names the instruction change, so it was reverted before merge; the restored put_page UUID line (W4.16) does no harm and shipped in gbrain v0.60.106.0 (`7aa2caa`, #6269). The opening line names v0.10.40 instead of v0.10.39.
 
 ### 2026-10-07: Fix wave 11 rows
 

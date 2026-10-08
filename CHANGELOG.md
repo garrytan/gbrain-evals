@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.40] - 2026-10-07
+## [0.10.41] - 2026-10-06
 
 ### Cat 40 Hard result: gbrain trails plain files by 11.3 points on the 55,000-document company
 
@@ -113,6 +113,15 @@ $1,794).
   drawn ([calibration.md](docs/benchmarks/cat40-hard/calibration.md)). Projections now go per model, arm and family
   from round 1's measured Hard costs (2 to 5 times v1 per cell) plus the measured judge cost; a resumed step opens a
   new budget run (`--new-budget-run`) sized to the cells still missing. `knobs.round-2.json` makes H2 and H3 harder.
+
+## [0.10.40] - 2026-10-07
+
+### gbrain fix wave 12 agent smoke: the forget-caveat move regresses Opus 5.5 write-back; the restored put_page UUID line does no harm
+
+Paired with gbrain fix wave 12 (GBRA-57, branch `capy/fix-wave-12`, head `209b20a96`, v0.60.106.0) against `capy/fix-wave-11` head `027d3c69f`. Shipped in gbrain v0.60.106.0, merge commit `7aa2caa0` (#6269), with W4.6 reverted (the shipped instructions are byte-identical to the baseline's) and W4.16 kept.
+
+- **Agent smoke (Cat 40, $38.88).** [Report](docs/benchmarks/2026-10-07-wave12-agent-smoke.md), [preregistration](docs/benchmarks/2026-10-07-wave12-agent-smoke-preregistration.md) committed before any cell, with amendment 1 (one attribution set) written after the preregistered cells and before that set ran. #92's harness and gated cells, `gbrain` arm, `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol`. Permission tasks: 60/60 on both builds, no leaks. Write-back: 60/60 against 55/60, all of it Opus 5.5 (20/20 to 15/20), so the preregistered W4.6 gate reads regress. The wave 12 build serving the baseline's instructions gives Opus 19/20, which names the instruction change. W4.16: Opus non-UUID first-write `request_id` 17/30 on the baseline and 14/30 on wave 12 (p = 0.61), so it does no harm but shows no measured gain. Five of six model-family cells are at the ceiling. No model called `put_page`. Computed, not measured: on the full surface the move pushes 152 characters of clause 7's "what is true now" sentence past a 2,048-character cap (53 before).
+- **Version.** Main is at 0.10.39, so this release is 0.10.40.
 
 ## [0.10.39] - 2026-10-07
 

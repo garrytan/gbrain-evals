@@ -1,0 +1,267 @@
+{
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "wave12"
+  ],
+  "tasks": [
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10",
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10"
+  ],
+  "families": [
+    "C",
+    "F"
+  ],
+  "success": {
+    "claude-opus-5-5": {
+      "wave12": 0.875
+    },
+    "claude-sonnet-5-5": {
+      "wave12": 1
+    },
+    "gpt-6.1-sol": {
+      "wave12": 1
+    }
+  },
+  "by_family": {
+    "C": {
+      "claude-opus-5-5": {
+        "wave12": 1
+      },
+      "claude-sonnet-5-5": {
+        "wave12": 1
+      },
+      "gpt-6.1-sol": {
+        "wave12": 1
+      }
+    },
+    "F": {
+      "claude-opus-5-5": {
+        "wave12": 0.75
+      },
+      "claude-sonnet-5-5": {
+        "wave12": 1
+      },
+      "gpt-6.1-sol": {
+        "wave12": 1
+      }
+    }
+  },
+  "by_stratum": {
+    "memory-only": {
+      "claude-opus-5-5": {
+        "wave12": 1
+      },
+      "claude-sonnet-5-5": {
+        "wave12": 1
+      },
+      "gpt-6.1-sol": {
+        "wave12": 1
+      }
+    },
+    "page-authoring": {
+      "claude-opus-5-5": {
+        "wave12": 0.75
+      },
+      "claude-sonnet-5-5": {
+        "wave12": 1
+      },
+      "gpt-6.1-sol": {
+        "wave12": 1
+      }
+    }
+  },
+  "capability": {
+    "claude-opus-5-5": null,
+    "claude-sonnet-5-5": null,
+    "gpt-6.1-sol": null
+  },
+  "advantage": {},
+  "pooled_advantage": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ]
+  },
+  "slope": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ],
+    "n_models": 0
+  },
+  "family_slopes": {
+    "C": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "F": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "wave12": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 60
+    }
+  },
+  "efficiency": {
+    "claude-opus-5-5": {
+      "wave12": {
+        "usd_per_task": 0.20943961374999995,
+        "usd_per_success": 0.23935955857142852,
+        "p50_s": 90.234,
+        "p95_s": 113.929,
+        "turns": 3.825
+      }
+    },
+    "claude-sonnet-5-5": {
+      "wave12": {
+        "usd_per_task": 0.10548236875000001,
+        "usd_per_success": 0.10548236875000001,
+        "p50_s": 77.641,
+        "p95_s": 111.819,
+        "turns": 2.975
+      }
+    },
+    "gpt-6.1-sol": {
+      "wave12": {
+        "usd_per_task": 0.03654791375000001,
+        "usd_per_success": 0.03654791375000001,
+        "p50_s": 83.952,
+        "p95_s": 114.335,
+        "turns": 4.975
+      }
+    }
+  },
+  "claims": {
+    "wave12": {
+      "unsupported_per_answer": null,
+      "contradicted_per_answer": null,
+      "judged": 0
+    }
+  },
+  "missed_evidence": {
+    "wave12": 0
+  },
+  "cost_split": {
+    "claude-opus-5-5": {
+      "wave12": {
+        "uncached_input": 0.00006220000000000001,
+        "cache_write": 0.157664125,
+        "cache_read": 0.024563555,
+        "output": 0.027103999999999993,
+        "gbrain_provider_calls": 0.000045733749999999996,
+        "unsplit": 0,
+        "total": 0.20943961374999998
+      }
+    },
+    "claude-sonnet-5-5": {
+      "wave12": {
+        "uncached_input": 0.000027099999999999998,
+        "cache_write": 0.07565275,
+        "cache_read": 0.019533355,
+        "output": 0.010213,
+        "gbrain_provider_calls": 0.00005616374999999999,
+        "unsplit": 0,
+        "total": 0.10548236875
+      }
+    },
+    "gpt-6.1-sol": {
+      "wave12": {
+        "uncached_input": 0.025516399999999998,
+        "cache_write": 0,
+        "cache_read": 0.006525550000000002,
+        "output": 0.004356500000000001,
+        "gbrain_provider_calls": 0.00014946374999999995,
+        "unsplit": 0,
+        "total": 0.036547913750000015
+      }
+    }
+  },
+  "tool_chars": {
+    "claude-opus-5-5": {
+      "wave12": {
+        "entity": 12826.55,
+        "search": 41397.8,
+        "get_page": 3012.475,
+        "get_backlinks": 1369.9250000000002,
+        "resolve_slugs": 23.725,
+        "query": 817.85,
+        "list_pages": 87.19999999999999,
+        "remember": 996.175,
+        "recall": 980.7750000000001,
+        "add_timeline_entry": 578.525,
+        "whoami": 36.6,
+        "forget": 68.9,
+        "list_skills": 10.575,
+        "edit_page": 296.42499999999995
+      }
+    },
+    "claude-sonnet-5-5": {
+      "wave12": {
+        "entity": 17878.975000000006,
+        "search": 31380.625000000004,
+        "get_page": 2352.4999999999995,
+        "whoami": 1506.45,
+        "query": 3096.55,
+        "recall": 107.4,
+        "list_pages": 87.19999999999999,
+        "list_skills": 66.97499999999998,
+        "edit_page": 2875.9999999999995,
+        "remember": 717.975,
+        "add_timeline_entry": 328.325
+      }
+    },
+    "gpt-6.1-sol": {
+      "wave12": {
+        "context_pack": 2410.975,
+        "entity": 7240.525000000001,
+        "get_page": 3721.2000000000007,
+        "search": 19577.525,
+        "whoami": 732.0000000000002,
+        "query": 1998.2999999999997,
+        "resolve_slugs": 31.65,
+        "list_pages": 10.925,
+        "edit_page": 2934.325,
+        "remember": 826.125,
+        "list_skills": 35.24999999999999,
+        "recall": 21.85
+      }
+    }
+  },
+  "cells": 120,
+  "usd": 14.058795850000003
+}
