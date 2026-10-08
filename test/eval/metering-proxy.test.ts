@@ -265,7 +265,7 @@ describe('leases survive restarts without replay', () => {
       let stderr = '';
       for (let attempt = 0; attempt < 3; attempt++) {
         const probe = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response() });
-        const port = probe.port;
+        const port = probe.port!;
         probe.stop(true);
         const proc = Bun.spawn([process.execPath, 'eval/runner/metering-proxy.ts', '--listen', `127.0.0.1:${port}`, '--budget-ledger', path, '--lease-usd', leaseUsd, '--run-id', 'lease-cli',
           '--upstream', `openai=http://127.0.0.1:${upstream.port}`], { cwd: ROOT, env: { PATH: process.env.PATH, HOME: process.env.HOME, ...FAKE_ENV }, stdout: 'pipe', stderr: 'pipe' });
