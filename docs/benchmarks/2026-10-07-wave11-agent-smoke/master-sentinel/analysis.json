@@ -1,0 +1,258 @@
+{
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "master"
+  ],
+  "tasks": [
+    "A01",
+    "A02",
+    "A03",
+    "B01",
+    "B02",
+    "B03",
+    "E01",
+    "E02",
+    "E03"
+  ],
+  "families": [
+    "A",
+    "B",
+    "E"
+  ],
+  "success": {
+    "claude-opus-5-5": {
+      "master": 1
+    },
+    "claude-sonnet-5-5": {
+      "master": 0.8888888888888888
+    },
+    "gpt-6.1-sol": {
+      "master": 1
+    }
+  },
+  "by_family": {
+    "A": {
+      "claude-opus-5-5": {
+        "master": 1
+      },
+      "claude-sonnet-5-5": {
+        "master": 1
+      },
+      "gpt-6.1-sol": {
+        "master": 1
+      }
+    },
+    "B": {
+      "claude-opus-5-5": {
+        "master": 1
+      },
+      "claude-sonnet-5-5": {
+        "master": 0.6666666666666666
+      },
+      "gpt-6.1-sol": {
+        "master": 1
+      }
+    },
+    "E": {
+      "claude-opus-5-5": {
+        "master": 1
+      },
+      "claude-sonnet-5-5": {
+        "master": 1
+      },
+      "gpt-6.1-sol": {
+        "master": 1
+      }
+    }
+  },
+  "by_stratum": {
+    "memory-only": {
+      "claude-opus-5-5": {
+        "master": 1
+      },
+      "claude-sonnet-5-5": {
+        "master": 0.8888888888888888
+      },
+      "gpt-6.1-sol": {
+        "master": 1
+      }
+    }
+  },
+  "capability": {
+    "claude-opus-5-5": null,
+    "claude-sonnet-5-5": null,
+    "gpt-6.1-sol": null
+  },
+  "advantage": {},
+  "pooled_advantage": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ]
+  },
+  "slope": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ],
+    "n_models": 0
+  },
+  "family_slopes": {
+    "A": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "B": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "E": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "master": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 0
+    }
+  },
+  "efficiency": {
+    "claude-opus-5-5": {
+      "master": {
+        "usd_per_task": 0.17524085666666667,
+        "usd_per_success": 0.17524085666666667,
+        "p50_s": 60.995,
+        "p95_s": 102.452,
+        "turns": 4.444444444444445
+      }
+    },
+    "claude-sonnet-5-5": {
+      "master": {
+        "usd_per_task": 0.10556700111111111,
+        "usd_per_success": 0.11876287625,
+        "p50_s": 67.707,
+        "p95_s": 85.309,
+        "turns": 4
+      }
+    },
+    "gpt-6.1-sol": {
+      "master": {
+        "usd_per_task": 0.045964641111111114,
+        "usd_per_success": 0.045964641111111114,
+        "p50_s": 72.515,
+        "p95_s": 98.875,
+        "turns": 4.555555555555555
+      }
+    }
+  },
+  "claims": {
+    "master": {
+      "unsupported_per_answer": null,
+      "contradicted_per_answer": null,
+      "judged": 0
+    }
+  },
+  "missed_evidence": {
+    "master": 0.017543859649122806
+  },
+  "cost_split": {
+    "claude-opus-5-5": {
+      "master": {
+        "uncached_input": 0.00004355555555555555,
+        "cache_write": 0.1362788888888889,
+        "cache_read": 0.018665955555555558,
+        "output": 0.02024888888888889,
+        "gbrain_provider_calls": 0.000003567777777777778,
+        "unsplit": 0,
+        "total": 0.17524085666666664
+      }
+    },
+    "claude-sonnet-5-5": {
+      "master": {
+        "uncached_input": 0.000019999999999999998,
+        "cache_write": 0.07898055555555555,
+        "cache_read": 0.01691828888888889,
+        "output": 0.009644444444444445,
+        "gbrain_provider_calls": 0.0000037122222222222218,
+        "unsplit": 0,
+        "total": 0.10556700111111111
+      }
+    },
+    "gpt-6.1-sol": {
+      "master": {
+        "uncached_input": 0.038044666666666664,
+        "cache_write": 0,
+        "cache_read": 0.004216566666666666,
+        "output": 0.0037011111111111107,
+        "gbrain_provider_calls": 0.000002296666666666667,
+        "unsplit": 0,
+        "total": 0.045964641111111114
+      }
+    }
+  },
+  "tool_chars": {
+    "claude-opus-5-5": {
+      "master": {
+        "search": 34144.444444444445,
+        "get_backlinks": 237.33333333333334,
+        "entity": 9373.777777777777,
+        "get_page": 7806.555555555556,
+        "resolve_slugs": 21.444444444444443,
+        "query": 3246.1111111111113
+      }
+    },
+    "claude-sonnet-5-5": {
+      "master": {
+        "entity": 12358.444444444445,
+        "search": 41010.11111111111,
+        "get_page": 6538.777777777777,
+        "whoami": 948.6666666666666,
+        "get_backlinks": 2216.3333333333335
+      }
+    },
+    "gpt-6.1-sol": {
+      "master": {
+        "context_pack": 1299.8888888888887,
+        "entity": 11644.666666666668,
+        "search": 33113.33333333333,
+        "whoami": 162.66666666666666,
+        "get_page": 9956.77777777778,
+        "get_backlinks": 2774.6666666666665
+      }
+    }
+  },
+  "cells": 27,
+  "usd": 2.9409524900000004,
+  "reconciliation": [
+    {
+      "budget_run_id": "cat40-model-ladder-2026-10-07T16-05-34-871Z-f7ed00dd",
+      "cells": 27,
+      "cells_usd": 2.9409524900000004,
+      "judge_usd": 0,
+      "slot_builds_usd": 0,
+      "attributed_usd": 2.9409524900000004,
+      "ledger_usd": 2.940957169999999,
+      "gap_usd": 0.000004679999998646878,
+      "gap_pct": 0.000001591318651759515,
+      "flagged": false
+    }
+  ]
+}

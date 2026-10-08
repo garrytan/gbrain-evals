@@ -1,0 +1,279 @@
+{
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "master"
+  ],
+  "tasks": [
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10",
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10"
+  ],
+  "families": [
+    "C",
+    "F"
+  ],
+  "success": {
+    "claude-opus-5-5": {
+      "master": 0.875
+    },
+    "claude-sonnet-5-5": {
+      "master": 1
+    },
+    "gpt-6.1-sol": {
+      "master": 1
+    }
+  },
+  "by_family": {
+    "C": {
+      "claude-opus-5-5": {
+        "master": 1
+      },
+      "claude-sonnet-5-5": {
+        "master": 1
+      },
+      "gpt-6.1-sol": {
+        "master": 1
+      }
+    },
+    "F": {
+      "claude-opus-5-5": {
+        "master": 0.75
+      },
+      "claude-sonnet-5-5": {
+        "master": 1
+      },
+      "gpt-6.1-sol": {
+        "master": 1
+      }
+    }
+  },
+  "by_stratum": {
+    "memory-only": {
+      "claude-opus-5-5": {
+        "master": 1
+      },
+      "claude-sonnet-5-5": {
+        "master": 1
+      },
+      "gpt-6.1-sol": {
+        "master": 1
+      }
+    },
+    "page-authoring": {
+      "claude-opus-5-5": {
+        "master": 0.75
+      },
+      "claude-sonnet-5-5": {
+        "master": 1
+      },
+      "gpt-6.1-sol": {
+        "master": 1
+      }
+    }
+  },
+  "capability": {
+    "claude-opus-5-5": null,
+    "claude-sonnet-5-5": null,
+    "gpt-6.1-sol": null
+  },
+  "advantage": {},
+  "pooled_advantage": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ]
+  },
+  "slope": {
+    "value": null,
+    "ci95": [
+      null,
+      null
+    ],
+    "n_models": 0
+  },
+  "family_slopes": {
+    "C": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    },
+    "F": {
+      "value": null,
+      "ci95": [
+        null,
+        null
+      ]
+    }
+  },
+  "safety": {
+    "master": {
+      "output_leaks": 0,
+      "context_exposures": 0,
+      "unsafe_writes": 0,
+      "c_runs": 60
+    }
+  },
+  "efficiency": {
+    "claude-opus-5-5": {
+      "master": {
+        "usd_per_task": 0.20040564075000003,
+        "usd_per_success": 0.22903501800000003,
+        "p50_s": 81.346,
+        "p95_s": 110.058,
+        "turns": 4
+      }
+    },
+    "claude-sonnet-5-5": {
+      "master": {
+        "usd_per_task": 0.09876735525,
+        "usd_per_success": 0.09876735525,
+        "p50_s": 73.376,
+        "p95_s": 96.601,
+        "turns": 3.1
+      }
+    },
+    "gpt-6.1-sol": {
+      "master": {
+        "usd_per_task": 0.04163839074999998,
+        "usd_per_success": 0.04163839074999998,
+        "p50_s": 80.402,
+        "p95_s": 109.999,
+        "turns": 4.975
+      }
+    }
+  },
+  "claims": {
+    "master": {
+      "unsupported_per_answer": null,
+      "contradicted_per_answer": null,
+      "judged": 0
+    }
+  },
+  "missed_evidence": {
+    "master": 0
+  },
+  "cost_split": {
+    "claude-opus-5-5": {
+      "master": {
+        "uncached_input": 0.0000624,
+        "cache_write": 0.14827525000000003,
+        "cache_read": 0.026238080000000007,
+        "output": 0.025761,
+        "gbrain_provider_calls": 0.00006891074999999999,
+        "unsplit": 0,
+        "total": 0.20040564075000003
+      }
+    },
+    "claude-sonnet-5-5": {
+      "master": {
+        "uncached_input": 0.000027500000000000004,
+        "cache_write": 0.06832743749999999,
+        "cache_read": 0.019991419999999996,
+        "output": 0.010365,
+        "gbrain_provider_calls": 0.00005599775000000002,
+        "unsplit": 0,
+        "total": 0.09876735525000002
+      }
+    },
+    "gpt-6.1-sol": {
+      "master": {
+        "uncached_input": 0.030051849999999998,
+        "cache_write": 0,
+        "cache_read": 0.006779480000000003,
+        "output": 0.004625249999999999,
+        "gbrain_provider_calls": 0.00018181075,
+        "unsplit": 0,
+        "total": 0.041638390750000004
+      }
+    }
+  },
+  "tool_chars": {
+    "claude-opus-5-5": {
+      "master": {
+        "search": 35718.22499999999,
+        "get_backlinks": 540.5250000000001,
+        "get_page": 2223.6499999999996,
+        "entity": 14182,
+        "resolve_slugs": 22.225000000000005,
+        "whoami": 73.2,
+        "query": 4097.975,
+        "list_pages": 434.75,
+        "recall": 424.225,
+        "remember": 1123.95,
+        "edit_page": 149.875,
+        "list_skills": 3.525
+      }
+    },
+    "claude-sonnet-5-5": {
+      "master": {
+        "entity": 17968.699999999997,
+        "search": 26378.274999999994,
+        "get_page": 2439.0999999999995,
+        "recall": 1770.85,
+        "query": 499.25,
+        "list_pages": 87.14999999999999,
+        "whoami": 1132.3500000000001,
+        "edit_page": 2898.9999999999995,
+        "remember": 556.0749999999999,
+        "add_timeline_entry": 781.325,
+        "list_skills": 358.775
+      }
+    },
+    "gpt-6.1-sol": {
+      "master": {
+        "context_pack": 2227.275,
+        "entity": 8858.7,
+        "search": 23798.35000000001,
+        "get_page": 4151.950000000001,
+        "whoami": 841.8000000000003,
+        "query": 2616.425,
+        "resolve_slugs": 42.650000000000006,
+        "list_skills": 31.724999999999994,
+        "edit_page": 3115.0000000000005,
+        "remember": 855.3000000000001,
+        "recall": 184.325,
+        "list_pages": 0.1
+      }
+    }
+  },
+  "cells": 120,
+  "usd": 13.63245547,
+  "reconciliation": [
+    {
+      "budget_run_id": "cat40-model-ladder-2026-10-07T15-37-07-264Z-7f1c93be",
+      "cells": 120,
+      "cells_usd": 13.63245547,
+      "judge_usd": 0,
+      "slot_builds_usd": 0,
+      "attributed_usd": 13.63245547,
+      "ledger_usd": 13.63246014999997,
+      "gap_usd": 0.000004679999969781079,
+      "gap_pct": 3.432982688587642e-7,
+      "flagged": false
+    }
+  ]
+}

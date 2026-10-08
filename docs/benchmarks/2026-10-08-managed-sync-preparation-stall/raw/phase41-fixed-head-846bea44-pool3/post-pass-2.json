@@ -1,0 +1,3472 @@
+{
+  "pass": 2,
+  "at": "2026-10-08T12:47:33.314Z",
+  "sources_status": {
+    "schema_version": 1,
+    "sources": [
+      {
+        "source_id": "bench",
+        "name": "bench",
+        "local_path": "<fixture-home>/repo-bench",
+        "federated": false,
+        "total_pages": 10931,
+        "total_chunks": 21862,
+        "embedded_chunks": 0,
+        "embed_coverage_pct": 0,
+        "last_sync_at": "2026-10-08T10:47:08.463Z",
+        "lag_seconds": 7219,
+        "failed_jobs_24h": 0,
+        "queue_depth": 0,
+        "backfill_active": 0,
+        "backfill_queued": 0,
+        "tracked_branch": null,
+        "priority_label": "normal",
+        "webhook_configured": false,
+        "sync_running": false,
+        "sync_holder": null,
+        "managed_backlog": {
+          "source_id": "bench",
+          "index": 9447,
+          "total": 15000,
+          "remaining": 5553,
+          "rate_pages_per_min": 106.4,
+          "eta_seconds": 3133,
+          "last_progress_at": "2026-10-08T12:47:20.678Z",
+          "resume_command": "gbrain sync --source bench --no-pull --no-embed",
+          "resume_args": [
+            "--source",
+            "bench",
+            "--no-pull",
+            "--no-embed"
+          ]
+        },
+        "git_holds": {
+          "count": 16,
+          "items": [
+            {
+              "path": "companies/scale-0-1502.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "companies/scale-0-1502",
+              "stale": false,
+              "held_since": "2026-10-08T11:23:13.936Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "companies/scale-0-1502.md"
+                ],
+                "why": "companies/scale-0-1502.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in companies/scale-0-1502.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected companies/scale-0-1502.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "companies/scale-0-1512.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "companies/scale-0-1512",
+              "stale": false,
+              "held_since": "2026-10-08T11:23:22.410Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "companies/scale-0-1512.md"
+                ],
+                "why": "companies/scale-0-1512.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in companies/scale-0-1512.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected companies/scale-0-1512.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1503.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1503",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:12.667Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1503.md"
+                ],
+                "why": "notes/scale-0-1503.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1503.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1503.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1504.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1504",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:19.710Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1504.md"
+                ],
+                "why": "notes/scale-0-1504.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1504.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1504.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1505.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1505",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:26.663Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1505.md"
+                ],
+                "why": "notes/scale-0-1505.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1505.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1505.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1506.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1506",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:33.615Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1506.md"
+                ],
+                "why": "notes/scale-0-1506.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1506.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1506.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1507.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1507",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:40.622Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1507.md"
+                ],
+                "why": "notes/scale-0-1507.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1507.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1507.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1508.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1508",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:47.621Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1508.md"
+                ],
+                "why": "notes/scale-0-1508.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1508.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1508.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1509.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1509",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:54.527Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1509.md"
+                ],
+                "why": "notes/scale-0-1509.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1509.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1509.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1513.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1513",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:13.811Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1513.md"
+                ],
+                "why": "notes/scale-0-1513.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1513.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1513.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1514.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1514",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:20.848Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1514.md"
+                ],
+                "why": "notes/scale-0-1514.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1514.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1514.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1515.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1515",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:27.772Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1515.md"
+                ],
+                "why": "notes/scale-0-1515.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1515.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1515.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1516.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1516",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:34.761Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1516.md"
+                ],
+                "why": "notes/scale-0-1516.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1516.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1516.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1517.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1517",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:41.777Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1517.md"
+                ],
+                "why": "notes/scale-0-1517.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1517.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1517.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1518.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1518",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:48.738Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1518.md"
+                ],
+                "why": "notes/scale-0-1518.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1518.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1518.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1519.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1519",
+              "stale": false,
+              "held_since": "2026-10-08T12:08:09.487Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1519.md"
+                ],
+                "why": "notes/scale-0-1519.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1519.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1519.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            }
+          ],
+          "sync_argv": [
+            "gbrain",
+            "sync",
+            "--source",
+            "bench",
+            "--no-pull"
+          ]
+        },
+        "shared_skills": {
+          "source_id": "bench",
+          "configured": null,
+          "mode": "content",
+          "reason_code": null,
+          "reason": null,
+          "explanation": "Shared skills are on for bench: the migration may inventory and adopt its skillpack. Opt out with gbrain sources shared-skills bench off.",
+          "parked": null
+        }
+      }
+    ]
+  },
+  "writer_status": {
+    "selected_brain": "host",
+    "enabled": true,
+    "brain_id": "9fd2bf2f-ff89-4027-900c-14a4e760ac6a",
+    "sampled_at": "2026-10-08T12:47:31.221Z",
+    "publication_concurrency": 2,
+    "local_process_ingress": {
+      "state": "not_running",
+      "accepting": false,
+      "active_preparations": 0,
+      "active_worktrees": 0,
+      "scope": "The process that answered has no resident consumer (a one-shot CLI, for example); another process may own writes. See worktrees and bindings for ownership."
+    },
+    "worktrees": [
+      {
+        "id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "owner_host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "owner_epoch": "1",
+        "topology_generation": "1",
+        "state": "active",
+        "heartbeat_at": null,
+        "queued": 48,
+        "running": 26,
+        "recovering": 0,
+        "oldest_request_at": "2026-10-08T12:46:44.015Z",
+        "last_completed_sequence": "9772",
+        "recovery_bytes": "0",
+        "recovering_effects": 0
+      }
+    ],
+    "counters": [
+      {
+        "key": "brain",
+        "outstanding_count": "74",
+        "intent_bytes": "171105",
+        "lifetime_ids": "9846",
+        "terminal_bytes": "161316864",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "outstanding_count": "74",
+        "intent_bytes": "171105",
+        "lifetime_ids": "9846",
+        "terminal_bytes": "161316864",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "worktree:34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "outstanding_count": "0",
+        "intent_bytes": "0",
+        "lifetime_ids": "0",
+        "terminal_bytes": "0",
+        "recovery_bytes": "0"
+      }
+    ],
+    "queue": [
+      {
+        "state": "queued",
+        "count": 48,
+        "intent_bytes": "111014",
+        "oldest_request_at": "2026-10-08T12:47:03.068Z",
+        "oldest_age_ms": "27808"
+      },
+      {
+        "state": "running",
+        "count": 26,
+        "intent_bytes": "60091",
+        "oldest_request_at": "2026-10-08T12:46:44.015Z",
+        "oldest_age_ms": "46861"
+      }
+    ],
+    "effects": [],
+    "limits": {
+      "principalOutstanding": 100,
+      "brainOutstanding": 1000,
+      "principalIntentBytes": 33554432,
+      "brainIntentBytes": 268435456,
+      "principalLifetimeIds": 250000,
+      "brainLifetimeIds": 1000000,
+      "principalTerminalBytes": 1610612736,
+      "brainTerminalBytes": 8589934592,
+      "brainRecoveryBytes": 1073741824,
+      "worktreeRecoveryBytes": 268435456
+    },
+    "capacity": [
+      {
+        "scope": "brain",
+        "resource": "outstanding_count",
+        "used": 74,
+        "limit": 1000,
+        "remaining": 926,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_outstanding"
+      },
+      {
+        "scope": "brain",
+        "resource": "intent_bytes",
+        "used": 171105,
+        "limit": 268435456,
+        "remaining": 268264351,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_intent_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "lifetime_ids",
+        "used": 9846,
+        "limit": 1000000,
+        "remaining": 990154,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_lifetime_ids"
+      },
+      {
+        "scope": "brain",
+        "resource": "terminal_bytes",
+        "used": 161316864,
+        "limit": 8589934592,
+        "remaining": 8428617728,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_terminal_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 1073741824,
+        "remaining": 1073741824,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_recovery_bytes"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "outstanding_count",
+        "used": 74,
+        "limit": 100,
+        "remaining": 26,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_outstanding"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "intent_bytes",
+        "used": 171105,
+        "limit": 33554432,
+        "remaining": 33383327,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_intent_bytes"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "lifetime_ids",
+        "used": 9846,
+        "limit": 250000,
+        "remaining": 240154,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_lifetime_ids"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "terminal_bytes",
+        "used": 161316864,
+        "limit": 1610612736,
+        "remaining": 1449295872,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_terminal_bytes"
+      },
+      {
+        "scope": "worktree:34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 268435456,
+        "remaining": 268435456,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.worktree_recovery_bytes"
+      }
+    ],
+    "preparation_policy": {
+      "deadlines": true,
+      "sync_preparation_ms": 120000,
+      "maintenance_preparation_ms": 120000,
+      "preparation_ceiling_ms": 600000,
+      "max_preparation_attempts": 2
+    },
+    "recent_failures": [],
+    "blockers": [
+      {
+        "request_id": "e12abd49-160a-4272-b002-d99ddb9a0eab",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:44.015Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 47206,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 3905,
+          "phase_age_ms": 3905,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "dream",
+            "pid": 55543,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "4d3bec2a-2fca-4642-b816-9537db85b70e",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:44.015Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 47207,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 3905,
+          "phase_age_ms": 3905,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "dream",
+            "pid": 55543,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "b2db728c-d008-4d7c-9283-f2f5f56f1383",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:44.015Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 47207,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 3905,
+          "phase_age_ms": 3905,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "dream",
+            "pid": 55543,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d99c83c4-020a-418a-ac10-50b71b06f1ea",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:44.015Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 47207,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 3905,
+          "phase_age_ms": 3905,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "dream",
+            "pid": 55543,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "24dc5001-97de-4043-966a-3c13d4321845",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 13278,
+          "phase_age_ms": 13278,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "cc5aacb3-1486-4c5b-bedc-f9e0c99d282e",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 13278,
+          "phase_age_ms": 13278,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "7ff6e6bc-99ed-44f6-bee8-371830998be4",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 13278,
+          "phase_age_ms": 13278,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "3993f626-33d3-4f8a-b727-68c08e25c17f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 13278,
+          "phase_age_ms": 13278,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "3bee3f0b-0da9-4633-b2ca-59ff6657f40f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 11957,
+          "phase_age_ms": 11957,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6aa408c1-0dfe-453b-90b3-0af6b7fb8958",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 11957,
+          "phase_age_ms": 11957,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "19658e04-386f-4379-bcba-aed36add022f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 11957,
+          "phase_age_ms": 11957,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2ad574b6-b619-4170-89ed-648f7bfefab5",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 11957,
+          "phase_age_ms": 11957,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "df2dea8b-60a1-4e19-ba7e-7fa50977a22e",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 11570,
+          "phase_age_ms": 11570,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d5f9ec13-f19e-4599-843a-c6ef2a0d1677",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 11570,
+          "phase_age_ms": 11570,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "73fe5377-3354-4e43-a2d1-6c37aaaefbde",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:57.439Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33783,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 11570,
+          "phase_age_ms": 11570,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "cc1af8bb-ac11-4824-82e4-45240780bcbd",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 9718,
+          "phase_age_ms": 9718,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2377eda3-a012-41af-8513-e4df8e1d5bea",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 9718,
+          "phase_age_ms": 9718,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6250981b-6ef4-49b0-b99f-9c37fae4200a",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 9718,
+          "phase_age_ms": 9718,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "304a3d44-6677-4453-9d02-aee4b69126c1",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 9718,
+          "phase_age_ms": 9718,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "ed340906-34dc-4c76-9059-6e0ac1443c7a",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8337,
+          "phase_age_ms": 8337,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "1949b794-47aa-4181-a23d-11eca7969ad2",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8337,
+          "phase_age_ms": 8337,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6f4ed498-a54c-4335-abc6-f9eeb17894f5",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8337,
+          "phase_age_ms": 8337,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2393c310-0bb5-46fb-9495-7fd66901aa97",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8337,
+          "phase_age_ms": 8337,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6b71a236-0f81-4cd3-8b66-bf44eba505c8",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7858,
+          "phase_age_ms": 7858,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "1e83e936-cbc8-4291-9082-d2c6d79e0aa4",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7858,
+          "phase_age_ms": 7858,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "aa9bd916-0be0-4d48-8d8c-ee8d13a35f39",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:46:59.115Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32107,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7858,
+          "phase_age_ms": 7858,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 26533,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "058d7683-a18f-4054-a005-f29f66c0be56",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "7fb02b4f-ae11-4e06-a1d8-a4baa359707e",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "a9dfba45-267f-4290-a1e9-781f918e7c02",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "374cf78d-8424-4ab1-b4ec-2eccfd24900c",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "bc500d67-7ce4-4b86-956e-5f62d1790ec4",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "f14cdea1-09e9-47e8-a7db-e8ba2010597e",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "52d25725-0981-4a6f-9046-6418ee79912c",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "1922fa92-2828-454f-8114-ff424bd9422f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "b6b95d83-cc93-4206-91ea-be15536ad0f1",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "15e5a346-2485-4274-ae2c-f553eea1c3dc",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "7bfa3fe9-dfbb-4b8d-86ac-d709763e7270",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "177f2f60-a5e2-4197-8014-e8957913c55f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": "group_member_waiting",
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "cause_unknown",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "0780d0a5-540a-432f-b876-1277fbc45086",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "5b3f401e-d234-408b-aca1-f92a4bca00e0",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:03.068Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 28154,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "9bd8b0e5-1171-4d72-8172-929cb070a927",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:04.997Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26225,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "14ada6a8-0c1b-497d-9a56-80cfa6b7715f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:04.997Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26225,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "f4aad299-34c0-42d1-bcbb-dcc641b5599a",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:04.997Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26226,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "bbe2c76c-0681-4591-aed6-ec57585f7c16",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:04.997Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26226,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d87b4f12-7244-44a9-b67a-712597e25745",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "b8cda0d3-3c1f-474c-b86c-e7ae0c518ef9",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "cc58d6dd-f4bc-489f-a162-e30c3bd805a4",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "71c0cb4c-9d9e-44de-8dc4-086a32a868a9",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "493228c7-d8ea-43e9-8ae0-8656ab97a63f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2052f585-4837-4c43-a7de-979ae782cc71",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "b3d93b45-5863-458c-9ef1-5613acfb37b4",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "dd6dab7f-19ae-4439-8af0-606827adb6cc",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "fd191d75-642e-4dd3-9a7b-786c608381fa",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "907e5311-af46-48c0-baed-579da83551f3",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "860bd98c-1534-4402-8553-3f1fbd301464",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "a8764471-a655-45e1-bc3e-fcd461b9641c",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "7ffa9c23-362a-45eb-997f-a87dc07a3dfd",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "0391c843-9353-4eaa-8731-6997460647d0",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "5b8afdd9-3a40-40df-b373-8859fab1f155",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "16419468-331e-48d0-bf06-3079f9df1db5",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:10.526Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 20697,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d0a18611-f610-4a44-871a-0067a217b6b6",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "8837bfab-05bc-4072-bec6-328b9a215d8c",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "80af8e96-00ee-4b8c-aef1-099f90fd78db",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "1014f98f-4011-4277-b704-82b15d0d89af",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d4b37da3-3464-425f-8d39-e2b2f2aabd11",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "5952ebe2-01c4-46a2-a8bc-c6b81019dba9",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "4478bbbb-3bb7-4015-9acd-8134d0bd0f7d",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "11010001-de77-43bc-b409-e2aa6f93fd3c",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6e1fd6d5-aeb2-496b-9b83-c356612dad63",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "247ff999-819f-4255-bcbb-c97cb8c39eff",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "72b5e7f9-092b-447d-b798-32b69f41e675",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "337f331f-4efd-4ef9-9f23-5c36774bec7d",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "fe9c0e58-52aa-4eac-a462-4b62d956b14e",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "891bc04d-9eb5-4ebe-bdce-4f314efb30ea",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T12:47:20.260Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 10963,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      }
+    ],
+    "mode": "managed",
+    "mode_epoch": 2,
+    "local_markers": {
+      "state": "cleared",
+      "removed": [],
+      "pending": []
+    },
+    "host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+    "local_host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+    "bindings": [
+      {
+        "source_id": "bench",
+        "source_incarnation": "2f8ef4e7-80dc-44af-97ac-540e057acc51",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "relative_path": "",
+        "topology_generation": "1",
+        "owner_host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "owner_epoch": "1",
+        "state": "active",
+        "manifest_digest": null,
+        "local_path": "<fixture-home>/repo-bench"
+      }
+    ],
+    "admin_state": "427b9be5a7c912c88e1d03768650fdb624ee7a8f0cc3647122e2c0fed98349cb",
+    "admin_lock": {
+      "locked": false,
+      "set_at": null,
+      "host_id": null
+    },
+    "blocking_effects": [],
+    "writer_versions": [
+      {
+        "role": "admitter",
+        "host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "principal": "local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "version": "0.60.108.0",
+        "version_label": "0.60.108.0",
+        "last_seen": "2026-10-08T12:47:20.260Z"
+      },
+      {
+        "role": "consumer",
+        "host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "principal": "local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "version": "0.60.108.0",
+        "version_label": "0.60.108.0",
+        "last_seen": "2026-10-08T12:47:17.930Z"
+      }
+    ],
+    "onboarding": {
+      "sources": [
+        {
+          "source_id": "bench",
+          "state": "ready",
+          "write_through": true,
+          "storage": {
+            "container": false,
+            "durability_verified": false,
+            "paths": [
+              {
+                "role": "canonical_root",
+                "path": "<fixture-home>/repo-bench",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "reservation_parent",
+                "path": "<fixture-home>",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "persistence_home",
+                "path": "<fixture-home>/.gbrain/persistence",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "coordination_directory",
+                "path": "<fixture-home>/.gbrain/persistence/locks",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              }
+            ],
+            "next_action": "Verify that the canonical checkout, its parent (which holds the sibling reservation), and the persistence home/coordination lock survive container recreation together. A mounted path is not proof of durability. Do not delete ownership or lock files."
+          }
+        },
+        {
+          "source_id": "default",
+          "state": "database_only",
+          "write_through": true
+        }
+      ],
+      "legacy_locks": [
+        {
+          "id": "gbrain-cycle:bench",
+          "holder_pid": 55543,
+          "holder_host": "vmkkcd9p",
+          "acquisition_token": "054a13a4-609a-439e-9c37-26f82f56fde7",
+          "liveness": "alive"
+        }
+      ],
+      "unsupported_maintenance": [],
+      "procedure": "For deliberate onboarding, stop and upgrade older writers on every host, review all sources and durable paths, explicitly claim each filesystem source using its fresh admin_state, inspect status again, then explicitly activate with --confirm-quiesced and a fresh admin_state. A claim alone fences legacy sync; finish activation before ordinary writes or sync. This inspection never claims, activates, repairs or switches to database-only storage."
+    },
+    "shared_skills": {
+      "writer_protocol_floor": 1,
+      "skill_bundles_enabled": false
+    },
+    "worktree_refreshes": []
+  },
+  "holds": {
+    "by_code_reason": [
+      {
+        "code": "invalid_fence",
+        "reason": "repeated_marker",
+        "step": null,
+        "n": 16
+      }
+    ],
+    "summary": {
+      "count": 16,
+      "stale": 0,
+      "fences": 16,
+      "images": 0,
+      "stalled": 0,
+      "source_id": "bench",
+      "concurrent": 0,
+      "incarnation": "2f8ef4e7-80dc-44af-97ac-540e057acc51"
+    },
+    "paths": [
+      {
+        "path": "companies/scale-0-1502.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "companies/scale-0-1512.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1503.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1504.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1505.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1506.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1507.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1508.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1509.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1513.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1514.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1515.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1516.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1517.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1518.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1519.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      }
+    ]
+  },
+  "preparation_stalled_receipts": [],
+  "preparation_attempts": []
+}

@@ -1,0 +1,39 @@
+{
+  "t": 1791457635505,
+  "at": "2026-10-08T11:07:15.505Z",
+  "pass": 1,
+  "committed_at_start": 277,
+  "code": 0,
+  "wall_ms": 13474.3,
+  "phase": {
+    "phase": "fence_repair",
+    "duration_ms": 9559,
+    "status": "ok",
+    "summary": "repaired 0 of 22 fence candidate(s) (deterministic 0, resolver 0, model 0; $0.0000 on the model); 22 still held (sync_in_progress 22). The fence census scan is still partial; the next run continues it.",
+    "details": {
+      "mode": "apply",
+      "candidates": 22,
+      "repaired": 0,
+      "repaired_by_tier": {
+        "deterministic": 0,
+        "resolver": 0,
+        "llm": 0
+      },
+      "held_by_reason": {
+        "sync_in_progress": 22
+      },
+      "llm_enabled": true,
+      "llm_usd": 0,
+      "llm_cap_remaining_usd": 1,
+      "llm_repairs": 0,
+      "llm_usd_per_repair": null,
+      "oldest_hold_at": null,
+      "oldest_hold_age_hours": null,
+      "scan_partial": true,
+      "complete": true,
+      "time_budget_ms": 300000,
+      "stopped_reason": null
+    }
+  },
+  "stderr_tail": "[gbrain] Prepared statements disabled (PgBouncer transaction-mode convention on port 6543). Override with GBRAIN_PREPARE=true if your pooler runs in session mode.\n"
+}

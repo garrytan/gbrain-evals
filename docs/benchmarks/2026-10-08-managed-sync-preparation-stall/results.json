@@ -1,0 +1,492 @@
+{
+ "schema": "gbrain-evals.mirror.managed-sync-preparation-stall/v1",
+ "measured_by": "gbrain scripts/bench/managed-sync-stall-repro.ts and scripts/bench/stall-repro-summarize.py (toxiproxy 57 ms, PgBouncer 1.26 transaction mode, Docker Postgres pg16, Ubicloud standard-16 VM, Ubuntu 24.04, non-TTY sync)",
+ "mirrors": [
+  "https://github.com/garrytan/gbrain/pull/6298",
+  "https://github.com/garrytan/gbrain/issues/6278"
+ ],
+ "upstream_doc": "docs/eval/managed-sync-stall-repro.md (gbrain), sections Verdict, Cause, Runs, Phase 4.1, Phase 4.1b, Lane B7",
+ "upstream_plan": "docs/plans/2026-10-07-001-fix-managed-sync-preparation-stall-plan.md (goals G1 to G5)",
+ "gbrain_commits": {
+  "release_105": "8e11aa1f34aba9748171dcb64841c1d8a2232027",
+  "throughput_head": "d99e2b435ba0ccd3e1e82c5bbc51b1c0f654e631",
+  "phase41_head": "846bea442a01f846341aebecf96067604974c941",
+  "phase41b_head": "a99c00565704191affc5292cf3fe5bde77fb030a",
+  "pr_gate_head": "7485fe2413a7b14e71edb9cc636836ff5d0abf05",
+  "merged": "b65d4bae7f3f5c8e18922e6ed947b39c65d82ee4",
+  "base_6279": "9d013e52d5eda300c57958c86e3f3bae8205e06a"
+ },
+ "shipped": "v0.60.112.0, merged as b65d4bae7 (#6298)",
+ "measured_at_note": "The reporter-shape runs (rows pool10 and pool3) and the first lock run were measured at 846bea442 (v0.60.108.0, PR head 14962f947 plus the bench captures). The second lock run was measured at a99c00565. The merged head b65d4bae7 was not rerun on the 15,000-entry load; its throughput was checked by the 1,500-file bench below.",
+ "fixture": {
+  "backlog_entries": 15000,
+  "history_pages": 1500,
+  "rtt_ms": 57,
+  "pooler": "PgBouncer transaction mode, statement_timeout startup parameter ignored",
+  "legacy_fact_rows": 1000,
+  "repeated_marker_pages_backlog": 20,
+  "adoption_load": "heavy (gbrain dream --phase extract_facts every 60 s, 20 rows dripped before each)",
+  "source_id": "bench",
+  "command": "timeout 3600 gbrain sync --source bench --no-pull --no-embed, looped until synced"
+ },
+ "phase0_cause": {
+  "natural_reproduction_of_reporter_stall": false,
+  "runs": "0.60.105.0 at pool 10 and 3 with light adoption (101 min each) and heavy adoption (stopped at 47 min each), and the throughput head at pool 10 and 3 with heavy adoption (165 and 167 min)",
+  "lock_wait_class": {
+   "proven_by": "forced probe: LOCK TABLE pages IN ACCESS EXCLUSIVE MODE held through the pooler for 240 s (0.60.105.0) and 200 s (throughput head)",
+   "show_statement_timeout_via_pooler": "0 (5min direct)",
+   "await": "assertSyncPageOrigin, step page_origin",
+   "renewals": "every 10 s, claim_lapsed false",
+   "members_preparing_s": 240,
+   "pages_committed_during_hold": 0,
+   "resume_after_release_s": 15
+  },
+  "never_settling_await_class": {
+   "found_by": "the reporter, live, on 0.60.110.0 (1935c74a9)",
+   "shape": "16 managed_sync_import members in one group, running / preparing for 25+ minutes, lease renewed every 10 s, no server statement older than 3 s, no lock wait over 1 s, statement_timeout 10 min on both URLs",
+   "prepare_in_isolation_s_each": [
+    2.6,
+    3.4
+   ],
+   "needs": "two persistence consumers alive on the host (serve and the sync CLI)",
+   "root_cause": "open, gbrain #6317",
+   "contained_by": "the budget race in the consumer, not reproduced by this bench"
+  },
+  "zero_progress_modes": [
+   {
+    "mode": "lock_wait",
+    "reproduced": "forced only",
+    "longest_no_commit_s": 240
+   },
+   {
+    "mode": "adoption_flood",
+    "reproduced": "naturally on 0.60.105.0",
+    "longest_no_commit_s": {
+     "pool10": 888,
+     "pool3": 668
+    },
+    "shape": "about 200 managed_maintenance_adopt_fact_fence requests queued on the root ahead of the sync, a different one running at every sample"
+   }
+  ],
+  "dark_connection_probe": "toxiproxy timeout toxic on half the connections: consumer tick stuck in refresh_roots, one connection idle in transaction on begin for 397 s, no claim held; not a preparing blocker and not part of this fix"
+ },
+ "drain_15k_before_after": [
+  {
+   "row": "0.60.105.0 pool 10",
+   "gbrain_commit": "8e11aa1f34aba9748171dcb64841c1d8a2232027",
+   "version": "0.60.105.0",
+   "pool": 10,
+   "passes_to_drain": "never (stopped by the harness 15 min after the stall, 47.6 min, 102 pages committed)",
+   "pages_committed_per_pass": [
+    102
+   ],
+   "pages_per_min_wall": [
+    2.1
+   ],
+   "pages_per_min_steady": [
+    2.4
+   ],
+   "longest_no_commit_s": 888,
+   "sync_deadline_stop": 0,
+   "failed_receipts": "not captured (run stopped before the tail)",
+   "holds_at_end": "not captured",
+   "source": "raw/phase0/release-0.60.105-pool10-heavy"
+  },
+  {
+   "row": "0.60.105.0 pool 3",
+   "gbrain_commit": "8e11aa1f34aba9748171dcb64841c1d8a2232027",
+   "version": "0.60.105.0",
+   "pool": 3,
+   "passes_to_drain": "never (stopped by the harness, 47.1 min, 62 pages committed)",
+   "pages_committed_per_pass": [
+    62
+   ],
+   "pages_per_min_wall": [
+    1.3
+   ],
+   "pages_per_min_steady": [
+    1.3
+   ],
+   "longest_no_commit_s": 668,
+   "sync_deadline_stop": 0,
+   "failed_receipts": "not captured",
+   "holds_at_end": "not captured",
+   "source": "raw/phase0/release-0.60.105-pool3-heavy"
+  },
+  {
+   "row": "throughput head pool 10",
+   "gbrain_commit": "d99e2b435ba0ccd3e1e82c5bbc51b1c0f654e631",
+   "version": "0.60.107.0",
+   "pool": 10,
+   "passes_to_drain": 3,
+   "pages_committed_per_pass": [
+    3900,
+    7538,
+    3542
+   ],
+   "pages_per_min_wall": [
+    65,
+    125.7,
+    74.5
+   ],
+   "pages_per_min_steady": [
+    58.9,
+    126.6,
+    85.9
+   ],
+   "longest_no_commit_s": 285,
+   "sync_deadline_stop": 0,
+   "failed_receipts": {
+    "repeated_marker": 471,
+    "adoption_roundtrip": 276
+   },
+   "holds_at_end": {
+    "invalid_fence/repeated_marker": 20
+   },
+   "minutes_to_drain": 167,
+   "source": "raw/phase0/gbra45-head-d99e2b43-pool10-heavy"
+  },
+  {
+   "row": "throughput head pool 3",
+   "gbrain_commit": "d99e2b435ba0ccd3e1e82c5bbc51b1c0f654e631",
+   "version": "0.60.107.0",
+   "pool": 3,
+   "passes_to_drain": "not reached in 170 min (11,987 of 15,000 entries committed at the cap)",
+   "pages_committed_per_pass": [
+    3425,
+    4747
+   ],
+   "pages_per_min_wall": [
+    57.1,
+    79.1
+   ],
+   "pages_per_min_steady": [
+    59.8,
+    78.9,
+    86.8
+   ],
+   "longest_no_commit_s": 33,
+   "sync_deadline_stop": 0,
+   "failed_receipts": "same two classes as pool 10",
+   "holds_at_end": {
+    "invalid_fence/repeated_marker": 20
+   },
+   "source": "raw/phase0/gbra45-head-d99e2b43-pool3-heavy",
+   "note": "The third pass (partial, 44.5 min) is in the steady list only; the two wall figures are the first two full passes."
+  },
+  {
+   "row": "fixed head pool 10",
+   "gbrain_commit": "846bea442a01f846341aebecf96067604974c941",
+   "version": "0.60.108.0",
+   "pool": 10,
+   "passes_to_drain": 2,
+   "pages_committed_per_pass": [
+    7719,
+    7261
+   ],
+   "pages_per_min_wall": [
+    128.7,
+    231.1
+   ],
+   "pages_per_min_steady": [
+    119.8,
+    262.5
+   ],
+   "longest_no_commit_s": [
+    605,
+    285
+   ],
+   "sync_deadline_stop": 0,
+   "pass_ends": [
+    "rc 124 (outer timeout 3600)",
+    "synced"
+   ],
+   "minutes_to_drain": 91,
+   "failed_receipts": 0,
+   "preparation_stalled_receipts": 0,
+   "holds_at_end": {
+    "invalid_fence/repeated_marker": 20
+   },
+   "entries_committed": 14980,
+   "source": "raw/phase41-fixed-head-846bea44-pool10"
+  },
+  {
+   "row": "fixed head pool 3",
+   "gbrain_commit": "846bea442a01f846341aebecf96067604974c941",
+   "version": "0.60.108.0",
+   "pool": 3,
+   "passes_to_drain": "3 passes of 3600 s; the third was cut at 14,996 of 15,000 processed and the printed retry-held sync closed it synced",
+   "pages_committed_per_pass": [
+    3076,
+    6355,
+    5545
+   ],
+   "pages_per_min_wall": [
+    51.3,
+    106,
+    92.5
+   ],
+   "pages_per_min_steady": [
+    46.5,
+    104.8,
+    93.5
+   ],
+   "longest_no_commit_s": [
+    544,
+    0,
+    64
+   ],
+   "sync_deadline_stop": 0,
+   "pass_ends": [
+    "rc 124",
+    "rc 124",
+    "rc 124"
+   ],
+   "minutes_to_drain": 180,
+   "failed_receipts": 0,
+   "preparation_stalled_receipts": 0,
+   "holds_at_end": {
+    "invalid_fence/repeated_marker": 20
+   },
+   "entries_committed": 14980,
+   "source": "raw/phase41-fixed-head-846bea44-pool3"
+  }
+ ],
+ "light_adoption_0_60_105": {
+  "gbrain_commit": "8e11aa1f34aba9748171dcb64841c1d8a2232027",
+  "note": "The reporter-scale load (60 legacy rows, nine refusals a pass) did not stall.",
+  "pool10": {
+   "pass1_pages": 964,
+   "pages_per_min_wall": 16.1,
+   "pages_per_min_steady": 16.2,
+   "pass2_pages": 647,
+   "longest_no_commit_s": 63
+  },
+  "pool3": {
+   "pass1_pages": 256,
+   "pages_per_min_wall": 4.3,
+   "pages_per_min_steady": 4.1,
+   "pass2_pages": 186,
+   "longest_no_commit_s": 0
+  },
+  "source": [
+   "raw/phase0/release-0.60.105-pool10-light",
+   "raw/phase0/release-0.60.105-pool3-light"
+  ]
+ },
+ "lane_a_bench_1500_files_57ms": {
+  "what": "gbrain catch-up bench on the same standard-16 shape",
+  "base": "#6279 branch, merged as 9d013e52d",
+  "base_commit": "9d013e52d5eda300c57958c86e3f3bae8205e06a",
+  "head": "the #6298 branch at lane A9",
+  "head_commit": null,
+  "head_commit_note": "not recorded in the PR body; the exact head that passed the full gate was 7485fe241",
+  "pages_per_min_wall": {
+   "base": 150.4,
+   "head": 150.0,
+   "change_pct": -0.3
+  },
+  "pages_per_min_steady": {
+   "base": 401.5,
+   "head": 378.1,
+   "change_pct": -5.8
+  },
+  "gate": "within 20% of the bench on the same fixture and RTT",
+  "met": true,
+  "source": "gbrain #6298 body (not re-measured here)"
+ },
+ "lock_scenario": {
+  "fixture": "3,000-entry backlog, heavy adoption, pool 10, 57 ms, PgBouncer transaction mode, LOCK TABLE pages IN ACCESS EXCLUSIVE MODE through the pooler, two holds of about 300 s",
+  "before_lane_a9": {
+   "gbrain_commit": "846bea442a01f846341aebecf96067604974c941",
+   "version": "0.60.108.0",
+   "locks": [
+    "09:41:26 to 09:46:26",
+    "09:51:26 to 09:56:26"
+   ],
+   "budget_fired_s": 120,
+   "group_members_released_at_budget": false,
+   "members_preparing_at_lock": 18,
+   "pool_connections_in_lock_wait": "9 of 10",
+   "root_released_after_lock_start_s": 300,
+   "first_commit_after_release_s": 28,
+   "sync_holds_written": 0,
+   "preparation_stalled_receipts": 1,
+   "single_write_preparation_stalled_s": 240,
+   "stalled_progress_lines": 0,
+   "drain_stops": "none",
+   "pass": {
+    "outcome": "synced",
+    "committed": 2980,
+    "entries": 3000,
+    "wall_s": 3471.5,
+    "pages_per_min_wall": 51.5,
+    "pages_per_min_steady": 58.6,
+    "longest_no_commit_s": 665
+   },
+   "overdue_observations": 39,
+   "overdue_with_claim_stall_and_step": 39,
+   "source": "raw/phase41-fixed-head-846bea44-lock"
+  },
+  "after_lane_a9_b6": {
+   "gbrain_commit": "a99c00565704191affc5292cf3fe5bde77fb030a",
+   "version": "0.60.108.0 plus A9, B6 and the drain owner-pid fix",
+   "locks": [
+    "14:34:10 to 14:39:07",
+    "14:44:07 to 14:49:07"
+   ],
+   "budget_fired_s": 120,
+   "head_member_released_at_budget": true,
+   "head_member_reclaimed_s": 10,
+   "time_to_hold_s": 240,
+   "hold_step": "origin_check",
+   "members_cancelled_for_refreeze": 73,
+   "pool_connections_in_lock_wait": "9 of 10",
+   "bounded_transactions_in_pass": 2035,
+   "statements_ended_by_bound": 0,
+   "unbounded_statements_holding_connections": [
+    "import content-hash lookup",
+    "readPageSnapshot",
+    "page_projections join",
+    "group-memoized origin read"
+   ],
+   "remaining_issue": "gbrain #6318",
+   "stalled_progress_lines": 127,
+   "first_commit_after_release_s": 120,
+   "preparation_stalled_receipts": 2,
+   "pass": {
+    "outcome": "exit 1, Error queue_capacity (89 queued adoption writes plus 1 running at the 100-request principal limit)",
+    "committed": 242,
+    "wall_s": 1501.7
+   },
+   "retry_held": {
+    "imported_entries": 2755,
+    "wall_s": 1006,
+    "outcome": "synced",
+    "committed_total": 2979,
+    "entries": 3000,
+    "holds": {
+     "invalid_fence/repeated_marker": 20,
+     "preparation_stalled": 1
+    }
+   },
+   "two_findings_fixed_after_run": {
+    "commit": "9e20864e3 (lane B7)",
+    "retry_held_rescreen": "the stalled file was never re-screened because the printed sync finished the old cursor; a checkpoint with scheduled re-screens now yields so the next pass takes them",
+    "queue_capacity": "the drain waits with backoff and ends blocked / write_capacity instead of exiting 1 with no summary",
+    "verified_by": "local probe tests, not rerun on the VM"
+   },
+   "source": "raw/phase41b-fixed-head-a99c00565-lock"
+  },
+  "local_probe_20ms_600_pages": {
+   "0.60.105.0": {
+    "members_preparing_s": 240,
+    "pages_committed": 0,
+    "resume_after_release_s": 15,
+    "step": "page_origin"
+   },
+   "throughput_head_d99e2b43": {
+    "hold_s": 200,
+    "members_preparing": 25,
+    "lock_waiters": 11
+   },
+   "source": "raw/phase0/local-probes"
+  }
+ },
+ "fence_outcomes_fixed_head": {
+  "backlog_marker_pages_held_invalid_fence_repeated_marker": 20,
+  "refusals_at_preparation": 0,
+  "refusals_throughput_head": {
+   "repeated_marker": 471,
+   "does_not_render_legacy_fact": 276
+  },
+  "legacy_rows_adopted_by_shape": {
+   "trailing_ws": "3 of 3",
+   "leading_ws": "3 of 3",
+   "crlf": "3 of 3",
+   "whitespace_only": "0 of 3 (left pending, counted by doctor fence_integrity as unrenderable_legacy_facts)"
+  },
+  "control_rows_adopted": "908 of 988 (the 80 on marker pages are skipped by design)",
+  "extract_facts_marker_pages_skipped": 20,
+  "legacy_rows_pending_at_end": 83,
+  "fence_repair_during_sync": {
+   "candidates": 22,
+   "repaired": 0,
+   "held_by_reason": {
+    "sync_in_progress": 22
+   },
+   "owner_unavailable": 0,
+   "model_usd": 0
+  }
+ },
+ "writer_status_fixed_head": {
+  "preparing_blockers_observed_reporter_shape_runs": 3676,
+  "overdue": 0,
+  "oldest_phase_age_s": 29.6,
+  "lock_run_overdue_observations": 39,
+  "overdue_with_claim_stall_and_step": 39,
+  "diagnostic_reason_cause_unknown_on_the_same_rows": 39,
+  "cause_unknown_rows_in_reporter_shape_runs": 58,
+  "lock_run_waiting_on_observed_db": 69,
+  "lock_run_waiting_on_unknown": 264,
+  "lock_b_overdue_observations": 19,
+  "lock_b_stalled_by_step": {
+   "preparing": {
+    "lines": 69,
+    "max_s": 36
+   },
+   "import_content": {
+    "lines": 14,
+    "max_s": 300
+   },
+   "origin_check": {
+    "lines": 11,
+    "max_s": 116
+   },
+   "queued": {
+    "lines": 11,
+    "max_s": 636
+   },
+   "page_snapshot": {
+    "lines": 22,
+    "max_s": 118
+   }
+  }
+ },
+ "goals": {
+  "G1_no_catchup_stops_for_one_request": {
+   "verdict": "partly met",
+   "met": false,
+   "detail": "A write that cannot prepare is cut off at 120 s and finished preparation_stalled by 240 s, and its file is held; no pass stopped on a single request in the five reporter-shape passes. Under a table lock the head member is held at 240 s, but nine of ten pool connections stay pinned until the lock drops (#6318), and the pass under that lock ended on queue_capacity before lane B7 (fixed, tested locally, not rerun). The never-settling await the reporter found is raced by the same budget and covered by gbrain forced-fault tests; this bench did not reproduce it."
+  },
+  "G2_writer_status_names_the_step": {
+   "verdict": "met",
+   "met": true,
+   "detail": "Every overdue claim (39 in the first lock run, 19 in the second) carried claim.stall with step, step age, wait cause and budget. diagnostic.reason still reads cause_unknown on the same rows."
+  },
+  "G3_fence_defects_never_consume_the_write_path": {
+   "verdict": "met",
+   "met": true,
+   "detail": "0 fence refusals at preparation in both 15,000-entry runs (471 and 276 on the throughput head); 20 marker pages held with the reason; whitespace and CRLF facts adopt; whitespace-only rows are counted."
+  },
+  "G4_fence_repair_runs_during_the_sync": {
+   "verdict": "not met in this release",
+   "met": false,
+   "detail": "22 candidates, all held sync_in_progress, none repaired, no owner_unavailable. Scoped to the follow-up change."
+  },
+  "G5_throughput_and_one_pass": {
+   "verdict": "rate and watchdog met; one pass not met at a 3600 s timeout",
+   "met": false,
+   "zero_sync_deadline_stop": true,
+   "rate_within_20pct_of_bench": true,
+   "every_pass_checkpoints_and_resumes": true,
+   "one_pass_at_3600s": false,
+   "one_pass_at_14400s": "met by arithmetic: 5,483 s of passes at pool 10 and about 10,800 s plus a short tail at pool 3; no run used a 14,400 s timeout",
+   "not_measured": [
+    "foreground put_page p95 during the catch-up",
+    "database outage and recovery scenario",
+    "several poisoned entries in one run"
+   ]
+  }
+ }
+}
