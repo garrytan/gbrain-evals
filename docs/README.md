@@ -62,7 +62,7 @@ gap does not isolate the effect of a graph alone.
 
 | Engineering question | Report |
 |---|---|
-| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 7 memory trust harness results, Cats 37-39](benchmarks/2026-10-07-memory-trust-results-harness.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md)): keyless, on gbrain's unmerged #5575 branches, no model measured yet; state resolution is exact, poisoning is contained except two search-label bugs, and purge leaves claim text in stored write outcomes |
+| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 8 memory trust rerun, Cats 37-39](benchmarks/2026-10-08-memory-trust-results-rerun.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md), [October 7 first run](benchmarks/2026-10-07-memory-trust-results-harness.md)): keyless, on gbrain's #5575 branches merged locally, no model measured yet; after the fixes every preregistered contract passes, and the write gate's detector still misses 21 of 90 instruction-worded payloads |
 | Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
@@ -174,6 +174,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-08: Memory trust rerun row
+
+The memory trust row now points to the October 8 rerun: after the gbrain fixes on `capy/memory-trust` `91290339`, Cats 37, 38 and 39 pass every preregistered keyless contract (October 7: Cats 37 and 39 failed on search labels and purge residuals). The October 7 report stays linked as the first run.
 
 ### 2026-10-07: Memory trust categories row
 
