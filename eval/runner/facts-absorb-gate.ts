@@ -41,6 +41,7 @@ import { budgetOptionsFrom, startPaidRun } from './budget-ledger.ts';
 import { generateFactsAbsorbWorld, renderSessionNote, type FactsAbsorbWorld } from '../generators/facts-absorb-gen.ts';
 import { decide, scoreArm, valueToken, type ArmScore, type ArmValidity, type StoredFact, type Verdict } from './facts-absorb/score.ts';
 import { Rng } from '../generators/seeded.ts';
+import { scrubMachinePaths } from './receipt.ts';
 import { scoreSalienceCoverage } from './cat35-judges.ts';
 import { pairedNatural, type NaturalPage } from './facts-absorb/natural.ts';
 
@@ -369,7 +370,7 @@ async function main() {
     arms: results.map(({ score, facts, ingest_log, ...r }) => r),
     budget: summary,
   };
-  writeFileSync(join(resolve(out), 'receipt.json'), JSON.stringify(receipt, null, 2));
+  writeFileSync(join(resolve(out), 'receipt.json'), JSON.stringify(scrubMachinePaths(receipt), null, 2));
   for (const r of results) writeFileSync(join(resolve(out), `arm-${r.arm.label}.json`), JSON.stringify({ arm: r.arm, score: r.score, facts: r.facts, ingest_log: r.ingest_log }, null, 2));
   console.log(JSON.stringify({ verdicts: verdicts.map(v => ({ label: v.label, mutant: v.mutant, pass: v.verdict.pass, checks: v.verdict.checks })), mutants_fail: receipt.mutants_fail, budget: summary }, null, 2));
 }

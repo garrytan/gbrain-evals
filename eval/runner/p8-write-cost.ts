@@ -32,6 +32,7 @@ import { GbrainSlot, McpClient, MeteringProxy, GBRAIN_EMBED_MODEL, type Meter } 
 import { runCli } from './lifecycle/drivers.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
 import { budgetOptionsFrom, startPaidRun } from './budget-ledger.ts';
+import { scrubMachinePaths } from './receipt.ts';
 
 const argv = process.argv.slice(2);
 const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
@@ -196,7 +197,7 @@ async function main() {
   } finally { proxy.stop(); }
   const summary = budget.close({ finish: results.length === arms.length });
   const receipt = { schema: 'p8-write-cost-v1', gbrain: { repo, commit: build.commit, version: build.version }, embedding_model: GBRAIN_EMBED_MODEL, dataset: 'LongMemEval-S cleaned (98d7416c), first distinct sessions', arms: results, budget: summary };
-  writeFileSync(join(resolve(out), 'receipt.json'), JSON.stringify(receipt, null, 2));
+  writeFileSync(join(resolve(out), 'receipt.json'), JSON.stringify(scrubMachinePaths(receipt), null, 2));
   console.log(JSON.stringify(receipt, null, 2));
 }
 

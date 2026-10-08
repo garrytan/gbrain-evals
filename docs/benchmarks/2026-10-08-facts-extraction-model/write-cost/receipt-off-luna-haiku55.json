@@ -250,7 +250,7 @@
     "input_tokens": 13608687,
     "output_tokens": 2167813,
     "overshoot_usd": 0,
-    "ledger_path": "/home/user/.capy/work/r2/budget/ledger.sqlite",
+    "ledger_path": "~/.capy/work/r2/budget/ledger.sqlite",
     "program_cap_usd": 40,
     "event_loop_lag_ms": {
       "p50": 0,

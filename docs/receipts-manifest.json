@@ -4753,7 +4753,7 @@
       "claim_id": "r2-facts-absorb-gate",
       "readme_anchor": "docs/benchmarks/2026-10-08-facts-extraction-model.md: The preregistered verdict",
       "artifact_path": "docs/benchmarks/2026-10-08-facts-extraction-model/gate/receipt.json",
-      "artifact_sha256": "4c96346032069a39c3ef311f8dc1dd087b8514cb6407d4fd99bf2536f8e00ec2",
+      "artifact_sha256": "522649696c5f5acd67997543fdbd236fd903384e797a57747eab256f7b41bd4e",
       "status": "covered",
       "expected": {
         "/preregistration/sha256": "8f9be0d9f872ad4bf47b7a019ec4eb850aba47951e51958f594cff4e9f6e7c11",
@@ -4775,7 +4775,7 @@
       "claim_id": "r2-write-cost-sonnet46",
       "readme_anchor": "docs/benchmarks/2026-10-08-facts-extraction-model.md: Write cost on P8's sessions",
       "artifact_path": "docs/benchmarks/2026-10-08-facts-extraction-model/write-cost/receipt-on-sonnet46.json",
-      "artifact_sha256": "24c088ba32a6e66d498ead2049d597e99769e51c1b041fe7e90623b42138fcc1",
+      "artifact_sha256": "c27e622e4896a5b08f83a9abca14741bbc53af925844f56f4879766711b81b32",
       "status": "covered",
       "expected": {
         "/arms/0/arm": "on",
@@ -4790,7 +4790,7 @@
       "claim_id": "r2-write-cost-off-cheap",
       "readme_anchor": "docs/benchmarks/2026-10-08-facts-extraction-model.md: Write cost on P8's sessions",
       "artifact_path": "docs/benchmarks/2026-10-08-facts-extraction-model/write-cost/receipt-off-luna-haiku55.json",
-      "artifact_sha256": "5276c51877890deae2c6656e4e931f641996eb204211b0a4bd6293d99280c69c",
+      "artifact_sha256": "5687ccd760b4eea287540bf51d03be0025d074b74ee3986b792a1af3670772d2",
       "status": "covered",
       "expected": {
         "/arms/0/arm": "off",

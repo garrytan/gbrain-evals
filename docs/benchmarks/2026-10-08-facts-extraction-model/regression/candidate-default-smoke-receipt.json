@@ -1,7 +1,7 @@
 {
   "schema": "facts-absorb-gate-v1",
   "gbrain": {
-    "repo": "/home/user/.capy/work/r2/gbrain-candidate",
+    "repo": "~/.capy/work/r2/gbrain-candidate",
     "ref": "HEAD",
     "commit": "4600f47a8c5792d669017c5c37136571160508cc",
     "version": "0.60.110.0",
@@ -169,7 +169,7 @@
     "input_tokens": 27933,
     "output_tokens": 10723,
     "overshoot_usd": 0,
-    "ledger_path": "/home/user/.capy/work/r2/budget/ledger.sqlite",
+    "ledger_path": "~/.capy/work/r2/budget/ledger.sqlite",
     "program_cap_usd": 40,
     "event_loop_lag_ms": {
       "p50": 0,
