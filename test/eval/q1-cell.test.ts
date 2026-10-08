@@ -24,7 +24,7 @@ import { FRONTIER_READERS, FullContextSystem } from '../../eval/runner/systems/b
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
 import type { ScriptedModel } from '../../eval/runner/cat40/loop.ts';
 import { CAMPAIGN_SCHEMA, type CampaignManifest } from '../../eval/runner/scoreboard.ts';
-import { loadCampaign, planWaves } from '../../eval/runner/shootout-cell.ts';
+import { Campaign, loadCampaign, planWaves } from '../../eval/runner/shootout-cell.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'q1-cell-'));
@@ -630,6 +630,9 @@ describe('the generated cell manifest', () => {
     expect(waves.length).toBeGreaterThanOrEqual(t1.size + 4);
     expect(units.every(u => u.lease_usd > 0 && u.command.includes('eval/runner/q1/cell.ts run --cell'))).toBe(true);
     expect(units.filter(u => u.sealed).every(u => ['beam-10m', 'beam-100k', 'beam-1m', 'locomo'].includes(u.benchmark))).toBe(true);
+    for (const u of units) expect(u.pass).toEqual(u.system === 'gbrain-defaults' ? ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY'] : ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY']);
+    const argv = new Campaign(path, join(tmp, 'pass-state')).launchArgv({ lease_id: 'l', cell: units[0].id, attempt: 1, usd: units[0].lease_usd, entry_id: 'e', max_output_tokens: null, status: 'reserved' }, { vm: 'ubirun-test-1-abc' });
+    expect(argv.join(' ')).toContain('--pass OPENAI_API_KEY --pass ANTHROPIC_API_KEY');
     const fd = Bun.spawnSync(['bun', 'eval/runner/scoreboard-cli.ts', 'plan', '--campaign', path, '--json'], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
     expect(fd.exitCode).toBe(0);
     expect(JSON.parse(fd.stdout.toString()).cells).toHaveLength(units.length);
