@@ -435,6 +435,20 @@ The 150-pairs-per-corpus raise could not be met for amara, so the final mix is *
 | `q/career-corpus/career-manifest.json` (v2, 272 documents) | `d5c3720d14b05d904b5c60c1854afcfd7e2ebde836d10262ecdfbc6e24338b4c` |
 | `custody-hashes.txt` (5,214 entries; replaces `1f593208…`; only these two files and the 143 new career documents changed) | `6268035ca9546aa791f5909a339ba13d20adf30368ae799a42c4ffe377e4cc0b` |
 
+### Career manifest format fix and G2 seed (recorded 2026-10-07, before any career G6 cell and before G2)
+
+- `q/career-corpus/career-manifest.json` is now `cb6a5e62615ac20c2137aeb48e03bffd8bded821925016fde465280a301cd29d`
+  (replaces `d5c3720d…`). The key `documents` is renamed to `files`, the key the runner reads, and
+  `"today": "2026-09-30"` is added, because current-employer gold depends on the ledger's "today". Without it the runner
+  would tell the agent "Today is 2026-04-19". All 272 path and hash entries are identical, and no document bytes change.
+- `g2/g2-seed.json` (G2's sample seed, drawn privately by the custodian; value in custody) =
+  `d8aac1f2eec67ec90b3761016705cd956eb894e5e8d6ce889e51c895e531d037`.
+- `custody-hashes.txt` (5,215 entries) = `1f1882c5c0a85ef9021be303817a75914fe2942d68632c9109e5390336607ca1`, replacing
+  `6268035c…`.
+- Amara keeps the runner's fixed `TODAY = 2026-04-19`. That fits the corpus (January to mid-April 2026), and no amara
+  question depends on "now".
+- Progress note: the amara G6 ingest is complete for both arms × 3 models × 3 ingests ($144).
+
 ### Builds, runners and models
 
 - **Candidate (frozen Q2 build):** gbrain `4ec7fbbe4221bd353b88cf46292b44153c542bb2` on branch `capy/q2-parser-gaps`
