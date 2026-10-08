@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.48] - 2026-10-08
+## [0.10.49] - 2026-10-08
 
 ### Q2 parser gaps: guards for typed list lines, a held-out frame for grammar precision and recall, relationship-phrasing units, and the custodian harness
 
@@ -13,6 +13,13 @@ Paired with gbrain branch `capy/q2-parser-gaps` (frozen build `4ec7fbbe4`, basel
 - **Harness.** `eval/runner/q2/` (grammar gates G1–G4 and G2 with two-judge labels and no adjudication, the runner's own zero-tolerance classes, the K conformance scorer, transition-identity C-gates with Holm selection and a fixed-sequence evaluator, the crossed bootstrap for G6, the power simulation, the campaign guard, preflight and allowlisted export); custody roots outside every git worktree with symlinks resolved; receipts that keep gate outcomes apart from execution status; resumable answer and judge checkpoints; the career-chronicle corpus and its development generator. The [custodian runbook](docs/benchmarks/2026-10-06-q2-parser-gaps-runbook.md) and [campaign manifest](docs/benchmarks/2026-10-06-q2-parser-gaps-campaign.json) fix the order of runs.
 - **Defects found in the sealed run, fixed after the decision.** `junk-audit.ts g2-sample` and `label` now write receipts with `run_status` (the custodian had recorded wrapper receipts); W manifests may key their list `pages` and the career manifest `documents`; `campaign.ts not-run` records a step a failed upstream gate stops, so the export runs inside the guard when G6 does not.
 - **CI flake fix.** `budget-ledger-sqlite.test.ts` "verify passes a healthy ledger" timed out on a CI runner (`tests (3)` on `35027cff`): its 400 reserve and settle pairs make 825 `synchronous = FULL` fsyncs, so on a busy runner disk it outlasts the 5 s test timeout. Its ledger now lives on tmpfs, as the scale test's does; the assertions are unchanged. Forced probe: with fsync delayed 10 ms on a disk path the test body takes 10.1 s, on tmpfs 0.7 s.
+- **Version.** Main is at 0.10.48, so this release is 0.10.49.
+
+## [0.10.48] - 2026-10-08
+
+### The R2 facts-extraction report describes its write-cost comparators by kind
+
+- [docs/benchmarks/2026-10-08-facts-extraction-model.md](docs/benchmarks/2026-10-08-facts-extraction-model.md): the write-cost context sentence now uses the comparison table's kind labels (`memory-bank`, `extract-first`, `graph-pipeline`, `temporal-graph`, `markdown-notes`) and links to [the table](docs/comparison-systems.md#systems-in-the-open-source-comparison), the one place that names the systems. The figures are unchanged.
 - **Version.** Main is at 0.10.47, so this release is 0.10.48.
 
 ## [0.10.47] - 2026-10-08
