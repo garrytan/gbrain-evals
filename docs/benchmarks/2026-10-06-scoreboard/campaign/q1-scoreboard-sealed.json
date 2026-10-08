@@ -1,0 +1,3997 @@
+{
+  "kind": "q1-scoreboard-campaign",
+  "schema_version": 1,
+  "campaign_id": "q1-scoreboard-sealed",
+  "cap_usd": 7200,
+  "ledger": "eval/reports/scoreboard/q1-scoreboard-sealed/campaign.sqlite",
+  "parameters": {},
+  "hedge_classifier": "none",
+  "cells": [
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c0",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c1",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c2",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c3",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c4",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c5",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c6",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c7",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c8",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.shipped-defaults.c9",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "shipped-defaults",
+      "lease_usd": 18.17,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c0",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c1",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c2",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c3",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c4",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c5",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c6",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c7",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c8",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.full-surface.c9",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "full-surface",
+      "lease_usd": 11.38,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 68,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 44,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c0",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c1",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c2",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c3",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c4",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c5",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c6",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c7",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c8",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-extract-first.common.c9",
+      "system": "ext-extract-first",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 37.51,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-extract-first.common --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 32,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 20,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c0",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c1",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c2",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c3",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c4",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c5",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c6",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c7",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c8",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-memory-bank.recipe.c9",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 27.6,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 41,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 26,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c0",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c1",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c2",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c3",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c4",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c5",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c6",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c7",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c8",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-graph-pipeline.common.c9",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 50.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 53,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 34,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c0",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c1",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c2",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c3",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c4",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c5",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c6",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c7",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c8",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.common.c9",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "common",
+      "lease_usd": 200.8,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 61,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 39,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c0",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c1",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c2",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c3",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c4",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c5",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c6",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c7",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c8",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-markdown-kb.recipe.c9",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 6.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-markdown-kb.recipe --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c0",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c1",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c2",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c3",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c4",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c5",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c6",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c7",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c8",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.ext-verbatim-session.recipe.c9",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-10m",
+      "config": "recipe",
+      "lease_usd": 8.17,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s1.baseline-recency.baseline",
+      "system": "baseline-recency",
+      "benchmark": "beam-10m",
+      "config": "baseline",
+      "lease_usd": 55.07,
+      "command": "bun eval/runner/q1/cell.ts run --cell s1.baseline-recency.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 1
+    },
+    {
+      "id": "s1.baseline-hybrid.baseline",
+      "system": "baseline-hybrid",
+      "benchmark": "beam-10m",
+      "config": "baseline",
+      "lease_usd": 95.1,
+      "command": "bun eval/runner/q1/cell.ts run --cell s1.baseline-hybrid.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 1
+    },
+    {
+      "id": "s1.baseline-none.baseline",
+      "system": "baseline-none",
+      "benchmark": "beam-10m",
+      "config": "baseline",
+      "lease_usd": 55.07,
+      "command": "bun eval/runner/q1/cell.ts run --cell s1.baseline-none.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 1
+    },
+    {
+      "id": "s1.baseline-full-context.baseline",
+      "system": "baseline-full-context",
+      "benchmark": "beam-10m",
+      "config": "baseline",
+      "lease_usd": 5.14,
+      "command": "bun eval/runner/q1/cell.ts run --cell s1.baseline-full-context.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 2
+    },
+    {
+      "id": "s1.baseline-file-agent.baseline",
+      "system": "baseline-file-agent",
+      "benchmark": "beam-10m",
+      "config": "baseline",
+      "lease_usd": 245.99,
+      "command": "bun eval/runner/q1/cell.ts run --cell s1.baseline-file-agent.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "T1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 1
+    },
+    {
+      "id": "s2b.gbrain-defaults.shipped-defaults",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-1m",
+      "config": "shipped-defaults",
+      "lease_usd": 117,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.shipped-defaults --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s2b.gbrain-defaults.full-surface",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-1m",
+      "config": "full-surface",
+      "lease_usd": 127.67,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.full-surface --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 72,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 48,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s2b.ext-extract-first.common",
+      "system": "ext-extract-first",
+      "benchmark": "beam-1m",
+      "config": "common",
+      "lease_usd": 102.63,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s2b.ext-extract-first.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 65,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 42,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s2b.ext-memory-bank.recipe",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-1m",
+      "config": "recipe",
+      "lease_usd": 76.71,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.ext-memory-bank.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 72,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 48,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s2b.ext-graph-pipeline.recipe",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-1m",
+      "config": "recipe",
+      "lease_usd": 119.43,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.ext-graph-pipeline.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 72,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 48,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s2b.ext-temporal-graph.common",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-1m",
+      "config": "common",
+      "lease_usd": 458.55,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s2b.ext-temporal-graph.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 72,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 48,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s2b.ext-markdown-kb.recipe",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-1m",
+      "config": "recipe",
+      "lease_usd": 35.43,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.ext-markdown-kb.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 22,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 13,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s2b.ext-verbatim-session.recipe",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-1m",
+      "config": "recipe",
+      "lease_usd": 35.43,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.ext-verbatim-session.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 8,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 4,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s2b.baseline-recency.baseline",
+      "system": "baseline-recency",
+      "benchmark": "beam-1m",
+      "config": "baseline",
+      "lease_usd": 35.43,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2b.baseline-recency.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 3
+    },
+    {
+      "id": "s2b.baseline-hybrid.baseline",
+      "system": "baseline-hybrid",
+      "benchmark": "beam-1m",
+      "config": "baseline",
+      "lease_usd": 38.79,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2b.baseline-hybrid.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 3
+    },
+    {
+      "id": "s2b.baseline-none.baseline",
+      "system": "baseline-none",
+      "benchmark": "beam-1m",
+      "config": "baseline",
+      "lease_usd": 35.43,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2b.baseline-none.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 3
+    },
+    {
+      "id": "s2b.gbrain-defaults.common-embedder",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-1m",
+      "config": "common-embedder",
+      "lease_usd": 55.27,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config common && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.common-embedder --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 72,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 48,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config common --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s2b.baseline-full-context.baseline",
+      "system": "baseline-full-context",
+      "benchmark": "beam-1m",
+      "config": "baseline",
+      "lease_usd": 1.37,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2b.baseline-full-context.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 3
+    },
+    {
+      "id": "s2b.baseline-file-agent.baseline",
+      "system": "baseline-file-agent",
+      "benchmark": "beam-1m",
+      "config": "baseline",
+      "lease_usd": 185.75,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2b.baseline-file-agent.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 3
+    },
+    {
+      "id": "s2a.gbrain-defaults.shipped-defaults",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-100k",
+      "config": "shipped-defaults",
+      "lease_usd": 55.06,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2a.gbrain-defaults.shipped-defaults --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s2a.gbrain-defaults.full-surface",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-100k",
+      "config": "full-surface",
+      "lease_usd": 57.75,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2a.gbrain-defaults.full-surface --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 5,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s2a.ext-extract-first.common",
+      "system": "ext-extract-first",
+      "benchmark": "beam-100k",
+      "config": "common",
+      "lease_usd": 19.72,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s2a.ext-extract-first.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 8,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 4,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s2a.ext-memory-bank.recipe",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-100k",
+      "config": "recipe",
+      "lease_usd": 17.56,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s2a.ext-memory-bank.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 10,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 5,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s2a.ext-graph-pipeline.recipe",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-100k",
+      "config": "recipe",
+      "lease_usd": 21.12,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell s2a.ext-graph-pipeline.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 17,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 10,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s2a.ext-temporal-graph.common",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-100k",
+      "config": "common",
+      "lease_usd": 50.94,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s2a.ext-temporal-graph.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s2a.ext-markdown-kb.recipe",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-100k",
+      "config": "recipe",
+      "lease_usd": 14.12,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s2a.ext-markdown-kb.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s2a.ext-verbatim-session.recipe",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-100k",
+      "config": "recipe",
+      "lease_usd": 14.12,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s2a.ext-verbatim-session.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s2a.baseline-recency.baseline",
+      "system": "baseline-recency",
+      "benchmark": "beam-100k",
+      "config": "baseline",
+      "lease_usd": 14.12,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2a.baseline-recency.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 5
+    },
+    {
+      "id": "s2a.baseline-hybrid.baseline",
+      "system": "baseline-hybrid",
+      "benchmark": "beam-100k",
+      "config": "baseline",
+      "lease_usd": 14.4,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2a.baseline-hybrid.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 5
+    },
+    {
+      "id": "s2a.baseline-none.baseline",
+      "system": "baseline-none",
+      "benchmark": "beam-100k",
+      "config": "baseline",
+      "lease_usd": 14.12,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2a.baseline-none.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 5
+    },
+    {
+      "id": "s2a.ext-memory-bank.common",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-100k",
+      "config": "common",
+      "lease_usd": 15,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config common && bun eval/runner/q1/cell.ts run --cell s2a.ext-memory-bank.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s2a.ext-graph-pipeline.common",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-100k",
+      "config": "common",
+      "lease_usd": 20.16,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s2a.ext-graph-pipeline.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 13,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s2a.ext-markdown-kb.common",
+      "system": "ext-markdown-kb",
+      "benchmark": "beam-100k",
+      "config": "common",
+      "lease_usd": 12.4,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config common && bun eval/runner/q1/cell.ts run --cell s2a.ext-markdown-kb.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s2a.ext-verbatim-session.common",
+      "system": "ext-verbatim-session",
+      "benchmark": "beam-100k",
+      "config": "common",
+      "lease_usd": 12.4,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config common && bun eval/runner/q1/cell.ts run --cell s2a.ext-verbatim-session.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 5,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s2a.baseline-full-context.baseline",
+      "system": "baseline-full-context",
+      "benchmark": "beam-100k",
+      "config": "baseline",
+      "lease_usd": 43.09,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2a.baseline-full-context.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 5
+    },
+    {
+      "id": "s2a.baseline-file-agent.baseline",
+      "system": "baseline-file-agent",
+      "benchmark": "beam-100k",
+      "config": "baseline",
+      "lease_usd": 60.19,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2a.baseline-file-agent.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S2a",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 5
+    },
+    {
+      "id": "s3.gbrain-defaults.shipped-defaults",
+      "system": "gbrain-defaults",
+      "benchmark": "locomo",
+      "config": "shipped-defaults",
+      "lease_usd": 20.56,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s3.gbrain-defaults.shipped-defaults --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s3.gbrain-defaults.full-surface",
+      "system": "gbrain-defaults",
+      "benchmark": "locomo",
+      "config": "full-surface",
+      "lease_usd": 50.37,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s3.gbrain-defaults.full-surface --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 4,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s3.ext-extract-first.recipe",
+      "system": "ext-extract-first",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 43.19,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-extract-first.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 46,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 29,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s3.ext-memory-bank.recipe",
+      "system": "ext-memory-bank",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 18.95,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-memory-bank.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s3.ext-graph-pipeline.recipe",
+      "system": "ext-graph-pipeline",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 23.27,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-graph-pipeline.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s3.ext-temporal-graph.recipe",
+      "system": "ext-temporal-graph",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 42.33,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-temporal-graph.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s3.ext-markdown-kb.recipe",
+      "system": "ext-markdown-kb",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 18.49,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-markdown-kb.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s3.ext-verbatim-session.recipe",
+      "system": "ext-verbatim-session",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 18.49,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-verbatim-session.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s3.baseline-recency.baseline",
+      "system": "baseline-recency",
+      "benchmark": "locomo",
+      "config": "baseline",
+      "lease_usd": 18.49,
+      "command": "bun eval/runner/q1/cell.ts run --cell s3.baseline-recency.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4
+    },
+    {
+      "id": "s3.baseline-hybrid.baseline",
+      "system": "baseline-hybrid",
+      "benchmark": "locomo",
+      "config": "baseline",
+      "lease_usd": 18.53,
+      "command": "bun eval/runner/q1/cell.ts run --cell s3.baseline-hybrid.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4
+    },
+    {
+      "id": "s3.baseline-none.baseline",
+      "system": "baseline-none",
+      "benchmark": "locomo",
+      "config": "baseline",
+      "lease_usd": 18.49,
+      "command": "bun eval/runner/q1/cell.ts run --cell s3.baseline-none.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4
+    },
+    {
+      "id": "s3.ext-extract-first.common",
+      "system": "ext-extract-first",
+      "benchmark": "locomo",
+      "config": "common",
+      "lease_usd": 17.33,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && bun eval/runner/q1/cell.ts run --cell s3.ext-extract-first.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s3.ext-memory-bank.common",
+      "system": "ext-memory-bank",
+      "benchmark": "locomo",
+      "config": "common",
+      "lease_usd": 16.96,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config common && bun eval/runner/q1/cell.ts run --cell s3.ext-memory-bank.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s3.ext-graph-pipeline.common",
+      "system": "ext-graph-pipeline",
+      "benchmark": "locomo",
+      "config": "common",
+      "lease_usd": 16.96,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s3.ext-graph-pipeline.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s3.ext-temporal-graph.common",
+      "system": "ext-temporal-graph",
+      "benchmark": "locomo",
+      "config": "common",
+      "lease_usd": 21.59,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s3.ext-temporal-graph.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s3.ext-markdown-kb.common",
+      "system": "ext-markdown-kb",
+      "benchmark": "locomo",
+      "config": "common",
+      "lease_usd": 16.63,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config common && bun eval/runner/q1/cell.ts run --cell s3.ext-markdown-kb.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s3.ext-verbatim-session.common",
+      "system": "ext-verbatim-session",
+      "benchmark": "locomo",
+      "config": "common",
+      "lease_usd": 16.63,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config common && bun eval/runner/q1/cell.ts run --cell s3.ext-verbatim-session.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s3.baseline-full-context.baseline",
+      "system": "baseline-full-context",
+      "benchmark": "locomo",
+      "config": "baseline",
+      "lease_usd": 11.74,
+      "command": "bun eval/runner/q1/cell.ts run --cell s3.baseline-full-context.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4
+    },
+    {
+      "id": "s3.baseline-file-agent.baseline",
+      "system": "baseline-file-agent",
+      "benchmark": "locomo",
+      "config": "baseline",
+      "lease_usd": 26.29,
+      "command": "bun eval/runner/q1/cell.ts run --cell s3.baseline-file-agent.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4
+    },
+    {
+      "id": "s3.ext-agent-runtime.recipe",
+      "system": "ext-agent-runtime",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 27.84,
+      "command": "bun eval/runner/q1/cell.ts run --cell s3.ext-agent-runtime.recipe --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4
+    },
+    {
+      "id": "s3.gbrain-defaults.shipped-defaults.r2",
+      "system": "gbrain-defaults",
+      "benchmark": "locomo",
+      "config": "shipped-defaults",
+      "lease_usd": 2.07,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s3.gbrain-defaults.shipped-defaults.r2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s3.ext-extract-first.recipe.r2",
+      "system": "ext-extract-first",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 24.7,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-extract-first --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-extract-first.recipe.r2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-extract-first; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-extract-first --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 46,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 29,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-extract-first --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-extract-first.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-extract-first --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-extract-first.tar\""
+    },
+    {
+      "id": "s3.ext-memory-bank.recipe.r2",
+      "system": "ext-memory-bank",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 0.45,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-memory-bank.recipe.r2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "s3.ext-graph-pipeline.recipe.r2",
+      "system": "ext-graph-pipeline",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 4.78,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-graph-pipeline.recipe.r2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s3.ext-temporal-graph.recipe.r2",
+      "system": "ext-temporal-graph",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 23.84,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-temporal-graph.recipe.r2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s3.ext-markdown-kb.recipe.r2",
+      "system": "ext-markdown-kb",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 0.01,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-markdown-kb.recipe.r2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s3.ext-verbatim-session.recipe.r2",
+      "system": "ext-verbatim-session",
+      "benchmark": "locomo",
+      "config": "recipe",
+      "lease_usd": 0.01,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-verbatim-session.recipe.r2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s3.baseline-hybrid.baseline.r2",
+      "system": "baseline-hybrid",
+      "benchmark": "locomo",
+      "config": "baseline",
+      "lease_usd": 0.04,
+      "command": "bun eval/runner/q1/cell.ts run --cell s3.baseline-hybrid.baseline.r2 --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S3",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 4
+    }
+  ],
+  "executes": [
+    "eval/runner/q1/cell.ts",
+    "eval/runner/q1/cells",
+    "eval/runner/q1/scoreboard-errors.ts",
+    "eval/runner/memory-qa",
+    "eval/runner/systems",
+    "eval/runner/cat40",
+    "eval/runner/decisions",
+    "eval/runner/metering-proxy.ts",
+    "eval/runner/budget-ledger.ts",
+    "eval/runner/paid-arm.ts",
+    "eval/runner/metrics.ts",
+    "eval/runner/sealed-confirmation-lib.ts",
+    "eval/runner/shootout-cell.ts",
+    "eval/runner/evidence-delivery",
+    "eval/runner/gbrain-under-test.ts",
+    "eval/runner/lifecycle/builds.ts",
+    "eval/runner/longmemeval-cache.ts",
+    "eval/runner/receipt.ts",
+    "eval/runner/situation-recall-provenance.ts",
+    "eval/generators/model-ladder-gen.ts",
+    "eval/systems",
+    "docs/comparison-systems",
+    "eval/decisions",
+    "package.json",
+    "bun.lock"
+  ],
+  "images": {
+    "alpine/socat": "alpine/socat@sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50",
+    "alpine/socat:1.8.0.3": "alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ghcr.io/astral-sh/uv:0.12.3": "ghcr.io/astral-sh/uv:0.12.3@sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ghcr.io/astral-sh/uv:0.9.5": "ghcr.io/astral-sh/uv:0.9.5@sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7",
+    "ghcr.io/vectorize-io/hindsight:0.10.2": "ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
+    "letta/letta:0.34.4": "letta/letta:0.34.4@sha256:8ee7fb697e7f08b121a487b48315d45c64b195c12418264b091371c9e8ab3a5c",
+    "neo4j:5.26.2": "neo4j:5.26.2@sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365",
+    "oven/bun:1.4.2-slim": "oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61",
+    "pgvector/pgvector:0.8.1-pg18": "pgvector/pgvector:0.8.1-pg18@sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c",
+    "python:3.12-slim": "python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "python:3.12-slim-bookworm": "python:3.12-slim-bookworm@sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "qdrant/qdrant:v1.19.2": "qdrant/qdrant:v1.19.2@sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad"
+  },
+  "blocks": {
+    "T1": {
+      "estimate_usd": 4068.78,
+      "cap_usd": 6103.17
+    },
+    "T2-S2a": {
+      "estimate_usd": 456.27,
+      "cap_usd": 684.41
+    },
+    "T2-S2b": {
+      "estimate_usd": 1424.89,
+      "cap_usd": 2137.34
+    },
+    "T2-S3": {
+      "estimate_usd": 519,
+      "cap_usd": 778.5
+    }
+  },
+  "output_caps": {
+    "extraction": 4096,
+    "reader": 2048,
+    "judge": 1024,
+    "agent": 16000
+  },
+  "route_classes": {
+    "harness": "reader",
+    "judge": "judge",
+    "agent": "agent"
+  },
+  "schedule": {
+    "vcpu_cap_day": 128,
+    "vcpu_cap_night": 200
+  },
+  "row_pull_every": 20,
+  "pull_interval_minutes": 10,
+  "models": [
+    "anthropic:claude-haiku-4-5",
+    "anthropic:claude-opus-4-7",
+    "anthropic:claude-opus-5-5",
+    "anthropic:claude-sonnet-5-5",
+    "openai:gpt-4.1-mini",
+    "openai:gpt-4o-2024-08-06",
+    "openai:gpt-6.1-sol",
+    "openai:text-embedding-3-large"
+  ]
+}
