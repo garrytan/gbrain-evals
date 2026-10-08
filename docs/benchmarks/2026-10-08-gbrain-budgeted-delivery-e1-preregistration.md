@@ -240,12 +240,28 @@ Every delivery record was complete and agreed with its own blocks, and every rea
 undated twin reused the `native` scored row on 453 of 587 LoCoMo questions (identical prompt bytes). As expected,
 today's `auto` overran an explicit budget on nearly every question; the gate records that and does not fail on it.
 
-### A1: budgets
+### A1 (2026-10-08): budgets, frozen before any deliver cell, live parity call or reader call
 
-Pending: `B_native` and `B_pseudo` per benchmark, from the sizing script on the real frozen lists, committed before any
-deliver cell, live parity call or reader call.
+From `budget-sizing.ts` on the real frozen lists of the freeze cells (`e1-freeze-*`, settled at $2.90 in total), grid
+3,500 to 8,000 in steps of 100. Ratios are serialized harness tokens over gbrain's `budget_used` at the chosen B.
+Receipts (counts only): `docs/benchmarks/2026-10-08-gbrain-budgeted-delivery-e1/receipts/sizing/`.
+
+| Benchmark | Questions | `B_native` | native ratio, max | `B_pseudo` | pseudo ratio, max (full list and first five) | `auto` over B on the full list (native) |
+|---|---:|---:|---|---:|---|---:|
+| LongMemEval-S slice | 100 | **6,200** | 1.251 (p50 1.144, p99 1.249) | **5,500** | 1.409 (p50 1.189, p99 1.315) | 100 of 100 |
+| LoCoMo dev | 587 | **7,300** | 1.061 (p50 1.012, p99 1.058) | **6,400** | 1.218 (p50 1.166, p99 1.211) | 587 of 587 |
+| BEAM-100K dev | 120 | **6,400** | 1.219 (p50 1.033, p99 1.204) | **6,000** | 1.292 (p50 1.145, p99 1.282) | 119 of 120 |
+
+Verification passed for every pair: no serialized delivery exceeds 8,000 harness tokens unless gbrain delivered more
+than B. On the full 25-hit list gbrain delivered more than B on nearly every question (the documented spill), so those
+contexts are cut by the arm's packer and the cuts are counted. No Cell A or Cell B frozen list lacked rerank scores
+(0 of 807 in each cell), so no rerank retry fired. BEAM reads only `B_native`.
 
 ## Changelog
+
+### 2026-10-08: A1 budgets
+
+`B_native` and `B_pseudo` filled from the real frozen lists, before any deliver cell or reader call.
 
 ### 2026-10-08: frozen
 
