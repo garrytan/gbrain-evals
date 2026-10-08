@@ -12,6 +12,8 @@ gbrain v0.60.95.0 (`c5fb0201d`), measured 2026-10-06 to 2026-10-07. This is a re
 
 **Caveat found after the run (2026-10-07): the gbrain arm ran without reranking.** The harness rebuilt nothing between the slot build and the cells, and each slot snapshot kept the Voyage base URL of the build process's proxy, whose port was gone when the cells ran. Every rerank call therefore failed fast and gbrain fell back to unreranked results. Search reported this as `rerank_failed` in 230 of 300 cells, but the reason was not recorded. (Per-cell provider metering cannot confirm it either way: a separate harness race, fixed in `f345d58`, charged most gbrain cells' provider calls to the slot instead of the cell; costs are unaffected beyond about $0.01 per cell.) The harness now points every slot start at the current proxy (`gbrain-arm.ts`, with a test that fails before the fix). The numbers above stand as measured: they describe gbrain without its reranker, a configuration a user would reach only with a broken provider endpoint. How much reranking changes the gap is measured in the fix wave's development rounds ([plan](https://github.com/garrytan/gbrain-evals/blob/plan/cat40-hard-fix/docs/plans/2026-10-07-cat40-hard-fix/PLAN.md) on its branch, gbrain-evals #93), not on these held-out tasks.
 
+**Measured on the development world (2026-10-08), not on held-out tasks:** one seed (20261005), 50 tasks, 10 per family, Sonnet 5.5, the same gbrain build the held-out cells ran (`8e11aa1f3`), reranking on vs off (`--gbrain-config search.reranker.enabled=false`), everything else equal. Reranking on: 21/50; off: 19/50. Paired, on wins 7 tasks and loses 5, which is within noise at this size. Plain files scored 32/50 on the same tasks. So the missing reranker explains at most a small part of the 11.3-point held-out gap. Every reranking-on cell but one made rerank calls (the other made no hybrid search), and the reranking-off cells made none. Results: `eval/reports/cat40/hard-fix/dev-master-{rerank,norerank}` (local, about $67).
+
 ## The concrete case
 
 The company has accounts, contracts, amendments, tickets, emails, meetings and agent notes. Since generator v2 (amendment A1), most records refer to an account indirectly, by one of three forms:
@@ -122,3 +124,4 @@ The output is committed as [holdout-stats.md](2026-10-07-model-ladder-hard/holdo
 
 - 2026-10-07: first version.
 - 2026-10-07: caveat added: the gbrain arm ran without reranking (stale Voyage endpoint in restored slots); harness fixed.
+- 2026-10-08: development-world measurement of the reranker's effect added to the caveat (+2 of 50 tasks, within noise).
