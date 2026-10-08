@@ -10,6 +10,8 @@ const world = generateWorld();
 const tasks = world.personas.flatMap(p => p.tasks);
 const truthValues = (t: PPTask) => ({ date: `${humanDate(t.gold.date.new_iso)} at ${t.gold.date.time}`, correction: t.gold.correction.corrected.label, commitment: t.gold.commitment.label });
 const truth = (t: PPTask) => truthfulAnswer(t, truthValues(t));
+/** The namesake's values as an answer would state them (labels without their `namesake` prefix). */
+const nsValues = (t: PPTask) => t.gold.namesake.map(m => m.label.replace(/^namesake (?:meeting |commitment: )?/, '')).map(v => /^\d{4}-\d\d-\d\d$/.test(v) ? humanDate(v) : v);
 const staleAnswer = (t: PPTask) => truthfulAnswer(t, { date: humanDate(t.gold.date.old_iso), correction: t.gold.correction.stale.label, commitment: null });
 
 describe('program-primary generator', () => {
@@ -66,8 +68,26 @@ describe('program-primary scorer', () => {
     expect(scoreAnswer(t, ok)).toMatchObject({ failed: false, complete: true });
     const stale = `Meeting: ${oldH}. Quote: ${g.correction.corrected.label}. I owe them ${g.commitment.label}.`;
     expect(scoreAnswer(t, stale).kinds).toEqual(['stale_date']);
-    const contradictory = `Meeting: ${newH}. Quote: ${g.correction.stale.label}, or maybe ${g.correction.corrected.label}. I owe them ${g.commitment.label}.`;
-    expect(scoreAnswer(t, contradictory).kinds).toEqual(['stale_correction']);
+    const staleOnly = `Meeting: ${newH}. Quote: ${g.correction.stale.label}. I owe them ${g.commitment.label}.`;
+    expect(scoreAnswer(t, staleOnly).kinds).toEqual(['stale_correction']);
+    // v2 tolerates a stale mention when the current value is also stated (amendment 1); v1 failed it.
+    const both = `Meeting: ${newH}. Quote: ${g.correction.stale.label}, or maybe ${g.correction.corrected.label}. I owe them ${g.commitment.label}.`;
+    expect(scoreAnswer(t, both).failed).toBe(false);
+    expect(scoreAnswer(t, both, { version: 't0-score-v1' }).kinds).toEqual(['stale_correction']);
+  });
+
+  test('v2 reads prose: an outdated record cited, a page slug and a disambiguation are not failures', () => {
+    const ns = g.namesake.find(m => m.label.startsWith('namesake meeting'))!;
+    const nsDate = humanDate(ns.label.replace('namesake meeting ', ''));
+    const prose = [
+      `**Pilot kickoff: ${newH}.** Your daily note still says "kickoff ${oldH}." That note is out of date.`,
+      `[Meeting record](meetings/${g.date.old_iso}-x-kickoff). Terms: ${g.correction.corrected.label}; earlier notes say ${g.correction.stale.label}, which is wrong.`,
+      `Not to be confused with the other contact of the same first name, whose meeting is ${nsDate}.`,
+      `I owe them ${g.commitment.label}.`,
+    ].join('\n');
+    expect(scoreAnswer(t, prose)).toMatchObject({ failed: false, complete: true });
+    expect(scoreAnswer(t, prose, { version: 't0-score-v1' }).failed).toBe(true);
+    expect(scoreAnswer(t, `${truth(t)} Their meeting is ${nsDate}.`).kinds).toEqual(['unsupported']);
   });
 
   test('a missed commitment, a namesake value, an empty answer and an execution error each fail', () => {
@@ -91,10 +111,10 @@ describe('program-primary scorer', () => {
       space: {
         truth,
         empty: () => '',
-        everything: x => [truth(x), staleAnswer(x), ...x.gold.namesake.map(m => m.label)].join(' '),
+        everything: x => [truth(x), staleAnswer(x), ...nsValues(x)].join(' '),
         refusal: () => 'I could not find anything about this meeting in your notes.',
         stale: staleAnswer,
-        wrongSource: x => x.gold.namesake.map(m => m.label).join('; '),
+        wrongSource: x => nsValues(x).join('; '),
       },
       score: answers => {
         const failures = answers.filter((a, i) => scoreAnswer(tasks[i], a).failed).length;

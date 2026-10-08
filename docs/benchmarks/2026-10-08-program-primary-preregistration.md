@@ -72,6 +72,9 @@ the corrected value is not a failure under the plan's definition; omissions are 
 suite (`test/eval/program-primary.test.ts`) passes the truthful deliverable on all 32 tasks and fails the empty,
 everything, refusal, stale and wrong-source fakes.
 
+**Scorer version.** Amendment 1 replaced v1 with `t0-score-v2` before any baseline cell; see the end of this
+document.
+
 **Scorer audit (preregistered).** After the baseline, the author reads a random sample of 30 session-2 deliverables
 (10 per counted reader, seeded) and labels each as failed or not under the definition above, then reports agreement
 with the scorer and every disagreement. The scorer is not changed after seeing baseline outputs; a disagreement is
@@ -244,4 +247,37 @@ first (Sonnet 5.5, Opus 5.5) lead the tables. A reader at 0% failures is a ceili
 
 ## Amendments
 
-None yet.
+### Amendment 1 (October 8, 2026, before any baseline cell): scorer `t0-score-v2`, execution order
+
+**What the setup smoke showed.** The 3-cell setup smoke (task `p20261015-t4`, baseline arm, one cell per counted
+reader, $0.81 in ledger run `t0-program-primary-2026-10-08T21-07-30-319Z-3c3e450c`; receipts in
+`2026-10-08-program-primary/smoke/`) produced three deliverables that the author reads as correct: each states the
+new meeting date, the corrected seat count and the owed order form. `t0-score-v1` failed two of them. Opus 5.5 wrote
+"Your Oct 12 daily note still says 'kickoff Thursday, Oct 22.' That note is out of date", "make sure no 150-seat
+figure ends up in the order form" and "Not to be confused with Idris Marchetti (Xerari Analytics)"; v1 scored a stale
+date, a stale correction and an unsupported value. gpt-6.1-sol linked "[Meeting record](meetings/2026-10-22-...)",
+whose page slug carries the old date, and wrote "The meeting page still has October 22 in its filename"; v1 scored a
+stale date. Strong readers cite outdated records to warn the user, and v1 counted the warning as the error.
+
+**Change.** `t0-score-v2` replaces v1 as the primary scorer before any baseline cell:
+
+1. The deliverable is read as prose: markdown link targets, code spans and page paths are removed, and emphasis
+   markers are dropped.
+2. More change cues: "no", "never", "still says/has/lists/shows", "says", "out of date", "stale", "history",
+   "earlier notes" before the value; "which is wrong", "out of date", "an error" after it.
+3. A stale mention outside a change context fails only when the current value is absent. A deliverable that states
+   the new date (or the corrected value) and also cites the old one passes; one that states only the old value
+   fails. Known cost: a deliverable that states both as current, contradicting itself, passes v2; the scorer audit
+   counts such cases.
+4. The namesake's company is no longer an unsupported value (naming it is not a claim about the contact), and a
+   namesake value in a sentence that tells the two people apart ("not to be confused with", "different person",
+   "namesake") is excused.
+
+Under v2 all three smoke deliverables pass and are complete. Every cell still records `score_v1` beside `score`, and
+the baseline report publishes both. The failure definition, the mutants, the detection rule, the tolerance, the
+envelope and PW are unchanged. The scorer audit stays as preregistered, on v2.
+
+**Execution order.** Cells run in this order so the budget fallback cuts the right cells: baseline repeat 1 (96
+cells), both mutants (64), baseline repeat 2 (96), then the ablation (32). Four personas run in parallel (one serve
+per persona), so latency is measured under that load; a candidate's envelope comparison runs under the same
+concurrency.

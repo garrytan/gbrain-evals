@@ -168,6 +168,8 @@ export interface CellRecord {
   /** Which of the three facts session 1's write calls carried (capture diagnostics; not scored). */
   capture: { writes: number; commitment: boolean; new_date: boolean; corrected: boolean };
   score: T0Score;
+  /** The superseded v1 rules on the same deliverable (amendment 1), for transparency. */
+  score_v1: T0Score;
   usd: { reader: number; gbrain_internal: number; total: number };
   tokens: { input_total: number; output_total: number };
   gbrain_internal?: Meter;
@@ -287,6 +289,7 @@ export async function runCell(ctx: Ctx, p: PPPersona, t: PPTask, reader: string,
     key, version: T0_VERSION, persona: p.id, task: t.id, kind: t.kind, correction_kind: t.correction_kind, reader, arm, repeat, sessions,
     capture: { writes: writes.length, commitment: matches(g.commitment, written), new_date: matches(g.date.new, written), corrected: matches(g.correction.corrected, written) },
     score: scoreAnswer(t, s2.answer, { executionError }),
+    score_v1: scoreAnswer(t, s2.answer, { executionError, version: 't0-score-v1' }),
     usd: { reader: readerUsd, gbrain_internal: gbrain_internal.usd, total: readerUsd + gbrain_internal.usd },
     tokens, gbrain_internal, wall_ms: Date.now() - started.getTime(), budget_run_id: ctx.budgetRunId, started_at: started.toISOString(),
   };

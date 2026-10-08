@@ -1,0 +1,402 @@
+{
+ "schema": "t0-receipt/v1",
+ "runner": "t0-program-primary-v1",
+ "verdict": "report-only",
+ "gbrain_evals_head": "1e5caf37f0c9b87256ed28a98b9579b84d5702ec",
+ "finished_at": "2026-10-08T21:08:52.311Z",
+ "data": {
+  "metrics": {
+   "forced_drop_detected": true,
+   "stale_correction_detected": true,
+   "scored_fraction": 1,
+   "harness_errors": 0
+  },
+  "summary": {
+   "failure_kinds": [
+    "missed_commitment",
+    "stale_date",
+    "stale_correction",
+    "unsupported",
+    "execution_error"
+   ],
+   "rows": [
+    {
+     "arm": "ablation-push-off",
+     "reader": "scripted",
+     "runs": 4,
+     "failures": 4,
+     "failure_rate": 1,
+     "complete": 0,
+     "by_kind": {
+      "missed_commitment": 4,
+      "stale_date": 0,
+      "stale_correction": 0,
+      "unsupported": 0,
+      "execution_error": 0
+     },
+     "clustered": {
+      "rate": 1,
+      "lower": 0,
+      "upper": 1,
+      "clusters": 1
+     },
+     "by_task_kind": {
+      "prep": {
+       "runs": 2,
+       "failures": 2
+      },
+      "reply": {
+       "runs": 2,
+       "failures": 2
+      }
+     },
+     "by_correction_kind": {
+      "role": {
+       "runs": 0,
+       "failures": 0
+      },
+      "seats": {
+       "runs": 1,
+       "failures": 1
+      },
+      "price": {
+       "runs": 3,
+       "failures": 3
+      }
+     },
+     "omissions": {
+      "date": 4,
+      "correction": 4
+     },
+     "capture": {
+      "any_write": 4,
+      "commitment": 4,
+      "new_date": 4,
+      "corrected": 4
+     },
+     "push": {
+      "s2_user_prompt_ok": 0,
+      "s2_session_start_ok": 0
+     },
+     "envelope": {
+      "cell_wall_ms": {
+       "p50": 13373,
+       "p95": 13561
+      },
+      "session2_wall_ms": {
+       "p50": 1,
+       "p95": 1
+      },
+      "tokens_per_cell": {
+       "input_mean": 0,
+       "output_mean": 0
+      },
+      "usd_per_cell": {
+       "reader_mean": 0,
+       "gbrain_internal_mean": 0.000028665,
+       "total_mean": 0.000028665,
+       "total_sum": 0.00011466
+      }
+     }
+    },
+    {
+     "arm": "baseline",
+     "reader": "scripted",
+     "runs": 4,
+     "failures": 0,
+     "failure_rate": 0,
+     "complete": 4,
+     "by_kind": {
+      "missed_commitment": 0,
+      "stale_date": 0,
+      "stale_correction": 0,
+      "unsupported": 0,
+      "execution_error": 0
+     },
+     "clustered": {
+      "rate": 0,
+      "lower": 0,
+      "upper": 1,
+      "clusters": 1
+     },
+     "by_task_kind": {
+      "prep": {
+       "runs": 2,
+       "failures": 0
+      },
+      "reply": {
+       "runs": 2,
+       "failures": 0
+      }
+     },
+     "by_correction_kind": {
+      "role": {
+       "runs": 0,
+       "failures": 0
+      },
+      "seats": {
+       "runs": 1,
+       "failures": 0
+      },
+      "price": {
+       "runs": 3,
+       "failures": 0
+      }
+     },
+     "omissions": {
+      "date": 0,
+      "correction": 0
+     },
+     "capture": {
+      "any_write": 4,
+      "commitment": 4,
+      "new_date": 4,
+      "corrected": 4
+     },
+     "push": {
+      "s2_user_prompt_ok": 4,
+      "s2_session_start_ok": 0
+     },
+     "envelope": {
+      "cell_wall_ms": {
+       "p50": 13385,
+       "p95": 13661
+      },
+      "session2_wall_ms": {
+       "p50": 47,
+       "p95": 51
+      },
+      "tokens_per_cell": {
+       "input_mean": 0,
+       "output_mean": 0
+      },
+      "usd_per_cell": {
+       "reader_mean": 0,
+       "gbrain_internal_mean": 0.000028665,
+       "total_mean": 0.000028665,
+       "total_sum": 0.00011466
+      }
+     }
+    },
+    {
+     "arm": "mutant-forced-drop",
+     "reader": "scripted",
+     "runs": 4,
+     "failures": 4,
+     "failure_rate": 1,
+     "complete": 0,
+     "by_kind": {
+      "missed_commitment": 4,
+      "stale_date": 0,
+      "stale_correction": 0,
+      "unsupported": 0,
+      "execution_error": 0
+     },
+     "clustered": {
+      "rate": 1,
+      "lower": 0,
+      "upper": 1,
+      "clusters": 1
+     },
+     "by_task_kind": {
+      "prep": {
+       "runs": 2,
+       "failures": 2
+      },
+      "reply": {
+       "runs": 2,
+       "failures": 2
+      }
+     },
+     "by_correction_kind": {
+      "role": {
+       "runs": 0,
+       "failures": 0
+      },
+      "seats": {
+       "runs": 1,
+       "failures": 1
+      },
+      "price": {
+       "runs": 3,
+       "failures": 3
+      }
+     },
+     "omissions": {
+      "date": 4,
+      "correction": 4
+     },
+     "capture": {
+      "any_write": 4,
+      "commitment": 4,
+      "new_date": 4,
+      "corrected": 4
+     },
+     "push": {
+      "s2_user_prompt_ok": 0,
+      "s2_session_start_ok": 0
+     },
+     "envelope": {
+      "cell_wall_ms": {
+       "p50": 14710,
+       "p95": 14986
+      },
+      "session2_wall_ms": {
+       "p50": 1,
+       "p95": 1
+      },
+      "tokens_per_cell": {
+       "input_mean": 0,
+       "output_mean": 0
+      },
+      "usd_per_cell": {
+       "reader_mean": 0,
+       "gbrain_internal_mean": 0.000028665,
+       "total_mean": 0.000028665,
+       "total_sum": 0.00011466
+      }
+     }
+    },
+    {
+     "arm": "mutant-stale-correction",
+     "reader": "scripted",
+     "runs": 4,
+     "failures": 4,
+     "failure_rate": 1,
+     "complete": 0,
+     "by_kind": {
+      "missed_commitment": 0,
+      "stale_date": 0,
+      "stale_correction": 4,
+      "unsupported": 0,
+      "execution_error": 0
+     },
+     "clustered": {
+      "rate": 1,
+      "lower": 0,
+      "upper": 1,
+      "clusters": 1
+     },
+     "by_task_kind": {
+      "prep": {
+       "runs": 2,
+       "failures": 2
+      },
+      "reply": {
+       "runs": 2,
+       "failures": 2
+      }
+     },
+     "by_correction_kind": {
+      "role": {
+       "runs": 0,
+       "failures": 0
+      },
+      "seats": {
+       "runs": 1,
+       "failures": 1
+      },
+      "price": {
+       "runs": 3,
+       "failures": 3
+      }
+     },
+     "omissions": {
+      "date": 0,
+      "correction": 0
+     },
+     "capture": {
+      "any_write": 4,
+      "commitment": 4,
+      "new_date": 4,
+      "corrected": 4
+     },
+     "push": {
+      "s2_user_prompt_ok": 4,
+      "s2_session_start_ok": 0
+     },
+     "envelope": {
+      "cell_wall_ms": {
+       "p50": 14992,
+       "p95": 15389
+      },
+      "session2_wall_ms": {
+       "p50": 42,
+       "p95": 50
+      },
+      "tokens_per_cell": {
+       "input_mean": 0,
+       "output_mean": 0
+      },
+      "usd_per_cell": {
+       "reader_mean": 0,
+       "gbrain_internal_mean": 0.000049985,
+       "total_mean": 0.000049985,
+       "total_sum": 0.00019994
+      }
+     }
+    }
+   ],
+   "mutants": [
+    {
+     "arm": "mutant-forced-drop",
+     "reader": "scripted",
+     "pairs": 4,
+     "personas": 1,
+     "mutant_failures": 4,
+     "baseline_failures": 0,
+     "risk_difference": {
+      "diff": 1,
+      "lower": null,
+      "upper": null
+     },
+     "stale_correction": {
+      "mutant": 0,
+      "baseline": 0
+     },
+     "rule": "exact: every baseline pass fails under the mutant",
+     "detected": true
+    },
+    {
+     "arm": "mutant-stale-correction",
+     "reader": "scripted",
+     "pairs": 4,
+     "personas": 1,
+     "mutant_failures": 4,
+     "baseline_failures": 0,
+     "risk_difference": {
+      "diff": 1,
+      "lower": null,
+      "upper": null
+     },
+     "stale_correction": {
+      "mutant": 4,
+      "baseline": 0
+     },
+     "rule": "exact: every baseline pass fails under the mutant",
+     "detected": true
+    },
+    {
+     "arm": "ablation-push-off",
+     "reader": "scripted",
+     "pairs": 4,
+     "personas": 1,
+     "mutant_failures": 4,
+     "baseline_failures": 0,
+     "risk_difference": {
+      "diff": 1,
+      "lower": null,
+      "upper": null
+     },
+     "stale_correction": {
+      "mutant": 0,
+      "baseline": 0
+     },
+     "rule": "exact: every baseline pass fails under the mutant",
+     "detected": true
+    }
+   ],
+   "cells": 16
+  }
+ }
+}
