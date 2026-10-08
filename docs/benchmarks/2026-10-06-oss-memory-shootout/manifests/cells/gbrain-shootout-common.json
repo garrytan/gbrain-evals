@@ -1,0 +1,73 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-shootout",
+  "config": "common",
+  "notes": "Draft. gbrain at the repository pin 739e5cc (secondary link). Common models: text-embedding-3-large at 1,536 dimensions; search stays on gbrain defaults (Voyage reranker).",
+  "cells": [
+    {
+      "id": "gbrain-shootout-common-locomo-r1",
+      "benchmark": "locomo",
+      "lease_usd": 9,
+      "lease_basis": "1.5 x estimate, not piloted: markdown-notes common reading plus Voyage rerank ($5.60)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system gbrain-shootout --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-shootout-common-locomo-r2",
+      "benchmark": "locomo",
+      "lease_usd": 1,
+      "lease_basis": "1.5 x estimate, not piloted: retrieval-only replicate ($0.60)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system gbrain-shootout --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/retrieval-only.json --ingest-replicate 2 --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-shootout-common-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 6,
+      "lease_basis": "1.5 x estimate, not piloted: as LoCoMo ($3.60)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split dev --system gbrain-shootout --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-shootout-common-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 42,
+      "lease_basis": "1.5 x estimate, not piloted: markdown-notes LongMemEval-S reading plus embeddings ($28.00)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system gbrain-shootout --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-lme-s.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "lease_scale": {
+        "param": "lme_s_limit",
+        "base": 100
+      }
+    }
+  ]
+}

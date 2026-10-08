@@ -1,0 +1,6 @@
+[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); extends while the sync keeps progressing (stops after 900s without progress); disable with --no-hard-deadline
+[gbrain] Prepared statements disabled (PgBouncer transaction-mode convention on port 6543). Override with GBRAIN_PREPARE=true if your pooler runs in session mode.
+[sync] managed catch-up: 3000 entries frozen, 2755 remaining; publishing in bulk groups (each page keeps its own request).
+Error [queue_capacity]: source=bench path=companies/scale-0-3952.md code=queue_capacity: Write capacity exhausted: principal outstanding requests. request=ac6a59f2-3fee-44b8-b386-27cd88ef5037 run=703cce17-fce0-494c-9d57-173caa321cdc target=363e38ddc097d7692658ed9d144c948f174fcf8e Fix the cause, then run: gbrain sync --source bench --no-pull --retry-failed --no-embed
+Fix: Inspect writer status and configured persistence limits. Existing requests retain their reserved completion space.
+Docs: https://github.com/garrytan/gbrain/blob/master/docs/guides/error-codes.md#queue_capacity

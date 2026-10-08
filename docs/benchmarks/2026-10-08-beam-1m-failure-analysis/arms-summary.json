@@ -1,0 +1,1372 @@
+{
+  "note": "BEAM-1M dev, 11 conversations, 220 questions. Judge openai:gpt-4.1-mini per rubric item for every arm. Paired deltas: b minus a, cluster bootstrap by conversation (11 clusters), 10,000 draws, seed 42.",
+  "answers": {
+    "published-2026-10-06-bridge": {
+      "reader": "openai:gpt-4.1-mini",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.5348,
+        "all_items_met": 75
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.5614,
+        "all_items_met": 69
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.2955,
+        "all_items_met": 6
+      },
+      "empty_zero_score_answers": 0,
+      "committed_wrong_detector": {
+        "all": 52,
+        "answerable": 37,
+        "abstention": 15,
+        "declined_answerable": 8
+      },
+      "provider_tokens_mean": {
+        "input": 7179,
+        "output": 674
+      },
+      "context_tokens_estimate_mean": 7684,
+      "finish_reasons": {},
+      "empty_answers": 0,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 0.295,
+        "contradiction_resolution": 0.659,
+        "event_ordering": 0.468,
+        "information_extraction": 0.412,
+        "instruction_following": 0.712,
+        "knowledge_update": 0.455,
+        "multi_session_reasoning": 0.601,
+        "preference_following": 0.924,
+        "summarization": 0.397,
+        "temporal_reasoning": 0.424
+      },
+      "cost_usd": 1.1361,
+      "committed_wrong_hand_labels": {
+        "all": 50,
+        "answerable": 35,
+        "abstention": 15,
+        "of": 220
+      }
+    },
+    "a1-nomem-gpt41mini": {
+      "reader": "openai:gpt-4.1-mini",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.2621,
+        "all_items_met": 31
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.2155,
+        "all_items_met": 16
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.6818,
+        "all_items_met": 15
+      },
+      "empty_zero_score_answers": 0,
+      "committed_wrong_detector": {
+        "all": 99,
+        "answerable": 92,
+        "abstention": 7,
+        "declined_answerable": 24
+      },
+      "provider_tokens_mean": {
+        "input": 98,
+        "output": 287
+      },
+      "context_tokens_estimate_mean": 0,
+      "finish_reasons": {
+        "stop": 219,
+        "length": 1
+      },
+      "empty_answers": 0,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 0.682,
+        "contradiction_resolution": 0.25,
+        "event_ordering": 0.212,
+        "information_extraction": 0.075,
+        "instruction_following": 0.451,
+        "knowledge_update": 0,
+        "multi_session_reasoning": 0.12,
+        "preference_following": 0.625,
+        "summarization": 0.185,
+        "temporal_reasoning": 0.023
+      },
+      "cost_usd": 0.2508
+    },
+    "a1-nomem-sonnet55": {
+      "reader": "anthropic:claude-sonnet-5-5",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.3127,
+        "all_items_met": 45
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.2363,
+        "all_items_met": 23
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 1,
+        "all_items_met": 22
+      },
+      "empty_zero_score_answers": 0,
+      "committed_wrong_detector": {
+        "all": 82,
+        "answerable": 82,
+        "abstention": 0,
+        "declined_answerable": 40
+      },
+      "provider_tokens_mean": {
+        "input": 134,
+        "output": 455
+      },
+      "context_tokens_estimate_mean": 0,
+      "finish_reasons": {
+        "end_turn": 207,
+        "max_tokens": 13
+      },
+      "empty_answers": 0,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 1,
+        "contradiction_resolution": 0.341,
+        "event_ordering": 0.012,
+        "information_extraction": 0.088,
+        "instruction_following": 0.602,
+        "knowledge_update": 0,
+        "multi_session_reasoning": 0.148,
+        "preference_following": 0.784,
+        "summarization": 0.129,
+        "temporal_reasoning": 0.023
+      },
+      "cost_usd": 1.1751
+    },
+    "a1-nomem-opus55": {
+      "reader": "anthropic:claude-opus-5-5",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.3101,
+        "all_items_met": 48
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.2335,
+        "all_items_met": 26
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 1,
+        "all_items_met": 22
+      },
+      "empty_zero_score_answers": 0,
+      "committed_wrong_detector": {
+        "all": 73,
+        "answerable": 73,
+        "abstention": 0,
+        "declined_answerable": 51
+      },
+      "provider_tokens_mean": {
+        "input": 134,
+        "output": 435
+      },
+      "context_tokens_estimate_mean": 0,
+      "finish_reasons": {
+        "end_turn": 210,
+        "max_tokens": 10
+      },
+      "empty_answers": 0,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 1,
+        "contradiction_resolution": 0.295,
+        "event_ordering": 0.005,
+        "information_extraction": 0.032,
+        "instruction_following": 0.686,
+        "knowledge_update": 0,
+        "multi_session_reasoning": 0.158,
+        "preference_following": 0.758,
+        "summarization": 0.123,
+        "temporal_reasoning": 0.045
+      },
+      "cost_usd": 2.1473
+    },
+    "a1-nomem-gpt61sol": {
+      "reader": "openai:gpt-6.1-sol",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.2857,
+        "all_items_met": 41
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.2064,
+        "all_items_met": 19
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 1,
+        "all_items_met": 22
+      },
+      "empty_zero_score_answers": 0,
+      "committed_wrong_detector": {
+        "all": 119,
+        "answerable": 119,
+        "abstention": 0,
+        "declined_answerable": 13
+      },
+      "provider_tokens_mean": {
+        "input": 97,
+        "output": 213
+      },
+      "context_tokens_estimate_mean": 0,
+      "finish_reasons": {
+        "stop": 220
+      },
+      "empty_answers": 0,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 1,
+        "contradiction_resolution": 0.318,
+        "event_ordering": 0.005,
+        "information_extraction": 0,
+        "instruction_following": 0.595,
+        "knowledge_update": 0,
+        "multi_session_reasoning": 0.18,
+        "preference_following": 0.614,
+        "summarization": 0.124,
+        "temporal_reasoning": 0.023
+      },
+      "cost_usd": 0.6038
+    },
+    "a0-bridge-top5": {
+      "reader": "openai:gpt-4.1-mini",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.5387,
+        "all_items_met": 78
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.5707,
+        "all_items_met": 73
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.25,
+        "all_items_met": 5
+      },
+      "empty_zero_score_answers": 0,
+      "committed_wrong_detector": {
+        "all": 57,
+        "answerable": 41,
+        "abstention": 16,
+        "declined_answerable": 4
+      },
+      "provider_tokens_mean": {
+        "input": 7179,
+        "output": 684
+      },
+      "context_tokens_estimate_mean": 7684,
+      "finish_reasons": {
+        "stop": 158,
+        "length": 62
+      },
+      "empty_answers": 0,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 0.25,
+        "contradiction_resolution": 0.659,
+        "event_ordering": 0.472,
+        "information_extraction": 0.506,
+        "instruction_following": 0.727,
+        "knowledge_update": 0.455,
+        "multi_session_reasoning": 0.585,
+        "preference_following": 0.947,
+        "summarization": 0.406,
+        "temporal_reasoning": 0.379
+      },
+      "cost_usd": 1.1378,
+      "floor": {
+        "n": 220,
+        "mean_score": 0.2621,
+        "all_items_met": 31
+      }
+    },
+    "a2-top5-sonnet55": {
+      "reader": "anthropic:claude-sonnet-5-5",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.5734,
+        "all_items_met": 104
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.5614,
+        "all_items_met": 89
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.6818,
+        "all_items_met": 15
+      },
+      "empty_zero_score_answers": 0,
+      "committed_wrong_detector": {
+        "all": 62,
+        "answerable": 55,
+        "abstention": 7,
+        "declined_answerable": 3
+      },
+      "provider_tokens_mean": {
+        "input": 11818,
+        "output": 767
+      },
+      "context_tokens_estimate_mean": 7684,
+      "finish_reasons": {
+        "end_turn": 129,
+        "max_tokens": 91
+      },
+      "empty_answers": 0,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 0.682,
+        "contradiction_resolution": 0.852,
+        "event_ordering": 0.129,
+        "information_extraction": 0.638,
+        "instruction_following": 0.727,
+        "knowledge_update": 0.5,
+        "multi_session_reasoning": 0.545,
+        "preference_following": 0.955,
+        "summarization": 0.26,
+        "temporal_reasoning": 0.447
+      },
+      "cost_usd": 7.0293,
+      "floor": {
+        "n": 220,
+        "mean_score": 0.3127,
+        "all_items_met": 45
+      }
+    },
+    "a2-top5-opus55": {
+      "reader": "anthropic:claude-opus-5-5",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.5271,
+        "all_items_met": 89
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.5074,
+        "all_items_met": 74
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.7045,
+        "all_items_met": 15
+      },
+      "empty_zero_score_answers": 4,
+      "committed_wrong_detector": {
+        "all": 58,
+        "answerable": 52,
+        "abstention": 6,
+        "declined_answerable": 9
+      },
+      "provider_tokens_mean": {
+        "input": 11818,
+        "output": 849
+      },
+      "context_tokens_estimate_mean": 7684,
+      "finish_reasons": {
+        "end_turn": 112,
+        "max_tokens": 108
+      },
+      "empty_answers": 4,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 0.705,
+        "contradiction_resolution": 0.818,
+        "event_ordering": 0.148,
+        "information_extraction": 0.567,
+        "instruction_following": 0.674,
+        "knowledge_update": 0.455,
+        "multi_session_reasoning": 0.432,
+        "preference_following": 0.837,
+        "summarization": 0.165,
+        "temporal_reasoning": 0.47
+      },
+      "cost_usd": 14.2852,
+      "floor": {
+        "n": 220,
+        "mean_score": 0.3101,
+        "all_items_met": 48
+      }
+    },
+    "a2-top5-gpt61sol": {
+      "reader": "openai:gpt-6.1-sol",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.6196,
+        "all_items_met": 96
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.6253,
+        "all_items_met": 84
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.5682,
+        "all_items_met": 12
+      },
+      "empty_zero_score_answers": 5,
+      "committed_wrong_detector": {
+        "all": 45,
+        "answerable": 36,
+        "abstention": 9,
+        "declined_answerable": 5
+      },
+      "provider_tokens_mean": {
+        "input": 7178,
+        "output": 438
+      },
+      "context_tokens_estimate_mean": 7684,
+      "finish_reasons": {
+        "stop": 215,
+        "length": 5
+      },
+      "empty_answers": 5,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 0.568,
+        "contradiction_resolution": 0.761,
+        "event_ordering": 0.509,
+        "information_extraction": 0.571,
+        "instruction_following": 0.811,
+        "knowledge_update": 0.5,
+        "multi_session_reasoning": 0.677,
+        "preference_following": 0.977,
+        "summarization": 0.397,
+        "temporal_reasoning": 0.424
+      },
+      "cost_usd": 4.3015,
+      "committed_wrong_hand_labels": {
+        "all": 40,
+        "answerable": 31,
+        "abstention": 9,
+        "declined_answerable": 5,
+        "undetermined": 5
+      },
+      "floor": {
+        "n": 220,
+        "mean_score": 0.2857,
+        "all_items_met": 41
+      }
+    },
+    "a3-top10-gpt61sol": {
+      "reader": "openai:gpt-6.1-sol",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.6488,
+        "all_items_met": 107
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.6603,
+        "all_items_met": 95
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.5455,
+        "all_items_met": 12
+      },
+      "empty_zero_score_answers": 6,
+      "committed_wrong_detector": {
+        "all": 43,
+        "answerable": 33,
+        "abstention": 10,
+        "declined_answerable": 8
+      },
+      "provider_tokens_mean": {
+        "input": 14121,
+        "output": 465
+      },
+      "context_tokens_estimate_mean": 15215,
+      "finish_reasons": {
+        "stop": 214,
+        "length": 6
+      },
+      "empty_answers": 6,
+      "reused_cached_answers": 0,
+      "by_category": {
+        "abstention": 0.545,
+        "contradiction_resolution": 0.807,
+        "event_ordering": 0.601,
+        "information_extraction": 0.653,
+        "instruction_following": 0.864,
+        "knowledge_update": 0.364,
+        "multi_session_reasoning": 0.72,
+        "preference_following": 0.966,
+        "summarization": 0.483,
+        "temporal_reasoning": 0.485
+      },
+      "cost_usd": 7.4156,
+      "floor": {
+        "n": 220,
+        "mean_score": 0.2857,
+        "all_items_met": 41
+      }
+    },
+    "a4-oracle-gpt61sol": {
+      "reader": "openai:gpt-6.1-sol",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.8489,
+        "all_items_met": 165
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.8321,
+        "all_items_met": 143
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 1,
+        "all_items_met": 22
+      },
+      "empty_zero_score_answers": 9,
+      "committed_wrong_detector": {
+        "all": 13,
+        "answerable": 13,
+        "abstention": 0,
+        "declined_answerable": 9
+      },
+      "provider_tokens_mean": {
+        "input": 6937,
+        "output": 404
+      },
+      "context_tokens_estimate_mean": 7419,
+      "finish_reasons": {
+        "stop": 211,
+        "length": 9
+      },
+      "empty_answers": 9,
+      "reused_cached_answers": 26,
+      "by_category": {
+        "abstention": 1,
+        "contradiction_resolution": 0.795,
+        "event_ordering": 0.991,
+        "information_extraction": 0.945,
+        "instruction_following": 0.879,
+        "knowledge_update": 0.955,
+        "multi_session_reasoning": 0.817,
+        "preference_following": 0.962,
+        "summarization": 0.372,
+        "temporal_reasoning": 0.773
+      },
+      "cost_usd": 4.0484,
+      "floor": {
+        "n": 220,
+        "mean_score": 0.2857,
+        "all_items_met": 41
+      }
+    },
+    "a5-r0-top5-gpt61sol": {
+      "reader": "openai:gpt-6.1-sol",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.6282,
+        "all_items_met": 100
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.6323,
+        "all_items_met": 87
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.5909,
+        "all_items_met": 13
+      },
+      "empty_zero_score_answers": 5,
+      "committed_wrong_detector": {
+        "all": 46,
+        "answerable": 37,
+        "abstention": 9,
+        "declined_answerable": 6
+      },
+      "provider_tokens_mean": {
+        "input": 6798,
+        "output": 426
+      },
+      "context_tokens_estimate_mean": 7284,
+      "finish_reasons": {
+        "stop": 215,
+        "length": 5
+      },
+      "empty_answers": 5,
+      "reused_cached_answers": 7,
+      "by_category": {
+        "abstention": 0.591,
+        "contradiction_resolution": 0.773,
+        "event_ordering": 0.502,
+        "information_extraction": 0.634,
+        "instruction_following": 0.803,
+        "knowledge_update": 0.455,
+        "multi_session_reasoning": 0.698,
+        "preference_following": 0.848,
+        "summarization": 0.44,
+        "temporal_reasoning": 0.538
+      },
+      "cost_usd": 3.9841,
+      "floor": {
+        "n": 220,
+        "mean_score": 0.2857,
+        "all_items_met": 41
+      }
+    },
+    "a5-r1-top5-gpt61sol": {
+      "reader": "openai:gpt-6.1-sol",
+      "status": "complete",
+      "questions": 220,
+      "qa_errors": 0,
+      "all": {
+        "n": 220,
+        "mean_score": 0.6605,
+        "all_items_met": 104
+      },
+      "answerable": {
+        "n": 198,
+        "mean_score": 0.6606,
+        "all_items_met": 90
+      },
+      "abstention": {
+        "n": 22,
+        "mean_score": 0.6591,
+        "all_items_met": 14
+      },
+      "empty_zero_score_answers": 5,
+      "committed_wrong_detector": {
+        "all": 36,
+        "answerable": 29,
+        "abstention": 7,
+        "declined_answerable": 8
+      },
+      "provider_tokens_mean": {
+        "input": 7048,
+        "output": 441
+      },
+      "context_tokens_estimate_mean": 7503,
+      "finish_reasons": {
+        "stop": 215,
+        "length": 5
+      },
+      "empty_answers": 5,
+      "reused_cached_answers": 3,
+      "by_category": {
+        "abstention": 0.659,
+        "contradiction_resolution": 0.784,
+        "event_ordering": 0.508,
+        "information_extraction": 0.791,
+        "instruction_following": 0.864,
+        "knowledge_update": 0.409,
+        "multi_session_reasoning": 0.614,
+        "preference_following": 0.894,
+        "summarization": 0.468,
+        "temporal_reasoning": 0.614
+      },
+      "cost_usd": 4.192,
+      "floor": {
+        "n": 220,
+        "mean_score": 0.2857,
+        "all_items_met": 41
+      }
+    }
+  },
+  "retrieval": {
+    "published-openai-6622a119e": {
+      "status": "complete",
+      "invalid_reasons": [],
+      "of": 198,
+      "strict_at_5": 36,
+      "strict_at_5_feasible": {
+        "hits": 36,
+        "of": 145
+      },
+      "strict_at_10": 57,
+      "strict_at_10_feasible": {
+        "hits": 57,
+        "of": 160
+      },
+      "any_at_5": 137,
+      "ndcg_at_10": 0.4315,
+      "event_ordering": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.2275
+      },
+      "summarization": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.1771
+      },
+      "fidelity": {
+        "embedding_deferred_pages": 0,
+        "rerank_missing_queries": 0,
+        "reranked_queries": 0
+      },
+      "cost_usd": 1.1361
+    },
+    "r0-voyage4": {
+      "status": "complete",
+      "invalid_reasons": [],
+      "of": 198,
+      "strict_at_5": 47,
+      "strict_at_5_feasible": {
+        "hits": 47,
+        "of": 145
+      },
+      "strict_at_10": 71,
+      "strict_at_10_feasible": {
+        "hits": 71,
+        "of": 160
+      },
+      "any_at_5": 140,
+      "ndcg_at_10": 0.4624,
+      "event_ordering": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.2469
+      },
+      "summarization": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.2019
+      },
+      "fidelity": {
+        "embedding_deferred_pages": 0,
+        "rerank_missing_queries": 0,
+        "reranked_queries": 0,
+        "rerank_degraded_queries": 0
+      },
+      "cost_usd": 0.7411
+    },
+    "r1-voyage4-rerank": {
+      "status": "complete",
+      "invalid_reasons": [],
+      "of": 198,
+      "strict_at_5": 57,
+      "strict_at_5_feasible": {
+        "hits": 57,
+        "of": 145
+      },
+      "strict_at_10": 76,
+      "strict_at_10_feasible": {
+        "hits": 76,
+        "of": 160
+      },
+      "any_at_5": 152,
+      "ndcg_at_10": 0.5075,
+      "event_ordering": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.2652
+      },
+      "summarization": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.1885
+      },
+      "fidelity": {
+        "embedding_deferred_pages": 0,
+        "rerank_missing_queries": 0,
+        "reranked_queries": 220,
+        "rerank_degraded_queries": 0,
+        "rerank_provider_requests": {
+          "voyage:rerank-2.5": 220
+        }
+      },
+      "cost_usd": 0.1404
+    },
+    "r2-voyage4-deep": {
+      "status": "complete",
+      "invalid_reasons": [],
+      "of": 198,
+      "strict_at_5": 47,
+      "strict_at_5_feasible": {
+        "hits": 47,
+        "of": 145
+      },
+      "strict_at_10": 68,
+      "strict_at_10_feasible": {
+        "hits": 68,
+        "of": 160
+      },
+      "any_at_5": 139,
+      "ndcg_at_10": 0.4572,
+      "event_ordering": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.2469
+      },
+      "summarization": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.2019
+      },
+      "fidelity": {
+        "embedding_deferred_pages": 0,
+        "rerank_missing_queries": 0,
+        "reranked_queries": 0,
+        "rerank_degraded_queries": 0
+      },
+      "cost_usd": 0
+    },
+    "r3-voyage4-rerank-deep": {
+      "status": "complete",
+      "invalid_reasons": [],
+      "of": 198,
+      "strict_at_5": 59,
+      "strict_at_5_feasible": {
+        "hits": 59,
+        "of": 145
+      },
+      "strict_at_10": 83,
+      "strict_at_10_feasible": {
+        "hits": 83,
+        "of": 160
+      },
+      "any_at_5": 155,
+      "ndcg_at_10": 0.5206,
+      "event_ordering": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.2609
+      },
+      "summarization": {
+        "n": 22,
+        "strict_at_10": 0,
+        "ndcg_at_10": 0.209
+      },
+      "fidelity": {
+        "embedding_deferred_pages": 0,
+        "rerank_missing_queries": 0,
+        "reranked_queries": 220,
+        "rerank_degraded_queries": 0,
+        "rerank_provider_requests": {
+          "voyage:rerank-2.5": 220
+        }
+      },
+      "cost_usd": 0.5598
+    }
+  },
+  "comparisons": {
+    "A0 date-order fix (bridge): a0-bridge-top5 minus the published bridge row": {
+      "score": {
+        "n": 220,
+        "a": 0.5348,
+        "b": 0.5387,
+        "delta": 0.0038,
+        "ci95": [
+          -0.0297,
+          0.0308
+        ],
+        "better": 28,
+        "worse": 25
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.3409,
+        "b": 0.3545,
+        "delta": 0.0136,
+        "ci95": [
+          -0.0182,
+          0.0409
+        ],
+        "better": 10,
+        "worse": 7
+      }
+    },
+    "A2 sonnet55 minus A0 bridge (same frozen top 5)": {
+      "score": {
+        "n": 220,
+        "a": 0.5387,
+        "b": 0.5734,
+        "delta": 0.0348,
+        "ci95": [
+          -0.0073,
+          0.0826
+        ],
+        "better": 50,
+        "worse": 38
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.3545,
+        "b": 0.4727,
+        "delta": 0.1182,
+        "ci95": [
+          0.0682,
+          0.1773
+        ],
+        "better": 32,
+        "worse": 6
+      }
+    },
+    "A2 sonnet55 minus its own no-memory floor": {
+      "score": {
+        "n": 220,
+        "a": 0.3127,
+        "b": 0.5734,
+        "delta": 0.2607,
+        "ci95": [
+          0.2025,
+          0.3217
+        ],
+        "better": 111,
+        "worse": 17
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.2045,
+        "b": 0.4727,
+        "delta": 0.2682,
+        "ci95": [
+          0.2045,
+          0.3318
+        ],
+        "better": 69,
+        "worse": 10
+      }
+    },
+    "A2 opus55 minus A0 bridge (same frozen top 5)": {
+      "score": {
+        "n": 220,
+        "a": 0.5387,
+        "b": 0.5271,
+        "delta": -0.0116,
+        "ci95": [
+          -0.057,
+          0.0358
+        ],
+        "better": 46,
+        "worse": 57
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.3545,
+        "b": 0.4045,
+        "delta": 0.05,
+        "ci95": [
+          0,
+          0.1091
+        ],
+        "better": 30,
+        "worse": 19
+      }
+    },
+    "A2 opus55 minus its own no-memory floor": {
+      "score": {
+        "n": 220,
+        "a": 0.3101,
+        "b": 0.5271,
+        "delta": 0.2169,
+        "ci95": [
+          0.16,
+          0.2716
+        ],
+        "better": 101,
+        "worse": 26
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.2182,
+        "b": 0.4045,
+        "delta": 0.1864,
+        "ci95": [
+          0.1318,
+          0.2364
+        ],
+        "better": 56,
+        "worse": 15
+      }
+    },
+    "A2 gpt61sol minus A0 bridge (same frozen top 5)": {
+      "score": {
+        "n": 220,
+        "a": 0.5387,
+        "b": 0.6196,
+        "delta": 0.0809,
+        "ci95": [
+          0.0443,
+          0.1216
+        ],
+        "better": 53,
+        "worse": 19
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.3545,
+        "b": 0.4364,
+        "delta": 0.0818,
+        "ci95": [
+          0.0409,
+          0.1227
+        ],
+        "better": 24,
+        "worse": 6
+      }
+    },
+    "A2 gpt61sol minus its own no-memory floor": {
+      "score": {
+        "n": 220,
+        "a": 0.2857,
+        "b": 0.6196,
+        "delta": 0.3338,
+        "ci95": [
+          0.2912,
+          0.3776
+        ],
+        "better": 131,
+        "worse": 14
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.1864,
+        "b": 0.4364,
+        "delta": 0.25,
+        "ci95": [
+          0.2045,
+          0.2955
+        ],
+        "better": 66,
+        "worse": 11
+      }
+    },
+    "A0 bridge minus its own no-memory floor": {
+      "score": {
+        "n": 220,
+        "a": 0.2621,
+        "b": 0.5387,
+        "delta": 0.2765,
+        "ci95": [
+          0.2032,
+          0.3445
+        ],
+        "better": 118,
+        "worse": 17
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.1409,
+        "b": 0.3545,
+        "delta": 0.2136,
+        "ci95": [
+          0.1455,
+          0.2727
+        ],
+        "better": 59,
+        "worse": 12
+      }
+    },
+    "A3 top 10 minus A2 top 5 (gpt-6.1-sol)": {
+      "score": {
+        "n": 220,
+        "a": 0.6196,
+        "b": 0.6488,
+        "delta": 0.0292,
+        "ci95": [
+          -0.0038,
+          0.0672
+        ],
+        "better": 44,
+        "worse": 22
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.4364,
+        "b": 0.4864,
+        "delta": 0.05,
+        "ci95": [
+          -0.0045,
+          0.1136
+        ],
+        "better": 23,
+        "worse": 12
+      }
+    },
+    "A4 oracle minus A2 top 5 (gpt-6.1-sol)": {
+      "score": {
+        "n": 220,
+        "a": 0.6196,
+        "b": 0.8489,
+        "delta": 0.2293,
+        "ci95": [
+          0.1875,
+          0.2731
+        ],
+        "better": 89,
+        "worse": 15
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.4364,
+        "b": 0.75,
+        "delta": 0.3136,
+        "ci95": [
+          0.2545,
+          0.3682
+        ],
+        "better": 75,
+        "worse": 6
+      }
+    },
+    "A5 reranker answers: R1 top 5 minus R0 top 5 (gpt-6.1-sol)": {
+      "score": {
+        "n": 220,
+        "a": 0.6282,
+        "b": 0.6605,
+        "delta": 0.0323,
+        "ci95": [
+          -0.0186,
+          0.0759
+        ],
+        "better": 44,
+        "worse": 39
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.4545,
+        "b": 0.4727,
+        "delta": 0.0182,
+        "ci95": [
+          -0.0318,
+          0.0682
+        ],
+        "better": 22,
+        "worse": 18
+      }
+    },
+    "A5 voyage-4 R0 top 5 minus OpenAI frozen top 5 (gpt-6.1-sol; different builds)": {
+      "score": {
+        "n": 220,
+        "a": 0.6196,
+        "b": 0.6282,
+        "delta": 0.0086,
+        "ci95": [
+          -0.029,
+          0.058
+        ],
+        "better": 36,
+        "worse": 35
+      },
+      "strict_all_items_met": {
+        "n": 220,
+        "a": 0.4364,
+        "b": 0.4545,
+        "delta": 0.0182,
+        "ci95": [
+          -0.0455,
+          0.0955
+        ],
+        "better": 22,
+        "worse": 18
+      }
+    },
+    "R1 reranker minus R0 (retrieval)": {
+      "strict_at_5": {
+        "n": 198,
+        "a": 0.2374,
+        "b": 0.2879,
+        "delta": 0.0505,
+        "ci95": [
+          0.0253,
+          0.0808
+        ],
+        "better": 13,
+        "worse": 3
+      },
+      "strict_at_10": {
+        "n": 198,
+        "a": 0.3586,
+        "b": 0.3838,
+        "delta": 0.0253,
+        "ci95": [
+          -0.0051,
+          0.0556
+        ],
+        "better": 11,
+        "worse": 6
+      }
+    },
+    "R2 deep pool minus R0 (retrieval)": {
+      "strict_at_5": {
+        "n": 198,
+        "a": 0.2374,
+        "b": 0.2374,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "better": 0,
+        "worse": 0
+      },
+      "strict_at_10": {
+        "n": 198,
+        "a": 0.3586,
+        "b": 0.3434,
+        "delta": -0.0152,
+        "ci95": [
+          -0.0303,
+          0
+        ],
+        "better": 0,
+        "worse": 3
+      }
+    },
+    "R3 deep pool with the reranker minus R1 (retrieval)": {
+      "strict_at_5": {
+        "n": 198,
+        "a": 0.2879,
+        "b": 0.298,
+        "delta": 0.0101,
+        "ci95": [
+          -0.0101,
+          0.0303
+        ],
+        "better": 5,
+        "worse": 3
+      },
+      "strict_at_10": {
+        "n": 198,
+        "a": 0.3838,
+        "b": 0.4192,
+        "delta": 0.0354,
+        "ci95": [
+          0,
+          0.0657
+        ],
+        "better": 9,
+        "worse": 2
+      }
+    },
+    "R3 deep pool with the reranker minus R0 (retrieval)": {
+      "strict_at_5": {
+        "n": 198,
+        "a": 0.2374,
+        "b": 0.298,
+        "delta": 0.0606,
+        "ci95": [
+          0.0404,
+          0.0808
+        ],
+        "better": 16,
+        "worse": 4
+      },
+      "strict_at_10": {
+        "n": 198,
+        "a": 0.3586,
+        "b": 0.4192,
+        "delta": 0.0606,
+        "ci95": [
+          0.0152,
+          0.1111
+        ],
+        "better": 19,
+        "worse": 7
+      }
+    },
+    "R0 voyage-4 at 7aa2caa0 minus the published OpenAI lists at 6622a119e (retrieval; different builds)": {
+      "strict_at_5": {
+        "n": 198,
+        "a": 0.1818,
+        "b": 0.2374,
+        "delta": 0.0556,
+        "ci95": [
+          0.0101,
+          0.101
+        ],
+        "better": 16,
+        "worse": 5
+      },
+      "strict_at_10": {
+        "n": 198,
+        "a": 0.2879,
+        "b": 0.3586,
+        "delta": 0.0707,
+        "ci95": [
+          0.0253,
+          0.1263
+        ],
+        "better": 20,
+        "worse": 6
+      }
+    }
+  },
+  "spend_usd": {
+    "arms": {
+      "a1-nomem-gpt41mini": 0.2508,
+      "a1-nomem-sonnet55": 1.1751,
+      "a1-nomem-opus55": 2.1473,
+      "a1-nomem-gpt61sol": 0.6038,
+      "a0-bridge-top5": 1.1378,
+      "a2-top5-sonnet55": 7.0293,
+      "a2-top5-opus55": 14.2852,
+      "a2-top5-gpt61sol": 4.3015,
+      "a3-top10-gpt61sol": 7.4156,
+      "a4-oracle-gpt61sol": 4.0484,
+      "a5-r0-top5-gpt61sol": 3.9841,
+      "a5-r1-top5-gpt61sol": 4.192,
+      "r0-voyage4": 0.7411,
+      "r1-voyage4-rerank": 0.1404,
+      "r2-voyage4-deep": 0,
+      "r3-voyage4-rerank-deep": 0.5598
+    },
+    "total": 52.0122
+  }
+}

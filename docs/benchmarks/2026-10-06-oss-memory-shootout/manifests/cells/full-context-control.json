@@ -1,0 +1,55 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "full-context",
+  "config": "control",
+  "notes": "Draft. D1 control: the whole history, most recent kept first under the 8,000-token arm; rehydrated context only.",
+  "cells": [
+    {
+      "id": "full-context-control-locomo-r1",
+      "benchmark": "locomo",
+      "lease_usd": 6,
+      "lease_basis": "1.5 x estimate, not piloted: about 25k tokens of history per LoCoMo question at gpt-4o-mini ($3.70)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system full-context --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/full-context-locomo.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "full-context-control-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 8,
+      "lease_basis": "1.5 x estimate, not piloted: about 100k tokens per question at gpt-4.1-mini ($5.30)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split dev --system full-context --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/full-context-beam-100k.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "full-context-control-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 48,
+      "lease_basis": "1.5 x estimate, not piloted: about 115k tokens per question at gpt-4o ($31.50)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system full-context --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/full-context-lme-s.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ],
+      "lease_scale": {
+        "param": "lme_s_limit",
+        "base": 100
+      }
+    }
+  ]
+}
