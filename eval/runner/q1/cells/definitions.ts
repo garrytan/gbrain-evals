@@ -120,6 +120,8 @@ export interface SetFacts {
   block: BlockId; selection: Selection; exclusions: Array<{ question_id: string; reason: string }>; role: 'headline' | 'public' | 'smoke'; exposure: 'E0' | 'E2' | 'E3'; label: string;
   /** Smoke sets: the dev conversations that run (the rest of the split is never loaded). */
   only_conversations?: string[];
+  /** Sessions per conversation, where an ingest probe writes a prefix of them. */
+  sessions?: number;
 }
 
 export interface Manifest {
@@ -155,7 +157,7 @@ export const SETS: Record<SetId, SetFacts> = {
   S5: { id: 'S5', benchmark: 'lme-m', split: 'dev', questions: 100, conversations: 100, corpus_tokens: 150_000_000, messages: 500_000, block: 'T2-S4-S5', selection: { kind: 'all' }, exclusions: [], role: 'public', exposure: 'E3', label: 'LongMemEval-M' },
   'S3-smoke': { id: 'S3-smoke', benchmark: 'locomo', split: 'dev', questions: 20, conversations: 1, corpus_tokens: 20_474, messages: 675, block: 'T2-S3', selection: { kind: 'stratified', limit: 20, stratify: 'category', seed: 'q1-smoke' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'LoCoMo dev smoke (conv-44, 20 questions)', only_conversations: ['conv-44'] },
   'S3-smoke-default': { id: 'S3-smoke-default', benchmark: 'locomo', split: 'dev', questions: 20, conversations: 1, corpus_tokens: 20_474, messages: 675, block: 'T2-S3', selection: { kind: 'stratified', limit: 20, stratify: 'category', seed: 'q1-smoke' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'LoCoMo dev smoke, own default amount (conv-44, 20 questions, claude-sonnet-5-5)', only_conversations: ['conv-44'] },
-  'S2b-ingest': { id: 'S2b-ingest', benchmark: 'beam-1m', split: 'dev', questions: 10, conversations: 1, corpus_tokens: 926_773, messages: 2_182, block: 'T2-S2b', selection: { kind: 'stratified', limit: 10, stratify: 'category', seed: 'q1-ingest-probe' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BEAM-1M dev ingest probe (1m-16, retrieval only)', only_conversations: ['1m-16'] },
+  'S2b-ingest': { id: 'S2b-ingest', benchmark: 'beam-1m', split: 'dev', questions: 10, conversations: 1, corpus_tokens: 926_773, messages: 2_182, sessions: 928, block: 'T2-S2b', selection: { kind: 'stratified', limit: 10, stratify: 'category', seed: 'q1-ingest-probe' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BEAM-1M dev ingest probe (1m-16, retrieval only)', only_conversations: ['1m-16'] },
 };
 
 /** PLAN §7 block lines (the approved estimate the re-priced manifest is compared with). */
@@ -169,12 +171,20 @@ export const PLAN_BLOCKS: Record<BlockId, { label: string; plan_usd: number }> =
 export const PLAN_SHARED_USD = 260;
 export const CAP_USD = 8500;
 
-// ─── Token and price assumptions (PLAN §7, stated) ───────────────────
+// ─── Token and price assumptions (PLAN §7, re-priced from the dev smokes) ──
+
+/** Where the measured assumptions come from. */
+export const MEASURED_ON = 'paid dev smokes, 2026-10-07 (docs/benchmarks/2026-10-06-scoreboard/dev-smokes/)';
 
 export const ASSUMPTIONS = {
-  reader_input_overhead_tokens: 1_000,
+  /** Reader prompt tokens besides the evidence (the reading template and the question), per reader's own tokens, measured on the no-memory smoke. */
+  reader_input_overhead_tokens: { default: 1_000 } as Record<string, number>,
+  /** Reader input tokens per budget token of a packed arm: the pack fills until the largest calibrated reader count reaches the budget, so the binding reader reads the budget and the others proportionally less. */
+  reader_tokens_per_budget_token: { default: 1 } as Record<string, number>,
+  /** Reader tokens per local cl100k_base token for unbudgeted text (a system's own default amount, a whole history): the calibration factor times the reader's encoding ratio. */
+  reader_tokens_per_cl100k: { default: 1 } as Record<string, number>,
   reader_output_tokens: { default: 400, 'openai:gpt-6.1-sol': 1_000 } as Record<string, number>,
-  /** Delivered evidence at a system's own default amount: gbrain's auto delivery reaches 24,000 tokens; every other system is assumed at 8,000. */
+  /** Delivered evidence at a system's own default amount, in cl100k_base tokens: gbrain's auto delivery reaches 24,000 tokens; every other system is assumed at 8,000. */
   vendor_default_tokens: { 'gbrain-defaults': 24_000, default: 8_000 } as Record<string, number>,
   /** Ingest dollars per million ingested tokens, from the shootout's pilots and the proof wave's ledger (PLAN §7); a recipe without a measured rate uses its common rate. */
   ingest_usd_per_mtok: {
@@ -183,17 +193,23 @@ export const ASSUMPTIONS = {
     'ext-markdown-kb:recipe': 0.1, 'ext-markdown-kb:common': 0.1, 'ext-verbatim-session:recipe': 0.1, 'ext-verbatim-session:common': 0.1,
     'gbrain-defaults:shipped-defaults': 0.12, 'gbrain-defaults:full-surface': 0.12, 'gbrain-defaults:common-embedder': 0.13, 'baseline-hybrid:baseline': 0.13,
   } as Record<string, number>,
-  /** gbrain's default query expansion: one counted call per retrieval (claude-haiku-4-5, 300 tokens in, 100 out). */
-  gbrain_expansion: { model: 'anthropic:claude-haiku-4-5', input: 300, output: 100 },
+  /** gbrain's own calls per retrieval (query embedding, LLM expansion with claude-haiku-4-5, rerank), dollars per query. */
+  gbrain_query_usd: 0.0008,
+  /** Write-start-to-queryable probes poll retrieval while a conversation is written: dollars per conversation for systems whose retrieval calls paid models. */
+  probe_usd_per_conversation: {} as Record<string, number>,
   /** Canonical judge tokens per call; BEAM judges every rubric item (3 assumed). */
   judge: { lme: { model: 'openai:gpt-4o-2024-08-06', calls: 1, input: 700, output: 10 }, beam: { model: 'openai:gpt-4.1-mini', calls: 3, input: 900, output: 60 } },
   frontier_judge_output_tokens: 60,
-  /** Agent loops (file agent, `think`, agent runtime): input tokens per question per reader, back-solved from the PLAN §7 block lines so the manifest reproduces the approved budget until the dev stress pilot re-prices them. */
+  /**
+   * Agent loops (file agent, `think`, agent runtime): input tokens per question per reader (a number for every reader,
+   * or a map by reader with a `default`), back-solved from the PLAN §7 block lines where nothing measured them; measured
+   * entries are cache-weighted (cached reads and writes at their price ratio to plain input).
+   */
   agent: {
     'baseline-file-agent': { S1: 130_000, S2a: 30_000, S2b: 73_000, S3: 18_000, output: 2_000 },
     think: { S1: 36_000, S2a: 21_000, S2b: 30_000, S3: 20_000, output: 1_000 },
     'ext-agent-runtime': { S3: 7_000, output: 2_000 },
-  } as Record<string, Record<string, number>>,
+  } as Record<string, Record<string, number | Record<string, number>>>,
   /** gbrain `synthesize` answers with its configured default model (claude-opus-4-7 at gbrain's pinned price) over its default delivery. */
   synthesize: { model: 'anthropic:claude-opus-4-7', input: 25_000, output: 1_000, price: { input: 5, output: 25 } },
   /** Ingest wall time per million tokens (hours) by `system:configuration` where the dev smokes measured it, else by runner, for the schedule and the /finish wait; a shim cell on S1 runs one conversation per VM. */
@@ -211,7 +227,11 @@ export function priceOf(model: string): { input: number; output: number; cache_r
 }
 
 const call = (model: string, input: number, output: number) => { const p = priceOf(model); return (input * p.input + output * p.output) / 1e6; };
-const outTokens = (reader: string) => ASSUMPTIONS.reader_output_tokens[reader] ?? ASSUMPTIONS.reader_output_tokens.default;
+const byReader = (table: Record<string, number>, reader: string) => table[reader] ?? table.default;
+const outTokens = (reader: string) => byReader(ASSUMPTIONS.reader_output_tokens, reader);
+const overhead = (reader: string) => byReader(ASSUMPTIONS.reader_input_overhead_tokens, reader);
+const perCl100k = (reader: string) => byReader(ASSUMPTIONS.reader_tokens_per_cl100k, reader);
+const agentTokens = (v: number | Record<string, number> | undefined, reader: string) => typeof v === 'number' ? v : v ? byReader(v, reader) ?? 0 : 0;
 
 // ─── Estimates ───────────────────────────────────────────────────────
 
@@ -226,12 +246,12 @@ function judgeCost(benchmark: string, judge?: string): number {
 
 /** Full context per conversation per reader: the history written to the cache once, read from it by later questions; nothing when it cannot fit. */
 function fullContextCost(set: SetFacts, reader: string, questions: number): number {
-  const history = set.corpus_tokens / set.conversations;
+  const history = set.corpus_tokens / set.conversations * perCl100k(reader);
   const w = READER_WINDOWS[reader];
-  if (history + ASSUMPTIONS.reader_input_overhead_tokens + 1024 > w.max_input_tokens) return 0;
+  if (history + overhead(reader) + 1024 > w.max_input_tokens) return 0;
   const p = priceOf(reader);
   const perConv = questions / set.conversations;
-  const conv = (history * (p.cache_write ?? p.input) + Math.max(0, perConv - 1) * history * (p.cache_read ?? p.input)) / 1e6 + perConv * call(reader, ASSUMPTIONS.reader_input_overhead_tokens, outTokens(reader));
+  const conv = (history * (p.cache_write ?? p.input) + Math.max(0, perConv - 1) * history * (p.cache_read ?? p.input)) / 1e6 + perConv * call(reader, overhead(reader), outTokens(reader));
   return conv * set.conversations;
 }
 
@@ -240,18 +260,20 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
   const lines: Record<string, number> = {};
   const add = (k: string, v: number) => { if (v) lines[k] = (lines[k] ?? 0) + v; };
   const rate = ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? 0;
-  add('ingest', rate * set.corpus_tokens / 1e6);
+  const tokens = def.ingest_sessions ? set.corpus_tokens * Math.min(1, def.ingest_sessions / Math.max(1, set.sessions ?? def.ingest_sessions)) : set.corpus_tokens;
+  add('ingest', rate * tokens / 1e6);
+  add('ingest_probes', (ASSUMPTIONS.probe_usd_per_conversation[def.system] ?? 0) * set.conversations);
   const policies = new Set(def.arms.map(a => a.policy).filter(Boolean));
-  if (def.system === 'gbrain-defaults') add('system_queries', policies.size * set.questions * call(ASSUMPTIONS.gbrain_expansion.model, ASSUMPTIONS.gbrain_expansion.input, ASSUMPTIONS.gbrain_expansion.output));
+  if (def.system === 'gbrain-defaults') add('system_queries', policies.size * set.questions * ASSUMPTIONS.gbrain_query_usd);
   for (const arm of def.arms) {
     const n = armQuestions(def, arm);
     const answers = (reader: string) => n * (arm.reader_replicates[reader] ?? 1);
     for (const r of arm.readers) {
-      if (arm.mode === 'packed') add('readers', answers(r) * call(r, arm.budget! + ASSUMPTIONS.reader_input_overhead_tokens, outTokens(r)));
-      else if (arm.mode === 'native-default') add('readers', answers(r) * call(r, (ASSUMPTIONS.vendor_default_tokens[def.system] ?? ASSUMPTIONS.vendor_default_tokens.default) + ASSUMPTIONS.reader_input_overhead_tokens, outTokens(r)));
+      if (arm.mode === 'packed') add('readers', answers(r) * call(r, arm.budget! * byReader(ASSUMPTIONS.reader_tokens_per_budget_token, r) + overhead(r), outTokens(r)));
+      else if (arm.mode === 'native-default') add('readers', answers(r) * call(r, byReader(ASSUMPTIONS.vendor_default_tokens, def.system) * perCl100k(r) + overhead(r), outTokens(r)));
       else if (arm.mode === 'full-context') add('full_context', fullContextCost(set, r, n));
-      else if (arm.mode === 'agent') { const a = ASSUMPTIONS.agent[def.system]; add('agent', n * call(r, a[def.set] ?? 0, a.output)); }
-      else if (arm.mode === 'own-answer' && arm.variant === 'think') { const a = ASSUMPTIONS.agent.think; add('own_answer', n * call(r, a[def.set] ?? 0, a.output)); }
+      else if (arm.mode === 'agent') { const a = ASSUMPTIONS.agent[def.system]; add('agent', n * call(r, agentTokens(a[def.set], r), agentTokens(a.output, r))); }
+      else if (arm.mode === 'own-answer' && arm.variant === 'think') { const a = ASSUMPTIONS.agent.think; add('own_answer', n * call(r, agentTokens(a[def.set], r), agentTokens(a.output, r))); }
     }
     if (arm.mode === 'own-answer' && arm.variant === 'synthesize') { const s = ASSUMPTIONS.synthesize; add('own_answer', n * (s.input * s.price.input + s.output * s.price.output) / 1e6); }
     if (arm.mode === 'retrieval-only') continue;
@@ -439,7 +461,7 @@ export function buildManifest(): Manifest {
     const estimate = Math.round(cells.filter(c => c.block === id).reduce((s, c) => s + c.estimate.usd, 0) * 100) / 100;
     return { id, label: PLAN_BLOCKS[id].label, plan_usd: PLAN_BLOCKS[id].plan_usd, estimate_usd: estimate, cap_usd: Math.round(estimate * 150) / 100 };
   });
-  const models = [...READERS, ...FRONTIER_JUDGES, ASSUMPTIONS.judge.lme.model, ASSUMPTIONS.judge.beam.model, ASSUMPTIONS.gbrain_expansion.model].map(m => [m, priceOf(m)] as const);
+  const models = [...READERS, ...FRONTIER_JUDGES, ASSUMPTIONS.judge.lme.model, ASSUMPTIONS.judge.beam.model, 'anthropic:claude-haiku-4-5'].map(m => [m, priceOf(m)] as const);
   return {
     schema: MANIFEST_SCHEMA, generated_by: 'bun eval/runner/q1/cells/definitions.ts', preregistration: PREREGISTRATION, readers: READERS, effort: 'medium',
     prices: Object.fromEntries(models.sort(([a], [b]) => (a < b ? -1 : 1))), assumptions: ASSUMPTIONS,

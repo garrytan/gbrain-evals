@@ -45,7 +45,15 @@
     }
   },
   "assumptions": {
-    "reader_input_overhead_tokens": 1000,
+    "reader_input_overhead_tokens": {
+      "default": 1000
+    },
+    "reader_tokens_per_budget_token": {
+      "default": 1
+    },
+    "reader_tokens_per_cl100k": {
+      "default": 1
+    },
     "reader_output_tokens": {
       "default": 400,
       "openai:gpt-6.1-sol": 1000
@@ -72,11 +80,8 @@
       "gbrain-defaults:common-embedder": 0.13,
       "baseline-hybrid:baseline": 0.13
     },
-    "gbrain_expansion": {
-      "model": "anthropic:claude-haiku-4-5",
-      "input": 300,
-      "output": 100
-    },
+    "gbrain_query_usd": 0.0008,
+    "probe_usd_per_conversation": {},
     "judge": {
       "lme": {
         "model": "openai:gpt-4o-2024-08-06",
@@ -347,6 +352,7 @@
       "conversations": 1,
       "corpus_tokens": 926773,
       "messages": 2182,
+      "sessions": 928,
       "block": "T2-S2b",
       "selection": {
         "kind": "stratified",
