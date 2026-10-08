@@ -1,0 +1,165 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50,
+    "templates": "A",
+    "templates_file_sha256": null,
+    "strata": {
+      "memory-only": 10,
+      "page-authoring": 10,
+      "hidden-tool": 0
+    }
+  },
+  "evals_commit": "5ee1012672725982c4e96148c36accfd021b9352",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "027d3c69ff46197d163509c0918192747f79c474",
+    "label": "baseline",
+    "commit": "027d3c69ff46197d163509c0918192747f79c474",
+    "version": "0.60.105.0",
+    "tree": "21ca876fbaa3fd15ea388b89f50d924ba95578cd",
+    "verified": {
+      "copy_tree": "21ca876fbaa3fd15ea388b89f50d924ba95578cd",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.105.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "advertised_surface": null,
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": "8a0a8e9c40612d1f736b6d823f95bf7b9fc93c355046a13c6447b75e69dfb5a9",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "mode": "cells",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 120,
+  "slot_builds": [],
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "C",
+    "F"
+  ],
+  "repeats": 2,
+  "max_tool_chars": null,
+  "argv": [
+    "--models",
+    "claude-opus-5-5,claude-sonnet-5-5,gpt-6.1-sol",
+    "--arms",
+    "gbrain",
+    "--gbrain",
+    "/workspace/gbrain@027d3c69ff46197d163509c0918192747f79c474",
+    "--gbrain-root",
+    "~/.capy/work/cat40/gbrain-baseline",
+    "--gbrain-label",
+    "baseline",
+    "--slots",
+    "4",
+    "--surface",
+    "starter",
+    "--max-tool-chars",
+    "none",
+    "--judge",
+    "none",
+    "--transcripts",
+    "--budget-ledger",
+    ".budget/w12-smoke.sqlite",
+    "--families",
+    "C,F",
+    "--repeat",
+    "2",
+    "--budget-usd",
+    "20",
+    "--out",
+    "eval/reports/cat40/w12-smoke/baseline-gated"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-07T20-42-46-601Z-eeddef89",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot1": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot2": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot3": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 15.450593,
+    "input_tokens": 15587306,
+    "output_tokens": 120779,
+    "basis": "budget ledger cat40-model-ladder-2026-10-07T20-42-46-601Z-eeddef89: 1392 paid requests, 1 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/w12-smoke.sqlite",
+    "program_cap_usd": 40,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 4,
+      "max": 2265.6
+    }
+  },
+  "finished_at": "2026-10-07T21:13:55.276Z"
+}

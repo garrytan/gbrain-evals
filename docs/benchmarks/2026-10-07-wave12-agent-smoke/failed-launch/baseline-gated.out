@@ -1,0 +1,12 @@
+[cat40] 120 cells to run (0 already done, order task) in eval/reports/cat40/w12-smoke/baseline-gated
+445 |     slotCommit = flag(argv, '--slot-ref') ? rev(flag(argv, '--slot-ref')!) : gbrainCommit;
+446 |     slotDir = slotRoot(root, slotCommit, world, analyze);
+447 |     const missing = missingSlotSnapshots(slotDir, nSlots);
+448 |     if (buildSlots && !missing.length && !argv.includes('--rebuild')) { log(`all ${nSlots} slot snapshots exist in ${slotDir}; nothing to build`); return; }
+449 |     if (!buildSlots && missing.length) {
+450 |       throw new Error(`gbrain slot snapshots are missing for build ${slotCommit.slice(0, 12)} on world ${worldDigest(world).slice(0, 12)} (${missing.length} of ${nSlots}: ${missing.join(', ')}). `
+                      ^
+error: gbrain slot snapshots are missing for build 027d3c69ff46 on world df8c95e71b17 (4 of 4: ~/.capy/work/cat40/gbrain-baseline/slots-027d3c69ff46-df8c95e7/slot0.tar, ~/.capy/work/cat40/gbrain-baseline/slots-027d3c69ff46-df8c95e7/slot1.tar, ~/.capy/work/cat40/gbrain-baseline/slots-027d3c69ff46-df8c95e7/slot2.tar, ~/.capy/work/cat40/gbrain-baseline/slots-027d3c69ff46-df8c95e7/slot3.tar). Build them first as their own step, one at a time: bun eval/runner/cat40-model-ladder.ts --build-slots --gbrain-repo /workspace/gbrain --gbrain-ref 027d3c69ff46197d163509c0918192747f79c474 --slots 4 --world eval/data/model-ladder-v1/world.json --slot-build-allowance-usd 2 --budget-usd <dollars> --budget-ledger <ledger>
+      at main (eval/runner/cat40-model-ladder.ts:450:17)
+      at eval/runner/cat40-model-ladder.ts:573:3
+
