@@ -457,7 +457,9 @@ in the freeze checklist.
 
 The launcher's list of public benchmarks left out LongMemEval-M, so its S5 cells, already marked public in the
 campaign, asked for the custodian's host. The launcher (`eval/runner/scoreboard-cli.ts`, outside the hashed tree)
-now lists it; the campaign hashes do not change.
+now lists it; the campaign hashes do not change. The launcher's default state directory moves to
+`eval/reports/scoreboard/<campaign>/state`, and doctor refuses a state directory whose `campaign.json` would sit
+where the budget ledger looks for a legacy ledger file (the first public launch stopped there before any lease).
 
 ### 2026-10-08: amendment A7
 

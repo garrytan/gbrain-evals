@@ -10,7 +10,7 @@
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { doctor, plan, priceProbe, runCells } from '../../eval/runner/scoreboard-cli.ts';
 import { answerId } from '../../eval/runner/scoreboard.ts';
@@ -209,6 +209,15 @@ describe('run', () => {
     const here = cli(['run', '--campaign', c.manifest, '--state', c.state, '--cell', 's1', '--sealed', '--json'], { ...set, GBRAIN_EVALS_CUSTODY_LOG: '' });
     expect([here.code, op(here.err).code]).toEqual([3, 'CUSTODY_REQUIRED']);
     expect(existsSync(join(c.state, 'leases.ndjson'))).toBe(false);
+  });
+
+  test('a state directory whose campaign.json would sit at the ledger\'s legacy path is refused before any lease', () => {
+    const c = campaign([cell('a')], { ledger: join(tmp, `collide${++n}`, 'campaign.sqlite') });
+    const stateDir = dirname(JSON.parse(readFileSync(c.manifest, 'utf8')).ledger);
+    const r = cli(['run', '--campaign', c.manifest, '--state', stateDir, '--cell', 'a', '--json'], set);
+    expect(r.code).not.toBe(0);
+    expect(r.err).toContain('state-dir');
+    expect(existsSync(join(stateDir, 'leases.ndjson'))).toBe(false);
   });
 
   test('LongMemEval-M is public: its cells launch without --sealed from any host', () => {

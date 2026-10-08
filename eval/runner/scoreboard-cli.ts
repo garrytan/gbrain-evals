@@ -43,7 +43,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSyn
 import { hostname, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
-import { BudgetRun, closeLedgers, priceRequest } from './budget-ledger.ts';
+import { BudgetRun, closeLedgers, ledgerPaths, priceRequest } from './budget-ledger.ts';
 import { AdmissionController, DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from './metering-proxy.ts';
 import { Campaign, DEFAULT_ROUTE_CLASSES, isQ1, loadCampaign, planWaves, resolveRunner, ownerTag, ubiRunner, vcpuOf, type LeaseState, type Runner } from './shootout-cell.ts';
 import { costSpeed, loadCell, renderCostSpeed, renderProgress } from './cost-speed.ts';
@@ -215,6 +215,12 @@ export async function doctor(a: Args, env: Record<string, string | undefined> = 
       fix: { next: 'run', argv: fetchArgv, verify: [...fetchArgv, '--verify-only'] } });
   }
   if (manifestPath && stateDir && loaded) {
+    const legacy = ledgerPaths(resolve(REPO_ROOT, loaded.manifest.ledger)).legacy;
+    if (resolve(stateDir, 'campaign.json') === legacy) {
+      const fixed = join(stateDir, 'state');
+      add({ id: 'state-dir', ok: false, severity: 'error', code: 'USAGE', detail: `--state ${stateDir} would put the campaign state file at ${legacy}, where the budget ledger reads a legacy ledger file and refuses to spend; use --state ${fixed}`,
+        fix: { next: 'run', argv: [...FRONT, 'doctor', '--campaign', manifestPath, '--state', fixed, '--for', forWhat] } });
+    }
     if (existsSync(join(stateDir, 'campaign.json'))) {
       try {
         const c = new Campaign(manifestPath, resolve(stateDir));
@@ -244,7 +250,7 @@ export function plan(manifestPath: string, stateDir?: string) {
   const loaded = loadCampaign(manifestPath);
   const m = loaded.manifest;
   const waves = planWaves(m);
-  const state = stateDir ?? `eval/reports/scoreboard/${m.campaign_id}`;
+  const state = stateDir ?? `eval/reports/scoreboard/${m.campaign_id}/state`;
   const cmd = (sub: string, ...x: string[]) => [...FRONT, sub, '--campaign', manifestPath, '--state', state, ...x].join(' ');
   const cells = m.cells.map(c => ({ id: c.id, system: c.system, benchmark: c.benchmark, config: c.config, block: c.block ?? null, lease_usd: c.lease_usd, vm: c.vm?.size ?? 'standard-8', vcpu: vcpuOf(c),
     wave: waves.find(w => w.cells.includes(c.id))!.wave, timeout_hours: c.timeout_hours ?? null, expected_hours: c.expected_hours ?? null, sealed: !!c.sealed, smoke: !!c.smoke,
