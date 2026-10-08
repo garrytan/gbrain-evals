@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain master [`a865f8f`](https://github.com/garrytan/gbrain/tree/a865f8f8b7c95b9f8c30690702797bafcfef537a) (v0.60.104.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.45 (`VERSION`) |
+| This repository | gbrain-evals v0.10.47 (`VERSION`) |
 
 This repository installs gbrain master `a865f8f`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -181,13 +181,25 @@ warm embedding cache.
 
 The agent benchmarks run like this:
 
+**Cat 40 Hard** asks the same agents harder questions about a larger, messier
+company: sets and counts over 10 to 40 accounts, values that changed several
+times with backdated corrections, customers with look-alike names, documents
+that disagree by authority, and facts that must survive five conversations.
+It is tuned on plain files until frontier models finish about half, then
+measured on a held-out world at about 4,000 and about 50,000 documents.
+[Operator guide](docs/benchmarks/cat40-hard/RUNBOOK.md),
+[world and scoring contract](docs/benchmarks/cat40-hard/WORLD_SCHEMA.md).
+
 ```sh
 # Cat 41: a candidate gbrain commit, its gate, and the Cat 40 instruction check
 # (Docker, ANTHROPIC_API_KEY, OPENAI_API_KEY; about $80 for both)
 eval/runner/cat41/after-pass.sh <gbrain checkout> <commit>
 
-# Cat 40 without spending: the scripted, hermetic arms
+# Cat 40 v1 without spending: the scripted, hermetic arms
 bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle --out $(mktemp -d)
+
+# Cat 40 Hard without spending: every family through the scripted arms, plus the freeze-rule table
+scripts/cat40-hard.sh hello
 ```
 
 For the full pinned configuration matrix, prerequisites, output paths and spending controls, follow the

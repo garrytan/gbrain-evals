@@ -1,0 +1,253 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-hard-claims-v1",
+  "judge": "gpt-6.1-sol",
+  "hard": {
+    "identity": {
+      "seed": 20261006,
+      "scale": "large",
+      "mode": "hard",
+      "version": "model-ladder-hard-v2",
+      "knob_digest": "37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434"
+    },
+    "max_turns": 16,
+    "tool_limits": "hard",
+    "judge": "gpt-6.1-sol",
+    "scorer": "cat40-hard-score-v2",
+    "judge_prompt": "cat40-hard-claims-v1",
+    "settings_digest": "9aeccdddad8e4721e6123f1e846f28914c05acbcadfe5c4e1eb839d7345b3210",
+    "code": {
+      "eval/generators/model-ladder-hard.ts": "574be4e1f5c0305b46407c35e10d898c25034d684089ac7ad4b03b015ddf6804",
+      "eval/generators/hard/schema.ts": "f556302c73c76f964a0bbcc661461b6661efec542c5747e376eb9b5b5d98d611",
+      "eval/generators/hard/semantics.ts": "943cf770348e81e527214be33b15e7f304865419149a3eabf05d6776ae5dcb33",
+      "eval/generators/hard/render.ts": "e9dae9373f3c3de7b91cf8fa85e5959360928c57f72534894cfaf1ce8e47f240",
+      "eval/generators/hard/rng.ts": "d0f4b78272e811ab559a1f086d4637a6f414e82c6a6deeffc3b9f1a4e2dce08d",
+      "eval/generators/hard/validate.ts": "049265b5dde2026104e5ff922b5837dc41fdd7ee35a02c531393c6bfd9b0ed13",
+      "eval/runner/cat40/hard.ts": "4e86fe55649e7fc23ed1ad7068cd6268eed97c81ea2c45e48f6dff68ad22f886",
+      "eval/runner/cat40/score-hard.ts": "83ba80902417c6a7627482c37b14b6f1d216fc67328dce10146214860a9d414b",
+      "eval/runner/cat40/judge-hard.ts": "4546497537199b18aeae947ea230762c22dddc6d5ec8b3816c53db58d561c955",
+      "eval/runner/cat40/score.ts": "8a44805190566cdc8ed22caf46c566ac12073db25a0f105d69b6f4222e06174d",
+      "eval/runner/cat40/loop.ts": "82de665e2eec6f2067c544b3c8e3fb7d16df3aa0c2769b58cb49aa2662b0842a",
+      "eval/runner/cat40/arms.ts": "c6fbcd9606774fb4fe59bd4a096e42e7e6d8865df26231947478376ad1025f53",
+      "eval/runner/cat40/hard-grep.ts": "4319257f2a6ec2226a14c670b3774cc8f001790a74255753dd7fcea2afa26a53",
+      "eval/runner/cat40/hard-grep-worker.ts": "39d080f4917f5ec8478053d15e0a23cc6a5d6b4cd53baf400c0ae7c89096af69",
+      "eval/runner/cat40/pg-arm.ts": "ca28bf1e6d8751b95403b10821ce04003d4f7a47e22873222b64b8574c1c9c74"
+    },
+    "runner_commit": "fcb2f5b742783bc8e5a0892894f9958181884f08",
+    "attempts_path": "attempts.jsonl",
+    "max_retries": 2,
+    "quarantined": {},
+    "pg_setup_embed_usd": 0
+  },
+  "world": {
+    "path": "eval/reports/cat40/hard-holdout/50k/world.json",
+    "scale": "large",
+    "digest": "9ea46415f46e0f2b8a74b5c3773caf9ba7e8303058114c5e4e329a0596892877",
+    "seed": 20261006,
+    "docs": 55235,
+    "tasks": 100
+  },
+  "evals_commit": "fcb2f5b742783bc8e5a0892894f9958181884f08",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "label": "gbrain-hard",
+    "commit": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "version": "0.60.95.0",
+    "tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+    "verified": {
+      "copy_tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.95.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "advertised_surface": null,
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": "1659e573968f3aa0f3e21d899ee0e364c720f4d5137e2ed6d0bac4a1594097cb",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": {
+      "sync_batch_docs": 5000
+    }
+  },
+  "mode": "cells",
+  "order": "task",
+  "complete": false,
+  "cells_planned": 800,
+  "slot_builds": [],
+  "models": [
+    "claude-sonnet-5-5",
+    "claude-opus-5-5",
+    "gpt-6.1-sol",
+    "claude-fable-5-1"
+  ],
+  "arms": [
+    "gbrain",
+    "fs"
+  ],
+  "families": [
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--world",
+    "eval/reports/cat40/hard-holdout/50k/world.json",
+    "--models",
+    "claude-sonnet-5-5,claude-opus-5-5,gpt-6.1-sol,claude-fable-5-1",
+    "--arms",
+    "gbrain,fs",
+    "--gbrain-label",
+    "gbrain-hard",
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "--slots",
+    "5",
+    "--concurrency",
+    "10",
+    "--repeat",
+    "1",
+    "--judge",
+    "gpt-6.1-sol",
+    "--budget-ledger",
+    ".budget/cat40-hard.sqlite",
+    "--transcripts",
+    "--out",
+    "eval/reports/cat40/hard/cells-50k",
+    "--step",
+    "cells-50k",
+    "--budget-usd",
+    "1039"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-07T02-59-17-285Z-e332d0f0",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0.44351565999999987,
+      "requests": 2092,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.008122659999999995,
+          "requests": 2010
+        },
+        "anthropic:claude-haiku-4-5-20251001": {
+          "usd": 0.010107999999999999,
+          "requests": 15
+        },
+        "anthropic:claude-opus-4-7": {
+          "usd": 0.425285,
+          "requests": 4
+        }
+      }
+    },
+    "slot:slot1": {
+      "usd": 0.6424305000000007,
+      "requests": 2268,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.01288950000000001,
+          "requests": 2182
+        },
+        "anthropic:claude-opus-4-7": {
+          "usd": 0.622745,
+          "requests": 7
+        },
+        "anthropic:claude-haiku-4-5-20251001": {
+          "usd": 0.006796,
+          "requests": 10
+        }
+      }
+    },
+    "slot:slot2": {
+      "usd": 0.571207289999999,
+      "requests": 2117,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.014226289999999992,
+          "requests": 2036
+        },
+        "anthropic:claude-opus-4-7": {
+          "usd": 0.55093,
+          "requests": 5
+        },
+        "anthropic:claude-haiku-4-5-20251001": {
+          "usd": 0.006050999999999998,
+          "requests": 9
+        }
+      }
+    },
+    "slot:slot3": {
+      "usd": 0.6338383700000009,
+      "requests": 2199,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.010770369999999963,
+          "requests": 2110
+        },
+        "anthropic:claude-haiku-4-5-20251001": {
+          "usd": 0.005973000000000001,
+          "requests": 9
+        },
+        "anthropic:claude-opus-4-7": {
+          "usd": 0.6170950000000001,
+          "requests": 7
+        }
+      }
+    },
+    "slot:slot4": {
+      "usd": 0.45140938000000075,
+      "requests": 2081,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.011651379999999994,
+          "requests": 2007
+        },
+        "anthropic:claude-haiku-4-5-20251001": {
+          "usd": 0.003463,
+          "requests": 5
+        },
+        "anthropic:claude-opus-4-7": {
+          "usd": 0.436295,
+          "requests": 5
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 1037.483034,
+    "input_tokens": 879728100,
+    "output_tokens": 4591085,
+    "basis": "budget ledger cat40-model-ladder-2026-10-07T02-59-17-285Z-e332d0f0: 21892 paid requests, 2 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/cat40-hard.sqlite",
+    "program_cap_usd": 2044,
+    "overshoot_usd": 15.029754,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 2036.7
+    }
+  },
+  "finished_at": "2026-10-07T05:48:23.259Z"
+}
