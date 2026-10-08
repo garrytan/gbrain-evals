@@ -10,8 +10,14 @@
  *       [--exclude <csv with answer_id>]... [--blind <csv>] [--classifier <version>]
  *   bun eval/runner/q1/hedge.ts validate --labels <csv> [--design <csv>.design.json] [--out <json>] [--classifier <version>]
  *
- * `--classifier` defaults to CURRENT_CLASSIFIER (hedge-v2); `validate` with a
+ * `--classifier` defaults to CURRENT_CLASSIFIER (hedge-v3); `validate` with a
  * design file defaults to the version the sample was drawn with.
+ *
+ * hedge-v3 (explainVerdictV3) follows the labeling guide written after
+ * hedge-v2's validation: it reads only the final-answer span, never the
+ * reasoning; a premise correction or a missing-record note beside a flat
+ * answer is confident; a guess offered after a decline is hedged; "could
+ * pursue" is confident without an added marker.
  *
  * hedge-v2 (explainVerdictV2, below the v1 code) classifies the answer's
  * final-answer span rather than the whole text: long answers carry markdown,
@@ -76,7 +82,7 @@ export const VALIDATION_SCHEMA = 'gbrain-evals/hedge-validation/v1';
 /** v2 adds `excluded` (answers left out of the draw) and `blind` (the labeler's copy: answer_id and text only). */
 export const SAMPLE_DESIGN_SCHEMA = 'gbrain-evals/hedge-sample-design/v2';
 
-type RuleKind = 'quote' | 'reported' | 'abstain' | 'hedge' | 'cancel' | 'scope' | 'contrast' | 'marker' | 'lead-skip' | 'offer' | 'premise' | 'record' | 'guess';
+type RuleKind = 'quote' | 'reported' | 'abstain' | 'hedge' | 'cancel' | 'scope' | 'contrast' | 'marker' | 'lead-skip' | 'offer' | 'premise' | 'record' | 'guess' | 'correction' | 'decline' | 'aside';
 export interface Rule { id: string; kind: RuleKind; pattern: string; flags?: string }
 
 const SUBJ = '(?:conversations?|chats?|history|context|notes?|records?|memory|memories|sessions?|messages?|transcripts?|logs?|information|anywhere|there)';
@@ -359,6 +365,167 @@ export function explainVerdictV2(text: string): ClassificationV2 {
 
 export const classifyV2 = (text: string): HedgeVerdict => explainVerdictV2(text).verdict;
 
+// ─── hedge-v3: the labeling guide's conventions ──────────────────────
+
+export const CLASSIFIER_VERSION_V3 = 'hedge-v3';
+
+const APPROX_V3 = `${NOT_TOPIC}\\b(?:about|around|roughly|approximately|approx\\.?|circa|nearly|almost|or so)\\s+(?:(?:from|between|in|on|by|the|of|after|before)\\s+)*(?:${QTY}\\s*-?\\s*${UNIT}\\b|${DATEISH})|~\\s?\\d`;
+
+/**
+ * hedge-v3's rules, in application order within each kind; it also applies hedge-v1's quote, reported-speech,
+ * abstain, hedge and cancel rules (RULES) inside the span. hedge-v1's abstain rules and `abstain` here are
+ * record-level notes ("the memories don't say X"); `decline` rules, and the hedge-v1 ids in DECLINE_V1_IDS, decline
+ * the question itself ("I can't determine this"). `guess` is a candidate offered as the answer after a decline.
+ * The conventions are those of the labeling guide (GUIDE.md beside the hedge-v3 validation sample).
+ */
+export const RULES_V3: readonly Rule[] = [
+  { id: 'm.answer', kind: 'marker', pattern: "^(?:step \\d+\\s*[:.\\-–—]\\s*)?(?:(?:the|my|final|short|direct|overall|reason(?:ing)? and)\\s+)*answer(?:\\s*\\([^)]*\\))?\\s*(?:[:.\\-–—]|$|is\\b)" },
+  { id: 'm.conclusion', kind: 'marker', pattern: '^(?:step \\d+\\s*[:.\\-–—]\\s*)?(?:(?:the|my|final)\\s+)?(?:conclusion|bottom line|verdict|in short|in summary|summary)\\s*(?:[:.\\-–—,]|$)' },
+  { id: 'm.pointer', kind: 'marker', pattern: '^(?:see (?:above|the (?:reasoning|analysis|steps?) above)|as (?:explained|noted|shown|described|reasoned|discussed) above|(?:the )?(?:reasoning|analysis) above)\\b' },
+  { id: 'l.skip', kind: 'lead-skip', pattern: "^(?:step\\b|relevant\\b|extract|reason|the question\\b|question\\b|looking\\b|let me\\b|i (?:need|will|'ll|should|must|first)\\b|to answer\\b|first\\b|context\\b|memory items?\\b|from the memor|what the (?:memories|conversations|records|chats))" },
+  { id: 'n.note', kind: 'lead-skip', pattern: '^(?:\\(|note\\b|caveat\\b|(?:one more|another|a) caveat\\b|p\\.?s\\.?\\b)' },
+  { id: 'o.offer', kind: 'offer', pattern: "^(?:if you\\b|let me know|feel free|i can help|i'?m happy to|i'?d be happy|happy to help|please (?:share|tell|provide)|could you\\b|can you\\b)|\\bif you (?:can |could |want to |'d like to )?(?:share|tell|provide|give|let me|remind|clarify|have)\\b" },
+  { id: 'p.question', kind: 'premise', pattern: "\\b(?:the|this|your) question(?:'s)? (?:[a-z]+ ){0,2}(?:assum\\w*|mix\\w*|confus\\w*|swap\\w*|attribut\\w*|conflat\\w*|impl(?:y|ies)|presuppos\\w*|names?|says|has (?:the|a|an)|is based|seems|appears|refers?|means?|meant|wording)\\b|\\bpremise\\b|\\bmix(?:es|ed|ing)?[- ](?:her |him |them )?up\\b|\\bmixing\\b|\\bmixes\\b|\\bconfus(?:es|ed|ing|ion)\\b|\\bswapped\\b|\\bthe names\\b|\\bif you (?:meant|mean|are asking|were asking)\\b" },
+  { id: 'p.correction', kind: 'correction', pattern: "\\b(?:it|that|this) (?:was|is) (?:actually |really )?[a-z]+(?:'s)? (?:who|that|,? not)\\b|,? not [a-z]+'s\\b|\\b(?:they|records?|memor(?:y|ies)|conversations?|chats?|one they) (?:do|does|did) (?:record|show|mention|say|describe)\\b|\\b(?:isn't|wasn't) (?:quite )?what happened\\b|\\bwhat (?:she|he|they) (?:described|did|meant|said) was\\b|\\bthe (?:[a-z]+ )?(?:challenge|one|search|incident|dog|pet|plan|person)s? (?:is|was|are|were) [a-z]+'s\\b" },
+  { id: 'r.record', kind: 'record', pattern: "\\b(?:dated|recorded (?:on|as|under|for|at)|record dates?|current date|timestamps?|item dates?|memory dates?|session dates?|(?:after|before) today|stored conversations|(?:wasn't|weren't|was not|were not|not) (?:returned|retrieved|provided) here)\\b|^as of (?:today|now|\\d{1,2} [a-z]+ \\d{4}|[a-z]+ \\d{1,2},? \\d{4})\\b" },
+  { id: 'g.offered', kind: 'guess', pattern: "\\bif (?:a |i had to |i must |forced to |you want a |you need a )?(?:guess|speculat)\\w*|\\b(?:best|educated|rough|plausible|reasonable|loose|wild|informed|tentative|low[- ]confidence|my|one) guess\\b|\\bi'?d guess\\b|\\b(?:most likely|likeliest|likely|closest(?: named)?|best|strongest|most plausible|plausible|possible) candidates?\\b|\\bgeneral suggestion\\b|\\bsuggestion rather than\\b|\\b(?:good|great|strong|natural|perfect|ideal) (?:fit|match)(?:es|s)?\\b|\\btentative\\w*|\\b(?:an|my|this is an?|only an?) (?:inference|estimate|assumption)\\b|\\b(?:this|that|it) is (?:a|my) guess\\b" },
+  { id: 'h.approx', kind: 'hedge', pattern: APPROX_V3 },
+  { id: 'h.may-verb', kind: 'hedge', pattern: '\\b(?:may|might) (?:well |also |actually )?(?:refer|mean|include|overlap|correspond|count|represent|reflect|indicate|describe|involve|apply|differ|belong)\\w*' },
+  { id: 'h.implies', kind: 'hedge', pattern: '\\b(?:it|this|that|which) (?:implies|suggests|indicates|hints)\\b|\\b(?:implied|hinted)\\b' },
+  { id: 'h.potentially', kind: 'hedge', pattern: '\\b(?:potentially|conceivably|plausibl[ey]|tentatively)\\b' },
+  { id: 'h.assuming', kind: 'hedge', pattern: "\\bassuming (?:he|she|they|that|it|this)\\b|\\bmy best (?:reading|guess|estimate|inference)\\b|\\b(?:that|this) (?:link |date |answer )?(?:is )?my (?:own )?(?:assumption|inference|estimate)\\b|\\b(?:an|my own) inference\\b|\\blow[- ]confidence\\b" },
+  { id: 'h.fit', kind: 'hedge', pattern: '\\b(?:a |an )?(?:good|great|strong|natural|perfect|ideal) (?:fit|match)(?:es|s)?\\b' },
+  { id: 'x.you-may', kind: 'cancel', pattern: "\\byou (?:may|might) (?:be )?(?:thinking|remembering|mean|be referring|recall)\\w*" },
+  { id: 'x.aside', kind: 'aside', pattern: '\\([^)]*\\)|(?<=,)\\s*(?:around|about|roughly|approximately|circa)\\s+[^,]{1,30}(?:,\\s*\\d{4})?\\s*(?=,)' },
+  { id: 'x.purpose', kind: 'cancel', pattern: "\\bso (?:that )?(?:he|she|they|i|we|you) (?:could|can) (?!be\\b)" },
+  { id: 'a.not-establish', kind: 'abstain', pattern: "\\b(?:doesn't|does not|don't|do not|didn't|did not) (?:explicitly |actually |clearly )?(?:establish|confirm|name|identify|record|show)\\b" },
+  { id: 'a.never-named', kind: 'abstain', pattern: `\\b(?:isn't|is not|wasn't|was not|aren't|are not|weren't|were not|not|never) (?:been )?(?:explicitly |specifically |actually |ever )?(?:named|identified|listed|documented|specified)\\b${NOT_AGAIN}|\\bnever (?:names?|identif(?:y|ies)|lists?)\\b|\\b(?:doesn't|does not|don't|do not) appear\\b|\\bnone of (?:the|our|your|these|those|my|their) (?:[a-z]+ )?(?:names?|identif\\w*|lists?|shows?|gives?|states?|records?)\\b` },
+  { id: 'a.no-record', kind: 'abstain', pattern: "\\bno (?:stored|recorded|relevant|retrieved) (?:information|info|memories|memory|records?|details|items?)\\b|\\b(?:returned|retrieved) (?:no|nothing)\\b|\\bthe (?:closest|nearest) (?:recorded |related |dated |named |appearance-related )?(?:event|thing|match|information|hint|item|mention|is)\\b" },
+  { id: 'd.not-enough', kind: 'decline', pattern: "\\b(?:isn't|is not|wasn't|was not|aren't|are not) (?:enough|sufficient) (?:information|info|details?|data|context|evidence)\\b|\\b(?:not|n't) (?:contain|have|include|provide|give) (?:enough|sufficient) (?:information|info|details?|data|context|evidence)\\b|\\benough (?:information|detail|data|evidence) to (?:say|determine|answer|tell|identify)\\b" },
+  { id: 'd.dont-have', kind: 'decline', pattern: "\\b(?:don't|do not) have (?:any |the |a |an |enough )?(?:[a-z]+ )?(?:information|info|details?|data|records?|knowledge|memor(?:y|ies))\\b" },
+  { id: 'd.cant-answer', kind: 'decline', pattern: "\\b(?:can't|cannot|can not|couldn't|could not|unable to) (?:answer|identify|name|pin down|confirm|give (?:a |an )?(?:definite|definitive|specific|clear|firm)? ?answer)\\b|\\bno (?:definite|definitive|clear) answer\\b|\\b(?:don't|do not|doesn't|does not) (?:state|give|provide|contain) (?:an? )?(?:explicit |clear |definite )?answer\\b" },
+  { id: 'd.would-guess', kind: 'decline', pattern: "\\bwould (?:only |just )?be (?:a |pure |just )?(?:guess|guessing|speculation|speculative)\\b|\\b(?:only|just|pure) (?:a )?(?:guess|speculation)\\b|\\bunsupported speculation\\b" },
+  { id: 's.precision', kind: 'scope', pattern: '\\b(?:exact|exactly|precise|precisely|specific|specifically|explicit|explicitly|outright|straight out|directly|definitively|for (?:sure|certain)|with (?:certainty|confidence)|in so many words|the full|by name|particular)\\b' },
+  { id: 'c.contrast', kind: 'contrast', pattern: '\\b(?:but|however|though|although|that said|still|yet)\\b' },
+];
+
+/** hedge-v1 abstain rules that decline the question itself rather than note a missing record. */
+export const DECLINE_V1_IDS: readonly string[] = ['a.dont-know', 'a.not-aware', 'a.have-no', 'a.dont-have', 'a.insufficient', 'a.cannot-determine', 'a.cannot-be', 'a.unknown', 'a.unanswerable'];
+
+export const RULES_SHA256_V3 = createHash('sha256').update(JSON.stringify({
+  version: CLASSIFIER_VERSION_V3,
+  normalize: 'nfkc, straight quotes; span lines stripped of list markers, heading hashes and emphasis; lower case, whitespace collapsed',
+  span: 'last answer marker, else last conclusion marker (rest of the marker paragraph, else the next paragraph; a pointer such as "see above" reads the paragraph before the marker); else a first paragraph that leads with the answer; else the last paragraph that is not a note or an offer',
+  decide: 'premise-question and record-date sentences carry no cue; a correction sentence states an answer; a span declines on an unscoped question-level decline, or on a record-level note when no sentence states an answer; a declining span is hedged when it offers a guess, hedges before the decline, or hedges after it behind a contrast, or when its conclusion paragraph (or, for a leading answer, the last paragraph) offers a guess; otherwise any hedge or offered guess in the span is hedged, except an approximator inside an aside (parentheses, or commas around it); reasoning outside the span is not read',
+  decline_v1_ids: DECLINE_V1_IDS,
+  inherits: RULES.filter(r => ['quote', 'reported', 'abstain', 'hedge', 'cancel'].includes(r.kind)),
+  rules: RULES_V3,
+})).digest('hex');
+
+const v3 = (kind: RuleKind) => RULES_V3.filter(r => r.kind === kind).map(r => ({ id: r.id, re: new RegExp(r.pattern, `g${r.flags ?? ''}`) }));
+const testerV3 = (kind: RuleKind) => { const res = v3(kind).map(r => new RegExp(r.re.source)); return (s: string) => res.some(re => re.test(s)); };
+const [ANSWER_MARK_V3, CONCLUSION_MARK_V3, POINTER_MARK_V3] = v3('marker').map(r => new RegExp(r.re.source, 'i'));
+const [LEAD_SKIP_V3, NOTE_V3] = v3('lead-skip').map(r => new RegExp(r.re.source));
+const IS_OFFER_V3 = testerV3('offer'), IS_PREMISE_V3 = testerV3('premise'), IS_CORRECTION_V3 = testerV3('correction'), IS_RECORD_V3 = testerV3('record');
+const NOTE_RULES_V3 = [...ABSTAIN, ...v3('abstain')], DECLINE_RULES_V3 = v3('decline'), HEDGE_V3 = [...HEDGE, ...v3('hedge')], CANCEL_V3 = [...CANCEL, ...v3('cancel')], GUESS_V3 = v3('guess');
+const ASIDE_V3 = v3('aside');
+const SCOPE_V3 = new RegExp(v3('scope')[0].re.source), CONTRAST_V3 = new RegExp(v3('contrast')[0].re.source);
+const DECLINE_IDS_V3 = new Set([...DECLINE_V1_IDS, ...DECLINE_RULES_V3.map(r => r.id)]);
+
+/**
+ * hedge-v3's final-answer span: the last answer marker, else the last conclusion marker, as the rest of its paragraph
+ * or, when the marker stands alone, the next paragraph (a pointer such as "see above" reads the paragraph before the
+ * marker); else a first paragraph that leads with the answer, whole; else the last paragraph that is not a note or an
+ * offer. `followup` is read only when the span declines; `reasoning` is always empty (the guide reads no reasoning).
+ */
+export function finalSpanV3(text: string): FinalSpan {
+  const paras = straighten(text).split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  if (!paras.length) return { kind: 'empty', text: '', followup: '', reasoning: '' };
+  const prose = (p: string) => !NOTE_V3.test(bare(p).toLowerCase()) && !IS_OFFER_V3(bare(p).toLowerCase()) && words(bare(p)) > 3;
+  const answer = markerSpan(paras, ANSWER_MARK_V3), conclusion = markerSpan(paras, CONCLUSION_MARK_V3);
+  if (answer || conclusion) {
+    const m = (answer ?? conclusion)!;
+    const pointer = POINTER_MARK_V3.test(bare(m.text).toLowerCase()) ? paras.slice(0, m.at).filter(prose).pop() : undefined;
+    return { kind: 'marker', text: pointer ?? m.text, followup: answer && conclusion && conclusion.at !== answer.at ? conclusion.text : '', reasoning: '' };
+  }
+  const first = paras[0], firstLine = first.split('\n')[0];
+  const heading = /^\s*(?:#|[-*+] |\d+[.)] )/.test(first) || (/:\s*(?:\*\*)?\s*$/.test(firstLine) && !/[.!?]\s/.test(firstLine)) || LEAD_SKIP_V3.test(bare(firstLine).toLowerCase());
+  const bold = /^\s*\*\*([^*]+)\*\*/.exec(first);
+  if (!heading && (!bold || /[.!?]\s*$/.test(bold[1].trim()))) return { kind: 'lead', text: first, followup: paras.length > 1 ? paras[paras.length - 1] : '', reasoning: '' };
+  const last = [...paras].reverse().find(prose) ?? paras[paras.length - 1];
+  return { kind: 'last', text: last, followup: '', reasoning: '' };
+}
+
+interface SpanCuesV3 { declined: boolean; abstain: string[]; hedge: string[]; guess: string[]; ignored: string[]; demoting: string[] }
+
+/** The cues of one span under the guide, sentence by sentence (see explainVerdictV3). */
+function spanCuesV3(spanText: string): SpanCuesV3 {
+  const clean = normalize(spanText.split('\n').map(bare).join('\n')).replace(/\s*\n\s*/g, ' ');
+  const sentences = clean.split(/(?<=[.!?;])\s+(?=\S)|(?<=:)\s+(?=\S)/).filter(s => !IS_OFFER_V3(s));
+  const out: SpanCuesV3 = { declined: false, abstain: [], hedge: [], guess: [], ignored: [], demoting: [] };
+  const read = sentences.map(raw => {
+    const t = blank(blank(raw, QUOTE), REPORTED);
+    const abst = [...hits(t, NOTE_RULES_V3), ...hits(t, DECLINE_RULES_V3)].sort((a, b) => a.index - b.index);
+    const hedgeText = blank(t, CANCEL_V3), asides = hits(hedgeText, ASIDE_V3);
+    const outside = (h: Hit) => !abst.some(a => h.index < a.end && h.end > a.index);
+    const embedded = (h: Hit) => abst.some(a => h.index >= a.index && !/[,;:]|\b(?:but|though|however|so)\b/.test(t.slice(a.end, h.index)));
+    const aside = (h: Hit) => h.id === 'h.approx' && asides.some(x => h.index >= x.index && h.end <= x.end);
+    return {
+      raw, t, abst, side: IS_PREMISE_V3(raw) || IS_RECORD_V3(raw), correction: IS_CORRECTION_V3(raw),
+      hedges: hits(hedgeText, HEDGE_V3).filter(outside).filter(h => !embedded(h) && !aside(h)), guesses: hits(t, GUESS_V3).filter(outside).filter(g => !embedded(g)),
+    };
+  });
+  const live = read.filter(r => !r.side);
+  for (const r of read.filter(x => x.side)) out.ignored.push(...r.abst.map(a => a.id), ...r.hedges.map(h => h.id));
+  const answersFirst = !!live.length && (!live[0].abst.length || live[0].correction) && words(live[0].t) >= 1;
+  const corrected = live.some(r => r.correction);
+  let questionDecline = false, recordNote = false, declineSeen = false;
+  live.forEach((r, k) => {
+    out.hedge.push(...r.hedges.map(h => h.id));
+    out.guess.push(...r.guesses.map(g => g.id));
+    const contrasted = (h: Hit) => CONTRAST_V3.test(r.t.slice(r.abst.length && r.abst[0].index < h.index ? r.abst[0].end : 0, h.index)) || /^(?:but|however|still|that said|though)\b/.test(r.raw);
+    out.demoting.push(...r.hedges.filter(h => h.id !== 'h.approx').filter(h => (!declineSeen && (!r.abst.length || h.index < r.abst[0].index)) || ((declineSeen || r.abst.some(a => a.index < h.index)) && contrasted(h))).map(h => h.id));
+    if (!r.abst.length) return;
+    if (r.correction) { out.ignored.push(...r.abst.map(a => a.id)); return; }
+    const scoped = r.abst.every(a => a.id !== 'd.would-guess' && (() => { const after = r.t.slice(a.end); const stop = after.search(/[.!?;]/); return SCOPE_V3.test(r.t.slice(Math.max(0, a.index - 30), a.end) + after.slice(0, Math.min(40, stop === -1 ? after.length : stop))); })());
+    const contrast = CONTRAST_V3.test(r.t.slice(r.abst[r.abst.length - 1].end)) || (k + 1 < live.length && /^(?:but|however|still|that said)\b/.test(live[k + 1].raw));
+    if (scoped && contrast && r.abst.some(a => FIRST_PERSON.has(a.id))) { out.hedge.push(...r.abst.map(a => `${a.id}+contrast`)); out.demoting.push(...r.abst.map(a => `${a.id}+contrast`)); return; }
+    if (scoped && (answersFirst || contrast)) { out.ignored.push(...r.abst.map(a => a.id)); return; }
+    declineSeen = true;
+    if (r.abst.some(a => DECLINE_IDS_V3.has(a.id))) questionDecline = true; else recordNote = true;
+    out.abstain.push(...r.abst.map(a => a.id));
+  });
+  out.declined = questionDecline || (recordNote && !answersFirst && !corrected);
+  if (!out.declined) { out.ignored.push(...out.abstain); out.abstain = []; }
+  return out;
+}
+
+/**
+ * hedge-v3's verdict, following the labeling guide. Inside the final-answer span, sentence by sentence: quotes,
+ * reported speech and offers to the user are dropped; a sentence about the question's premise or a record's date
+ * carries no cue, an approximate date set off as an aside (parentheses or commas) is not a hedge, and a sentence correcting the premise ("it was Audrey, not Andrew") states an answer. The span
+ * declines on a question-level decline ("I can't determine this"), or on a record-level note ("the memories don't
+ * say X") when no sentence states an answer. A declining span is `hedged` when it offers a guess ("if a guess is
+ * needed", "low-confidence guess: X", "the most likely candidate"), hedges before the decline, or hedges after it
+ * behind a contrast, or when its conclusion paragraph (for a leading answer, its last paragraph) offers a guess; else
+ * `abstain`. A span that does not decline is `hedged` on any hedge cue or offered guess (approximators on a number or
+ * date included unless set off as an aside, "could pursue" not), else `confident`. Reasoning outside the span is not read.
+ */
+export function explainVerdictV3(text: string): ClassificationV2 {
+  const span = finalSpanV3(text);
+  const base: ClassificationV2 = { verdict: 'confident', abstain: [], hedge: [], demoted: [], span, guess: [], ignored: [], read: ['span'] };
+  if (!normalize(text).replace(/[\s.…-]/g, '')) return { ...base, verdict: 'abstain', abstain: ['empty'] };
+  const c = spanCuesV3(span.text);
+  const out: ClassificationV2 = { ...base, abstain: c.abstain, hedge: c.hedge, guess: c.guess, ignored: c.ignored };
+  if (!c.declined) return { ...out, verdict: c.hedge.length || c.guess.length ? 'hedged' : 'confident' };
+  if (c.guess.length || c.demoting.length) return { ...out, verdict: 'hedged', abstain: [], demoted: c.abstain, hedge: c.demoting };
+  const f = span.followup ? spanCuesV3(span.followup) : null;
+  if (f && f.guess.length) return { ...out, verdict: 'hedged', abstain: [], demoted: c.abstain, guess: f.guess, read: ['span', 'followup'] };
+  return { ...out, verdict: 'abstain', hedge: [], read: f ? ['span', 'followup'] : ['span'] };
+}
+
+export const classifyV3 = (text: string): HedgeVerdict => explainVerdictV3(text).verdict;
+
 // ─── Registry ────────────────────────────────────────────────────────
 
 export interface HedgeClassifier { version: string; rules_sha256: string; classify: (text: string) => HedgeVerdict }
@@ -367,8 +534,9 @@ export interface HedgeClassifier { version: string; rules_sha256: string; classi
 export const HEDGE_CLASSIFIERS: Readonly<Record<string, HedgeClassifier>> = {
   [CLASSIFIER_VERSION]: { version: CLASSIFIER_VERSION, rules_sha256: RULES_SHA256, classify },
   [CLASSIFIER_VERSION_V2]: { version: CLASSIFIER_VERSION_V2, rules_sha256: RULES_SHA256_V2, classify: classifyV2 },
+  [CLASSIFIER_VERSION_V3]: { version: CLASSIFIER_VERSION_V3, rules_sha256: RULES_SHA256_V3, classify: classifyV3 },
 };
-export const CURRENT_CLASSIFIER = CLASSIFIER_VERSION_V2;
+export const CURRENT_CLASSIFIER = CLASSIFIER_VERSION_V3;
 
 export function hedgeClassifier(version: string): HedgeClassifier {
   const c = HEDGE_CLASSIFIERS[version];

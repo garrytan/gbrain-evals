@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { checkPinTable, checkReceipt, checkSize, derive, deriveAll, explain, README_BEGIN, README_END, renderAll, renderHeadline, loadCampaign, type CampaignManifest, type Scoreboard } from '../../eval/runner/scoreboard.ts';
-import { classify, classifyV2, CLASSIFIER_VERSION, CLASSIFIER_VERSION_V2, RULES_SHA256, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
+import { classify, classifyV3, CLASSIFIER_VERSION, CLASSIFIER_VERSION_V3, RULES_SHA256, RULES_SHA256_V3 } from '../../eval/runner/q1/hedge.ts';
 import { defaultCells, fieldCells, READERS, writeSyntheticReceipt, type SyntheticOptions } from './fixtures/scoreboard/synthetic.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -362,7 +362,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     expect(gb.sets.map(s => [s.set, s.cell])).toEqual([['S1', 's1-gbrain-8k'], ['S2a', 's2a-gbrain-8k']]);
     expect([gb.pooled.abstention_answers, gb.pooled.correct_abstentions, gb.pooled.correct_abstention_rate]).toEqual([42, 14, Number((14 / 42).toFixed(6))]);
     expect([gb.pooled.wrong, gb.pooled.confident_wrong, gb.pooled.answerable_answers, gb.pooled.false_abstentions]).toEqual([151, 56, 207, 39]);
-    expect(sb.derived.classifier).toEqual({ file: 'eval/runner/q1/hedge.ts', version: CLASSIFIER_VERSION_V2, rules_sha256: RULES_SHA256_V2, source: 'campaign.json hedge_classifier, computed at render time', per_answer: 'cells/<cell_id>/derived/hedge.ndjson' });
+    expect(sb.derived.classifier).toEqual({ file: 'eval/runner/q1/hedge.ts', version: CLASSIFIER_VERSION_V3, rules_sha256: RULES_SHA256_V3, source: 'campaign.json hedge_classifier, computed at render time', per_answer: 'cells/<cell_id>/derived/hedge.ndjson' });
     expect(sb.cells.find(c => c.cell_id === 's1-temporal-graph-8k')!.derived.confident_error_rate).toBeNull();
     expect(checkReceipt(dir, {}).messages).toEqual([]);
     rmSync(dir, { recursive: true });
@@ -403,7 +403,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     const hedge = lines(join(dir, 'cells/s1-gbrain-8k/derived/hedge.ndjson'));
     const judged = answers.filter(a => a.outcome === 'scored');
     expect(judged.length).toBe(answers.length - READERS.length);
-    expect(hedge).toEqual(judged.map(a => ({ answer_id: a.answer_id, verdict: classifyV2(a.text), classifier_version: CLASSIFIER_VERSION_V2, rules_sha256: RULES_SHA256_V2, delivered_tokens: a.delivered_tokens })));
+    expect(hedge).toEqual(judged.map(a => ({ answer_id: a.answer_id, verdict: classifyV3(a.text), classifier_version: CLASSIFIER_VERSION_V3, rules_sha256: RULES_SHA256_V3, delivered_tokens: a.delivered_tokens })));
     expect(new Set(hedge.map(h => h.verdict))).toEqual(new Set(['abstain', 'hedged', 'confident']));
     expect(() => readFileSync(join(dir, 'cells/s1-temporal-graph-8k/derived/hedge.ndjson'))).toThrow();
     expect(checkReceipt(dir, {}).messages).toEqual([]);
@@ -444,10 +444,10 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     expect(v1.sb.derived.classifier.version).toBe(CLASSIFIER_VERSION);
     expect(v1.sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.false_abstentions).toBeGreaterThan(v2.sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.false_abstentions);
     expect(checkReceipt(v1.dir, {}).messages).toEqual([]);
-    editJson(join(v1.dir, 'campaign.json'), x => { x.hedge_classifier = CLASSIFIER_VERSION_V2; });
+    editJson(join(v1.dir, 'campaign.json'), x => { x.hedge_classifier = CLASSIFIER_VERSION_V3; });
     expect(codes(v1.dir)).toContain('SCOREBOARD_STALE');
     editJson(join(v1.dir, 'campaign.json'), x => { x.hedge_classifier = 'hedge-v0'; });
-    expect(checkReceipt(v1.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('campaign.json hedge_classifier is "hedge-v0", not one of hedge-v1, hedge-v2');
+    expect(checkReceipt(v1.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('campaign.json hedge_classifier is "hedge-v0", not one of hedge-v1, hedge-v2, hedge-v3');
     editJson(join(v1.dir, 'campaign.json'), x => { delete (x as Partial<CampaignManifest>).hedge_classifier; });
     expect(checkReceipt(v1.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('hedge_classifier is null');
     rmSync(v1.dir, { recursive: true }); rmSync(v2.dir, { recursive: true });
@@ -467,7 +467,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     const out = explain(dir, 'gbrain-defaults', 'confident-error') as Record<string, any>;
     expect(out.cell).toBe('s1-gbrain-8k');
     expect(out.value.confident_wrong).toBe(40);
-    expect(out.value.classifier.version).toBe(CLASSIFIER_VERSION_V2);
+    expect(out.value.classifier.version).toBe(CLASSIFIER_VERSION_V3);
     expect(out.value.per_answer).toBe('cells/s1-gbrain-8k/derived/hedge.ndjson');
     expect((explain(dir, 'gbrain-defaults', 'abstention') as Record<string, any>).value.correct_abstention_rate).toBeCloseTo(1 / 3, 5);
     rmSync(dir, { recursive: true });
