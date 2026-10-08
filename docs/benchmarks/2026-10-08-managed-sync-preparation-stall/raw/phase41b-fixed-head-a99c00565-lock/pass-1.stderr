@@ -1,0 +1,207 @@
+[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); extends while the sync keeps progressing (stops after 900s without progress); disable with --no-hard-deadline
+[gbrain] Prepared statements disabled (PgBouncer transaction-mode convention on port 6543). Override with GBRAIN_PREPARE=true if your pooler runs in session mode.
+[sync] managed catch-up: 3000 entries frozen, 3000 remaining; publishing in bulk groups (each page keeps its own request).
+[sync] 1/3000 processed (1 written, 0 waived this run) · 14.7 pages/min · indexing ETA 3h24m
+[sync] 2/3000 processed · stalled 3s on preparing · allowed 2m30s
+[sync] 5/3000 processed (5 written, 0 waived this run) · 8.1 pages/min · indexing ETA 6h08m
+[sync-watchdog] parent alive 60s elapsed, deadline in ~3540s (extends while progressing)
+[sync] 36/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 53/3000 processed (53 written, 0 waived this run) · 45.3 pages/min · indexing ETA 1h05m
+[sync] 78/3000 processed (78 written, 0 waived this run) · 56.2 pages/min · indexing ETA 51m59s
+[sync] 79/3000 processed (79 written, 0 waived this run) · 48.4 pages/min · indexing ETA 1h00m
+[sync] 94/3000 processed (94 written, 0 waived this run) · 51.3 pages/min · indexing ETA 56m41s
+[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)
+[sync] 102/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 123/3000 processed (123 written, 0 waived this run) · 53.1 pages/min · indexing ETA 54m08s
+[sync] 136/3000 processed (136 written, 0 waived this run) · 54.5 pages/min · indexing ETA 52m34s
+[sync] 141/3000 processed · stalled 0s on preparing · allowed 2m30s
+[sync] 143/3000 processed (143 written, 0 waived this run) · 50.3 pages/min · indexing ETA 56m47s
+[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)
+[sync] 152/3000 processed (152 written, 0 waived this run) · 49.6 pages/min · indexing ETA 57m26s
+[persistence] phase=claim reason=deadline_exceeded checkout=not_observed conn_wait_ms=5000 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 165/3000 processed · stalled 16s on preparing · allowed 2m30s
+[sync] 165/3000 processed · stalled 26s on preparing · allowed 2m30s
+[sync] 165/3000 processed · stalled 36s on preparing (claim lapsed: owner missing)
+[sync] 165/3000 processed · stalled 50s on import_content (waiting on db) · allowed 2m30s
+[sync-watchdog] parent alive 240s elapsed, deadline in ~3360s (extends while progressing)
+[sync] 165/3000 processed · stalled 60s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 70s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 80s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 90s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 100s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 110s on import_content (waiting on db) · allowed 2m30s
+[sync-watchdog] parent alive 300s elapsed, deadline in ~3300s (extends while progressing)
+[sync] 165/3000 processed · stalled 120s on import_content (waiting on db) · allowed 2m30s
+[persistence] phase=preparation reason=deadline_exceeded; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 165/3000 processed · stalled 7s on preparing · allowed 2m30s
+[sync] 165/3000 processed · stalled 16s on origin_check (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 26s on origin_check (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 36s on origin_check (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 46s on origin_check (waiting on db) · allowed 2m30s
+[sync-watchdog] parent alive 360s elapsed, deadline in ~3240s (extends while progressing)
+[sync] 165/3000 processed · stalled 56s on origin_check (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 66s on origin_check (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 76s on origin_check (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 86s on origin_check (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 96s on origin_check (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 106s on origin_check (waiting on db) · allowed 2m30s
+[sync-watchdog] parent alive 420s elapsed, deadline in ~3180s (extends while progressing)
+[sync] 165/3000 processed · stalled 116s on origin_check (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 250s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 260s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 270s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 280s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 290s on import_content (waiting on db) · allowed 2m30s
+[sync-watchdog] parent alive 480s elapsed, deadline in ~3120s (extends while progressing)
+[sync] 165/3000 processed · stalled 300s on import_content (waiting on db) · allowed 2m30s
+[sync] 165/3000 processed · stalled 306s on queued
+[sync] 165/3000 processed · stalled 316s on queued
+[sync] 165/3000 processed · stalled 1s on preparing · allowed 2m30s
+[sync] 165/3000 processed · stalled 4s on preparing · allowed 2m30s
+[sync] 165/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 540s elapsed, deadline in ~3060s (extends while progressing)
+[sync] 165/3000 processed · stalled 6s on preparing · allowed 2m30s
+[sync] 166/3000 processed · stalled 4s on preparing · allowed 2m30s
+[sync] 166/3000 processed · stalled 1s on preparing · allowed 2m30s
+[sync] 166/3000 processed · stalled 4s on preparing · allowed 2m30s
+[sync] 166/3000 processed · stalled 6s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 600s elapsed, deadline in ~3000s (extends while progressing)
+[sync] 166/3000 processed · stalled 1s on preparing · allowed 2m30s
+[sync] 166/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 166/3000 processed · stalled 1s on preparing · allowed 2m30s
+[sync] 178/3000 processed (178 written, 0 waived this run) · 16.9 pages/min · indexing ETA 2h47m
+[sync] 189/3000 processed (189 written, 0 waived this run) · 17.6 pages/min · indexing ETA 2h39m
+[sync] 200/3000 processed (200 written, 0 waived this run) · 18.3 pages/min · indexing ETA 2h33m
+[sync-watchdog] parent alive 660s elapsed, deadline in ~2940s (extends while progressing)
+[sync] 210/3000 processed · stalled 6s on preparing · allowed 2m30s
+[sync] 222/3000 processed (222 written, 0 waived this run) · 19.5 pages/min · indexing ETA 2h22m
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 720s elapsed, deadline in ~2880s (extends while progressing)
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 780s elapsed, deadline in ~2820s (extends while progressing)
+[sync] 231/3000 processed · stalled 1s on preparing · allowed 2m30s
+[persistence] phase=idle_probe reason=deadline_exceeded checkout=not_observed conn_wait_ms=5003 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 4s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 14s on page_snapshot (waiting on db) · allowed 2m30s
+[sync] 231/3000 processed · stalled 24s on page_snapshot (waiting on db) · allowed 2m30s
+[sync] 231/3000 processed · stalled 34s on page_snapshot (waiting on db) · allowed 2m30s
+[sync] 231/3000 processed · stalled 44s on page_snapshot (waiting on db) · allowed 2m30s
+[sync-watchdog] parent alive 840s elapsed, deadline in ~2760s (extends while progressing)
+[sync] 231/3000 processed · stalled 54s on page_snapshot (waiting on db) · allowed 2m30s
+[sync] 231/3000 processed · stalled 64s on page_snapshot (waiting on db) · allowed 2m30s
+[sync] 231/3000 processed · stalled 74s on page_snapshot (waiting on db) · allowed 2m30s
+[sync] 231/3000 processed · stalled 84s on page_snapshot (waiting on db) · allowed 2m30s
+[sync] 231/3000 processed · stalled 94s on page_snapshot (waiting on db) · allowed 2m30s
+[sync] 231/3000 processed · stalled 104s on page_snapshot (waiting on db) · allowed 2m30s
+[sync-watchdog] parent alive 900s elapsed, deadline in ~2700s (extends while progressing)
+[sync] 231/3000 processed · stalled 114s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=preparation reason=deadline_exceeded; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 226s on queued
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 8s on preparing · allowed 2m30s
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=6; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 18s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 28s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=7; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 38s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 960s elapsed, deadline in ~2640s (extends while progressing)
+[sync] 231/3000 processed · stalled 48s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 58s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=5; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 68s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 78s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 88s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 98s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 1020s elapsed, deadline in ~2580s (extends while progressing)
+[sync] 231/3000 processed · stalled 108s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 118s on page_snapshot (waiting on db) · allowed 2m30s
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=5; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 356s on queued
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 366s on queued
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 376s on queued
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 386s on queued
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=5; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 1080s elapsed, deadline in ~2520s (extends while progressing)
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 231/3000 processed · stalled 396s on queued
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 6s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+(node:9235) TimeoutNegativeWarning: -0.0009500000160187483 is a negative number.
+Timeout duration was set to 1.
+(Use `bun --trace-warnings ...` to show where the warning was created)
+[sync-watchdog] parent alive 1140s elapsed, deadline in ~2460s (extends while progressing)
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 1200s elapsed, deadline in ~2400s (extends while progressing)
+[sync] 231/3000 processed · stalled 0s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 4s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 1s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 4s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 1s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 1260s elapsed, deadline in ~2340s (extends while progressing)
+[sync] 231/3000 processed · stalled 1s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 3s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 596s on queued
+[sync] 231/3000 processed · stalled 3s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 616s on queued
+[sync] 231/3000 processed · stalled 10s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 1320s elapsed, deadline in ~2280s (extends while progressing)
+[sync] 231/3000 processed · stalled 636s on queued
+[sync] 231/3000 processed · stalled 3s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 6s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 3s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 6s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 1380s elapsed, deadline in ~2220s (extends while progressing)
+[sync] 231/3000 processed · stalled 6s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 1s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 4s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 0s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 1440s elapsed, deadline in ~2160s (extends while progressing)
+[sync] 231/3000 processed · stalled 3s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 6s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 5s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 2s on preparing · allowed 2m30s
+[sync] 231/3000 processed · stalled 4s on preparing · allowed 2m30s
+[sync-watchdog] parent alive 1500s elapsed, deadline in ~2100s (extends while progressing)
+Error [queue_capacity]: source=bench path=companies/scale-0-3952.md code=queue_capacity: Write capacity exhausted: principal outstanding requests. request=ac6a59f2-3fee-44b8-b386-27cd88ef5037 run=703cce17-fce0-494c-9d57-173caa321cdc target=363e38ddc097d7692658ed9d144c948f174fcf8e Fix the cause, then run: gbrain sync --source bench --no-pull --retry-failed --no-embed
+Fix: Inspect writer status and configured persistence limits. Existing requests retain their reserved completion space.
+Docs: https://github.com/garrytan/gbrain/blob/master/docs/guides/error-codes.md#queue_capacity
