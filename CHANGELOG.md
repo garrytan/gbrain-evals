@@ -2,6 +2,18 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.44] - 2026-10-08
+
+### BEAM-1M failure analysis on the development split: the 1M no-memory floor, frontier readers, the oracle ceiling and the reranker; the BEAM date order in the reader prompt fixed
+
+Wave 0 item B2 / E5.3 of the 10x memory advantage plan (gbrain-evals #97, GBRA-60). No gbrain change. Paid: $52.42 of a $60 ledger cap, preregistered before any paid request (46013ab, amendments 05a7cbb, 593b557 and 1d28760). Development split only; no sealed conversation was read.
+
+- **Report.** [BEAM-1M failure analysis](docs/benchmarks/2026-10-08-beam-1m-failure-analysis.md), with [`decomposition.json`](docs/benchmarks/2026-10-08-beam-1m-failure-analysis/decomposition.json) and [`arms-summary.json`](docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms-summary.json) recomputed keyless by `decompose.ts --check` and `analyze.ts --check`, and every arm's receipts, rows and full answers under `arms/`. The 1M no-memory floor is 26.2% with the `gpt-4.1-mini` bridge and 28.6% to 31.3% with Sonnet 5.5, Opus 5.5 and `gpt-6.1-sol`. On the published top 5, `gpt-6.1-sol` scores 62.0% against the bridge's 53.9% (+8.1 points, 95% interval [4.4, 12.2]); with only the gold turns it reaches 84.9%. The shipped reranker raises strict recall at 5 from 47 to 57 of 198 at gbrain `7aa2caa0` with voyage-4; its answer gain (+3.2) is not distinguished. The three-reader ranking is confounded by unequal output limits (preregistration amendment 3).
+- **Free decomposition.** 49 of 194 answerable questions can never pass strict recall at 5; strict recall is 36 of 145 feasible at 5 and 57 of 160 at 10. The 57 questions with no gold in the top 5 are 30 semantic drift, 15 lexical gap and 12 date-scoped. 50 of 220 published answers commit to a wrong value regardless of hedge (model-read labels).
+- **Reader prompt date order (fix).** `renderHistory` sorted BEAM's `Month-DD-YYYY` dates as strings, so sessions reached the reader alphabetically by month name, and the fallback "Current Date" was the alphabetically last date, earlier than the true latest session in 8 of 11 BEAM-1M dev conversations. `sessionDateKey` and `latestDate` in `eval/runner/memory-qa/qa.ts` compare BEAM dates as dates; other date formats keep their string keys, so LongMemEval and LoCoMo prompts are byte-identical. Rerun with the fix, the published 53.5% bridge row is 53.9%.
+- **Runner.** `memory-qa/run.ts` gains `--retrieved-from` (replay another arm's ranked lists without building a brain), `--qa-context none|oracle` (the no-memory floor and the gold-evidence ceiling), and `--search-limit`, `--pool-depth` and `--max-per-session`. A dev run loads only its split's conversation files. With the reranker pinned on, a run is `invalid` unless every query carries rerank scores, none reports a rerank degradation, and the budget ledger holds a request to the configured reranker model for every reranked query. Claude 5 readers are sent no `temperature`, which they reject. Tests: `test/eval/memory-qa-arms.test.ts`.
+- **Version.** Main is at 0.10.43, so this release is 0.10.44.
+
 ## [0.10.43] - 2026-10-08
 
 ### One usage receipt for every reading lane, the reading headroom recount, and model rules that match the project rule
