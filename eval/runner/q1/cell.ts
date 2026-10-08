@@ -1104,7 +1104,9 @@ export function scoreboardCampaignCell(def: CellDefinition, arm: ArmDefinition, 
  */
 export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Record<string, string> {
   const out: Record<string, string> = {};
-  const dirs = ['eval/systems', 'docs/comparison-systems'].flatMap(d => readdirSync(join(root, d), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => join(root, d, e.name)).sort());
+  // Q1's kinds only: eval/systems also holds the open-source comparison's own bundles (gbrain-evals#89), which no Q1 cell runs.
+  const kinds = new Set((JSON.parse(readFileSync(join(root, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
+  const dirs = ['eval/systems', 'docs/comparison-systems'].flatMap(d => readdirSync(join(root, d), { withFileTypes: true }).filter(e => e.isDirectory() && (d !== 'eval/systems' || e.name.startsWith('_') || kinds.has(e.name))).map(e => join(root, d, e.name)).sort());
   for (const dir of dirs) for (const f of ['docker-compose.yml', 'Dockerfile']) {
     const path = join(dir, f);
     if (!existsSync(path)) continue;
@@ -1123,7 +1125,8 @@ export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval
   'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/openai-judge-shim.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
   'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
   'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',
-  'eval/systems', 'docs/comparison-systems', 'eval/decisions', 'package.json', 'bun.lock'];
+  'eval/systems/PROTOCOL.md', 'eval/systems/_fake', 'eval/systems/_shim', 'eval/systems/bootstrap.sh', 'eval/systems/gbrain-defaults', 'eval/systems/kinds.json',
+  'eval/systems/name-guard-baseline.json', 'docs/comparison-systems', 'eval/decisions', 'package.json', 'bun.lock'];
 
 const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
