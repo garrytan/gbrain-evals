@@ -198,4 +198,14 @@ cells and DIRECT, (5) the other budgets, (6) judge and labels after each reader 
 
 ## Amendments
 
-None yet.
+### Amendment 1 (2026-10-08, after the A4 live shape probe, before any A5 cell or labeler call)
+
+The probe (`bun eval/runner/pilot/run.ts probe`, run `a4-probe-2026-10-08T20-54-58-473Z-919bacdc`, $0.11, 12
+requests) accepted every body shape the pilot sends. It also showed that OpenAI writes its prompt cache on its
+own: `gpt-6.1-sol` and `gpt-6-luna` responses report `prompt_tokens_details.cache_write_tokens` on ordinary
+requests (1,151 of a reader request's tokens; 12,371 on the CACHE cold request), and the ledger's price table bills
+those at the model's cache-write rate (`gpt-6.1-sol` $2.50 per million against $2.00 input; `gpt-6-luna` $0.125
+against $0.10). The CACHE definition above said OpenAI has no write premium; that sentence is wrong for these
+models. Correction: on both providers the first read of a prefix pays a cache-write premium, and on OpenAI every
+call may carry one, CACHE or not; dollars are computed from each call's reported buckets either way. No arm,
+rule, model or threshold changes.
