@@ -2,6 +2,13 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.48] - 2026-10-08
+
+### The R2 facts-extraction report describes its write-cost comparators by kind
+
+- [docs/benchmarks/2026-10-08-facts-extraction-model.md](docs/benchmarks/2026-10-08-facts-extraction-model.md): the write-cost context sentence now uses the comparison table's kind labels (`memory-bank`, `extract-first`, `graph-pipeline`, `temporal-graph`, `markdown-notes`) and links to [the table](docs/comparison-systems.md#systems-in-the-open-source-comparison), the one place that names the systems. The figures are unchanged.
+- **Version.** Main is at 0.10.47, so this release is 0.10.48.
+
 ## [0.10.47] - 2026-10-08
 
 ### Facts-absorb quality gate: Claude Haiku 5.5 passes as gbrain's background fact-extraction model, GPT-6 Luna does not; write cost of three extraction models
