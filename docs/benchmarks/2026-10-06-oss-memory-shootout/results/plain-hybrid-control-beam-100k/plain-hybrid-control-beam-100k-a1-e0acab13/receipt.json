@@ -1,0 +1,320 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "beam-100k",
+  "split": "dev",
+  "started_at": "2026-10-07T19:34:09.852Z",
+  "finished_at": "2026-10-07T20:51:41.559Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "BEAM 100k",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "plain-hybrid-control-beam-100k-a1-e0acab13",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 6,
+    "sessions": 486,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0.08919624999999999,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 510
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "73c9135919c6fe0addbb77780837387de3b49239d8453048119cc316e5035aed",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 6,
+    "questions_expected": 120
+  },
+  "system": {
+    "name": "plain-hybrid",
+    "capability_system": "plain-hybrid",
+    "capabilities": {
+      "system": "plain-hybrid",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large@1536",
+            "dims": 1536
+          },
+          "notes": "Postgres full-text plus pgvector cosine, reciprocal-rank fusion; whole sessions; embedding input cut at 24,000 characters"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: a session is searchable once its row is written",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 10
+          }
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 30
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    },
+    "identity": {
+      "system": "plain-hybrid",
+      "config": null,
+      "versions": null
+    }
+  },
+  "counts": {
+    "rows": 240,
+    "scored": 216,
+    "errors": 0,
+    "abstention": 24
+  },
+  "summary": {
+    "recall_all_at_5": 0.42592592592592593,
+    "recall_any_at_5": 0.7592592592592593,
+    "recall_all_at_10": 0.5833333333333334,
+    "ndcg_at_10": 0.5431342646836905,
+    "latency_p50_ms": 132.04999999999998,
+    "latency_p95_ms": 439.25
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 240,
+    "outcomes": {
+      "scored": 240,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence",
+      "vendor-default"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 480
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.native.b8000.main",
+      "dir": "arms/fixed-evidence.native.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.42592592592592593,
+        "recall_any_at_5": 0.7592592592592593,
+        "recall_all_at_10": 0.5833333333333334,
+        "ndcg_at_10": 0.5431342646836905,
+        "latency_p50_ms": 375.7,
+        "latency_p95_ms": 507.8,
+        "qa_score": 0.5491203703703704,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5491203703703704,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.rehydrated.b8000.main",
+      "dir": "arms/fixed-evidence.rehydrated.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.42592592592592593,
+        "recall_any_at_5": 0.7592592592592593,
+        "recall_all_at_10": 0.5833333333333334,
+        "ndcg_at_10": 0.5431342646836905,
+        "latency_p50_ms": 375.7,
+        "latency_p95_ms": 507.8,
+        "qa_score": 0.5501058201058201,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5501058201058201,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "vendor-default.native.bnone.main",
+      "dir": "arms/vendor-default.native.bnone.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.42592592592592593,
+        "recall_any_at_5": 0.7592592592592593,
+        "recall_all_at_10": 0.5833333333333334,
+        "ndcg_at_10": 0.5431342646836905,
+        "latency_p50_ms": 8,
+        "latency_p95_ms": 14.494999999999997,
+        "qa_score": 0.5916732804232804,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5916732804232804,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "vendor-default.rehydrated.bnone.main",
+      "dir": "arms/vendor-default.rehydrated.bnone.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.42592592592592593,
+        "recall_any_at_5": 0.7592592592592593,
+        "recall_all_at_10": 0.5833333333333334,
+        "ndcg_at_10": 0.5431342646836905,
+        "latency_p50_ms": 8,
+        "latency_p95_ms": 14.494999999999997,
+        "qa_score": 0.5931018518518518,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5931018518518518,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    }
+  ]
+}

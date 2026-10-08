@@ -1,0 +1,54 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-shootout",
+  "config": "recipe",
+  "notes": "Draft. gbrain at the repository pin 739e5cc, the secondary link to the starting line and the pilots. gbrain init defaults: voyage:voyage-4 embedder, balanced search with the Voyage reranker. Needs VOYAGE_API_KEY. Recipe arm off LongMemEval-S.",
+  "cells": [
+    {
+      "id": "gbrain-shootout-recipe-locomo-r1",
+      "benchmark": "locomo",
+      "lease_usd": 9,
+      "lease_basis": "1.5 x estimate, not piloted: markdown-notes common reading plus Voyage rerank and voyage-4 embeddings ($5.60)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system gbrain-shootout --embed real --embedding-model voyage:voyage-4 --embedding-dims 1024 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-locomo.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-shootout-recipe-locomo-r2",
+      "benchmark": "locomo",
+      "lease_usd": 1,
+      "lease_basis": "1.5 x estimate, not piloted: retrieval-only replicate ($0.60)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system gbrain-shootout --embed real --embedding-model voyage:voyage-4 --embedding-dims 1024 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/retrieval-only.json --ingest-replicate 2 --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-shootout-recipe-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 6,
+      "lease_basis": "1.5 x estimate, not piloted: as LoCoMo ($3.60)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split dev --system gbrain-shootout --embed real --embedding-model voyage:voyage-4 --embedding-dims 1024 --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/four-arms-beam-100k.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    }
+  ]
+}

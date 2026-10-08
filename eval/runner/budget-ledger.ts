@@ -854,6 +854,62 @@ export class BudgetRun {
     return new BudgetRun(runId, options.budgetUsd, paths.ledger);
   }
 
+  /**
+   * Open or resume a lease run with a fixed id (a shootout cell's metering
+   * proxy). A lease ledger is marked as one when it is created, and its
+   * program cap is the sum of the leases opened in it, so one file can hold a
+   * cell's reruns. A lease run that already exists is resumed with its
+   * committed spend and its recorded output cap, so restarting the proxy never
+   * grants the lease again. Refused: a closed lease, a different amount or
+   * output cap for the same id, a ledger that is not a lease ledger, and a new
+   * lease while another lease in the file is still open, unless `newRun`
+   * closes the open ones first (they are never reopened).
+   */
+  static openLease(options: { runId: string; leaseUsd: number; ledgerPath: string; maxOutputTokens?: number | null; newRun?: boolean; runner?: string; log?: (line: string) => void }): BudgetRun {
+    if (!Number.isFinite(options.leaseUsd) || options.leaseUsd <= 0) throw new BudgetExceededError('--lease-usd must be a positive number of dollars');
+    if (!/^[A-Za-z0-9._:-]{1,128}$/.test(options.runId)) throw new BudgetExceededError(`lease run id ${JSON.stringify(options.runId)} must be 1-128 characters of [A-Za-z0-9._:-]`);
+    const maxOut = options.maxOutputTokens ?? null;
+    if (maxOut !== null && !(Number.isInteger(maxOut) && maxOut > 0)) throw new BudgetExceededError('--max-output-tokens must be a positive integer');
+    const paths = ledgerPaths(options.ledgerPath);
+    const fresh = !existsSync(paths.ledger);
+    ensureLedger(paths, { migrateCapUsd: options.leaseUsd, create: { capUsd: options.leaseUsd, reason: `lease ${options.runId}` }, log: options.log });
+    write(paths.ledger, `lease ${options.runId}`, db => {
+      const meta = (key: string) => (db.query('SELECT value FROM ledger_meta WHERE key = ?').get(key) as { value: string } | null)?.value ?? null;
+      const runs = db.query('SELECT run_id, runner, budget_usd, finished_at FROM runs').all() as Array<{ run_id: string; runner: string; budget_usd: number; finished_at: string | null }>;
+      if (fresh && !runs.length) db.query(`INSERT OR REPLACE INTO ledger_meta (key, value) VALUES ('lease_ledger', '1')`).run();
+      else if (meta('lease_ledger') !== '1' && !(runs.length && runs.every(r => r.runner === 'metering-proxy' || r.runner === 'lease'))) {
+        throw new BudgetExceededError(`${paths.ledger} is not a lease ledger; a metering proxy never raises another ledger's cap. Give the proxy its own --budget-ledger file`);
+      }
+      const run = runs.find(r => r.run_id === options.runId);
+      const capKey = `lease_max_output_tokens:${options.runId}`;
+      if (run) {
+        if (run.finished_at) throw new BudgetExceededError(`lease ${options.runId} was closed at ${run.finished_at}; a closed lease is never reopened`);
+        if (Math.abs(run.budget_usd - options.leaseUsd) > 1e-9) throw new BudgetExceededError(`lease ${options.runId} was opened for $${run.budget_usd.toFixed(2)}, not $${options.leaseUsd.toFixed(2)}`);
+        const recorded = meta(capKey);
+        if ((recorded === null ? null : Number(recorded)) !== maxOut) throw new BudgetExceededError(`lease ${options.runId} was opened with an output cap of ${recorded ?? 'the default'}, not ${maxOut ?? 'the default'}`);
+        return;
+      }
+      const open = runs.filter(r => r.finished_at === null);
+      if (open.length && !options.newRun) throw new BudgetExceededError(`${paths.ledger} still holds open lease ${open[0].run_id}; pass --new-run to close it and open ${options.runId}`);
+      for (const r of open) db.query('UPDATE runs SET finished_at = ? WHERE run_id = ?').run(now(), r.run_id);
+      if (runs.length) db.query('INSERT INTO caps (program_cap_usd, kind, reason, by, at) VALUES (?, ?, ?, ?, ?)').run(currentCap(db) + options.leaseUsd, 'lease', `lease ${options.runId}`, whoami(), now());
+      db.query(`INSERT INTO runs (${RUN_COLUMNS}) VALUES (?, ?, ?, ?, ?, NULL)`).run(options.runId, options.runner ?? 'lease', options.leaseUsd, null, now());
+      if (maxOut !== null) db.query('INSERT OR REPLACE INTO ledger_meta (key, value) VALUES (?, ?)').run(capKey, String(maxOut));
+    });
+    return new BudgetRun(options.runId, options.leaseUsd, paths.ledger);
+  }
+
+  /** Requests recorded against one run (a lease ledger can hold several). */
+  static runRequests(ledgerPath: string, runId: string): number {
+    return (connect(ledgerPaths(ledgerPath).ledger).db.query('SELECT COUNT(*) AS n FROM entries WHERE run_id = ?').get(runId) as { n: number }).n;
+  }
+
+  /** The output-token cap a lease was opened with (null: the proxy default). */
+  static leaseMaxOutputTokens(ledgerPath: string, runId: string): number | null {
+    const row = connect(ledgerPaths(ledgerPath).ledger).db.query('SELECT value FROM ledger_meta WHERE key = ?').get(`lease_max_output_tokens:${runId}`) as { value: string } | null;
+    return row ? Number(row.value) : null;
+  }
+
   /** Measure this process's event-loop lag for the run's summary; close() stops it. */
   attachLagMonitor(monitor: LagMonitor): void { this.lag = monitor; }
 
@@ -1034,7 +1090,16 @@ export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
   'anthropic:claude-opus-5': { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 },
   'anthropic:claude-opus-5-5': { input: 4, output: 20, cache_read: 0.2, cache_write: 5 },
   'anthropic:claude-fable-5-1': { input: 10, output: 50, cache_read: 0.25, cache_write: 12.5 },
+  // Vendor-default and common models for the open-source memory shootout; developers.openai.com model pages, checked 2026-10-05.
+  'openai:gpt-4o': { input: 2.5, output: 10, cache_read: 1.25 },
+  'openai:gpt-4o-mini': { input: 0.15, output: 0.6, cache_read: 0.075 },
+  'openai:gpt-4.1': { input: 2, output: 8, cache_read: 0.5 },
   'openai:gpt-4.1-mini': { input: 0.4, output: 1.6, cache_read: 0.1 },
+  'openai:gpt-4.1-nano': { input: 0.1, output: 0.4, cache_read: 0.025 },
+  'openai:gpt-5': { input: 1.25, output: 10, cache_read: 0.125 },
+  'openai:gpt-5-mini': { input: 0.25, output: 2, cache_read: 0.025 },
+  'openai:gpt-5-nano': { input: 0.05, output: 0.4, cache_read: 0.005 },
+  'openai:o4-mini': { input: 1.1, output: 4.4, cache_read: 0.275 },
   'openai:gpt-5.2': { input: 1.75, output: 14, cache_read: 0.175 },
   'openai:gpt-5.4': { input: 2.5, output: 15, cache_read: 0.25 },
   'openai:gpt-5.4-mini': { input: 0.75, output: 4.5, cache_read: 0.075 },
@@ -1248,10 +1313,12 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
   const chain = new Map<string, number>();
   const pricing: PriceOptions = { chainContextTokens: id => chain.get(id) };
   const measure = async (price: RequestPrice, response: Response) => {
-    if ((response.headers.get('content-type') ?? '').includes('event-stream')) return null;
+    // A 4xx answer without usage settles at $0, as the metering proxy does: providers do not bill rejected requests.
+    const rejected = response.status >= 400 && response.status < 500 ? { usd: 0, input_tokens: 0, output_tokens: 0 } : null;
+    if ((response.headers.get('content-type') ?? '').includes('event-stream')) return rejected;
     let parsed: unknown;
-    try { parsed = await response.clone().json(); } catch { return null; }
-    const cost = usageCost(price, parsed);
+    try { parsed = await response.clone().json(); } catch { return rejected; }
+    const cost = usageCost(price, parsed) ?? rejected;
     const id = (parsed as { id?: unknown } | null)?.id;
     if (cost && price.provider === 'openai' && typeof id === 'string') {
       chain.set(id, cost.input_tokens + cost.output_tokens);
