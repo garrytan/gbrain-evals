@@ -196,28 +196,17 @@ table is the one place that maps a label to its project; the preregistrations, t
 
 Versions are the pins of the 2026-10-06 preregistrations. Each label's shim lives in `eval/systems/<label>/`, with its
 capability record, lock file and pilot notes. **Former id** is the name the system, its directory and its cell, lease
-and result ids carried until amendment A6 (2026-10-08): an earlier id is the current one with the label replaced by
+and result ids carried until amendment A6 (2026-10-07): an earlier id is the current one with the label replaced by
 the former id (`extract-first-common-locomo-r1-a2-7c50fc54` was `mem0-…`), and the BEAM recipe switch
 `temporal_graph_beam_recipe` was `graphiti_beam_recipe`. Ledger entries and logs written before A6 use the former ids.
 
-### Matched results
-
-Every system below ran through the same harness, with the same conversations, the same 8,000-token evidence budget
-and the same reader (`gpt-4o-2024-08-06`, judged by `gpt-4o`), on a stratified 100-question LongMemEval-S slice. Unlike
-the self-reported rows above, these numbers share one protocol; the full tables, the other benchmarks and the limits
-are in [the comparison report](benchmarks/2026-10-06-oss-memory-shootout.md). gbrain is measured through an adapter
-that hands the reader bare chunks without titles or dates (not gbrain's `query` delivery).
-
-| System | Answers correct, own evidence | Answers correct, original sessions behind the evidence | Strict `recall_all@5` | Ingest $ per 100 haystacks |
-|---|---:|---:|---:|---:|
-| `memory-bank` | 91% | 78% | 97.9% | 32.11 |
-| `graph-pipeline` | 83% | 74% | 93.8% | 60.88 |
-| `extract-first` | 79% | 75% | 93.8% | 42.26 |
-| `markdown-notes` | 69% | 72% | 83.3% | 1.45 |
-| gbrain (`c5fb0201`, through the adapter) | 59% | 78% | 97.9% | 1.53 |
-| `temporal-graph` | 37% | 40% | 39.6% | 108.69 |
-
 ## Changelog
+
+### 2026-10-07: Systems in the open-source comparison
+
+Added the table that maps the open-source shootout's kind labels (`temporal-graph`, `graph-pipeline`,
+`extract-first`, `agent-runtime`, `markdown-notes`, `memory-bank`) to their projects, versions, licenses and upstream
+repositories. The shootout's code, manifests, results and preregistrations now use the labels and link here.
 
 ### 2026-10-08: Systems in the open-source comparison and their matched results
 
