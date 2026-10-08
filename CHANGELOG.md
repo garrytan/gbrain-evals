@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.45] - 2026-10-08
+## [0.10.46] - 2026-10-08
 
 ### Q2 parser gaps: guards for typed list lines, a held-out frame for grammar precision and recall, relationship-phrasing units, and the custodian harness
 
@@ -12,6 +12,16 @@ Paired with gbrain branch `capy/q2-parser-gaps` (frozen build `4ec7fbbe4`, basel
 - **Preregistration and freeze record.** [Preregistration](docs/benchmarks/2026-10-06-q2-parser-gaps-preregistration.md) with amendments 1–4 before the freeze and every deviation in its freeze record, including the run deviations found after the last cell (export outside the campaign guard, the stress-floor counting error, nine reconstructed access-log lines).
 - **Harness.** `eval/runner/q2/` (grammar gates G1–G4 and G2 with two-judge labels and no adjudication, the runner's own zero-tolerance classes, the K conformance scorer, transition-identity C-gates with Holm selection and a fixed-sequence evaluator, the crossed bootstrap for G6, the power simulation, the campaign guard, preflight and allowlisted export); custody roots outside every git worktree with symlinks resolved; receipts that keep gate outcomes apart from execution status; resumable answer and judge checkpoints; the career-chronicle corpus and its development generator. The [custodian runbook](docs/benchmarks/2026-10-06-q2-parser-gaps-runbook.md) and [campaign manifest](docs/benchmarks/2026-10-06-q2-parser-gaps-campaign.json) fix the order of runs.
 - **Defects found in the sealed run, fixed after the decision.** `junk-audit.ts g2-sample` and `label` now write receipts with `run_status` (the custodian had recorded wrapper receipts); W manifests may key their list `pages` and the career manifest `documents`; `campaign.ts not-run` records a step a failed upstream gate stops, so the export runs inside the guard when G6 does not.
+- **Version.** Main is at 0.10.45, so this release is 0.10.46.
+
+## [0.10.45] - 2026-10-08
+
+### gbrain #6317 mirror: the sync wedge is a pooler round trip that never completes; two consumers were a multiplier
+
+Paired with gbrain #6330 (branch `capy/6317-reliability-contract`, merged as `b5f12b12e`, v0.60.117.0) and the mechanism fix #6329 (v0.60.114.0). No paid call ($0 here); this mirror reruns nothing.
+
+- **Two-consumer and partition arms (mirror, $0 here).** [Report](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md). On 16-vCPU Ubicloud VMs behind PgBouncer in transaction mode at 57 ms: 2 h 49 min of `gbrain serve --http` beside a 6-lane `gbrain sync` on v0.60.110.0 published 4,951 pages with no wedge (three arms: plain; adoption load plus CLI restarts; dual direct pool plus restarts), while one `gbrain sync --no-lanes` with no serve wedged within one sample once the client→pooler half of its connections was dropped: backend `active`/`ClientRead`, the consumer's `expired_claims` round trip parked 135 s past its 5 s deadline, renewals lapsing, zero commits, until the network came back. The named await is postgres.js's query promise in `runUnsafe`; the v0.60.112.0 preparation budget does not cover it (run F: 16 members parked 166 s, nothing cut or held).
+- **Reading.** `persistence.single_consumer` ships off in gbrain v0.60.117.0 per the preregistered reading (the single-process arm wedged). The fix is the bounded client-side settle in v0.60.114.0; v0.60.117.0 adds direct-lane routing for the consumer's round trips, `owner.backend[]` in `writer status`, and movement-based health.
 - **Version.** Main is at 0.10.44, so this release is 0.10.45.
 
 ## [0.10.44] - 2026-10-08
