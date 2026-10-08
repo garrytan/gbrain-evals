@@ -22,10 +22,12 @@ points between systems is noise (one question is 5 points). Nothing here is a sc
 - **Files.** [`aggregates.json`](aggregates.json) holds the allowlisted receipt fields of every arm (counts, per-reader
   means, timings, spend, ingest), with no answer or context text. [`calibration.json`](calibration.json) and
   [`dev-strength.json`](dev-strength.json) hold the calibration and power inputs.
-  [`hedge-v1-validation.json`](hedge-v1-validation.json) and [`hedge-v2-dev.json`](hedge-v2-dev.json) hold the
-  hedge classifiers' aggregate numbers on the blind, hand-labeled 200-answer sample of these answers (labels and
-  answer text stay outside the repository); the sample is hedge-v2's development data, and its validation is a
-  fresh sample of the other 678 answers.
+  The hedge classifiers' aggregate numbers on blind, hand-labeled samples of these answers (labels and answer text
+  stay outside the repository): [`hedge-v1-validation.json`](hedge-v1-validation.json) on the first 200-answer
+  sample, [`hedge-v2-validation.json`](hedge-v2-validation.json) on a fresh 200 from the other 678, and the
+  development numbers [`hedge-v2-dev.json`](hedge-v2-dev.json) (first sample) and
+  [`hedge-v3-dev.json`](hedge-v3-dev.json) (both samples, 400 answers). hedge-v3's validation is a fresh sample of
+  the 478 answers in neither.
 
 ## Spend
 

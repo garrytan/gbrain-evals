@@ -1,0 +1,56 @@
+{
+  "note": "hedge-v2 on a fresh blind 200-answer sample of the 678 dev-smoke answers outside the hedge-v1 sample (seed q1-hedge-v2-validation, stratified by hedge-v2 verdict), labeled by an independent labeler. Abstain precision missed the 0.90 bar.",
+  "schema": "gbrain-evals/hedge-validation/v1",
+  "classifier_version": "hedge-v2",
+  "rules_sha256": "8a3f60ce1668af9e06b9838d989f82e42a48818d8b9e754931608870cf2260b0",
+  "labels_sha256": "1fc7a69840334fa5e56a57b263a6179c71f553f736268bfa54913ad331505775",
+  "n": 200,
+  "unlabeled": 0,
+  "accuracy": 0.855,
+  "per_class": {
+    "abstain": {
+      "support": 64,
+      "predicted": 67,
+      "precision": 0.8806,
+      "recall": 0.9219
+    },
+    "hedged": {
+      "support": 54,
+      "predicted": 67,
+      "precision": 0.7463,
+      "recall": 0.9259
+    },
+    "confident": {
+      "support": 82,
+      "predicted": 66,
+      "precision": 0.9394,
+      "recall": 0.7561
+    }
+  },
+  "confusion": {
+    "abstain": {
+      "abstain": 59,
+      "hedged": 4,
+      "confident": 1
+    },
+    "hedged": {
+      "abstain": 1,
+      "hedged": 50,
+      "confident": 3
+    },
+    "confident": {
+      "abstain": 7,
+      "hedged": 13,
+      "confident": 62
+    }
+  },
+  "population_weighted": {
+    "accuracy": 0.8943,
+    "recall": {
+      "abstain": 0.9018,
+      "hedged": 0.8025,
+      "confident": 0.9148
+    }
+  },
+  "misclassified_count": 29
+}

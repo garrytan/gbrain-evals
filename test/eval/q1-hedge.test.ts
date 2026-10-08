@@ -14,8 +14,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import {
-  classify, classifyV2, CLASSIFIER_VERSION, CLASSIFIER_VERSION_V2, CURRENT_CLASSIFIER, explainVerdict, explainVerdictV2, finalSpan, HEDGE_CLASSIFIERS, hedgeClassifier, parseCsv, RULES, RULES_SHA256,
-  RULES_SHA256_V2, RULES_V2, stratifiedSample, toCsv, validate, type SampleAnswer, type SampleDesign,
+  classify, classifyV2, classifyV3, CLASSIFIER_VERSION, CLASSIFIER_VERSION_V2, CLASSIFIER_VERSION_V3, CURRENT_CLASSIFIER, DECLINE_V1_IDS, explainVerdict, explainVerdictV2, explainVerdictV3, finalSpan,
+  finalSpanV3, HEDGE_CLASSIFIERS, hedgeClassifier, parseCsv, RULES, RULES_SHA256, RULES_SHA256_V2, RULES_SHA256_V3, RULES_V2, RULES_V3, stratifiedSample, toCsv, validate, type SampleAnswer, type SampleDesign,
 } from '../../eval/runner/q1/hedge.ts';
 import { answerId, answerProblems, readRecords, RecordLog, type AnswerRecord } from '../../eval/runner/memory-qa/records.ts';
 
@@ -102,17 +102,13 @@ describe('hedge-v2: the final-answer span', () => {
   const steps = (answer: string, reasoning = 'Item 4 says the class met on Tuesdays.', extra = '') =>
     `**Relevant information:**\n- Item 4 (2023-05-02): Priya joined a pottery class at the studio on Elm Street.\n- Item 9 (2023-06-11): she said the class was going well and that she might take a glazing course later.\n\n**Reasoning:**\n${reasoning}${extra}\n\n**Answer:** ${answer}`;
 
-  test('version, rule-table hash and registry; hedge-v1 stays importable', () => {
+  test('version and rule-table hash, unchanged for the record; hedge-v1 stays importable', () => {
     expect(CLASSIFIER_VERSION_V2).toBe('hedge-v2');
-    expect(CURRENT_CLASSIFIER).toBe('hedge-v2');
-    expect(RULES_SHA256_V2).toMatch(/^[0-9a-f]{64}$/);
-    expect(RULES_SHA256_V2).not.toBe(RULES_SHA256);
+    expect(RULES_SHA256_V2).toBe('8a3f60ce1668af9e06b9838d989f82e42a48818d8b9e754931608870cf2260b0');
     expect(new Set(RULES_V2.map(r => r.id)).size).toBe(RULES_V2.length);
     for (const r of RULES_V2) expect(() => new RegExp(r.pattern, `g${r.flags ?? ''}`)).not.toThrow();
-    expect(Object.keys(HEDGE_CLASSIFIERS)).toEqual(['hedge-v1', 'hedge-v2']);
     expect(hedgeClassifier('hedge-v1').classify).toBe(classify);
     expect(hedgeClassifier('hedge-v2')).toEqual({ version: 'hedge-v2', rules_sha256: RULES_SHA256_V2, classify: classifyV2 });
-    expect(() => hedgeClassifier('hedge-v0')).toThrow(/unknown hedge classifier "hedge-v0"; known: hedge-v1, hedge-v2/);
   });
 
   test('span: the last answer marker, a stand-alone marker\'s next paragraph, a conclusion, a leading answer, else the last paragraph', () => {
@@ -188,6 +184,77 @@ describe('hedge-v2: the final-answer span', () => {
   });
 });
 
+describe('hedge-v3: the labeling guide', () => {
+  const steps = (answer: string, reasoning = 'Item 4 says the class met on Tuesdays.') =>
+    `**Relevant information:**\n- Item 4 (2023-05-02): Priya joined a pottery class at the studio on Elm Street.\n- Item 9 (2023-06-11): she said she might take a glazing course later.\n\n**Reasoning:**\n${reasoning}\n\n**Answer:** ${answer}`;
+
+  test('version, rule-table hash and registry; v1 and v2 stay importable', () => {
+    expect(CLASSIFIER_VERSION_V3).toBe('hedge-v3');
+    expect(CURRENT_CLASSIFIER).toBe('hedge-v3');
+    expect(RULES_SHA256_V3).toMatch(/^[0-9a-f]{64}$/);
+    expect(new Set([RULES_SHA256, RULES_SHA256_V2, RULES_SHA256_V3]).size).toBe(3);
+    expect(new Set(RULES_V3.map(r => r.id)).size).toBe(RULES_V3.length);
+    for (const r of RULES_V3) expect(() => new RegExp(r.pattern, `g${r.flags ?? ''}`)).not.toThrow();
+    for (const id of DECLINE_V1_IDS) expect(RULES.some(r => r.id === id && r.kind === 'abstain')).toBe(true);
+    expect(Object.keys(HEDGE_CLASSIFIERS)).toEqual(['hedge-v1', 'hedge-v2', 'hedge-v3']);
+    expect(hedgeClassifier('hedge-v3')).toEqual({ version: 'hedge-v3', rules_sha256: RULES_SHA256_V3, classify: classifyV3 });
+    expect(() => hedgeClassifier('hedge-v0')).toThrow(/unknown hedge classifier "hedge-v0"; known: hedge-v1, hedge-v2, hedge-v3/);
+  });
+
+  test('reasoning is not read: a bare final answer is confident however the reasoning hedges; a pointer reads what it points to', () => {
+    const bare = steps('3', 'The first two plans may be the same class, so the count is probably 3.');
+    expect(classifyV2(bare)).toBe('hedged');
+    expect(classifyV3(bare)).toBe('confident');
+    expect(classifyV3(steps('See above.', 'The class probably met on Tuesdays.'))).toBe('hedged');
+    expect(finalSpanV3(steps('See above.', 'The class probably met on Tuesdays.')).text).toBe('**Reasoning:**\nThe class probably met on Tuesdays.');
+  });
+
+  test('premise corrections and missing-record notes followed by a flat answer are confident', () => {
+    expect(classifyV3(steps("Sam didn't join a pottery class. The class was Priya's: she joined on 2 May 2023. The memories don't say who taught it."))).toBe('confident');
+    expect(classifyV3(steps("The records don't show Sam in a pottery class. The one they do record is Priya's, which met on Tuesdays."))).toBe('confident');
+    expect(classifyV3(steps("There's no record of Priya taking a glazing course. What she described was a pottery class on Elm Street, from 2 May 2023."))).toBe('confident');
+    expect(classifyV3(steps('The class met on Tuesdays. The memories do not record which studio room it used.'))).toBe('confident');
+    expect(classifyV3(steps('As of 16 August 2023, there is no record of this. The only relevant item is dated later, on 1 October 2023. In it, Priya suggests a glazing course.'))).toBe('confident');
+    expect(classifyV2(steps('The class met on Tuesdays. The memories do not record which studio room it used.'))).toBe('abstain');
+  });
+
+  test('a decline stays abstain when it only describes the records or names a candidate to reject it', () => {
+    expect(classifyV3(steps("The memories don't say which day the class met. They only show that she joined in May and kept going in June."))).toBe('abstain');
+    expect(classifyV3(steps("The memories don't say which glaze she prefers. The closest hint is that she liked blue mugs, which might suggest cobalt, but that isn't a stated preference. I can't give a definite answer."))).toBe('abstain');
+    expect(classifyV3(steps("The studio isn't named, and Elm Street is a possibility, but there is not enough evidence to favor it."))).toBe('abstain');
+    expect(classifyV3(steps('Nothing in the memories shows Sam taking a class. The question may be mixing him up with Priya.'))).toBe('abstain');
+    expect(classifyV3(steps('The closest recorded event is the open studio night on 22 September.'))).toBe('abstain');
+    expect(classifyV3(steps("The memories don't name the studio. They describe a studio with a kiln and possibly a shop. I can't identify it from this."))).toBe('abstain');
+  });
+
+  test('a candidate offered as the answer after a decline, or a low-confidence guess, is hedged', () => {
+    expect(classifyV3('The conversations never name a studio, so this is a low-confidence guess: Elm Street Ceramics.')).toBe('hedged');
+    expect(classifyV3(steps('Elm Street Ceramics (a tentative guess; the memory items do not name a studio).'))).toBe('hedged');
+    expect(classifyV3(steps("The chats never name the studio. From the clues, they could mean Elm Street Ceramics, though this is a guess and not stated."))).toBe('hedged');
+    expect(classifyV3(steps("The memory doesn't name it. Elm Street is the most likely candidate, but it is unconfirmed."))).toBe('hedged');
+  });
+
+  test('"could pursue" answers a possibility question; an added marker hedges it', () => {
+    expect(classifyV3(steps('Priya could become a ceramics teacher or open a studio.'))).toBe('confident');
+    expect(classifyV3(steps('Priya could work as a potter.'))).toBe('confident');
+    expect(classifyV3(steps('Priya could potentially become a ceramics teacher.'))).toBe('hedged');
+    expect(classifyV3(steps('Teaching ceramics could be a good fit for Priya.'))).toBe('hedged');
+  });
+
+  test('any hedge inside the final answer counts; ranges, asides and purpose clauses do not', () => {
+    expect(classifyV3(steps('June 2023. It may have continued into early July.'))).toBe('hedged');
+    expect(classifyV3(steps('2 times. Both plans were for August, so they may be the same outing.'))).toBe('hedged');
+    expect(classifyV3(steps('June 2023. She signed up around 11 May 2023.'))).toBe('hedged');
+    expect(classifyV3(steps('About 3 years.'))).toBe('hedged');
+    expect(classifyV3(steps('She joined in late March or early April 2023, sometime between 27 March and 2 April. No exact date was recorded.'))).toBe('confident');
+    expect(classifyV3(steps('She went to the open studio (around 1 October 2023) and glazed two mugs.'))).toBe('confident');
+    expect(classifyV3(steps('It was Priya who, around 26 June 2023, set up the kiln.'))).toBe('confident');
+    expect(classifyV3(steps('Priya got a tattoo of a kiln, so she could have it with her wherever she goes.'))).toBe('confident');
+    expect(classifyV3(steps('The question seems to mix up the two people. It was Priya who joined, not Sam.'))).toBe('confident');
+    expect(classifyV3("I don't know the exact date, but it was in early May.")).toBe('hedged');
+  });
+});
+
 describe('sample and validate', () => {
   const answer = (i: number, text: string, extra: Partial<SampleAnswer> = {}): SampleAnswer => ({ answer_id: `a${String(i).padStart(3, '0')}`, cell_id: 'c', question_id: `q${i}`, reader: 'r', text, outcome: 'scored', ...extra });
   const pool = [
@@ -221,21 +288,21 @@ describe('sample and validate', () => {
     expect(rows.every(r => r.label === '')).toBe(true);
     const design = JSON.parse(readFileSync(`${out}.design.json`, 'utf8')) as SampleDesign;
     expect(design.strata.abstain).toEqual({ population: 5, sampled: 5 });
-    expect(design.classifier_version).toBe(CLASSIFIER_VERSION_V2);
-    expect(design.rules_sha256).toBe(RULES_SHA256_V2);
+    expect(design.classifier_version).toBe(CLASSIFIER_VERSION_V3);
+    expect(design.rules_sha256).toBe(RULES_SHA256_V3);
     expect(design.answers).toHaveLength(2);
 
     // A labeler disagrees on two answers: one hedge the classifier missed, one abstention it called hedged.
-    const labeled: Array<Record<string, string>> = rows.map(r => ({ ...r, label: classifyV2(r.text) }));
-    const conf = labeled.find(r => classifyV2(r.text) === 'confident')!; conf.label = 'hedged';
-    const hed = labeled.find(r => classifyV2(r.text) === 'hedged')!; hed.label = 'abstain';
+    const labeled: Array<Record<string, string>> = rows.map(r => ({ ...r, label: classifyV3(r.text) }));
+    const conf = labeled.find(r => classifyV3(r.text) === 'confident')!; conf.label = 'hedged';
+    const hed = labeled.find(r => classifyV3(r.text) === 'hedged')!; hed.label = 'abstain';
     writeFileSync(out, toCsv(Object.keys(rows[0]), labeled));
     const v = Bun.spawnSync(['bun', 'eval/runner/q1/hedge.ts', 'validate', '--labels', out, '--design', `${out}.design.json`, '--out', join(dir, 'v.json')], { cwd: ROOT });
     expect(v.exitCode).toBe(0);
     const report = JSON.parse(v.stdout.toString());
     expect(report).toEqual(JSON.parse(readFileSync(join(dir, 'v.json'), 'utf8')));
     expect(report.n).toBe(30);
-    expect(report.classifier_version).toBe(CLASSIFIER_VERSION_V2);
+    expect(report.classifier_version).toBe(CLASSIFIER_VERSION_V3);
     expect(report.confusion).toEqual({ abstain: { abstain: 5, hedged: 1, confident: 0 }, hedged: { abstain: 0, hedged: 12, confident: 1 }, confident: { abstain: 0, hedged: 0, confident: 11 } });
     expect(report.per_class.hedged).toEqual({ support: 13, predicted: 13, precision: Number((12 / 13).toFixed(4)), recall: Number((12 / 13).toFixed(4)) });
     expect(report.per_class.abstain).toEqual({ support: 6, predicted: 5, precision: 1, recall: Number((5 / 6).toFixed(4)) });
@@ -271,10 +338,10 @@ describe('sample and validate', () => {
     expect(JSON.parse(readFileSync(join(dir, 'v1.csv.design.json'), 'utf8')).rules_sha256).toBe(RULES_SHA256);
     expect(Bun.spawnSync(['bun', 'eval/runner/q1/hedge.ts', 'classify', '--text', 'x', '--classifier', 'hedge-v0'], { cwd: ROOT }).exitCode).toBe(2);
     // The labeler fills the blind copy; validate reads it with the design and runs the classifier the sample was drawn with.
-    writeFileSync(blind, toCsv(['answer_id', 'text', 'label'], b.map(r => ({ ...r, label: classifyV2(r.text) }))));
+    writeFileSync(blind, toCsv(['answer_id', 'text', 'label'], b.map(r => ({ ...r, label: classifyV3(r.text) }))));
     const v = Bun.spawnSync(['bun', 'eval/runner/q1/hedge.ts', 'validate', '--labels', blind, '--design', `${out}.design.json`], { cwd: ROOT });
     expect(v.exitCode).toBe(0);
-    expect(JSON.parse(v.stdout.toString())).toMatchObject({ classifier_version: CLASSIFIER_VERSION_V2, rules_sha256: RULES_SHA256_V2, n: 30, accuracy: 1 });
+    expect(JSON.parse(v.stdout.toString())).toMatchObject({ classifier_version: CLASSIFIER_VERSION_V3, rules_sha256: RULES_SHA256_V3, n: 30, accuracy: 1 });
     rmSync(dir, { recursive: true });
   });
 
@@ -282,7 +349,7 @@ describe('sample and validate', () => {
     const design = { classifier_version: 'hedge-v1', rules_sha256: RULES_SHA256, strata: { abstain: { population: 1, sampled: 1 }, hedged: { population: 1, sampled: 1 }, confident: { population: 1, sampled: 1 } } } as SampleDesign;
     const csv = toCsv(['answer_id', 'text', 'label'], [{ answer_id: 'x', text: 'Probably.', label: 'hedged' }]);
     expect(validate(csv, design).classifier_version).toBe('hedge-v1');
-    expect(() => validate(csv, design, hedgeClassifier(CLASSIFIER_VERSION_V2))).toThrow(/drawn with hedge-v1/);
+    expect(() => validate(csv, design, hedgeClassifier(CLASSIFIER_VERSION_V3))).toThrow(/drawn with hedge-v1/);
   });
 
   test('validate refuses an unknown label and a file with nothing labeled; CSV quoting round-trips', () => {
@@ -302,8 +369,11 @@ describe('labeled fixture', () => {
       expect(validate(csv, null, hedgeClassifier(CLASSIFIER_VERSION))).toEqual(v1);
       expect(v1.rules_sha256).toBe(RULES_SHA256);
       const v2 = JSON.parse(readFileSync(join(FIX, `validation-${name}-hedge-v2.json`), 'utf8'));
-      expect(validate(csv)).toEqual(v2);
+      expect(validate(csv, null, hedgeClassifier(CLASSIFIER_VERSION_V2))).toEqual(v2);
       expect(v2.rules_sha256).toBe(RULES_SHA256_V2);
+      const v3 = JSON.parse(readFileSync(join(FIX, `validation-${name}-hedge-v3.json`), 'utf8'));
+      expect(validate(csv)).toEqual(v3);
+      expect(v3.rules_sha256).toBe(RULES_SHA256_V3);
     });
   }
 
