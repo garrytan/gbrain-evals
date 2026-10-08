@@ -482,6 +482,18 @@ The 150-pairs-per-corpus raise could not be met for amara, so the final mix is *
 - The custodian fetched and hash-verified the 21 BEAM-1M sealed conversations and their `probing_questions.json` onto
   the run machine, because the runner's loader requires them and does not download them. Nothing reads the questions.
 
+### Label receipt wrapper (recorded 2026-10-08, before grammar-score)
+
+- `junk-audit.ts label` writes `label-summary.json` with no `run_status`, the same harness defect as the G2 sample, so
+  the campaign refused `grammar-score`. The custodian recorded a wrapper through
+  `campaign.ts record --step grammar-label --run labels`. Nothing was re-run.
+- Label summary `cdd3e7b54e035b641848b65f154204702bc06d7b1ae813a6e356d1e2039c44a2`; wrapper
+  `2f70a02f13f4900dff76132683531b8f843e87e1e63ec98272614244c368e082`.
+- Labels: 2,353 lines and 4,706 line-and-judge pairs (`claude-opus-5-5` and `gpt-6.1-sol`, `q2-judge-v1`), none left
+  retryable or unstarted, $12.86 spent against a $40 cap. The runner's default up-front estimate ($94) refused
+  `--budget-usd 40`, so `--estimate-usd 40` was passed. The hard cap stayed $40.
+- The N re-mint finished for both arms on the deviation-3 manifest with no page errors.
+
 ### Builds, runners and models
 
 - **Candidate (frozen Q2 build):** gbrain `4ec7fbbe4221bd353b88cf46292b44153c542bb2` on branch `capy/q2-parser-gaps`
