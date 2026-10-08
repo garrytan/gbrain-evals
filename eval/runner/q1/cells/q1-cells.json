@@ -447,8 +447,8 @@
       "id": "T2-S4-S5",
       "label": "T2 S4, S5",
       "plan_usd": 420,
-      "estimate_usd": 664.58,
-      "cap_usd": 996.87
+      "estimate_usd": 263.2,
+      "cap_usd": 394.8
     }
   ],
   "cells": [
@@ -476,7 +476,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 10,
       "expected_hours": 10,
@@ -675,7 +676,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 10,
       "expected_hours": 44,
@@ -755,7 +757,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 10,
       "expected_hours": 20,
@@ -931,7 +934,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 10,
       "expected_hours": 26,
@@ -1107,7 +1111,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 10,
       "expected_hours": 34,
@@ -1283,7 +1288,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 10,
       "expected_hours": 39,
@@ -1460,7 +1466,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 10,
       "expected_hours": 6,
@@ -1635,7 +1642,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 10,
       "expected_hours": 2,
@@ -1810,7 +1818,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 6,
@@ -1951,7 +1960,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 6,
@@ -2121,7 +2131,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 6,
@@ -2262,7 +2273,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 6,
@@ -2328,7 +2340,8 @@
       "canonical_instrument": "beam-10m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s1"
+        "seed": "q1-probes-s1",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 6,
@@ -2394,7 +2407,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 22,
@@ -2539,7 +2553,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 48,
@@ -2616,7 +2631,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 42,
@@ -2739,7 +2755,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 48,
@@ -2862,7 +2879,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 48,
@@ -2985,7 +3003,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 48,
@@ -3109,7 +3128,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 13,
@@ -3231,7 +3251,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 4,
@@ -3353,7 +3374,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -3469,7 +3491,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -3586,7 +3609,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -3702,7 +3726,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 48,
@@ -3773,7 +3798,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -3834,7 +3860,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b"
+        "seed": "q1-probes-s2b",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -3900,7 +3927,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -3997,7 +4025,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 8,
@@ -4074,7 +4103,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 4,
@@ -4149,7 +4179,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 5,
@@ -4224,7 +4255,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 10,
@@ -4299,7 +4331,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 8,
@@ -4375,7 +4408,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -4449,7 +4483,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -4523,7 +4558,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -4591,7 +4627,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -4660,7 +4697,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -4728,7 +4766,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 8,
@@ -4797,7 +4836,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 7,
@@ -4866,7 +4906,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 8,
@@ -4935,7 +4976,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 8,
@@ -5004,7 +5046,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -5066,7 +5109,8 @@
       "canonical_instrument": "beam-100k",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2a"
+        "seed": "q1-probes-s2a",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -5136,7 +5180,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -5218,7 +5263,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -5299,7 +5345,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 29,
@@ -5378,7 +5425,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -5457,7 +5505,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -5536,7 +5585,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -5616,7 +5666,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -5694,7 +5745,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -5772,7 +5824,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -5844,7 +5897,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -5917,7 +5971,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -5989,7 +6044,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -6062,7 +6118,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -6135,7 +6192,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -6208,7 +6266,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -6282,7 +6341,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -6355,7 +6415,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -6428,7 +6489,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -6494,7 +6556,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -6564,7 +6627,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -6630,7 +6694,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -6691,7 +6756,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 29,
@@ -6750,7 +6816,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -6809,7 +6876,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -6868,7 +6936,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 2,
@@ -6928,7 +6997,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -6985,7 +7055,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -7042,7 +7113,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3"
+        "seed": "q1-probes-s3",
+        "conversations": null
       },
       "shards": 1,
       "expected_hours": 1,
@@ -7089,7 +7161,8 @@
       "canonical_instrument": "lme-s",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s4"
+        "seed": "q1-probes-s4",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 48,
@@ -7151,11 +7224,11 @@
         }
       ],
       "estimate": {
-        "usd": 400.63,
+        "usd": 64.25,
         "lines": {
           "frontier_judges": 0.21,
           "ingest": 6.9,
-          "ingest_probes": 373.75,
+          "ingest_probes": 37.38,
           "judges": 0.76,
           "readers": 18.13,
           "system_queries": 0.88
@@ -7183,7 +7256,8 @@
       "canonical_instrument": "lme-s",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s4-slice"
+        "seed": "q1-probes-s4-slice",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 7,
@@ -7251,7 +7325,8 @@
       "canonical_instrument": "lme-s",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s4-slice"
+        "seed": "q1-probes-s4-slice",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 2,
@@ -7319,7 +7394,8 @@
       "canonical_instrument": "lme-s",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s4-slice"
+        "seed": "q1-probes-s4-slice",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 1,
@@ -7381,7 +7457,8 @@
       "canonical_instrument": "lme-s",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s4-slice"
+        "seed": "q1-probes-s4-slice",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 1,
@@ -7444,7 +7521,8 @@
       "canonical_instrument": "lme-s",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s4-slice"
+        "seed": "q1-probes-s4-slice",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 1,
@@ -7504,7 +7582,8 @@
       "canonical_instrument": "lme-m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s5"
+        "seed": "q1-probes-s5",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 48,
@@ -7544,11 +7623,11 @@
         }
       ],
       "estimate": {
-        "usd": 156.64,
+        "usd": 91.64,
         "lines": {
           "frontier_judges": 0.21,
           "ingest": 18,
-          "ingest_probes": 130,
+          "ingest_probes": 65,
           "judges": 0.28,
           "readers": 7.98,
           "system_queries": 0.18
@@ -7574,7 +7653,8 @@
       "canonical_instrument": "lme-m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s5"
+        "seed": "q1-probes-s5",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 48,
@@ -7640,7 +7720,8 @@
       "canonical_instrument": "lme-m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s5"
+        "seed": "q1-probes-s5",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 23,
@@ -7706,7 +7787,8 @@
       "canonical_instrument": "lme-m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s5"
+        "seed": "q1-probes-s5",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 8,
@@ -7766,7 +7848,8 @@
       "canonical_instrument": "lme-m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s5"
+        "seed": "q1-probes-s5",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 8,
@@ -7827,7 +7910,8 @@
       "canonical_instrument": "lme-m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s5"
+        "seed": "q1-probes-s5",
+        "conversations": 50
       },
       "shards": 1,
       "expected_hours": 8,
@@ -7892,7 +7976,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -7978,7 +8063,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8043,7 +8129,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8108,7 +8195,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8173,7 +8261,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8239,7 +8328,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8303,7 +8393,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8367,7 +8458,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8425,7 +8517,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8484,7 +8577,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8542,7 +8636,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8600,7 +8695,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke"
+        "seed": "q1-probes-s3-smoke",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8658,7 +8754,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke-default"
+        "seed": "q1-probes-s3-smoke-default",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8723,7 +8820,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke-default"
+        "seed": "q1-probes-s3-smoke-default",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8786,7 +8884,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke-default"
+        "seed": "q1-probes-s3-smoke-default",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8849,7 +8948,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke-default"
+        "seed": "q1-probes-s3-smoke-default",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8912,7 +9012,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke-default"
+        "seed": "q1-probes-s3-smoke-default",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -8974,7 +9075,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke-default"
+        "seed": "q1-probes-s3-smoke-default",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -9036,7 +9138,8 @@
       "canonical_instrument": "locomo",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s3-smoke-default"
+        "seed": "q1-probes-s3-smoke-default",
+        "conversations": null
       },
       "only_conversations": [
         "conv-44"
@@ -9093,7 +9196,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b-ingest"
+        "seed": "q1-probes-s2b-ingest",
+        "conversations": null
       },
       "only_conversations": [
         "1m-16"
@@ -9152,7 +9256,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b-ingest"
+        "seed": "q1-probes-s2b-ingest",
+        "conversations": null
       },
       "only_conversations": [
         "1m-16"
@@ -9211,7 +9316,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b-ingest"
+        "seed": "q1-probes-s2b-ingest",
+        "conversations": null
       },
       "only_conversations": [
         "1m-16"
@@ -9271,7 +9377,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b-ingest"
+        "seed": "q1-probes-s2b-ingest",
+        "conversations": null
       },
       "only_conversations": [
         "1m-16"
@@ -9331,7 +9438,8 @@
       "canonical_instrument": "beam-1m",
       "probes": {
         "sample": 20,
-        "seed": "q1-probes-s2b-ingest"
+        "seed": "q1-probes-s2b-ingest",
+        "conversations": null
       },
       "only_conversations": [
         "1m-16"
@@ -9371,7 +9479,7 @@
       "ingest_sessions": 93
     }
   ],
-  "total_usd": 7133.52,
+  "total_usd": 6732.14,
   "plan_total_usd": 7710,
   "cap_usd": 8500
 }

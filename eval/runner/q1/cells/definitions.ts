@@ -97,7 +97,7 @@ export interface CellDefinition {
   effort: 'medium';
   canonical_instrument: string;
   /** Write-start-to-queryable probes: the last session plus `sample` sessions per conversation, seeded. */
-  probes: { sample: number; seed: string };
+  probes: { sample: number; seed: string; /** Probe only this many seeded conversations (null: all). */ conversations?: number | null };
   /** Dev smoke cells: only these conversations of the split run (the set's `only_conversations`). */
   only_conversations?: string[];
   /** Ingest probes: write only the first N sessions of each conversation (a fixed fraction, for a system too slow or costly to ingest whole on a smoke). */
@@ -281,7 +281,7 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
   const tokens = def.ingest_sessions ? set.corpus_tokens * Math.min(1, def.ingest_sessions / Math.max(1, set.sessions ?? def.ingest_sessions)) : set.corpus_tokens;
   add('ingest', rate * tokens / 1e6);
   const probe = ASSUMPTIONS.probe_usd[def.system];
-  if (probe) add('ingest_probes', Math.min(probe.max_per_conversation, probe.per_mtok * tokens / set.conversations / 1e6) * set.conversations);
+  if (probe) add('ingest_probes', Math.min(probe.max_per_conversation, probe.per_mtok * tokens / set.conversations / 1e6) * Math.min(set.conversations, def.probes.conversations ?? set.conversations));
   const policies = new Set(def.arms.map(a => a.policy).filter(Boolean));
   if (def.system === 'gbrain-defaults') add('system_queries', policies.size * set.questions * ASSUMPTIONS.gbrain_query_usd);
   for (const arm of def.arms) {
@@ -356,7 +356,7 @@ function makeCell(set: SetId, system: string, configuration: string, armSpecs: A
   const perMtok = ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
   const hours = Math.max(1, Math.ceil(perMtok * s.corpus_tokens / 1e6 / shards));
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
-    ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}` },
+    ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}`, conversations: set === 'S4' || set === 'S4-slice' || set === 'S5' ? 50 : null },
     ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), shards, expected_hours: Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
   return { ...base, estimate: estimateCell(base) };
 }

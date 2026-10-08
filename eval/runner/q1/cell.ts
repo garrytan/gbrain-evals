@@ -400,6 +400,16 @@ export function runConfigText(def: CellDefinition, arm: ArmDefinition, ctx: { in
 // ─── Probes ──────────────────────────────────────────────────────────
 
 /** The probe set of one conversation: the last session plus `sample` others, seeded (all of them when there are fewer). */
+/**
+ * Whether this conversation is probed. Cells with many small haystacks (LongMemEval) cap probing at
+ * `probes.conversations` seeded conversations; without the cap every conversation is probed.
+ */
+export function probedConversation(convId: string, all: readonly string[], probes: { seed: string; conversations?: number | null }): boolean {
+  if (probes.conversations == null || probes.conversations >= all.length) return true;
+  const keep = [...all].sort((a, b) => (hashKey(`${probes.seed}|conversations`, a) < hashKey(`${probes.seed}|conversations`, b) ? -1 : 1)).slice(0, probes.conversations);
+  return keep.includes(convId);
+}
+
 export function probeSample(plan: ReadonlyArray<{ input: SessionInput }>, sample: number, seed: string): Map<number, 'last' | 'sample'> {
   const out = new Map<number, 'last' | 'sample'>();
   if (!plan.length) return out;
@@ -597,7 +607,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const ns = sanitizer.ns(convId);
     staging.event({ realization_id: rid, conversation: convId, attempt, event: 'started', at: new Date().toISOString() });
     const plan = ingestPlan(conv);
-    const sample = probeSample(plan, def.probes.sample, `${def.probes.seed}|${convId}`);
+    const sample = probedConversation(convId, [...byConv.keys()], def.probes) ? probeSample(plan, def.probes.sample, `${def.probes.seed}|${convId}`) : new Map<number, 'last' | 'sample'>();
     const canProbe = probeable(capabilities);
     const fixed = policyFor('fixed-evidence');
     const errors: IngestSummary['errors'] = [];

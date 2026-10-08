@@ -115,7 +115,10 @@ and 16,000 tokens:
 
 - **One byte string per arm**, filled until the largest count among the participating readers' tokenizers reaches
   the budget. Counts use local `cl100k_base` and `o200k_base`, each reader with a calibration factor measured on dev
-  packs against provider-reported input tokens (OPEN: factors); the provider count is recorded for every call.
+  packs against provider-reported input tokens (measured 2026-10-07 on the dev smokes: Opus 5.5 1.471 and Sonnet 5.5
+  1.452 times `cl100k_base`, maximum error about 10%; GPT-6.1 Sol 1.001 times `o200k_base`, maximum error 4.7%); the
+  provider count is recorded for every call. The Claude count binds, so an 8,000-token pack holds about 5,450
+  `cl100k_base` tokens of evidence. The same counter packs every system, so the error does not favor one system.
 - **Cut rule.** An item larger than the remaining budget is cut at its last whole turn, else its last whole line, else
   its last sentence. Packing stops after a cut and never skips to a smaller, lower-ranked item.
 - **Packing loss** is reported apart from retrieval loss. Fill rate is a diagnostic beside each cell, not a gate.
@@ -180,7 +183,8 @@ Tokens and dollars per question sit beside every accuracy.
    - delivered and total reader tokens per question;
    - LLM calls and dollars per 1,000 ingested messages and per million ingested tokens;
    - commit versus background split for synchronous systems (ingest-phase total, labeled, for queued systems);
-   - write-start-to-queryable p50/p95 (the last session and a fixed 20-session sample per conversation);
+   - write-start-to-queryable p50/p95 (the last session and a fixed 20-session sample per conversation;
+     on LongMemEval, whose sets hold one small haystack per question, 50 seeded haystacks per cell are probed);
    - ingest wall time;
    - monthly cost for a personal workload (2,000 messages, 300 questions) and a team workload (50,000 messages,
      10,000 questions).
@@ -234,8 +238,8 @@ correct-abstention rate on BEAM-10M.
 - **Family 3 (diagnostic).** Strict recall of all gold sessions at 10 on S1.
 - Everything on S2 to S5 is descriptive, with clustered intervals.
 - **Power rule.** OPEN: the simulated minimum detectable difference. If it exceeds 10 points for most Family 1
-  rows, Family 1 shrinks to `gbrain-defaults` against the four strongest rows on dev data (BEAM-1M dev and LoCoMo dev,
-  8k, `claude-sonnet-5-5`), chosen before S1 opens. If power is still inadequate, S1 is published descriptively with
+  rows, Family 1 shrinks to `gbrain-defaults` against the four strongest rows on dev data (the three-reader mean at
+  8k on the LoCoMo dev smoke, amendment A4), chosen before S1 opens. If power is still inadequate, S1 is published descriptively with
   its detectable difference and no superiority claim.
 - **Cohorts.**
   - Each comparison uses its own pairwise cohort. Coverage is measured against the scheduled cohort.
@@ -340,14 +344,36 @@ cell, which this campaign does not define.
 so later decisions have material no one has used. Q1's cells do not use it. It is referenced here only by the SHA-256
 of its hash list: OPEN (relayed by the program owner when minting finishes).
 
-## Changelog
-
 **A3 (2026-10-07, before freeze): output caps bind only the harness's own calls.** The dev stress pilot showed the
 metering proxy refusing gbrain's query-expansion call, which states a 64,000-token output allowance, because the
 proxy's default output cap was 32,768. Every pilot query therefore ran without expansion, which is not gbrain's shipped
 behavior. The proxy now applies output caps (inject when absent, refuse when exceeded) only to reader and judge calls.
 A system under test's requests pass unmodified, and their reservation is the allowance they state. The pilot's query
 phase is rerun on the fixed proxy.
+
+**A4 (2026-10-07, before freeze): settings from the dev smokes.** Paid smokes on LoCoMo dev (one conversation, 20
+questions) and BEAM-1M dev ingest probes, $53.75, receipts in
+[`2026-10-06-scoreboard/dev-smokes/`](2026-10-06-scoreboard/dev-smokes/README.md), settle these:
+- Reader token calibration factors (see Arms). The 3% calibration bar is not met for the Claude readers (error up to
+  about 10% per pack). Instead of a per-pack provider count, the tolerance is stated: packs are filled by the
+  calibrated local count, and every reader call's provider-reported input tokens are published beside it.
+- Readiness probes on LongMemEval cells are capped at 50 seeded haystacks per cell; every other set keeps every
+  conversation. A probe still missing after `/finish` reports ready is final; probes no longer poll past the drain.
+- The power rule's four strongest dev rows are ranked by the three-reader mean at 8k on the LoCoMo dev smoke (the
+  estimand): `ext-extract-first`, `ext-markdown-kb`, `ext-temporal-graph`, `ext-graph-pipeline` (`power.json`).
+  Family 1 stays descriptive: the detectable difference is 16.0 points with nine comparisons and 13.6 after the
+  shrink.
+- BEAM-10M ingest projections per conversation (about 11M tokens): extract-first common $31 and 19 h; memory-bank
+  recipe $19 and 26 h; graph-pipeline recipe $39 and 54 h, over 48 h, so its S1 cell runs common ($44, 34 h);
+  temporal-graph common $193 and 39 h. The graph pipeline keeps its recipe on BEAM-100K and BEAM-1M sealed.
+- Claude 5 readers reject a temperature parameter, so no temperature is sent to them.
+
+## Changelog
+
+### 2026-10-07: amendment A4
+
+Settings from the dev smokes: reader calibration with a stated tolerance, the LongMemEval probe cap, the shrink-rule
+ranking, BEAM-10M ingest projections and the graph pipeline's S1 switch to common.
 
 ### 2026-10-07: derived columns
 

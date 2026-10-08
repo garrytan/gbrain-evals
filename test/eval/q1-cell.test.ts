@@ -741,3 +741,15 @@ describe('paid dev smokes', () => {
     expect(new Set(rows.map(r => r.conversation))).toEqual(new Set([corpus.conversations[0].id]));
   });
 });
+
+describe('probe conversation cap', () => {
+  test('without a cap every conversation is probed; with one, a fixed seeded subset of that size', async () => {
+    const { probedConversation } = await import('../../eval/runner/q1/cell.ts');
+    const all = Array.from({ length: 600 }, (_, i) => `q${i}`);
+    expect(all.every(c => probedConversation(c, all, { seed: 's' }))).toBe(true);
+    const picked = all.filter(c => probedConversation(c, all, { seed: 's', conversations: 50 }));
+    expect(picked).toHaveLength(50);
+    expect(all.filter(c => probedConversation(c, all, { seed: 's', conversations: 50 }))).toEqual(picked);
+    expect(all.filter(c => probedConversation(c, all, { seed: 't', conversations: 50 }))).not.toEqual(picked);
+  });
+});
