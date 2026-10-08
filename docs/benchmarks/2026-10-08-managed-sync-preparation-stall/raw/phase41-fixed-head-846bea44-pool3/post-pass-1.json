@@ -1,0 +1,2545 @@
+{
+  "pass": 1,
+  "at": "2026-10-08T11:47:20.888Z",
+  "sources_status": {
+    "schema_version": 1,
+    "sources": [
+      {
+        "source_id": "bench",
+        "name": "bench",
+        "local_path": "<fixture-home>/repo-bench",
+        "federated": false,
+        "total_pages": 4576,
+        "total_chunks": 9152,
+        "embedded_chunks": 0,
+        "embed_coverage_pct": 0,
+        "last_sync_at": "2026-10-08T10:47:08.463Z",
+        "lag_seconds": 3606,
+        "failed_jobs_24h": 0,
+        "queue_depth": 0,
+        "backfill_active": 0,
+        "backfill_queued": 0,
+        "tracked_branch": null,
+        "priority_label": "normal",
+        "webhook_configured": false,
+        "sync_running": false,
+        "sync_holder": null,
+        "managed_backlog": {
+          "source_id": "bench",
+          "index": 3078,
+          "total": 15000,
+          "remaining": 11922,
+          "rate_pages_per_min": 51.4,
+          "eta_seconds": 13923,
+          "last_progress_at": "2026-10-08T11:47:10.212Z",
+          "resume_command": "gbrain sync --source bench --no-pull --no-embed",
+          "resume_args": [
+            "--source",
+            "bench",
+            "--no-pull",
+            "--no-embed"
+          ]
+        },
+        "git_holds": {
+          "count": 2,
+          "items": [
+            {
+              "path": "companies/scale-0-1502.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "companies/scale-0-1502",
+              "stale": false,
+              "held_since": "2026-10-08T11:23:13.936Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "companies/scale-0-1502.md"
+                ],
+                "why": "companies/scale-0-1502.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in companies/scale-0-1502.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected companies/scale-0-1502.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "companies/scale-0-1512.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "companies/scale-0-1512",
+              "stale": false,
+              "held_since": "2026-10-08T11:23:22.410Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "companies/scale-0-1512.md"
+                ],
+                "why": "companies/scale-0-1512.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in companies/scale-0-1512.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected companies/scale-0-1512.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            }
+          ],
+          "sync_argv": [
+            "gbrain",
+            "sync",
+            "--source",
+            "bench",
+            "--no-pull"
+          ]
+        },
+        "shared_skills": {
+          "source_id": "bench",
+          "configured": null,
+          "mode": "content",
+          "reason_code": null,
+          "reason": null,
+          "explanation": "Shared skills are on for bench: the migration may inventory and adopt its skillpack. Opt out with gbrain sources shared-skills bench off.",
+          "parked": null
+        }
+      }
+    ]
+  },
+  "writer_status": {
+    "selected_brain": "host",
+    "enabled": true,
+    "brain_id": "9fd2bf2f-ff89-4027-900c-14a4e760ac6a",
+    "sampled_at": "2026-10-08T11:47:18.863Z",
+    "publication_concurrency": 2,
+    "local_process_ingress": {
+      "state": "not_running",
+      "accepting": false,
+      "active_preparations": 0,
+      "active_worktrees": 0,
+      "scope": "The process that answered has no resident consumer (a one-shot CLI, for example); another process may own writes. See worktrees and bindings for ownership."
+    },
+    "worktrees": [
+      {
+        "id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "owner_host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "owner_epoch": "1",
+        "topology_generation": "1",
+        "state": "active",
+        "heartbeat_at": null,
+        "queued": 37,
+        "running": 37,
+        "recovering": 0,
+        "oldest_request_at": "2026-10-08T11:46:45.157Z",
+        "last_completed_sequence": "3397",
+        "recovery_bytes": "0",
+        "recovering_effects": 0
+      }
+    ],
+    "counters": [
+      {
+        "key": "brain",
+        "outstanding_count": "74",
+        "intent_bytes": "171476",
+        "lifetime_ids": "3471",
+        "terminal_bytes": "56868864",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "outstanding_count": "74",
+        "intent_bytes": "171476",
+        "lifetime_ids": "3471",
+        "terminal_bytes": "56868864",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "worktree:34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "outstanding_count": "0",
+        "intent_bytes": "0",
+        "lifetime_ids": "0",
+        "terminal_bytes": "0",
+        "recovery_bytes": "0"
+      }
+    ],
+    "queue": [
+      {
+        "state": "queued",
+        "count": 37,
+        "intent_bytes": "85678",
+        "oldest_request_at": "2026-10-08T11:47:00.724Z",
+        "oldest_age_ms": "17794"
+      },
+      {
+        "state": "running",
+        "count": 37,
+        "intent_bytes": "85798",
+        "oldest_request_at": "2026-10-08T11:46:45.157Z",
+        "oldest_age_ms": "33361"
+      }
+    ],
+    "effects": [],
+    "limits": {
+      "principalOutstanding": 100,
+      "brainOutstanding": 1000,
+      "principalIntentBytes": 33554432,
+      "brainIntentBytes": 268435456,
+      "principalLifetimeIds": 250000,
+      "brainLifetimeIds": 1000000,
+      "principalTerminalBytes": 1610612736,
+      "brainTerminalBytes": 8589934592,
+      "brainRecoveryBytes": 1073741824,
+      "worktreeRecoveryBytes": 268435456
+    },
+    "capacity": [
+      {
+        "scope": "brain",
+        "resource": "outstanding_count",
+        "used": 74,
+        "limit": 1000,
+        "remaining": 926,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_outstanding"
+      },
+      {
+        "scope": "brain",
+        "resource": "intent_bytes",
+        "used": 171476,
+        "limit": 268435456,
+        "remaining": 268263980,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_intent_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "lifetime_ids",
+        "used": 3471,
+        "limit": 1000000,
+        "remaining": 996529,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_lifetime_ids"
+      },
+      {
+        "scope": "brain",
+        "resource": "terminal_bytes",
+        "used": 56868864,
+        "limit": 8589934592,
+        "remaining": 8533065728,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_terminal_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 1073741824,
+        "remaining": 1073741824,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_recovery_bytes"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "outstanding_count",
+        "used": 74,
+        "limit": 100,
+        "remaining": 26,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_outstanding"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "intent_bytes",
+        "used": 171476,
+        "limit": 33554432,
+        "remaining": 33382956,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_intent_bytes"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "lifetime_ids",
+        "used": 3471,
+        "limit": 250000,
+        "remaining": 246529,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_lifetime_ids"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "terminal_bytes",
+        "used": 56868864,
+        "limit": 1610612736,
+        "remaining": 1553743872,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_terminal_bytes"
+      },
+      {
+        "scope": "worktree:34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 268435456,
+        "remaining": 268435456,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.worktree_recovery_bytes"
+      }
+    ],
+    "preparation_policy": {
+      "deadlines": true,
+      "sync_preparation_ms": 120000,
+      "maintenance_preparation_ms": 120000,
+      "preparation_ceiling_ms": 600000,
+      "max_preparation_attempts": 2
+    },
+    "recent_failures": [],
+    "blockers": [
+      {
+        "request_id": "2f1c2c0f-eab3-4307-b6b2-185122a2198f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33706,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 10194,
+          "phase_age_ms": 10194,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "c99950cd-ddae-4d2b-8f79-3e3e5e630305",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 10194,
+          "phase_age_ms": 10194,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "09bdd19c-0035-4c9d-acfe-9bc34d14635d",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 10194,
+          "phase_age_ms": 10194,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "ea020991-f2fd-4ebd-bcd0-bc4e79110e72",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 10194,
+          "phase_age_ms": 10194,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "4e46581e-1792-406e-8abe-1b8167e96b0c",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 9047,
+          "phase_age_ms": 9047,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "cead1bc4-2f37-4d4e-8408-86a69b389e5c",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 9047,
+          "phase_age_ms": 9047,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2fe9422d-d788-464d-8cd1-1cb679370ade",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 9047,
+          "phase_age_ms": 9047,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "21cd625f-53f4-46d8-8361-806bb4630722",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 9047,
+          "phase_age_ms": 9047,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "79eac3c8-9f4c-4851-93ee-350c8835ade1",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8449,
+          "phase_age_ms": 8449,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "1834bf2e-2805-4fc7-9047-301fb3cd7fe6",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8449,
+          "phase_age_ms": 8449,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "656b0b04-9c89-4382-90e5-26d8b84d1831",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8449,
+          "phase_age_ms": 8449,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "69128bd2-a368-4ab4-8e88-a1581fa47d22",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:45.157Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 33707,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8711,
+          "phase_age_ms": 8711,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "4549e5ea-4a96-4371-86b3-e473c5c11e83",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32615,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8343,
+          "phase_age_ms": 8343,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "abcc48a5-64ef-476b-8b39-6ef7320eb16b",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32615,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8343,
+          "phase_age_ms": 8343,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "0732d556-65e8-4085-aee9-31da80ad4982",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32615,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8343,
+          "phase_age_ms": 8343,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "eff52242-c389-478d-933f-45e040108fd1",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32616,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 8344,
+          "phase_age_ms": 8344,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6229b1a0-8d91-4441-ab98-e731162097bb",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32616,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7192,
+          "phase_age_ms": 7192,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "8fb660eb-bafc-4ffd-a4e1-bc7645eb49c8",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32616,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7192,
+          "phase_age_ms": 7192,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "67678f06-21b8-470f-ade0-b0e2363348d0",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32616,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7192,
+          "phase_age_ms": 7192,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "4409d086-7d1d-4698-93a0-2ce55cb2b32f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32616,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7192,
+          "phase_age_ms": 7192,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "a585b7d9-7cf0-4abc-a894-4e70e3a06a88",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32616,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 6050,
+          "phase_age_ms": 6050,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "fcf2a18f-d377-42b5-8837-2bcaa5b13d6c",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:46.249Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 32616,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 6050,
+          "phase_age_ms": 6050,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "738d671b-41e0-4309-af93-0b7fb18d75c1",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7643,
+          "phase_age_ms": 7643,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2c8c09d9-ed44-4f0a-b004-825e31826e90",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7643,
+          "phase_age_ms": 7643,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "ee5dee59-de46-46ba-9886-c04fae988a0b",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7643,
+          "phase_age_ms": 7643,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "bd9d108b-f068-4efb-9b46-0270686b4a19",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 7643,
+          "phase_age_ms": 7643,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "ad4e2a57-0864-4678-a23e-024442758b65",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "5349e51f-0cde-4f97-b488-c60b1653a7d8",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "459d14e1-32f5-4c32-87fa-6e21a58ba587",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "9c44c83b-b80e-4992-86c2-33f24599a8d9",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d355e12e-0351-4409-87e9-c93ef6482dec",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "a8d57539-8352-4230-a7ae-86e7320b7983",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "64608472-a0ef-4389-8af2-2e78125e488c",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6072c085-5018-4ff1-8617-ce29863fcf66",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "e9594829-bf3c-48bb-bdee-074a56892a85",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 6484,
+          "phase_age_ms": 6484,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "659efeef-cf73-4712-be04-201a52f42566",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:46:52.267Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 26598,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "7f7c03f3-a5a3-4c84-a678-6b19c52da429",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 5363,
+          "phase_age_ms": 5363,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": {
+            "kind": "sync",
+            "pid": 9556,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "5ca15725-efa3-4079-bd15-ad98d4804db8",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "93de1464-941b-4d75-9fdd-3d08d0301475",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "c90f8c64-ecd2-4b10-a4d5-5bc76252d4d8",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "f56bb50e-b9d9-4e1c-8aea-5ebda02c2ee4",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "901355ed-d991-412c-bb18-cc00e6b6e890",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "75cf1a14-bf5e-452a-8532-5033a2f22e7b",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "4fb0889a-1c00-41f2-ab9c-33aceda3b5f2",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "39ce4cbb-90c9-444b-b618-f6da0e1a746d",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "ad91ccbd-48a6-478a-a6fd-619e075dc2d5",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "275c833a-92f3-4a0d-9a13-3162772e2d00",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6dc7a4ad-0903-4752-aa2e-0fa5ca93f36e",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "5616872f-27b7-45ba-9422-4f7ebb56b2a9",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "fa0b5713-b50f-4afa-bec0-5c9f68bbc452",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:00.724Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 18141,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "7af3c6d9-cbba-42f7-a0f2-4a341849edfd",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "16d53235-cdc2-4891-81a5-6f1ef55f5513",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "f16d1109-f1de-45cb-ad37-7f45bf357d91",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "65a117d5-a9a2-4eb9-a873-56e1a1c25101",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "09b3f01f-3d72-4670-8ac8-26d38fdb6223",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "34b8e02f-96c1-4fc2-b506-464c0675bbe2",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "343391ae-702c-4c20-a29d-bf3c742749ce",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6a63ff40-e89b-47f3-a47e-11d935d2e2f7",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "a88bb30c-2304-41e3-83e9-3c904d130a2a",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d7a71f53-9efc-487f-91dc-c3aac550d116",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "0e7cdb55-519b-4e56-9b69-a7bb086c5858",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d67a4efa-5ae0-4395-9c36-db3aeda1410f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "f79b63ec-f5cf-4f7c-9db8-c73b82b72647",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "5f7a0bbc-cde6-4bdc-a624-1b0ba1786877",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "e254fe1a-729f-4f3b-a2e9-13adc1fbd1e5",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "05f22d1c-d025-405d-bbb3-7d42bf404c54",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2b755242-dd37-4328-a68e-2b42a83e9827",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "ef77ae29-bf2b-45ac-8405-d28ed3606a03",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2e95e23a-16e5-406b-80ce-3b4fc0dd1f17",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "fd10771f-3175-4d70-848b-3a3f9fc7dc30",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "c2c542c9-2b38-4cb0-8f9b-52487d605789",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2afbf588-1d9a-44ac-98a2-8d4d98e703d5",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "1f6632ca-7d30-4adb-a9f3-8b89015b9a3f",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:08.928Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 9937,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2e78ae6f-a75f-46f3-9bdf-ff324965113a",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T11:47:11.139Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 1000,
+        "diagnostic": {
+          "age_ms": 7726,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      }
+    ],
+    "mode": "managed",
+    "mode_epoch": 2,
+    "local_markers": {
+      "state": "cleared",
+      "removed": [],
+      "pending": []
+    },
+    "host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+    "local_host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+    "bindings": [
+      {
+        "source_id": "bench",
+        "source_incarnation": "2f8ef4e7-80dc-44af-97ac-540e057acc51",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "relative_path": "",
+        "topology_generation": "1",
+        "owner_host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "owner_epoch": "1",
+        "state": "active",
+        "manifest_digest": null,
+        "local_path": "<fixture-home>/repo-bench"
+      }
+    ],
+    "admin_state": "539d25483ae68a8ee2ec621e10aa4bb4b38fcdb65deefe264353443f67210c0a",
+    "admin_lock": {
+      "locked": false,
+      "set_at": null,
+      "host_id": null
+    },
+    "blocking_effects": [],
+    "writer_versions": [
+      {
+        "role": "admitter",
+        "host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "principal": "local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "version": "0.60.108.0",
+        "version_label": "0.60.108.0",
+        "last_seen": "2026-10-08T11:47:11.139Z"
+      },
+      {
+        "role": "consumer",
+        "host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "principal": "local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "version": "0.60.108.0",
+        "version_label": "0.60.108.0",
+        "last_seen": "2026-10-08T11:47:09.314Z"
+      }
+    ],
+    "onboarding": {
+      "sources": [
+        {
+          "source_id": "bench",
+          "state": "ready",
+          "write_through": true,
+          "storage": {
+            "container": false,
+            "durability_verified": false,
+            "paths": [
+              {
+                "role": "canonical_root",
+                "path": "<fixture-home>/repo-bench",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "reservation_parent",
+                "path": "<fixture-home>",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "persistence_home",
+                "path": "<fixture-home>/.gbrain/persistence",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "coordination_directory",
+                "path": "<fixture-home>/.gbrain/persistence/locks",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              }
+            ],
+            "next_action": "Verify that the canonical checkout, its parent (which holds the sibling reservation), and the persistence home/coordination lock survive container recreation together. A mounted path is not proof of durability. Do not delete ownership or lock files."
+          }
+        },
+        {
+          "source_id": "default",
+          "state": "database_only",
+          "write_through": true
+        }
+      ],
+      "legacy_locks": [
+        {
+          "id": "gbrain-cycle:bench",
+          "holder_pid": 23806,
+          "holder_host": "vmkkcd9p",
+          "acquisition_token": "74297428-b42b-4366-b83d-3795ea0bbf20",
+          "liveness": "alive"
+        }
+      ],
+      "unsupported_maintenance": [],
+      "procedure": "For deliberate onboarding, stop and upgrade older writers on every host, review all sources and durable paths, explicitly claim each filesystem source using its fresh admin_state, inspect status again, then explicitly activate with --confirm-quiesced and a fresh admin_state. A claim alone fences legacy sync; finish activation before ordinary writes or sync. This inspection never claims, activates, repairs or switches to database-only storage."
+    },
+    "shared_skills": {
+      "writer_protocol_floor": 1,
+      "skill_bundles_enabled": false
+    },
+    "worktree_refreshes": []
+  },
+  "holds": {
+    "by_code_reason": [
+      {
+        "code": "invalid_fence",
+        "reason": "repeated_marker",
+        "step": null,
+        "n": 2
+      }
+    ],
+    "summary": {
+      "count": 2,
+      "stale": 0,
+      "fences": 2,
+      "images": 0,
+      "stalled": 0,
+      "source_id": "bench",
+      "concurrent": 0,
+      "incarnation": "2f8ef4e7-80dc-44af-97ac-540e057acc51"
+    },
+    "paths": [
+      {
+        "path": "companies/scale-0-1502.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "companies/scale-0-1512.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      }
+    ]
+  },
+  "preparation_stalled_receipts": [],
+  "preparation_attempts": []
+}

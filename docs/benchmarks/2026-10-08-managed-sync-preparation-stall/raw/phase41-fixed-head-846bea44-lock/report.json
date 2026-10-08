@@ -1,0 +1,1909 @@
+{
+  "schema": "gbrain.bench.managed-sync-stall-repro/v1",
+  "label": "capy_6278-phase41_846bea44-pool10-pgbouncer",
+  "cli_repo": "<work>/gbrain",
+  "cli_version": "0.60.108.0",
+  "cli_commit": "capy/6278-phase41@846bea44",
+  "harness_commit": "capy/6278-phase41@846bea44",
+  "started_at": "2026-10-08T09:38:05.658Z",
+  "params": {
+    "files": 3000,
+    "history": 1500,
+    "legacy_facts": 1000,
+    "marker_pages": 20,
+    "backlog_marker_pages": 20,
+    "rtt_ms": 57,
+    "pool_size": 10,
+    "pooler": "pgbouncer",
+    "doomed_pages": 12,
+    "drip_rows": 20,
+    "max_minutes": 50,
+    "passes": 2,
+    "sample_seconds": 30,
+    "adoption_interval_s": 60,
+    "stall_minutes": 2,
+    "stall_kill_minutes": 15,
+    "seed": 1
+  },
+  "pooler": {
+    "kind": "pgbouncer",
+    "image": "edoburu/pgbouncer@sha256:9c78945868a6a142c7fc40ccd843bbe5a606df163c7ffce4de70e0d628d696a2",
+    "listen": "127.0.0.1:55434",
+    "pool_mode": "transaction",
+    "default_pool_size": "50",
+    "max_client_conn": "2000",
+    "ignore_startup_parameters": "extra_float_digits,options,statement_timeout,idle_in_transaction_session_timeout"
+  },
+  "host": {
+    "cpus": 16,
+    "platform": "linux",
+    "bun": "1.4.2"
+  },
+  "rerun": "bun scripts/bench/managed-sync-stall-repro.ts --files 3000 --history 1500 --legacy-facts 1000 --marker-pages 20 --doomed-pages 12 --drip-rows 20 --backlog-marker-pages 20 --rtt 57 --pool-size 10 --max-minutes 50 --passes 2 --adoption-interval 60 --stall-minutes 2 --chaos-at 3 --chaos-kind lock --chaos-for 300 --chaos-repeat 2 --chaos-gap 300 --retry-held-after --out .context/bench/stall-lock",
+  "fixture": {
+    "database": "<db>",
+    "home": "<fixture-home>",
+    "root": "<fixture-home>/repo-bench",
+    "backlog_entries": 3000,
+    "history_pages": 1500,
+    "legacy_rows": 1000,
+    "legacy_pages": 250,
+    "legacy_by_shape": {
+      "trailing_ws": 3,
+      "leading_ws": 3,
+      "whitespace_only": 3,
+      "crlf": 3,
+      "plain": 197,
+      "pipe": 198,
+      "newline": 198,
+      "backslash": 198,
+      "backtick": 197
+    },
+    "doomed_pages": 12,
+    "adoptable_pages": 218,
+    "drip_pool_pages": 418,
+    "drip_rows_per_run": 20,
+    "marker_history_pages": [
+      "people/scale-0-0",
+      "people/scale-0-1",
+      "companies/scale-0-2",
+      "people/scale-0-10",
+      "people/scale-0-11",
+      "companies/scale-0-12",
+      "people/scale-0-20",
+      "people/scale-0-21",
+      "companies/scale-0-22",
+      "people/scale-0-30",
+      "people/scale-0-31",
+      "companies/scale-0-32",
+      "people/scale-0-40",
+      "people/scale-0-41",
+      "companies/scale-0-42",
+      "people/scale-0-50",
+      "people/scale-0-51",
+      "companies/scale-0-52",
+      "people/scale-0-60",
+      "people/scale-0-61"
+    ],
+    "marker_backlog_pages": [
+      "people/scale-0-1500",
+      "people/scale-0-1501",
+      "companies/scale-0-1502",
+      "notes/scale-0-1503",
+      "notes/scale-0-1504",
+      "notes/scale-0-1505",
+      "notes/scale-0-1506",
+      "notes/scale-0-1507",
+      "notes/scale-0-1508",
+      "notes/scale-0-1509",
+      "people/scale-0-1510",
+      "people/scale-0-1511",
+      "companies/scale-0-1512",
+      "notes/scale-0-1513",
+      "notes/scale-0-1514",
+      "notes/scale-0-1515",
+      "notes/scale-0-1516",
+      "notes/scale-0-1517",
+      "notes/scale-0-1518",
+      "notes/scale-0-1519"
+    ]
+  },
+  "session_timeouts": {
+    "requested_startup_parameters": {
+      "statement_timeout": "5min",
+      "idle_in_transaction_session_timeout": "5min"
+    },
+    "via_pooler": {
+      "statement_timeout": "0",
+      "idle_in_transaction_session_timeout": "0",
+      "lock_timeout": "0"
+    },
+    "direct": {
+      "statement_timeout": "5min",
+      "idle_in_transaction_session_timeout": "5min",
+      "lock_timeout": "0"
+    }
+  },
+  "passes": [
+    {
+      "pass": 1,
+      "pid": 9549,
+      "startedAt": 1791452305747,
+      "committedAtStart": 0,
+      "stallAt": 1791452497647,
+      "stallCaptured": true,
+      "endedAt": 1791455777211,
+      "code": 0,
+      "committedAtEnd": 2980,
+      "status": "synced",
+      "wall_s": 3471.5,
+      "pages_per_min": 51.5,
+      "time_to_stall_s": 191.9,
+      "outcome": "synced",
+      "sync_deadline_stop": false,
+      "drain_lines": [
+        "Managed sync synced: 3000 entries this run (3000 written, 0 waived), 51.9 pages/min."
+      ],
+      "stalled_progress_lines": 0,
+      "stalled_by_step": {},
+      "stalled_sample": [],
+      "persistence_lines": [
+        "[persistence] phase=claim reason=deadline_exceeded checkout=not_observed conn_wait_ms=5001 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=preparation reason=deadline_exceeded; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=6; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=5; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=7; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=preparation reason=deadline_exceeded; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=5; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=57014 message=\"canceling statement due to user request\" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log",
+        "[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log"
+      ],
+      "restart_required": false,
+      "holds_by_code_reason": [
+        {
+          "code": "invalid_fence",
+          "reason": "repeated_marker",
+          "step": null,
+          "n": 20
+        }
+      ],
+      "stalled_receipts": 1
+    }
+  ],
+  "retry_held": {
+    "scheduled": 20,
+    "sync_argv": [
+      "sync",
+      "--source",
+      "bench",
+      "--no-pull"
+    ],
+    "sync_code": 0,
+    "holds_before": [
+      {
+        "code": "invalid_fence",
+        "reason": "repeated_marker",
+        "step": null,
+        "n": 20
+      }
+    ],
+    "holds_after": [
+      {
+        "code": "invalid_fence",
+        "reason": "repeated_marker",
+        "step": null,
+        "n": 20
+      }
+    ]
+  },
+  "legacy_outcome": {
+    "plain": {
+      "adopted": 181,
+      "pending": 16,
+      "expired": 0
+    },
+    "pipe": {
+      "adopted": 182,
+      "pending": 16,
+      "expired": 0
+    },
+    "newline": {
+      "adopted": 182,
+      "pending": 16,
+      "expired": 0
+    },
+    "backslash": {
+      "adopted": 182,
+      "pending": 16,
+      "expired": 0
+    },
+    "backtick": {
+      "adopted": 181,
+      "pending": 16,
+      "expired": 0
+    },
+    "whitespace_only": {
+      "adopted": 0,
+      "pending": 3,
+      "expired": 0
+    },
+    "crlf": {
+      "adopted": 3,
+      "pending": 0,
+      "expired": 0
+    },
+    "trailing_ws": {
+      "adopted": 3,
+      "pending": 0,
+      "expired": 0
+    },
+    "drip_control": {
+      "adopted": 60,
+      "pending": 0,
+      "expired": 0
+    },
+    "leading_ws": {
+      "adopted": 3,
+      "pending": 0,
+      "expired": 0
+    }
+  },
+  "fence_repair": null,
+  "result": {
+    "committed_sync_requests": 2980,
+    "chaos": [
+      {
+        "t": 1791452486297,
+        "at": "2026-10-08T09:41:26.297Z",
+        "action": "lock_held",
+        "episode": 1,
+        "statement": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+        "via": "pooler",
+        "pass": 1,
+        "committed": 148
+      },
+      {
+        "t": 1791452786403,
+        "at": "2026-10-08T09:46:26.403Z",
+        "action": "lock_released",
+        "episode": 1,
+        "pass": 1,
+        "committed": 176
+      },
+      {
+        "t": 1791453086538,
+        "at": "2026-10-08T09:51:26.538Z",
+        "action": "lock_held",
+        "episode": 2,
+        "statement": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+        "via": "pooler",
+        "pass": 1,
+        "committed": 257
+      },
+      {
+        "t": 1791453386638,
+        "at": "2026-10-08T09:56:26.638Z",
+        "action": "lock_released",
+        "episode": 2,
+        "pass": 1,
+        "committed": 257
+      }
+    ],
+    "stall_debug_last": null,
+    "backlog_entries": 3000,
+    "states": [
+      {
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "state": "committed",
+        "n": 245
+      },
+      {
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "state": "failed",
+        "n": 1
+      },
+      {
+        "kind": "managed_maintenance_fence_facts",
+        "state": "committed",
+        "n": 66
+      },
+      {
+        "kind": "managed_sync_checkpoint",
+        "state": "committed",
+        "n": 2
+      },
+      {
+        "kind": "managed_sync_import",
+        "state": "committed",
+        "n": 2980
+      }
+    ],
+    "stalls": [
+      {
+        "pass": 1,
+        "stall_since": "2026-10-08T09:41:37.647Z",
+        "running": [
+          {
+            "request_id": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": {
+              "step": "canonical_projections",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:25.141Z",
+              "token": "2d6e4159-ccaa-44c1-a1c9-6e89cc574b05",
+              "claimed_at": "2026-10-08T09:41:25.141Z",
+              "step_since": "2026-10-08T09:41:26.154Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "10c425cf-f195-41fa-8583-fab83888e5a8",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": {
+              "step": "canonical_projections",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:25.141Z",
+              "token": "af674d1f-1741-4a59-a722-69efc29948f7",
+              "claimed_at": "2026-10-08T09:41:25.141Z",
+              "step_since": "2026-10-08T09:41:26.154Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "412fe5b7-8a9d-4abc-9aae-8d36ba128227",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": {
+              "step": "canonical_projections",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:25.141Z",
+              "token": "0d5d3c52-a188-425a-a7fa-5a6ee95c0bc3",
+              "claimed_at": "2026-10-08T09:41:25.141Z",
+              "step_since": "2026-10-08T09:41:26.154Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "e21e7e17-5a41-4852-a118-9eef46cfee3d",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": {
+              "step": "canonical_projections",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:25.141Z",
+              "token": "42cabf7a-b9b8-4cb4-9a46-93a2f596ad57",
+              "claimed_at": "2026-10-08T09:41:25.141Z",
+              "step_since": "2026-10-08T09:41:26.154Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "f020487b-ad0f-4321-b7b4-4fcfce5dd3e4",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": {
+              "step": "page_snapshot",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:26.154Z",
+              "token": "d3b2ac3c-2476-4f24-afd5-67b3c6410f75",
+              "claimed_at": "2026-10-08T09:41:26.154Z",
+              "step_since": "2026-10-08T09:41:26.294Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 19355
+          },
+          {
+            "request_id": "f40abca0-0291-4555-94ae-e62ac4e6ec23",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": {
+              "step": "page_snapshot",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:26.154Z",
+              "token": "4137cc11-d438-4a4e-aa77-0ee32bcd7145",
+              "claimed_at": "2026-10-08T09:41:26.154Z",
+              "step_since": "2026-10-08T09:41:26.294Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "a2169364-0035-44bf-a39d-1332b6ef83dd",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": {
+              "step": "page_snapshot",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:26.154Z",
+              "token": "bc950e5f-4fd4-49df-822a-a010b7b1fbd0",
+              "claimed_at": "2026-10-08T09:41:26.154Z",
+              "step_since": "2026-10-08T09:41:26.294Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "48f03da4-a455-4405-b19e-e809d554be0c",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "e12a908d-1ea1-4c1a-ab5a-2ca31c4d6f8e",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "f26f7c35-1f0f-46cc-9052-98f1f79b8a3e",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "1bde63bf-8661-431f-8813-d9ff7ba8a92c",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "0569ec36-15cf-492b-85cb-ad20150c0037",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 215660,
+            "since_update_ms": 9354
+          },
+          {
+            "request_id": "a1277d36-3e02-41a2-823f-e2d01f1a9782",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "a1277d36-3e02-41a2-823f-e2d01f1a9782",
+            "claim_phase": {
+              "step": "origin_check",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:26.233Z",
+              "token": "cdf4d445-8fa3-4b79-bd98-06b474bc1344",
+              "claimed_at": "2026-10-08T09:41:26.233Z",
+              "step_since": "2026-10-08T09:41:26.665Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 204170,
+            "since_update_ms": 18210
+          },
+          {
+            "request_id": "ff1d1e70-025a-466a-aac1-06b7916a2497",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "a1277d36-3e02-41a2-823f-e2d01f1a9782",
+            "claim_phase": {
+              "step": "origin_check",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:26.233Z",
+              "token": "3154c00d-3732-41fc-866c-fabddb3295dd",
+              "claimed_at": "2026-10-08T09:41:26.233Z",
+              "step_since": "2026-10-08T09:41:26.669Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 204170,
+            "since_update_ms": 8263
+          },
+          {
+            "request_id": "b013a122-cbf7-4681-a10c-77d6c288f7b8",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "a1277d36-3e02-41a2-823f-e2d01f1a9782",
+            "claim_phase": {
+              "step": "origin_check",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:26.233Z",
+              "token": "53b0ac9d-4d70-46ef-9516-9ed55d2d242a",
+              "claimed_at": "2026-10-08T09:41:26.233Z",
+              "step_since": "2026-10-08T09:41:26.672Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 204170,
+            "since_update_ms": 8263
+          },
+          {
+            "request_id": "4d1087d7-77ac-4e9b-a537-0cd3e4c13f16",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "a1277d36-3e02-41a2-823f-e2d01f1a9782",
+            "claim_phase": {
+              "step": "origin_check",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:26.233Z",
+              "token": "54b967e3-da24-4044-ae40-e8d997f50208",
+              "claimed_at": "2026-10-08T09:41:26.233Z",
+              "step_since": "2026-10-08T09:41:26.675Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 204170,
+            "since_update_ms": 8263
+          },
+          {
+            "request_id": "0d1c4bd4-6bbe-43f7-9641-b49ee03a8f96",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "a1277d36-3e02-41a2-823f-e2d01f1a9782",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 204170,
+            "since_update_ms": 8263
+          },
+          {
+            "request_id": "e02cd02d-1663-4ffd-8ad9-aac820132d01",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "a1277d36-3e02-41a2-823f-e2d01f1a9782",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 204170,
+            "since_update_ms": 8263
+          },
+          {
+            "request_id": "a19f0cb9-9055-477d-9bf2-c20ef0af428d",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "a1277d36-3e02-41a2-823f-e2d01f1a9782",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 204170,
+            "since_update_ms": 8263
+          },
+          {
+            "request_id": "b4e0311c-f2cc-4217-818f-f7ad0adc456a",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "a1277d36-3e02-41a2-823f-e2d01f1a9782",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 204170,
+            "since_update_ms": 8263
+          },
+          {
+            "request_id": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": {
+              "step": "origin_check",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:31.220Z",
+              "token": "fd14cbf5-1963-4d8a-8105-1795a4a59034",
+              "claimed_at": "2026-10-08T09:41:31.220Z",
+              "step_since": "2026-10-08T09:41:31.653Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 13276
+          },
+          {
+            "request_id": "c5bfd86f-ac31-4d33-916d-dc3ae41198d3",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": {
+              "step": "origin_check",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:31.220Z",
+              "token": "a37a44cb-31a1-4303-b4c1-9170030e505b",
+              "claimed_at": "2026-10-08T09:41:31.220Z",
+              "step_since": "2026-10-08T09:41:31.656Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 3276
+          },
+          {
+            "request_id": "1348a20d-f2b7-4574-883f-2b94e03dac3f",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": {
+              "step": "origin_check",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:31.220Z",
+              "token": "ebf17d18-e0d0-4c75-bf42-321a87f13af8",
+              "claimed_at": "2026-10-08T09:41:31.220Z",
+              "step_since": "2026-10-08T09:41:31.659Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 3276
+          },
+          {
+            "request_id": "76de6348-ba71-4d86-8aa5-e57b6dd7e121",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": {
+              "step": "origin_check",
+              "owner": {
+                "pid": 9549,
+                "kind": "sync",
+                "version": "0.60.108.0"
+              },
+              "phase": "preparing",
+              "since": "2026-10-08T09:41:31.220Z",
+              "token": "03e7df08-744f-4b91-94ae-9cc0ce82cc7f",
+              "claimed_at": "2026-10-08T09:41:31.220Z",
+              "step_since": "2026-10-08T09:41:31.662Z",
+              "waiting_on": "db"
+            },
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 3276
+          },
+          {
+            "request_id": "572601e2-45a9-4fed-bc6e-9b7c34502053",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 3276
+          },
+          {
+            "request_id": "52b0f69c-91ab-41bf-929a-7c13de3a6062",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 3276
+          },
+          {
+            "request_id": "e79e64ce-e563-489f-9f50-fbc343c54d53",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 3276
+          },
+          {
+            "request_id": "25fa74ec-3f4f-4646-aa4c-1f7babaab509",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 3276
+          },
+          {
+            "request_id": "a26a2379-aeb4-479c-8b40-2b8c7fbb9435",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 3276
+          },
+          {
+            "request_id": "63a582b1-a844-4380-87f3-4cc3d58949e3",
+            "operation": "submit_job",
+            "kind": "managed_sync_import",
+            "grp": "46be1d80-fd8a-4975-b557-752ff545bdad",
+            "claim_phase": null,
+            "blocked_reason": null,
+            "state": "running",
+            "publication_started": false,
+            "claim_lapsed": false,
+            "age_ms": 190521,
+            "since_update_ms": 3276
+          }
+        ],
+        "activity_summary": [
+          "96 postgres.js idle in transaction Client/ClientRead xact=138236ms q=138234ms blocked_by=[] :: LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+          "95 gbrain:cli-sync:9549:module active Lock/relation xact=138206ms q=138206ms blocked_by=[96] :: WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source",
+          "87 gbrain:cli-sync:9549:module active Lock/relation xact=138206ms q=138206ms blocked_by=[96] :: WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source",
+          "97 gbrain:cli-sync:9549:module active Lock/relation xact=138206ms q=138206ms blocked_by=[96] :: WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source",
+          "94 gbrain:cli-sync:9549:module active Lock/relation xact=138206ms q=138206ms blocked_by=[96] :: WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source",
+          "99 gbrain:cli-sync:9549:module active Lock/relation xact=137826ms q=137826ms blocked_by=[96] :: SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+          "91 gbrain:cli-sync:9549:module active Lock/relation xact=137826ms q=137826ms blocked_by=[96] :: SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+          "90 gbrain:dream:9547:module active Lock/relation xact=137310ms q=137310ms blocked_by=[96] :: SELECT (\n      EXISTS (SELECT 1 FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id\n    ",
+          "100 gbrain:cli-sync:9549:module active Lock/relation xact=137197ms q=137197ms blocked_by=[96] :: SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,rev",
+          "114 gbrain:cli-sync:9549:module active Lock/relation xact=133972ms q=133972ms blocked_by=[96] :: WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source",
+          "93 gbrain:cli-sync:9549:module active Lock/relation xact=132838ms q=132838ms blocked_by=[96] :: SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+          "115 gbrain:dream:9547:module active Lock/relation xact=127037ms q=127037ms blocked_by=[96] :: SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,rev",
+          "120 gbrain:dream:9547:module active Lock/relation xact=118892ms q=118892ms blocked_by=[96] :: WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 AND p.deleted_at IS NULL\n    ORDER BY (p",
+          "116 gbrain:writer-status:10925:module idle Client/ClientRead xact=nullms q=531ms blocked_by=[] :: SELECT brain_id, enabled, to_jsonb(persistence_brain)->>'mode_epoch' AS mode_epoch FROM persistence_brain WHERE singleto",
+          "122 gbrain:dream:9547:module idle Client/ClientRead xact=nullms q=5995ms blocked_by=[] :: SELECT c.* FROM persistence_topology_changes c\n    JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uui"
+        ],
+        "locks": [
+          {
+            "pid": 87,
+            "waiting_app": "gbrain:cli-sync:9549:module",
+            "waiting_query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n    (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation,\n    COALESCE((SELECT jsonb_agg(t.tag O",
+            "wait_ms": 138227,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 90,
+            "waiting_app": "gbrain:dream:9547:module",
+            "waiting_query": "SELECT (\n      EXISTS (SELECT 1 FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id\n        WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active'))\n      AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_",
+            "wait_ms": 137330,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 91,
+            "waiting_app": "gbrain:cli-sync:9549:module",
+            "waiting_query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+            "wait_ms": 137847,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 93,
+            "waiting_app": "gbrain:cli-sync:9549:module",
+            "waiting_query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+            "wait_ms": 132858,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 94,
+            "waiting_app": "gbrain:cli-sync:9549:module",
+            "waiting_query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n    (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation,\n    COALESCE((SELECT jsonb_agg(t.tag O",
+            "wait_ms": 138227,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 95,
+            "waiting_app": "gbrain:cli-sync:9549:module",
+            "waiting_query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n    (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation,\n    COALESCE((SELECT jsonb_agg(t.tag O",
+            "wait_ms": 138227,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 97,
+            "waiting_app": "gbrain:cli-sync:9549:module",
+            "waiting_query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n    (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation,\n    COALESCE((SELECT jsonb_agg(t.tag O",
+            "wait_ms": 138227,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 99,
+            "waiting_app": "gbrain:cli-sync:9549:module",
+            "waiting_query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+            "wait_ms": 137847,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 100,
+            "waiting_app": "gbrain:cli-sync:9549:module",
+            "waiting_query": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j\n      WHERE (j.reason IS DISTINCT FROM 'rebuild_failed' OR j.updated_at<now()-interval '30 seconds')\n      ORDER BY updated_at,source_i",
+            "wait_ms": 137217,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 114,
+            "waiting_app": "gbrain:cli-sync:9549:module",
+            "waiting_query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n    (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation,\n    COALESCE((SELECT jsonb_agg(t.tag O",
+            "wait_ms": 133993,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 115,
+            "waiting_app": "gbrain:dream:9547:module",
+            "waiting_query": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j\n      WHERE (j.reason IS DISTINCT FROM 'rebuild_failed' OR j.updated_at<now()-interval '30 seconds')\n      ORDER BY updated_at,source_i",
+            "wait_ms": 127058,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          },
+          {
+            "pid": 120,
+            "waiting_app": "gbrain:dream:9547:module",
+            "waiting_query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 AND p.deleted_at IS NULL\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n    (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation,\n    COALESCE(",
+            "wait_ms": 118912,
+            "blocker_pid": 96,
+            "blocker_app": "postgres.js",
+            "blocker_state": "idle in transaction",
+            "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+            "blocker_xact_ms": 138257
+          }
+        ],
+        "trace_last_round_trip_age_ms": 11602.720947265625
+      }
+    ],
+    "preparing_claims_observed": {
+      "preparing_blockers_observed": 333,
+      "overdue": 39,
+      "overdue_with_claim_stall_and_step": 39,
+      "overdue_without_claim_stall_or_step": 0,
+      "overdue_with_diagnostic_cause_unknown": 39,
+      "max_phase_age_ms": 267670,
+      "max_step_age_ms": 266657,
+      "steps": {
+        "canonical_projections": 20,
+        "page_snapshot": 20,
+        "origin_check": 28,
+        "knowledge_publication": 1
+      },
+      "waiting_on": {
+        "unknown": 264,
+        "db": 69
+      },
+      "diagnostic_reasons": {
+        "pending": 247,
+        "cause_unknown": 86
+      }
+    },
+    "doctor_fence_integrity": {
+      "exit": 0,
+      "status": "warn",
+      "unrenderable_total": 3,
+      "unrenderable_complete": true,
+      "unrenderable_by_class": {
+        "empty/fence_unrenderable": 3
+      },
+      "unrenderable_pages": 3
+    },
+    "failed_receipts_by_kind_and_error": [
+      {
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "error_code": "preparation_stalled",
+        "state": "failed",
+        "error_class": "Preparation of this write was cut off 2 time(s) at its deadline, last at step pa",
+        "n": 1
+      }
+    ],
+    "failed_receipts_recent": [
+      {
+        "request_id": "f8266fbd-e656-4a80-a499-728b21e9f791",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-582",
+        "error_code": "preparation_stalled",
+        "error_message": "Preparation of this write was cut off 2 time(s) at its deadline, last at step page_snapshot (waiting on db), the limit of persistence.max_preparation_attempts (2); it is not claimed again. Run gbrain sources writer status --source bench --j",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:55:29.439Z"
+      }
+    ],
+    "holds": [
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:companies/scale-0-1502.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "82f426428c6a9cd9887090d0d30340d37a2f6d0d",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "companies/scale-0-1502.md",
+          "slug": "companies/scale-0-1502",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T09:38:29.874Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:32.588Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "companies/scale-0-1502.md",
+          "upstream_version": "1127fd00955b1b0547a78667528ed21d380f7cf1b8693586adfc20deb1b1ff3f"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:companies/scale-0-1512.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "70d092f9e3c60143566b8f4ee7fef59dd127d247",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "companies/scale-0-1512.md",
+          "slug": "companies/scale-0-1512",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T09:38:30.627Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:33.214Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "companies/scale-0-1512.md",
+          "upstream_version": "422a5d4cbeb98f48ae97194dd5c1582ddb62d1c10ecd8d491cee5aad7fc501f8"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1503.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "c0da6d787f70a13b9b0d6ab8f7696bdf5dac9244",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1503.md",
+          "slug": "notes/scale-0-1503",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:10.380Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:33.784Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1503.md",
+          "upstream_version": "e76d4e8dde49b8e467e7421bc5697c81d572b8dc8f844ba4790bcad6ceabcfcc"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1504.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "6184dc33f4fe61063847811c43f329a5a78b86e9",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1504.md",
+          "slug": "notes/scale-0-1504",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:11.006Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:34.345Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1504.md",
+          "upstream_version": "1a0b43ebfa7496dbf66ada7a8aa35b2dbb4b00045382c348d251ad27928fb2ff"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1505.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "5925cae889ab86bb459817d786460271e3538577",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1505.md",
+          "slug": "notes/scale-0-1505",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:11.629Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:34.911Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1505.md",
+          "upstream_version": "2214b92a8e4bc7e9bade55d9b8d6b70811e9ee474781bf2dac485c01d90ba594"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1506.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "6c505516a51fdd3ca392a6253faa319e11bff682",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1506.md",
+          "slug": "notes/scale-0-1506",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:12.251Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:35.476Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1506.md",
+          "upstream_version": "acdb3220ba664baadf803f4dbc3cedc45698524811f9530360533bdf9b6c55dc"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1507.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "7c679c3e8c023ed4f3f5a09307e6fb32d6720fcc",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1507.md",
+          "slug": "notes/scale-0-1507",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:12.875Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:36.038Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1507.md",
+          "upstream_version": "ee6dd58bdda3f90f1b6957258ec46550d5ee29ad389f7f2dc545a19535c42485"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1508.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "8424ddfb032f7fd2430eff733e4f77d6f622fd35",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1508.md",
+          "slug": "notes/scale-0-1508",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:13.500Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:36.609Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1508.md",
+          "upstream_version": "05f8436d9aca3e19a510d4b6e5eb8639b8f65e7136db924b0583f5609bbafa58"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1509.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "2afa5a6bc3e9e5c91055d85aa926402603374ea7",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1509.md",
+          "slug": "notes/scale-0-1509",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:14.121Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:37.172Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1509.md",
+          "upstream_version": "d00dcdc34b0bd5d4a4607ef58b66a7b68f94e4cc3b32470ad014723611e9032a"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1513.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "2fa141945386c35d97363910d47625420cdaac94",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1513.md",
+          "slug": "notes/scale-0-1513",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:14.751Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:37.735Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1513.md",
+          "upstream_version": "ca00aa0745ec0f9de45753308164731d8a8430ef1dd08a18b9f5d937029ba3f1"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1514.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "6b789d0883b15c18285c561c5f1cc6249200fbdb",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1514.md",
+          "slug": "notes/scale-0-1514",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:15.369Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:38.298Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1514.md",
+          "upstream_version": "89f79acf110ef4f4bbdfe3f824091026cb846a6360677617da3610efd4f1b730"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1515.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "969a2dde04914591f940fc93ea917fd762dc69f1",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1515.md",
+          "slug": "notes/scale-0-1515",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:15.990Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:38.868Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1515.md",
+          "upstream_version": "dfed74f6a7ed3a20137074209a75c8f46df4f81c5c240f4922e45ec5beec3949"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1516.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "80da465984f05dfcea5cda42e00dd6e843b7b237",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1516.md",
+          "slug": "notes/scale-0-1516",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:16.615Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:39.431Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1516.md",
+          "upstream_version": "620d694dd574820bc9516e224ddd133ccccb83fca63ff96eb0ab29b05dd2cf12"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1517.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "cb282d15f001094e105c1a715a4f63c91f4f88b1",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1517.md",
+          "slug": "notes/scale-0-1517",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:17.241Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:39.994Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1517.md",
+          "upstream_version": "4784a7d87ff98831dd7da803923b9f975cecd1848a580cc1950d2cf24a5f9b8a"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1518.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "ed7de2942331e618ee65133fec7a8de346b9e1a1",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1518.md",
+          "slug": "notes/scale-0-1518",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:17.863Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:40.559Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1518.md",
+          "upstream_version": "23ab93b05b5d66fdbe8ea37fd5765f415ab85a4b314ecaf1cb670180614064b6"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:notes/scale-0-1519.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "0f53f5c6b69bf656aa3eb035eb9b2d5195c3ed3d",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1519.md",
+          "slug": "notes/scale-0-1519",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:15:18.490Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:41.119Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "notes/scale-0-1519.md",
+          "upstream_version": "bd8891ba97be5c4ae4b90fde4e11861ca510c18a49ee68371bdd6fe7cff255df"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:people/scale-0-1500.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 52,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "9cd2ba73d3f1130d16af637eff099dbe46a23fc9",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "people/scale-0-1500.md",
+          "slug": "people/scale-0-1500",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:27:29.879Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:41.691Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "people/scale-0-1500.md",
+          "upstream_version": "cde19697685585b97a3ad611f4d84f441e34a361faf7815903229da2b3344ad0"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:people/scale-0-1501.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "01e5c2015e86fe2306d745e2a30e722c1ffe8ba1",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "people/scale-0-1501.md",
+          "slug": "people/scale-0-1501",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:27:30.501Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:42.252Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "people/scale-0-1501.md",
+          "upstream_version": "965382100c8c310635c6853fa434b20bf150e042ca89c829a8cb57c72a49ee75"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:people/scale-0-1510.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 52,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "8680f1396553f2b05fa6ec768c9065a9de93ac08",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "people/scale-0-1510.md",
+          "slug": "people/scale-0-1510",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:27:31.120Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:42.818Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "people/scale-0-1510.md",
+          "upstream_version": "895db56ad3ddeb68adc4f4533fe8c456b05dfa57b5fe811e884aa0b66f045741"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2:people/scale-0-1511.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "9bfe5c0a4739ad6f090db017a2288bac23b84123",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "people/scale-0-1511.md",
+          "slug": "people/scale-0-1511",
+          "run_id": "679ab6b7-8109-4288-b0ed-5afc2c3866b3",
+          "held_at": "2026-10-08T10:27:31.745Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T10:38:43.381Z",
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+          "observed_at": "2026-10-08T10:38:30.358Z",
+          "source_path": "people/scale-0-1511.md",
+          "upstream_version": "41574846387e8fbd6b6e435c12c8875e08e038d13e330c437e061dc5b9554740"
+        }
+      },
+      {
+        "op": "sync-hold-summary",
+        "fingerprint": "bench:7f63235b-1e5e-4b88-82cb-2f0fe748dfc2",
+        "record": {
+          "count": 20,
+          "stale": 0,
+          "fences": 20,
+          "images": 0,
+          "stalled": 0,
+          "source_id": "bench",
+          "concurrent": 0,
+          "incarnation": "7f63235b-1e5e-4b88-82cb-2f0fe748dfc2"
+        }
+      }
+    ],
+    "samples": 110,
+    "adoption_runs": 4,
+    "adoption_summary": [
+      {
+        "i": 0,
+        "status": null,
+        "dripped": 0,
+        "fenced": null,
+        "pending": null,
+        "fence_failed": 0,
+        "code": 143
+      },
+      {
+        "i": 1,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 0,
+        "pending": 566,
+        "fence_failed": 183,
+        "code": 0
+      },
+      {
+        "i": 2,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 147,
+        "pending": 83,
+        "fence_failed": 27,
+        "code": 0
+      },
+      {
+        "i": 3,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 83,
+        "fence_failed": 23,
+        "code": 0
+      }
+    ],
+    "legacy_pending_at_end": 83
+  },
+  "finished_at": "2026-10-08T10:45:20.073Z"
+}

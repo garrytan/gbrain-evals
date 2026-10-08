@@ -1,0 +1,193 @@
+[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); extends while the sync keeps progressing (stops after 900s without progress); disable with --no-hard-deadline
+[gbrain] Prepared statements disabled (PgBouncer transaction-mode convention on port 6543). Override with GBRAIN_PREPARE=true if your pooler runs in session mode.
+[sync] managed catch-up: 3000 entries frozen, 3000 remaining; publishing in bulk groups (each page keeps its own request).
+[sync] 1/3000 processed (1 written, 0 waived this run) · 15.9 pages/min · indexing ETA 3h08m
+[sync] 3/3000 processed (3 written, 0 waived this run) · 8.6 pages/min · indexing ETA 5h50m
+[sync] 21/3000 processed (21 written, 0 waived this run) · 27.5 pages/min · indexing ETA 1h48m
+[sync-watchdog] parent alive 60s elapsed, deadline in ~3540s (extends while progressing)
+[sync] 53/3000 processed (53 written, 0 waived this run) · 52.8 pages/min · indexing ETA 55m48s
+[sync] 69/3000 processed (69 written, 0 waived this run) · 56.7 pages/min · indexing ETA 51m45s
+[sync] 87/3000 processed (87 written, 0 waived this run) · 61 pages/min · indexing ETA 47m47s
+[sync] 106/3000 processed (106 written, 0 waived this run) · 62.7 pages/min · indexing ETA 46m11s
+[sync] 118/3000 processed (118 written, 0 waived this run) · 62.6 pages/min · indexing ETA 46m05s
+[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)
+[sync] 127/3000 processed (127 written, 0 waived this run) · 60.3 pages/min · indexing ETA 47m40s
+[sync] 142/3000 processed (142 written, 0 waived this run) · 57.2 pages/min · indexing ETA 49m58s
+[sync] 151/3000 processed (151 written, 0 waived this run) · 56.2 pages/min · indexing ETA 50m43s
+[sync] 160/3000 processed (160 written, 0 waived this run) · 55.6 pages/min · indexing ETA 51m06s
+[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)
+[persistence] phase=claim reason=deadline_exceeded checkout=not_observed conn_wait_ms=5001 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 240s elapsed, deadline in ~3360s (extends while progressing)
+[sync-watchdog] parent alive 300s elapsed, deadline in ~3300s (extends while progressing)
+[persistence] phase=preparation reason=deadline_exceeded; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 360s elapsed, deadline in ~3240s (extends while progressing)
+[sync-watchdog] parent alive 420s elapsed, deadline in ~3180s (extends while progressing)
+[sync-watchdog] parent alive 480s elapsed, deadline in ~3120s (extends while progressing)
+[sync] 179/3000 processed (179 written, 0 waived this run) · 21.8 pages/min · indexing ETA 2h09m
+[sync] 191/3000 processed (191 written, 0 waived this run) · 22.8 pages/min · indexing ETA 2h03m
+[sync] 200/3000 processed (200 written, 0 waived this run) · 22.9 pages/min · indexing ETA 2h02m
+[sync-watchdog] parent alive 540s elapsed, deadline in ~3060s (extends while progressing)
+[sync] 213/3000 processed (213 written, 0 waived this run) · 23.7 pages/min · indexing ETA 1h57m
+[sync] 215/3000 processed (215 written, 0 waived this run) · 23.4 pages/min · indexing ETA 1h59m
+[sync] 224/3000 processed (224 written, 0 waived this run) · 23.8 pages/min · indexing ETA 1h56m
+[sync] 233/3000 processed (233 written, 0 waived this run) · 24.2 pages/min · indexing ETA 1h54m
+[sync] 240/3000 processed (240 written, 0 waived this run) · 24.4 pages/min · indexing ETA 1h53m
+[sync-watchdog] parent alive 600s elapsed, deadline in ~3000s (extends while progressing)
+[sync] 252/3000 processed (252 written, 0 waived this run) · 25.2 pages/min · indexing ETA 1h49m
+[sync] 256/3000 processed (256 written, 0 waived this run) · 23.5 pages/min · indexing ETA 1h56m
+[sync-watchdog] parent alive 660s elapsed, deadline in ~2940s (extends while progressing)
+[sync-watchdog] parent alive 720s elapsed, deadline in ~2880s (extends while progressing)
+[sync-watchdog] parent alive 780s elapsed, deadline in ~2820s (extends while progressing)
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=4; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=6; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 840s elapsed, deadline in ~2760s (extends while progressing)
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=5; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=7; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 900s elapsed, deadline in ~2700s (extends while progressing)
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 960s elapsed, deadline in ~2640s (extends while progressing)
+[sync-watchdog] parent alive 1020s elapsed, deadline in ~2580s (extends while progressing)
+[persistence] phase=preparation reason=deadline_exceeded; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=5; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=2; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[persistence] phase=idle_probe reason=57014 message="canceling statement due to user request" first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 1080s elapsed, deadline in ~2520s (extends while progressing)
+[persistence] phase=idle_probe reason=deadline_exceeded first_conn_ms=0 loop_lag_ms=3; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 1140s elapsed, deadline in ~2460s (extends while progressing)
+[sync-watchdog] parent alive 1200s elapsed, deadline in ~2400s (extends while progressing)
+[sync-watchdog] parent alive 1260s elapsed, deadline in ~2340s (extends while progressing)
+[sync-watchdog] parent alive 1320s elapsed, deadline in ~2280s (extends while progressing)
+[sync] 260/3000 processed (260 written, 0 waived this run) · 11.7 pages/min · indexing ETA 3h54m
+[sync-watchdog] parent alive 1380s elapsed, deadline in ~2220s (extends while progressing)
+[sync-watchdog] parent alive 1440s elapsed, deadline in ~2160s (extends while progressing)
+[sync-watchdog] parent alive 1500s elapsed, deadline in ~2100s (extends while progressing)
+[sync-watchdog] parent alive 1560s elapsed, deadline in ~2040s (extends while progressing)
+[sync-watchdog] parent alive 1620s elapsed, deadline in ~1980s (extends while progressing)
+[sync-watchdog] parent alive 1680s elapsed, deadline in ~1920s (extends while progressing)
+[sync-watchdog] parent alive 1740s elapsed, deadline in ~1860s (extends while progressing)
+[sync-watchdog] parent alive 1800s elapsed, deadline in ~1800s (extends while progressing)
+[sync-watchdog] parent alive 1860s elapsed, deadline in ~1740s (extends while progressing)
+[sync-watchdog] parent alive 1920s elapsed, deadline in ~1680s (extends while progressing)
+[sync] 263/3000 processed (263 written, 0 waived this run) · 8.1 pages/min · indexing ETA 5h37m
+[sync-watchdog] parent alive 1980s elapsed, deadline in ~1620s (extends while progressing)
+[sync-watchdog] parent alive 2040s elapsed, deadline in ~1560s (extends while progressing)
+[sync-watchdog] parent alive 2100s elapsed, deadline in ~1500s (extends while progressing)
+[sync-watchdog] parent alive 2160s elapsed, deadline in ~1440s (extends while progressing)
+[sync] 274/3000 processed (274 written, 0 waived this run) · 7.5 pages/min · indexing ETA 6h03m
+[sync] 285/3000 processed (285 written, 0 waived this run) · 7.8 pages/min · indexing ETA 5h49m
+[sync] 311/3000 processed (311 written, 0 waived this run) · 8.4 pages/min · indexing ETA 5h18m
+[sync-watchdog] parent alive 2220s elapsed, deadline in ~1380s (extends while progressing)
+[sync] 315/3000 processed (315 written, 0 waived this run) · 8.5 pages/min · indexing ETA 5h16m
+[sync] 324/3000 processed (324 written, 0 waived this run) · 8.7 pages/min · indexing ETA 5h08m
+[sync] 360/3000 processed (360 written, 0 waived this run) · 9.6 pages/min · indexing ETA 4h35m
+[sync] 378/3000 processed (378 written, 0 waived this run) · 10 pages/min · indexing ETA 4h22m
+[sync-watchdog] parent alive 2280s elapsed, deadline in ~1320s (extends while progressing)
+[sync] 389/3000 processed (389 written, 0 waived this run) · 10.2 pages/min · indexing ETA 4h14m
+[sync] 397/3000 processed (397 written, 0 waived this run) · 10.4 pages/min · indexing ETA 4h10m
+[sync] 406/3000 processed (406 written, 0 waived this run) · 10.5 pages/min · indexing ETA 4h05m
+[sync] 415/3000 processed (415 written, 0 waived this run) · 10.7 pages/min · indexing ETA 4h00m
+[sync] 433/3000 processed (433 written, 0 waived this run) · 11.1 pages/min · indexing ETA 3h50m
+[sync-watchdog] parent alive 2340s elapsed, deadline in ~1260s (extends while progressing)
+[sync] 443/3000 processed (443 written, 0 waived this run) · 11.3 pages/min · indexing ETA 3h46m
+[sync] 460/3000 processed (460 written, 0 waived this run) · 11.6 pages/min · indexing ETA 3h38m
+[sync] 470/3000 processed (470 written, 0 waived this run) · 11.8 pages/min · indexing ETA 3h33m
+[sync] 479/3000 processed (479 written, 0 waived this run) · 12 pages/min · indexing ETA 3h30m
+[sync-watchdog] parent alive 2400s elapsed, deadline in ~1200s (extends while progressing)
+[sync] 501/3000 processed (501 written, 0 waived this run) · 12.5 pages/min · indexing ETA 3h20m
+[sync] 515/3000 processed (515 written, 0 waived this run) · 12.8 pages/min · indexing ETA 3h14m
+[sync] 524/3000 processed (524 written, 0 waived this run) · 12.9 pages/min · indexing ETA 3h11m
+[sync] 533/3000 processed (533 written, 0 waived this run) · 13.1 pages/min · indexing ETA 3h08m
+[sync] 543/3000 processed (543 written, 0 waived this run) · 13.3 pages/min · indexing ETA 3h05m
+[sync-watchdog] parent alive 2460s elapsed, deadline in ~1140s (extends while progressing)
+[sync] 552/3000 processed (552 written, 0 waived this run) · 13.4 pages/min · indexing ETA 3h02m
+[sync] 561/3000 processed (561 written, 0 waived this run) · 13.6 pages/min · indexing ETA 2h59m
+[sync] 574/3000 processed (574 written, 0 waived this run) · 13.8 pages/min · indexing ETA 2h55m
+[sync] 579/3000 processed (579 written, 0 waived this run) · 13.9 pages/min · indexing ETA 2h54m
+[sync] 589/3000 processed (589 written, 0 waived this run) · 14.1 pages/min · indexing ETA 2h51m
+[sync-watchdog] parent alive 2520s elapsed, deadline in ~1080s (extends while progressing)
+[sync] 598/3000 processed (598 written, 0 waived this run) · 14.2 pages/min · indexing ETA 2h49m
+[sync] 608/3000 processed (608 written, 0 waived this run) · 14.3 pages/min · indexing ETA 2h46m
+[sync] 634/3000 processed (634 written, 0 waived this run) · 14.8 pages/min · indexing ETA 2h39m
+[sync] 645/3000 processed (645 written, 0 waived this run) · 15 pages/min · indexing ETA 2h36m
+[sync-watchdog] parent alive 2580s elapsed, deadline in ~1020s (extends while progressing)
+[sync] 652/3000 processed (652 written, 0 waived this run) · 15.1 pages/min · indexing ETA 2h35m
+[sync] 662/3000 processed (662 written, 0 waived this run) · 15.3 pages/min · indexing ETA 2h33m
+[sync] 671/3000 processed (671 written, 0 waived this run) · 15.4 pages/min · indexing ETA 2h31m
+[sync] 681/3000 processed (681 written, 0 waived this run) · 15.5 pages/min · indexing ETA 2h29m
+[sync-watchdog] parent alive 2640s elapsed, deadline in ~960s (extends while progressing)
+[sync] 690/3000 processed (690 written, 0 waived this run) · 15.7 pages/min · indexing ETA 2h27m
+[sync] 698/3000 processed (698 written, 0 waived this run) · 15.8 pages/min · indexing ETA 2h25m
+[sync] 718/3000 processed (718 written, 0 waived this run) · 16.2 pages/min · indexing ETA 2h21m
+[sync] 780/3000 processed (780 written, 0 waived this run) · 17.5 pages/min · indexing ETA 2h07m
+[sync] 854/3000 processed (854 written, 0 waived this run) · 19.1 pages/min · indexing ETA 1h52m
+[sync-watchdog] parent alive 2700s elapsed, deadline in ~900s (extends while progressing)
+[sync] 919/3000 processed (919 written, 0 waived this run) · 20.4 pages/min · indexing ETA 1h41m
+[sync] 952/3000 processed (952 written, 0 waived this run) · 21.1 pages/min · indexing ETA 1h37m
+[sync] 1015/3000 processed (1015 written, 0 waived this run) · 22.4 pages/min · indexing ETA 1h28m
+[sync] 1089/3000 processed (1089 written, 0 waived this run) · 23.9 pages/min · indexing ETA 1h19m
+[sync] 1188/3000 processed (1188 written, 0 waived this run) · 26 pages/min · indexing ETA 1h09m
+[sync] 1262/3000 processed (1262 written, 0 waived this run) · 27.5 pages/min · indexing ETA 1h03m
+[sync-watchdog] parent alive 2760s elapsed, deadline in ~840s (extends while progressing)
+[sync] 1336/3000 processed (1336 written, 0 waived this run) · 29 pages/min · indexing ETA 57m25s
+[sync] 1397/3000 processed (1397 written, 0 waived this run) · 30.2 pages/min · indexing ETA 53m09s
+[sync] 1483/3000 processed (1483 written, 0 waived this run) · 31.9 pages/min · indexing ETA 47m34s
+[sync] 1544/3000 processed (1544 written, 0 waived this run) · 33.1 pages/min · indexing ETA 44m03s
+[sync] 1632/3000 processed (1632 written, 0 waived this run) · 34.8 pages/min · indexing ETA 39m19s
+[sync-watchdog] parent alive 2820s elapsed, deadline in ~780s (extends while progressing)
+[sync] 1669/3000 processed (1669 written, 0 waived this run) · 35.4 pages/min · indexing ETA 37m36s
+[sync] 1755/3000 processed (1755 written, 0 waived this run) · 37.1 pages/min · indexing ETA 33m35s
+[sync] 1840/3000 processed (1840 written, 0 waived this run) · 38.7 pages/min · indexing ETA 29m59s
+[sync] 1890/3000 processed (1890 written, 0 waived this run) · 39.6 pages/min · indexing ETA 28m03s
+[sync] 1952/3000 processed (1952 written, 0 waived this run) · 40.7 pages/min · indexing ETA 25m45s
+[sync-watchdog] parent alive 2880s elapsed, deadline in ~720s (extends while progressing)
+[sync] 2039/3000 processed (2039 written, 0 waived this run) · 42.4 pages/min · indexing ETA 22m42s
+[sync] 2125/3000 processed (2125 written, 0 waived this run) · 43.9 pages/min · indexing ETA 19m55s
+[sync] 2187/3000 processed (2187 written, 0 waived this run) · 45 pages/min · indexing ETA 18m04s
+[sync] 2308/3000 processed (2308 written, 0 waived this run) · 47.3 pages/min · indexing ETA 14m38s
+[sync-watchdog] parent alive 2940s elapsed, deadline in ~660s (extends while progressing)
+[sync] 2372/3000 processed (2372 written, 0 waived this run) · 48.4 pages/min · indexing ETA 12m59s
+[sync] 2405/3000 processed (2405 written, 0 waived this run) · 48.8 pages/min · indexing ETA 12m12s
+[sync] 2465/3000 processed (2465 written, 0 waived this run) · 49.8 pages/min · indexing ETA 10m45s
+[sync] 2515/3000 processed (2515 written, 0 waived this run) · 50.6 pages/min · indexing ETA 9m35s
+[sync] 2553/3000 processed (2553 written, 0 waived this run) · 51.2 pages/min · indexing ETA 8m44s
+[sync-watchdog] parent alive 3000s elapsed, deadline in ~600s (extends while progressing)
+[sync] 2601/3000 processed (2601 written, 0 waived this run) · 52 pages/min · indexing ETA 7m41s
+[sync] 2634/3000 processed (2634 written, 0 waived this run) · 52.3 pages/min · indexing ETA 7m00s
+[sync] 2658/3000 processed (2658 written, 0 waived this run) · 52.5 pages/min · indexing ETA 6m31s
+[sync] 2670/3000 processed (2670 written, 0 waived this run) · 52.5 pages/min · indexing ETA 6m18s
+[sync-watchdog] parent alive 3060s elapsed, deadline in ~540s (extends while progressing)
+[sync] 2682/3000 processed (2682 written, 0 waived this run) · 52.5 pages/min · indexing ETA 6m04s
+[sync] 2695/3000 processed (2695 written, 0 waived this run) · 52.5 pages/min · indexing ETA 5m49s
+[sync] 2736/3000 processed (2736 written, 0 waived this run) · 53.1 pages/min · indexing ETA 4m59s
+[sync] 2794/3000 processed (2794 written, 0 waived this run) · 54 pages/min · indexing ETA 3m49s
+[sync] 2855/3000 processed (2855 written, 0 waived this run) · 55 pages/min · indexing ETA 2m39s
+[sync-watchdog] parent alive 3120s elapsed, deadline in ~480s (extends while progressing)
+[sync] 2896/3000 processed (2896 written, 0 waived this run) · 55.6 pages/min · indexing ETA 1m53s
+[sync] 2953/3000 processed (2953 written, 0 waived this run) · 56.5 pages/min · indexing ETA 50s
+[sync-watchdog] parent alive 3180s elapsed, deadline in ~420s (extends while progressing)
+[sync-watchdog] parent alive 3240s elapsed, deadline in ~360s (extends while progressing)
+[sync-watchdog] parent alive 3300s elapsed, deadline in ~300s (extends while progressing)
+[sync-watchdog] parent alive 3360s elapsed, deadline in ~240s (extends while progressing)
+[sync-watchdog] parent alive 3420s elapsed, deadline in ~180s (extends while progressing)
+[sync] lanes: 6 of 16, 2.5 busy on average; lanes waited for the sync loop to prepare groups (2.5 of 6 busy on average).
+[sync] 3496 page(s) have un-extracted edges — run 'gbrain extract --stale'
+[sync] Skipped automatic .gitignore maintenance for the managed worktree.
