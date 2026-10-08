@@ -2,18 +2,28 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.49] - 2026-10-08
+## [0.10.50] - 2026-10-08
 
 ### Q2 parser gaps: guards for typed list lines, a held-out frame for grammar precision and recall, relationship-phrasing units, and the custodian harness
 
-Paired with gbrain #6343 (branch `capy/q2-parser-gaps`, frozen build `4ec7fbbe4`, baseline master `5b5891069`), merged as `61624308b` in v0.60.120.0. Held-out spend $306.56 for the campaign, $333.97 with minting.
+Paired with gbrain #6343 (branch `capy/q2-parser-gaps`, frozen build `4ec7fbbe4`, baseline master `5b5891069`), merged, v0.60.120.0 (`61624308b`). Held-out spend $306.56 for the campaign, $333.97 with minting.
 
 - **Verdicts.** [Record](docs/benchmarks/2026-10-05-heldout-program/q2.md) and [verdict file](docs/benchmarks/2026-10-05-heldout-verdicts/q2-heldout-2026-10-08.json). `line_grammar.enabled` stays opt-in: G1 fails (459 of 583 minted lines wrong on 664,930 held-out list lines, Wilson upper bound 75.6 per 100,000 against 2; all but one wrong line comes from the stress stratum of changelog, glossary and template notes; 14 template-slot lines against 0) and G3's decoys fail (17 of 52 template-slot decoys minted), while G3's relation recall (511/511), G4 guard loss (0.994), G2 agent-written relation lines (299/300, lower bound 0.981) and G5 carry-over pass. G6 did not run, as the order of runs requires after a G1–G5 failure. The C-gates select U34, U1 and U25 (U6 fails safety); fixed-sequence confirmation passes P1 (U34, false starts −0.41) and P2 (+U1, advisor traps +0.43) and fails P3 (+U25, no change), so U3, U4 and U1 ship and U2, U5 and U6 are reverted. Future-cycle candidates (closed category vocabulary, multi-word slot refusal, changelog-tag refusal) are recorded as candidates only.
 - **Preregistration and freeze record.** [Preregistration](docs/benchmarks/2026-10-06-q2-parser-gaps-preregistration.md) with amendments 1–4 before the freeze and every deviation in its freeze record, including the run deviations found after the last cell (export outside the campaign guard, the stress-floor counting error, nine reconstructed access-log lines).
 - **Harness.** `eval/runner/q2/` (grammar gates G1–G4 and G2 with two-judge labels and no adjudication, the runner's own zero-tolerance classes, the K conformance scorer, transition-identity C-gates with Holm selection and a fixed-sequence evaluator, the crossed bootstrap for G6, the power simulation, the campaign guard, preflight and allowlisted export); custody roots outside every git worktree with symlinks resolved; receipts that keep gate outcomes apart from execution status; resumable answer and judge checkpoints; the career-chronicle corpus and its development generator. The [custodian runbook](docs/benchmarks/2026-10-06-q2-parser-gaps-runbook.md) and [campaign manifest](docs/benchmarks/2026-10-06-q2-parser-gaps-campaign.json) fix the order of runs.
 - **Defects found in the sealed run, fixed after the decision.** `junk-audit.ts g2-sample` and `label` now write receipts with `run_status` (the custodian had recorded wrapper receipts); W manifests may key their list `pages` and the career manifest `documents`; `campaign.ts not-run` records a step a failed upstream gate stops, so the export runs inside the guard when G6 does not.
 - **CI flake fix.** `budget-ledger-sqlite.test.ts` "verify passes a healthy ledger" timed out on a CI runner (`tests (3)` on `35027cff`): its 400 reserve and settle pairs make 825 `synchronous = FULL` fsyncs, so on a busy runner disk it outlasts the 5 s test timeout. Its ledger now lives on tmpfs, as the scale test's does; the assertions are unchanged. Forced probe: with fsync delayed 10 ms on a disk path the test body takes 10.1 s, on tmpfs 0.7 s.
-- **Version.** Main is at 0.10.48, so this release is 0.10.49.
+- **Pin.** The `gbrain` dependency moves from `a865f8f` (v0.60.104.0) to `61624308b` (v0.60.120.0), the merge of gbrain #6343; `bun.lock` follows. Committed results keep the commits they were measured at.
+- **Version.** Main is at 0.10.49, so this release is 0.10.50.
+
+## [0.10.49] - 2026-10-08
+
+### gbrain managed catch-up follow-up: first page at 15.5 s, page saves within a second of idle
+
+Paired with gbrain #6344 (branch `capy/next-wave-g3-g6-g7`, measured at `d6d9d5956` against master `b5f12b12e`, v0.60.117.0; merged as `7c4c36e31`, v0.60.119.0). Mirror, $0 here.
+
+- **Catch-up and page saves, three runs per head.** [Report](docs/benchmarks/2026-10-08-managed-sync-followup-wave.md), [`results.json`](docs/benchmarks/2026-10-08-managed-sync-followup-wave/results.json) and the raw bench JSON for every run. First commit 15.5 to 15.6 s (master 19.0 to 19.6 s; target 15 s, missed by 0.5 s); slowest page saves during a catch-up +0.52 to +0.77 s over idle with none failed (master +0.52 to +2.28 s, one failed); catch-up while saving every 5 s 55 to 64% of idle (target 50%).
+- **Correction.** The October 7 report's catch-up-while-saving row (45%, one run) was low; three more runs of that code measured 60.6 to 63.2%. The October 7 report carries the correction in its changelog.
 
 ## [0.10.48] - 2026-10-08
 
