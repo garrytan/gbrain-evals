@@ -194,6 +194,19 @@ describe('reading lane', () => {
     expect(repeatsTrap('She realized that self-care is important.', 'self-care is important')).toBe(true);
     expect(repeatsTrap('The conversation never says.', 'self-care is important')).toBe(false);
   });
+  test('Claude 5 readers and judges get no temperature (the API refuses it as deprecated); older Claude models keep temperature 0', async () => {
+    const real = globalThis.fetch;
+    const bodies: any[] = [];
+    globalThis.fetch = (async (_u: string, init: RequestInit) => { bodies.push(JSON.parse(String(init.body))); return new Response(JSON.stringify({ content: [{ type: 'text', text: 'a' }], usage: { input_tokens: 1, output_tokens: 1 } }), { status: 200 }); }) as never;
+    try {
+      const c = new ChatClient(join(tmp, 'qa-cache-temp'));
+      for (const m of ['anthropic:claude-opus-5-5', 'anthropic:claude-sonnet-5-5', 'anthropic:claude-haiku-4-5']) await c.chat(m, 'p', { maxTokens: 5, effort: 'medium' });
+      expect(bodies.map(b => [b.model, b.temperature])).toEqual([['claude-opus-5-5', undefined], ['claude-sonnet-5-5', undefined], ['claude-haiku-4-5', 0]]);
+      const { judgeTemperature } = await import('../../eval/runner/memory-qa/qa.ts');
+      expect(judgeTemperature('anthropic:claude-opus-5-5', { temperature: 0 })).toBeNull();
+      expect(judgeTemperature('openai:gpt-4o-2024-08-06', { temperature: 0 })).toBe(0);
+    } finally { globalThis.fetch = real; }
+  });
   test('replicates are separate provider calls, never one cached answer', async () => {
     const real = globalThis.fetch;
     let calls = 0;
