@@ -1,10 +1,10 @@
 # Preregistration: the head-to-head memory scoreboard (2026-10-06)
 
-**Status: draft.** The design below is fixed. A few values are still open and are marked OPEN: the frozen gbrain
-commit, the campaign hash, the power-simulation result, the engine rule's measured inputs and the per-reader token
-calibration. They are filled by the freezing commit, before any counted cell reserves a lease. After the first counted
-cell runs, nothing here changes; a later change is a dated amendment at the end of this file, written before any cell
-it affects. Changes to a bar or a family need the program owner's approval first.
+**Status: frozen on 2026-10-08** at gbrain-evals commit `8842b7784a34924e9ee07b1de0600012303c7c4b`, before any counted
+cell reserved a lease. The freeze checklist below fills every value that was open. Nothing below changes after the
+first counted cell runs; a later change is a dated amendment at the end of this file, written before any cell it
+affects, and a change to a bar or a family needs the program owner's approval first. The D8 reserve's hash-list SHA
+(amendment A2) is recorded when it is relayed; Q1's cells do not use the reserve.
 
 Owner: GBRA-49 (the competitor-ideas program). Plan approved by Garry on 2026-10-06, with every recommendation
 accepted. This campaign replaces the sealed phase of the open-source comparison (gbrain-evals#73) and reuses its
@@ -52,8 +52,8 @@ component and default-amount rows (its default query expansion is one counted LL
 `synthesize` for gbrain's own answer, recorded under the reader `own:<gbrain's resolved model>`. A labeled
 full-surface row runs `think` with each reader as `model` and the question date as `reference_date`, in its own cell on
 a stack started with `GBRAIN_FULL_SURFACE=1`, so every starter row reads a starter-only stack. No request carries `token_budget`. The resolved configuration (search mode,
-reranker, expansion, embedder, internal models) is published beside its hash. OPEN: frozen gbrain commit (gbrain
-master on the freeze date).
+reranker, expansion, embedder, internal models) is published beside its hash. Frozen gbrain commit: `7aa2caa0aa2a9f031730cd351cd516cf4f9f5802`
+(master on 2026-10-08, 0.60.106.0).
 
 **External configurations.** Each system runs its documented recipe as the headline row where the recipe's measured
 ingest fits 48 hours per conversation and its block cap. Otherwise it runs the common configuration (extraction
@@ -238,7 +238,8 @@ correct-abstention rate on BEAM-10M.
 - **Family 2.** S1 whole-system rows, the same method, Holm within the family.
 - **Family 3 (diagnostic).** Strict recall of all gold sessions at 10 on S1.
 - Everything on S2 to S5 is descriptive, with clustered intervals.
-- **Power rule.** OPEN: the simulated minimum detectable difference. If it exceeds 10 points for most Family 1
+- **Power rule.** Simulated minimum detectable difference (`power.json`): 16.0 points with nine comparisons, 13.6
+  after the shrink, so Family 1 is descriptive (A1, A4). If it exceeds 10 points for most Family 1
   rows, Family 1 shrinks to `gbrain-defaults` against the four strongest rows on dev data (the three-reader mean at
   8k on the LoCoMo dev smoke, amendment A4), chosen before S1 opens. If power is still inadequate, S1 is published descriptively with
   its detectable difference and no superiority claim.
@@ -326,10 +327,28 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 
 ## Freeze checklist (filled by the freezing commit)
 
-- OPEN: gbrain commit; campaign hash, covering the git tree of every executed file and images by digest; resolved
-  gbrain configuration and its hash; power result; engine rule inputs; token calibration factors; the cell manifest
-  and its re-priced total; the S1 subset ids; Family 1 membership if shrunk; the hedge classifier's dev-smoke
-  validation.
+- **gbrain:** `7aa2caa0aa2a9f031730cd351cd516cf4f9f5802` (0.60.106.0), installed in the `gbrain-defaults` image.
+  Resolved configuration hash `415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab` (config file
+  `6349524a…0554`, starter tool list `08403fb2…483c58d`): PGLite, `voyage:voyage-4` at 1,024 dimensions, `tokenmax`
+  search, `voyage:rerank-2.5`, query expansion on (`claude-haiku-4-5`), `synthesize` and `think` on `claude-opus-4-7`.
+- **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
+  cell executes (155 files) and the pinned images:
+  - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
+    from the custodian's host. Hash `5112e4b2a838007030bb4e1f694a963bd70d4e0502a412427a9a975b786c6d6e`.
+  - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
+    `ed0c6638f6d2f36b424101fd1ee2bf410b33b6df5145387d3b25be8b6871ae5a`.
+  The two caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
+- **Images:** the 12 upstream images in each campaign's `images` map, every one by `sha256` digest; images the
+  bundles build are covered by their Dockerfiles and lockfiles in the hashed tree.
+- **Engine:** PGLite (rule result, rechecked at the freeze commit).
+- **Token calibration:** Opus 5.5 1.4708 and Sonnet 5.5 1.4524 times `cl100k_base`; GPT-6.1 Sol 1.0009 times
+  `o200k_base` (A4).
+- **Cell manifest:** `eval/runner/q1/cells/q1-cells.json`, $6,732 in cells (A5 lines).
+- **S1 sweep subset:** 100 questions stratified by conversation and category, seed `q1-sweep`, drawn by the
+  custodian when questions open; question `1_abstention_0` is excluded everywhere.
+- **Family 1:** descriptive; shrink comparators `ext-extract-first`, `ext-markdown-kb`, `ext-temporal-graph`,
+  `ext-graph-pipeline`.
+- **Hedge classifier:** none met the bar; `hedge_classifier: none` (A6).
 
 ## Amendments
 
@@ -390,6 +409,11 @@ classifier. Each answer record still carries its delivered tokens. The three val
 [`2026-10-06-scoreboard/dev-smokes/`](2026-10-06-scoreboard/dev-smokes/README.md).
 
 ## Changelog
+
+### 2026-10-08: frozen
+
+Freeze checklist filled: gbrain `7aa2caa0`, resolved configuration hash, two campaign hashes and caps, images, engine,
+calibration, cell manifest, sweep subset rule, Family 1 comparators, hedge classifier none.
 
 ### 2026-10-08: amendment A6
 
