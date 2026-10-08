@@ -71,7 +71,7 @@
 import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join, relative, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { budgetOptionsFrom, startPaidRun } from '../budget-ledger.ts';
 import { cachedOpenAIEmbedder, PG_EMBED_DIMS } from '../cat40/pg-arm.ts';
 import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
@@ -1047,7 +1047,12 @@ export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Recor
   for (const dir of dirs) for (const f of ['docker-compose.yml', 'Dockerfile']) {
     const path = join(dir, f);
     if (!existsSync(path)) continue;
-    for (const m of readFileSync(path, 'utf8').matchAll(/([a-z0-9][\w./:-]*)@(sha256:[0-9a-f]{64})/g)) out[m[1]] = `${m[1]}@${m[2]}`;
+    // Keyed by bundle and image tag, valued by bare digest: upstream registry paths can carry a product name, which
+    // published files outside docs/comparison-systems.md must not (the bundle files there hold the full references).
+    for (const m of readFileSync(path, 'utf8').matchAll(/([a-z0-9][\w./:-]*)@(sha256:[0-9a-f]{64})/g)) {
+      const tag = m[1].includes(':') ? m[1].slice(m[1].lastIndexOf(':') + 1) : 'latest';
+      out[`${basename(dir)}/${f === 'Dockerfile' ? 'base' : 'service'}:${tag}`] = m[2];
+    }
   }
   return Object.fromEntries(Object.entries(out).sort(([a], [b]) => (a < b ? -1 : 1)));
 }
