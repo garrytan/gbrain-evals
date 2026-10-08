@@ -198,4 +198,16 @@ The last command is the counted Cat 37 run; the per-model commands above it are 
 
 ## Amendments
 
-None yet. Any change to models, thresholds, sizes or decision rules is written here, committed and pushed before the cell it affects runs.
+Any change to models, thresholds, sizes or decision rules is written here, committed and pushed before the cell it affects runs.
+
+### Amendment 1, 2026-10-08, before any paid cell: the measured head and how the runs execute
+
+Garry authorized the paid run (about $417 planned, hard cap $500). Nothing below changes a model, threshold, size or decision rule.
+
+- **Measured head.** gbrain `capy/memory-trust` at `c2f10ee8ba598f440f3e22549b9f6963784442da` (v0.60.110.0, every lane merged, master v0.60.110.0 merged, full Ubicloud gate green). Every counted cell runs with `--gbrain <checkout>@c2f10ee8ba598f440f3e22549b9f6963784442da`. Keyless reruns at this commit pass every Cat 37, 38 and 39 contract (receipts in `docs/benchmarks/2026-10-08-memory-trust/`).
+- **Models rechecked** on 2026-10-08 with `bun scripts/model-freshness.ts`: newest Opus `claude-opus-5-5`, Sonnet `claude-sonnet-5-5`, Fable `claude-fable-5-1`, GPT `gpt-6.1-sol`; no warnings; all priced, the official judge `gpt-4o-2024-08-06` included. The model list is unchanged.
+- **Pre-flight, not counted.** Before its counted cell, `gpt-6.1-sol` (the only provider path the Fable smoke does not exercise) runs 2 Cat 37 scenario runs (`--limit 2 --repeats 1`) to catch a harness fault before 800 runs. Its rows are reported as pre-flight and enter no metric or decision. Worst case under $1.
+- **Concurrency.** Cat 37 runs 8 scenario sessions at a time (`--concurrency 8`); every request still reserves through the ledger.
+- **Utility guard execution.** The W10 tooling imports the pinned gbrain, so a driver (`eval/runner/memory-trust/utility-guard.ts`) runs the same harness at the measured head through the copied overlay: gbrain's own `eval longmemeval` with W10a's arguments (`W10A_ARGS`: top 5, balanced mode, reranker on, notes reader) and the recording stub reader, on `longmemeval_s_cleaned.json` (SHA-256 `d6f21ea9…`, checked), with a cold embedding cache. Readers then run through the provider batch APIs with W10's preregistered per-model settings (`MODEL_SETTINGS`: Sonnet and Opus 5.5 at low effort and 4,096 output tokens, `gpt-6.1-sol` at medium effort and 12,000), reserved at the uncached list worst case and settled at what the provider bills. The official `gpt-4o-2024-08-06` judge grades every reader row. Comparisons with the published rows are paired by question id with the exact McNemar test.
+- **Budget ledger.** `.budget/memory-trust.sqlite`, program cap $500, one shared run (`memory-trust-evals`, $500) that every runner joins. A cell starts only if its worst case fits what is left; if the projected total passes $500 the run stops and is reported, and the design is not trimmed.
+
