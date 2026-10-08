@@ -38,7 +38,7 @@ const runner = resolveRunner();
 const remoteRoot = `work/${basename(REPO_ROOT)}`;
 
 const ubi = (...args: string[]) => {
-  const p = Bun.spawnSync(['bash', runner, ...args], { stdout: 'pipe', stderr: 'pipe', env: process.env });
+  const p = Bun.spawnSync(['bash', runner, ...args], { stdout: 'pipe', stderr: 'pipe', env: process.env, timeout: (args[0] === 'pull' ? 1800 : 120) * 1000 });
   return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() };
 };
 
@@ -95,8 +95,8 @@ function step(c: Campaign, l: LeaseState): Phase {
     const cmd = launched?.argv?.at(-1);
     if (!cmd) return 'lost';
     const inner = `bash -l ~/.ubirun-setup.sh && ${cmd}`;
-    const r = ubi('ssh', vm, `cd ${remoteRoot} && . ~/.ubirun-env && touch ~/.q1-reattach-started && setsid nohup bash -lc ${JSON.stringify(inner)} > ~/q1-cell.log 2>&1 < /dev/null & disown; echo started`);
-    return r.code === 0 && r.out.includes('started') ? 'started' : 'waiting';
+    ubi('ssh', vm, `cd ${remoteRoot} && . ~/.ubirun-env && touch ~/.q1-reattach-started && (setsid nohup bash -lc ${JSON.stringify(inner)} > ~/q1-cell.log 2>&1 < /dev/null &) ; echo started`);
+    return 'started';
   }
   pullParts(c, l, vm);
   return 'crashed';
