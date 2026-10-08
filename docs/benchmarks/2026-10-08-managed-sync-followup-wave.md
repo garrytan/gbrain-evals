@@ -2,7 +2,7 @@
 
 **Measured by gbrain on October 8, 2026; mirrored into this repository on October 8, 2026. This mirror reruns nothing.**
 
-This is the follow-up to [the October 7 report](2026-10-07-managed-sync-lanes-foreground.md), on the same rig: gbrain's `scripts/bench/managed-sync-catchup.ts`, Docker Postgres (`pgvector/pgvector:pg16`) behind a toxiproxy latency proxy at 57 ms, 1,500 generated notes with 34 already-deleted files first, default settings, on 16-vCPU Ubicloud VMs (Ubuntu 24.04). Every row is three runs per head. Master was gbrain `b5f12b12e` (v0.60.117.0); the wave was gbrain [#6344](https://github.com/garrytan/gbrain/pull/6344) (branch `capy/next-wave-g3-g6-g7`) measured at `d6d9d5956`, which ships as v0.60.119.0; later commits on it changed docs, release stamps and an engine-SQL ratchet row only.
+This is the follow-up to [the October 7 report](2026-10-07-managed-sync-lanes-foreground.md), on the same rig: gbrain's `scripts/bench/managed-sync-catchup.ts`, Docker Postgres (`pgvector/pgvector:pg16`) behind a toxiproxy latency proxy at 57 ms, 1,500 generated notes with 34 already-deleted files first, default settings, on 16-vCPU Ubicloud VMs (Ubuntu 24.04). Every row is three runs per head. Master was gbrain `b5f12b12e` (v0.60.117.0); the wave was gbrain [#6344](https://github.com/garrytan/gbrain/pull/6344) (branch `capy/next-wave-g3-g6-g7`) measured at `d6d9d5956`, which ships as v0.60.119.0; later commits on it merged master (v0.60.118.0) and changed docs, release stamps and an engine-SQL ratchet row.
 
 ## The finding
 
