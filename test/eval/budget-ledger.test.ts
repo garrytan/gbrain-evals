@@ -51,6 +51,13 @@ describe('pricing', () => {
     expect(routed).toMatchObject({ input: 3, output: 15 });
   });
 
+  test('the cheap extraction candidates carry their list prices', () => {
+    expect(priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-haiku-5-5', max_tokens: 10, messages: [] }))
+      .toMatchObject({ kind: 'chat', input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 });
+    expect(priceRequest('https://api.openai.com/v1/responses', { model: 'gpt-6-luna', max_output_tokens: 10, input: 'x' }))
+      .toMatchObject({ kind: 'chat', input: 0.1, output: 0.5 });
+  });
+
   test('dated snapshots use the family list price; Voyage rerank is priced from query and documents', () => {
     expect(priceRequest('https://api.openai.com/v1/chat/completions', { model: 'gpt-4o-2024-08-06', max_tokens: 10, messages: [] }))
       .toMatchObject({ kind: 'chat', input: 2.5, output: 10, maxOutputTokens: 10 });
@@ -288,6 +295,19 @@ describe('provider SDKs that capture fetch', () => {
     expect(attempts).toBe(2);
     expect(entries.map(e => e.status)).toEqual(['charged-reservation', 'reconciled']);
     expect(entries[1].input_tokens).toBe(12);
+  });
+
+  test('a 4xx answer without usage settles at $0, as the metering proxy settles it; a 5xx keeps its reservation', async () => {
+    const path = ledgerPath();
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: path });
+    let status = 400;
+    const guard = installPaidRequestGuard(run, { fetchImpl: (async () => new Response(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: '`temperature` is deprecated for this model.' } }),
+      { status, headers: { 'content-type': 'application/json' } })) as unknown as typeof fetch });
+    const call = () => fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(anthropicBody) });
+    try { expect((await call()).status).toBe(400); status = 500; expect((await call()).status).toBe(500); }
+    finally { guard.uninstall(); }
+    const entries = read(path).entries;
+    expect(entries.map(e => [e.status, e.actual_usd! > 0])).toEqual([['reconciled', false], ['charged-reservation', true]]);
   });
 });
 

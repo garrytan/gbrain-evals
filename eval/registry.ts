@@ -670,6 +670,16 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Each arm is a fresh PGLite brain behind gbrain serve (stdio MCP). The agent writes sessions as note pages with put_page and remembers one fact per page; every provider request goes through a metering proxy and gbrain\'s GBRAIN_AI_CALL_LOG. After in-session work settles, the background queue is drained with gbrain jobs work and what remains is reported. It does not measure retrieval quality or the HTTP transport.',
   },
   {
+    id: 'facts-absorb-gate', legacy_alias: 'R2-facts-absorb', name: 'Facts-absorb quality gate: does a cheaper facts.extraction_model keep the saved facts as good as the default?',
+    family: 'performance', tier: 'P', script: 'eval/runner/facts-absorb-gate.ts',
+    run: { kind: 'listed', reason: 'paid decision run for the 10x plan item R2 (write-path default before the Q1 freeze): the real facts-absorb job on a build passed with --gbrain, one arm per extraction model plus two mutants, metered under the eval budget ledger and preregistered', command: 'bun eval/runner/facts-absorb-gate.ts --gbrain <checkout>@<ref> --prereg <path> --budget-usd <n> --out eval/reports/facts-absorb-gate/<name>' },
+    cost_estimate: { usd: 6, basis: 'docs/benchmarks/2026-10-08-facts-extraction-model/PREREGISTRATION.md: Sonnet 4.6 baseline about $3, the gpt-6.1-sol coverage judge about $2, cheap arms and mutants under $1' },
+    receipt_path: 'eval/reports/facts-absorb-gate/<name>/receipt.json',
+    headline: { metric: 'per arm: recall, precision, attribution and correction handling of the stored facts against the facts-absorb world\'s answer key; parse failures (unhandled must be 0); facts readable after a restart; resolved model at the facts invocation; natural-prose covered items (Cat 35 coverage judge); paired candidate-minus-baseline intervals and the preregistered verdict, with both mutants failing', denominator: 'facts-absorb-gen@1 seeds 60 and 61: 170 pages, 529 planted claims, 96 correction cases, 64 rejected suggestions; transcript-distill-v1: 20 transcripts, 173 planted items' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Each arm is a fresh PGLite brain behind gbrain serve (stdio MCP). The agent writes every page with put_page, which queues the real facts-absorb job; gbrain jobs work drains it after the session closes, then a fresh process reads every stored fact, job and ingest_log row. Facts are matched to planted claims without a model; the natural-prose stratum uses the Cat 35 coverage judge. A disabled-extractor mutant and a drop-all-output mutant must fail. It does not measure retrieval or answers, and its templated world is easier than real chat.',
+  },
+  {
     id: 'entity-resolution', legacy_alias: 'N4', name: 'Entity resolution: variants, namesakes and cross-source identity',
     family: 'relationships', tier: 'H', script: 'eval/runner/n4-entity-resolution.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n4-entity-resolution'),
@@ -1109,6 +1119,16 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Scores one configuration cell; the shootout scripts assemble cells into a matrix.',
   },
   {
+    id: 'lifecycle-lite', legacy_alias: 'shootout-P2', name: 'Update and forget across memory systems (open-source memory shootout, lifecycle-lite)',
+    family: 'temporal', tier: 'P', script: 'eval/runner/lifecycle-lite.ts',
+    run: { kind: 'listed', reason: 'a shootout cell per system: vendor shims run on their own Ubicloud VM behind a metering proxy lease, and gbrain-shootout spends on its reranker and embedder; its keyless gate is the mutation suite in test/eval/lifecycle-lite.test.ts, which runs in bun run test', command: 'bun eval/runner/lifecycle-lite.ts --system <shim URL>|gbrain-shootout --seeds 1,2,3,4,5 --qa reader --restart [--restart-cmd "bash eval/systems/bootstrap.sh restart --system <name>"] --output <dir> (counted cells: docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/manifests/)' },
+    cost_estimate: { usd: null, basis: 'unmeasured: the draft preregistration (docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md) estimates $21.16 for five seeds on all seven cells (Phase 2 pilot costs, reader and judge included); the campaign cap is $24.37' },
+    receipt_path: 'the --output path (receipt.json)',
+    headline: { metric: 'per system: current-value probes the fixed reader answered correctly (headline), and beside it the retrieval check (new value served, no earlier value active; a design choice, report-only) and dated as-of probes (report-only); witnessed delete targets gone after delete and restart, survivor retention (floor 1.0), state lost or reactivated by a restart', denominator: 'per seed: 12 correction chains (update depth 1 to 4, three reverts), 12 as-of probes, 10 delete targets and 7 retained canaries, at witness, after the deletes and after a restart; five seeds' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Ingests seeded synthetic chat histories (the N1 correction chains and N5 canaries for the same seed, with namespace-unique labels) through any protocol v1 shim or in-process gbrain-shootout: dated corrections arrive as ordinary sessions, explicit deletes go through /delete_source. Every delete is preceded by a presence check, and a delete target the system never surfaced is no-signal rather than a forget. Retrieval is scored lexically against the generator ledger: the new value served and no earlier value active after a correction (an item the system marks superseded is history), the value current at an earlier query date, a deleted claim absent from every returned item after the delete and after a restart that keeps state, and retained facts still present (survivor floor 1.0). The update headline is a fixed reader (gpt-4o-mini) answering from the packed native evidence, checked by a fixed judge (gpt-4o-2024-08-06), on in every counted cell. Report-only, no inferential family. It does not measure paraphrased residue the lexical patterns miss, physical erasure, or systems without a passive memory API. A retrieval error is a scored miss; a harness or budget failure makes the run incomplete.',
+  },
+  {
     id: 'qrels-regression', legacy_alias: 'qrels', name: 'qrels / baseline regression fixture',
     family: 'retrieval', tier: 'H', script: 'scripts/generate-v0.41-launch.ts',
     run: { kind: 'listed', reason: 'checked in CI; the corpus is synthesized from the queries, so it is a regression smoke only', command: 'bun scripts/generate-v0.41-launch.ts --check' },
@@ -1196,6 +1216,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'judge.ts': { role: 'shared rubric judge' },
   'lifecycle-report.ts': { role: 'Markdown summary of lifecycle receipts', part_of: 'memory-lifecycle' },
   'llm-budget.ts': { role: 'shared LLM concurrency bucket' },
+  'metering-proxy.ts': { role: 'fail-closed provider metering proxy: in-process for Cat 40 and other gbrain-arm callers, lease mode for open-source memory shootout cells (docs/plans/2026-10-05-oss-memory-shootout/PLAN.md)' },
   'longmemeval-aggregate.ts': { role: 'LongMemEval receipt aggregator', part_of: 'longmemeval-retrieval' },
   'longmemeval-batch.sh': { role: 'LongMemEval multi-worker batch wrapper', part_of: 'longmemeval-retrieval' },
   'longmemeval-cache.ts': { role: 'LongMemEval embedding cache', part_of: 'longmemeval-retrieval' },
@@ -1223,6 +1244,8 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'paid-arm.ts': { role: 'paid-arm guard: --paid and --budget-run-id against the budget ledger' },
   'pins.ts': { role: 'declared gbrain pins from package.json' },
   'precisionmembench-instrument.ts': { role: 'PrecisionMemBench instrumentation sweep', part_of: 'precisionmembench' },
+  'precisionmembench-s3.ts': { role: 'open-source memory shootout family S3: PrecisionMemBench search-only precision and recall, each common configuration paired with gbrain-shootout common (frozen master, and the pin as a descriptive family), cluster sign-flip and Holm', part_of: 'precisionmembench' },
+  'precisionmembench-system.ts': { role: 'PrecisionMemBench on the upstream contract for any open-source memory shootout system (protocol v1 shim or in-process gbrain-shootout): Phase 5, family S3', part_of: 'precisionmembench' },
   'probe-accounting.ts': { role: 'shared probe accounting' },
   'promotion.ts': { role: 'evaluates preregistered promotion rules against a receipt' },
   'prereg.ts': { role: 'preregistration attestation and the CI order check' },
@@ -1247,6 +1270,8 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'situation-recall-programmatic.ts': { role: 'programmatic driver for Cats 5, 8 and 9', part_of: 'situation-recall' },
   'situation-recall-provenance.ts': { role: 'situation-recall provenance hashing', part_of: 'situation-recall' },
   'situation-recall-regression.ts': { role: 'situation-recall regression comparator', part_of: 'situation-recall' },
+  'shootout-report.ts': { role: 'open-source memory shootout Phase 4 analysis: primary family, pin link, S1, S2 and descriptive tables with the preregistered sentences, from the committed cell results (latest settled attempt per cell)' },
+  'shootout-cell.ts': { role: 'open-source memory shootout cells (PLAN.md 2026-10-05): campaign manifest, durable host-ledger leases, Ubicloud launch, settlement; not the embedder-shootout entry shootout-cell' },
   'smoke.ts': { role: 'embedder-shootout pre-flight smoke', part_of: 'shootout-cell' },
   'synthetic-corpus-loader.ts': { role: 'synthetic-v1 corpus loader' },
   'tool-bridge.ts': { role: 'agent tool bridge' },
@@ -1256,4 +1281,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'lifecycle', 'memory-qa', 'p4-stream', 'power', 'queries', 'stats', 'system-one', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'facts-absorb', 'lifecycle', 'lifecycle-lite', 'memory-qa', 'p4-stream', 'power', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];

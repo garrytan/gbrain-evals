@@ -1,0 +1,205 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "lme-s",
+  "split": "dev",
+  "started_at": "2026-10-06T22:28:51.951Z",
+  "finished_at": "2026-10-06T23:27:05.814Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 50,
+      "misses": 21721,
+      "inserts": 21721,
+      "bytes": 133453824
+    }
+  },
+  "dataset": {
+    "name": "LongMemEval-S cleaned",
+    "files": [
+      {
+        "path": "longmemeval/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+      }
+    ],
+    "revision": "98d7416c",
+    "license": "MIT"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "gbrain-legacy-common-lme-s-a1-aeb7a952",
+    "retry_upstream_5xx": true
+  },
+  "ingest": null,
+  "sanitizer": {
+    "forbidden_markers": 19701
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "d3ab8ee22ecb4b8fe06b2fd1af171f11b1924ba3a5dd45e2dc5d6d06e355c2e7",
+  "retrieval_path": "hybridSearch (expansion off), chunks reduced to distinct sessions",
+  "selection": {
+    "categories": null,
+    "limit": 100,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 100,
+    "questions_expected": 100
+  },
+  "counts": {
+    "rows": 100,
+    "scored": 96,
+    "errors": 0,
+    "abstention": 4
+  },
+  "summary": {
+    "recall_all_at_5": 0.9479166666666666,
+    "recall_any_at_5": 0.9791666666666666,
+    "recall_all_at_10": 0.9791666666666666,
+    "ndcg_at_10": 0.9573934340261906,
+    "latency_p50_ms": 427.3,
+    "latency_p95_ms": 529.0999999999999,
+    "qa_score": 0.86,
+    "qa_rows": 100,
+    "qa_errors": 0,
+    "qa_service_score": 0.86,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "mode": "reader",
+    "reader": "openai:gpt-4o-2024-08-06",
+    "judge": "openai:gpt-4o-2024-08-06",
+    "runs": 1,
+    "sessions": 5,
+    "budgetTokens": null,
+    "thinkModel": "anthropic:claude-sonnet-5-5",
+    "context": "sessions",
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "judge_prompts": "LongMemEval official per-type prompts"
+  },
+  "rows_file": "rows.ndjson",
+  "system": {
+    "name": "gbrain",
+    "capability_system": "gbrain",
+    "context": "rehydrated",
+    "policy": {
+      "name": "gbrain:vendor-default",
+      "mode": "vendor-default",
+      "settings": {
+        "limit": 30,
+        "expansion": false
+      }
+    },
+    "capabilities": {
+      "system": "gbrain",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.46.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "legacy": {
+          "model_roles": {},
+          "notes": "memory-qa legacy path: harness pins, hybridSearch expansion off, chunks reduced to pages"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one page per session; the page slug is the occurrence id"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "limit": 30,
+            "expansion": false
+          },
+          "pins": {
+            "search.mode": "balanced",
+            "search.reranker.enabled": "false",
+            "search.autocut": "false"
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    },
+    "identity": null
+  },
+  "context": "rehydrated",
+  "policy": {
+    "name": "gbrain:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "limit": 30,
+      "expansion": false
+    },
+    "settings_source": "settings"
+  },
+  "manifest_sha256": "618fde32576d4c08908d589570ee339ab54b9c093fd9031a3c9fef30bde71188",
+  "outcomes": {
+    "scored": 100,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 100,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

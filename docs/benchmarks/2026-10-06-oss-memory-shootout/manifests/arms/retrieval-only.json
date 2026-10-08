@@ -1,0 +1,10 @@
+{
+  "policies": {
+    "vendor-default": {
+      "budget_tokens": null
+    },
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  }
+}

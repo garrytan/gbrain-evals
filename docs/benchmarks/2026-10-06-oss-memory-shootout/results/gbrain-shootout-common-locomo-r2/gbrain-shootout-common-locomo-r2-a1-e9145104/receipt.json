@@ -1,0 +1,250 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "locomo",
+  "split": "dev",
+  "started_at": "2026-10-07T20:10:31.341Z",
+  "finished_at": "2026-10-07T20:23:30.381Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 597,
+      "misses": 723,
+      "inserts": 722,
+      "bytes": 4435968
+    }
+  },
+  "dataset": {
+    "name": "LoCoMo (locomo10.json)",
+    "files": [
+      {
+        "path": "locomo/locomo10.json",
+        "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4"
+      }
+    ],
+    "revision": "3eb6f2c",
+    "license": "CC BY-NC 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 2,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "gbrain-shootout-common-locomo-r2-a1-e9145104",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 3,
+    "sessions": 89,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0.00877721,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 2034
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "d3e6d9f5fd4949a320f1e9c8a53fe8f00b41d7ee1b60599a40efcc6a830b5300",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 3,
+    "questions_expected": 587
+  },
+  "system": {
+    "name": "gbrain-shootout",
+    "capability_system": "gbrain-shootout",
+    "capabilities": {
+      "system": "gbrain-shootout",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.46.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "gbrain init defaults for search; embedder from the run"
+        },
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "unsettable": [
+            "extraction"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each chunk cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 40
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [
+        "retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-shootout",
+      "config": "{}",
+      "versions": null
+    }
+  },
+  "counts": {
+    "rows": 1174,
+    "scored": 928,
+    "errors": 0,
+    "abstention": 246
+  },
+  "summary": {
+    "recall_all_at_5": 0.8760775862068966,
+    "recall_any_at_5": 0.9665948275862069,
+    "recall_all_at_10": 0.9256465517241379,
+    "ndcg_at_10": 0.9082039288767755,
+    "latency_p50_ms": 567.95,
+    "latency_p95_ms": 941.5899999999999
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 1174,
+    "outcomes": {
+      "scored": 1174,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence",
+      "vendor-default"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 0
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.retrieval",
+      "dir": "arms/fixed-evidence.retrieval",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 587,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 587,
+        "scored": 464,
+        "errors": 0,
+        "abstention": 123
+      },
+      "summary": {
+        "recall_all_at_5": 0.8771551724137931,
+        "recall_any_at_5": 0.9676724137931034,
+        "recall_all_at_10": 0.9267241379310345,
+        "ndcg_at_10": 0.9091018135615727,
+        "latency_p50_ms": 770.55,
+        "latency_p95_ms": 1063.4599999999991
+      }
+    },
+    {
+      "id": "vendor-default.retrieval",
+      "dir": "arms/vendor-default.retrieval",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 587,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 587,
+        "scored": 464,
+        "errors": 0,
+        "abstention": 123
+      },
+      "summary": {
+        "recall_all_at_5": 0.875,
+        "recall_any_at_5": 0.9655172413793104,
+        "recall_all_at_10": 0.9245689655172413,
+        "ndcg_at_10": 0.9073060441919791,
+        "latency_p50_ms": 397.15,
+        "latency_p95_ms": 502.8099999999999
+      }
+    }
+  ]
+}

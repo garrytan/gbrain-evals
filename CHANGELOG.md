@@ -2,6 +2,40 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.47] - 2026-10-08
+
+### Facts-absorb quality gate: Claude Haiku 5.5 passes as gbrain's background fact-extraction model, GPT-6 Luna does not; write cost of three extraction models
+
+[Report](docs/benchmarks/2026-10-08-facts-extraction-model.md), [preregistration](docs/benchmarks/2026-10-08-facts-extraction-model/PREREGISTRATION.md) (SHA-256 `8f9be0d9…` frozen before any counted cell; post-run scorer amendments disclosed), gate and write-cost receipts. Item R2 of the 10x plan, wave 0; paired with gbrain #6338. $23.30 of the $40 cap.
+
+- **Gate (gbrain master `1935c74a`, v0.60.110.0).** The real `facts-absorb` job behind `gbrain serve`, on 170 pages of a seeded chat world (529 planted claims) and the 20 Cat 35 transcripts. Under the preregistered rule Claude Haiku 5.5 passes every check against Sonnet 4.6 and GPT-6 Luna fails attribution (−6.6 points); the extractor-disabled and drop-all-output mutants both fail. After the disclosed scorer fixes, the templated world is at a ceiling for all three models; on natural transcripts Haiku 5.5 covers 4.6 points fewer planted items (95% interval −9.0 to −0.6), inside the 10-point harm margin.
+- **Write cost (P8 protocol, 1,000 LongMemEval-S sessions).** Extraction off $0.32, today's Sonnet 4.6 default $15.94 (P8 measured $9.94 at v0.60.48), Haiku 5.5 $1.38 per 1,000 pages; GPT-6 Luna's arm hit the 3-hour drain limit (about $1.23, an estimate).
+- **Harness.** `eval/runner/facts-absorb-gate.ts` with its scorer and generator, `--rescore` / `--reread` modes, a write-cost arm for an explicit extraction model, and a response-transform hook on the shared metering proxy for the drop mutant. The lifecycle `freePort` test now holds an OS-assigned port instead of fixed port 47998, which sits in the ephemeral range.
+- **Version.** Main is at 0.10.46, so this release is 0.10.47.
+
+## [0.10.46] - 2026-10-08
+
+### Open-source memory comparison: gbrain and five open-source memory systems through one harness
+
+[Report](docs/benchmarks/2026-10-06-oss-memory-shootout.md), [preregistration](docs/benchmarks/2026-10-06-oss-memory-shootout-preregistration.md) (frozen 2026-10-06, amendments A1 to A8), [update-and-forget preregistration](docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md), per-cell receipts and text-free rows. The systems are named by kind (`memory-bank`, `graph-pipeline`, `extract-first`, `markdown-notes`, `temporal-graph`, `agent-runtime`); [docs/comparison-systems.md](docs/comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project.
+
+- **Primary family (LongMemEval-S, 100 questions, 8,000 tokens of each system's evidence, `gpt-4o` reader).** gbrain at master `c5fb0201`, measured through an adapter that hands the reader bare chunks without titles or dates, answered 59%; `memory-bank` 91%, `graph-pipeline` 83% and `extract-first` 79% are ahead after Holm, `markdown-notes` 69% is not distinguishable and `temporal-graph` 37% is behind. gbrain's strict `recall_all@5` is 97.9%, tied for the top, and its answers reach 78% on the original sessions behind its hits, so the gap is delivery through this adapter, not retrieval. A `gbrain-query` adapter is planned.
+- **Also measured.** LoCoMo dev, BEAM-100K dev, the custodian's sealed LoCoMo and BEAM-100K batch (aggregates only, gbrain's pin as the blind row), PrecisionMemBench on the upstream contract (S3) and update-and-forget (lifecycle-lite, report-only). The frontier-reader replays (D2) await a scope decision.
+- **Harness.** Ubicloud cell runner with durable leases and a fail-closed metering proxy (`eval/runner/shootout-cell.ts`), the shim protocol and six vendor shims (`eval/systems/`), multi-arm memory QA, the sealed execution profile, the PrecisionMemBench system path and S3 analysis, lifecycle-lite with its mutation kit, and `eval/runner/shootout-report.ts`.
+- **Frontier readers (D2).** On the LongMemEval-S primary arm, Opus 5.5, Sonnet 5.5 and `gpt-6.1-sol` lift every system; gbrain gains 7 to 9 points and the order holds. Fable 5.1 is descriptive only.
+- **Spend.** $1,079.48 measured across Phases 4 to 7 and D2, plus a $283 reservation with unknown actual spend held against the $1,450 cap.
+- **Version.** Main is at 0.10.45, so this release is 0.10.46.
+
+## [0.10.45] - 2026-10-08
+
+### gbrain #6317 mirror: the sync wedge is a pooler round trip that never completes; two consumers were a multiplier
+
+Paired with gbrain #6330 (branch `capy/6317-reliability-contract`, merged as `b5f12b12e`, v0.60.117.0) and the mechanism fix #6329 (v0.60.114.0). No paid call ($0 here); this mirror reruns nothing.
+
+- **Two-consumer and partition arms (mirror, $0 here).** [Report](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md). On 16-vCPU Ubicloud VMs behind PgBouncer in transaction mode at 57 ms: 2 h 49 min of `gbrain serve --http` beside a 6-lane `gbrain sync` on v0.60.110.0 published 4,951 pages with no wedge (three arms: plain; adoption load plus CLI restarts; dual direct pool plus restarts), while one `gbrain sync --no-lanes` with no serve wedged within one sample once the client→pooler half of its connections was dropped: backend `active`/`ClientRead`, the consumer's `expired_claims` round trip parked 135 s past its 5 s deadline, renewals lapsing, zero commits, until the network came back. The named await is postgres.js's query promise in `runUnsafe`; the v0.60.112.0 preparation budget does not cover it (run F: 16 members parked 166 s, nothing cut or held).
+- **Reading.** `persistence.single_consumer` ships off in gbrain v0.60.117.0 per the preregistered reading (the single-process arm wedged). The fix is the bounded client-side settle in v0.60.114.0; v0.60.117.0 adds direct-lane routing for the consumer's round trips, `owner.backend[]` in `writer status`, and movement-based health.
+- **Version.** Main is at 0.10.44, so this release is 0.10.45.
+
 ## [0.10.44] - 2026-10-08
 
 ### BEAM-1M failure analysis on the development split: the 1M no-memory floor, frontier readers, the oracle ceiling and the reranker; the BEAM date order in the reader prompt fixed

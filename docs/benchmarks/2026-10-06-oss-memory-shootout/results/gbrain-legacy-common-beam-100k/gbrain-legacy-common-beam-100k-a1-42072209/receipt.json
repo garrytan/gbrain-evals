@@ -1,0 +1,205 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-100k",
+  "split": "dev",
+  "started_at": "2026-10-07T19:45:05.450Z",
+  "finished_at": "2026-10-07T20:08:21.775Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 157,
+      "misses": 2657,
+      "inserts": 2656,
+      "bytes": 16318464
+    }
+  },
+  "dataset": {
+    "name": "BEAM 100k",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "gbrain-legacy-common-beam-100k-a1-42072209",
+    "retry_upstream_5xx": true
+  },
+  "ingest": null,
+  "sanitizer": {
+    "forbidden_markers": 510
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "a867834dc68c31977876e35485116854b80e6224af5b5f43fc87c53767d559a0",
+  "retrieval_path": "hybridSearch (expansion off), chunks reduced to distinct sessions",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 6,
+    "questions_expected": 120
+  },
+  "counts": {
+    "rows": 120,
+    "scored": 108,
+    "errors": 0,
+    "abstention": 12
+  },
+  "summary": {
+    "recall_all_at_5": 0.48148148148148145,
+    "recall_any_at_5": 0.8240740740740741,
+    "recall_all_at_10": 0.6018518518518519,
+    "ndcg_at_10": 0.5753435298989316,
+    "latency_p50_ms": 485.55,
+    "latency_p95_ms": 687.0749999999999,
+    "qa_score": 0.6000727513227513,
+    "qa_rows": 120,
+    "qa_errors": 0,
+    "qa_service_score": 0.6000727513227513,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "mode": "reader",
+    "reader": "openai:gpt-4.1-mini",
+    "judge": "openai:gpt-4.1-mini",
+    "runs": 1,
+    "sessions": 5,
+    "budgetTokens": null,
+    "thinkModel": "anthropic:claude-sonnet-5-5",
+    "context": "sessions",
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "judge_prompts": "per-rubric-item yes/no"
+  },
+  "rows_file": "rows.ndjson",
+  "system": {
+    "name": "gbrain",
+    "capability_system": "gbrain",
+    "context": "rehydrated",
+    "policy": {
+      "name": "gbrain:vendor-default",
+      "mode": "vendor-default",
+      "settings": {
+        "limit": 30,
+        "expansion": false
+      }
+    },
+    "capabilities": {
+      "system": "gbrain",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.46.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "legacy": {
+          "model_roles": {},
+          "notes": "memory-qa legacy path: harness pins, hybridSearch expansion off, chunks reduced to pages"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one page per session; the page slug is the occurrence id"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "limit": 30,
+            "expansion": false
+          },
+          "pins": {
+            "search.mode": "balanced",
+            "search.reranker.enabled": "false",
+            "search.autocut": "false"
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    },
+    "identity": null
+  },
+  "context": "rehydrated",
+  "policy": {
+    "name": "gbrain:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "limit": 30,
+      "expansion": false
+    },
+    "settings_source": "settings"
+  },
+  "manifest_sha256": "19e5340710a77c078b7403e6b9d94f8236b8eb81bf24971bee4e661b36a8a76d",
+  "outcomes": {
+    "scored": 120,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 120,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

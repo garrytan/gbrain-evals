@@ -1,0 +1,229 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-100k",
+  "split": "dev",
+  "started_at": "2026-10-07T19:32:50.198Z",
+  "finished_at": "2026-10-07T20:52:42.579Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "voyage:voyage-4",
+    "dims": 1024,
+    "cache_stats": {
+      "hits": 276,
+      "misses": 2664,
+      "inserts": 2664,
+      "bytes": 10911744
+    }
+  },
+  "dataset": {
+    "name": "BEAM 100k",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "gbrain-shootout-recipe-beam-100k-a1-6d10e950",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 6,
+    "sessions": 486,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0.05455398,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 510
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "10b6eb4638d2a5251580feda3cdb5eec18e3abbd88924adc06d565451639e928",
+  "cell_run_config_hash": "e631e30b70c351698b2bf94d35380b0595b84165ab1c48f5b4439ad249aa4a8f",
+  "arm": {
+    "id": "vendor-default.rehydrated.bnone.main",
+    "policy": "vendor-default",
+    "context": "rehydrated",
+    "budget_tokens": null,
+    "reader": {
+      "id": "main",
+      "model": "openai:gpt-4.1-mini",
+      "slice": null
+    }
+  },
+  "retrieval_path": "MemorySystem.retrieve (gbrain-shootout, policy gbrain-shootout:vendor-default), one retrieval per question and policy shared by every arm",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 6,
+    "questions_expected": 120,
+    "reader_slice": null
+  },
+  "counts": {
+    "rows": 120,
+    "scored": 108,
+    "errors": 0,
+    "abstention": 12
+  },
+  "summary": {
+    "recall_all_at_5": 0.5555555555555556,
+    "recall_any_at_5": 0.8425925925925926,
+    "recall_all_at_10": 0.6388888888888888,
+    "ndcg_at_10": 0.6184750347149915,
+    "latency_p50_ms": 447.75,
+    "latency_p95_ms": 876.2449999999999,
+    "qa_score": 0.6546759259259258,
+    "qa_rows": 120,
+    "qa_errors": 0,
+    "qa_service_score": 0.6546759259259258,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "reader": "openai:gpt-4.1-mini",
+    "judge": "openai:gpt-4.1-mini",
+    "runs": 1,
+    "context": "rehydrated",
+    "budget_tokens": null,
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "judge_prompts": "per-rubric-item yes/no",
+    "contexts_file": "../../contexts.ndjson"
+  },
+  "system": {
+    "name": "gbrain-shootout",
+    "capability_system": "gbrain-shootout",
+    "capabilities": {
+      "system": "gbrain-shootout",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.46.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "gbrain init defaults for search; embedder from the run"
+        },
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "unsettable": [
+            "extraction"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each chunk cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 40
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [
+        "retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-shootout",
+      "config": "{}",
+      "versions": null
+    }
+  },
+  "context": "rehydrated",
+  "policy": {
+    "name": "gbrain-shootout:vendor-default",
+    "mode": "vendor-default",
+    "settings": {},
+    "settings_source": "settings"
+  },
+  "manifest_sha256": "19e5340710a77c078b7403e6b9d94f8236b8eb81bf24971bee4e661b36a8a76d",
+  "outcomes": {
+    "scored": 120,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 120,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "rows_file": "rows.ndjson",
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

@@ -1,0 +1,717 @@
+{
+  "kind": "precisionmembench-system",
+  "schema_version": 1,
+  "benchmark": "precisionmembench",
+  "contract": "PrecisionMemBench upstream contract",
+  "started_at": "2026-10-07T21:05:19.951Z",
+  "finished_at": "2026-10-07T21:06:35.394Z",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "5cd8322fc1d832f1a38d56c10c57dc4a03e2f71de633a3e250c36514ba3d4623",
+  "upstream": {
+    "repo": "tenurehq/precisionmembench",
+    "commit": "c9689ca63d83f8979b235fd2c0a6ddf2d28ca850",
+    "fixture_sha256": {
+      "fixtures/beliefs.seed.json": "35659b3b9a581b644fc6746e1b4e902c3e7b56c0973b546bf7b0816a69e3de98",
+      "fixtures/retrieval.cases.json": "09e99f0852280538abe34b03570f65583fdb10df3c554b7150f0f665d5db709c"
+    },
+    "scorer_sha256": {
+      "scorer/baseAdapter.ts": "0aa2bf9ec4544b548e8bd6ffbf47a23a2fa78eb236b3a60c9b46593d80c35356",
+      "scorer/belief.ts": "c3a992066d452cd6b80865640782c31d201a14e1f3fde44cd25953c0d6459353",
+      "scorer/buildRetrievalReport.ts": "809c77fccbf0e3b3001a2c396f4c6dc515d4f1f19b293373c8abca9239fcfa9b",
+      "scorer/runCases.ts": "e0e9c7bfcff2999955989e27127698cc9f4ed57284dbd9d3b87d2bbc46e61958",
+      "providers.config.json": "3b5a7fef80f5272f9b0f8d67c9a96249ee30ade34b28fcb77a44b34e7204a8eb"
+    }
+  },
+  "evaluator": "vendored BaseAdapter.buildContext and scoreCases, unchanged: persona, pinned facts, open questions, relation expansion and the budget come from the shared evaluator; only searchText calls the system (eval/precisionmembench/systemAdapter.ts)",
+  "ingestion": {
+    "unit": "one session per belief, one user turn with upstream's /add text (BaseAdapter.beliefToText)",
+    "superseded": "seeded live; no supersession field crosses",
+    "event_time": "synthetic and disclosed: 2026-05-29T00:00:00 plus one minute per fixture index (arrival order), never the belief's own dates",
+    "query_time": "the namespace's last event time",
+    "namespaces": "one per (user, scope) a case searches: that user's beliefs of that scope plus the user's universal beliefs; a belief no searched namespace holds gets its owner's own namespace"
+  },
+  "belief_mapping": "distinct cited sources in first-appearance order over items in rank order, whole items, cut at the case limit (maxBeliefs, default 20); one source is one belief of that namespace; items with provenance unavailable cite nothing; a retrieval whose items all lack provenance is not measurable",
+  "families": {
+    "search-only": "every category the vendored scorer does not list as structural (the S3 headline)",
+    "structural": "the scorer's STRUCTURAL_CATEGORIES, reported separately"
+  },
+  "selection": {
+    "cases_expected": 77,
+    "full_case_count": 77,
+    "limit": null,
+    "partial": false
+  },
+  "system": {
+    "name": "gbrain-shootout",
+    "capability_system": "gbrain-shootout",
+    "identity": {
+      "system": "gbrain-shootout",
+      "config": {},
+      "embedding": {
+        "mode": "real",
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536
+      },
+      "gbrain": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
+    },
+    "capabilities": {
+      "system": "gbrain-shootout",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.95.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "gbrain init defaults for search; embedder from the run"
+        },
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "unsettable": [
+            "extraction"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each chunk cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 40
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [
+        "retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)"
+      ]
+    }
+  },
+  "policy": {
+    "name": "gbrain-shootout:vendor-default",
+    "mode": "vendor-default",
+    "settings": {},
+    "settings_source": "settings"
+  },
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.95.0",
+    "package_sha256": "d463f36620585760ae2f9c1ca3602b89961ae5a5a28b3be879d61dcf8c6fa9e5",
+    "loaded_git_head": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
+  },
+  "overlay": {
+    "requested": "~/gbrain-master@c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "ref": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "commit": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+    "version": "0.60.95.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.95.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "gbrain_config": {},
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 19,
+      "misses": 108,
+      "inserts": 108,
+      "bytes": 663552
+    }
+  },
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "gbrain-shootout-master-common-pmb-a1-78a3afab",
+    "retry_upstream_5xx": true
+  },
+  "sanitizer": {
+    "forbidden_markers": 146
+  },
+  "ingest": {
+    "namespaces": 6,
+    "sessions": 50,
+    "failed_sessions": 0,
+    "degraded_namespaces": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "usd": 0.0005,
+    "requests": 43
+  },
+  "namespaces": [
+    {
+      "ns": "ns-21b1f83044778e53",
+      "user": "other-user",
+      "scope": "domain:code",
+      "beliefs": 1,
+      "searched": false,
+      "ingest": {
+        "ns": "ns-21b1f83044778e53",
+        "sessions": 1,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.000011350000000000001,
+          "requests": 3,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 1
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-82b23dc37110309d",
+      "user": "test-user",
+      "scope": "domain:code",
+      "beliefs": 27,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-82b23dc37110309d",
+        "sessions": 27,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.00035811999999999997,
+          "requests": 29,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 27
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-4ce929c3ab8adc1e",
+      "user": "test-user",
+      "scope": "domain:hobby",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-4ce929c3ab8adc1e",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.000025290000000000004,
+          "requests": 2,
+          "unpriced": 0
+        }
+      }
+    },
+    {
+      "ns": "ns-c30d9886ee1e0a68",
+      "user": "test-user",
+      "scope": "domain:writing",
+      "beliefs": 12,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-c30d9886ee1e0a68",
+        "sessions": 12,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.00011124000000000001,
+          "requests": 8,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 7
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-7e11712ba6bb85de",
+      "user": "brand-new-user",
+      "scope": "domain:code",
+      "beliefs": 0,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-7e11712ba6bb85de",
+        "sessions": 0,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "skipped",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0,
+          "requests": 0,
+          "unpriced": 0
+        }
+      }
+    },
+    {
+      "ns": "ns-5e9036e11e4b46e1",
+      "user": "test-user",
+      "scope": "user:universal",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-5e9036e11e4b46e1",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.000019700000000000005,
+          "requests": 1,
+          "unpriced": 0
+        }
+      }
+    }
+  ],
+  "costs": {
+    "ingest_usd": 0.0005,
+    "retrieval_usd": 0.0044,
+    "total_usd": 0.0049,
+    "source": "metering proxy"
+  },
+  "latency": {
+    "system_calls": 72,
+    "p50_ms": 658.3,
+    "p95_ms": 947.7350000000005
+  },
+  "outcomes": {
+    "scored": 77,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 77,
+  "comparison_complete": true,
+  "summary": {
+    "search-only": {
+      "cases": 43,
+      "counted": 43,
+      "harness_failures": 0,
+      "passed": 3,
+      "mean_precision": 0.0806,
+      "n_precision": 40,
+      "mean_recall": 1,
+      "n_recall": 34,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "structural": {
+      "cases": 34,
+      "counted": 34,
+      "harness_failures": 0,
+      "passed": 6,
+      "mean_precision": 0.0253,
+      "n_precision": 29,
+      "mean_recall": 0.9444,
+      "n_recall": 9,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "all": {
+      "cases": 77,
+      "counted": 77,
+      "harness_failures": 0,
+      "passed": 9,
+      "mean_precision": 0.0573,
+      "n_precision": 69,
+      "mean_recall": 0.9884,
+      "n_recall": 43,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "categories": [
+      {
+        "category": "Type routing and open questions",
+        "family": "structural",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0093,
+        "n_precision": 6,
+        "mean_recall": 1,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Alias resolution",
+        "family": "search-only",
+        "cases": 23,
+        "counted": 23,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.1014,
+        "n_precision": 23,
+        "mean_recall": 1,
+        "n_recall": 22,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Scope disambiguation",
+        "family": "structural",
+        "cases": 12,
+        "counted": 12,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0241,
+        "n_precision": 12,
+        "mean_recall": 0.875,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Supersession chain exclusion",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0,
+        "n_precision": 3,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Design boundary cases",
+        "family": "search-only",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 2,
+        "mean_precision": 0.0139,
+        "n_precision": 4,
+        "mean_recall": 1,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cross-user isolation",
+        "family": "structural",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0,
+        "n_precision": 1,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Persona prelude content",
+        "family": "structural",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0,
+        "n_precision": 3,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Ranking stability",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0.0833,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Fuzzy matching and prefix guards",
+        "family": "search-only",
+        "cases": 7,
+        "counted": 7,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0397,
+        "n_precision": 7,
+        "mean_recall": 1,
+        "n_recall": 5,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cold start behavior",
+        "family": "search-only",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": null,
+        "n_precision": 0,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Budget eviction and capacity",
+        "family": "structural",
+        "cases": 5,
+        "counted": 5,
+        "harness_failures": 0,
+        "passed": 3,
+        "mean_precision": 0.1111,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Counter-signal retrieval",
+        "family": "search-only",
+        "cases": 2,
+        "counted": 2,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0556,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Relation expansion",
+        "family": "search-only",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.1111,
+        "n_precision": 4,
+        "mean_recall": 1,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      }
+    ],
+    "upstream": {
+      "meanLatencyMs": 642.02,
+      "p50LatencyMs": 654.42,
+      "p95LatencyMs": 1035.84,
+      "caseCount": 77,
+      "meanPrecision": 0.0573,
+      "meanRecall": 0.9884,
+      "totalPassed": 9,
+      "totalCases": 77,
+      "passRate": 0.1169,
+      "activeRetrievalPasses": 0,
+      "passTypes": {
+        "activeRetrieval": 0,
+        "structural": 6,
+        "triviallyEmpty": 3
+      },
+      "categories": [
+        {
+          "category": "Alias resolution",
+          "caseCount": 23,
+          "passed": 0,
+          "failed": 23,
+          "meanPrecision": 0.1014,
+          "meanRecall": 1
+        },
+        {
+          "category": "Scope disambiguation",
+          "caseCount": 12,
+          "passed": 0,
+          "failed": 12,
+          "meanPrecision": 0.0241,
+          "meanRecall": 0.875
+        },
+        {
+          "category": "Fuzzy matching and prefix guards",
+          "caseCount": 7,
+          "passed": 0,
+          "failed": 7,
+          "meanPrecision": 0.0397,
+          "meanRecall": 1
+        },
+        {
+          "category": "Type routing and open questions",
+          "caseCount": 6,
+          "passed": 0,
+          "failed": 6,
+          "meanPrecision": 0.0093,
+          "meanRecall": 1
+        },
+        {
+          "category": "Design boundary cases",
+          "caseCount": 6,
+          "passed": 2,
+          "failed": 4,
+          "meanPrecision": 0.0139,
+          "meanRecall": 1
+        },
+        {
+          "category": "Budget eviction and capacity",
+          "caseCount": 5,
+          "passed": 3,
+          "failed": 2,
+          "meanPrecision": 0.1111,
+          "meanRecall": 1
+        },
+        {
+          "category": "Persona prelude content",
+          "caseCount": 4,
+          "passed": 1,
+          "failed": 3,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Relation expansion",
+          "caseCount": 4,
+          "passed": 0,
+          "failed": 4,
+          "meanPrecision": 0.1111,
+          "meanRecall": 1
+        },
+        {
+          "category": "Supersession chain exclusion",
+          "caseCount": 3,
+          "passed": 0,
+          "failed": 3,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Ranking stability",
+          "caseCount": 3,
+          "passed": 1,
+          "failed": 2,
+          "meanPrecision": 0.0833,
+          "meanRecall": 1
+        },
+        {
+          "category": "Counter-signal retrieval",
+          "caseCount": 2,
+          "passed": 0,
+          "failed": 2,
+          "meanPrecision": 0.0556,
+          "meanRecall": 1
+        },
+        {
+          "category": "Cross-user isolation",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Cold start behavior",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": null,
+          "meanRecall": null
+        }
+      ]
+    }
+  },
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson",
+    "report": "report.json"
+  }
+}
