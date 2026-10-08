@@ -106,8 +106,10 @@ export interface CellSpec {
   block?: string;
   /** Q1: a sealed-set cell that only the custodian's host may launch. */
   sealed?: boolean;
-  /** Q1: a 20-question smoke cell (`eval:scoreboard smoke`). */
+  /** Q1: a paid dev smoke cell (`eval:scoreboard smoke`). */
   smoke?: boolean;
+  /** Q1: the only conversations the cell reads (a dev smoke); its preflight checks and fetches just their files. */
+  conversations?: string[];
   /** Q1: providers the cell calls, for admission shares (default openai, anthropic, voyage). */
   providers?: ProviderName[];
   /** Q1: expected wall-clock hours, for the schedule. */

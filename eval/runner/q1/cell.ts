@@ -1017,7 +1017,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
       id, system: c.system, benchmark: c.benchmark, config: c.configuration, lease_usd: lease, command,
       setup_command: `bash eval/systems/bootstrap.sh setup${c.runner === 'shim' ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
       vm: { size: `standard-${VM_VCPU}` }, timeout_hours: Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
-      ...(smoke ? { smoke: true } : {}), providers: c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'],
+      ...(smoke ? { smoke: true } : {}), ...(c.only_conversations ? { conversations: c.only_conversations } : {}), providers: c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'],
       expected_hours: c.expected_hours, wave: c.block === 'T1' ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
       ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(c.restore_command ? { restore_command: c.restore_command } : {}),
     };

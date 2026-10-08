@@ -9,7 +9,7 @@
  *                                       judge stub, judge repeats, cost and speed, then the generator's render and
  *                                       check on the synthetic receipt (test/eval/fixtures/scoreboard/synthetic.ts)
  *   explain  <row> <column>              the chain behind one published number (eval/runner/scoreboard.ts)
- *   doctor   [--campaign <m> [--state <dir>]] [--for fixture|local|run|sealed] [--benchmark <b>]...
+ *   doctor   [--campaign <m> [--state <dir>]] [--for fixture|local|run|sealed] [--benchmark <b>]... [--cell <id>]...
  *                                       preflight before any lease: Bun, Python, Docker, architecture, disk, ports,
  *                                       which keys are present (never their values), ledger, dataset hashes,
  *                                       resolved models priced, the VM executor and its owner tag, the freeze
@@ -197,13 +197,22 @@ export async function doctor(a: Args, env: Record<string, string | undefined> = 
     add({ id: 'custody', ok: custodian, severity: 'error', detail: custodian ? `custody log ${log}` : 'this is not the custodian host (no GBRAIN_EVALS_CUSTODY_LOG, or a Capy machine)', code: 'CUSTODY_REQUIRED',
       fix: { next: 'tell_user_to_run', argv: [...FRONT, 'doctor', '--for', 'sealed'], user_message: 'sealed cells launch only from the custodian host, where the sealed data, rows and snapshots stay' } });
   }
-  const benchmarks = new Set([...many(a, '--benchmark'), ...(loaded?.manifest.cells ?? []).map(c => c.benchmark)]);
-  for (const b of [...benchmarks].sort()) {
+  // Datasets: the named cells' (every cell's without --cell), and a dev smoke's own conversations only, so preflight never
+  // asks this host to download a sealed conversation it will not read.
+  const named = many(a, '--cell');
+  const datasets = new Map<string, Set<string> | null>(many(a, '--benchmark').map(b => [b, null]));
+  for (const c of (loaded?.manifest.cells ?? []).filter(x => !named.length || named.includes(x.id))) {
+    const prior = datasets.has(c.benchmark) ? datasets.get(c.benchmark)! : new Set<string>();
+    datasets.set(c.benchmark, prior && c.conversations ? new Set([...prior, ...c.conversations]) : null);
+  }
+  for (const b of [...datasets.keys()].sort()) {
     if (!PUBLIC_BENCHMARKS.has(b)) { add({ id: `dataset:${b}`, ok: null, severity: 'warn', detail: `${b}: held by the custodian; never opened here` }); continue; }
-    const files = filesFor(b);
+    const only = datasets.get(b) ?? undefined;
+    const fetchArgv = ['bun', 'run', 'eval:decide', 'fetch', '--benchmark', b, ...(only ? ['--conversations', [...only].sort().join(',')] : [])];
+    const files = filesFor(b, only);
     const bad = files.filter(f => { const p = join(DATASET_ROOT, f.path); return !existsSync(p) || sha256(readFileSync(p)) !== f.sha256; });
     add({ id: `dataset:${b}`, ok: !bad.length, severity: err(forWhat === 'local'), detail: bad.length ? `${b}: ${bad.length} of ${files.length} files missing or not the pinned bytes` : `${b}: ${files.length} files match their pinned sha256`, code: 'PREFLIGHT_FAILED',
-      fix: { next: 'run', argv: ['bun', 'run', 'eval:decide', 'fetch', '--benchmark', b], verify: ['bun', 'run', 'eval:decide', 'fetch', '--benchmark', b, '--verify-only'] } });
+      fix: { next: 'run', argv: fetchArgv, verify: [...fetchArgv, '--verify-only'] } });
   }
   if (manifestPath && stateDir && loaded) {
     if (existsSync(join(stateDir, 'campaign.json'))) {
@@ -303,7 +312,7 @@ export async function runCells(a: Args, opts: { smoke?: boolean; runner?: Runner
     why: 'a sealed launch is never implicit: the custodian host keeps dataset caches, rows and snapshots, and only aggregates leave it',
     fix: { next: 'tell_user_to_run', argv: [...FRONT, 'run', '--campaign', manifest, '--state', state, ...ids.flatMap(i => ['--cell', i]).slice(0, 2), '--sealed'], user_message: 'ask the custodian to run this on their host' } });
   const forWhat: DoctorFor = local ? 'local' : sealedCells.length ? 'sealed' : 'run';
-  const pre = await doctor(['--campaign', manifest, '--state', state, '--for', forWhat]);
+  const pre = await doctor(['--campaign', manifest, '--state', state, '--for', forWhat, ...ids.flatMap(id => ['--cell', id])]);
   if (dry) {
     return { data: { dry_run: true, preflight: pre, launcher_host: hostname(), executor: local ? 'this machine (shootout-cell.ts remote)' : (() => { try { return resolveRunner(); } catch { return null; } })(),
       cells: cells.map(x => ({ cell: x.id, rows_to: join(resolve(state), 'results', x.id, '<lease>'), checkpoints_every_rows: isQ1(c.manifest) ? c.manifest.row_pull_every ?? 20 : null,
