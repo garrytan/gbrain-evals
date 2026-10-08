@@ -31,7 +31,7 @@ The manifests and campaign hash are in [manifests/](../manifests/) and the rules
 | `basic-memory-common-beam-100k` | `a1-b180b106` | one of six conversations hit the runner's 600-second `/finish` default (`ingest_degraded`, 20 questions per arm); attempt `a2-bf2d30ca` with the four-hour wait completed |
 
 Every other directory here is a complete cell. Directories with `shard-<i>/` hold one receipt per parallel shard of a
-LongMemEval-S cell; `pmb/` holds a PrecisionMemBench run (rows without the fixture's query and description text,
+LongMemEval-S cell; `sealed/` holds a Phase 7 cell's allowlisted per-arm aggregates, beside its custody access log; `pmb/` holds a PrecisionMemBench run (rows without the fixture's query and description text,
 which the repository already carries in `eval/precisionmembench/fixtures/`).
 
 ## Stop rules and the unknown-actual reservation
@@ -43,6 +43,8 @@ as spend and tripped Graphiti's stop at $535.78; Graphiti's measured spend was $
 (1.0 times; the stop is $378), so the check was corrected and the stop cleared before any Phase 7 cell.
 
 ## Changelog
+
+- 2026-10-08: Phase 7 sealed cells (aggregates, custody access logs and lease summaries only); every counted cell finished.
 
 - 2026-10-08: Phase 4 complete: the A7 reruns of the two Cognee LoCoMo r2 cells, Basic Memory BEAM and Hindsight LongMemEval-S.
 - 2026-10-07: The per-system stop counts measured spend only; Graphiti's stop trip from the unknown-actual reservation cleared.
