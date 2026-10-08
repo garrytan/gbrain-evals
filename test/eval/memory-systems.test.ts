@@ -21,7 +21,7 @@ import { FullContextSystem } from '../../eval/runner/systems/baselines.ts';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
 import { packContext, packNative, renderItem, strictSources, TOKENIZER, validateSources } from '../../eval/runner/systems/render.ts';
-import { findLeaks, forbiddenMarkers, NS_RE, Sanitizer, SRC_RE } from '../../eval/runner/systems/sanitize.ts';
+import { findLeaks, forbiddenMarkers, NS_RE, Sanitizer, SanitizerLeakError, SRC_RE } from '../../eval/runner/systems/sanitize.ts';
 import { SystemError, type Item } from '../../eval/runner/systems/types.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'memory-systems-'));
@@ -70,6 +70,17 @@ describe('sanitizer', () => {
     } finally { server.stop(); }
     expect(bodies.length).toBe(6);
     expect(bodies.flatMap(b => findLeaks(b, san.markers))).toEqual([]);
+  });
+
+  test('a marker inside the system\'s own name (its policy names) does not refuse its requests; the marker elsewhere still does', async () => {
+    const server = serveProtocol(new FakeMemorySystem());
+    try {
+      const sys = new HttpMemorySystem(server.url, { name: 'ext-temporal-graph', markers: ['temporal'] });
+      const ns = san.ns('gpt4_2655b836_abs');
+      await sys.reset(ns);
+      await sys.retrieve(ns, { text: 'What color is my car?', query_time: null }, { name: 'ext-temporal-graph:fixed-evidence', mode: 'fixed-evidence', settings: {} });
+      await expect(sys.retrieve(ns, { text: 'a temporal question', query_time: null }, { name: 'ext-temporal-graph:fixed-evidence', mode: 'fixed-evidence', settings: {} })).rejects.toBeInstanceOf(SanitizerLeakError);
+    } finally { server.stop(); }
   });
 
   test('a marker that the corpus text itself contains is not forbidden', () => {
