@@ -63,7 +63,7 @@ gap does not isolate the effect of a graph alone.
 
 | Engineering question | Report |
 |---|---|
-| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 8 memory trust rerun, Cats 37-39](benchmarks/2026-10-08-memory-trust-results-rerun.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md), [October 7 first run](benchmarks/2026-10-07-memory-trust-results-harness.md)): keyless, at the gbrain `capy/memory-trust` head `2546f33a`, no model measured yet; every preregistered contract passes and every instruction-worded attack is flagged or held, while most benign preferences worded as instructions are held or flagged too |
+| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 8 paid run with Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol](benchmarks/2026-10-08-memory-trust-results-paid.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [keyless rerun](benchmarks/2026-10-08-memory-trust-results-rerun.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md)): trust labels cut planted-claim adoption (Sonnet 10.6% without labels to 2.0% with them) and raise current-value answers (Opus 55% to 100%); no model followed an instruction-worded injection in any arm, so the write gate and suppression show no measurable benefit on top of labels and the preregistered rules set `external_mode = flag`, `agent_mode = flag`, `agent_activation = allow` |
 | Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
@@ -181,6 +181,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-08: Memory trust paid run row
+
+The memory trust row now points to the October 8 paid run at gbrain `capy/memory-trust` `c2f10ee8`: labels cut planted-claim adoption and raise current-value answers, the gate and suppression show no measurable benefit on top of labels, and the preregistered rules set the three defaults to flag, flag and allow. The keyless rerun stays linked.
 
 ### 2026-10-08: Memory trust rerun row
 
