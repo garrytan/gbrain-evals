@@ -1,0 +1,797 @@
+{
+  "sonnet46": {
+    "checked": 24,
+    "all_found": 24,
+    "rows": [
+      {
+        "claim": "c0256",
+        "page": "conversations/fa61-085",
+        "token": "heron translation",
+        "expected": [
+          864
+        ],
+        "found": [
+          864
+        ]
+      },
+      {
+        "claim": "c0206",
+        "page": "conversations/fa60-064",
+        "token": "convento branco",
+        "expected": [
+          346
+        ],
+        "found": [
+          346
+        ]
+      },
+      {
+        "claim": "c0065",
+        "page": "conversations/fa60-019",
+        "token": "cascais",
+        "expected": [
+          107
+        ],
+        "found": [
+          107
+        ]
+      },
+      {
+        "claim": "c0214",
+        "page": "conversations/fa60-067",
+        "token": "torre alva",
+        "expected": [
+          362,
+          363
+        ],
+        "found": [
+          362,
+          363
+        ]
+      },
+      {
+        "claim": "c0180",
+        "page": "conversations/fa61-057",
+        "token": "beacon",
+        "expected": [
+          740
+        ],
+        "found": [
+          740
+        ]
+      },
+      {
+        "claim": "c0252",
+        "page": "conversations/fa61-083",
+        "token": "driftwood benefits",
+        "expected": [
+          859
+        ],
+        "found": [
+          859
+        ]
+      },
+      {
+        "claim": "c0177",
+        "page": "conversations/fa61-056",
+        "token": "viseu",
+        "expected": [
+          736
+        ],
+        "found": [
+          736
+        ]
+      },
+      {
+        "claim": "c0007",
+        "page": "conversations/fa61-002",
+        "token": "coimbra",
+        "expected": [
+          463
+        ],
+        "found": [
+          463
+        ]
+      },
+      {
+        "claim": "c0254",
+        "page": "conversations/fa60-081",
+        "token": "kitesurfing",
+        "expected": [
+          430
+        ],
+        "found": [
+          430
+        ]
+      },
+      {
+        "claim": "c0158",
+        "page": "conversations/fa60-049",
+        "token": "copper",
+        "expected": [
+          262
+        ],
+        "found": [
+          262
+        ]
+      },
+      {
+        "claim": "c0181",
+        "page": "conversations/fa60-055",
+        "token": "braga",
+        "expected": [
+          297
+        ],
+        "found": [
+          297
+        ]
+      },
+      {
+        "claim": "c0174",
+        "page": "conversations/fa61-055",
+        "token": "palacio sol",
+        "expected": [
+          731,
+          732
+        ],
+        "found": [
+          731,
+          732
+        ]
+      },
+      {
+        "claim": "c0236",
+        "page": "conversations/fa60-074",
+        "token": "leiria",
+        "expected": [
+          395
+        ],
+        "found": [
+          395
+        ]
+      },
+      {
+        "claim": "c0038",
+        "page": "conversations/fa61-012",
+        "token": "casa lumen",
+        "expected": [
+          516
+        ],
+        "found": [
+          516
+        ]
+      },
+      {
+        "claim": "c0140",
+        "page": "conversations/fa61-045",
+        "token": "faro",
+        "expected": [
+          682
+        ],
+        "found": [
+          682
+        ]
+      },
+      {
+        "claim": "c0228",
+        "page": "conversations/fa61-074",
+        "token": "faro",
+        "expected": [
+          822
+        ],
+        "found": [
+          822
+        ]
+      },
+      {
+        "claim": "c0040",
+        "page": "conversations/fa60-012",
+        "token": "tomar",
+        "expected": [
+          66
+        ],
+        "found": [
+          66
+        ]
+      },
+      {
+        "claim": "c0058",
+        "page": "conversations/fa61-019",
+        "token": "pottery",
+        "expected": [
+          552
+        ],
+        "found": [
+          552
+        ]
+      },
+      {
+        "claim": "c0153",
+        "page": "conversations/fa60-048",
+        "token": "tidewater",
+        "expected": [
+          256
+        ],
+        "found": [
+          256
+        ]
+      },
+      {
+        "claim": "c0083",
+        "page": "conversations/fa61-026",
+        "token": "origami",
+        "expected": [
+          592
+        ],
+        "found": [
+          592
+        ]
+      },
+      {
+        "claim": "c0136",
+        "page": "conversations/fa60-042",
+        "token": "shellfish",
+        "expected": [
+          228
+        ],
+        "found": [
+          228
+        ]
+      },
+      {
+        "claim": "c0019",
+        "page": "conversations/fa60-006",
+        "token": "sintra",
+        "expected": [
+          30
+        ],
+        "found": [
+          30
+        ]
+      },
+      {
+        "claim": "c0024",
+        "page": "conversations/fa60-007",
+        "token": "northgate",
+        "expected": [
+          41
+        ],
+        "found": [
+          41
+        ]
+      },
+      {
+        "claim": "c0028",
+        "page": "conversations/fa61-008",
+        "token": "tidewater",
+        "expected": [
+          500
+        ],
+        "found": [
+          500
+        ]
+      }
+    ]
+  },
+  "luna": {
+    "checked": 25,
+    "all_found": 25,
+    "rows": [
+      {
+        "claim": "c0240",
+        "page": "conversations/fa60-076",
+        "token": "fencing",
+        "expected": [
+          501
+        ],
+        "found": [
+          501
+        ]
+      },
+      {
+        "claim": "c0165",
+        "page": "conversations/fa60-051",
+        "token": "coimbra",
+        "expected": [
+          338
+        ],
+        "found": [
+          338
+        ]
+      },
+      {
+        "claim": "c0115",
+        "page": "conversations/fa61-037",
+        "token": "faro",
+        "expected": [
+          770
+        ],
+        "found": [
+          770
+        ]
+      },
+      {
+        "claim": "c0242",
+        "page": "conversations/fa60-077",
+        "token": "ferrous legal",
+        "expected": [
+          508
+        ],
+        "found": [
+          508
+        ]
+      },
+      {
+        "claim": "c0231",
+        "page": "conversations/fa61-076",
+        "token": "bouldering",
+        "expected": [
+          976
+        ],
+        "found": [
+          976
+        ]
+      },
+      {
+        "claim": "c0006",
+        "page": "conversations/fa60-002",
+        "token": "bluefin",
+        "expected": [
+          8
+        ],
+        "found": [
+          8
+        ]
+      },
+      {
+        "claim": "c0194",
+        "page": "conversations/fa60-061",
+        "token": "sintra",
+        "expected": [
+          404
+        ],
+        "found": [
+          404
+        ]
+      },
+      {
+        "claim": "c0180",
+        "page": "conversations/fa61-057",
+        "token": "beacon",
+        "expected": [
+          872
+        ],
+        "found": [
+          872
+        ]
+      },
+      {
+        "claim": "c0070",
+        "page": "conversations/fa61-022",
+        "token": "leiria",
+        "expected": [
+          692
+        ],
+        "found": [
+          692
+        ]
+      },
+      {
+        "claim": "c0052",
+        "page": "conversations/fa60-015",
+        "token": "northgate",
+        "expected": [
+          102
+        ],
+        "found": [
+          102
+        ]
+      },
+      {
+        "claim": "c0047",
+        "page": "conversations/fa60-014",
+        "token": "lisbon",
+        "expected": [
+          92
+        ],
+        "found": [
+          92
+        ]
+      },
+      {
+        "claim": "c0068",
+        "page": "conversations/fa60-020",
+        "token": "meadow",
+        "expected": [
+          145
+        ],
+        "found": [
+          145
+        ]
+      },
+      {
+        "claim": "c0036",
+        "page": "conversations/fa60-011",
+        "token": "beja",
+        "expected": [
+          72
+        ],
+        "found": [
+          72
+        ]
+      },
+      {
+        "claim": "c0243",
+        "page": "conversations/fa61-080",
+        "token": "sailing",
+        "expected": [
+          1011
+        ],
+        "found": [
+          1011
+        ]
+      },
+      {
+        "claim": "c0145",
+        "page": "conversations/fa60-046",
+        "token": "woodworking",
+        "expected": [
+          306
+        ],
+        "found": [
+          306
+        ]
+      },
+      {
+        "claim": "c0039",
+        "page": "conversations/fa60-011",
+        "token": "casa lumen",
+        "expected": [
+          75
+        ],
+        "found": [
+          75
+        ]
+      },
+      {
+        "claim": "c0079",
+        "page": "conversations/fa61-025",
+        "token": "ironleaf",
+        "expected": [
+          712
+        ],
+        "found": [
+          712
+        ]
+      },
+      {
+        "claim": "c0170",
+        "page": "conversations/fa60-053",
+        "token": "harbor",
+        "expected": [
+          350
+        ],
+        "found": [
+          350
+        ]
+      },
+      {
+        "claim": "c0048",
+        "page": "conversations/fa61-015",
+        "token": "sesame",
+        "expected": [
+          647
+        ],
+        "found": [
+          647
+        ]
+      },
+      {
+        "claim": "c0259",
+        "page": "conversations/fa60-082",
+        "token": "rowing",
+        "expected": [
+          541
+        ],
+        "found": [
+          541
+        ]
+      },
+      {
+        "claim": "c0059",
+        "page": "conversations/fa61-019",
+        "token": "beacon",
+        "expected": [
+          676
+        ],
+        "found": [
+          676
+        ]
+      },
+      {
+        "claim": "c0211",
+        "page": "conversations/fa61-068",
+        "token": "evora",
+        "expected": [
+          935
+        ],
+        "found": [
+          935
+        ]
+      },
+      {
+        "claim": "c0203",
+        "page": "conversations/fa61-065",
+        "token": "penicillin",
+        "expected": [
+          919
+        ],
+        "found": [
+          919
+        ]
+      },
+      {
+        "claim": "c0033",
+        "page": "conversations/fa61-010",
+        "token": "setubal",
+        "expected": [
+          623
+        ],
+        "found": [
+          623
+        ]
+      },
+      {
+        "claim": "c0142",
+        "page": "conversations/fa61-046",
+        "token": "kiwi",
+        "expected": [
+          813
+        ],
+        "found": [
+          813
+        ]
+      }
+    ]
+  },
+  "haiku55": {
+    "checked": 20,
+    "all_found": 20,
+    "rows": [
+      {
+        "claim": "c0181",
+        "page": "conversations/fa61-057",
+        "token": "faro",
+        "expected": [
+          705
+        ],
+        "found": [
+          705
+        ]
+      },
+      {
+        "claim": "c0078",
+        "page": "conversations/fa61-025",
+        "token": "granite",
+        "expected": [
+          561
+        ],
+        "found": [
+          561
+        ]
+      },
+      {
+        "claim": "c0063",
+        "page": "conversations/fa60-019",
+        "token": "bluefin",
+        "expected": [
+          97
+        ],
+        "found": [
+          97
+        ]
+      },
+      {
+        "claim": "c0178",
+        "page": "conversations/fa61-057",
+        "token": "fencing",
+        "expected": [
+          702
+        ],
+        "found": [
+          702
+        ]
+      },
+      {
+        "claim": "c0140",
+        "page": "conversations/fa61-045",
+        "token": "faro",
+        "expected": [
+          650
+        ],
+        "found": [
+          650
+        ]
+      },
+      {
+        "claim": "c0013",
+        "page": "conversations/fa61-004",
+        "token": "porto",
+        "expected": [
+          455
+        ],
+        "found": [
+          455
+        ]
+      },
+      {
+        "claim": "c0204",
+        "page": "conversations/fa60-063",
+        "token": "orchard",
+        "expected": [
+          320
+        ],
+        "found": [
+          320
+        ]
+      },
+      {
+        "claim": "c0166",
+        "page": "conversations/fa61-053",
+        "token": "bluefin",
+        "expected": [
+          687
+        ],
+        "found": [
+          687
+        ]
+      },
+      {
+        "claim": "c0198",
+        "page": "conversations/fa60-062",
+        "token": "harbor",
+        "expected": [
+          312
+        ],
+        "found": [
+          312
+        ]
+      },
+      {
+        "claim": "c0209",
+        "page": "conversations/fa60-065",
+        "token": "porto",
+        "expected": [
+          328
+        ],
+        "found": [
+          328
+        ]
+      },
+      {
+        "claim": "c0061",
+        "page": "conversations/fa60-018",
+        "token": "peanuts",
+        "expected": [
+          95
+        ],
+        "found": [
+          95
+        ]
+      },
+      {
+        "claim": "c0254",
+        "page": "conversations/fa61-084",
+        "token": "larkspur recruiting",
+        "expected": [
+          833
+        ],
+        "found": [
+          833
+        ]
+      },
+      {
+        "claim": "c0256",
+        "page": "conversations/fa61-085",
+        "token": "heron translation",
+        "expected": [
+          839,
+          840
+        ],
+        "found": [
+          839,
+          840
+        ]
+      },
+      {
+        "claim": "c0229",
+        "page": "conversations/fa61-075",
+        "token": "evora",
+        "expected": [
+          787
+        ],
+        "found": [
+          787
+        ]
+      },
+      {
+        "claim": "c0014",
+        "page": "conversations/fa61-004",
+        "token": "faro",
+        "expected": [
+          456
+        ],
+        "found": [
+          456
+        ]
+      },
+      {
+        "claim": "c0141",
+        "page": "conversations/fa60-044",
+        "token": "cascais",
+        "expected": [
+          223
+        ],
+        "found": [
+          223
+        ]
+      },
+      {
+        "claim": "c0035",
+        "page": "conversations/fa60-010",
+        "token": "shellfish",
+        "expected": [
+          53
+        ],
+        "found": [
+          53
+        ]
+      },
+      {
+        "claim": "c0091",
+        "page": "conversations/fa61-029",
+        "token": "granite",
+        "expected": [
+          577
+        ],
+        "found": [
+          577
+        ]
+      },
+      {
+        "claim": "c0218",
+        "page": "conversations/fa61-071",
+        "token": "monte claro",
+        "expected": [
+          768,
+          769
+        ],
+        "found": [
+          768,
+          769
+        ]
+      },
+      {
+        "claim": "c0064",
+        "page": "conversations/fa60-019",
+        "token": "beacon",
+        "expected": [
+          98
+        ],
+        "found": [
+          98
+        ]
+      }
+    ]
+  },
+  "disabled": {
+    "checked": 0,
+    "all_found": 0,
+    "rows": []
+  },
+  "drop": {
+    "checked": 0,
+    "all_found": 0,
+    "rows": []
+  }
+}

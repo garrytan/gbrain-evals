@@ -651,6 +651,16 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Each arm is a fresh PGLite brain behind gbrain serve (stdio MCP). The agent writes sessions as note pages with put_page and remembers one fact per page; every provider request goes through a metering proxy and gbrain\'s GBRAIN_AI_CALL_LOG. After in-session work settles, the background queue is drained with gbrain jobs work and what remains is reported. It does not measure retrieval quality or the HTTP transport.',
   },
   {
+    id: 'facts-absorb-gate', legacy_alias: 'R2-facts-absorb', name: 'Facts-absorb quality gate: does a cheaper facts.extraction_model keep the saved facts as good as the default?',
+    family: 'performance', tier: 'P', script: 'eval/runner/facts-absorb-gate.ts',
+    run: { kind: 'listed', reason: 'paid decision run for the 10x plan item R2 (write-path default before the Q1 freeze): the real facts-absorb job on a build passed with --gbrain, one arm per extraction model plus two mutants, metered under the eval budget ledger and preregistered', command: 'bun eval/runner/facts-absorb-gate.ts --gbrain <checkout>@<ref> --prereg <path> --budget-usd <n> --out eval/reports/facts-absorb-gate/<name>' },
+    cost_estimate: { usd: 6, basis: 'docs/benchmarks/2026-10-08-facts-extraction-model/PREREGISTRATION.md: Sonnet 4.6 baseline about $3, the gpt-6.1-sol coverage judge about $2, cheap arms and mutants under $1' },
+    receipt_path: 'eval/reports/facts-absorb-gate/<name>/receipt.json',
+    headline: { metric: 'per arm: recall, precision, attribution and correction handling of the stored facts against the facts-absorb world\'s answer key; parse failures (unhandled must be 0); facts readable after a restart; resolved model at the facts invocation; natural-prose covered items (Cat 35 coverage judge); paired candidate-minus-baseline intervals and the preregistered verdict, with both mutants failing', denominator: 'facts-absorb-gen@1 seeds 60 and 61: 170 pages, 529 planted claims, 96 correction cases, 64 rejected suggestions; transcript-distill-v1: 20 transcripts, 173 planted items' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Each arm is a fresh PGLite brain behind gbrain serve (stdio MCP). The agent writes every page with put_page, which queues the real facts-absorb job; gbrain jobs work drains it after the session closes, then a fresh process reads every stored fact, job and ingest_log row. Facts are matched to planted claims without a model; the natural-prose stratum uses the Cat 35 coverage judge. A disabled-extractor mutant and a drop-all-output mutant must fail. It does not measure retrieval or answers, and its templated world is easier than real chat.',
+  },
+  {
     id: 'entity-resolution', legacy_alias: 'N4', name: 'Entity resolution: variants, namesakes and cross-source identity',
     family: 'relationships', tier: 'H', script: 'eval/runner/n4-entity-resolution.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n4-entity-resolution'),
@@ -1257,4 +1267,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'p4-stream', 'queries', 'stats', 'system-one', 'systems', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'facts-absorb', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'p4-stream', 'queries', 'stats', 'system-one', 'systems', 'takes-bootstrap'];
