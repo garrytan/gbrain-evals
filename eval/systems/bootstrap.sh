@@ -4,7 +4,7 @@
 # Run from the repository root on a fresh Ubuntu 24.04 Ubicloud VM. Subcommands:
 #
 #   setup  [--system NAME] [--datasets locomo,lme-s,beam-100k] [--conversations id,id]
-#          Once per VM (ubi-runner --setup): Docker with the compose plugin, Bun 1.3.14, `bun install --frozen-lockfile`,
+#          Once per VM (ubi-runner --setup): Docker with the compose plugin, Bun 1.4.2 (as CI), `bun install --frozen-lockfile`,
 #          the pinned datasets through `bun run eval:decide fetch` (each file checked against its SHA-256), and the
 #          system's pinned images (`docker compose pull`, then `build` for the shim image). --conversations fetches
 #          only those BEAM conversations' files (a dev smoke never downloads a sealed conversation).
@@ -40,7 +40,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
-BUN_VERSION=1.3.14
+BUN_VERSION=1.4.2
 die() { echo "bootstrap: $*" >&2; exit 1; }
 log() { echo "bootstrap: $*" >&2; }
 
