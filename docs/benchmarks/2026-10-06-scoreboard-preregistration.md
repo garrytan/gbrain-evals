@@ -216,7 +216,9 @@ correct-abstention rate on BEAM-10M.
 - **Validation.** Before freeze, `bun eval/runner/q1/hedge.ts sample` draws a 200-answer sample of dev-smoke answers,
   stratified by verdict, with verdicts hidden from the labeler. The sample is hand-labeled, and
   `bun eval/runner/q1/hedge.ts validate` writes per-class precision and recall and the confusion matrix into the
-  receipt. A classifier change after that is a new version and is written here before any cell it affects. The
+  receipt. If `confident` or `abstain` precision on that sample is under 0.90, the classifier is revised, its version
+  bumped and the sample redrawn before freeze; the confident-error column is not published from a classifier that
+  missed this bar. A classifier change after that is a new version and is written here before any cell it affects. The
   development fixture (207 invented memory-QA answers, `test/eval/fixtures/hedge/`) scores 147 of 147 on the set the
   rules were written against and 59 of 60 on a holdout written before the rules and not used to tune them.
 
