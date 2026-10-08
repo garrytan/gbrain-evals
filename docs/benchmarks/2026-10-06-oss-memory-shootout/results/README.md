@@ -52,7 +52,22 @@ estimate never covered: the failed LongMemEval-S attempt `a2` ($9.82, the databa
 A7), and the LongMemEval-S rerun `a3` costing $66.74 against the pilot's $50.12 LongMemEval-S estimate. No other
 `memory-bank` cell remains.
 
+### Ledger correction for the first D2 pass
+
+The first D2 replay pass sent `temperature` to Claude 5.x point releases, and every one of its 1,800 Anthropic reader
+calls came back HTTP 400 `invalid_request_error` ("`temperature` is deprecated for this model.") with no usage, between
+2026-10-08 14:21:30 and 15:34:04 UTC. The host-side budget guard charged each at its reservation: Fable 5.1 600 calls
+$90.24, Opus 5.5 600 calls $36.09, Sonnet 5.5 600 calls $18.05, $144.38 in all, which filled the campaign cap. The
+metering proxy settles a 4xx answer without usage at $0 (`662d7018`) because providers do not bill rejected requests;
+the guard now does the same (`a165ef57`). The campaign ledger keeps the 1,800 entries and adds one correction entry,
+`correction-a165ef575f7e`, of −$144.38 naming the rows, the rule and the commit (amendment A9). The rejected rows were
+`reader_error` (harness failures) and were retried on resume.
+
 ## Changelog
+
+- 2026-10-08: D2 frontier-reader arms (Opus 5.5, Sonnet 5.5, `gpt-6.1-sol`, Fable 5.1) on the six LongMemEval-S primary cells, added beside each cell's existing arms; the original arms' files are unchanged.
+
+- 2026-10-08: The first D2 pass's 1,800 rejected Anthropic calls corrected to $0 in the ledger, with evidence.
 
 - 2026-10-08: `memory-bank`'s stop overshoot logged with its causes.
 

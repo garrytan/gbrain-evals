@@ -27,7 +27,7 @@ here as "gbrain as measured through this adapter". The follow-up that measures g
 [the budgeted delivery plan](https://github.com/garrytan/gbrain-evals/blob/capy/gbrain-budgeted-delivery-plan/docs/plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md),
 which adds a `gbrain-query` adapter.
 
-Status: every Phase 4 to 7 cell finished on 2026-10-08; the frontier-reader replays (D2) are pending a scope decision. Rules,
+Status: every Phase 4 to 7 cell and the frontier-reader replays (D2) finished on 2026-10-08. Rules,
 amendments and hashes are in the [preregistration](2026-10-06-oss-memory-shootout-preregistration.md).
 
 ## The concrete case
@@ -227,10 +227,23 @@ the time: the adapter's items carry no dates, so the reader cannot tell the corr
 
 ### Frontier readers (D2)
 
-Not run yet. The preregistered D2 replay (four frontier readers on frozen contexts, a 100-question slice per
-benchmark) costs about $15 per system per benchmark on the primary arm and about $140 on LongMemEval-S with all four
-arms, more than the campaign has left; its scope is awaiting a decision. Amendment A8 makes `claude-fable-5-1`
-descriptive only, so the counted D2 readers will be Opus 5.5, Sonnet 5.5 and `gpt-6.1-sol`.
+The same frozen evidence (LongMemEval-S, 8,000 tokens, `native`) read by newer models, 100 questions per system, judged
+by `gpt-4o` (amendment A9). Opus 5.5, Sonnet 5.5 and `gpt-6.1-sol` are counted readers; Fable 5.1 is descriptive only
+(amendment A8). These rows are descriptive: they enter no test.
+
+| System | `gpt-4o` (main) | Opus 5.5 | Sonnet 5.5 | `gpt-6.1-sol` | Fable 5.1 (descriptive) |
+|---|---:|---:|---:|---:|---:|
+| `memory-bank` common | 91% | 94% | 95% | 95% | 86% |
+| `graph-pipeline` common | 83% | 93% | 90% | 92% | 86% |
+| `extract-first` common | 79% | 94% | 92% | 83% | 84% |
+| `markdown-notes` common | 69% | 73% | 71% | 72% | 70% |
+| `temporal-graph` common | 37% | 43% | 41% | 45% | 40% |
+| gbrain master common | 59% | 68% | 66% | 67% | 64% |
+
+A stronger reader lifts every system, and most of all the systems whose evidence already carries dated facts or whole
+notes (`extract-first` gains 15 points with Opus 5.5). gbrain gains 7 to 9 points with each frontier reader, but the
+order does not change: through this adapter, its chunks still trail `memory-bank` and `graph-pipeline` by 25 points or
+more with every counted reader, and `extract-first` by 16 to 26 points.
 
 ## What to use and what to avoid
 
@@ -264,7 +277,7 @@ descriptive only, so the counted D2 readers will be Opus 5.5, Sonnet 5.5 and `gp
 ## Reproduce and inspect
 
 - Code: gbrain-evals branch `capy/oss-memory-shootout`; gbrain pin `739e5cc`, gbrain master `c5fb0201`.
-- Rules and hashes: [preregistration](2026-10-06-oss-memory-shootout-preregistration.md) (amendments A1 to A8),
+- Rules and hashes: [preregistration](2026-10-06-oss-memory-shootout-preregistration.md) (amendments A1 to A9),
   [lifecycle-lite preregistration](2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md).
 - Cells: [manifests](2026-10-06-oss-memory-shootout/manifests/) (`bun eval/runner/shootout-cell.ts reserve|launch|settle`),
   [lifecycle-lite manifests](2026-10-06-oss-memory-shootout-lifecycle-lite/manifests/).
@@ -273,11 +286,13 @@ descriptive only, so the counted D2 readers will be Opus 5.5, Sonnet 5.5 and `gp
 - Analysis: `bun eval/runner/shootout-report.ts --output <dir>` (primary, S1, S2, descriptive),
   `bun eval/runner/precisionmembench-s3.ts` (S3).
 - Keys: `OPENAI_API_KEY`, `VOYAGE_API_KEY` (gbrain's reranker), `ANTHROPIC_API_KEY` (D2 only), `UBICLOUD_API_KEY`.
-- Spend, measured by the cells' metering proxies: Phase 4 $734.06 (including failed attempts), Phase 5 $2.11, Phase 6
-  $5.39, Phase 7 $193.95; $935.51 in all. The campaign ledger also holds $283 for one `temporal-graph` lease whose
-  VM was destroyed before its cell started (a reservation with unknown actual spend, counted against the $1,450 cap
-  but not as spend). Ubicloud VM time is extra.
+- D2 replay: `bun eval/runner/memory-qa/run.ts <cell selection> --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/d2-frontier-lme-s-primary.json --replay --output <pulled cell>/mqa --paid ...`.
+- Spend, measured: Phase 4 $734.06 (including failed attempts), Phase 5 $2.11, Phase 6 $5.39, Phase 7 $193.95,
+  D2 replays $143.97; $1,079.48 in all. The campaign ledger also holds $283 for one `temporal-graph` lease whose VM was
+  destroyed before its cell started (a reservation with unknown actual spend, counted against the $1,450 cap but not
+  as spend), and a −$144.38 correction for 1,800 rejected D2 calls that were charged at their reservation (results
+  README). Ubicloud VM time is extra.
 
 ## Changelog
 
-- 2026-10-08: First publication.
+- 2026-10-08: First publication, with the D2 frontier-reader rows.

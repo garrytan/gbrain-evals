@@ -512,7 +512,14 @@ arms it expands; a replay of an in-process gbrain cell also no longer needs the 
 A third fix came from the first D2 pass: Claude 5.x point releases (Opus 5.5, Sonnet 5.5, Fable 5.1) reject
 `temperature` with HTTP 400, so every Anthropic reader row of that pass was a `reader_error` (a harness failure); the
 reader now omits `temperature` for those models, which then run at their default, and the failed rows were retried on
-resume. No counted cell used an Anthropic reader. D2 replays the frozen contexts on the host through the campaign ledger (about $90 to $100). D2 results are descriptive
+resume. No counted cell used an Anthropic reader. The first pass also exposed an accounting difference: the host-side budget
+guard charged each of those 1,800 rejected calls at its full reservation, because the response carried no usage
+(Fable 5.1 600 calls $90.235370, Opus 5.5 600 calls $36.094148, Sonnet 5.5 600 calls $18.047074; $144.376592 in all,
+2026-10-08 14:21:30 to 15:34:04 UTC), while the metering proxy settles a 4xx answer without usage at $0 (`662d7018`),
+and providers do not bill a rejected request. By the campaign owner's decision on 2026-10-08, the guard now applies the
+proxy's rule (`a165ef57`, with a keyless test), and the campaign ledger carries one visible correction entry,
+`correction-a165ef575f7e`, of −$144.376592 that names the rows, the rule and the commit; the 1,800 original entries are
+unchanged and `budget-ledger.ts verify` passes. D2 replays the frozen contexts on the host through the campaign ledger (about $90 to $100). D2 results are descriptive
 per reader; they enter no Holm family. Recorded before any D2 call.
 
 ## Changelog
