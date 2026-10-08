@@ -820,7 +820,7 @@ async function runModelArm(sut: TrustSut, targets: readonly Cat39Target[], o: Mo
             arm: brainArm({ sut, labels: true, writes: false, sideEffects: false, effects: [] }),
             proactive: { sut, labels: true },
             ...(model === STUB_MODEL ? { scripted: stubRecoveryModel(t) } : {}),
-            maxTurns: 8, maxOutputTokens: PAID_SESSION_TOKENS.output,
+            maxTurns: 8, maxOutputTokens: 4096,
           });
           const answer = answerText(s.run);
           rows.push({ model, target_id: t.id, repeat: rep, scope, recovered: answer.toLowerCase().includes(t.token.toLowerCase()), answer: answer.slice(0, 300), injected_has_token: s.injected.includes(t.token), usd: s.run.usd, ...(s.run.error ? { error: s.run.error } : {}) });

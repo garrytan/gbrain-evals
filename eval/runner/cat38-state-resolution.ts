@@ -747,7 +747,7 @@ export async function runModelArm(gut: GbrainUnderTest, world: GeneratedCat38, o
         const s = await runSession({
           model, system: MODEL_SYSTEM, user: probe.question,
           arm: brainArm({ sut, labels, writes: false, sideEffects: false, effects: [], maxChars: 6000 }),
-          proactive: { sut, labels }, maxTurns: 6, maxOutputTokens: 1000,
+          proactive: { sut, labels }, maxTurns: 6, maxOutputTokens: 4096,
           ...(opts.mode === 'dry' ? { scripted: labelReadingStub(probe) } : {}),
         });
         const answer = finalAnswer(s.run);

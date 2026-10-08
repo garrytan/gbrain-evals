@@ -144,7 +144,7 @@ export async function runSession(s: SessionSpec): Promise<SessionResult> {
     withheld = tc.withheld;
   }
   const user = injected ? `${injected}\n\n${s.user}` : s.user;
-  const run = await runAgent({ model: s.model, system: s.system, user, arm: s.arm, maxTurns: s.maxTurns ?? 10, maxToolChars: 6000, maxOutputTokens: s.maxOutputTokens ?? 2000, scripted: s.scripted });
+  const run = await runAgent({ model: s.model, system: s.system, user, arm: s.arm, maxTurns: s.maxTurns ?? 10, maxToolChars: 6000, maxOutputTokens: s.maxOutputTokens ?? 4096, scripted: s.scripted });
   return { run, injected, withheld, user };
 }
 
