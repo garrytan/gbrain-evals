@@ -2,6 +2,15 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.41] - 2026-10-08
+
+### gbrain #6279 mirror: managed Postgres catch-up at 368 pages/min, a page save at 2.5 s
+
+Paired with gbrain #6279 (branch `capy/sync-feeder-fast-writes`, measured at `0ba3b1f7c`, merged as `9d013e52d`, v0.60.111.0).
+
+- **Catch-up and put_page before and after (mirror, $0 here).** [Report](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md), [`results.json`](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground/results.json) and the raw bench JSON for every row. Master `a865f8f8` and the branch on 16-vCPU Ubicloud VMs at 57 ms: the 10,000-file backlog takes 33.6 min (was 74.5), steady 367.9 pages/min (was 174.8), idle `put_page` p50 2.46 s (was 8.6), 3,332 pages/min near the database (was 2,404). Three of gbrain's targets missed and are recorded as missed: first commit (18.4 s against 15 s), `put_page` p95 during a catch-up (idle + 1.5 s against idle + 1 s) and catch-up while a page is saved every 5 s (174.4 pages/min, 45% of idle against 50%; master 0.4 with 115 of 120 saves failed).
+- **Version.** Main is at 0.10.40, so this release is 0.10.41.
+
 ## [0.10.40] - 2026-10-07
 
 ### gbrain fix wave 12 agent smoke: the forget-caveat move regresses Opus 5.5 write-back; the restored put_page UUID line does no harm
