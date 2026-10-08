@@ -6,7 +6,7 @@
  ],
  "upstream_doc": "docs/eval/managed-sync-catchup.md (gbrain), section 'Feeder, lanes to 16 and foreground priority'",
  "before": "master a865f8f8 (v0.60.104.0)",
- "after": "capy/sync-feeder-fast-writes 0ba3b1f7c (#6279, ships as v0.60.111.0); G4 lane means from d00f4d035 (same lane code)",
+ "after": "capy/sync-feeder-fast-writes 0ba3b1f7c (#6279, merged as 9d013e52d, v0.60.111.0); G4 lane means from d00f4d035 (same lane code)",
  "gates": {
   "G1_steady_pages_per_min_10k_57ms": {
    "before": 174.8,
