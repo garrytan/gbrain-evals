@@ -18,7 +18,8 @@
  *      session write, finish wait) and write-start-to-queryable probes: the
  *      last session plus a seeded sample of 20 sessions, each timed from the
  *      start of its write to the first fixed-evidence retrieval that returns
- *      it (probes poll while later sessions are written). Every conversation
+ *      it (probes poll while later sessions are written; once /finish reports
+ *      ready, a probe's next miss is final). Every conversation
  *      of the shard is ingested before any question, then
  *      `$SHOOTOUT_OUT/ingest-complete` is written so the VM snapshots the
  *      store; with SHOOTOUT_RESTORED_REALIZATION set the restored store is
@@ -602,6 +603,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const writes: number[] = [];
     let failed = 0, synthetic = 0, messages = 0, tokens = 0;
     const probes: Array<Promise<ProbeRecord>> = [];
+    /** Set once /finish has returned: the store is as queryable as it will get, so a probe whose next poll misses is missed. */
+    let drained = false;
     const probe = async (step: { input: SessionInput }, kind: 'last' | 'sample', t0: number): Promise<ProbeRecord> => {
       const base = { realization_id: rid, source_id: step.input.source_id, kind };
       if (!canProbe) return { ...base, status: 'not-measurable', write_start_to_queryable_ms: null, polls: 0 };
@@ -610,11 +613,12 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       let polls = 0;
       while (true) {
         polls++;
+        const last = drained;
         try {
           const res = await system.retrieve(ns, { text: passage, query_time: null }, fixed);
           if (res.items.some(i => i.source_ids.includes(step.input.source_id))) return { ...base, status: 'found', write_start_to_queryable_ms: Math.round((performance.now() - t0) * 10) / 10, polls };
         } catch { /* a vendor error is polled again until the deadline */ }
-        if (performance.now() >= deadline) return { ...base, status: 'missed', write_start_to_queryable_ms: null, polls };
+        if (last || performance.now() >= deadline) return { ...base, status: 'missed', write_start_to_queryable_ms: null, polls };
         await Bun.sleep(opts.probeIntervalMs ?? 2000);
       }
     };
@@ -644,6 +648,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       await meter.phase(slot, 'background');
       let finish = { ready: false, waited_ms: 0, completeness: 'not reached' };
       if (!importError) { try { const f = await system.finishIngest(ns, opts.finishTimeoutS ?? finishTimeoutFor(def)); finish = { ready: f.ready, waited_ms: f.waited_ms, completeness: f.completeness }; } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; } }
+      if (finish.ready) drained = true;
       const probeRecords = await Promise.all(probes);
       await meter.phase(slot, null);
       return { finish, probeRecords };

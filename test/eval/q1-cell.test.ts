@@ -698,6 +698,18 @@ describe('paid dev smokes', () => {
     expect(asked).toEqual([16_200]);
   });
 
+  test('a probe that still misses once /finish reports ready is missed at once, not polled to its deadline', async () => {
+    const fake = new FakeMemorySystem();
+    fake.retrieve = async () => ({ items: [], applied_settings: {}, truncated: false });
+    const def = cellDef('ext-markdown-kb', 'shim', [{ id: 'retrieval-only', mode: 'retrieval-only', policy: 'fixed-evidence', readers: [] }], { only_conversations: [corpus.conversations[0].id] });
+    const t0 = performance.now();
+    await runCell(def, { out: join(tmp, 'probe-drain'), probeIntervalMs: 5, probeTimeoutMs: 120_000 }, { corpus, system: fake });
+    expect(performance.now() - t0).toBeLessThan(60_000);
+    const ingested = ndjson(join(tmp, 'probe-drain', 'runs', def.id, 'realizations.ndjson')).find(e => e.event === 'ingested');
+    expect(ingested.probes.length).toBeGreaterThan(0);
+    expect(ingested.probes.every((p: { status: string }) => p.status === 'missed')).toBe(true);
+  });
+
   test('a dev cell never names a conversation outside the dev split; the corpus keeps only its conversations', async () => {
     const { devOnly } = await import('../../eval/runner/q1/cell.ts');
     const { beamFiles } = await import('../../eval/runner/memory-qa/corpus.ts');
