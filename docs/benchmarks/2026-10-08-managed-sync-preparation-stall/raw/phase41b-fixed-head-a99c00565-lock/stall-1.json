@@ -1,0 +1,4080 @@
+{
+  "t": 1791470201901,
+  "at": "2026-10-08T14:36:41.901Z",
+  "pass": 1,
+  "sync_pid": 9235,
+  "via": "pooler",
+  "running": [
+    {
+      "request_id": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+      "claim_phase": {
+        "step": "origin_check",
+        "owner": {
+          "pid": 9233,
+          "kind": "dream",
+          "version": "0.60.108.0"
+        },
+        "phase": "preparing",
+        "since": "2026-10-08T14:36:10.728Z",
+        "token": "3500d337-4385-49bd-a18a-436a5e37abed",
+        "claimed_at": "2026-10-08T14:36:10.728Z",
+        "step_since": "2026-10-08T14:36:11.039Z",
+        "waiting_on": "db"
+      },
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 235439,
+      "since_update_ms": 1150
+    },
+    {
+      "request_id": "89aad877-9c67-40fe-93a7-ac04ad33cd88",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "claim_phase": {
+        "step": "import_content",
+        "owner": {
+          "pid": 9235,
+          "kind": "sync",
+          "version": "0.60.108.0"
+        },
+        "phase": "preparing",
+        "since": "2026-10-08T14:34:06.398Z",
+        "token": "184731f6-d6fe-4288-84d0-d71d8c91b56c",
+        "claimed_at": "2026-10-08T14:34:06.398Z",
+        "step_since": "2026-10-08T14:34:07.089Z",
+        "waiting_on": "db"
+      },
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 223837,
+      "since_update_ms": 5478
+    },
+    {
+      "request_id": "92de1627-e296-47cc-950b-416d997066f2",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "claim_phase": {
+        "step": "import_content",
+        "owner": {
+          "pid": 9235,
+          "kind": "sync",
+          "version": "0.60.108.0"
+        },
+        "phase": "preparing",
+        "since": "2026-10-08T14:34:06.398Z",
+        "token": "a91e7ac6-af9d-44ce-bf3b-ff56046fe909",
+        "claimed_at": "2026-10-08T14:34:06.398Z",
+        "step_since": "2026-10-08T14:34:07.089Z",
+        "waiting_on": "db"
+      },
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 223837,
+      "since_update_ms": 5478
+    },
+    {
+      "request_id": "26e4b6db-a9af-46e8-a6af-39271d5aa3f6",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "claim_phase": {
+        "step": "import_content",
+        "owner": {
+          "pid": 9235,
+          "kind": "sync",
+          "version": "0.60.108.0"
+        },
+        "phase": "preparing",
+        "since": "2026-10-08T14:34:06.398Z",
+        "token": "9ef7d794-d4e3-4cfe-9cb8-22a27144501b",
+        "claimed_at": "2026-10-08T14:34:06.398Z",
+        "step_since": "2026-10-08T14:34:07.089Z",
+        "waiting_on": "db"
+      },
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 223837,
+      "since_update_ms": 5478
+    },
+    {
+      "request_id": "9241dfaa-5bb8-4dcf-9d1b-fe0bc0bd0f47",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "claim_phase": null,
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 223837,
+      "since_update_ms": 5478
+    },
+    {
+      "request_id": "203cedfc-0feb-4728-a123-5f36e8e05c99",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "claim_phase": null,
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 223837,
+      "since_update_ms": 5478
+    },
+    {
+      "request_id": "6772602f-d006-44d1-ab3e-9f22a51b3989",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "claim_phase": null,
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 223837,
+      "since_update_ms": 5478
+    },
+    {
+      "request_id": "17247866-0c1a-42bb-be2b-7c13c967104e",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "claim_phase": null,
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 223837,
+      "since_update_ms": 5478
+    },
+    {
+      "request_id": "537ee659-7006-4b00-b998-98f48c058cb3",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "claim_phase": null,
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 223837,
+      "since_update_ms": 5478
+    }
+  ],
+  "activity": [
+    {
+      "pid": 96,
+      "state": "idle in transaction",
+      "application_name": "postgres.js",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": 154712,
+      "query_age_ms": 154711,
+      "state_age_ms": 151244,
+      "query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocked_by": []
+    },
+    {
+      "pid": 91,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:9235:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 154669,
+      "query_age_ms": 154669,
+      "state_age_ms": 154669,
+      "query": "\n        SELECT id, slug FROM pages\n        WHERE source_id = $1\n          AND deleted_at IS NULL\n          AND (content_hash = $2 OR (frontmatter->>'id' = $3 AND $4::text IS NOT NULL))\n          AND ",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 92,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:9235:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 154669,
+      "query_age_ms": 154669,
+      "state_age_ms": 154669,
+      "query": "\n        SELECT id, slug FROM pages\n        WHERE source_id = $1\n          AND deleted_at IS NULL\n          AND (content_hash = $2 OR (frontmatter->>'id' = $3 AND $4::text IS NOT NULL))\n          AND ",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 94,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:9235:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 154669,
+      "query_age_ms": 154669,
+      "state_age_ms": 154669,
+      "query": "\n        SELECT id, slug FROM pages\n        WHERE source_id = $1\n          AND deleted_at IS NULL\n          AND (content_hash = $2 OR (frontmatter->>'id' = $3 AND $4::text IS NOT NULL))\n          AND ",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 95,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:9235:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 154666,
+      "query_age_ms": 154666,
+      "state_age_ms": 154666,
+      "query": "\n        SELECT id, slug FROM pages\n        WHERE source_id = $1\n          AND deleted_at IS NULL\n          AND (content_hash = $2 OR (frontmatter->>'id' = $3 AND $4::text IS NOT NULL))\n          AND ",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 102,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:9235:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 154583,
+      "query_age_ms": 154583,
+      "state_age_ms": 154583,
+      "query": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j\n      WHERE (j.reason IS DISTINCT F",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 98,
+      "state": "active",
+      "application_name": "gbrain:dream:9233:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 153732,
+      "query_age_ms": 153732,
+      "state_age_ms": 153732,
+      "query": "SELECT (\n      EXISTS (SELECT 1 FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id\n        WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uu",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 100,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:9235:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 153674,
+      "query_age_ms": 153674,
+      "state_age_ms": 153674,
+      "query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n    (SELECT s.incarnation ",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 120,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:9235:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 150547,
+      "query_age_ms": 150547,
+      "state_age_ms": 150547,
+      "query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 121,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:9235:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 150547,
+      "query_age_ms": 150547,
+      "state_age_ms": 150547,
+      "query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 88,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:9235:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 150547,
+      "query_age_ms": 150547,
+      "state_age_ms": 150547,
+      "query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 97,
+      "state": "active",
+      "application_name": "gbrain:dream:9233:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 146458,
+      "query_age_ms": 146458,
+      "state_age_ms": 146458,
+      "query": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j\n      WHERE (j.reason IS DISTINCT F",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 124,
+      "state": "active",
+      "application_name": "gbrain:dream:9233:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 127753,
+      "query_age_ms": 127753,
+      "state_age_ms": 127753,
+      "query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 AND p.deleted_at IS NULL\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n ",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 125,
+      "state": "active",
+      "application_name": "gbrain:dream:9233:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 30841,
+      "query_age_ms": 30841,
+      "state_age_ms": 30841,
+      "query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "blocked_by": [
+        96
+      ]
+    },
+    {
+      "pid": 127,
+      "state": "idle",
+      "application_name": "gbrain:dream:9233:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 388,
+      "state_age_ms": 388,
+      "query": "SELECT c.* FROM persistence_topology_changes c\n    JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid\n    WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS",
+      "blocked_by": []
+    },
+    {
+      "pid": 139,
+      "state": "idle",
+      "application_name": "gbrain:dream:9233:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 207,
+      "state_age_ms": 203,
+      "query": "commit",
+      "blocked_by": []
+    },
+    {
+      "pid": 161,
+      "state": "idle",
+      "application_name": "gbrain:dream:9233:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 388,
+      "state_age_ms": 388,
+      "query": "WITH expired AS (\n        SELECT r.id FROM persistence_requests r WHERE r.state='running' AND r.recovery IS NULL\n        AND r.publication_started=false AND r.claim_expires_at<now() AND set_config('gb",
+      "blocked_by": []
+    }
+  ],
+  "states": [
+    {
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "state": "committed",
+      "n": 12
+    },
+    {
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "state": "queued",
+      "n": 1
+    },
+    {
+      "kind": "managed_sync_import",
+      "state": "committed",
+      "n": 163
+    },
+    {
+      "kind": "managed_sync_import",
+      "state": "queued",
+      "n": 50
+    },
+    {
+      "kind": "managed_sync_import",
+      "state": "running",
+      "n": 9
+    }
+  ],
+  "committed": 163,
+  "failed": [],
+  "holds": [
+    {
+      "op": "sync-hold",
+      "fingerprint": "bench:cd11bbf8-02d5-4902-ab66-7c5b294bd245:companies/scale-0-1502.md",
+      "record": {
+        "code": "invalid_fence",
+        "meta": {
+          "line": 32,
+          "fence": {
+            "line": 14,
+            "rows": [],
+            "fence": "facts",
+            "reason": "repeated_marker",
+            "columns": [],
+            "section": "timeline"
+          },
+          "reason": "repeated_marker",
+          "blob_oid": "82f426428c6a9cd9887090d0d30340d37a2f6d0d",
+          "fence_version": 3,
+          "recovery_version": 1
+        },
+        "mode": "managed",
+        "path": "companies/scale-0-1502.md",
+        "slug": "companies/scale-0-1502",
+        "run_id": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "held_at": "2026-10-08T14:31:10.899Z",
+        "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "page_id": null,
+        "version": 1,
+        "source_id": "bench",
+        "updated_at": "2026-10-08T14:31:10.899Z",
+        "incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+        "observed_at": "2026-10-08T14:31:08.835Z",
+        "source_path": "companies/scale-0-1502.md",
+        "upstream_version": "1127fd00955b1b0547a78667528ed21d380f7cf1b8693586adfc20deb1b1ff3f"
+      }
+    },
+    {
+      "op": "sync-hold",
+      "fingerprint": "bench:cd11bbf8-02d5-4902-ab66-7c5b294bd245:companies/scale-0-1512.md",
+      "record": {
+        "code": "invalid_fence",
+        "meta": {
+          "line": 32,
+          "fence": {
+            "line": 14,
+            "rows": [],
+            "fence": "facts",
+            "reason": "repeated_marker",
+            "columns": [],
+            "section": "timeline"
+          },
+          "reason": "repeated_marker",
+          "blob_oid": "70d092f9e3c60143566b8f4ee7fef59dd127d247",
+          "fence_version": 3,
+          "recovery_version": 1
+        },
+        "mode": "managed",
+        "path": "companies/scale-0-1512.md",
+        "slug": "companies/scale-0-1512",
+        "run_id": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "held_at": "2026-10-08T14:31:11.656Z",
+        "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "page_id": null,
+        "version": 1,
+        "source_id": "bench",
+        "updated_at": "2026-10-08T14:31:11.656Z",
+        "incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+        "observed_at": "2026-10-08T14:31:08.835Z",
+        "source_path": "companies/scale-0-1512.md",
+        "upstream_version": "422a5d4cbeb98f48ae97194dd5c1582ddb62d1c10ecd8d491cee5aad7fc501f8"
+      }
+    },
+    {
+      "op": "sync-hold-summary",
+      "fingerprint": "bench:cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "record": {
+        "count": 2,
+        "stale": 0,
+        "fences": 2,
+        "images": 0,
+        "stalled": 0,
+        "source_id": "bench",
+        "concurrent": 0,
+        "incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      }
+    }
+  ],
+  "locks": [
+    {
+      "pid": 88,
+      "waiting_app": "gbrain:cli-sync:9235:module",
+      "waiting_query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "wait_ms": 150570,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 91,
+      "waiting_app": "gbrain:cli-sync:9235:module",
+      "waiting_query": "\n        SELECT id, slug FROM pages\n        WHERE source_id = $1\n          AND deleted_at IS NULL\n          AND (content_hash = $2 OR (frontmatter->>'id' = $3 AND $4::text IS NOT NULL))\n          AND ($5::text IS NULL OR slug <> $6)\n        ORDER BY (frontmatter->>'id' IS NOT DISTINCT FROM $7::text)",
+      "wait_ms": 154691,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 92,
+      "waiting_app": "gbrain:cli-sync:9235:module",
+      "waiting_query": "\n        SELECT id, slug FROM pages\n        WHERE source_id = $1\n          AND deleted_at IS NULL\n          AND (content_hash = $2 OR (frontmatter->>'id' = $3 AND $4::text IS NOT NULL))\n          AND ($5::text IS NULL OR slug <> $6)\n        ORDER BY (frontmatter->>'id' IS NOT DISTINCT FROM $7::text)",
+      "wait_ms": 154691,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 94,
+      "waiting_app": "gbrain:cli-sync:9235:module",
+      "waiting_query": "\n        SELECT id, slug FROM pages\n        WHERE source_id = $1\n          AND deleted_at IS NULL\n          AND (content_hash = $2 OR (frontmatter->>'id' = $3 AND $4::text IS NOT NULL))\n          AND ($5::text IS NULL OR slug <> $6)\n        ORDER BY (frontmatter->>'id' IS NOT DISTINCT FROM $7::text)",
+      "wait_ms": 154691,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 95,
+      "waiting_app": "gbrain:cli-sync:9235:module",
+      "waiting_query": "\n        SELECT id, slug FROM pages\n        WHERE source_id = $1\n          AND deleted_at IS NULL\n          AND (content_hash = $2 OR (frontmatter->>'id' = $3 AND $4::text IS NOT NULL))\n          AND ($5::text IS NULL OR slug <> $6)\n        ORDER BY (frontmatter->>'id' IS NOT DISTINCT FROM $7::text)",
+      "wait_ms": 154688,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 97,
+      "waiting_app": "gbrain:dream:9233:module",
+      "waiting_query": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j\n      WHERE (j.reason IS DISTINCT FROM 'rebuild_failed' OR j.updated_at<now()-interval '30 seconds')\n      ORDER BY updated_at,source_i",
+      "wait_ms": 146480,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 98,
+      "waiting_app": "gbrain:dream:9233:module",
+      "waiting_query": "SELECT (\n      EXISTS (SELECT 1 FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id\n        WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active'))\n      AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_",
+      "wait_ms": 153755,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 100,
+      "waiting_app": "gbrain:cli-sync:9235:module",
+      "waiting_query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n    (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation,\n    COALESCE((SELECT jsonb_agg(t.tag O",
+      "wait_ms": 153697,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 102,
+      "waiting_app": "gbrain:cli-sync:9235:module",
+      "waiting_query": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j\n      WHERE (j.reason IS DISTINCT FROM 'rebuild_failed' OR j.updated_at<now()-interval '30 seconds')\n      ORDER BY updated_at,source_i",
+      "wait_ms": 154605,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 120,
+      "waiting_app": "gbrain:cli-sync:9235:module",
+      "waiting_query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "wait_ms": 150570,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 121,
+      "waiting_app": "gbrain:cli-sync:9235:module",
+      "waiting_query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "wait_ms": 150570,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 124,
+      "waiting_app": "gbrain:dream:9233:module",
+      "waiting_query": "WITH chosen AS (\n    SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 AND p.deleted_at IS NULL\n    ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1\n  ) SELECT p.*,\n    (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation,\n    COALESCE(",
+      "wait_ms": 127776,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    },
+    {
+      "pid": 125,
+      "waiting_app": "gbrain:dream:9233:module",
+      "waiting_query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "wait_ms": 30864,
+      "blocker_pid": 96,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 154734
+    }
+  ],
+  "committed_stale_ms": 136849,
+  "writer_status": {
+    "selected_brain": "host",
+    "enabled": true,
+    "brain_id": "89aa3eea-0b98-4d3f-b555-a2a120ace04a",
+    "sampled_at": "2026-10-08T14:36:43.286Z",
+    "publication_concurrency": 2,
+    "local_process_ingress": {
+      "state": "not_running",
+      "accepting": false,
+      "active_preparations": 0,
+      "active_worktrees": 0,
+      "scope": "The process that answered has no resident consumer (a one-shot CLI, for example); another process may own writes. See worktrees and bindings for ownership."
+    },
+    "worktrees": [
+      {
+        "id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "owner_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+        "owner_epoch": "1",
+        "topology_generation": "1",
+        "state": "active",
+        "heartbeat_at": null,
+        "queued": 51,
+        "running": 9,
+        "recovering": 0,
+        "oldest_request_at": "2026-10-08T14:32:46.470Z",
+        "last_completed_sequence": "224",
+        "recovery_bytes": "0",
+        "recovering_effects": 0
+      }
+    ],
+    "counters": [
+      {
+        "key": "brain",
+        "outstanding_count": "60",
+        "intent_bytes": "139290",
+        "lifetime_ids": "235",
+        "terminal_bytes": "3850240",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "principal:local_cli:97925bd2-2b5c-4078-a434-9c3d90edf927",
+        "outstanding_count": "60",
+        "intent_bytes": "139290",
+        "lifetime_ids": "235",
+        "terminal_bytes": "3850240",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "worktree:714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "outstanding_count": "0",
+        "intent_bytes": "0",
+        "lifetime_ids": "0",
+        "terminal_bytes": "0",
+        "recovery_bytes": "0"
+      }
+    ],
+    "queue": [
+      {
+        "state": "queued",
+        "count": 51,
+        "intent_bytes": "118428",
+        "oldest_request_at": "2026-10-08T14:32:58.072Z",
+        "oldest_age_ms": "224874"
+      },
+      {
+        "state": "running",
+        "count": 9,
+        "intent_bytes": "20862",
+        "oldest_request_at": "2026-10-08T14:32:46.470Z",
+        "oldest_age_ms": "236476"
+      }
+    ],
+    "effects": [],
+    "limits": {
+      "principalOutstanding": 100,
+      "brainOutstanding": 1000,
+      "principalIntentBytes": 33554432,
+      "brainIntentBytes": 268435456,
+      "principalLifetimeIds": 250000,
+      "brainLifetimeIds": 1000000,
+      "principalTerminalBytes": 1610612736,
+      "brainTerminalBytes": 8589934592,
+      "brainRecoveryBytes": 1073741824,
+      "worktreeRecoveryBytes": 268435456
+    },
+    "capacity": [
+      {
+        "scope": "brain",
+        "resource": "outstanding_count",
+        "used": 60,
+        "limit": 1000,
+        "remaining": 940,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_outstanding"
+      },
+      {
+        "scope": "brain",
+        "resource": "intent_bytes",
+        "used": 139290,
+        "limit": 268435456,
+        "remaining": 268296166,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_intent_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "lifetime_ids",
+        "used": 235,
+        "limit": 1000000,
+        "remaining": 999765,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_lifetime_ids"
+      },
+      {
+        "scope": "brain",
+        "resource": "terminal_bytes",
+        "used": 3850240,
+        "limit": 8589934592,
+        "remaining": 8586084352,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_terminal_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 1073741824,
+        "remaining": 1073741824,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_recovery_bytes"
+      },
+      {
+        "scope": "principal:local_cli:97925bd2-2b5c-4078-a434-9c3d90edf927",
+        "resource": "outstanding_count",
+        "used": 60,
+        "limit": 100,
+        "remaining": 40,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_outstanding"
+      },
+      {
+        "scope": "principal:local_cli:97925bd2-2b5c-4078-a434-9c3d90edf927",
+        "resource": "intent_bytes",
+        "used": 139290,
+        "limit": 33554432,
+        "remaining": 33415142,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_intent_bytes"
+      },
+      {
+        "scope": "principal:local_cli:97925bd2-2b5c-4078-a434-9c3d90edf927",
+        "resource": "lifetime_ids",
+        "used": 235,
+        "limit": 250000,
+        "remaining": 249765,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_lifetime_ids"
+      },
+      {
+        "scope": "principal:local_cli:97925bd2-2b5c-4078-a434-9c3d90edf927",
+        "resource": "terminal_bytes",
+        "used": 3850240,
+        "limit": 1610612736,
+        "remaining": 1606762496,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_terminal_bytes"
+      },
+      {
+        "scope": "worktree:714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 268435456,
+        "remaining": 268435456,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.worktree_recovery_bytes"
+      }
+    ],
+    "preparation_policy": {
+      "deadlines": true,
+      "sync_preparation_ms": 120000,
+      "maintenance_preparation_ms": 120000,
+      "preparation_ceiling_ms": 600000,
+      "max_preparation_attempts": 2
+    },
+    "recent_failures": [],
+    "blockers": [
+      {
+        "request_id": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:46.470Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 1,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 236817,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 32559,
+          "phase_age_ms": 32559,
+          "step": "origin_check",
+          "step_age_ms": 32248,
+          "waiting_on": "db",
+          "owner": {
+            "kind": "dream",
+            "pid": 9233,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write (step origin_check, waiting on db), so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:58.072Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 1,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 225216,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "89aad877-9c67-40fe-93a7-ac04ad33cd88",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:58.072Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 225216,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 156890,
+          "phase_age_ms": 156890,
+          "step": "import_content",
+          "step_age_ms": 156199,
+          "waiting_on": "db",
+          "owner": {
+            "kind": "sync",
+            "pid": 9235,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write (step import_content, waiting on db), so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": {
+            "reason": "preparation_overdue",
+            "step": "import_content",
+            "step_age_ms": 156199,
+            "waiting_on": "db",
+            "budget_ms": 120000
+          }
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "92de1627-e296-47cc-950b-416d997066f2",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:58.072Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 225216,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 156890,
+          "phase_age_ms": 156890,
+          "step": "import_content",
+          "step_age_ms": 156199,
+          "waiting_on": "db",
+          "owner": {
+            "kind": "sync",
+            "pid": 9235,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write (step import_content, waiting on db), so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": {
+            "reason": "preparation_overdue",
+            "step": "import_content",
+            "step_age_ms": 156199,
+            "waiting_on": "db",
+            "budget_ms": 120000
+          }
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "26e4b6db-a9af-46e8-a6af-39271d5aa3f6",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:58.072Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 225216,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 156890,
+          "phase_age_ms": 156890,
+          "step": "import_content",
+          "step_age_ms": 156199,
+          "waiting_on": "db",
+          "owner": {
+            "kind": "sync",
+            "pid": 9235,
+            "version": "0.60.108.0"
+          },
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write (step import_content, waiting on db), so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts.",
+          "budget_ms": 120000,
+          "stall": {
+            "reason": "preparation_overdue",
+            "step": "import_content",
+            "step_age_ms": 156199,
+            "waiting_on": "db",
+            "budget_ms": 120000
+          }
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "9241dfaa-5bb8-4dcf-9d1b-fe0bc0bd0f47",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:58.072Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 225216,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "203cedfc-0feb-4728-a123-5f36e8e05c99",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:58.072Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 225216,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6772602f-d006-44d1-ab3e-9f22a51b3989",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:58.072Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 225216,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "17247866-0c1a-42bb-be2b-7c13c967104e",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:58.072Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 225216,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "537ee659-7006-4b00-b998-98f48c058cb3",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:32:58.072Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 225216,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "claim": {
+          "phase": "unrecorded",
+          "claim_age_ms": null,
+          "phase_age_ms": null,
+          "step": null,
+          "step_age_ms": null,
+          "waiting_on": "unknown",
+          "owner": null,
+          "resumes_on_its_own": false,
+          "why": "The owner has not recorded this claim's phase (a claim younger than one renewal, or an owner that predates phase recording).",
+          "budget_ms": 120000,
+          "stall": null
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "215cbcc7-aa09-4708-a956-f3648d4e3edf",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:10.194Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 1,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 213094,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "3983f7be-aa15-40dd-8d06-f2b5af44a0e5",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:10.194Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 213094,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "027381b4-e006-4c14-9c79-043b1d32c0dc",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:10.194Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 213094,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "8f09a77a-a00b-4554-9ed2-6fefb3044ac8",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:10.194Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 213094,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "a32d79c4-295f-4351-8b15-facd2dd59998",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:10.194Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 213094,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "507f757c-ac3e-4150-82e0-84738aaf950c",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:10.194Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 213094,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "78792e59-782c-4fea-9fd3-6cd3b6c453dc",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:10.194Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 213094,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "db5ac534-e9f6-440c-a796-ddcda566b528",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "e56e9864-bcdf-4a37-888f-a10f97d6154a",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "a04711e0-dca9-4632-a4b8-371868ac116f",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "0d7b710e-5858-42d9-aea7-f52359df9650",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "754fa58f-569c-485b-8346-461baddd8eac",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "bd66ac5b-a46a-4c8c-85e4-0d4baba4a81b",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "975f3198-06b4-4245-b1ed-b265abc63113",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "9fc0d56a-4a32-490d-bede-d68bb71d3c83",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d9795c56-52c2-4fea-be6e-9b6bf95b5b08",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "6737705a-bbd4-4142-b584-20c07b9ec298",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d0353d91-b805-40bd-a524-99a6c7a30215",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "043aa655-2d99-46d5-a2f3-983b0b168b3e",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "2d35da57-2e84-4e08-8823-70d9d09b27ec",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:13.654Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 209634,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "03185b71-b2f0-440d-86c5-2f3eed4f34cb",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "51a80666-78c8-4fd4-87e2-3634727b1388",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "623b8653-08f9-4d71-bd84-156c6dc56244",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "cd1c8140-adad-409e-84fc-12f60a21d2d1",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "889ce931-61ed-45de-aeb2-bab0e4453210",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "1bb242dd-d716-40f5-b2ba-b5c76f06e9c2",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "769d4f59-591b-42ef-a4f5-15b2c20990df",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "c36740dc-1f1d-4fea-9729-a9d741325992",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "673c3428-431a-4bd8-a1a7-734fe71b46b2",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "a3fdf22e-c7c8-4644-a1fe-6fe80b0437a1",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "08626996-841b-4612-9c7c-8e0ea9e350b5",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "64dbf536-4cd4-46a9-bca0-21aaf53c635a",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "9daa2cf0-602b-45c9-8c50-c5ceac83139c",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:27.141Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 196147,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "09203ca3-74c9-4405-ba54-6542ac05cb91",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:37.660Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 185628,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "1ceea8d3-0346-4ef3-ab38-27f89a9d4ebb",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:37.660Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 185628,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "47171964-b992-4298-850d-6e93e23d11b6",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:37.660Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 185628,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "dc987f71-2bc8-4751-9a01-45a768a6a439",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:37.660Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 185628,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "34dbe82d-a9f1-4571-9401-9a20735597ee",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:37.660Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 185628,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "d8700f6c-3e8b-4dc4-add7-5061a61bd9e7",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:37.660Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 185628,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "e651231b-a98b-469f-b9c4-c601f8e78b55",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:54.755Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 168533,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "977fd2cf-34e6-4db7-95b4-ec8087ec6087",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:58.365Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 164923,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "f33127d6-a479-434a-ba18-828400205ccf",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:58.365Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 164923,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "37359c19-2128-4061-bbd0-fd4bc0d44a96",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:58.365Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 164923,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "9a6be05d-80bf-4f21-9f75-10be9cca424f",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:58.365Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 164923,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "f2f2da2a-b72d-4594-9119-e7f332843aaf",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:58.365Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 164923,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "f19e1a67-c100-4c5c-a24e-688e4a8dd35d",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:58.365Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 164923,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "c8b748a6-8f6a-4b8f-a5b1-1b2bc8a93e1b",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:58.365Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 164923,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "c90e1318-5485-48ba-8694-1176ac7cab38",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:33:58.365Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 164923,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      },
+      {
+        "request_id": "4b4c09d9-e017-44bc-aa48-3eecd9885275",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": "preparation_deadline",
+        "error_code": null,
+        "created_at": "2026-10-08T14:34:03.840Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_maintenance_adopt_fact_fence",
+        "preparation_attempts": 1,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 159448,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Keep the same request_id: the owner cut this preparation off at its budget and will claim it again; a second cut-off finishes it preparation_stalled. Read claim.stall on the running blocker for the step and what it waited on."
+      },
+      {
+        "request_id": "87691b6f-4a15-4578-9430-4cebbe50310c",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "state": "queued",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T14:34:06.440Z",
+        "operation": "submit_job",
+        "intent_kind": "managed_sync_import",
+        "preparation_attempts": 0,
+        "retry_after_ms": 30000,
+        "diagnostic": {
+          "age_ms": 156848,
+          "assessment": "stalled",
+          "reason": "cause_unknown",
+          "next_action": "inspect_owner"
+        },
+        "next_action": "Inspect gbrain sources writer status --json on the selected brain host first to identify the designated owner and any recovery. Routine repair must not claim, activate, or transfer ownership. Ask the operator to review docs/architecture/topologies.md before a deliberate topology change. Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      }
+    ],
+    "mode": "managed",
+    "mode_epoch": 2,
+    "local_markers": {
+      "state": "cleared",
+      "removed": [],
+      "pending": []
+    },
+    "host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+    "local_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+    "bindings": [
+      {
+        "source_id": "bench",
+        "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+        "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+        "relative_path": "",
+        "topology_generation": "1",
+        "owner_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+        "owner_epoch": "1",
+        "state": "active",
+        "manifest_digest": null,
+        "local_path": "<fixture-home>/repo-bench"
+      }
+    ],
+    "admin_state": "bd726562b800af997c76fb2eb73858c2f903e8736f266cad171d5a84a532910a",
+    "admin_lock": {
+      "locked": false,
+      "set_at": null,
+      "host_id": null
+    },
+    "blocking_effects": [],
+    "writer_versions": [
+      {
+        "role": "admitter",
+        "host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+        "principal": "local_cli:97925bd2-2b5c-4078-a434-9c3d90edf927",
+        "version": "0.60.108.0",
+        "version_label": "0.60.108.0",
+        "last_seen": "2026-10-08T14:34:06.440Z"
+      },
+      {
+        "role": "consumer",
+        "host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+        "principal": "local_cli:97925bd2-2b5c-4078-a434-9c3d90edf927",
+        "version": "0.60.108.0",
+        "version_label": "0.60.108.0",
+        "last_seen": "2026-10-08T14:34:05.727Z"
+      }
+    ],
+    "onboarding": {
+      "sources": [
+        {
+          "source_id": "bench",
+          "state": "ready",
+          "write_through": true,
+          "storage": {
+            "container": false,
+            "durability_verified": false,
+            "paths": [
+              {
+                "role": "canonical_root",
+                "path": "<fixture-home>/repo-bench",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "reservation_parent",
+                "path": "<fixture-home>",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "persistence_home",
+                "path": "<fixture-home>/.gbrain/persistence",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "coordination_directory",
+                "path": "<fixture-home>/.gbrain/persistence/locks",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              }
+            ],
+            "next_action": "Verify that the canonical checkout, its parent (which holds the sibling reservation), and the persistence home/coordination lock survive container recreation together. A mounted path is not proof of durability. Do not delete ownership or lock files."
+          }
+        },
+        {
+          "source_id": "default",
+          "state": "database_only",
+          "write_through": true
+        }
+      ],
+      "legacy_locks": [
+        {
+          "id": "gbrain-cycle:bench",
+          "holder_pid": 9233,
+          "holder_host": "vm5pffj1",
+          "acquisition_token": "ecba3a08-52e5-49d9-b8d3-6c6b967ad50d",
+          "liveness": "alive"
+        }
+      ],
+      "unsupported_maintenance": [],
+      "procedure": "For deliberate onboarding, stop and upgrade older writers on every host, review all sources and durable paths, explicitly claim each filesystem source using its fresh admin_state, inspect status again, then explicitly activate with --confirm-quiesced and a fresh admin_state. A claim alone fences legacy sync; finish activation before ordinary writes or sync. This inspection never claims, activates, repairs or switches to database-only storage."
+    },
+    "shared_skills": {
+      "writer_protocol_floor": 1,
+      "skill_bundles_enabled": false
+    },
+    "native_lock": {
+      "target": "linux-x64-glibc",
+      "napi": 3,
+      "acquired": true,
+      "released": true
+    },
+    "worktree_refreshes": []
+  },
+  "stall_since": "2026-10-08T14:34:28.356Z",
+  "trace": {
+    "total_round_trips": 20017,
+    "last_round_trip_age_ms": 8150.882080078125,
+    "in_flight_hint": "a statement in flight is not yet in the trace; see activity[] for the backend side",
+    "recent_statement_classes": [
+      {
+        "sql": "COMMIT",
+        "n": 99,
+        "last_age_ms": 8150.882080078125
+      },
+      {
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_tok",
+        "n": 14,
+        "last_age_ms": 8150.884033203125
+      },
+      {
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000",
+        "n": 14,
+        "last_age_ms": 8150.889892578125
+      },
+      {
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*i",
+        "n": 15,
+        "last_age_ms": 8889.205078125
+      },
+      {
+        "sql": "UPDATE persistence_requests SET state='queued',execution_token=NULL,claim_expire",
+        "n": 34,
+        "last_age_ms": 37263.430908203125
+      },
+      {
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*int",
+        "n": 12,
+        "last_age_ms": 47264.85498046875
+      },
+      {
+        "sql": "commit",
+        "n": 98,
+        "last_age_ms": 147327.001953125
+      },
+      {
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id",
+        "n": 30,
+        "last_age_ms": 147392.34106445312
+      },
+      {
+        "sql": "SELECT set_config('gbrain.persistence_protocol','2',true),(SELECT brain_id::text",
+        "n": 89,
+        "last_age_ms": 147392.34692382812
+      },
+      {
+        "sql": "begin ",
+        "n": 94,
+        "last_age_ms": 147452.61596679688
+      },
+      {
+        "sql": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state='running",
+        "n": 24,
+        "last_age_ms": 147515.31689453125
+      },
+      {
+        "sql": "SELECT r.* FROM persistence_requests r JOIN persistence_worktrees w ON w.id=r.wo",
+        "n": 48,
+        "last_age_ms": 147576.54711914062
+      },
+      {
+        "sql": "SELECT DISTINCT ON (local_path) * FROM ( SELECT h.local_path,s.source_id,s.sourc",
+        "n": 24,
+        "last_age_ms": 147643.3369140625
+      },
+      {
+        "sql": "SELECT brain_id,enabled,to_jsonb(persistence_brain)->>'mode_epoch' AS mode_epoch",
+        "n": 24,
+        "last_age_ms": 147703.85107421875
+      },
+      {
+        "sql": "SELECT key,value FROM config WHERE key = ANY($1::text[])",
+        "n": 4,
+        "last_age_ms": 149627.337890625
+      },
+      {
+        "sql": "UPDATE persistence_requests SET state='running', execution_token=$2::uuid,claim_",
+        "n": 11,
+        "last_age_ms": 153766.59301757812
+      },
+      {
+        "sql": "SELECT key,outstanding_count::text AS outstanding FROM persistence_counters WHER",
+        "n": 6,
+        "last_age_ms": 154022.97290039062
+      },
+      {
+        "sql": "SELECT key,value FROM config WHERE key LIKE 'persistence.limits.%'",
+        "n": 10,
+        "last_age_ms": 154023.06494140625
+      },
+      {
+        "sql": "SELECT lane,revoked_at,grant_ceiling FROM persistence_local_writers WHERE id=$1:",
+        "n": 23,
+        "last_age_ms": 154150.3359375
+      },
+      {
+        "sql": "SELECT * FROM persistence_requests WHERE principal_kind=$1 AND principal_id=$2 A",
+        "n": 8,
+        "last_age_ms": 154211.61108398438
+      },
+      {
+        "sql": "SELECT e.* FROM persistence_effects e LEFT JOIN persistence_worktrees w ON w.id=",
+        "n": 22,
+        "last_age_ms": 154400.23388671875
+      },
+      {
+        "sql": "UPDATE op_checkpoints SET updated_at=now() WHERE op=$1 AND fingerprint=$2",
+        "n": 6,
+        "last_age_ms": 154400.67895507812
+      },
+      {
+        "sql": "UPDATE op_checkpoints SET completed_keys=$4::text::jsonb,updated_at=now() WHERE ",
+        "n": 6,
+        "last_age_ms": 154400.84204101562
+      },
+      {
+        "sql": "SELECT set_config('synchronous_commit','on',true)",
+        "n": 3,
+        "last_age_ms": 154400.84497070312
+      },
+      {
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w",
+        "n": 34,
+        "last_age_ms": 154464.82592773438
+      }
+    ],
+    "tail": [
+      {
+        "age_ms": 128152.73803710938,
+        "ms": 60.983,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 128152.73706054688,
+        "ms": 60.99,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 127266.35400390625,
+        "ms": 64.2,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(),claim_phase=COALESCE($4::text::jsonb,claim_phase) WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND set_config('gbrain.persistence_protocol','2',true)='2' RETU"
+      },
+      {
+        "age_ms": 118891.037109375,
+        "ms": 64.665,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 118152.48291015625,
+        "ms": 59.963,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 118152.47705078125,
+        "ms": 62.592,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 118152.47607421875,
+        "ms": 62.6,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 117266.2548828125,
+        "ms": 61.152,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(),claim_phase=COALESCE($4::text::jsonb,claim_phase) WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND set_config('gbrain.persistence_protocol','2',true)='2' RETU"
+      },
+      {
+        "age_ms": 108890.72192382812,
+        "ms": 68.654,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 108152.50390625,
+        "ms": 63.344,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 108152.5009765625,
+        "ms": 63.359,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 108152.5,
+        "ms": 63.363,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 107265.76098632812,
+        "ms": 60.485,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(),claim_phase=COALESCE($4::text::jsonb,claim_phase) WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND set_config('gbrain.persistence_protocol','2',true)='2' RETU"
+      },
+      {
+        "age_ms": 98890.81201171875,
+        "ms": 67.586,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 98152.34912109375,
+        "ms": 60.869,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 98152.34497070312,
+        "ms": 62.453,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 98152.34497070312,
+        "ms": 62.46,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 97266.10498046875,
+        "ms": 66.354,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(),claim_phase=COALESCE($4::text::jsonb,claim_phase) WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND set_config('gbrain.persistence_protocol','2',true)='2' RETU"
+      },
+      {
+        "age_ms": 88889.92700195312,
+        "ms": 68.076,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 88151.96508789062,
+        "ms": 60.638,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 88151.9619140625,
+        "ms": 60.661,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 88151.9619140625,
+        "ms": 60.665,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 87265.85498046875,
+        "ms": 62.468,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(),claim_phase=COALESCE($4::text::jsonb,claim_phase) WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND set_config('gbrain.persistence_protocol','2',true)='2' RETU"
+      },
+      {
+        "age_ms": 78890.17797851562,
+        "ms": 63.721,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 78150.94311523438,
+        "ms": 60.529,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 78150.93603515625,
+        "ms": 61.645,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 78150.93505859375,
+        "ms": 61.657,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 77265.5048828125,
+        "ms": 63.695,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(),claim_phase=COALESCE($4::text::jsonb,claim_phase) WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND set_config('gbrain.persistence_protocol','2',true)='2' RETU"
+      },
+      {
+        "age_ms": 68890.0419921875,
+        "ms": 63.582,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 68151.71411132812,
+        "ms": 60.074,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 68151.70703125,
+        "ms": 61.062,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 68151.7060546875,
+        "ms": 61.072,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 67265.36889648438,
+        "ms": 62.4,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(),claim_phase=COALESCE($4::text::jsonb,claim_phase) WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND set_config('gbrain.persistence_protocol','2',true)='2' RETU"
+      },
+      {
+        "age_ms": 58889.866943359375,
+        "ms": 66.729,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 58151.452880859375,
+        "ms": 60.573,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 58151.447021484375,
+        "ms": 61.625,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 58151.446044921875,
+        "ms": 61.634,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 57264.962890625,
+        "ms": 62.231,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(),claim_phase=COALESCE($4::text::jsonb,claim_phase) WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND set_config('gbrain.persistence_protocol','2',true)='2' RETU"
+      },
+      {
+        "age_ms": 48889.73291015625,
+        "ms": 63.656,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 48151.35595703125,
+        "ms": 61.149,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 48151.35009765625,
+        "ms": 62.267,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 48151.34912109375,
+        "ms": 62.274,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 47264.85498046875,
+        "ms": 61.861,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(),claim_phase=COALESCE($4::text::jsonb,claim_phase) WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND set_config('gbrain.persistence_protocol','2',true)='2' RETU"
+      },
+      {
+        "age_ms": 38889.6640625,
+        "ms": 67.767,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 38151.22412109375,
+        "ms": 61.152,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 38151.216064453125,
+        "ms": 62.122,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 38151.215087890625,
+        "ms": 62.131,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 37263.430908203125,
+        "ms": 62.48,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests SET state='queued',execution_token=NULL,claim_expires_at=NULL, blocked_reason=$3,updated_at=now(),preparation_attempts=preparation_attempts+CASE WHEN $4::boolean THEN 1 ELSE 0 END WHERE id=$1::uuid AND execution_token=$2::uuid AND state='running' AND recovery IS NULL AND "
+      },
+      {
+        "age_ms": 28889.405029296875,
+        "ms": 63.533,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 28151.367919921875,
+        "ms": 60.64,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 28151.364013671875,
+        "ms": 61.75,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 28151.364013671875,
+        "ms": 61.755,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 18889.343017578125,
+        "ms": 64.139,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 18150.97802734375,
+        "ms": 61.009,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 18150.971923828125,
+        "ms": 62.011,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 18150.970947265625,
+        "ms": 62.019,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      },
+      {
+        "age_ms": 8889.205078125,
+        "ms": 63.907,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "UPDATE persistence_requests r SET claim_expires_at=now()+($3::double precision*interval '1 millisecond'),updated_at=now(), claim_phase=COALESCE(jsonb_set(t.stamp::jsonb,'{token}',to_jsonb(t.token::text)),r.claim_phase) FROM unnest($1::uuid[],$2::uuid[],$4::text[]) AS t(id,token,stamp) WHERE r.id=t.i"
+      },
+      {
+        "age_ms": 8150.889892578125,
+        "ms": 60.22,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "BEGIN; SET LOCAL statement_timeout = 2000"
+      },
+      {
+        "age_ms": 8150.884033203125,
+        "ms": 61.351,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "execute",
+        "sql": "SELECT h.state AS head_state, h.claim_phase AS head_claim_phase, h.execution_token::text AS head_token, (h.claim_expires_at IS NOT NULL AND h.claim_expires_at < now()) AS head_lapsed, h.intent->>'kind' AS head_kind FROM persistence_source_bindings b JOIN sources s ON s.id = b.source_id AND s.incarna"
+      },
+      {
+        "age_ms": 8150.882080078125,
+        "ms": 61.363,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1294267271,
+        "kind": "simple",
+        "sql": "COMMIT"
+      }
+    ]
+  },
+  "running_detail": [
+    {
+      "id": "5e67e575-c4b2-4079-9458-321b9280d7c9",
+      "principal_kind": "local_cli",
+      "principal_id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+      "request_id": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "page_id": null,
+      "slug": "companies/scale-0-3152",
+      "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+      "topology_generation": "1",
+      "digest": "af67cb54352432ec4f2ca6fe786c60818812c5c9f9ab082e81ccf0e3e707f97c",
+      "intent": {
+        "from": "e6f8ee13571242c44f4555ca5c9aacf660ad1fb4",
+        "kind": "managed_sync_import",
+        "lane": "f29ab010-e082-41a3-bbc5-2c15cf7f8856",
+        "path": "companies/scale-0-3152.md",
+        "after": "c6aa7868-2eaf-452b-856a-451659e4f251",
+        "group": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "index": 165,
+        "runId": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "total": 3000,
+        "target": "363e38ddc097d7692658ed9d144c948f174fcf8e",
+        "blobOid": "151fcc8ec6488b4c7d4609c430e5d05735311558",
+        "content": "---\ntitle: Scale 0 3152\ntype: company\n---\n# Scale 0 3152\n\nlinden island ember quiver ember pepper ember island russet meadow pepper quiver juniper kestrel island lantern ledger juniper kestrel ember marble hollow marble orbit.\n\nsummit falcon meadow harbor nectar falcon ember marble lantern hollow ember pepper russet orbit linden summit thicket kestrel lantern signal lantern quartz orbit quartz.\n\npepper nectar juniper meadow lantern marble pepper juniper thicket hollow canvas orbit juniper island meadow juniper lantern kestrel garnet marble marble canvas ledger kestrel. Marker scaletok0x3152.\n\nSee [[people/scale-0-3400]].\nSee [[notes/scale-0-3929]].\nSee [[notes/scale-0-3777]].\n\n## Timeline\n\n- **2025-08-13** | Scale event 3152 recorded\n- **2026-08-13** | Scale follow-up 3152\n",
+        "rawHash": "f4eef4e88c8870772df2eb9659249562a680b6ca33a5b2c2e5b4e77baa0fab91",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "0b567947b4f1791fc7070ee2a383a93f54eaf0d42f5d048b0b91084a8bd079fd",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-3152.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+          }
+        },
+        "holdObservedAt": "2026-10-08T14:31:08.835Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      },
+      "sequence": "171",
+      "state": "running",
+      "execution_token": "3500d337-4385-49bd-a18a-436a5e37abed",
+      "claim_expires_at": "2026-10-08T14:37:10.759Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2322",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T14:32:46.470Z",
+      "updated_at": "2026-10-08T14:36:40.759Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.108.0",
+      "admitter_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": {
+        "step": "origin_check",
+        "owner": {
+          "pid": 9233,
+          "kind": "dream",
+          "version": "0.60.108.0"
+        },
+        "phase": "preparing",
+        "since": "2026-10-08T14:36:10.728Z",
+        "token": "3500d337-4385-49bd-a18a-436a5e37abed",
+        "claimed_at": "2026-10-08T14:36:10.728Z",
+        "step_since": "2026-10-08T14:36:11.039Z",
+        "waiting_on": "db"
+      },
+      "preparation_attempts": 1
+    },
+    {
+      "id": "424cfcf0-34ed-4012-a236-ee92ae904d97",
+      "principal_kind": "local_cli",
+      "principal_id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+      "request_id": "89aad877-9c67-40fe-93a7-ac04ad33cd88",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "page_id": null,
+      "slug": "companies/scale-0-3172",
+      "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+      "topology_generation": "1",
+      "digest": "ddd01a87a4fcd51d1872451ac069447e1f1117553dfe3783494676d8d7273e74",
+      "intent": {
+        "from": "e6f8ee13571242c44f4555ca5c9aacf660ad1fb4",
+        "kind": "managed_sync_import",
+        "lane": "f29ab010-e082-41a3-bbc5-2c15cf7f8856",
+        "path": "companies/scale-0-3172.md",
+        "after": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "group": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+        "index": 167,
+        "runId": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "total": 3000,
+        "target": "363e38ddc097d7692658ed9d144c948f174fcf8e",
+        "blobOid": "967db4b10c39cb4f5d36e79a9bc29f3b746c2aee",
+        "content": "---\ntitle: Scale 0 3172\ntype: company\n---\n# Scale 0 3172\n\ncanvas falcon meadow summit orbit summit hollow marble garnet linden orbit summit ember signal signal lantern quiver summit quartz quartz summit pepper marble kestrel.\n\ngarnet quiver quartz falcon thicket marble ember quiver kestrel harbor harbor kestrel hollow signal signal linden signal summit ledger harbor thicket signal summit falcon.\n\ngarnet garnet island russet oracle kestrel kestrel russet nectar meadow oracle summit ember quartz signal hollow summit garnet pepper linden hollow juniper meadow island. Marker scaletok0x3172.\n\nSee [[notes/scale-0-1746]].\nSee [[notes/scale-0-1938]].\nSee [[notes/scale-0-2604]].\n\n## Timeline\n\n- **2025-02-18** | Scale event 3172 recorded\n- **2026-02-18** | Scale follow-up 3172\n",
+        "rawHash": "a8da016b7d350f1e3303325e9718662dbcced90e79ada41bbe4a582003a3e4a0",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "0b567947b4f1791fc7070ee2a383a93f54eaf0d42f5d048b0b91084a8bd079fd",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-3172.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+          }
+        },
+        "holdObservedAt": "2026-10-08T14:31:08.835Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      },
+      "sequence": "174",
+      "state": "running",
+      "execution_token": "184731f6-d6fe-4288-84d0-d71d8c91b56c",
+      "claim_expires_at": "2026-10-08T14:37:06.431Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2316",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T14:32:58.072Z",
+      "updated_at": "2026-10-08T14:36:36.431Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.108.0",
+      "admitter_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": {
+        "step": "import_content",
+        "owner": {
+          "pid": 9235,
+          "kind": "sync",
+          "version": "0.60.108.0"
+        },
+        "phase": "preparing",
+        "since": "2026-10-08T14:34:06.398Z",
+        "token": "184731f6-d6fe-4288-84d0-d71d8c91b56c",
+        "claimed_at": "2026-10-08T14:34:06.398Z",
+        "step_since": "2026-10-08T14:34:07.089Z",
+        "waiting_on": "db"
+      },
+      "preparation_attempts": 0
+    },
+    {
+      "id": "836f913b-c3b4-4611-88aa-6485ce4b24bb",
+      "principal_kind": "local_cli",
+      "principal_id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+      "request_id": "92de1627-e296-47cc-950b-416d997066f2",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "page_id": null,
+      "slug": "companies/scale-0-3182",
+      "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+      "topology_generation": "1",
+      "digest": "2c83f720134cd3ce159322522446c38ea53147f9d228a1beecb6df92ae7d62e7",
+      "intent": {
+        "from": "e6f8ee13571242c44f4555ca5c9aacf660ad1fb4",
+        "kind": "managed_sync_import",
+        "lane": "f29ab010-e082-41a3-bbc5-2c15cf7f8856",
+        "path": "companies/scale-0-3182.md",
+        "after": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "group": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+        "index": 168,
+        "runId": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "total": 3000,
+        "target": "363e38ddc097d7692658ed9d144c948f174fcf8e",
+        "blobOid": "5dd0380d49f07b2b664c6fd1dbb8c35f5fa00358",
+        "content": "---\ntitle: Scale 0 3182\ntype: company\n---\n# Scale 0 3182\n\nthicket lantern garnet hollow linden signal pepper signal lantern pepper oracle linden hollow signal orbit thicket harbor harbor harbor nectar nectar canvas garnet garnet.\n\nmarble marble nectar juniper marble garnet quiver quiver russet pepper ledger pepper kestrel nectar russet oracle thicket canvas quartz russet canvas ember harbor garnet.\n\nlantern kestrel ember oracle quiver quiver lantern russet quartz ledger garnet thicket falcon ledger thicket marble ledger lantern juniper quartz thicket nectar quiver quiver. Marker scaletok0x3182.\n\nSee [[notes/scale-0-3684]].\nSee [[notes/scale-0-2157]].\nSee [[notes/scale-0-2219]].\n\n## Timeline\n\n- **2025-11-08** | Scale event 3182 recorded\n- **2026-11-08** | Scale follow-up 3182\n",
+        "rawHash": "9c614958ba603ea6f11daa8bb5a608f5fd97122b96dfe32f4225750f51812767",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "0b567947b4f1791fc7070ee2a383a93f54eaf0d42f5d048b0b91084a8bd079fd",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-3182.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+          }
+        },
+        "holdObservedAt": "2026-10-08T14:31:08.835Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      },
+      "sequence": "175",
+      "state": "running",
+      "execution_token": "a91e7ac6-af9d-44ce-bf3b-ff56046fe909",
+      "claim_expires_at": "2026-10-08T14:37:06.431Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2324",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T14:32:58.072Z",
+      "updated_at": "2026-10-08T14:36:36.431Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.108.0",
+      "admitter_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": {
+        "step": "import_content",
+        "owner": {
+          "pid": 9235,
+          "kind": "sync",
+          "version": "0.60.108.0"
+        },
+        "phase": "preparing",
+        "since": "2026-10-08T14:34:06.398Z",
+        "token": "a91e7ac6-af9d-44ce-bf3b-ff56046fe909",
+        "claimed_at": "2026-10-08T14:34:06.398Z",
+        "step_since": "2026-10-08T14:34:07.089Z",
+        "waiting_on": "db"
+      },
+      "preparation_attempts": 0
+    },
+    {
+      "id": "bd58cc8e-b94c-48be-8b73-9388ba4d630c",
+      "principal_kind": "local_cli",
+      "principal_id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+      "request_id": "26e4b6db-a9af-46e8-a6af-39271d5aa3f6",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "page_id": null,
+      "slug": "companies/scale-0-3192",
+      "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+      "topology_generation": "1",
+      "digest": "c1d1b229567d85b28dfae3ed58b87e615e4b9a84f59bc462c2eda39fd3807853",
+      "intent": {
+        "from": "e6f8ee13571242c44f4555ca5c9aacf660ad1fb4",
+        "kind": "managed_sync_import",
+        "lane": "f29ab010-e082-41a3-bbc5-2c15cf7f8856",
+        "path": "companies/scale-0-3192.md",
+        "after": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "group": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+        "index": 169,
+        "runId": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "total": 3000,
+        "target": "363e38ddc097d7692658ed9d144c948f174fcf8e",
+        "blobOid": "33bb3828a3e9c988106000faf8e4cf87419fcc5b",
+        "content": "---\ntitle: Scale 0 3192\ntype: company\n---\n# Scale 0 3192\n\norbit pepper quartz harbor russet quartz thicket harbor quiver oracle meadow falcon lantern nectar falcon juniper pepper summit island ember quiver thicket signal quartz.\n\nhollow pepper canvas falcon quiver meadow quartz island harbor summit nectar meadow orbit russet canvas orbit signal orbit russet summit meadow harbor hollow hollow.\n\nquiver oracle nectar oracle garnet ember russet linden meadow ledger falcon russet marble signal meadow orbit summit garnet canvas hollow island quiver island quartz. Marker scaletok0x3192.\n\nSee [[companies/scale-0-3962]].\nSee [[notes/scale-0-986]].\nSee [[notes/scale-0-3055]].\n\n## Timeline\n\n- **2025-05-15** | Scale event 3192 recorded\n- **2026-05-15** | Scale follow-up 3192\n",
+        "rawHash": "0f59ef91178028a1368eb467ea783a987d14b1348819cfdcf1cb5f2415132fb9",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "0b567947b4f1791fc7070ee2a383a93f54eaf0d42f5d048b0b91084a8bd079fd",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-3192.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+          }
+        },
+        "holdObservedAt": "2026-10-08T14:31:08.835Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      },
+      "sequence": "176",
+      "state": "running",
+      "execution_token": "9ef7d794-d4e3-4cfe-9cb8-22a27144501b",
+      "claim_expires_at": "2026-10-08T14:37:06.431Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2312",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T14:32:58.072Z",
+      "updated_at": "2026-10-08T14:36:36.431Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.108.0",
+      "admitter_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": {
+        "step": "import_content",
+        "owner": {
+          "pid": 9235,
+          "kind": "sync",
+          "version": "0.60.108.0"
+        },
+        "phase": "preparing",
+        "since": "2026-10-08T14:34:06.398Z",
+        "token": "9ef7d794-d4e3-4cfe-9cb8-22a27144501b",
+        "claimed_at": "2026-10-08T14:34:06.398Z",
+        "step_since": "2026-10-08T14:34:07.089Z",
+        "waiting_on": "db"
+      },
+      "preparation_attempts": 0
+    },
+    {
+      "id": "2c23486f-9529-418b-a3e5-045ac16f3fc7",
+      "principal_kind": "local_cli",
+      "principal_id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+      "request_id": "9241dfaa-5bb8-4dcf-9d1b-fe0bc0bd0f47",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "page_id": null,
+      "slug": "companies/scale-0-3202",
+      "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+      "topology_generation": "1",
+      "digest": "f70ba9ae1ff979c161882e6d4795330c79b81353b9c5c01c637b25a8a03f9ee7",
+      "intent": {
+        "from": "e6f8ee13571242c44f4555ca5c9aacf660ad1fb4",
+        "kind": "managed_sync_import",
+        "lane": "f29ab010-e082-41a3-bbc5-2c15cf7f8856",
+        "path": "companies/scale-0-3202.md",
+        "after": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "group": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+        "index": 170,
+        "runId": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "total": 3000,
+        "target": "363e38ddc097d7692658ed9d144c948f174fcf8e",
+        "blobOid": "78275e5ed7c8d0a1c3efb6005117c847e186b35b",
+        "content": "---\ntitle: Scale 0 3202\ntype: company\n---\n# Scale 0 3202\n\nsummit orbit meadow juniper marble harbor orbit hollow marble juniper ledger lantern quiver linden garnet orbit linden signal kestrel canvas pepper ember falcon russet.\n\nthicket orbit hollow hollow quiver hollow russet signal hollow nectar ember garnet signal russet garnet signal hollow pepper marble ledger island summit pepper kestrel.\n\nharbor signal lantern thicket falcon ember canvas marble garnet linden harbor pepper nectar kestrel harbor juniper thicket summit pepper juniper nectar harbor marble lantern. Marker scaletok0x3202.\n\nSee [[people/scale-0-4360]].\nSee [[notes/scale-0-2073]].\nSee [[notes/scale-0-4166]].\n\n## Timeline\n\n- **2025-06-24** | Scale event 3202 recorded\n- **2026-06-24** | Scale follow-up 3202\n",
+        "rawHash": "c96ad140a9b7f714c7b64a053661849969148d0c68029f066e218a2a2f487f1a",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "0b567947b4f1791fc7070ee2a383a93f54eaf0d42f5d048b0b91084a8bd079fd",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-3202.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+          }
+        },
+        "holdObservedAt": "2026-10-08T14:31:08.835Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      },
+      "sequence": "177",
+      "state": "running",
+      "execution_token": "d8105e42-7355-4f55-8537-f68102c2e0eb",
+      "claim_expires_at": "2026-10-08T14:37:06.431Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2319",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T14:32:58.072Z",
+      "updated_at": "2026-10-08T14:36:36.431Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.108.0",
+      "admitter_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": null,
+      "preparation_attempts": 0
+    },
+    {
+      "id": "255ad2f8-d987-47dd-b591-8b10591eb05c",
+      "principal_kind": "local_cli",
+      "principal_id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+      "request_id": "203cedfc-0feb-4728-a123-5f36e8e05c99",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "page_id": null,
+      "slug": "companies/scale-0-3212",
+      "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+      "topology_generation": "1",
+      "digest": "b1f4f84bca45076aac04f60e12c6c474a7fce6e83575f461b57c57a10479005f",
+      "intent": {
+        "from": "e6f8ee13571242c44f4555ca5c9aacf660ad1fb4",
+        "kind": "managed_sync_import",
+        "lane": "f29ab010-e082-41a3-bbc5-2c15cf7f8856",
+        "path": "companies/scale-0-3212.md",
+        "after": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "group": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+        "index": 171,
+        "runId": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "total": 3000,
+        "target": "363e38ddc097d7692658ed9d144c948f174fcf8e",
+        "blobOid": "e47013801f88ee0d5a37806a678cbd8c41015789",
+        "content": "---\ntitle: Scale 0 3212\ntype: company\n---\n# Scale 0 3212\n\nquiver ember oracle summit hollow canvas summit harbor signal marble linden marble falcon canvas quartz signal meadow russet quartz orbit garnet ember orbit falcon.\n\nsummit summit kestrel linden falcon canvas falcon falcon juniper garnet quiver marble signal quiver nectar hollow juniper orbit island thicket island quartz quartz ledger.\n\nisland quartz summit garnet harbor ledger hollow russet island orbit russet pepper thicket quartz quartz island ledger hollow ledger quartz summit juniper ledger quiver. Marker scaletok0x3212.\n\nSee [[notes/scale-0-2477]].\nSee [[notes/scale-0-566]].\nSee [[notes/scale-0-2039]].\n\n## Timeline\n\n- **2025-05-19** | Scale event 3212 recorded\n- **2026-05-19** | Scale follow-up 3212\n",
+        "rawHash": "d3370d62498815f87e891adf1f38af8f454b5a1a3ced7c11d22cc5843448baa4",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "0b567947b4f1791fc7070ee2a383a93f54eaf0d42f5d048b0b91084a8bd079fd",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-3212.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+          }
+        },
+        "holdObservedAt": "2026-10-08T14:31:08.835Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      },
+      "sequence": "178",
+      "state": "running",
+      "execution_token": "25aa9cc6-5bae-417b-99e4-85ed9d3fe229",
+      "claim_expires_at": "2026-10-08T14:37:06.431Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2311",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T14:32:58.072Z",
+      "updated_at": "2026-10-08T14:36:36.431Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.108.0",
+      "admitter_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": null,
+      "preparation_attempts": 0
+    },
+    {
+      "id": "7d9928ae-1008-4969-b70f-a04cca093833",
+      "principal_kind": "local_cli",
+      "principal_id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+      "request_id": "6772602f-d006-44d1-ab3e-9f22a51b3989",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "page_id": null,
+      "slug": "companies/scale-0-3222",
+      "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+      "topology_generation": "1",
+      "digest": "413367dfb9fd5bfbe6a7b3b90b6e502709057b99ca602369b18ecf9188b34a99",
+      "intent": {
+        "from": "e6f8ee13571242c44f4555ca5c9aacf660ad1fb4",
+        "kind": "managed_sync_import",
+        "lane": "f29ab010-e082-41a3-bbc5-2c15cf7f8856",
+        "path": "companies/scale-0-3222.md",
+        "after": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "group": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+        "index": 172,
+        "runId": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "total": 3000,
+        "target": "363e38ddc097d7692658ed9d144c948f174fcf8e",
+        "blobOid": "af22af4760e2df03990ebb4bfaedfce28beeecd5",
+        "content": "---\ntitle: Scale 0 3222\ntype: company\n---\n# Scale 0 3222\n\nthicket garnet quartz marble thicket pepper falcon falcon falcon signal signal meadow pepper ember island signal lantern canvas oracle signal quiver harbor island signal.\n\nmeadow garnet canvas hollow harbor meadow kestrel island nectar russet meadow linden nectar pepper quiver juniper summit signal garnet marble harbor quartz quartz meadow.\n\nmeadow quiver meadow oracle marble kestrel island quartz falcon falcon oracle signal oracle harbor juniper ledger canvas linden oracle falcon ledger oracle quiver lantern. Marker scaletok0x3222.\n\nSee [[notes/scale-0-3368]].\nSee [[people/scale-0-101]].\nSee [[people/scale-0-2850]].\n\n## Timeline\n\n- **2025-08-21** | Scale event 3222 recorded\n- **2026-08-21** | Scale follow-up 3222\n",
+        "rawHash": "ec11c4a41f977c3cb26b098056b3b2a1f26220c3af75c4d95deac979f5b90572",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "0b567947b4f1791fc7070ee2a383a93f54eaf0d42f5d048b0b91084a8bd079fd",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-3222.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+          }
+        },
+        "holdObservedAt": "2026-10-08T14:31:08.835Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      },
+      "sequence": "179",
+      "state": "running",
+      "execution_token": "ea7cb142-af7c-48c1-b986-326b4cd68625",
+      "claim_expires_at": "2026-10-08T14:37:06.431Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2320",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T14:32:58.072Z",
+      "updated_at": "2026-10-08T14:36:36.431Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.108.0",
+      "admitter_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": null,
+      "preparation_attempts": 0
+    },
+    {
+      "id": "7bc0618d-f359-410a-b793-6e6725eeb312",
+      "principal_kind": "local_cli",
+      "principal_id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+      "request_id": "17247866-0c1a-42bb-be2b-7c13c967104e",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "page_id": null,
+      "slug": "companies/scale-0-3232",
+      "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+      "topology_generation": "1",
+      "digest": "0d13f90f6c823735c6ecafbf2131e68cf752ab72e341ba67f8859e4f981f9c98",
+      "intent": {
+        "from": "e6f8ee13571242c44f4555ca5c9aacf660ad1fb4",
+        "kind": "managed_sync_import",
+        "lane": "f29ab010-e082-41a3-bbc5-2c15cf7f8856",
+        "path": "companies/scale-0-3232.md",
+        "after": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "group": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+        "index": 173,
+        "runId": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "total": 3000,
+        "target": "363e38ddc097d7692658ed9d144c948f174fcf8e",
+        "blobOid": "9a5c9c36070b5e8595869e3d4d5733d666363ccb",
+        "content": "---\ntitle: Scale 0 3232\ntype: company\n---\n# Scale 0 3232\n\njuniper summit quartz nectar signal summit island kestrel pepper quartz nectar thicket ember orbit marble hollow ember harbor marble marble ember quiver quiver orbit.\n\nmeadow hollow signal juniper harbor meadow canvas linden hollow orbit signal kestrel ledger canvas nectar falcon garnet kestrel orbit nectar canvas hollow nectar hollow.\n\nledger falcon orbit orbit ember nectar summit ember falcon summit meadow russet island pepper quiver ledger juniper oracle lantern thicket oracle russet orbit nectar. Marker scaletok0x3232.\n\nSee [[people/scale-0-3440]].\nSee [[companies/scale-0-4452]].\nSee [[notes/scale-0-1316]].\n\n## Timeline\n\n- **2025-04-16** | Scale event 3232 recorded\n- **2026-04-16** | Scale follow-up 3232\n",
+        "rawHash": "6a9a10ebb70b63fa067e7092a50e1a63bf502b67ef98ea8c0320b04d3f6de183",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "0b567947b4f1791fc7070ee2a383a93f54eaf0d42f5d048b0b91084a8bd079fd",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-3232.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+          }
+        },
+        "holdObservedAt": "2026-10-08T14:31:08.835Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      },
+      "sequence": "180",
+      "state": "running",
+      "execution_token": "47621734-cdd1-4bfc-801f-6f823427f7e9",
+      "claim_expires_at": "2026-10-08T14:37:06.431Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2314",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T14:32:58.072Z",
+      "updated_at": "2026-10-08T14:36:36.431Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.108.0",
+      "admitter_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": null,
+      "preparation_attempts": 0
+    },
+    {
+      "id": "37a5804e-d229-4028-b818-339307e815ac",
+      "principal_kind": "local_cli",
+      "principal_id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+      "request_id": "537ee659-7006-4b00-b998-98f48c058cb3",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245",
+      "page_id": null,
+      "slug": "companies/scale-0-3242",
+      "worktree_id": "714ae82f-a80f-4a3e-9da8-8abd80946abd",
+      "topology_generation": "1",
+      "digest": "49b9eb1edc1e35b9adaaf02b425d14f5353ba7fcd08cd54da93c6816780c8b49",
+      "intent": {
+        "from": "e6f8ee13571242c44f4555ca5c9aacf660ad1fb4",
+        "kind": "managed_sync_import",
+        "lane": "f29ab010-e082-41a3-bbc5-2c15cf7f8856",
+        "path": "companies/scale-0-3242.md",
+        "after": "89ae892c-8d5f-4692-a324-b7b4dfc0efb4",
+        "group": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+        "index": 174,
+        "runId": "703cce17-fce0-494c-9d57-173caa321cdc",
+        "total": 3000,
+        "target": "363e38ddc097d7692658ed9d144c948f174fcf8e",
+        "blobOid": "574133ee2f4a4c2652e4f58855be7c65df3391e1",
+        "content": "---\ntitle: Scale 0 3242\ntype: company\n---\n# Scale 0 3242\n\nsignal quiver island ledger falcon juniper ember juniper signal russet lantern linden meadow falcon kestrel meadow nectar quiver ledger canvas oracle juniper canvas linden.\n\npepper lantern quiver juniper russet lantern quiver garnet harbor meadow falcon falcon garnet garnet summit kestrel garnet quartz orbit ember nectar garnet kestrel linden.\n\nember juniper garnet thicket kestrel orbit island meadow garnet lantern nectar orbit thicket lantern summit marble linden island orbit island juniper garnet thicket marble. Marker scaletok0x3242.\n\nSee [[people/scale-0-1161]].\nSee [[people/scale-0-3740]].\nSee [[notes/scale-0-324]].\n\n## Timeline\n\n- **2025-06-23** | Scale event 3242 recorded\n- **2026-06-23** | Scale follow-up 3242\n",
+        "rawHash": "3fb9e44128af6005461a601e1c77c881b6f0f0abd9be6ed54dafbae313cede44",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "0b567947b4f1791fc7070ee2a383a93f54eaf0d42f5d048b0b91084a8bd079fd",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-3242.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+          }
+        },
+        "holdObservedAt": "2026-10-08T14:31:08.835Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "97925bd2-2b5c-4078-a434-9c3d90edf927",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+      },
+      "sequence": "181",
+      "state": "running",
+      "execution_token": "f15821c6-6ada-4266-8212-014f4cb13648",
+      "claim_expires_at": "2026-10-08T14:37:06.431Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2324",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T14:32:58.072Z",
+      "updated_at": "2026-10-08T14:36:36.431Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.108.0",
+      "admitter_host_id": "fd526614-4992-4aca-b7f9-9fdc8e663bec",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": null,
+      "preparation_attempts": 0
+    }
+  ],
+  "queued_head": [
+    {
+      "request_id": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "97e58a65-3b85-45b6-affa-4158ebf26de6",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:32:58.072Z"
+    },
+    {
+      "request_id": "215cbcc7-aa09-4708-a956-f3648d4e3edf",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "215cbcc7-aa09-4708-a956-f3648d4e3edf",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:33:10.194Z"
+    },
+    {
+      "request_id": "3983f7be-aa15-40dd-8d06-f2b5af44a0e5",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "215cbcc7-aa09-4708-a956-f3648d4e3edf",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:33:10.194Z"
+    },
+    {
+      "request_id": "027381b4-e006-4c14-9c79-043b1d32c0dc",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "215cbcc7-aa09-4708-a956-f3648d4e3edf",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:33:10.194Z"
+    },
+    {
+      "request_id": "8f09a77a-a00b-4554-9ed2-6fefb3044ac8",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "215cbcc7-aa09-4708-a956-f3648d4e3edf",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:33:10.194Z"
+    },
+    {
+      "request_id": "a32d79c4-295f-4351-8b15-facd2dd59998",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "215cbcc7-aa09-4708-a956-f3648d4e3edf",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:33:10.194Z"
+    },
+    {
+      "request_id": "507f757c-ac3e-4150-82e0-84738aaf950c",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "215cbcc7-aa09-4708-a956-f3648d4e3edf",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:33:10.194Z"
+    },
+    {
+      "request_id": "78792e59-782c-4fea-9fd3-6cd3b6c453dc",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "215cbcc7-aa09-4708-a956-f3648d4e3edf",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:33:10.194Z"
+    },
+    {
+      "request_id": "db5ac534-e9f6-440c-a796-ddcda566b528",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "db5ac534-e9f6-440c-a796-ddcda566b528",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:33:13.654Z"
+    },
+    {
+      "request_id": "e56e9864-bcdf-4a37-888f-a10f97d6154a",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": "db5ac534-e9f6-440c-a796-ddcda566b528",
+      "blocked_reason": null,
+      "created_at": "2026-10-08T14:33:13.654Z"
+    }
+  ]
+}

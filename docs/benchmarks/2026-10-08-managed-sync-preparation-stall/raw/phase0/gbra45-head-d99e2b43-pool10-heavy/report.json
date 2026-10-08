@@ -1,0 +1,1577 @@
+{
+  "schema": "gbrain.bench.managed-sync-stall-repro/v1",
+  "label": "head-pool10",
+  "cli_repo": "<work>/gbrain",
+  "cli_version": "0.60.107.0",
+  "cli_commit": "capy/6278-phase0@d99e2b43",
+  "harness_commit": "capy/6278-phase0@d99e2b43",
+  "started_at": "2026-10-08T06:15:34.943Z",
+  "params": {
+    "files": 15000,
+    "history": 1500,
+    "legacy_facts": 1000,
+    "marker_pages": 20,
+    "backlog_marker_pages": 20,
+    "rtt_ms": 57,
+    "pool_size": 10,
+    "pooler": "pgbouncer",
+    "doomed_pages": 12,
+    "drip_rows": 20,
+    "max_minutes": 170,
+    "passes": 3,
+    "sample_seconds": 30,
+    "adoption_interval_s": 60,
+    "stall_minutes": 5,
+    "stall_kill_minutes": 15,
+    "seed": 1
+  },
+  "pooler": {
+    "kind": "pgbouncer",
+    "image": "edoburu/pgbouncer@sha256:9c78945868a6a142c7fc40ccd843bbe5a606df163c7ffce4de70e0d628d696a2",
+    "listen": "127.0.0.1:55434",
+    "pool_mode": "transaction",
+    "default_pool_size": "50",
+    "max_client_conn": "2000",
+    "ignore_startup_parameters": "extra_float_digits,options,statement_timeout,idle_in_transaction_session_timeout"
+  },
+  "host": {
+    "cpus": 16,
+    "platform": "linux",
+    "bun": "1.4.2"
+  },
+  "rerun": "bun scripts/bench/managed-sync-stall-repro.ts --files 15000 --history 1500 --legacy-facts 1000 --marker-pages 20 --doomed-pages 12 --drip-rows 20 --backlog-marker-pages 20 --rtt 57 --pool-size 10 --max-minutes 170 --passes 3 --sample-seconds 30 --adoption-interval 60 --stall-minutes 5 --stall-kill-minutes 15 --inspect --out .context/bench/stall-run --label head-pool10",
+  "fixture": {
+    "database": "<db>",
+    "home": "<fixture-home>",
+    "root": "<fixture-home>/repo-bench",
+    "backlog_entries": 15000,
+    "history_pages": 1500,
+    "legacy_rows": 1000,
+    "legacy_pages": 250,
+    "legacy_by_shape": {
+      "trailing_ws": 3,
+      "leading_ws": 3,
+      "whitespace_only": 3,
+      "crlf": 3,
+      "plain": 197,
+      "pipe": 198,
+      "newline": 198,
+      "backslash": 198,
+      "backtick": 197
+    },
+    "doomed_pages": 12,
+    "adoptable_pages": 218,
+    "drip_pool_pages": 418,
+    "drip_rows_per_run": 20,
+    "marker_history_pages": [
+      "people/scale-0-0",
+      "people/scale-0-1",
+      "companies/scale-0-2",
+      "people/scale-0-10",
+      "people/scale-0-11",
+      "companies/scale-0-12",
+      "people/scale-0-20",
+      "people/scale-0-21",
+      "companies/scale-0-22",
+      "people/scale-0-30",
+      "people/scale-0-31",
+      "companies/scale-0-32",
+      "people/scale-0-40",
+      "people/scale-0-41",
+      "companies/scale-0-42",
+      "people/scale-0-50",
+      "people/scale-0-51",
+      "companies/scale-0-52",
+      "people/scale-0-60",
+      "people/scale-0-61"
+    ],
+    "marker_backlog_pages": [
+      "people/scale-0-1500",
+      "people/scale-0-1501",
+      "companies/scale-0-1502",
+      "notes/scale-0-1503",
+      "notes/scale-0-1504",
+      "notes/scale-0-1505",
+      "notes/scale-0-1506",
+      "notes/scale-0-1507",
+      "notes/scale-0-1508",
+      "notes/scale-0-1509",
+      "people/scale-0-1510",
+      "people/scale-0-1511",
+      "companies/scale-0-1512",
+      "notes/scale-0-1513",
+      "notes/scale-0-1514",
+      "notes/scale-0-1515",
+      "notes/scale-0-1516",
+      "notes/scale-0-1517",
+      "notes/scale-0-1518",
+      "notes/scale-0-1519"
+    ]
+  },
+  "session_timeouts": {
+    "requested_startup_parameters": {
+      "statement_timeout": "5min",
+      "idle_in_transaction_session_timeout": "5min"
+    },
+    "via_pooler": {
+      "statement_timeout": "0",
+      "idle_in_transaction_session_timeout": "0",
+      "lock_timeout": "0"
+    },
+    "direct": {
+      "statement_timeout": "5min",
+      "idle_in_transaction_session_timeout": "5min",
+      "lock_timeout": "0"
+    }
+  },
+  "passes": [
+    {
+      "pass": 1,
+      "pid": 9627,
+      "startedAt": 1791440156221,
+      "committedAtStart": 0,
+      "inspect": "127.0.0.1:6499",
+      "endedAt": 1791443754697,
+      "code": 124,
+      "committedAtEnd": 3900,
+      "killedBy": "timeout_3600",
+      "status": null,
+      "wall_s": 3598.5,
+      "pages_per_min": 65,
+      "time_to_stall_s": null
+    },
+    {
+      "pass": 2,
+      "pid": 25717,
+      "startedAt": 1791443761285,
+      "committedAtStart": 3900,
+      "inspect": "127.0.0.1:6499",
+      "endedAt": 1791447359809,
+      "code": 124,
+      "committedAtEnd": 11438,
+      "killedBy": "timeout_3600",
+      "status": null,
+      "wall_s": 3598.5,
+      "pages_per_min": 125.7,
+      "time_to_stall_s": null
+    },
+    {
+      "pass": 3,
+      "pid": 52139,
+      "startedAt": 1791447366435,
+      "committedAtStart": 11438,
+      "inspect": "127.0.0.1:6499",
+      "endedAt": 1791450217491,
+      "code": 0,
+      "committedAtEnd": 14980,
+      "status": "synced",
+      "wall_s": 2851.1,
+      "pages_per_min": 74.5,
+      "time_to_stall_s": null
+    }
+  ],
+  "result": {
+    "committed_sync_requests": 14980,
+    "backlog_entries": 15000,
+    "states": [
+      {
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "state": "committed",
+        "n": 333
+      },
+      {
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "state": "failed",
+        "n": 747
+      },
+      {
+        "kind": "managed_sync_checkpoint",
+        "state": "committed",
+        "n": 1
+      },
+      {
+        "kind": "managed_sync_import",
+        "state": "committed",
+        "n": 14980
+      }
+    ],
+    "stalls": [],
+    "failed_receipts_by_kind_and_error": [
+      {
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "error_code": "invalid_params",
+        "state": "failed",
+        "error_class": "repeated_marker",
+        "n": 471
+      },
+      {
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "error_code": "invalid_params",
+        "state": "failed",
+        "error_class": "adoption_roundtrip",
+        "n": 276
+      }
+    ],
+    "failed_receipts_recent": [
+      {
+        "request_id": "5aed4a9a-dcd5-4efc-afff-481284fa450d",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-91",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:06:08.182Z"
+      },
+      {
+        "request_id": "469fa1cb-ffe6-4870-a0fa-263a97f66f84",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-90",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:06:04.935Z"
+      },
+      {
+        "request_id": "5738b22d-a267-40e7-a072-9db3cb5508fc",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-81",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:06:01.752Z"
+      },
+      {
+        "request_id": "a6e10409-e641-47e7-a5fa-a69197a787f9",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-80",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:58.510Z"
+      },
+      {
+        "request_id": "809aeb9b-6adf-4de9-a9ca-4ccd42b1449c",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-71",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:55.324Z"
+      },
+      {
+        "request_id": "54c82588-18ef-4dc2-abde-8f5372089e8f",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-70",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:52.093Z"
+      },
+      {
+        "request_id": "aacf880c-20d1-4794-a877-e2a33d362a46",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-61",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:48.658Z"
+      },
+      {
+        "request_id": "11a56435-1a1b-461a-af8c-ae4361137d5f",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-60",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:44.987Z"
+      },
+      {
+        "request_id": "6c68d068-326b-46ee-a238-ef2d719d92d2",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-51",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:41.358Z"
+      },
+      {
+        "request_id": "68e2ddf9-e79d-4df2-a9a5-54c505ecc518",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-50",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:37.553Z"
+      },
+      {
+        "request_id": "07617157-bbe2-41e7-a553-83745b404eed",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-41",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:10.038Z"
+      },
+      {
+        "request_id": "fab67a09-b7ca-475a-ac62-bb640188535e",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-40",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:06.351Z"
+      },
+      {
+        "request_id": "dc4868f1-4da8-406f-a3ea-ecde40766cdc",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-31",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:05:02.736Z"
+      },
+      {
+        "request_id": "a568e0e5-dc37-4fac-ab4b-8d5d5c18cf9c",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-30",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:59.067Z"
+      },
+      {
+        "request_id": "7e5dfea9-db33-4ec1-aec7-ed309b67ff5b",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-21",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:55.446Z"
+      },
+      {
+        "request_id": "82b4ec43-0763-45ad-aebd-4d4b75920a7a",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-20",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:51.695Z"
+      },
+      {
+        "request_id": "375c36b3-afb8-4f12-a2e3-238a399780a1",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-11",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:48.002Z"
+      },
+      {
+        "request_id": "7e57ce2e-5c34-47f2-a942-2893c4fd1677",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-101",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:44.265Z"
+      },
+      {
+        "request_id": "fdabe3bd-40d5-4a62-a64f-8ad5de334247",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-100",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:40.961Z"
+      },
+      {
+        "request_id": "903d284f-6369-46eb-a71c-971f1d2d16ab",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-10",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:37.587Z"
+      },
+      {
+        "request_id": "96b9b0e4-9995-4b37-add0-f3d19c10a751",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-1",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:33.908Z"
+      },
+      {
+        "request_id": "94532add-a1a2-474f-a730-63609f3390d1",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-0",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:30.164Z"
+      },
+      {
+        "request_id": "1a6d010a-749f-42b9-aad7-d2ab32a2ff3f",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-92",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:26.481Z"
+      },
+      {
+        "request_id": "2c488544-197c-4098-a78c-41675f9ad2bc",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-82",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:23.113Z"
+      },
+      {
+        "request_id": "a4f5c6d3-6fda-4f53-a1bc-133a868fd97b",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-72",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:19.810Z"
+      },
+      {
+        "request_id": "91aeac37-b939-41d9-ad61-029350cfbd87",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-62",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:16.429Z"
+      },
+      {
+        "request_id": "71f4bee4-80ea-4932-af82-0dde9c712100",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-52",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:04:13.116Z"
+      },
+      {
+        "request_id": "66247885-4bdb-4a59-a6a8-5713d8fa86fa",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-42",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:03:49.095Z"
+      },
+      {
+        "request_id": "8e115ab8-b243-4ef3-ad63-5190b2d44af5",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-32",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:03:45.403Z"
+      },
+      {
+        "request_id": "d792a69f-df36-4093-a40f-db895ccd6cd8",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-22",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:03:41.661Z"
+      },
+      {
+        "request_id": "f7a97c2f-478b-4bde-ae6b-05b07a3ef7f0",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-2",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:03:37.967Z"
+      },
+      {
+        "request_id": "18452e00-f0ec-4f29-a39f-ae768f824fc3",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "companies/scale-0-12",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:03:34.126Z"
+      },
+      {
+        "request_id": "e63434ad-a573-413d-afc8-eae4dc92eca9",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-91",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:00:33.795Z"
+      },
+      {
+        "request_id": "5d384db2-c579-454e-adc2-097ef0d8c383",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-90",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:00:30.610Z"
+      },
+      {
+        "request_id": "984da2cd-5009-4c62-a9fc-962f84eb8491",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-81",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:00:27.480Z"
+      },
+      {
+        "request_id": "fae0526a-c5d1-4806-aaaa-2ed0a29cb057",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-80",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:00:24.283Z"
+      },
+      {
+        "request_id": "f931c1ff-c850-4897-aba5-e0b6963395b5",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-71",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:00:21.155Z"
+      },
+      {
+        "request_id": "c8d91cea-1a75-4e9f-a4ef-8c796674aded",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-70",
+        "error_code": "invalid_params",
+        "error_message": "The adopted fence row does not render its legacy fact.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:00:17.968Z"
+      },
+      {
+        "request_id": "d31013bf-1409-4981-a2dc-4f58a930f857",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-61",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:00:14.533Z"
+      },
+      {
+        "request_id": "da0af8d0-9836-4ff7-aa36-7db22833f1ac",
+        "operation": "submit_job",
+        "kind": "managed_maintenance_adopt_fact_fence",
+        "slug": "people/scale-0-60",
+        "error_code": "invalid_params",
+        "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "blocked_reason": null,
+        "completed_at": "2026-10-08T09:00:10.906Z"
+      }
+    ],
+    "holds": [
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:companies/scale-0-1502.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "16358ea11b86d0e14e5eedd7642045fdec294e67",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "companies/scale-0-1502.md",
+          "slug": "companies/scale-0-1502",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T06:28:59.146Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T06:28:59.146Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "companies/scale-0-1502.md",
+          "upstream_version": "9b8630d1ef916f3db330fe7a57171870fe47587f5c33e9d04bfa892d6cbe1830"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:companies/scale-0-1512.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "cb1cd328883672284c5ec0cbfb1f1eacd4159210",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "companies/scale-0-1512.md",
+          "slug": "companies/scale-0-1512",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T06:29:29.088Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T06:29:29.088Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "companies/scale-0-1512.md",
+          "upstream_version": "c2f971f865c299aa3fac0c9a0bbfaa2554d66713234485b0187a50a69e4bbe03"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1503.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "5b014777863d303b6b9bf85504d120f4377921e5",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1503.md",
+          "slug": "notes/scale-0-1503",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:26:59.977Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:26:59.977Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1503.md",
+          "upstream_version": "6c4fc70238224d941b2a3cd6ff5bd89d586cb5e30695bfa87da8467c1fa08f2a"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1504.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "d818c717dd9010bde6063c14cc80e3ee18303a6b",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1504.md",
+          "slug": "notes/scale-0-1504",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:27:07.187Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:27:07.187Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1504.md",
+          "upstream_version": "f5f9cfac20ee555cbbcb8cc0b02d421f746a24916ed76063fcac0dbed399292e"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1505.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "b0913d41661bf54bf1f0cc0577c2306e86c7cf6c",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1505.md",
+          "slug": "notes/scale-0-1505",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:27:14.280Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:27:14.280Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1505.md",
+          "upstream_version": "c77811d138defd5a4cd27a130d928446744e172da555eaf8467bafe48e3d16fe"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1506.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "f30df52b8c7e70e1c0d68ce4e95c11238cf94b9b",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1506.md",
+          "slug": "notes/scale-0-1506",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:27:21.517Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:27:21.517Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1506.md",
+          "upstream_version": "9ab9146110b755ed30da36c694fcec8ed4971c983dbfe00785a7b9a45c2c03fa"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1507.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "0eb6e7e9a839a31768f1180dca9d5bf43b93b303",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1507.md",
+          "slug": "notes/scale-0-1507",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:27:28.620Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:27:28.620Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1507.md",
+          "upstream_version": "d489c7930e2b550e8bba2f8507f257d39de71bb96768f9c57ff67c0e482dc595"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1508.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "cccfa1f92c5ff06e2c9282f61f46cade3d06fa1d",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1508.md",
+          "slug": "notes/scale-0-1508",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:27:35.708Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:27:35.708Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1508.md",
+          "upstream_version": "c18ae2f07a9732eacabef7b19be28a443ddfba6af176929367305528dc1956b8"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1509.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "b92779359c7c6675832fe15ce7ae8092e5b41be7",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1509.md",
+          "slug": "notes/scale-0-1509",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:27:42.925Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:27:42.925Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1509.md",
+          "upstream_version": "abd0d5edadb47f42709faa0cbb08d8220cca857fb92f501e54ecf43a76b4415c"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1513.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "b7e4e090049bb2a20ac3cfccdc39e32467ceb722",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1513.md",
+          "slug": "notes/scale-0-1513",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:27:56.147Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:27:56.147Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1513.md",
+          "upstream_version": "7ba283d8117c0afc15c0bf12fc11f670161565e19dd6b6d624a22ff2def2b5be"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1514.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "39f0bbfe8b1d812076088d6de23d9a9605890946",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1514.md",
+          "slug": "notes/scale-0-1514",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:28:03.262Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:28:03.262Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1514.md",
+          "upstream_version": "9334f9e6dda1c782ba5a7445a94e40e7deccf54bd1b09cd53b8419c76074b870"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1515.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "45f8c945e5481657cc97b19a77c36c651714ecb1",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1515.md",
+          "slug": "notes/scale-0-1515",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:28:25.839Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:28:25.839Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1515.md",
+          "upstream_version": "08b15f51b70c7579238aaf6485f431cd7f0ec6078df9f7e61eb039093af568f1"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1516.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "62cdfb49bcfcae77ba26ab01e98d0d0413f29160",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1516.md",
+          "slug": "notes/scale-0-1516",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:28:36.660Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:28:36.660Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1516.md",
+          "upstream_version": "4494d757f7c7e57baaecaf626471444fc2faa7eb6939edfb65c73dd7c3be4665"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1517.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "b319615521b75d282e5a9841757c1fc3a92f5cb6",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1517.md",
+          "slug": "notes/scale-0-1517",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:28:43.385Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:28:43.385Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1517.md",
+          "upstream_version": "e95c69fbaae7142799dbae3b78370add4c50a57b9aaba548228b94173f82ded9"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1518.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "66cfe064c6b44574c9a249c9323599dc572c0c41",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1518.md",
+          "slug": "notes/scale-0-1518",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:28:53.983Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:28:53.983Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1518.md",
+          "upstream_version": "35509734a056f9530c5e01c5f905c264dfaf9de6c33c79d87c059dda2c337dbb"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:notes/scale-0-1519.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "55835c444df8d0a5e2efa1bfb8b14f086428c907",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "notes/scale-0-1519.md",
+          "slug": "notes/scale-0-1519",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T07:29:04.318Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T07:29:04.318Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "notes/scale-0-1519.md",
+          "upstream_version": "d139f2270f930ec5e5c2618842dbcaece49ec38ffc1b1a9378a4e6183e097992"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:people/scale-0-1500.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 52,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "af30e3803d0b5efdbee93a8e4481ee9f92942786",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "people/scale-0-1500.md",
+          "slug": "people/scale-0-1500",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T08:34:31.521Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T08:34:31.521Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "people/scale-0-1500.md",
+          "upstream_version": "2dd6c1f8980ed9ce48096ecc97aa710c7c8cc7c9acb3bc2ccb7f8d8595846a0f"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:people/scale-0-1501.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "ae7e4d7d706b03146e8109bc16bd27e9ed6e45c7",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "people/scale-0-1501.md",
+          "slug": "people/scale-0-1501",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T08:34:37.160Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T08:34:37.160Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "people/scale-0-1501.md",
+          "upstream_version": "fe927e07a3193aa9a9acad714e3badef12376f5eef36723ab88ce737bd1f7058"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:people/scale-0-1510.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 52,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "ea1fe4fcee3802e4ca46ef4aeac61833fb696499",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "people/scale-0-1510.md",
+          "slug": "people/scale-0-1510",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T08:34:48.403Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T08:34:48.403Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "people/scale-0-1510.md",
+          "upstream_version": "625e08c180247b7497f368360a6724b584743cecd50094cde4a6a0c9165ec690"
+        }
+      },
+      {
+        "op": "sync-hold",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf:people/scale-0-1511.md",
+        "record": {
+          "code": "invalid_fence",
+          "meta": {
+            "line": 32,
+            "fence": {
+              "line": 14,
+              "rows": [],
+              "fence": "facts",
+              "reason": "repeated_marker",
+              "columns": [],
+              "section": "timeline"
+            },
+            "reason": "repeated_marker",
+            "blob_oid": "35aa2d6122ec8c038d18905b1653e34b7c560aa1",
+            "fence_version": 3,
+            "recovery_version": 1
+          },
+          "mode": "managed",
+          "path": "people/scale-0-1511.md",
+          "slug": "people/scale-0-1511",
+          "run_id": "b9fd4814-3308-4d7b-98a5-78d8309a9981",
+          "held_at": "2026-10-08T08:34:53.988Z",
+          "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+          "page_id": null,
+          "version": 1,
+          "source_id": "bench",
+          "updated_at": "2026-10-08T08:34:53.988Z",
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf",
+          "observed_at": "2026-10-08T06:15:58.673Z",
+          "source_path": "people/scale-0-1511.md",
+          "upstream_version": "20c526890257688c8ac497a31efc400a11210839b65909b4651a8fd255ec5ab9"
+        }
+      },
+      {
+        "op": "sync-hold-summary",
+        "fingerprint": "bench:3ea5fbdc-6576-44bf-8e74-9253213552bf",
+        "record": {
+          "count": 20,
+          "stale": 0,
+          "fences": 20,
+          "images": 0,
+          "source_id": "bench",
+          "concurrent": 0,
+          "incarnation": "3ea5fbdc-6576-44bf-8e74-9253213552bf"
+        }
+      }
+    ],
+    "samples": 317,
+    "adoption_runs": 24,
+    "adoption_summary": [
+      {
+        "i": 0,
+        "status": null,
+        "dripped": 0,
+        "fenced": null,
+        "pending": null,
+        "fence_failed": 0,
+        "code": 143
+      },
+      {
+        "i": 1,
+        "status": null,
+        "dripped": 20,
+        "fenced": null,
+        "pending": null,
+        "fence_failed": 0,
+        "code": 143
+      },
+      {
+        "i": 2,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 172,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 3,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 4,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 5,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 6,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 7,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 8,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 9,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 10,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 11,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 12,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 13,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 14,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 12,
+        "pending": 128,
+        "fence_failed": 34,
+        "code": 0
+      },
+      {
+        "i": 15,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 16,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 17,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 18,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 19,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 20,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 21,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 22,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      },
+      {
+        "i": 23,
+        "status": "warn",
+        "dripped": 20,
+        "fenced": 20,
+        "pending": 128,
+        "fence_failed": 32,
+        "code": 0
+      }
+    ],
+    "legacy_pending_at_end": 128
+  },
+  "finished_at": "2026-10-08T09:06:13.031Z"
+}
