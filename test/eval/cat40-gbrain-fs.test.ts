@@ -34,7 +34,8 @@ const world = generateHardWorld(HARD_SEEDS.calibration);
 const writeWorld = (w: unknown) => { const p = join(tmp(), 'world.json'); writeFileSync(p, JSON.stringify(w)); return p; };
 const files = new Map([['accounts/acme/crm.md', '---\ntitle: "CRM record"\n---\nowner: Alice Example\n'], ['notes/x.md', 'note']]);
 
-const GBRAIN_TOOLS = [
+type FakeTool = { name: string; description: string; inputSchema: Record<string, unknown>; annotations?: { readOnlyHint?: boolean } };
+const GBRAIN_TOOLS: FakeTool[] = [
   { name: 'search', description: 'search the brain', inputSchema: { type: 'object', properties: { query: { type: 'string' } } }, annotations: { readOnlyHint: true } },
   { name: 'get_page', description: 'read a page', inputSchema: { type: 'object', properties: { slug: { type: 'string' } } }, annotations: { readOnlyHint: true } },
   { name: 'put_page', description: 'write a page', inputSchema: { type: 'object', properties: { slug: { type: 'string' }, content: { type: 'string' } } } },
@@ -113,7 +114,7 @@ describe('gbrain-fs cells', () => {
     expect(rec.stop).toBe('submitted');
     expect(lifecycle).toEqual(['newSession', 'newSession', 'newSession', 'newSession', 'restoreOrQuarantine']);
     expect(calls.map(c => c.name)).toEqual(['put_page', 'put_page', 'put_page', 'put_page']);
-    expect(rec.sessions.slice(0, 4).every(s => s.writes.length === 1 && s.writes[0].startsWith('notes/session-'))).toBe(true);
+    expect(rec.sessions.slice(0, 4).every(s => s.writes?.length === 1 && s.writes[0].startsWith('notes/session-'))).toBe(true);
     expect(rec.sessions[4].run.tool_calls.map(t => t.name)).toEqual(['list_dir']);
     expect(rec.score.wrote).toBe(true);
     expect(rec.write_diagnostic!.length).toBeGreaterThan(0);
