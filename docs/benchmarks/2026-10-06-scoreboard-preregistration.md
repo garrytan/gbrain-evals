@@ -377,7 +377,20 @@ projects 54 hours per BEAM-10M conversation, over the 48-hour limit, so under th
 setup (34 hours and $44 per conversation) and is labeled "common setup" wherever it appears. A field-wide claim
 needs every external kind on S1, so it runs.
 
+**A6 (2026-10-08, before freeze): the confident-error column is not published.** The hedge classifier was validated
+under the rule in "Derived columns" on three fresh, blind, hand-labeled samples of 200 dev-smoke answers, each by a
+different labeler who did not know the system. Abstain precision was 0.42 (`hedge-v1`), 0.881 (`hedge-v2`) and 0.893
+(`hedge-v3`, 67 of 75) against the 0.90 bar; confident precision was 0.80, 0.939 and 0.973. No version met the bar, so
+the confident-error rate and the classifier-based false-abstention rate are not published (`hedge_classifier: none`
+in the campaign). The correct-abstention column stays: it uses each benchmark's own abstention judgment, not the
+classifier. Each answer record still carries its delivered tokens. The three validation aggregates are in
+[`2026-10-06-scoreboard/dev-smokes/`](2026-10-06-scoreboard/dev-smokes/README.md).
+
 ## Changelog
+
+### 2026-10-08: amendment A6
+
+The hedge classifier missed its validation bar three times; the confident-error column is not published.
 
 ### 2026-10-08: hedge verdicts at render time
 
