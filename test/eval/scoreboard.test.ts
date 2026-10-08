@@ -8,9 +8,10 @@
 import { describe, expect, test } from 'bun:test';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
-import { checkPinTable, checkReceipt, checkSize, derive, explain, README_BEGIN, README_END, renderAll, renderHeadline, loadCampaign, type CampaignManifest, type Scoreboard } from '../../eval/runner/scoreboard.ts';
+import { checkPinTable, checkReceipt, checkSize, derive, deriveAll, explain, README_BEGIN, README_END, renderAll, renderHeadline, loadCampaign, type CampaignManifest, type Scoreboard } from '../../eval/runner/scoreboard.ts';
+import { classify, classifyV2, CLASSIFIER_VERSION, CLASSIFIER_VERSION_V2, RULES_SHA256, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
 import { defaultCells, fieldCells, READERS, writeSyntheticReceipt, type SyntheticOptions } from './fixtures/scoreboard/synthetic.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -19,9 +20,9 @@ function fresh(o: SyntheticOptions = {}): { dir: string; sb: Scoreboard } {
   const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
   writeSyntheticReceipt(dir, o);
   const { campaign } = loadCampaign(dir);
-  const sb = derive(dir);
-  for (const f of renderAll(dir, sb, campaign).files) writeFileSync(f.path, f.text);
-  return { dir, sb };
+  const d = deriveAll(dir);
+  for (const f of renderAll(dir, d, campaign).files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); }
+  return { dir, sb: d.scoreboard };
 }
 
 const codes = (dir: string, env: Record<string, string> = {}) => checkReceipt(dir, env).messages.map(m => m.code);
@@ -352,7 +353,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
 
   test('per cell, per system and set, and pooled over sets, from replicate-0 answers with a scored canonical judgment', () => {
     const { dir, sb } = fresh({ cells: scripted() });
-    expect(sb.schema).toBe('gbrain-evals/scoreboard/v3');
+    expect(sb.schema).toBe('gbrain-evals/scoreboard/v4');
     const s1 = sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived;
     expect(s1).toEqual({ answers: 177, wrong: 107, confident_wrong: 40, abstention_answers: 30, correct_abstentions: 10, answerable_answers: 147, false_abstentions: 27, confident_error_rate: Number((40 / 107).toFixed(6)), correct_abstention_rate: Number((10 / 30).toFixed(6)), false_abstention_rate: Number((27 / 147).toFixed(6)) });
     const s2a = sb.cells.find(c => c.cell_id === 's2a-gbrain-8k')!.derived;
@@ -361,7 +362,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     expect(gb.sets.map(s => [s.set, s.cell])).toEqual([['S1', 's1-gbrain-8k'], ['S2a', 's2a-gbrain-8k']]);
     expect([gb.pooled.abstention_answers, gb.pooled.correct_abstentions, gb.pooled.correct_abstention_rate]).toEqual([42, 14, Number((14 / 42).toFixed(6))]);
     expect([gb.pooled.wrong, gb.pooled.confident_wrong, gb.pooled.answerable_answers, gb.pooled.false_abstentions]).toEqual([151, 56, 207, 39]);
-    expect(sb.derived.classifier.file).toBe('eval/runner/q1/hedge.ts');
+    expect(sb.derived.classifier).toEqual({ file: 'eval/runner/q1/hedge.ts', version: CLASSIFIER_VERSION_V2, rules_sha256: RULES_SHA256_V2, source: 'campaign.json hedge_classifier, computed at render time', per_answer: 'cells/<cell_id>/derived/hedge.ndjson' });
     expect(sb.cells.find(c => c.cell_id === 's1-temporal-graph-8k')!.derived.confident_error_rate).toBeNull();
     expect(checkReceipt(dir, {}).messages).toEqual([]);
     rmSync(dir, { recursive: true });
@@ -393,35 +394,70 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     rmSync(dir, { recursive: true });
   });
 
-  test('mutation: a stored hedge verdict that differs from the recomputed one fails check', () => {
-    const { dir } = fresh({ cells: scripted() });
-    const path = join(dir, 'cells/s1-gbrain-8k/answers.ndjson');
-    const lines = readFileSync(path, 'utf8').trim().split('\n').map(l => JSON.parse(l));
-    const target = lines.find(a => a.text === 'It was Tuesday.')!;
-    expect(target.hedge).toEqual({ verdict: 'confident', classifier_version: 'hedge-v1' });
-    target.hedge.verdict = 'hedged';
-    writeFileSync(path, lines.map(l => JSON.stringify(l)).join('\n') + '\n');
-    const m = checkReceipt(dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!;
-    expect(m.message).toContain('stores hedge verdict hedged, but hedge-v1 recomputes confident');
+  const lines = (path: string) => readFileSync(path, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+
+  test('derived/hedge.ndjson: one line per judged answer, in answers.ndjson order, with verdict, version, rules sha and delivered tokens', () => {
+    const cells = scripted().map(c => (c.id === 's1-gbrain-8k' ? { ...c, harnessFail: [0] } : c));
+    const { dir } = fresh({ cells });
+    const answers = lines(join(dir, 'cells/s1-gbrain-8k/answers.ndjson'));
+    const hedge = lines(join(dir, 'cells/s1-gbrain-8k/derived/hedge.ndjson'));
+    const judged = answers.filter(a => a.outcome === 'scored');
+    expect(judged.length).toBe(answers.length - READERS.length);
+    expect(hedge).toEqual(judged.map(a => ({ answer_id: a.answer_id, verdict: classifyV2(a.text), classifier_version: CLASSIFIER_VERSION_V2, rules_sha256: RULES_SHA256_V2, delivered_tokens: a.delivered_tokens })));
+    expect(new Set(hedge.map(h => h.verdict))).toEqual(new Set(['abstain', 'hedged', 'confident']));
+    expect(() => readFileSync(join(dir, 'cells/s1-temporal-graph-8k/derived/hedge.ndjson'))).toThrow();
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
     rmSync(dir, { recursive: true });
   });
 
-  test('mutation: answer text edited under its stamp, or a stamp from another classifier version, fails check', () => {
+  test('mutation: an edited or missing derived/hedge.ndjson fails check, and so does answer text edited after render', () => {
     const a = fresh({ cells: scripted() });
-    const pathA = join(a.dir, 'cells/s1-gbrain-8k/answers.ndjson');
-    writeFileSync(pathA, readFileSync(pathA, 'utf8').replace('"text":"It was Tuesday."', '"text":"It was probably Tuesday."'));
-    expect(codes(a.dir)).toContain('RECEIPT_INVALID');
+    const path = join(a.dir, 'cells/s1-gbrain-8k/derived/hedge.ndjson');
+    const text = readFileSync(path, 'utf8');
+    writeFileSync(path, text.replace('"verdict":"confident"', '"verdict":"hedged"'));
+    const m = checkReceipt(a.dir, {}).messages;
+    expect(m.map(x => x.code)).toEqual(['SCOREBOARD_STALE']);
+    expect(m[0].message).toContain('cells/s1-gbrain-8k/derived/hedge.ndjson differs from the regenerated text at line');
+    rmSync(path);
+    expect(checkReceipt(a.dir, {}).messages[0].message).toContain('derived/hedge.ndjson is missing');
     const b = fresh({ cells: scripted() });
     const pathB = join(b.dir, 'cells/s1-gbrain-8k/answers.ndjson');
-    writeFileSync(pathB, readFileSync(pathB, 'utf8').replace('"classifier_version":"hedge-v1"', '"classifier_version":"hedge-v0"'));
-    expect(checkReceipt(b.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('from classifier hedge-v0');
+    writeFileSync(pathB, readFileSync(pathB, 'utf8').replace('"text":"It was Tuesday."', '"text":"It was probably Tuesday."'));
+    const stale = checkReceipt(b.dir, {}).messages.filter(x => x.code === 'SCOREBOARD_STALE').map(x => x.message);
+    expect(stale.some(x => x.includes('cells/s1-gbrain-8k/derived/hedge.ndjson'))).toBe(true);
+    expect(stale.some(x => x.includes('scoreboard.json'))).toBe(true);
     rmSync(a.dir, { recursive: true }); rmSync(b.dir, { recursive: true });
   });
 
-  test('answers without a stamp are classified from their text and check clean', () => {
-    const cells = scripted().map(c => ({ ...c, noHedge: true }));
+  test('campaign.json hedge_classifier picks the version; a version change re-renders; an unknown or missing version is refused', () => {
+    const texts = (i: number, reader: string) => (i % 6 === 2 && reader === READERS[2] ? "**Answer:** It was Tuesday.\n\nThe chats don't say whether it was the first or second Tuesday." : text(i, reader));
+    const cells = scripted().map(c => (c.answerText ? { ...c, answerText: texts } : c));
+    const v1 = fresh({ cells, hedgeClassifier: CLASSIFIER_VERSION });
+    const v2 = fresh({ cells });
+    const h1 = lines(join(v1.dir, 'cells/s1-gbrain-8k/derived/hedge.ndjson')), h2 = lines(join(v2.dir, 'cells/s1-gbrain-8k/derived/hedge.ndjson'));
+    expect(h1.every(h => h.classifier_version === CLASSIFIER_VERSION && h.rules_sha256 === RULES_SHA256)).toBe(true);
+    const long = lines(join(v2.dir, 'cells/s1-gbrain-8k/answers.ndjson')).filter(a => a.text.startsWith('**Answer:**')).map(a => a.answer_id);
+    expect(long.length).toBeGreaterThan(0);
+    expect(long.map(id => h1.find(h => h.answer_id === id).verdict)).toEqual(long.map(() => classify(texts(2, READERS[2]))));
+    expect(classify(texts(2, READERS[2]))).toBe('abstain');
+    expect(long.map(id => h2.find(h => h.answer_id === id).verdict)).toEqual(long.map(() => 'confident'));
+    expect(v1.sb.derived.classifier.version).toBe(CLASSIFIER_VERSION);
+    expect(v1.sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.false_abstentions).toBeGreaterThan(v2.sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.false_abstentions);
+    expect(checkReceipt(v1.dir, {}).messages).toEqual([]);
+    editJson(join(v1.dir, 'campaign.json'), x => { x.hedge_classifier = CLASSIFIER_VERSION_V2; });
+    expect(codes(v1.dir)).toContain('SCOREBOARD_STALE');
+    editJson(join(v1.dir, 'campaign.json'), x => { x.hedge_classifier = 'hedge-v0'; });
+    expect(checkReceipt(v1.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('campaign.json hedge_classifier is "hedge-v0", not one of hedge-v1, hedge-v2');
+    editJson(join(v1.dir, 'campaign.json'), x => { delete (x as Partial<CampaignManifest>).hedge_classifier; });
+    expect(checkReceipt(v1.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('hedge_classifier is null');
+    rmSync(v1.dir, { recursive: true }); rmSync(v2.dir, { recursive: true });
+  });
+
+  test('a hedge stamp on an older answer record is ignored: verdicts come from the text', () => {
+    const cells = scripted().map(c => ({ ...c, legacyStamp: { verdict: 'hedged' as const, classifier_version: 'hedge-v0' } }));
     const { dir, sb } = fresh({ cells });
     expect(sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.confident_wrong).toBe(40);
+    expect(lines(join(dir, 'cells/s1-gbrain-8k/answers.ndjson'))[0].hedge).toEqual({ verdict: 'hedged', classifier_version: 'hedge-v0' });
     expect(checkReceipt(dir, {}).messages).toEqual([]);
     rmSync(dir, { recursive: true });
   });
@@ -431,7 +467,8 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     const out = explain(dir, 'gbrain-defaults', 'confident-error') as Record<string, any>;
     expect(out.cell).toBe('s1-gbrain-8k');
     expect(out.value.confident_wrong).toBe(40);
-    expect(out.value.classifier.version).toBe('hedge-v1');
+    expect(out.value.classifier.version).toBe(CLASSIFIER_VERSION_V2);
+    expect(out.value.per_answer).toBe('cells/s1-gbrain-8k/derived/hedge.ndjson');
     expect((explain(dir, 'gbrain-defaults', 'abstention') as Record<string, any>).value.correct_abstention_rate).toBeCloseTo(1 / 3, 5);
     rmSync(dir, { recursive: true });
   });

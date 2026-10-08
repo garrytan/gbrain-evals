@@ -1,13 +1,25 @@
 /**
- * Hedge and abstention classifier for Q1's derived columns (preregistration,
- * "Derived columns"): a deterministic lexical classifier that labels one
- * answer text `abstain`, `hedged` or `confident`. It makes no model calls.
+ * Hedge and abstention classifiers for Q1's derived columns (preregistration,
+ * "Derived columns"): deterministic lexical classifiers that label one answer
+ * text `abstain`, `hedged` or `confident`. They make no model calls. The
+ * scoreboard runs the version campaign.json names in `hedge_classifier`, at
+ * render time (HEDGE_CLASSIFIERS); answers carry no verdict.
  *
- *   bun eval/runner/q1/hedge.ts classify --text <answer>
+ *   bun eval/runner/q1/hedge.ts classify --text <answer> [--classifier <version>]
  *   bun eval/runner/q1/hedge.ts sample --answers <answers.ndjson[.gz]>... --n 200 --seed <s> --out <csv>
- *   bun eval/runner/q1/hedge.ts validate --labels <csv> [--design <csv>.design.json] [--out <json>]
+ *       [--exclude <csv with answer_id>]... [--blind <csv>] [--classifier <version>]
+ *   bun eval/runner/q1/hedge.ts validate --labels <csv> [--design <csv>.design.json] [--out <json>] [--classifier <version>]
  *
- * Verdicts:
+ * `--classifier` defaults to CURRENT_CLASSIFIER (hedge-v2); `validate` with a
+ * design file defaults to the version the sample was drawn with.
+ *
+ * hedge-v2 (explainVerdictV2, below the v1 code) classifies the answer's
+ * final-answer span rather than the whole text: long answers carry markdown,
+ * a marked final answer and reasoning paragraphs whose uncertainty is often
+ * about premises or side details. hedge-v1, kept for the record, matches cues
+ * anywhere in the text; it is documented here.
+ *
+ * hedge-v1 verdicts:
  *   abstain    the answer declines: "I don't know", "not mentioned", "no
  *              information", "cannot determine", "the conversation doesn't
  *              say" and the like, with no guess offered;
@@ -61,9 +73,10 @@ export type HedgeVerdict = 'abstain' | 'hedged' | 'confident';
 export const HEDGE_VERDICTS: readonly HedgeVerdict[] = ['abstain', 'hedged', 'confident'];
 export const CLASSIFIER_VERSION = 'hedge-v1';
 export const VALIDATION_SCHEMA = 'gbrain-evals/hedge-validation/v1';
-export const SAMPLE_DESIGN_SCHEMA = 'gbrain-evals/hedge-sample-design/v1';
+/** v2 adds `excluded` (answers left out of the draw) and `blind` (the labeler's copy: answer_id and text only). */
+export const SAMPLE_DESIGN_SCHEMA = 'gbrain-evals/hedge-sample-design/v2';
 
-type RuleKind = 'quote' | 'reported' | 'abstain' | 'hedge' | 'cancel' | 'scope' | 'contrast';
+type RuleKind = 'quote' | 'reported' | 'abstain' | 'hedge' | 'cancel' | 'scope' | 'contrast' | 'marker' | 'lead-skip' | 'offer' | 'premise' | 'record' | 'guess';
 export interface Rule { id: string; kind: RuleKind; pattern: string; flags?: string }
 
 const SUBJ = '(?:conversations?|chats?|history|context|notes?|records?|memory|memories|sessions?|messages?|transcripts?|logs?|information|anywhere|there)';
@@ -164,8 +177,205 @@ export function explainVerdict(text: string): Classification {
 
 export const classify = (text: string): HedgeVerdict => explainVerdict(text).verdict;
 
-/** The `hedge` field cell.ts stamps on an answer record. */
-export const hedgeStamp = (text: string) => ({ verdict: classify(text), classifier_version: CLASSIFIER_VERSION });
+// ─── hedge-v2: classify the final-answer span ────────────────────────
+
+export const CLASSIFIER_VERSION_V2 = 'hedge-v2';
+
+const QTY = '(?:\\d[\\d,.]*|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|fifty|a hundred|a few|a couple(?: of)?|several|half an?|an?)';
+const UNIT = '(?:years?|months?|weeks?|days?|hours?|minutes?|seconds?|times|percent|%|miles?|km|kilometers?|kilometres?|dollars?|pounds?|kg|lbs?)';
+const DATEISH = "(?:(?:early|mid|late|the (?:end|start|beginning|middle) of)[- ]?\\s*)?(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?\\s+(?:\\d|of\\b)|(?:january|february|march|april|may|june|july|august|september|october|november|december)\\b|(?:spring|summer|autumn|fall|winter)\\b|(?:19|20)\\d\\d\\b|\\d{1,2}(?:st|nd|rd|th)?(?:\\s*(?:-|–|and|to)\\s*\\d{1,2}(?:st|nd|rd|th)?)?\\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\b|\\d{1,2}(?::\\d\\d)?\\s?(?:am|pm)\\b|noon|midnight)";
+const NOT_TOPIC = '(?<!\\b(?:talk|talked|talking|talks|ask|asked|asking|asks|think|thinking|thought|know|knew|care|cared|worried|excited|information|info|details|nothing|anything|something|said|say|says|wrote|story|stories|conversations?|chats?|questions?|mention|mentioned|learn|learned|learning|read|reading|forgot|remember|remembered|tell|told|hear|heard|sure|unsure|curious|all|how|what|memories|memory|items?|notes?|records?) )';
+
+/**
+ * hedge-v2's own rules, in application order within each kind; it also applies hedge-v1's quote, reported-speech,
+ * abstain, hedge and cancel rules (RULES) inside the span. `marker` finds the final-answer line; `lead-skip` marks a
+ * first line that does not lead with the answer; `offer` drops a sentence addressed to the user; `premise` marks a
+ * sentence about the question's premise and `record` one about a record's date, whose cues are not about the answer;
+ * `guess` is a guess offered after a decline.
+ */
+export const RULES_V2: readonly Rule[] = [
+  { id: 'm.answer', kind: 'marker', pattern: "^(?:step \\d+\\s*[:.\\-–—]\\s*)?(?:(?:the|my|final|short|direct|overall|reason(?:ing)? and)\\s+)*answer(?:\\s*\\([^)]*\\))?\\s*(?:[:.\\-–—]|$|is\\b)" },
+  { id: 'm.conclusion', kind: 'marker', pattern: '^(?:step \\d+\\s*[:.\\-–—]\\s*)?(?:(?:the|my|final)\\s+)?(?:conclusion|bottom line|verdict|in short|in summary|summary)\\s*(?:[:.\\-–—,]|$)' },
+  { id: 'm.reasoning', kind: 'marker', pattern: '^(?:step \\d+\\s*[:.\\-–—]\\s*)?(?:reason(?:ing)?|reason over the information|reason (?:about|through|toward)[^:.]*)\\s*(?:[:.\\-–—]|$)' },
+  { id: 'l.skip', kind: 'lead-skip', pattern: "^(?:step\\b|relevant\\b|extract|reason|the question\\b|question\\b|looking\\b|let me\\b|i (?:need|will|'ll|should|must|first)\\b|to answer\\b|first\\b|context\\b|memory items?\\b|from the memor|what the (?:memories|conversations|records|chats))" },
+  { id: 'o.offer', kind: 'offer', pattern: "^(?:if you\\b|let me know|feel free|i can help|i'?m happy to|i'?d be happy|happy to help|please (?:share|tell|provide)|could you\\b|can you\\b)|\\bif you (?:can |could |want to |'d like to )?(?:share|tell|provide|give|let me|remind|clarify|have)\\b" },
+  { id: 'p.question', kind: 'premise', pattern: "\\b(?:the|this|your) question(?:'s)? (?:[a-z]+ ){0,2}(?:assum\\w*|mix\\w*|confus\\w*|swap\\w*|attribut\\w*|conflat\\w*|impl(?:y|ies)|presuppos\\w*|names?|says|has (?:the|a|an)|is based|seems|appears|refers?|means?|meant|wording)\\b|\\bpremise\\b|\\bmix(?:es|ed|ing)?[- ]up\\b|\\bmixes\\b|\\bconfus(?:es|ed|ing|ion)\\b|\\bswapped\\b|\\bthe names\\b" },
+  { id: 'p.correction', kind: 'premise', pattern: "\\b(?:it|that|this) (?:was|is) (?:actually |really )?[a-z]+(?:'s)? (?:who|that|,? not)\\b|,? not [a-z]+'s\\b|\\b(?:they|records?|memor(?:y|ies)|conversations?|chats?|one they) (?:do|does|did) (?:record|show|mention|say|describe)\\b|\\b(?:isn't|wasn't) (?:quite )?what happened\\b" },
+  { id: 'r.record', kind: 'record', pattern: "\\b(?:dated|recorded (?:on|as|under|for|at)|record dates?|current date|timestamps?|item dates?|memory dates?|session dates?|(?:after|before) today|stored conversations)\\b" },
+  { id: 'g.guess', kind: 'guess', pattern: "\\bif (?:a |i had to |i must |forced to |you want a |you need a )?(?:guess|speculat)\\w*|\\b(?:best|educated|rough|plausible|reasonable|my|a) guess\\b|\\bspeculat\\w*|\\b(?:is|are|be) (?:a |one )?possibilit(?:y|ies)\\b|\\btentative\\w*|\\b(?:an|my|this is an?|only an?) (?:inference|estimate|assumption|guess)\\b|\\bgeneral suggestion\\b|\\bsuggestion rather than\\b|\\b(?:good|best|strong|natural|likely|possible|plausible) (?:fit|match|candidate|option)s?\\b|\\b(?:would|could) (?:also )?(?:be )?(?:a )?(?:good |great |strong |natural |reasonable |plausible )?(?:fit|match|candidate)s?\\b|\\bmy guess\\b" },
+  { id: 'h2.approx', kind: 'hedge', pattern: `${NOT_TOPIC}\\b(?:about|around|roughly|approximately|approx\\.?|circa|nearly|almost|some ?time|or so)\\s+(?:(?:from|between|in|on|by|the|of|after|before)\\s+)*(?:${QTY}\\s*-?\\s*${UNIT}\\b|${DATEISH})|~\\s?\\d` },
+  { id: 'h2.may-verb', kind: 'hedge', pattern: '\\b(?:may|might) (?:well |also |actually )?(?:refer|mean|include|overlap|correspond|count|represent|reflect|indicate|describe|involve|apply|differ|belong)\\w*' },
+  { id: 'h2.implies', kind: 'hedge', pattern: '\\b(?:it|this|that|which) (?:implies|suggests|indicates|hints)\\b|\\b(?:implied|hinted)\\b' },
+  { id: 'h2.potentially', kind: 'hedge', pattern: '\\b(?:potentially|conceivably|plausibl[ey]|tentatively)\\b' },
+  { id: 'h2.assuming', kind: 'hedge', pattern: "\\bassuming (?:he|she|they|that|it|this)\\b|\\bmy best (?:reading|guess|estimate|inference)\\b|\\b(?:that|this) (?:link |date |answer )?(?:is )?my (?:own )?(?:assumption|inference|estimate)\\b|\\b(?:an|my own) inference\\b" },
+  { id: 'x2.you-may', kind: 'cancel', pattern: "\\byou (?:may|might) (?:be )?(?:thinking|remembering|mean|be referring|recall)\\w*" },
+  { id: 'a2.not-enough', kind: 'abstain', pattern: "\\b(?:isn't|is not|wasn't|was not|aren't|are not) (?:enough|sufficient) (?:information|info|details?|data|context|evidence)\\b" },
+  { id: 'a2.dont-have', kind: 'abstain', pattern: "\\b(?:don't|do not) have (?:any |the |a |an |enough )?(?:[a-z]+ )?(?:information|info|details?|data|records?|knowledge|memor(?:y|ies))\\b" },
+  { id: 'a2.never-named', kind: 'abstain', pattern: `\\b(?:isn't|is not|wasn't|was not|aren't|are not|weren't|were not|not|never) (?:been )?(?:explicitly |specifically |actually |ever )?(?:named|identified|listed|documented)\\b${NOT_AGAIN}|\\b(?:never|don't|doesn't|didn't|do not|does not|did not) (?:actually |explicitly |specifically )?(?:names?|identif(?:y|ies)|lists?)\\b|\\b(?:doesn't|does not|don't|do not) appear\\b|\\bnone of (?:the|our|your|these|those|my|their) (?:[a-z]+ )?(?:names?|identif\\w*|lists?|shows?|gives?|states?|records?)\\b` },
+  { id: 'a2.cant-answer', kind: 'abstain', pattern: "\\b(?:can't|cannot|can not|couldn't|could not|unable to) (?:answer|identify|name|pin down|confirm)\\b|\\bno (?:stored|recorded|relevant|retrieved) (?:information|info|memories|memory|records?|details|items?)\\b|\\b(?:returned|retrieved) (?:no|nothing)\\b" },
+  { id: 'a2.would-guess', kind: 'abstain', pattern: "\\bwould (?:only |just )?be (?:a |pure |just )?(?:guess|guessing|speculation|speculative)\\b" },
+  { id: 's2.precision', kind: 'scope', pattern: '\\b(?:exact|exactly|precise|precisely|specific|specifically|explicit|explicitly|outright|straight out|directly|definitively|for (?:sure|certain)|with (?:certainty|confidence)|in so many words|the full|by name|particular)\\b' },
+  { id: 'c2.contrast', kind: 'contrast', pattern: '\\b(?:but|however|though|although|that said|still|yet)\\b' },
+];
+
+export const RULES_SHA256_V2 = createHash('sha256').update(JSON.stringify({
+  version: CLASSIFIER_VERSION_V2,
+  normalize: 'nfkc, straight quotes; span lines stripped of list markers, heading hashes and emphasis; lower case, whitespace collapsed',
+  span: 'last answer marker, else last conclusion marker (rest of the marker paragraph, else the next paragraph); else a leading answer (bold opening sentence, or first sentence); else the last paragraph that is not a note or an offer',
+  followup: 'a declining span is hedged when a guess follows in the conclusion paragraph, or, for a leading answer, in the rest of its paragraph or the last paragraph; a span of at most 6 words also reads its reasoning section (else the paragraph before it) for hedges other than approximators; approximators never turn a decline into a guess',
+  inherits: RULES.filter(r => ['quote', 'reported', 'abstain', 'hedge', 'cancel'].includes(r.kind)),
+  rules: RULES_V2,
+})).digest('hex');
+
+const v2 = (kind: RuleKind) => RULES_V2.filter(r => r.kind === kind).map(r => ({ id: r.id, re: new RegExp(r.pattern, `g${r.flags ?? ''}`) }));
+const tester = (kind: RuleKind) => { const res = v2(kind).map(r => new RegExp(r.re.source)); return (s: string) => res.some(re => re.test(s)); };
+const [ANSWER_MARK, CONCLUSION_MARK, REASON_MARK] = v2('marker').map(r => new RegExp(r.re.source, 'i'));
+const IS_LEAD_SKIP = tester('lead-skip'), IS_OFFER = tester('offer'), IS_PREMISE = tester('premise'), IS_RECORD = tester('record');
+const ABSTAIN_V2 = [...ABSTAIN, ...v2('abstain')], HEDGE_V2 = [...HEDGE, ...v2('hedge')], CANCEL_V2 = [...CANCEL, ...v2('cancel')], GUESS = v2('guess');
+const SCOPE_V2 = new RegExp(v2('scope')[0].re.source), CONTRAST_V2 = new RegExp(v2('contrast')[0].re.source);
+const SHORT_SPAN_WORDS = 6;
+/** First-person declines: scoped to precision and followed by a contrast ("I don't know the exact date, but ..."), the answerer's own uncertainty, so a hedge. */
+const FIRST_PERSON = new Set(['a.dont-know', 'a.dont-recall', 'a.dont-have', 'a2.dont-have', 'a.not-aware']);
+
+/** A line without its list marker, heading hashes and emphasis. */
+const bare = (line: string) => line.replace(/^\s*(?:[-*+]\s+|\d+[.)]\s+)?(?:#{1,6}\s*)?/, '').replace(/[*_]{1,3}/g, '').trim();
+const straighten = (t: string) => t.normalize('NFKC').replace(/\r\n?/g, '\n').replace(/[\u201c\u201d\u201e\u00ab\u00bb]/g, '"').replace(/[\u2018\u2019\u201a\u2032]/g, "'");
+const words = (s: string) => s.replace(/[^a-z0-9']+/gi, ' ').trim().split(' ').filter(Boolean).length;
+
+export interface FinalSpan {
+  kind: 'marker' | 'lead' | 'last' | 'empty';
+  text: string;
+  /** Read only when `text` declines: a guess here makes the answer hedged. */
+  followup: string;
+  /** Read only when `text` is at most SHORT_SPAN_WORDS words: its reasoning section, else the paragraph before it. */
+  reasoning: string;
+}
+
+function markerSpan(paras: string[], mark: RegExp): { text: string; at: number } | null {
+  for (let i = paras.length - 1; i >= 0; i--) {
+    const lines = paras[i].split('\n');
+    const at = lines.findIndex(l => mark.test(bare(l)));
+    if (at < 0) continue;
+    const head = bare(lines[at]).replace(mark, '').replace(/^[\s:.\-–—,]+/, '');
+    const rest = [head, ...lines.slice(at + 1)].join('\n').trim();
+    if (rest) return { text: rest, at: i };
+    if (paras[i + 1]) return { text: paras[i + 1], at: i };
+  }
+  return null;
+}
+
+/**
+ * The answer's final-answer span: the last answer marker ("**Answer:**", "Answer:", "# Answer"), else the last
+ * conclusion marker, as the rest of its paragraph or, when the marker stands alone, the next paragraph; else a first
+ * paragraph that leads with the answer (its bold opening sentence, or its first sentence); else the last paragraph
+ * that is not a note or an offer.
+ */
+export function finalSpan(text: string): FinalSpan {
+  const paras = straighten(text).split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  if (!paras.length) return { kind: 'empty', text: '', followup: '', reasoning: '' };
+  const answer = markerSpan(paras, ANSWER_MARK), conclusion = markerSpan(paras, CONCLUSION_MARK);
+  const prose = (p: string) => !/^(?:\(|note\b|caveat\b)/i.test(bare(p)) && !IS_OFFER(bare(p).toLowerCase()) && words(bare(p)) > 3;
+  const reasonAt = paras.map((p, i) => (REASON_MARK.test(bare(p.split('\n')[0])) ? i : -1)).filter(i => i >= 0).pop();
+  const section = (from: number, stop: number) => paras.slice(from, stop).filter(p => prose(p) || REASON_MARK.test(bare(p.split('\n')[0]))).map(p => p.split('\n').map(l => (REASON_MARK.test(bare(l)) ? bare(l).replace(REASON_MARK, '') : l)).join('\n')).join('\n\n');
+  if (answer || conclusion) {
+    const m = (answer ?? conclusion)!;
+    const reasoning = reasonAt === undefined ? paras.slice(0, m.at).filter(prose).slice(-1).join('\n\n') : section(reasonAt, reasonAt < m.at ? m.at : paras.length);
+    return { kind: 'marker', text: m.text, followup: answer && conclusion && conclusion.at !== answer.at ? conclusion.text : '', reasoning };
+  }
+  const first = paras[0], firstLine = first.split('\n')[0];
+  const heading = /^\s*(?:#|[-*+] |\d+[.)] )/.test(first) || (/:\s*(?:\*\*)?\s*$/.test(firstLine) && !/[.!?]\s/.test(firstLine)) || IS_LEAD_SKIP(bare(firstLine).toLowerCase());
+  if (!heading) {
+    const bold = /^\s*\*\*([^*]+)\*\*/.exec(first);
+    const lead = bold ? (/[.!?]\s*$/.test(bold[1].trim()) ? bold[1] : null) : /^[\s\S]*?[.!?](?=\s|$)(?:\s+(?:\S+\s+){0,7}?\S+[.!?](?=\s|$))?/.exec(first)?.[0] ?? first;
+    const rest = lead === null ? '' : first.slice(first.indexOf(lead) + lead.length).replace(/^\s*\*\*/, '');
+    if (lead !== null) return { kind: 'lead', text: lead, followup: [rest, paras.length > 1 ? paras[paras.length - 1] : ''].join('\n\n'), reasoning: reasonAt === undefined ? rest : section(reasonAt, paras.length) };
+  }
+  const last = [...paras].reverse().find(prose) ?? paras[paras.length - 1];
+  return { kind: 'last', text: last, followup: '', reasoning: '' };
+}
+
+interface SpanCues { declined: boolean; abstain: string[]; hedge: string[]; guess: string[]; ignored: string[]; premise: boolean }
+
+/** The cues of one span, sentence by sentence (see explainVerdictV2). */
+function spanCues(spanText: string): SpanCues {
+  const clean = normalize(spanText.split('\n').map(bare).join('\n')).replace(/\s*\n\s*/g, ' ');
+  const sentences = clean.split(/(?<=[.!?;])\s+(?=\S)|(?<=:)\s+(?=\S)/).filter(s => !IS_OFFER(s));
+  const out: SpanCues = { declined: false, abstain: [], hedge: [], guess: [], ignored: [], premise: sentences.some(IS_PREMISE) };
+  let substantive = false;
+  sentences.forEach((raw, k) => {
+    const t = blank(blank(raw, QUOTE), REPORTED);
+    const abst = hits(t, ABSTAIN_V2);
+    const hedgeText = blank(blank(t, CANCEL_V2), [{ re: /\([^)]*\)/g }]);
+    const boundary = (h: Hit) => !abst.some(a => h.index >= a.index && !/[,;:]|\b(?:but|though|however|so)\b/.test(t.slice(a.end, h.index)));
+    const hedges = hits(hedgeText, HEDGE_V2).filter(h => !abst.some(a => h.index < a.end && h.end > a.index)).filter(boundary);
+    const guesses = hits(t, GUESS).filter(g => !abst.some(a => g.index < a.end && g.end > a.index)).filter(boundary);
+    if (IS_PREMISE(raw) || IS_RECORD(raw)) { out.ignored.push(...abst.map(a => a.id), ...hedges.map(h => h.id)); return; }
+    out.hedge.push(...hedges.map(h => h.id));
+    out.guess.push(...guesses.map(g => g.id));
+    if (!abst.length) { if (words(t) >= 2) substantive = true; return; }
+    const scoped = abst.every(a => a.id !== 'a2.would-guess' && (() => { const after = t.slice(a.end); const stop = after.search(/[.!?;]/); return SCOPE_V2.test(t.slice(Math.max(0, a.index - 30), a.end) + after.slice(0, Math.min(40, stop === -1 ? after.length : stop))); })());
+    const contrast = CONTRAST_V2.test(t.slice(abst[abst.length - 1].end)) || (k + 1 < sentences.length && /^(?:but|however|still|that said)\b/.test(sentences[k + 1]));
+    if (scoped && contrast && abst.some(a => FIRST_PERSON.has(a.id))) { out.hedge.push(...abst.map(a => `${a.id}+contrast`)); return; }
+    if (scoped && (substantive || contrast)) { out.ignored.push(...abst.map(a => a.id)); return; }
+    out.declined = true;
+    out.abstain.push(...abst.map(a => a.id));
+  });
+  return out;
+}
+
+export interface ClassificationV2 extends Classification { span: FinalSpan; guess: string[]; ignored: string[]; read: Array<'span' | 'followup' | 'reasoning'> }
+
+/**
+ * hedge-v2's verdict with the span it classified and the rule ids that produced it. Inside the span, sentence by
+ * sentence: hedge-v1's quotes and reported speech are blanked, and offers to the user dropped; a sentence about the
+ * question's premise or a record's date contributes no cue; an abstain cue scoped to precision ("the exact date isn't
+ * given") is no decline when the span has already answered or goes on with a contrast; a hedge cue inside the declining
+ * clause ("can't tell which park they could mean") does not count. Then: a decline with a guess or hedge is `hedged`; a
+ * decline alone is `abstain`, unless the span corrects the question's premise; any other hedge cue (including an
+ * approximator on a number or date) is `hedged`; else `confident`.
+ */
+export function explainVerdictV2(text: string): ClassificationV2 {
+  const span = finalSpan(text);
+  const base: ClassificationV2 = { verdict: 'confident', abstain: [], hedge: [], demoted: [], span, guess: [], ignored: [], read: ['span'] };
+  if (!normalize(text).replace(/[\s.…-]/g, '')) return { ...base, verdict: 'abstain', abstain: ['empty'] };
+  const c = spanCues(span.text);
+  const out: ClassificationV2 = { ...base, abstain: c.abstain, hedge: c.hedge, guess: c.guess, ignored: c.ignored };
+  if (c.declined && !c.premise) {
+    if (c.guess.length || c.hedge.some(h => h !== 'h2.approx')) return { ...out, verdict: 'hedged', abstain: [], demoted: c.abstain };
+    const f = span.followup ? spanCues(span.followup) : null;
+    if (f && f.guess.length) return { ...out, verdict: 'hedged', abstain: [], demoted: c.abstain, guess: f.guess, read: ['span', 'followup'] };
+    return { ...out, verdict: 'abstain', read: f ? ['span', 'followup'] : ['span'] };
+  }
+  if (c.declined) { out.ignored = [...out.ignored, ...out.abstain]; out.abstain = []; }
+  if (c.hedge.length) return { ...out, verdict: 'hedged' };
+  if (span.reasoning && words(span.text) <= SHORT_SPAN_WORDS) {
+    const r = spanCues(span.reasoning);
+    const own = r.hedge.filter(h => h !== 'h2.approx');
+    if (own.length) return { ...out, verdict: 'hedged', hedge: own, read: ['span', 'reasoning'] };
+    return { ...out, read: ['span', 'reasoning'] };
+  }
+  return out;
+}
+
+export const classifyV2 = (text: string): HedgeVerdict => explainVerdictV2(text).verdict;
+
+// ─── Registry ────────────────────────────────────────────────────────
+
+export interface HedgeClassifier { version: string; rules_sha256: string; classify: (text: string) => HedgeVerdict }
+
+/** Every classifier version a receipt may name in campaign.json `hedge_classifier`. */
+export const HEDGE_CLASSIFIERS: Readonly<Record<string, HedgeClassifier>> = {
+  [CLASSIFIER_VERSION]: { version: CLASSIFIER_VERSION, rules_sha256: RULES_SHA256, classify },
+  [CLASSIFIER_VERSION_V2]: { version: CLASSIFIER_VERSION_V2, rules_sha256: RULES_SHA256_V2, classify: classifyV2 },
+};
+export const CURRENT_CLASSIFIER = CLASSIFIER_VERSION_V2;
+
+export function hedgeClassifier(version: string): HedgeClassifier {
+  const c = HEDGE_CLASSIFIERS[version];
+  if (!c) throw new Error(`unknown hedge classifier ${JSON.stringify(version)}; known: ${Object.keys(HEDGE_CLASSIFIERS).join(', ')}`);
+  return c;
+}
+
 
 // ─── CSV (RFC 4180) ──────────────────────────────────────────────────
 
@@ -194,8 +404,13 @@ export const toCsv = (header: string[], rows: Array<Record<string, string>>) => 
 
 export interface SampleAnswer { answer_id: string; cell_id: string; question_id: string; reader: string; text: string; outcome?: string }
 export interface SampleDesign {
-  schema: typeof SAMPLE_DESIGN_SCHEMA; classifier_version: string; rules_sha256: string; seed: string; n: number;
-  answers: Array<{ path: string; sha256: string }>; eligible: number;
+  schema: typeof SAMPLE_DESIGN_SCHEMA | 'gbrain-evals/hedge-sample-design/v1'; classifier_version: string; rules_sha256: string; seed: string; n: number;
+  answers: Array<{ path: string; sha256: string }>;
+  /** Files whose answer_id column was left out of the draw (an earlier sample, say), and how many answers that removed. */
+  excluded?: { files: Array<{ path: string; sha256: string }>; answers: number };
+  /** The labeler's copy: answer_id and text only, in the sample's seeded order. */
+  blind?: { path: string; sha256: string } | null;
+  eligible: number;
   strata: Record<HedgeVerdict, { population: number; sampled: number }>;
 }
 
@@ -209,11 +424,11 @@ export function readAnswers(path: string): SampleAnswer[] {
 }
 
 /** Equal allocation over the three verdict strata, a short stratum's remainder spread over the others; seeded order inside each stratum and in the output. */
-export function stratifiedSample(answers: readonly SampleAnswer[], n: number, seed: string): { rows: SampleAnswer[]; strata: SampleDesign['strata']; eligible: number } {
+export function stratifiedSample(answers: readonly SampleAnswer[], n: number, seed: string, classifier: HedgeClassifier = hedgeClassifier(CURRENT_CLASSIFIER)): { rows: SampleAnswer[]; strata: SampleDesign['strata']; eligible: number } {
   const seen = new Set<string>();
   const eligible = answers.filter(a => (a.outcome === undefined || JUDGED_OUTCOMES.has(a.outcome)) && a.text.trim() && !seen.has(a.answer_id) && seen.add(a.answer_id));
   const by = Object.fromEntries(HEDGE_VERDICTS.map(v => [v, [] as SampleAnswer[]])) as Record<HedgeVerdict, SampleAnswer[]>;
-  for (const a of eligible) by[classify(a.text)].push(a);
+  for (const a of eligible) by[classifier.classify(a.text)].push(a);
   for (const v of HEDGE_VERDICTS) by[v].sort((a, b) => (rank(seed, a.answer_id) < rank(seed, b.answer_id) ? -1 : 1));
   const take = Object.fromEntries(HEDGE_VERDICTS.map(v => [v, 0])) as Record<HedgeVerdict, number>;
   let left = Math.min(n, eligible.length);
@@ -227,6 +442,8 @@ export function stratifiedSample(answers: readonly SampleAnswer[], n: number, se
 }
 
 export const SAMPLE_HEADER = ['answer_id', 'cell_id', 'question_id', 'reader', 'text', 'label', 'note'];
+/** The blind copy for the labeler: answer_id and text only (no cell, system or reader); the labeler adds a `label` column, and `validate` reads it. */
+export const BLIND_HEADER = ['answer_id', 'text'];
 
 // ─── validate ────────────────────────────────────────────────────────
 
@@ -243,7 +460,8 @@ export interface ValidationReport {
 
 const r4 = (x: number) => Math.round(x * 1e4) / 1e4;
 
-export function validate(csvText: string, design: SampleDesign | null = null): ValidationReport {
+export function validate(csvText: string, design: SampleDesign | null = null, classifier: HedgeClassifier = hedgeClassifier(design?.classifier_version ?? CURRENT_CLASSIFIER)): ValidationReport {
+  if (design && design.rules_sha256 !== classifier.rules_sha256) throw new Error(`the sample was drawn with ${design.classifier_version} (rules ${design.rules_sha256.slice(0, 12)}…), but this validation runs ${classifier.version} (rules ${classifier.rules_sha256.slice(0, 12)}…): its strata would not weight this classifier's verdicts`);
   const rows = parseCsv(csvText);
   const labeled = rows.filter(r => r.label?.trim());
   for (const r of labeled) if (!HEDGE_VERDICTS.includes(r.label.trim() as HedgeVerdict)) throw new Error(`answer ${r.answer_id}: label ${JSON.stringify(r.label)} is not one of ${HEDGE_VERDICTS.join(', ')}`);
@@ -254,7 +472,7 @@ export function validate(csvText: string, design: SampleDesign | null = null): V
   const misclassified: ValidationReport['misclassified'] = [];
   const weight = (p: HedgeVerdict) => (design && design.strata[p].sampled ? design.strata[p].population / design.strata[p].sampled : 1);
   for (const r of labeled) {
-    const label = r.label.trim() as HedgeVerdict, predicted = classify(r.text);
+    const label = r.label.trim() as HedgeVerdict, predicted = classifier.classify(r.text);
     confusion[label][predicted]++;
     weighted[label][predicted] += weight(predicted);
     if (label !== predicted) misclassified.push({ answer_id: r.answer_id, label, predicted });
@@ -267,7 +485,7 @@ export function validate(csvText: string, design: SampleDesign | null = null): V
   const total = (m: ValidationReport['confusion']) => HEDGE_VERDICTS.reduce((s, l) => s + HEDGE_VERDICTS.reduce((t, p) => t + m[l][p], 0), 0);
   const diag = (m: ValidationReport['confusion']) => HEDGE_VERDICTS.reduce((s, v) => s + m[v][v], 0);
   return {
-    schema: VALIDATION_SCHEMA, classifier_version: CLASSIFIER_VERSION, rules_sha256: RULES_SHA256, labels_sha256: createHash('sha256').update(csvText).digest('hex'),
+    schema: VALIDATION_SCHEMA, classifier_version: classifier.version, rules_sha256: classifier.rules_sha256, labels_sha256: createHash('sha256').update(csvText).digest('hex'),
     n: labeled.length, unlabeled: rows.length - labeled.length, accuracy: r4(diag(confusion) / labeled.length), per_class, confusion,
     population_weighted: design ? {
       accuracy: r4(diag(weighted) / total(weighted)),
@@ -285,26 +503,39 @@ function args(argv: string[], name: string): string[] {
 
 if (import.meta.main) {
   const argv = process.argv.slice(2);
-  const usage = 'usage: bun eval/runner/q1/hedge.ts classify --text <answer> | sample --answers <answers.ndjson[.gz]>... --n 200 --seed <s> --out <csv> | validate --labels <csv> [--design <json>] [--out <json>]';
+  const usage = 'usage: bun eval/runner/q1/hedge.ts classify --text <answer> | sample --answers <answers.ndjson[.gz]>... --n 200 --seed <s> --out <csv> [--exclude <csv>]... [--blind <csv>] | validate --labels <csv> [--design <json>] [--out <json>]; each takes [--classifier <version>]';
   const one = (name: string) => { const v = args(argv, name); if (v.length !== 1) { console.error(`${usage}\n(${name} is required once)`); process.exit(2); } return v[0]; };
   const command = argv[0];
+  const named = args(argv, '--classifier')[0];
+  const pick = (fallback: string) => { try { return hedgeClassifier(named ?? fallback); } catch (e) { console.error((e as Error).message); process.exit(2); } };
+  const fileSha = (p: string) => createHash('sha256').update(readFileSync(p)).digest('hex');
   if (command === 'classify') {
-    console.log(JSON.stringify({ ...explainVerdict(one('--text')), classifier_version: CLASSIFIER_VERSION, rules_sha256: RULES_SHA256 }, null, 2));
+    const c = pick(CURRENT_CLASSIFIER), text = one('--text');
+    const why = c.version === CLASSIFIER_VERSION ? explainVerdict(text) : explainVerdictV2(text);
+    console.log(JSON.stringify({ ...why, classifier_version: c.version, rules_sha256: c.rules_sha256 }, null, 2));
   } else if (command === 'sample') {
-    const paths = args(argv, '--answers');
+    const paths = args(argv, '--answers'), excludes = args(argv, '--exclude'), blind = args(argv, '--blind')[0];
     if (!paths.length) { console.error(`${usage}\n(--answers is required)`); process.exit(2); }
-    for (const p of paths) if (!existsSync(p)) { console.error(`no such answers file: ${p}`); process.exit(2); }
-    const n = Number(one('--n')), seed = one('--seed'), out = one('--out');
+    for (const p of [...paths, ...excludes]) if (!existsSync(p)) { console.error(`no such file: ${p}`); process.exit(2); }
+    const n = Number(one('--n')), seed = one('--seed'), out = one('--out'), c = pick(CURRENT_CLASSIFIER);
     if (!Number.isInteger(n) || n <= 0) { console.error('--n must be a positive integer'); process.exit(2); }
-    const s = stratifiedSample(paths.flatMap(readAnswers), n, seed);
+    const skip = new Set(excludes.flatMap(p => parseCsv(readFileSync(p, 'utf8')).map(r => r.answer_id)));
+    const all = paths.flatMap(readAnswers), pool = all.filter(a => !skip.has(a.answer_id));
+    const s = stratifiedSample(pool, n, seed, c);
     writeFileSync(out, toCsv(SAMPLE_HEADER, s.rows.map(a => ({ answer_id: a.answer_id, cell_id: a.cell_id, question_id: a.question_id, reader: a.reader, text: a.text, label: '', note: '' }))));
-    const design: SampleDesign = { schema: SAMPLE_DESIGN_SCHEMA, classifier_version: CLASSIFIER_VERSION, rules_sha256: RULES_SHA256, seed, n, answers: paths.map(p => ({ path: p, sha256: createHash('sha256').update(readFileSync(p)).digest('hex') })), eligible: s.eligible, strata: s.strata };
+    if (blind) writeFileSync(blind, toCsv(BLIND_HEADER, s.rows.map(a => ({ answer_id: a.answer_id, text: a.text }))));
+    const design: SampleDesign = {
+      schema: SAMPLE_DESIGN_SCHEMA, classifier_version: c.version, rules_sha256: c.rules_sha256, seed, n, answers: paths.map(p => ({ path: p, sha256: fileSha(p) })),
+      excluded: { files: excludes.map(p => ({ path: p, sha256: fileSha(p) })), answers: all.length - pool.length }, blind: blind ? { path: blind, sha256: fileSha(blind) } : null,
+      eligible: s.eligible, strata: s.strata,
+    };
     writeFileSync(`${out}.design.json`, JSON.stringify(design, null, 2) + '\n');
-    console.log(JSON.stringify({ out, design: `${out}.design.json`, sampled: s.rows.length, eligible: s.eligible, strata: s.strata }, null, 2));
+    console.log(JSON.stringify({ out, design: `${out}.design.json`, blind: blind ?? null, classifier_version: c.version, sampled: s.rows.length, excluded: design.excluded!.answers, eligible: s.eligible, strata: s.strata }, null, 2));
   } else if (command === 'validate') {
     const labels = one('--labels');
     const designPath = args(argv, '--design')[0];
-    const report = validate(readFileSync(labels, 'utf8'), designPath ? JSON.parse(readFileSync(designPath, 'utf8')) as SampleDesign : null);
+    const design = designPath ? JSON.parse(readFileSync(designPath, 'utf8')) as SampleDesign : null;
+    const report = validate(readFileSync(labels, 'utf8'), design, pick(design?.classifier_version ?? CURRENT_CLASSIFIER));
     const text = JSON.stringify(report, null, 2) + '\n';
     const out = args(argv, '--out')[0];
     if (out) writeFileSync(out, text);
