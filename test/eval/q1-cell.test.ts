@@ -654,7 +654,7 @@ describe('paid dev smokes', () => {
     const locomo = m.smoke_cells.filter(c => c.set === 'S3-smoke');
     expect(new Set(locomo.map(c => c.system))).toEqual(new Set([...kinds].filter(k => k !== 'ext-agent-runtime')));
     expect(locomo.find(c => c.system === 'gbrain-defaults')!.arms.map(a => a.id)).toEqual(['component-b8000', 'whole-synthesize']);
-    expect(m.smoke_cells.filter(c => c.set === 'S2b-ingest').map(c => `${c.system}:${c.configuration}`)).toEqual(['ext-extract-first:common', 'ext-memory-bank:recipe', 'ext-graph-pipeline:recipe', 'ext-temporal-graph:common']);
+    expect(m.smoke_cells.filter(c => c.set === 'S2b-ingest').map(c => `${c.system}:${c.configuration}:${c.ingest_sessions ?? 'all'}`)).toEqual(['ext-extract-first:common:all', 'ext-memory-bank:recipe:all', 'ext-graph-pipeline:recipe:all', 'ext-temporal-graph:common:93']);
     expect(m.total_usd).toBe(Math.round(m.blocks.reduce((s, b) => s + b.estimate_usd, 0) * 100) / 100);
   });
 
@@ -668,6 +668,20 @@ describe('paid dev smokes', () => {
       expect(u.command).not.toContain('--limit');
       expect(u.lease_usd).toBeCloseTo(Math.ceil(2 * c.estimate.usd * 100) / 100, 2);
     }
+  });
+
+  test('an ingest probe with ingest_sessions writes only that prefix of each conversation and counts only its tokens', async () => {
+    const fake = new FakeMemorySystem();
+    const written: string[] = [];
+    const ingest = fake.ingestSession.bind(fake);
+    fake.ingestSession = async (ns, s, t) => { written.push(s.source_id); return ingest(ns, s, t); };
+    const conv = corpus.conversations[0];
+    const def = cellDef('ext-temporal-graph', 'shim', [{ id: 'retrieval-only', mode: 'retrieval-only', policy: 'fixed-evidence', readers: [] }], { ingest_sessions: 2, only_conversations: [conv.id] });
+    const res = await runCell(def, { out: join(tmp, 'ingest-prefix'), ...quiet }, { corpus, system: fake });
+    expect(written).toHaveLength(2);
+    const receipt = JSON.parse(readFileSync(join(res.arms[0].dir, 'receipt.json'), 'utf8'));
+    expect(receipt.ingest.messages).toBe(conv.sessions.slice(0, 2).reduce((n, x) => n + x.turns.length, 0));
+    expect(definitionProblems({ ...def, ingest_sessions: 0 }, new Set(['ext-temporal-graph']))).toContain('ingest_sessions must be a positive whole number of sessions');
   });
 
   test('a dev cell never names a conversation outside the dev split; the corpus keeps only its conversations', async () => {

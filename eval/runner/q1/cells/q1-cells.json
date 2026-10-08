@@ -8793,7 +8793,8 @@
         "lines": {
           "ingest": 11.12
         }
-      }
+      },
+      "ingest_sessions": 93
     }
   ],
   "total_usd": 5417.59,

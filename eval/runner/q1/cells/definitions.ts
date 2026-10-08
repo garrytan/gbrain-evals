@@ -100,6 +100,8 @@ export interface CellDefinition {
   probes: { sample: number; seed: string };
   /** Dev smoke cells: only these conversations of the split run (the set's `only_conversations`). */
   only_conversations?: string[];
+  /** Ingest probes: write only the first N sessions of each conversation (a fixed fraction, for a system too slow or costly to ingest whole on a smoke). */
+  ingest_sessions?: number;
   /** VM units: conversations per launch (a shim cell on S1 launches one VM per conversation). */
   shards: number;
   expected_hours: number;
@@ -404,8 +406,12 @@ export function generateSmokeCells(): CellDefinition[] {
     makeCell('S3-smoke', system, headlineConfig(system, 'locomo'), [b8({ label: 'component, 8,000 tokens (dev smoke)' }), ...(system === 'gbrain-defaults' ? [synthesize] : [])]));
   cells.push(makeCell('S3-smoke', 'baseline-file-agent', 'baseline', [{ id: 'whole-agent', mode: 'agent', label: 'file agent, uncapped grep, 40 turns (dev smoke)' }]));
   cells.push(makeCell('S3-smoke', 'baseline-full-context', 'baseline', [{ id: 'whole-full-context', mode: 'full-context', label: 'whole history (dev smoke)' }]));
-  for (const system of ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph'])
-    cells.push(makeCell('S2b-ingest', system, headlineConfig(system, 'beam'), [{ id: 'retrieval-only', mode: 'retrieval-only', label: 'ingest-cost probe, retrieval only' }]));
+  for (const system of ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph']) {
+    const cell = makeCell('S2b-ingest', system, headlineConfig(system, 'beam'), [{ id: 'retrieval-only', mode: 'retrieval-only', label: 'ingest-cost probe, retrieval only' }]);
+    // The temporal graph's LoCoMo smoke ingested at many times the planned rate, so its BEAM-1M probe writes the first
+    // tenth of the conversation (93 of 928 sessions) and the projection scales from that prefix.
+    cells.push(system === 'ext-temporal-graph' ? { ...cell, ingest_sessions: 93 } : cell);
+  }
   return cells;
 }
 
@@ -472,6 +478,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (!['shim', 'in-process'].includes(d.runner)) p.push('runner must be shim or in-process');
   if (!(Number.isInteger(d.ingest_replicate) && d.ingest_replicate >= 1)) p.push('ingest_replicate must be a positive integer');
   if (!(Number.isInteger(d.probes?.sample) && d.probes.sample >= 0 && d.probes.seed)) p.push('probes needs a sample size and a seed');
+  if (d.ingest_sessions !== undefined && !(Number.isInteger(d.ingest_sessions) && d.ingest_sessions > 0)) p.push('ingest_sessions must be a positive whole number of sessions');
   if (d.only_conversations !== undefined && !(Array.isArray(d.only_conversations) && d.only_conversations.length && d.only_conversations.every(c => typeof c === 'string' && c) && d.split === 'dev')) p.push('only_conversations must list dev conversation ids on a dev-split cell');
   if (!Array.isArray(d.arms) || !d.arms.length) p.push('arms must list at least one arm');
   const ids = new Set<string>();

@@ -473,6 +473,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const system = deps.system ?? systemFor(def, opts, sanitizer);
   const capabilities = await system.capabilities();
   const slot = def.runner === 'shim' ? capabilities.system : def.system;
+  /** The sessions a conversation writes, in order; an ingest probe with `ingest_sessions` writes only that prefix. */
+  const ingestPlan = (conv: Corpus['conversations'][number]) => sanitizer.ingestPlan(conv).slice(0, def.ingest_sessions ?? Infinity);
   const policyFor = (mode: RetrievalPolicy['mode']): RetrievalPolicy => ({ name: `${capabilities.system}:${mode}`, mode, settings: policyKnobs(capabilities.retrieval_policies?.[mode]).settings });
   const ownArms = arms.filter(a => a.mode === 'own-answer');
   const agentArms = arms.filter(a => a.mode === 'agent');
@@ -584,7 +586,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const conv = byConv.get(convId)!;
     const ns = sanitizer.ns(convId);
     staging.event({ realization_id: rid, conversation: convId, attempt, event: 'started', at: new Date().toISOString() });
-    const plan = sanitizer.ingestPlan(conv);
+    const plan = ingestPlan(conv);
     const sample = probeSample(plan, def.probes.sample, `${def.probes.seed}|${convId}`);
     const canProbe = probeable(capabilities);
     const fixed = policyFor('fixed-evidence');
@@ -659,7 +661,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const ns = sanitizer.ns(convId);
     const dir = staging.dir(rid);
     const isLive = live.has(rid);
-    const plan = sanitizer.ingestPlan(conv);
+    const plan = ingestPlan(conv);
     const lastEventTime = plan.map(p => p.event_time).filter((t): t is string => !!t).sort().pop() ?? null;
     const fallbackDate = conv.sessions.map(x => x.date ?? '').sort().pop() || undefined;
     const ingested = new Set(plan.map(p => p.input.source_id));
