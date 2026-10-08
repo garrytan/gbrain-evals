@@ -60,7 +60,7 @@ const FRONT = ['bun', 'run', 'eval:scoreboard'];
 /** Provider keys whose presence (never value) doctor reports. */
 export const KEY_NAMES = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GEMINI_API_KEY', 'UBICLOUD_API_TOKEN', 'UBICLOUD_API_KEY'] as const;
 const PROVIDER_KEY: Record<string, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY' };
-export const PUBLIC_BENCHMARKS = new Set(['locomo', 'lme-s', 'beam-100k', 'beam-500k', 'beam-1m', 'fixture']);
+export const PUBLIC_BENCHMARKS = new Set(['locomo', 'lme-s', 'lme-m', 'beam-100k', 'beam-500k', 'beam-1m', 'fixture']);
 
 interface Result { data: unknown; text: string; exit?: number }
 type Args = string[];

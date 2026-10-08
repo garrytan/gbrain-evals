@@ -453,6 +453,12 @@ in the freeze checklist.
 
 ## Changelog
 
+### 2026-10-08: LongMemEval-M launches as public
+
+The launcher's list of public benchmarks left out LongMemEval-M, so its S5 cells, already marked public in the
+campaign, asked for the custodian's host. The launcher (`eval/runner/scoreboard-cli.ts`, outside the hashed tree)
+now lists it; the campaign hashes do not change.
+
 ### 2026-10-08: amendment A7
 
 Freeze commit `9ed3612c`; campaign hashes `f7278f3b` sealed and `52757aab` public. BEAM-10M manifest hashes and

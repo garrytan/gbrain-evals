@@ -211,6 +211,13 @@ describe('run', () => {
     expect(existsSync(join(c.state, 'leases.ndjson'))).toBe(false);
   });
 
+  test('LongMemEval-M is public: its cells launch without --sealed from any host', () => {
+    const c = campaign([cell('m', { benchmark: 'lme-m', timeout_hours: 6 })]);
+    const r = cli(['run', '--campaign', c.manifest, '--state', c.state, '--cell', 'm', '--dry-run', '--json'], set);
+    expect(r.code, r.err).toBe(0);
+    expect(JSON.parse(r.out).preflight.checks.find((x: { id: string }) => x.id === 'dataset:lme-m').detail).not.toContain('custodian');
+  });
+
   test('--dry-run shows the launcher host, where rows land and how the VM is torn down, and reserves nothing', () => {
     const c = campaign([cell('a', { timeout_hours: 6 })]);
     const r = cli(['run', '--campaign', c.manifest, '--state', c.state, '--cell', 'a', '--dry-run', '--json'], set);
