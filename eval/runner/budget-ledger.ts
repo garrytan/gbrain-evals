@@ -1299,10 +1299,12 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
   const chain = new Map<string, number>();
   const pricing: PriceOptions = { chainContextTokens: id => chain.get(id) };
   const measure = async (price: RequestPrice, response: Response) => {
-    if ((response.headers.get('content-type') ?? '').includes('event-stream')) return null;
+    // A 4xx answer without usage settles at $0, as the metering proxy does: providers do not bill rejected requests.
+    const rejected = response.status >= 400 && response.status < 500 ? { usd: 0, input_tokens: 0, output_tokens: 0 } : null;
+    if ((response.headers.get('content-type') ?? '').includes('event-stream')) return rejected;
     let parsed: unknown;
-    try { parsed = await response.clone().json(); } catch { return null; }
-    const cost = usageCost(price, parsed);
+    try { parsed = await response.clone().json(); } catch { return rejected; }
+    const cost = usageCost(price, parsed) ?? rejected;
     const id = (parsed as { id?: unknown } | null)?.id;
     if (cost && price.provider === 'openai' && typeof id === 'string') {
       chain.set(id, cost.input_tokens + cost.output_tokens);

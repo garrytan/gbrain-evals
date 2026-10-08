@@ -260,4 +260,17 @@ describe('provider SDKs that capture fetch', () => {
     expect(entries.map(e => e.status)).toEqual(['charged-reservation', 'reconciled']);
     expect(entries[1].input_tokens).toBe(12);
   });
+
+  test('a 4xx answer without usage settles at $0, as the metering proxy settles it; a 5xx keeps its reservation', async () => {
+    const path = ledgerPath();
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: path });
+    let status = 400;
+    const guard = installPaidRequestGuard(run, { fetchImpl: (async () => new Response(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: '`temperature` is deprecated for this model.' } }),
+      { status, headers: { 'content-type': 'application/json' } })) as unknown as typeof fetch });
+    const call = () => fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(anthropicBody) });
+    try { expect((await call()).status).toBe(400); status = 500; expect((await call()).status).toBe(500); }
+    finally { guard.uninstall(); }
+    const entries = read(path).entries;
+    expect(entries.map(e => [e.status, e.actual_usd! > 0])).toEqual([['reconciled', false], ['charged-reservation', true]]);
+  });
 });
