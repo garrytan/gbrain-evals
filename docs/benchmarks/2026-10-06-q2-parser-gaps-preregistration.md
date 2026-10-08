@@ -494,6 +494,29 @@ The 150-pairs-per-corpus raise could not be met for amara, so the final mix is *
   `--budget-usd 40`, so `--estimate-usd 40` was passed. The hard cap stayed $40.
 - The N re-mint finished for both arms on the deviation-3 manifest with no page errors.
 
+### Run deviations after the freeze (recorded 2026-10-08, after the verdicts)
+
+Earlier deviations are recorded above: the sealed-confirmation-v1 overlap check, the C-gate comparator and W manifest
+key, the manifest format fixes, the G2 and label receipt wrappers, and the two dropped N template files. These three
+were found after the last cell.
+
+- **Deviation 5: export outside the campaign guard.** The campaign's `export` step requires a `g6-decision` receipt, which cannot
+  exist when G6 does not run (G1 and G3 failed, so the answer phase is skipped under "Order of runs" step 5). The
+  custodian ran the same export code (`Q2_EXPORT_ALLOWLIST` and `exportAggregates`) outside the campaign guard over
+  the 69 recorded receipts, and the aggregate's `export_note` says so. Aggregate SHA-256
+  `dd88fdbef9764b7c74c9b4024f9186cd7aef99654893b6533dcd4b30077bae7a`; gate receipt
+  `a2198b449260ef61f514a13229e68caf9f848b94990d2a3d0e38802b7a3deeba`. The harness now records a not-run receipt for a
+  step a failed upstream gate stops (`campaign.ts not-run`), so a later export runs inside the guard.
+- **Custodian counting error, stress floor.** The stress stratum was built against the custodian's own, looser count of
+  template- and label-shaped lines (about 3,575). The runner's independent checker counts 944, below the 2,000-line
+  floor, so `G1.material_floor` is insufficient. G1 fails on its wrong-mint bars regardless (458 wrong stress mints
+  against 0; Wilson upper bound 75.6 per 100,000 list lines against 2), so the floor cannot change the verdict.
+- **Reconstructed access-log lines.** Another lane destroyed the custodian's VM during the run. Nine access-log lines
+  were reconstructed afterwards; each carries `"reconstructed": true`. The custody
+  material still verifies against `custody-hashes.txt` `f30b31273dd4e597fb995211ae685fcdd8729881156c8eab120ef42e98da7cd9`.
+
+Spend: the campaign cost $306.56 ($333.97 with minting), inside the approved $2,100.
+
 ### Builds, runners and models
 
 - **Candidate (frozen Q2 build):** gbrain `4ec7fbbe4221bd353b88cf46292b44153c542bb2` on branch `capy/q2-parser-gaps`
@@ -518,6 +541,7 @@ The 150-pairs-per-corpus raise could not be met for amara, so the final mix is *
 
 ## Changelog
 
+- 2026-10-08: run deviations after the freeze (5: export outside the campaign guard; stress-floor counting error; nine reconstructed access-log lines), recorded after the verdicts.
 - 2026-10-07: amendment 4 (G6 models: Sonnet 5.5, GPT-6.1 Sol and Opus 5.5; Fable 5.1 smoke-test only), before the freeze.
 - 2026-10-06: amendment 3 (dependency units U34 and U25 from the development trace), before the freeze.
 - 2026-10-06: amendments 1 and 2 (beam stratum excludes three conversations GBRA-52 opened; concurrent QA-only opening), before the freeze.
