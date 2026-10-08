@@ -351,7 +351,8 @@ describe('CLI', () => {
     expect(JSON.parse(bad.stdout).ok).toBe(false);
     expect(bad.stderr).toContain('failed verification');
     expect(bad.stderr).toContain('docs/budget-ledger.md');
-  });
+  // 800 fsynced ledger transactions plus two CLI spawns: 0.3 s locally, 6.9 s on a loaded CI runner, past bun's 5 s default.
+  }, 30_000);
 
   test('a file that is not a ledger refuses spending and names the verify command', () => {
     const path = join(tmp(), 'l.sqlite');
