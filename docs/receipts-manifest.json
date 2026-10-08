@@ -4726,6 +4726,28 @@
       },
       "golden_test": "bun docs/benchmarks/2026-10-08-beam-1m-failure-analysis/analyze.ts --check",
       "note": "Preregistered (46013ab, amendments 05a7cbb, 593b557, 1d28760) BEAM-1M dev arms: no-memory floors for four readers, frozen top-5/top-10 replays, the oracle ceiling, voyage-4 retrieval at gbrain 7aa2caa0 with and without the reranker, and reranker answers; judge gpt-4.1-mini. The A2 reader ranking is confounded by unequal output limits (amendment 3)."
+    },
+    {
+      "claim_id": "reading-headroom-recount",
+      "readme_anchor": "docs/benchmarks/2026-10-08-reading-headroom.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-08-reading-headroom/headroom.json",
+      "artifact_sha256": "cd10b9ac0b778efd31577acd968c7367fc72cad4859a1e2044525b887d7571b4",
+      "status": "covered",
+      "expected": {
+        "/delivered/mean_delivered_chars4": 15822.9,
+        "/delivered/mean_gold_chars4": 6489.6,
+        "/delivered/gold_share_chars4": 0.41,
+        "/delivered/by_type/multi-session/mean_gold_chars4": 8981.1,
+        "/notes_length/w10a-sonnet55-notes/mean_chars4": 138.5,
+        "/notes_length/w10b-opus55-notes/mean_chars4": 150.8,
+        "/commitment/arms/w10a-sonnet55-notes/committed_wrong": 25,
+        "/commitment/arms/w10b-opus55-notes/committed_wrong": 19,
+        "/commitment/arms/w10b-sonnet55-notes/committed_wrong": 29,
+        "/commitment/arms/w10b-sol-notes/committed_wrong": 24,
+        "/status": "recount: exploratory, from committed receipts, not preregistered"
+      },
+      "golden_test": "test/eval/reading-headroom.test.ts",
+      "note": "$0 keyless recount over committed W10a and W10b receipts (eval/runner/reading-headroom.ts); exploratory, not preregistered; commitment counts rest on agent-written labels (commitment-labels.json) that no person has reviewed."
     }
   ]
 }

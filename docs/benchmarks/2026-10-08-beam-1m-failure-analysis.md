@@ -156,7 +156,7 @@ The reranker's retrieval gain is real; its answer gain is in the right direction
 
 - `qa.ts:43` (main) sorted session dates as strings. BEAM writes `March-05-2024`, so "sessions in date order" was alphabetical by month name, and `run.ts:291` (main) took the alphabetically last date as the reader's "Current Date", earlier than the true latest session in 8 of 11 dev conversations (for `1m-28`, October 5, 2024 instead of May 5, 2025). `sessionDateKey` now maps BEAM's format to `YYYY-MM-DD`; every other date format keeps its string key, so LongMemEval and LoCoMo prompts are byte-identical. LoCoMo's own date strings ("1:56 pm on 8 May, 2023") have the same string-sort problem and are untouched here.
 - `run.ts:219` (main) parsed every BEAM conversation file, sealed ones included, on a dev run; it now loads only the split's conversations.
-- `run.ts:393` (main) stored only the first 2,000 characters of an answer; full answers and the provider's finish reason now go to `answers.ndjson`.
+- `run.ts:393` (main at `f1ce49fe`) stored only the first 2,000 characters of an answer. This analysis wrote full answers and finish reasons to a per-shard `answers.ndjson` (committed as `answers.ndjson.gz`); since gbrain-evals #99 the runner's usage receipt keeps the full answer and finish reason in every row instead.
 - Claude 5 readers were refused (`temperature` is deprecated for them); the reading lane now omits it for them and records `temperature_sent` in the receipt.
 - The runner's up-front estimate prices every embedding as uncached (`run.ts:253`, main), which refused R1 and R2's first attempts against $2 run caps ($0.04 spent); they reran with larger run caps under the same $60 program cap.
 

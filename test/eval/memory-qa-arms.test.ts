@@ -1,5 +1,5 @@
 import { afterAll, afterEach, describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -50,7 +50,7 @@ describe('reader sampling', () => {
       await c.chat('anthropic:claude-sonnet-4-6', 'p', { maxTokens: 5, replicate: 0 });
       expect('temperature' in bodies[0]).toBe(false);
       expect(bodies[1].temperature).toBe(0);
-      expect(five.finish_reason).toBe('end_turn');
+      expect(five.finish).toBe('end_turn');
     } finally { globalThis.fetch = real; }
   });
 });
@@ -106,7 +106,7 @@ describe('reading arms without retrieval', () => {
       const out = join(tmp, `${label}-out`);
       const res = await runArm(parseRunArgs(['--benchmark', 'fixture', '--qa', 'reader', '--qa-context', context, '--reader', 'openai:gpt-4o-mini', '--judge', 'openai:gpt-4o-mini',
         '--paid', '--budget-run-id', BudgetRun.open({ runner: 'test', budgetUsd: 1, estimateUsd: 0.1, ledgerPath: ledger }).runId, '--budget-ledger', ledger, '--output', out]));
-      return { ...res, readerPrompts: prompts.filter(p => p.startsWith('I will give you several history chats')), answers: readFileSync(join(out, 'answers.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l)) };
+      return { ...res, readerPrompts: prompts.filter(p => p.startsWith('I will give you several history chats')) };
     } finally {
       globalThis.fetch = real;
       if (prevCache === undefined) delete process.env.GBRAIN_EVALS_QA_CACHE; else process.env.GBRAIN_EVALS_QA_CACHE = prevCache;
@@ -115,13 +115,12 @@ describe('reading arms without retrieval', () => {
 
   test('no memory: the reader sees an empty history and no retrieval is scored', async () => {
     const fx = loadFixture();
-    const { receipt, rows, readerPrompts, answers } = await runReader('none', 'nomem');
+    const { receipt, rows, readerPrompts } = await runReader('none', 'nomem');
     expect(readerPrompts).toHaveLength(fx.questions.length);
     expect(readerPrompts.every(p => p.includes('History Chats:\n\n\n\nCurrent Date:') && !p.includes('### Session'))).toBe(true);
     expect(rows.every(r => r.retrieved === undefined && typeof r.qa_score === 'number' && r.qa_sessions === 0)).toBe(true);
     expect((receipt.summary as Record<string, unknown>).recall_all_at_5).toBeNull();
-    expect(answers).toHaveLength(fx.questions.length);
-    expect(answers[0]).toMatchObject({ answer: 'The answer.', finish_reason: 'stop' });
+    expect(rows.every(r => r.qa_answer === 'The answer.')).toBe(true);
   }, 60_000);
 
   test('oracle: the reader sees exactly the gold sessions', async () => {
