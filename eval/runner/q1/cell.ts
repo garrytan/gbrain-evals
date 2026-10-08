@@ -95,6 +95,7 @@ import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, read
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
 import { definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, SETS, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type Selection } from './cells/definitions.ts';
+import { hedgeStamp } from './hedge.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -699,7 +700,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
     const terminal = (id: string, outcome: Outcome) => FINAL.has(outcome) || (answerTries.get(id) ?? 0) + 1 >= maxAttempts;
     const recordAttempt = (id: string, outcome: Outcome, error?: string) => { appendFileSync(join(dir, 'answer-attempts.ndjson'), JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString() }) + '\n'); answerTries.set(id, (answerTries.get(id) ?? 0) + 1); };
-    const appendAnswer = (a: AnswerRecord, error?: string) => {
+    const appendAnswer = (raw: AnswerRecord, error?: string, pack: PackedContext | null = null) => {
+      const a = withDerived(raw, pack);
       if (FINAL.has(a.outcome)) { answers.append(a); return; }
       if (terminal(a.answer_id, a.outcome)) { recordAttempt(a.answer_id, a.outcome, error); answers.append(a); return; }
       recordAttempt(a.answer_id, a.outcome, error);
@@ -780,7 +782,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         }
         const c = res.value!;
         appendAnswer(answerRecord(id, { text: c.text, outcome: r!.outcome, usage: { input: c.input_tokens, output: c.output_tokens, cache_read: c.cache_read_tokens ?? 0, cache_write: c.cache_write_tokens ?? 0 },
-          latency_ms: Math.round(performance.now() - t0), provider_input_tokens: c.input_tokens + (c.cache_read_tokens ?? 0) + (c.cache_write_tokens ?? 0) }));
+          latency_ms: Math.round(performance.now() - t0), provider_input_tokens: c.input_tokens + (c.cache_read_tokens ?? 0) + (c.cache_write_tokens ?? 0) }), undefined, pack);
       }
       return pack;
     };
@@ -866,6 +868,17 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     }
     flush();
   }
+}
+
+/**
+ * The per-answer derived fields on a judged answer (preregistration, "Derived columns"): the hedge verdict on its text,
+ * and the evidence its reader was given, as the packed context's per-tokenizer counts on a component arm or the
+ * reader's total input tokens (`reader_input`) on a whole-system arm.
+ */
+export function withDerived(a: AnswerRecord, pack: PackedContext | null): AnswerRecord {
+  if (!JUDGED.has(a.outcome)) return a;
+  const delivered = a.arm === 'component' && pack ? pack.delivered : { reader_input: a.provider_input_tokens ?? a.usage.input + a.usage.cache_read + a.usage.cache_write };
+  return { ...a, hedge: hedgeStamp(a.text), delivered_tokens: delivered };
 }
 
 // ─── Publish ─────────────────────────────────────────────────────────

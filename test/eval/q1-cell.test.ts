@@ -15,6 +15,7 @@ import { join, resolve } from 'node:path';
 import { campaignCells, campaignManifest, cellAggregates, contextKey, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, scoreboardCampaignCell, selectCellQuestions, type CellDeps, type CellResult } from '../../eval/runner/q1/cell.ts';
 import { buildManifest, definitionProblems, estimateCell, loadManifest, manifestText, MANIFEST_PATH, SETS, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
+import { classify, CLASSIFIER_VERSION } from '../../eval/runner/q1/hedge.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatOptions, ChatResult } from '../../eval/runner/memory-qa/qa.ts';
@@ -162,6 +163,18 @@ describe('keyless end to end: two component cells into a scoreboard receipt', ()
     expect(contexts.some(c => c.key === contextKey(rid, 'conv-a:q003', 'component-b8000'))).toBe(true);
   });
 
+  test('judged answers carry the hedge verdict of their text and the packed context\'s per-tokenizer counts', () => {
+    const dir = join(receipt, 'cells', gb.arms[0].cell_id);
+    const answers = ndjson(join(dir, 'answers.ndjson'));
+    const rows = new Map(ndjson(join(dir, 'rows.ndjson')).map(r => [r.id, r]));
+    for (const a of answers) {
+      expect(a.hedge).toEqual({ verdict: classify(a.text), classifier_version: CLASSIFIER_VERSION });
+      expect(a.delivered_tokens).toEqual(rows.get(a.question_id).delivered_tokens);
+    }
+    expect(answers.filter(a => a.hedge.verdict === 'abstain').every(a => rows.get(a.question_id).abstention || a.text === 'The history does not say.')).toBe(true);
+    expect(new Set(answers.map(a => a.hedge.verdict))).toEqual(new Set(['confident', 'abstain']));
+  });
+
   test('canonical judgments at replicate 0; frontier judges under their own instrument ids, Sonnet rows only', () => {
     const dir = join(receipt, 'cells', gb.arms[0].cell_id);
     const judgments = ndjson(join(dir, 'judgments.ndjson'));
@@ -233,6 +246,8 @@ describe('whole-system arms through the cell runner', () => {
     expect(vet.outcome).toBe('scored');
     expect(vet.stop_reason).toBe('submitted');
     expect(vet.opened_source_ids).toContain('session_2');
+    expect(vet.hedge).toEqual({ verdict: classify(vet.text), classifier_version: CLASSIFIER_VERSION });
+    expect(vet.delivered_tokens).toEqual({ reader_input: vet.provider_input_tokens ?? vet.usage.input + vet.usage.cache_read + vet.usage.cache_write });
     const row = ndjson(join(dir, 'rows.ndjson')).find(r => r.id === 'conv-a:q003');
     expect(row.evidence_opened[READERS[0]]).toBe(1);
     expect(row.recall_measurable).toBe(false);

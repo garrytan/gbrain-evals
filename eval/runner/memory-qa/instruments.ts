@@ -236,6 +236,14 @@ function instrumentHash(def: Record<string, unknown>): string {
 
 // ─── Registry ────────────────────────────────────────────────────────
 
+/**
+ * The score at which every registered instrument passes an answer, used by the scoreboard's derived columns (an
+ * answer below it is judged wrong; an abstention question's answer at or above it abstained correctly). The yes/no
+ * instruments score 0 or 1; BEAM's rubric mean and event-ordering tau_norm pass at 0.5. A reporting rule, outside
+ * the instrument hash: it changes no judgment.
+ */
+export const PASS_THRESHOLD = 0.5;
+
 export const INSTRUMENTS: Readonly<Record<string, Instrument>> = Object.freeze({
   'lme-s': yesNoInstrument('lme-s', 'lme'),
   'lme-m': yesNoInstrument('lme-m', 'lme'),

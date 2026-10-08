@@ -1,0 +1,54 @@
+{
+  "schema": "gbrain-evals/hedge-validation/v1",
+  "classifier_version": "hedge-v1",
+  "rules_sha256": "3181d1a9963f1c065fd19ca4470062e8f9aba161931289969d15f4cca56c7be7",
+  "labels_sha256": "9578ae5daa94bdd0f842874327ab85c0300aa62865d3cf816062d3e89afa44e2",
+  "n": 60,
+  "unlabeled": 0,
+  "accuracy": 0.9833,
+  "per_class": {
+    "abstain": {
+      "support": 20,
+      "predicted": 21,
+      "precision": 0.9524,
+      "recall": 1
+    },
+    "hedged": {
+      "support": 20,
+      "predicted": 19,
+      "precision": 1,
+      "recall": 0.95
+    },
+    "confident": {
+      "support": 20,
+      "predicted": 20,
+      "precision": 1,
+      "recall": 1
+    }
+  },
+  "confusion": {
+    "abstain": {
+      "abstain": 20,
+      "hedged": 0,
+      "confident": 0
+    },
+    "hedged": {
+      "abstain": 1,
+      "hedged": 19,
+      "confident": 0
+    },
+    "confident": {
+      "abstain": 0,
+      "hedged": 0,
+      "confident": 20
+    }
+  },
+  "population_weighted": null,
+  "misclassified": [
+    {
+      "answer_id": "holdout-038",
+      "label": "hedged",
+      "predicted": "abstain"
+    }
+  ]
+}

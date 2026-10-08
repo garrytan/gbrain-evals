@@ -188,6 +188,38 @@ Tokens and dollars per question sit beside every accuracy.
    Campaign spend, cached-replay spend and projected workload cost are three separate numbers. Projections for a
    system not run on a set are labeled experiment limits.
 
+### Derived columns
+
+Two descriptive columns sit beside accuracy in the full report tables (per cell, and per system and set) and in
+`scoreboard.json`. They make no model calls, need no new cells, are not tested and belong to no Holm family. The
+README headline keeps its six columns; one line under it gives each system's confident-error rate and
+correct-abstention rate on BEAM-10M.
+
+- **Counted answers.** Each promised reader's replicate-0 answer that has a scored canonical judgment, on scheduled
+  questions outside the preregistered exclusions. An answer is wrong when its canonical score is below 0.5, every
+  instrument's pass threshold (yes/no verdicts score 0 or 1; BEAM's rubric mean and event-ordering score pass at
+  0.5).
+- **Confident-error rate.** The share of wrong answers that carry no hedge and no abstention, as the classifier
+  below labels them.
+- **"I don't know" column.** The correct-abstention rate is the share of answers to questions where abstaining is
+  right (LoCoMo adversarial, BEAM abstention, LongMemEval `_abs`) that the canonical instrument passes, so each
+  benchmark's own abstention judgment decides. It is pooled per system over its sets. Beside it, the false-abstention
+  rate is the share of answers to questions with gold evidence that the classifier labels `abstain`.
+- **Classifier.** `eval/runner/q1/hedge.ts`, version `hedge-v1`, rule-table sha256
+  `3181d1a9963f1c065fd19ca4470062e8f9aba161931289969d15f4cca56c7be7`. It is a deterministic lexical classifier with
+  three labels: `abstain`, `hedged` and `confident`. It ignores quoted text and reported speech ("you said you might
+  move" reports the user's hedge), and its rules handle negation ("no doubt" and "not mentioned again" are not cues).
+  An abstention that goes on to guess, or that only disclaims precision before answering, is `hedged`.
+- **Per answer.** `answers.ndjson` stores `hedge` (verdict and classifier version) and `delivered_tokens` (the packed
+  context's per-tokenizer counts on component arms, the reader's total input tokens on whole-system arms).
+  `bun eval/runner/scoreboard.ts check` recomputes every verdict from the stored text and fails on a mismatch.
+- **Validation.** Before freeze, `bun eval/runner/q1/hedge.ts sample` draws a 200-answer sample of dev-smoke answers,
+  stratified by verdict, with verdicts hidden from the labeler. The sample is hand-labeled, and
+  `bun eval/runner/q1/hedge.ts validate` writes per-class precision and recall and the confusion matrix into the
+  receipt. A classifier change after that is a new version and is written here before any cell it affects. The
+  development fixture (207 invented memory-QA answers, `test/eval/fixtures/hedge/`) scores 147 of 147 on the set the
+  rules were written against and 59 of 60 on a holdout written before the rules and not used to tune them.
+
 ## Statistics
 
 - **Estimand.** The per-question mean over the three readers' scores, clustered by conversation on S1 to S3 and by
@@ -286,7 +318,8 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 
 - OPEN: gbrain commit; campaign hash, covering the git tree of every executed file and images by digest; resolved
   gbrain configuration and its hash; power result; engine rule inputs; token calibration factors; the cell manifest
-  and its re-priced total; the S1 subset ids; Family 1 membership if shrunk.
+  and its re-priced total; the S1 subset ids; Family 1 membership if shrunk; the hedge classifier's dev-smoke
+  validation.
 
 ## Amendments
 
@@ -313,6 +346,11 @@ proxy's default output cap was 32,768. Every pilot query therefore ran without e
 behavior. The proxy now applies output caps (inject when absent, refuse when exceeded) only to reader and judge calls.
 A system under test's requests pass unmodified, and their reservation is the allowance they state. The pilot's query
 phase is rerun on the fixed proxy.
+
+### 2026-10-07: derived columns
+
+Draft edit before freeze: the confident-error rate and the "I don't know" column (correct and false abstention)
+join the report as descriptive columns, with the `hedge-v1` classifier and its validation procedure.
 
 ### 2026-10-07: amendments A1 and A2
 

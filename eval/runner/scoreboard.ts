@@ -81,7 +81,27 @@
  *     ext-agent-runtime, which runs only the LoCoMo slice) to have run on the
  *     headline set.
  *
- * scoreboard.json, schema `gbrain-evals/scoreboard/v2` (interface Scoreboard; v2 adds each cell's `not_applicable`):
+ * Derived columns (preregistration, "Derived columns"; descriptive, no family, no Holm):
+ *   - The answers counted are each promised reader's replicate-0 answer with a
+ *     scored canonical judgment, on scheduled questions outside the
+ *     preregistered exclusions. An answer is wrong when its canonical score is
+ *     below PASS_THRESHOLD (memory-qa/instruments.ts, 0.5).
+ *   - Confident-error rate = wrong answers the hedge classifier
+ *     (eval/runner/q1/hedge.ts) calls `confident` / wrong answers.
+ *   - Correct-abstention rate = answers to abstention questions (the row's
+ *     `abstention`: LoCoMo adversarial, BEAM abstention, LongMemEval `_abs`)
+ *     the canonical instrument passes / those answers. Its own abstention
+ *     judgment decides, not the classifier.
+ *   - False-abstention rate = answers to questions with gold evidence (the
+ *     row's gold_count > 0) the classifier calls `abstain` / those answers.
+ *   - Per cell; per system and set from the system's head cell (headCellOf);
+ *     pooled per system by summing counts over its head cells on every set.
+ *   - `check` recomputes the classifier verdict from every answer's stored
+ *     text and refuses a stored `hedge` whose verdict or classifier version
+ *     differs.
+ *
+ * scoreboard.json, schema `gbrain-evals/scoreboard/v3` (interface Scoreboard; v2 adds each cell's `not_applicable`;
+ * v3 adds each cell's `derived` and the top-level `derived`):
  *   schema, generator, campaign {id, hash, campaign_sha256, gbrain, measured, readers},
  *   inputs [{path, sha256}] (every file the derivation read),
  *   statistics {alpha, draws, descriptive_draws, seed, method},
@@ -89,7 +109,8 @@
  *   sets [{id, label, benchmark, exposure, exposure_label, cluster_unit, clusters, scheduled, preregistered_exclusions}],
  *   cells [CellAggregate], comparisons [Comparison], families [FamilyResult],
  *   field {required, ran, missing, complete}, verdict, headline [HeadlineRow],
- *   size_curve {sets, rows}, losses [comparison ids], disclosures, staleness.
+ *   size_curve {sets, rows}, losses [comparison ids], disclosures, staleness,
+ *   derived {classifier {file, version, rules_sha256}, pass_threshold, rule, systems [{system, sets, pooled}], headline}.
  * Numbers are rounded to six decimals; arrays are in campaign order. A field
  * may be added only with a schema version bump.
  */
@@ -103,9 +124,11 @@ import { clusteredPairedDelta, holmAdjusted, normalQuantile } from './stats/pair
 import { wildTest, type ClusterRow } from './stats/wild-cluster.ts';
 import { scanTree, secretMessage } from './q1/secret-scan.ts';
 import type { PowerReport } from './q1/power.ts';
+import { classify, CLASSIFIER_VERSION, RULES_SHA256, type HedgeVerdict } from './q1/hedge.ts';
+import { PASS_THRESHOLD } from './memory-qa/instruments.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
-export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v2';
+export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v3';
 export const CAMPAIGN_SCHEMA = 'gbrain-evals/q1-campaign/v1';
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 export const MAX_TREE_BYTES = 60 * 1024 * 1024;
@@ -128,6 +151,7 @@ export interface AnswerRecord {
   answer_id: string; cell_id: string; realization_id: string; question_id: string; conversation: string;
   system: string; arm: string; reader: string; replicate: number; context_sha256: string; text: string;
   usage: Usage; provider_input_tokens: number | null; latency_ms: number | null; outcome: Outcome;
+  hedge?: { verdict: HedgeVerdict; classifier_version: string }; delivered_tokens?: Record<string, number>;
 }
 export interface JudgmentRecord {
   answer_id: string; instrument_id: string; instrument_sha256: string; judge: string; judge_replicate: number;
@@ -295,7 +319,13 @@ interface CellData {
   problems: string[];
   /** does_not_fit answers per reader (not applicable: never a judge or harness failure). */
   notApplicable: Record<string, number>;
+  derived: DerivedCounts;
 }
+
+/** Counts behind the derived columns (see the header); every rate is a ratio of two of them. */
+export interface DerivedCounts { answers: number; wrong: number; confident_wrong: number; abstention_answers: number; correct_abstentions: number; answerable_answers: number; false_abstentions: number }
+export interface DerivedColumns extends DerivedCounts { confident_error_rate: number | null; correct_abstention_rate: number | null; false_abstention_rate: number | null }
+const NO_DERIVED: DerivedCounts = { answers: 0, wrong: 0, confident_wrong: 0, abstention_answers: 0, correct_abstentions: 0, answerable_answers: 0, false_abstentions: 0 };
 
 const mean = (xs: readonly number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null);
 
@@ -306,7 +336,7 @@ function cellFiles(receipt: string, id: string) {
 
 function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): CellData {
   const set = campaign.sets.find(s => s.id === cell.set)!;
-  const empty: CellData = { cell, values: new Map(), judgeRuns: [], readerMeans: {}, missingReaders: [], productFailures: 0, harnessFailures: 0, judgeSd: null, latencies: [], rows: new Map(), problems: [], notApplicable: {} };
+  const empty: CellData = { cell, values: new Map(), judgeRuns: [], readerMeans: {}, missingReaders: [], productFailures: 0, harnessFailures: 0, judgeSd: null, latencies: [], rows: new Map(), problems: [], notApplicable: {}, derived: { ...NO_DERIVED } };
   if (cell.status === 'not-run') return empty;
   const files = cellFiles(r.root, cell.cell_id);
   if (!existsSync(files.runConfig)) throw invalid(r.root, `cell ${cell.cell_id} has no run-config.json`, 'the configuration identity is the run-config.json hash');
@@ -326,6 +356,14 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
     byQuestion.set(a.question_id, [...(byQuestion.get(a.question_id) ?? []), a]);
   }
   if (problems.length) throw invalid(r.root, `cell ${cell.cell_id}: ${problems.slice(0, 3).join('; ')}`, 'answers are immutable records keyed by their content id');
+  const verdicts = new Map(answers.map(a => [a.answer_id, classify(a.text)]));
+  for (const a of answers) {
+    if (!a.hedge) continue;
+    const at = `${a.question_id}/${a.reader}/${a.replicate}`;
+    if (a.hedge.classifier_version !== CLASSIFIER_VERSION) problems.push(`answer ${at} carries a hedge verdict from classifier ${a.hedge.classifier_version}; this generator runs ${CLASSIFIER_VERSION}`);
+    else if (a.hedge.verdict !== verdicts.get(a.answer_id)) problems.push(`answer ${at} stores hedge verdict ${a.hedge.verdict}, but ${CLASSIFIER_VERSION} recomputes ${verdicts.get(a.answer_id)} from its stored text`);
+  }
+  if (problems.length) throw invalid(r.root, `cell ${cell.cell_id}: ${problems.slice(0, 3).join('; ')}`, 'the derived columns recompute every hedge verdict from the answer text (eval/runner/q1/hedge.ts); a stored verdict that differs means the text, the stamp or the classifier changed after the cell ran', { next: 'report', user_message: 'find out which changed before anything else: answers are immutable once counted, and a classifier change after freeze is an amendment' });
   const excluded = new Map(set.exclusions.map(e => [e.question_id, e.reason]));
   const seenReaders = new Set(answers.map(a => a.reader));
   const missingReaders = cell.readers.filter(x => !seenReaders.has(x));
@@ -338,6 +376,7 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
   let productFailures = 0, harnessFailures = 0;
   const notApplicable: Record<string, number> = {};
   const values = new Map<string, QuestionValue>();
+  const derived: DerivedCounts = { ...NO_DERIVED };
   for (const q of set.scheduled) {
     const row = rows.get(q.question_id);
     const recall = (() => {
@@ -378,13 +417,23 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
       }
       if (scores.length === reps(reader)) { const m = mean(scores)!; perReader.push(m); readerScores[reader].push(m); runScores.forEach((x, j) => perReaderRuns[j].push(mean(x)!)); }
     }
+    for (const reader of cell.readers) {
+      const a = qa.find(x => x.reader === reader && x.replicate === 0);
+      const canonical = a && !NOT_APPLICABLE.has(a.outcome) && !PRODUCT_FAILURES.has(a.outcome) && !HARNESS_FAILURES.has(a.outcome) ? byAnswer.get(a.answer_id)?.find(j => j.judge_replicate === 0) : undefined;
+      if (!a || !canonical?.parse_ok || canonical.outcome !== 'scored' || typeof canonical.score !== 'number') continue;
+      const verdict = verdicts.get(a.answer_id)!, pass = canonical.score >= PASS_THRESHOLD;
+      derived.answers++;
+      if (!pass) { derived.wrong++; if (verdict === 'confident') derived.confident_wrong++; }
+      if (row?.abstention) { derived.abstention_answers++; if (pass) derived.correct_abstentions++; }
+      else if ((row?.gold_count ?? 0) > 0) { derived.answerable_answers++; if (verdict === 'abstain') derived.false_abstentions++; }
+    }
     if (reason || perReader.length !== cell.readers.length) { done(null, reason ?? (unfit.length ? notApplicableReason(unfit) : 'incomplete readers')); continue; }
     if (cell.arm === 'component' && new Set(qa.map(a => a.context_sha256)).size > 1) throw invalid(r.root, `cell ${cell.cell_id} question ${q.question_id}: readers read different context bytes`, 'every reader of a component arm reads the same frozen pack (plan §4.3)');
     done(mean(perReader)!, null, perReaderRuns.map(x => mean(x)!));
   }
   return {
     cell, values, judgeRuns, readerMeans: Object.fromEntries(cell.readers.map(x => [x, mean(readerScores[x])])), missingReaders,
-    productFailures, harnessFailures, judgeSd: mean(sds), latencies, rows, problems, notApplicable,
+    productFailures, harnessFailures, judgeSd: mean(sds), latencies, rows, problems, notApplicable, derived,
   };
 }
 
@@ -417,6 +466,8 @@ export interface CellAggregate {
   recall_all_at_10: number | null; recall_all_at_5: number | null; recall_any_at_10: number | null; ndcg_at_10: number | null;
   fill_rate: number | null; delivered_tokens: Record<string, number>; latency_p50_ms: number | null;
   exclusions: Array<{ question_id: string; reason: string }>;
+  /** Descriptive derived columns (confident errors, the "I don't know" column); no family, no Holm. */
+  derived: DerivedColumns;
 }
 
 export interface FamilyResult { id: string; label: string; metric: string; plan: string; comparisons: string[]; verdict_stability: number | null }
@@ -438,6 +489,17 @@ export interface Scoreboard {
   verdict: string; headline: HeadlineRow[];
   size_curve: { sets: Array<{ id: string; label: string }>; rows: Array<{ system: string; label: string; values: string[] }> };
   losses: string[]; disclosures: string[]; staleness: string;
+  derived: {
+    classifier: { file: string; version: string; rules_sha256: string }; pass_threshold: number; rule: string;
+    systems: Array<{ system: string; sets: Array<{ set: string; cell: string } & DerivedColumns>; pooled: DerivedColumns }>;
+    /** The one line under the README headline: each headline system's confident-error and correct-abstention rates on the headline set. */
+    headline: string;
+  };
+}
+
+export function derivedColumns(c: DerivedCounts): DerivedColumns {
+  const rate = (k: number, n: number) => (n ? r6(k / n) : null);
+  return { ...c, confident_error_rate: rate(c.confident_wrong, c.wrong), correct_abstention_rate: rate(c.correct_abstentions, c.abstention_answers), false_abstention_rate: rate(c.false_abstentions, c.answerable_answers) };
 }
 
 const r6 = (x: number) => { const v = Number(x.toFixed(6)); return Object.is(v, -0) ? 0 : v; };
@@ -667,6 +729,7 @@ export function derive(receipt: string): Scoreboard {
       fill_rate: rmean('fill_rate'), delivered_tokens: Object.fromEntries(Object.keys(tokens).sort().map(k => [k, r6(tokens[k] / tokenCounts[k])])),
       latency_p50_ms: lat === null ? null : r6(lat),
       exclusions: vals.filter(v => v.reason !== null).map(v => ({ question_id: v.question_id, reason: v.reason! })),
+      derived: derivedColumns(d.derived),
     };
   });
 
@@ -702,6 +765,16 @@ export function derive(receipt: string): Scoreboard {
     values: curveSets.map(s => { const cell = headCell(s.id, system); if (!cell) return 'not run'; const a = cells.find(c => c.cell_id === cell.cell_id)!; return a.status === 'not-run' ? `not run: ${a.not_run_reason}` : a.mean === null ? 'no scored questions' : `${pct(a.mean)} (${a.valued}/${a.scheduled})`; }),
   }));
 
+  const derivedSystems = [...new Set(campaign.cells.map(c => c.system))].map(system => {
+    const heads = campaign.sets.map(s => headCellOf(campaign, s.id, system)).filter((c): c is CampaignCell => !!c);
+    const pooled = heads.reduce((acc, c) => { const d = data.get(c.cell_id)!.derived; return Object.fromEntries(Object.keys(acc).map(k => [k, acc[k as keyof DerivedCounts] + d[k as keyof DerivedCounts]])) as unknown as DerivedCounts; }, { ...NO_DERIVED });
+    return { system, sets: heads.map(c => ({ set: c.set, cell: c.cell_id, ...cells.find(x => x.cell_id === c.cell_id)!.derived })), pooled: derivedColumns(pooled) };
+  });
+  const derivedLine = (() => {
+    const rows = headline.filter(h => h.cell && cells.find(c => c.cell_id === h.cell)!.status !== 'not-run').map(h => { const d = cells.find(c => c.cell_id === h.cell)!.derived; return `\`${h.system}\` ${d.confident_error_rate === null ? 'n/a' : pct(d.confident_error_rate)} / ${d.correct_abstention_rate === null ? 'n/a' : pct(d.correct_abstention_rate)}`; });
+    return `Descriptive, not tested: confident-error rate (wrong answers with no hedge or abstention) / correct-abstention rate on ${headSet.label}: ${rows.length ? rows.join('; ') : 'no system ran'}.`;
+  })();
+
   const losses = comparisons.filter(c => c.metric === 'answer' && c.delta !== null && c.delta < 0 && c.ci95 && c.ci95[1] < 0).sort((a, b) => a.delta! - b.delta! || (a.id < b.id ? -1 : 1)).map(c => c.id);
   const f1c = comparisons.filter(c => c.family === 'F1');
   const verdict = verdictSentence(ctx, f1c, field);
@@ -718,6 +791,11 @@ export function derive(receipt: string): Scoreboard {
     cells, comparisons, families, field, verdict, headline,
     size_curve: { sets: curveSets.map(s => ({ id: s.id, label: s.label })), rows: curveRows },
     losses, disclosures: campaign.disclosures, staleness,
+    derived: {
+      classifier: { file: 'eval/runner/q1/hedge.ts', version: CLASSIFIER_VERSION, rules_sha256: RULES_SHA256 }, pass_threshold: PASS_THRESHOLD,
+      rule: 'replicate-0 answers of every promised reader with a scored canonical judgment; wrong = canonical score below the pass threshold; confident-error rate = wrong answers the classifier calls confident / wrong answers; correct-abstention rate = abstention-question answers the canonical instrument passes / abstention-question answers; false-abstention rate = answers to questions with gold evidence the classifier calls abstain / those answers; pooled sums counts over the system\'s head cells on every set; descriptive, no Holm family',
+      systems: derivedSystems, headline: derivedLine,
+    },
   };
 }
 
@@ -752,6 +830,7 @@ export function renderHeadline(sb: Scoreboard, base: string): string {
   const head = sb.sets.find(s => s.role === 'headline')!;
   const lines = [sb.verdict, '', `| Kind and configuration | ${head.label} accuracy at 8k, three-reader mean | Dollars per month, personal agent | p50 answer latency | Write to queryable, p50 | Receipt |`, '|---|---|---|---|---|---|'];
   for (const r of sb.headline) lines.push(`| ${cellText(r.label)} | ${cellText(r.accuracy)} | ${money(r.personal_month_usd)} | ${ms(r.latency_p50_ms)} | ${ms(r.write_to_queryable_p50_ms)} | ${r.receipt ? `[cell](${base}/${r.receipt})` : 'none'} |`);
+  lines.push('', sb.derived.headline);
   if (sb.size_curve.sets.length) {
     lines.push('', `| System | ${sb.size_curve.sets.map(s => s.label).join(' | ')} |`, `|---|${sb.size_curve.sets.map(() => '---|').join('')}`);
     for (const r of sb.size_curve.rows) lines.push(`| ${cellText(r.label)} | ${r.values.map(cellText).join(' | ')} |`);
@@ -767,11 +846,20 @@ export function renderHeadline(sb: Scoreboard, base: string): string {
 
 export function renderReport(sb: Scoreboard): string {
   const out = [`# Scoreboard tables: ${sb.campaign.id}`, '', 'Generated by `bun eval/runner/scoreboard.ts render` from this directory\'s rows, answers and judgments; `bun eval/runner/scoreboard.ts check` regenerates it byte for byte.', '', '## Headline', '', renderHeadline(sb, '.').trimEnd(), ''];
-  out.push('## Cells', '', '| Cell | Set | System | Arm | Budget | Accuracy | Scored | Product failures | Harness failures | Judge SD | recall_all@10 | Fill rate | Status |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+  out.push('## Cells', '', '| Cell | Set | System | Arm | Budget | Accuracy | Scored | Product failures | Harness failures | Judge SD | recall_all@10 | Fill rate | Confident-error rate | Correct abstention | False abstention | Status |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   const num = (x: number | null, f: (x: number) => string) => (x === null ? 'n/a' : f(x));
-  for (const c of sb.cells) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`);
+  const ratio = (r: number | null, k: number, n: number) => (r === null ? 'n/a' : `${pct(r)} (${k}/${n})`);
+  const dcols = (d: DerivedColumns) => `${ratio(d.confident_error_rate, d.confident_wrong, d.wrong)} | ${ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers)} | ${ratio(d.false_abstention_rate, d.false_abstentions, d.answerable_answers)}`;
+  for (const c of sb.cells) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${dcols(c.derived)} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`);
   out.push('', '## Per-reader accuracy', '', `| Cell | ${sb.campaign.readers.join(' | ')} |`, `|---|${sb.campaign.readers.map(() => '---|').join('')}`);
   for (const c of sb.cells.filter(x => x.status !== 'not-run')) out.push(`| \`${c.cell_id}\` | ${sb.campaign.readers.map(r => (r in c.per_reader ? num(c.per_reader[r], pct) : 'not promised')).join(' | ')} |`);
+  const dv = sb.derived;
+  out.push('', '## Derived columns by system and set', '', `Descriptive only, with no family and no Holm correction. Classifier \`${dv.classifier.file}\` ${dv.classifier.version}, rule table sha256 \`${dv.classifier.rules_sha256}\`; an answer is wrong below a canonical score of ${dv.pass_threshold}. Counted: ${dv.rule}.`, '');
+  out.push('| System | Set | Cell | Confident-error rate | Correct abstention | False abstention |', '|---|---|---|---|---|---|');
+  for (const s of dv.systems) {
+    for (const x of s.sets) out.push(`| \`${s.system}\` | ${x.set} | \`${x.cell}\` | ${dcols(x)} |`);
+    if (s.sets.length > 1) out.push(`| \`${s.system}\` | all sets, pooled | | ${dcols(s.pooled)} |`);
+  }
   for (const f of sb.families) {
     out.push('', `## Family ${f.id}: ${f.label}`, '', `Plan: ${f.plan}. Metric: ${f.metric}. Holm within the family.${f.verdict_stability !== null ? ` Verdict stability over judge runs: ${pct(f.verdict_stability)}.` : ''}`, '');
     out.push('| Comparison | gbrain-defaults | Other | Difference (points) | 95% interval | p | Holm p | Cohort | Conversations | Bounds (points) | Outcome |', '|---|---|---|---|---|---|---|---|---|---|---|');
@@ -942,7 +1030,7 @@ const firstLine = (a: string, b: string) => { const x = a.split('\n'), y = b.spl
 
 // ─── explain ────────────────────────────────────────────────────────
 
-export const EXPLAIN_COLUMNS = ['accuracy', 'cost', 'latency', 'queryable', 'receipt', 'size-100k', 'size-1m', 'size-10m', 'comparison', 'recall'] as const;
+export const EXPLAIN_COLUMNS = ['accuracy', 'cost', 'latency', 'queryable', 'receipt', 'size-100k', 'size-1m', 'size-10m', 'comparison', 'recall', 'confident-error', 'abstention'] as const;
 
 export function explain(receipt: string, row: string, column: string): Record<string, unknown> {
   const sb = derive(receipt);
@@ -961,7 +1049,9 @@ export function explain(receipt: string, row: string, column: string): Record<st
     : column === 'latency' ? { latency_p50_ms: cell.latency_p50_ms, rule: 'median over scored replicate-0 answers of the answer latency plus the row\'s retrieval latency' }
       : column === 'cost' || column === 'queryable' ? { personal_month_usd: head?.personal_month_usd ?? null, write_to_queryable_p50_ms: head?.write_to_queryable_p50_ms ?? null, source: 'cost-speed.json' }
         : column === 'recall' ? { recall_all_at_10: cell.recall_all_at_10, rule: 'mean of rows.ndjson recall_all_at_10 over rows with gold sessions' }
-          : column === 'comparison' ? cmp : { receipt: `cells/${cellId}/receipt.json` };
+          : column === 'comparison' ? cmp
+            : column === 'confident-error' || column === 'abstention' ? { ...cell.derived, classifier: sb.derived.classifier, pass_threshold: sb.derived.pass_threshold, rule: sb.derived.rule }
+              : { receipt: `cells/${cellId}/receipt.json` };
   const inputs = sb.inputs.filter(i => i.path.startsWith(`cells/${cellId}/`) || i.path === 'campaign.json' || i.path === 'power.json');
   return {
     receipt: rel(receipt), row, column, cell: cellId, campaign: sb.campaign.id, campaign_hash: sb.campaign.hash, config_sha256: cell.config_sha256,

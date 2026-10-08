@@ -10,7 +10,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, wri
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
-import { checkPinTable, checkReceipt, checkSize, derive, explain, README_BEGIN, README_END, renderAll, loadCampaign, type CampaignManifest, type Scoreboard } from '../../eval/runner/scoreboard.ts';
+import { checkPinTable, checkReceipt, checkSize, derive, explain, README_BEGIN, README_END, renderAll, renderHeadline, loadCampaign, type CampaignManifest, type Scoreboard } from '../../eval/runner/scoreboard.ts';
 import { defaultCells, fieldCells, READERS, writeSyntheticReceipt, type SyntheticOptions } from './fixtures/scoreboard/synthetic.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -337,5 +337,102 @@ describe('receipt guards inside check', () => {
     expect(msgs.map(m => m.code)).toEqual(['PIN_TABLE_MISMATCH']);
     expect(msgs[0].message).toContain('ext-markdown-kb');
     rmSync(tmp, { recursive: true });
+  });
+});
+
+describe('derived columns: confident errors and the "I don\'t know" column', () => {
+  /** i % 6 === 5 is the abstention question (gold_count 0); the others have gold evidence. */
+  const R0 = READERS[0], R1 = READERS[1];
+  const text = (i: number, reader: string) => {
+    if (i % 6 === 5) return reader === R0 ? "I don't know." : reader === R1 ? 'It was probably March.' : 'It was March 3.';
+    return ['Not mentioned in the conversation.', 'I think it was Tuesday.', 'It was Tuesday.', 'It was Tuesday.', 'It was Tuesday.'][i % 6];
+  };
+  const score = (i: number, reader: string) => (i % 6 === 5 ? (reader === R0 ? 1 : 0) : i % 6 >= 3 ? 1 : 0);
+  const scripted = () => defaultCells().map(c => (c.id === 's1-gbrain-8k' || c.id === 's2a-gbrain-8k' ? { ...c, answerText: text, scoreOf: score } : c));
+
+  test('per cell, per system and set, and pooled over sets, from replicate-0 answers with a scored canonical judgment', () => {
+    const { dir, sb } = fresh({ cells: scripted() });
+    expect(sb.schema).toBe('gbrain-evals/scoreboard/v3');
+    const s1 = sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived;
+    expect(s1).toEqual({ answers: 177, wrong: 107, confident_wrong: 40, abstention_answers: 30, correct_abstentions: 10, answerable_answers: 147, false_abstentions: 27, confident_error_rate: Number((40 / 107).toFixed(6)), correct_abstention_rate: Number((10 / 30).toFixed(6)), false_abstention_rate: Number((27 / 147).toFixed(6)) });
+    const s2a = sb.cells.find(c => c.cell_id === 's2a-gbrain-8k')!.derived;
+    expect([s2a.answers, s2a.wrong, s2a.confident_wrong, s2a.abstention_answers, s2a.correct_abstentions, s2a.answerable_answers, s2a.false_abstentions]).toEqual([72, 44, 16, 12, 4, 60, 12]);
+    const gb = sb.derived.systems.find(s => s.system === 'gbrain-defaults')!;
+    expect(gb.sets.map(s => [s.set, s.cell])).toEqual([['S1', 's1-gbrain-8k'], ['S2a', 's2a-gbrain-8k']]);
+    expect([gb.pooled.abstention_answers, gb.pooled.correct_abstentions, gb.pooled.correct_abstention_rate]).toEqual([42, 14, Number((14 / 42).toFixed(6))]);
+    expect([gb.pooled.wrong, gb.pooled.confident_wrong, gb.pooled.answerable_answers, gb.pooled.false_abstentions]).toEqual([151, 56, 207, 39]);
+    expect(sb.derived.classifier.file).toBe('eval/runner/q1/hedge.ts');
+    expect(sb.cells.find(c => c.cell_id === 's1-temporal-graph-8k')!.derived.confident_error_rate).toBeNull();
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a harness failure or an unjudged answer is not counted; the preregistered exclusion is not counted', () => {
+    const cells = scripted().map(c => (c.id === 's1-gbrain-8k' ? { ...c, harnessFail: [5] } : c));
+    const { dir, sb } = fresh({ cells });
+    const d = sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived;
+    expect([d.abstention_answers, d.correct_abstentions]).toEqual([27, 9]);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('the report carries both columns per cell and per system and set; the README keeps six columns with one line under it', () => {
+    const { dir, sb } = fresh({ cells: scripted() });
+    const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
+    expect(md).toContain('| Confident-error rate | Correct abstention | False abstention | Status |');
+    expect(md).toContain('## Derived columns by system and set');
+    expect(md).toContain('| `gbrain-defaults` | S1 | `s1-gbrain-8k` | 37.4% (40/107) | 33.3% (10/30) | 18.4% (27/147) |');
+    expect(md).toContain('| `gbrain-defaults` | all sets, pooled | | 37.1% (56/151) | 33.3% (14/42) | 18.8% (39/207) |');
+    const block = renderHeadline(sb, '.');
+    const header = block.split('\n').find(l => l.startsWith('| Kind and configuration'))!;
+    expect(header.split('|').length - 2).toBe(6);
+    expect(header).not.toContain('abstention');
+    const line = block.split('\n').find(l => l.startsWith('Descriptive, not tested:'))!;
+    expect(line).toContain('on BEAM-10M: `gbrain-defaults` 37.4% / 33.3%; `ext-extract-first`');
+    expect(line).not.toContain('ext-temporal-graph');
+    expect(sb.families.map(f => f.id)).toEqual(['F1', 'F2', 'F3']);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('mutation: a stored hedge verdict that differs from the recomputed one fails check', () => {
+    const { dir } = fresh({ cells: scripted() });
+    const path = join(dir, 'cells/s1-gbrain-8k/answers.ndjson');
+    const lines = readFileSync(path, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    const target = lines.find(a => a.text === 'It was Tuesday.')!;
+    expect(target.hedge).toEqual({ verdict: 'confident', classifier_version: 'hedge-v1' });
+    target.hedge.verdict = 'hedged';
+    writeFileSync(path, lines.map(l => JSON.stringify(l)).join('\n') + '\n');
+    const m = checkReceipt(dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!;
+    expect(m.message).toContain('stores hedge verdict hedged, but hedge-v1 recomputes confident');
+    rmSync(dir, { recursive: true });
+  });
+
+  test('mutation: answer text edited under its stamp, or a stamp from another classifier version, fails check', () => {
+    const a = fresh({ cells: scripted() });
+    const pathA = join(a.dir, 'cells/s1-gbrain-8k/answers.ndjson');
+    writeFileSync(pathA, readFileSync(pathA, 'utf8').replace('"text":"It was Tuesday."', '"text":"It was probably Tuesday."'));
+    expect(codes(a.dir)).toContain('RECEIPT_INVALID');
+    const b = fresh({ cells: scripted() });
+    const pathB = join(b.dir, 'cells/s1-gbrain-8k/answers.ndjson');
+    writeFileSync(pathB, readFileSync(pathB, 'utf8').replace('"classifier_version":"hedge-v1"', '"classifier_version":"hedge-v0"'));
+    expect(checkReceipt(b.dir, {}).messages.find(x => x.code === 'RECEIPT_INVALID')!.message).toContain('from classifier hedge-v0');
+    rmSync(a.dir, { recursive: true }); rmSync(b.dir, { recursive: true });
+  });
+
+  test('answers without a stamp are classified from their text and check clean', () => {
+    const cells = scripted().map(c => ({ ...c, noHedge: true }));
+    const { dir, sb } = fresh({ cells });
+    expect(sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived.confident_wrong).toBe(40);
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('explain traces both derived columns', () => {
+    const { dir } = fresh({ cells: scripted() });
+    const out = explain(dir, 'gbrain-defaults', 'confident-error') as Record<string, any>;
+    expect(out.cell).toBe('s1-gbrain-8k');
+    expect(out.value.confident_wrong).toBe(40);
+    expect(out.value.classifier.version).toBe('hedge-v1');
+    expect((explain(dir, 'gbrain-defaults', 'abstention') as Record<string, any>).value.correct_abstention_rate).toBeCloseTo(1 / 3, 5);
+    rmSync(dir, { recursive: true });
   });
 });
