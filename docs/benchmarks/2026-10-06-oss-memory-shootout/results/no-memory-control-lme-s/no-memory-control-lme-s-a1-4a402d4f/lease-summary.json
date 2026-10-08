@@ -1,0 +1,8 @@
+{
+  "run_id": "no-memory-control-lme-s-a1-4a402d4f",
+  "lease_usd": 1,
+  "committed_usd": 0.2664275000000003,
+  "requests": 200,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

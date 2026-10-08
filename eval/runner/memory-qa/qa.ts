@@ -22,6 +22,9 @@
  * provider calls, never ten copies of one cached response. Answers and
  * rubrics stay on the evaluator side; the system under test only sees the
  * question.
+ *
+ * Provider endpoints honor OPENAI_BASE_URL and ANTHROPIC_BASE_URL, so a
+ * shootout cell's reader and judge calls go through its metering proxy.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -182,7 +185,7 @@ export class ChatClient {
 }
 
 async function openaiChat(model: string, prompt: string, opts: { maxTokens: number; temperature?: number }): Promise<ProviderReply> {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch(`${(process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, '')}/chat/completions`, {
     method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     // GPT-5 and later reasoning models take max_completion_tokens and only their default temperature.
     body: JSON.stringify(!sendsTemperature(`openai:${model}`)
@@ -198,7 +201,7 @@ async function openaiChat(model: string, prompt: string, opts: { maxTokens: numb
 }
 
 async function anthropicChat(model: string, prompt: string, opts: { maxTokens: number; temperature?: number }): Promise<ProviderReply> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(`${(process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com').replace(/\/$/, '')}/v1/messages`, {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({ model, max_tokens: opts.maxTokens, ...(sendsTemperature(`anthropic:${model}`) ? { temperature: opts.temperature ?? 0 } : {}), messages: [{ role: 'user', content: prompt }] }),
     signal: AbortSignal.timeout(300_000),

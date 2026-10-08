@@ -10,6 +10,9 @@
  *     [--retrieved-from <rows dir>] [--search-limit N] [--pool-depth N] [--max-per-session N]
  *     [--paid --budget-run-id <id>] --output <dir>
  *
+ * Memory-system cells (`--system`, `--arms`, `--replay`, `--sealed-profile`, `--provider-proxy` and the other flags in
+ * run-systems.ts) run through run-systems.ts, the open-source comparison's harness, unchanged; this file dispatches to it.
+ *
  * What it measures: judge-free session retrieval. Each conversation's
  * sessions are imported as pages into a fresh in-memory gbrain (PGLite), the
  * question goes through gbrain's hybrid search with the pinned search config
@@ -65,6 +68,8 @@ import { loadCorpus, occurrenceId, renderSessionPage, type Corpus, type MemoryQu
 import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, judgeResponse, latestDate, packSessions, readerPrompt, repeatsTrap, sendsTemperature, unresolvedRelativeTime, type SavedFact } from './qa.ts';
 import { normalizeUsage, receipt, sumUsage, thinkFinish, USAGE_RECEIPT_SCHEMA, type UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
+import * as systems from './run-systems.ts';
+export { readinessProbe, type ProbeResult } from './run-systems.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 
@@ -191,7 +196,14 @@ export function ledgerRerankRequests(ledgerPath: string, runId: string, particip
   } finally { db.close(); }
 }
 
+/** Flags only the memory-system harness (run-systems.ts) takes; any of them sends the run there. */
+const SYSTEMS_FLAGS = ['--system', '--arms', '--replay', '--sealed-profile', '--provider-proxy', '--proxy-slot', '--context', '--policy', '--policy-setting',
+  '--max-attempts', '--finish-timeout-s', '--ingest-timeout-s', '--ingest-replicate', '--no-retry-upstream-5xx', '--budget-tokens'];
+export const isSystemsArgv = (argv: string[]) => argv.some(x => SYSTEMS_FLAGS.includes(x));
+export type SystemsRunArgs = systems.RunArgs;
+
 export function parseRunArgs(argv: string[]): RunArgs {
+  if (isSystemsArgv(argv)) return systems.parseRunArgs(argv) as unknown as RunArgs;
   const one = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const many = (name: string) => argv.flatMap((a, i) => (a === name ? [argv[i + 1]] : []));
   const benchmark = one('--benchmark');
@@ -348,6 +360,7 @@ export async function readAndJudge(p: {
 }
 
 export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unknown>; rows: MemoryQaRow[] }> {
+  if ('system' in a) return systems.runArm(a as unknown as systems.RunArgs) as unknown as Promise<{ receipt: Record<string, unknown>; rows: MemoryQaRow[] }>;
   const started = new Date().toISOString();
   mkdirSync(a.output, { recursive: true });
   const gut = resolveGbrainUnderTest(a.gbrain);

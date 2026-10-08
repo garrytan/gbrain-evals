@@ -2,6 +2,19 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.46] - 2026-10-08
+
+### Open-source memory comparison: gbrain and five open-source memory systems through one harness
+
+[Report](docs/benchmarks/2026-10-06-oss-memory-shootout.md), [preregistration](docs/benchmarks/2026-10-06-oss-memory-shootout-preregistration.md) (frozen 2026-10-06, amendments A1 to A8), [update-and-forget preregistration](docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md), per-cell receipts and text-free rows. The systems are named by kind (`memory-bank`, `graph-pipeline`, `extract-first`, `markdown-notes`, `temporal-graph`, `agent-runtime`); [docs/comparison-systems.md](docs/comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project.
+
+- **Primary family (LongMemEval-S, 100 questions, 8,000 tokens of each system's evidence, `gpt-4o` reader).** gbrain at master `c5fb0201`, measured through an adapter that hands the reader bare chunks without titles or dates, answered 59%; `memory-bank` 91%, `graph-pipeline` 83% and `extract-first` 79% are ahead after Holm, `markdown-notes` 69% is not distinguishable and `temporal-graph` 37% is behind. gbrain's strict `recall_all@5` is 97.9%, tied for the top, and its answers reach 78% on the original sessions behind its hits, so the gap is delivery through this adapter, not retrieval. A `gbrain-query` adapter is planned.
+- **Also measured.** LoCoMo dev, BEAM-100K dev, the custodian's sealed LoCoMo and BEAM-100K batch (aggregates only, gbrain's pin as the blind row), PrecisionMemBench on the upstream contract (S3) and update-and-forget (lifecycle-lite, report-only). The frontier-reader replays (D2) await a scope decision.
+- **Harness.** Ubicloud cell runner with durable leases and a fail-closed metering proxy (`eval/runner/shootout-cell.ts`), the shim protocol and six vendor shims (`eval/systems/`), multi-arm memory QA, the sealed execution profile, the PrecisionMemBench system path and S3 analysis, lifecycle-lite with its mutation kit, and `eval/runner/shootout-report.ts`.
+- **Frontier readers (D2).** On the LongMemEval-S primary arm, Opus 5.5, Sonnet 5.5 and `gpt-6.1-sol` lift every system; gbrain gains 7 to 9 points and the order holds. Fable 5.1 is descriptive only.
+- **Spend.** $1,079.48 measured across Phases 4 to 7 and D2, plus a $283 reservation with unknown actual spend held against the $1,450 cap.
+- **Version.** Main is at 0.10.45, so this release is 0.10.46.
+
 ## [0.10.45] - 2026-10-08
 
 ### gbrain #6317 mirror: the sync wedge is a pooler round trip that never completes; two consumers were a multiplier

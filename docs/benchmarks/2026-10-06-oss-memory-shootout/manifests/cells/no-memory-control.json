@@ -1,0 +1,55 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "no-memory",
+  "config": "control",
+  "notes": "Draft. D1 control: the reader sees the question alone.",
+  "cells": [
+    {
+      "id": "no-memory-control-locomo-r1",
+      "benchmark": "locomo",
+      "lease_usd": 1,
+      "lease_basis": "1.5 x estimate, not piloted: question-only prompts ($0.50)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system no-memory --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/no-memory-locomo.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "no-memory-control-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 1,
+      "lease_basis": "1.5 x estimate, not piloted: question-only prompts ($0.30)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split dev --system no-memory --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/no-memory-beam-100k.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "no-memory-control-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 1,
+      "lease_basis": "1.5 x estimate, not piloted: question-only prompts ($0.60)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system no-memory --arms docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/arms/no-memory-lme-s.json --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ],
+      "lease_scale": {
+        "param": "lme_s_limit",
+        "base": 100
+      }
+    }
+  ]
+}

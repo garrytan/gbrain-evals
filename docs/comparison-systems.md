@@ -180,7 +180,40 @@ Record the question the benchmark asks, dataset revision and subset, result budg
 
 A causal explanation needs a controlled change. If two systems use different models and chunking, report the observed difference without assigning it to one component. If gbrain has not run the benchmark, say so. The purpose of this page is to help choose the next useful experiment and the right configuration, not to manufacture one leaderboard from incompatible scores.
 
+## Systems in the open-source comparison
+
+The [open-source memory shootout](plans/2026-10-05-oss-memory-shootout/PLAN.md) names each system by its kind. This
+table is the one place that maps a label to its project; the preregistrations, the manifests and the reports link here.
+
+| Label | Kind | Project | Version | License | Upstream | Former id |
+|---|---|---|---|---|---|---|
+| `temporal-graph` | a temporal knowledge-graph library | Graphiti (the open-source library, not Zep Cloud) | `graphiti-core` 0.30.2, Neo4j 5.26.2 | Apache-2.0 | [getzep/graphiti](https://github.com/getzep/graphiti) | `graphiti` |
+| `graph-pipeline` | a knowledge-graph pipeline | Cognee | `cognee` 1.6.2 | Apache-2.0 | [topoteretes/cognee](https://github.com/topoteretes/cognee) | `cognee` |
+| `extract-first` | an extract-first memory server | Mem0 (open source, not the platform) | `mem0ai` 2.2.1, Qdrant 1.19.2 | Apache-2.0 | [mem0ai/mem0](https://github.com/mem0ai/mem0) | `mem0` |
+| `agent-runtime` | a stateful agent runtime | Letta (Letta Code App Server, local backend) | Letta Code 0.34.4 | Apache-2.0 | [letta-ai/letta-code](https://github.com/letta-ai/letta-code) | `letta` |
+| `markdown-notes` | a Markdown notes server | Basic Memory | `basic-memory` 0.23.2 | AGPL-3.0 | [basicmachines-co/basic-memory](https://github.com/basicmachines-co/basic-memory) | `basic-memory` |
+| `memory-bank` | a memory-bank server | Hindsight | server and `hindsight-client` 0.10.2 | MIT | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | `hindsight` |
+
+Versions are the pins of the 2026-10-06 preregistrations. Each label's shim lives in `eval/systems/<label>/`, with its
+capability record, lock file and pilot notes. **Former id** is the name the system, its directory and its cell, lease
+and result ids carried until amendment A6 (2026-10-07): an earlier id is the current one with the label replaced by
+the former id (`extract-first-common-locomo-r1-a2-7c50fc54` was `mem0-…`), and the BEAM recipe switch
+`temporal_graph_beam_recipe` was `graphiti_beam_recipe`. Ledger entries and logs written before A6 use the former ids.
+
 ## Changelog
+
+### 2026-10-07: Systems in the open-source comparison
+
+Added the table that maps the open-source shootout's kind labels (`temporal-graph`, `graph-pipeline`,
+`extract-first`, `agent-runtime`, `markdown-notes`, `memory-bank`) to their projects, versions, licenses and upstream
+repositories. The shootout's code, manifests, results and preregistrations now use the labels and link here.
+
+### 2026-10-08: Systems in the open-source comparison and their matched results
+
+Added the table that maps the open-source shootout's kind labels (`temporal-graph`, `graph-pipeline`,
+`extract-first`, `agent-runtime`, `markdown-notes`, `memory-bank`) to their projects, versions, licenses and upstream
+repositories, and the matched results from [the comparison report](benchmarks/2026-10-06-oss-memory-shootout.md). The
+shootout's code, manifests, results and preregistrations now use the labels and link here.
 
 ### 2026-10-07: Re-pin to gbrain `a865f8f`
 

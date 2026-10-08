@@ -1,0 +1,8 @@
+{
+  "run_id": "no-memory-control-beam-100k-a1-ea8997df",
+  "lease_usd": 1,
+  "committed_usd": 0.09945160000000006,
+  "requests": 438,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}
