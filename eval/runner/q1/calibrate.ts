@@ -24,11 +24,11 @@ export function calibrationSamples(out: string): CalibrationSample[] {
   const samples: CalibrationSample[] = [];
   const runs = join(out, 'runs');
   if (!existsSync(runs)) return samples;
-  for (const cell of readdirSync(runs)) {
+  for (const cell of readdirSync(runs).sort()) {
     const prompts = new Map(lines<{ prompt: string; meta: { context_sha256: string } }>(join(runs, cell, 'contexts.ndjson')).map(c => [c.meta.context_sha256, c.prompt]));
     const rdir = join(runs, cell, 'r');
     if (!existsSync(rdir)) continue;
-    for (const rid of readdirSync(rdir)) {
+    for (const rid of readdirSync(rdir).sort()) {
       for (const a of lines<{ reader: string; context_sha256: string; provider_input_tokens: number | null; outcome: string }>(join(rdir, rid, 'answers.ndjson'))) {
         const prompt = prompts.get(a.context_sha256);
         if (!prompt || !a.provider_input_tokens || a.outcome !== 'scored') continue;
