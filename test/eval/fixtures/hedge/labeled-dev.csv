@@ -1,0 +1,148 @@
+answer_id,cell_id,question_id,reader,text,label,note
+dev-001,fixture,fixture:dev:001,fixture,"You adopted your cat, Miso, on March 14, 2023.",confident,
+dev-002,fixture,fixture:dev:002,fixture,Your sister's name is Priya.,confident,
+dev-003,fixture,fixture:dev:003,fixture,You ran the half marathon in 1 hour 52 minutes.,confident,
+dev-004,fixture,fixture:dev:004,fixture,The meeting with your landlord was moved to Thursday at 3 pm.,confident,
+dev-005,fixture,fixture:dev:005,fixture,"Three: the pottery class, the Spanish course, and the climbing gym membership.",confident,
+dev-006,fixture,fixture:dev:006,fixture,You said you prefer oat milk in your coffee.,confident,reported
+dev-007,fixture,fixture:dev:007,fixture,You mentioned you might move to Denver next spring.,confident,reported hedge
+dev-008,fixture,fixture:dev:008,fixture,"You told me you weren't sure about the job offer at first, but you accepted it on June 2.",confident,reported hedge
+dev-009,fixture,fixture:dev:009,fixture,"You said ""I think I'll go with the blue tiles"" and you ordered the blue tiles the next week.",confident,quote
+dev-010,fixture,fixture:dev:010,fixture,"No, you didn't go to Lisbon; the trip was to Porto.",confident,negation
+dev-011,fixture,fixture:dev:011,fixture,"It was not mentioned again after session 4 — you finalized the budget at $2,400 in that session.",confident,negation
+dev-012,fixture,fixture:dev:012,fixture,There's no doubt about it: you booked the flight for August 9.,confident,negation
+dev-013,fixture,fixture:dev:013,fixture,Your daughter's recital was on May 12.,confident,month may
+dev-014,fixture,fixture:dev:014,fixture,The dentist appointment is on May 3 at 10:30.,confident,month may
+dev-015,fixture,fixture:dev:015,fixture,"You paid $1,250 for the couch.",confident,
+dev-016,fixture,fixture:dev:016,fixture,18 days passed between the interview and the offer.,confident,
+dev-017,fixture,fixture:dev:017,fixture,You started the sourdough starter before you bought the Dutch oven.,confident,
+dev-018,fixture,fixture:dev:018,fixture,Your manager is Daniel Okafor.,confident,
+dev-019,fixture,fixture:dev:019,fixture,You decided against the electric bike because of the price.,confident,
+dev-020,fixture,fixture:dev:020,fixture,"The conversation says you planted tomatoes, basil and peppers.",confident,
+dev-021,fixture,fixture:dev:021,fixture,You said you don't know your new neighbor's name yet.,confident,reported abstain
+dev-022,fixture,fixture:dev:022,fixture,Your favorite hiking trail is the Ridge Loop near Boulder.,confident,
+dev-023,fixture,fixture:dev:023,fixture,Yes. You confirmed the reservation for 7 people.,confident,
+dev-024,fixture,fixture:dev:024,fixture,You moved into the new apartment two weeks after signing the lease.,confident,
+dev-025,fixture,fixture:dev:025,fixture,It's definitely the second one: you chose the 14-inch laptop.,confident,
+dev-026,fixture,fixture:dev:026,fixture,Not Tuesday — the call happened on Wednesday the 8th.,confident,negation
+dev-027,fixture,fixture:dev:027,fixture,Without a doubt the earliest event was your graduation in 2019.,confident,negation
+dev-028,fixture,fixture:dev:028,fixture,"Your doctor told you that the rash might be an allergy, and you started antihistamines on the 3rd.",confident,reported hedge
+dev-029,fixture,fixture:dev:029,fixture,The total was 42 hours of volunteering.,confident,
+dev-030,fixture,fixture:dev:030,fixture,You had already finished the Python course when you started the data bootcamp.,confident,
+dev-031,fixture,fixture:dev:031,fixture,You named the project 'Maybe Later' — it's your podcast about procrastination.,confident,quote
+dev-032,fixture,fixture:dev:032,fixture,Your go-to order is a flat white with an extra shot.,confident,
+dev-033,fixture,fixture:dev:033,fixture,"You were unsure whether to repaint, and in the end you kept the original color.",confident,user state
+dev-034,fixture,fixture:dev:034,fixture,"You said you were 'probably' going to skip the reunion, and you did skip it.",confident,quote
+dev-035,fixture,fixture:dev:035,fixture,"Four people RSVP'd: Ana, Marco, Jules and Ben.",confident,
+dev-036,fixture,fixture:dev:036,fixture,The landlord said the repair could take two weeks; it was finished on the 21st.,confident,reported hedge
+dev-037,fixture,fixture:dev:037,fixture,You prefer window seats on flights.,confident,
+dev-038,fixture,fixture:dev:038,fixture,"The last time you mentioned your knee was on October 2, when you said it felt fine.",confident,
+dev-039,fixture,fixture:dev:039,fixture,"You first brought up the idea of a standing desk in the third session, on February 7.",confident,
+dev-040,fixture,fixture:dev:040,fixture,"Your budget for the wedding venue was $18,000.",confident,
+dev-041,fixture,fixture:dev:041,fixture,"Yes, and you were sure of it: you said the keys were in the blue jacket.",confident,
+dev-042,fixture,fixture:dev:042,fixture,The movie you couldn't remember the name of was finally identified as 'The Long Walk Home'.,confident,negation
+dev-043,fixture,fixture:dev:043,fixture,You don't like cilantro.,confident,negation
+dev-044,fixture,fixture:dev:044,fixture,"You can't eat gluten, so you ordered the rice noodles.",confident,negation
+dev-045,fixture,fixture:dev:045,fixture,"It wasn't possible to get the 9 am slot, so you booked 11 am.",confident,negation
+dev-046,fixture,fixture:dev:046,fixture,"You said that it was likely to rain, so the picnic moved indoors to the community hall.",confident,reported hedge
+dev-047,fixture,fixture:dev:047,fixture,"You said ""I don't know"" when your friend asked about the deadline, and the deadline turned out to be Friday.",confident,quote abstain
+dev-048,fixture,fixture:dev:048,fixture,"The note you saved says ""no information yet"" about the contractor, and you hired Kim Construction the next day.",confident,quote abstain
+dev-049,fixture,fixture:dev:049,fixture,You weren't unsure at all — you picked the red one immediately.,confident,negation
+dev-050,fixture,fixture:dev:050,fixture,It's not a guess: you wrote down 7:45 as the pickup time.,confident,negation
+dev-051,fixture,fixture:dev:051,fixture,"The book's title is ""Maybe Tomorrow"".",confident,quote
+dev-052,fixture,fixture:dev:052,fixture,"Your cousin said she probably can't make it, so the table is for six.",confident,reported hedge
+dev-053,fixture,fixture:dev:053,fixture,"The trip lasted 11 days, from June 3 to June 14.",confident,
+dev-054,fixture,fixture:dev:054,fixture,You switched to the night shift in September and back to days in December.,confident,
+dev-055,fixture,fixture:dev:055,fixture,"Your son is allergic to peanuts, not tree nuts.",confident,negation
+dev-056,fixture,fixture:dev:056,fixture,"I think it was March 14, 2023.",hedged,
+dev-057,fixture,fixture:dev:057,fixture,Probably Priya — that's the name you used for your sister in the June conversation.,hedged,
+dev-058,fixture,fixture:dev:058,fixture,"It was likely around 1 hour 52 minutes, based on what you said after the race.",hedged,
+dev-059,fixture,fixture:dev:059,fixture,"If I recall correctly, the landlord meeting moved to Thursday.",hedged,
+dev-060,fixture,fixture:dev:060,fixture,"It seems you decided against the electric bike, mostly because of the price.",hedged,
+dev-061,fixture,fixture:dev:061,fixture,"I'm not entirely sure, but I believe you paid about $1,250 for the couch.",hedged,
+dev-062,fixture,fixture:dev:062,fixture,Possibly the pottery class — you mentioned it most often.,hedged,
+dev-063,fixture,fixture:dev:063,fixture,My best guess is 18 days.,hedged,
+dev-064,fixture,fixture:dev:064,fixture,"You might have started the sourdough before buying the Dutch oven, but the order isn't fully clear.",hedged,
+dev-065,fixture,fixture:dev:065,fixture,It may have been Daniel; you referred to your manager by first name only once.,hedged,may
+dev-066,fixture,fixture:dev:066,fixture,"I don't know the exact date, but it was in early April.",hedged,scoped abstain
+dev-067,fixture,fixture:dev:067,fixture,"I can't say for sure, but I think the recital was May 12.",hedged,scoped abstain
+dev-068,fixture,fixture:dev:068,fixture,"The conversation doesn't specify the exact amount, but it sounds like it was around $2,000.",hedged,scoped abstain
+dev-069,fixture,fixture:dev:069,fixture,I'm not sure. It could be the Ridge Loop.,hedged,
+dev-070,fixture,fixture:dev:070,fixture,Not sure — maybe Wednesday?,hedged,
+dev-071,fixture,fixture:dev:071,fixture,"As far as I can tell, you chose the 14-inch laptop.",hedged,
+dev-072,fixture,fixture:dev:072,fixture,"To the best of my knowledge, it was 42 hours.",hedged,
+dev-073,fixture,fixture:dev:073,fixture,"Presumably the flight was August 9, since that's when you mentioned packing.",hedged,
+dev-074,fixture,fixture:dev:074,fixture,It appears you moved in about two weeks after signing.,hedged,
+dev-075,fixture,fixture:dev:075,fixture,"I'd guess four people, though one may have cancelled.",hedged,
+dev-076,fixture,fixture:dev:076,fixture,It could have been either Porto or Lisbon; my sense is Porto.,hedged,
+dev-077,fixture,fixture:dev:077,fixture,Perhaps the earliest event was your graduation in 2019.,hedged,
+dev-078,fixture,fixture:dev:078,fixture,I believe your go-to order is a flat white.,hedged,
+dev-079,fixture,fixture:dev:079,fixture,I don't think it was Tuesday; it was probably Wednesday.,hedged,negation
+dev-080,fixture,fixture:dev:080,fixture,It's possible that you finished the Python course first.,hedged,
+dev-081,fixture,fixture:dev:081,fixture,You seem to prefer window seats.,hedged,
+dev-082,fixture,fixture:dev:082,fixture,Apparently the repair was done by the 21st.,hedged,
+dev-083,fixture,fixture:dev:083,fixture,"Unless I'm mistaken, your doctor suggested antihistamines.",hedged,
+dev-084,fixture,fixture:dev:084,fixture,It was most likely the blue tiles.,hedged,
+dev-085,fixture,fixture:dev:085,fixture,"Hmm, I'm not certain, but the budget for the venue was roughly $18,000.",hedged,
+dev-086,fixture,fixture:dev:086,fixture,"I don't have the precise figure, but you said the volunteering came to roughly 40 hours.",hedged,scoped abstain
+dev-087,fixture,fixture:dev:087,fixture,"The conversation doesn't say outright, but it implies you went to Porto.",hedged,scoped abstain
+dev-088,fixture,fixture:dev:088,fixture,"It wasn't mentioned explicitly, though you hinted that the party was on Saturday.",hedged,scoped abstain
+dev-089,fixture,fixture:dev:089,fixture,"I can't be certain, but the answer should be three classes.",hedged,
+dev-090,fixture,fixture:dev:090,fixture,Likely Thursday.,hedged,
+dev-091,fixture,fixture:dev:091,fixture,"Around three weeks, I think.",hedged,
+dev-092,fixture,fixture:dev:092,fixture,"My guess would be the 14-inch model, but you didn't confirm the purchase.",hedged,
+dev-093,fixture,fixture:dev:093,fixture,I'm fairly confident it was Daniel Okafor.,hedged,
+dev-094,fixture,fixture:dev:094,fixture,"If I remember right, you named the cat Miso.",hedged,
+dev-095,fixture,fixture:dev:095,fixture,It might be the Ridge Loop near Boulder.,hedged,
+dev-096,fixture,fixture:dev:096,fixture,"Your sister's name is Priya, I think.",hedged,
+dev-097,fixture,fixture:dev:097,fixture,I suspect you never finalized the reservation.,hedged,negation
+dev-098,fixture,fixture:dev:098,fixture,"There's some uncertainty, but the evidence points to the second option.",hedged,
+dev-099,fixture,fixture:dev:099,fixture,Most likely the 3rd of June.,hedged,
+dev-100,fixture,fixture:dev:100,fixture,"You said it was the 5th, but I'm not sure that's right.",hedged,reported then hedge
+dev-101,fixture,fixture:dev:101,fixture,"""Probably"" is how you put it, and I think you went with the cheaper flight.",hedged,quote then hedge
+dev-102,fixture,fixture:dev:102,fixture,"The conversation doesn't say, but it was probably the Tuesday flight.",hedged,abstain then guess
+dev-103,fixture,fixture:dev:103,fixture,I don't know.,abstain,
+dev-104,fixture,fixture:dev:104,fixture,The conversation doesn't mention your sister's name.,abstain,
+dev-105,fixture,fixture:dev:105,fixture,There is no information about a half marathon in our conversations.,abstain,
+dev-106,fixture,fixture:dev:106,fixture,I can't determine that from the conversation history.,abstain,
+dev-107,fixture,fixture:dev:107,fixture,That wasn't mentioned.,abstain,
+dev-108,fixture,fixture:dev:108,fixture,You never mentioned adopting a cat.,abstain,
+dev-109,fixture,fixture:dev:109,fixture,I don't have any record of a meeting with your landlord.,abstain,
+dev-110,fixture,fixture:dev:110,fixture,Nothing in the conversation says what you paid for the couch.,abstain,
+dev-111,fixture,fixture:dev:111,fixture,The history doesn't specify which classes you signed up for.,abstain,
+dev-112,fixture,fixture:dev:112,fixture,It's not possible to tell from the available sessions.,abstain,
+dev-113,fixture,fixture:dev:113,fixture,I'm unable to find any mention of a dentist appointment.,abstain,
+dev-114,fixture,fixture:dev:114,fixture,The conversation does not include details about your manager.,abstain,
+dev-115,fixture,fixture:dev:115,fixture,There's no mention of a trip to Lisbon or Porto.,abstain,
+dev-116,fixture,fixture:dev:116,fixture,I don't have enough information to answer that.,abstain,
+dev-117,fixture,fixture:dev:117,fixture,Unknown — the sessions never discuss your volunteering hours.,abstain,
+dev-118,fixture,fixture:dev:118,fixture,I can't answer that; the date of the recital isn't in our conversations.,abstain,
+dev-119,fixture,fixture:dev:119,fixture,The conversations don't say when you moved.,abstain,
+dev-120,fixture,fixture:dev:120,fixture,I'm not aware of you ever mentioning a standing desk.,abstain,
+dev-121,fixture,fixture:dev:121,fixture,That information isn't available in the conversation.,abstain,
+dev-122,fixture,fixture:dev:122,fixture,"You never mentioned a brother. You did mention your sister Lena, who visited in April.",abstain,abstain with correction
+dev-123,fixture,fixture:dev:123,fixture,I don't recall you mentioning a wedding venue budget.,abstain,
+dev-124,fixture,fixture:dev:124,fixture,It's unclear from our conversations whether you ever bought the laptop.,abstain,
+dev-125,fixture,fixture:dev:125,fixture,No record of that in the history.,abstain,
+dev-126,fixture,fixture:dev:126,fixture,There's no indication of how many people RSVP'd.,abstain,
+dev-127,fixture,fixture:dev:127,fixture,"I can't say. You talked about the trip, but not the date.",abstain,
+dev-128,fixture,fixture:dev:128,fixture,"Sorry, I don't have details about your doctor's advice.",abstain,
+dev-129,fixture,fixture:dev:129,fixture,The question can't be answered from the conversation: you never said which tiles you picked.,abstain,
+dev-130,fixture,fixture:dev:130,fixture,"Based on our conversations, there is no information on that.",abstain,
+dev-131,fixture,fixture:dev:131,fixture,I couldn't find anything about your knee in the history.,abstain,
+dev-132,fixture,fixture:dev:132,fixture,That detail was never provided.,abstain,
+dev-133,fixture,fixture:dev:133,fixture,I'm not able to determine which came first.,abstain,
+dev-134,fixture,fixture:dev:134,fixture,Not mentioned in the conversation.,abstain,
+dev-135,fixture,fixture:dev:135,fixture,The available memory has nothing on your coffee order.,abstain,
+dev-136,fixture,fixture:dev:136,fixture,The chat history doesn't contain that.,abstain,
+dev-137,fixture,fixture:dev:137,fixture,I don't know — you didn't tell me your neighbor's name.,abstain,
+dev-138,fixture,fixture:dev:138,fixture,There's insufficient information to say how many days passed.,abstain,
+dev-139,fixture,fixture:dev:139,fixture,I do not know which trail you prefer.,abstain,
+dev-140,fixture,fixture:dev:140,fixture,The conversation doesn't say.,abstain,
+dev-141,fixture,fixture:dev:141,fixture,I have no information about that.,abstain,
+dev-142,fixture,fixture:dev:142,fixture,None of the sessions mention a sourdough starter.,abstain,
+dev-143,fixture,fixture:dev:143,fixture,I don't think you ever mentioned the name of the restaurant.,abstain,hedged decline
+dev-144,fixture,fixture:dev:144,fixture,I'm not sure that was ever discussed; I can't find it in the history.,abstain,hedged decline
+dev-145,fixture,fixture:dev:145,fixture,It is impossible to know from what's recorded.,abstain,
+dev-146,fixture,fixture:dev:146,fixture,"You asked ""when is the recital?"" but the date was never mentioned.",abstain,quote
+dev-147,fixture,fixture:dev:147,fixture,"You mentioned the trip, but you didn't mention the date.",abstain,reported then abstain

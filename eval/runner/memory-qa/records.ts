@@ -25,6 +25,7 @@ import type { ProvenanceStatus } from '../systems/types.ts';
 import type { PackingLoss } from '../systems/render.ts';
 import { OUTCOMES, type Outcome } from './outcomes.ts';
 import type { MemoryQaRow } from './run.ts';
+import { HEDGE_VERDICTS, type HedgeVerdict } from '../q1/hedge.ts';
 
 export { OUTCOMES };
 
@@ -60,6 +61,10 @@ export interface AnswerRecord {
   opened_source_ids?: string[];
   /** Dollars the answer cost, when the caller priced it. */
   usd?: number;
+  /** eval/runner/q1/hedge.ts verdict on `text`, stamped on judged answers; the scoreboard recomputes it and refuses a mismatch. */
+  hedge?: { verdict: HedgeVerdict; classifier_version: string };
+  /** Evidence the reader was given: the packed context's per-tokenizer counts (component arms) or `{ reader_input }`, the reader's total input tokens (whole-system arms). */
+  delivered_tokens?: Record<string, number>;
 }
 
 /**
@@ -67,7 +72,7 @@ export interface AnswerRecord {
  * eval/runner/systems/file-agent.ts is assignable to it); the cell adds the
  * identity fields to make an `AnswerRecord`.
  */
-export type AnswerPayload = Pick<AnswerRecord, 'text' | 'outcome' | 'usage' | 'latency_ms'> & { provider_input_tokens: number | null; stop_reason?: string; turns?: number; opened_source_ids?: string[]; usd?: number };
+export type AnswerPayload = Pick<AnswerRecord, 'text' | 'outcome' | 'usage' | 'latency_ms'> & { provider_input_tokens: number | null; stop_reason?: string; turns?: number; opened_source_ids?: string[]; usd?: number; hedge?: AnswerRecord['hedge']; delivered_tokens?: Record<string, number> };
 
 /** An answer record from a system's answer and the cell's identity fields; the id is derived, never passed. */
 export function answerRecord(identity: Omit<AnswerRecord, 'answer_id' | keyof AnswerPayload>, a: AnswerPayload & { error?: string }): AnswerRecord {
@@ -144,6 +149,8 @@ export function answerProblems(rec: unknown): string[] {
     usage: v => !!v && typeof v === 'object' && ['input', 'output', 'cache_read', 'cache_write'].every(k => int((v as Record<string, unknown>)[k])),
     stop_reason: v => v === undefined || str(v), turns: v => v === undefined || int(v), usd: v => v === undefined || num(v),
     opened_source_ids: v => v === undefined || (Array.isArray(v) && v.every(x => typeof x === 'string')),
+    hedge: v => v === undefined || (!!v && typeof v === 'object' && HEDGE_VERDICTS.includes((v as Record<string, unknown>).verdict as HedgeVerdict) && str((v as Record<string, unknown>).classifier_version)),
+    delivered_tokens: v => v === undefined || (!!v && typeof v === 'object' && !Array.isArray(v) && Object.values(v as object).every(int)),
   }, r => typeof r.cell_id === 'string' && typeof r.question_id === 'string' && typeof r.reader === 'string' && Number.isInteger(r.replicate)
     && r.answer_id !== answerId(r.cell_id, r.question_id, r.reader, r.replicate as number) ? ['answer.answer_id is not sha256(cell_id|question_id|reader|replicate)'] : []);
 }

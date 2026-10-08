@@ -8,6 +8,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { seededRandom } from '../../../../eval/runner/stats/paired.ts';
+import { hedgeStamp } from '../../../../eval/runner/q1/hedge.ts';
 import { answerId, CAMPAIGN_SCHEMA, type AnswerRecord, type CampaignCell, type CampaignManifest, type JudgmentRecord, type RowRecord } from '../../../../eval/runner/scoreboard.ts';
 
 export const READERS = ['claude-opus-5-5', 'gpt-6.1-sol', 'claude-sonnet-5-5'];
@@ -24,6 +25,12 @@ export interface SyntheticCell {
   dropReaders?: string[];
   judgeRuns?: number;
   gzip?: boolean;
+  /** Answer text per question index and reader (default: a confident synthetic sentence). */
+  answerText?: (i: number, reader: string) => string;
+  /** Canonical score per question index and reader (default: seeded around `quality`). */
+  scoreOf?: (i: number, reader: string) => number;
+  /** Leave the per-answer `hedge` stamp off (an answer written before the derived columns existed). */
+  noHedge?: boolean;
 }
 
 export interface SyntheticOptions {
@@ -91,15 +98,16 @@ export function writeSyntheticReceipt(dir: string, o: SyntheticOptions = {}): Ca
         for (const reader of readers) {
           const harness = c.harnessFail?.includes(i);
           const unfit = !!c.doesNotFit?.questions.includes(i) && c.doesNotFit.readers.includes(reader);
+          const text = c.answerText?.(i, reader) ?? `synthetic answer ${q.question_id} ${reader}`;
           const a: AnswerRecord = {
             answer_id: answerId(c.id, q.question_id, reader, 0), cell_id: c.id, realization_id: `${c.id}-r1`, question_id: q.question_id, conversation: q.conversation,
-            system: c.system, arm: c.arm, reader, replicate: 0, context_sha256: c.arm === 'component' ? context : sha(`${context}|${reader}`), text: `synthetic answer ${q.question_id} ${reader}`,
+            system: c.system, arm: c.arm, reader, replicate: 0, context_sha256: c.arm === 'component' ? context : sha(`${context}|${reader}`), text,
             usage: { input: 8000, output: 300, cache_read: 0, cache_write: 0 }, provider_input_tokens: 8100, latency_ms: 2000 + Math.floor(rng() * 1000), outcome: harness ? 'reader_error' : unfit ? 'does_not_fit' : 'scored',
+            ...(harness || unfit || c.noHedge ? {} : { hedge: hedgeStamp(text), delivered_tokens: { cl100k_base: 7000, o200k_base: 6800 } }),
           };
           answers.push(a);
           if (harness || unfit) continue;
-          const base = Math.min(1, Math.max(0, c.quality + (rng() - 0.5) * 0.6));
-          const score = Math.round(base * 4) / 4;
+          const score = c.scoreOf ? c.scoreOf(i, reader) : Math.round(Math.min(1, Math.max(0, c.quality + (rng() - 0.5) * 0.6)) * 4) / 4;
           for (let j = 0; j < (c.judgeRuns ?? 1); j++) {
             judgments.push({ answer_id: a.answer_id, instrument_id: INSTRUMENT, instrument_sha256: sha(INSTRUMENT), judge: 'gpt-4.1-mini', judge_replicate: j, temperature: 0, score: j && rng() < 0.1 ? Math.max(0, score - 0.25) : score, parse_ok: true, raw_sha256: sha(`${a.answer_id}|${j}`), outcome: 'scored' });
           }
