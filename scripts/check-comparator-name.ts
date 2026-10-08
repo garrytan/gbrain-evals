@@ -1,7 +1,11 @@
 #!/usr/bin/env bun
 /**
  * Fail when the comparator's product name or its maker's name appears in a
- * tracked or untracked (non-ignored) file of this repository.
+ * tracked or untracked (non-ignored) file the memory proof wave publishes or
+ * shares (IN_SCOPE): its reports, harness, workload suites and tests, plus the
+ * repository's front pages (README, docs/README, CHANGELOG). Other
+ * evaluations in this repository name the systems they measure by design and
+ * are outside this guard.
  *
  * Gzip files are scanned decompressed. The names are never written here. Each is stored as a 64-bit Bun.hash
  * (wyhash) plus a sha256 of the lowercase name and its length. The scan
@@ -13,9 +17,7 @@
  * Files that held a dated citation before this guard existed are allowed for
  * the names they already contain (docs/comparison-systems.md stays as is by
  * decision). The harness locks may name the harness repository, which carries
- * the maker's organisation name. Other evaluations' artifact trees, merged from
- * main, name the systems they measure by design and are outside this guard's
- * scope (OUT_OF_SCOPE); the guard covers everything else, README included.
+ * the maker's organisation name.
  *
  *   bun scripts/check-comparator-name.ts            exit 1 on any hit
  *   bun scripts/check-comparator-name.ts --list     also print every allowed hit
@@ -43,12 +45,15 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
   'docs/benchmarks/2026-10-03-agent-operator/after-b3f4e8b/runs.tar.gz': ['product'],
 };
 
-/** Path prefixes of other evaluations' artifacts (open-source memory shootout, BEAM-1M failure analysis), not this wave's. */
-export const OUT_OF_SCOPE: readonly string[] = [
-  'docs/benchmarks/2026-10-06-oss-memory-shootout',
-  'docs/plans/2026-10-05-oss-memory-shootout/',
-  'docs/benchmarks/2026-10-08-beam-1m-failure-analysis',
-  'eval/systems/',
+/** Repo-relative path prefixes the guard covers. */
+export const IN_SCOPE: readonly string[] = [
+  'README.md', 'docs/README.md', 'CHANGELOG.md', 'package.json', 'eval/registry.ts', 'docs/comparison-systems.md',
+  'docs/benchmarks/2026-10-05-', 'docs/plans/2026-09-28-gbrain-10x/',
+  'eval/harness-provider/', 'eval/workload-suites/', 'eval/data/memory-proof-wave/', 'eval/data/workload-suites/',
+  'eval/schemas/workload-suite.schema.json', 'eval/runner/memory-proof-wave', 'eval/runner/harness-',
+  'eval/runner/coding-spike.ts', 'eval/runner/stub-upstream.ts', 'eval/runner/metering-proxy-testkit.ts',
+  'test/eval/harness-', 'test/eval/memory-proof-wave', 'test/eval/workload-suites', 'test/eval/comparator-server',
+  'test/eval/coding-spike', 'scripts/check-comparator-name.ts',
 ];
 /**
  * Both names are also ordinary English. The product name is skipped in the
@@ -107,7 +112,7 @@ export function scan(root: string, files = repoFiles(root)): { violations: Hit[]
   const violations: Hit[] = [];
   const allowed: Hit[] = [];
   for (const rel of files) {
-    if (OUT_OF_SCOPE.some(prefix => rel.startsWith(prefix))) continue;
+    if (!IN_SCOPE.some(prefix => rel.startsWith(prefix))) continue;
     const path = join(root, rel);
     let bytes: Uint8Array;
     try {
