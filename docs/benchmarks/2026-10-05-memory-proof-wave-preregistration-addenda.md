@@ -33,3 +33,28 @@ The preregistration's table names the audited scorer by revision `7619a08c…`. 
 Before #6066 merges, the gbrain sealed cells are replayed retrieval-only on the merged build at its shipped defaults. Wave 11's HNSW `iterative_scan` default changed from strict to relaxed order. The replay uses a copy of each cell's store (the stores stay untouched), and `harness:cell replay` writes the replayed contexts and a per-question diff to custody. Only questions whose context changed are re-answered (`mpw.reanswer --retrievals … --questions …`) and re-judged. The shipped-default score is then reported beside the sealed one, and it decides nothing.
 
 Retrieval is not bit-for-bit repeatable even on one build and one store. A replay of a 20-question dev cell on the freeze build matched that build's earlier retrieval on 18 of 20 questions, the other two being near-tied pages in a different order. So the check also replays each cell on the freeze build, as a noise baseline, and reports changed-context counts for both builds.
+
+## Temporal fact reserve: validation verdict (October 7, 2026)
+
+**The reserve fails its preregistered win rule on validation, so the sealed primary gbrain arm runs with the reserve off.** That rule requires temporal reasoning and event ordering to improve (paired mean difference above 0) and the pooled score not to fall (paired mean difference at least 0). The confirmation ran the combined lane on the freeze build `d7467d1cf`, BEAM validation 100k + 500k + 1M (18 conversations, 360 questions), with date grounding at its default. All six cells passed every gate, and the verdict is recorded here before any sealed gbrain cell runs.
+
+| Validation | Reserve off | Reserve on |
+|---|---:|---:|
+| 100k | 0.652 | 0.689 |
+| 500k | 0.665 | 0.670 |
+| 1M | 0.708 | 0.677 |
+| Pooled | 0.679 | 0.677 |
+
+Paired results, reserve on against off:
+
+| Questions | Mean difference | Wins / losses / ties |
+|---|---:|---|
+| Temporal reasoning | +0.090 | 5 / 3 / 28 |
+| Event ordering | +0.011 | 11 / 12 / 13 |
+| Pooled | −0.002 | 35 / 49 / 276 |
+
+The pooled clause fails. Contradiction resolution (−0.035, 3/9) and abstention (−0.056) fall the most.
+
+One fact about the 1M pair, recorded without changing the verdict: its two cells did not share one extraction store. The reserve-on cell was planned after a repository merge changed `package.json`'s declared gbrain pin (`739e5cc` to `a865f8f`), which is part of the store identity. The loaded build was `d7467d1cf` for both cells, but the reserve-on cell ran its own fact extraction. At 100k and 500k both arms read one store. So the 1M difference includes extraction-to-extraction variation as well as the reserve. The rule is applied as preregistered.
+
+The sealed gbrain cells run with `--reserve off`. Their identity records the declared pin `a865f8f` and the loaded head `d7467d1cf`; the loaded head is what runs.
