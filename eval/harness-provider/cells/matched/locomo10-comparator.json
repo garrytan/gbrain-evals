@@ -1,0 +1,32 @@
+{
+ "dataset": "locomo",
+ "split": "locomo10",
+ "provider": "comparator",
+ "mode": "rag",
+ "lane": "combined",
+ "target_tokens": 8000,
+ "models": {
+  "answer": "gemini:gemini-3.8-flash",
+  "judge": "gemini:gemini-3.5-flash"
+ },
+ "k": 10,
+ "provider_config": {
+  "max_tokens": 835,
+  "max_chunk_tokens": 477
+ },
+ "seal": "public",
+ "budget_usd": 30,
+ "questions": {
+  "units": [
+   "conv-26",
+   "conv-30",
+   "conv-41",
+   "conv-43",
+   "conv-47",
+   "conv-48",
+   "conv-49",
+   "conv-50"
+  ]
+ },
+ "note": "memory proof wave matched secondary row, locomo10-comparator: dev-frozen configuration of locomo-locomo10-comparator-rag-c42cdf3d59d0, public non-dev questions"
+}
