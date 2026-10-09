@@ -48,4 +48,30 @@ describe('sealed analysis', () => {
     expect(out.primary.upper).toBeGreaterThanOrEqual(out.estimate_points);
     expect(['ahead', 'non-inferior', 'behind', 'inconclusive']).toContain(out.outcome);
   });
+
+  test('an unscored question, rubric item or failed context gate makes the outcome inconclusive whatever the bounds say', async () => {
+    const { analyse, incompleteness } = await import('../../eval/runner/memory-proof-wave-sealed-analysis.ts');
+    const root = mkdtempSync(join(tmpdir(), 'mpw-sealed-'));
+    const dir = join(root, 'c');
+    mkdirSync(join(dir, 'stages/judge'), { recursive: true });
+    const schedule = ['1_a_0', '1_a_1', '1_a_2', '1_a_3', '1_a_4'];
+    writeFileSync(join(dir, 'cell.json'), JSON.stringify({ cell_id: 'c', spec: { split: '100k' }, resolved: { schedule_sha256: 's', schedule } }));
+    const judge = (qid: string, r: object) => writeFileSync(join(dir, 'stages/judge', `${qid}.json`), JSON.stringify({ query_id: qid, ...r }));
+    judge('1_a_0', { outcome: 'answered', score: 1, rubric: [{ score: 1 }] });
+    judge('1_a_1', { outcome: 'judge_failure', score: null, rubric: [{ score: null }] });
+    judge('1_a_2', { outcome: 'answered', score: 0.5, rubric: [{ score: 1 }, { score: null }] });
+    judge('1_a_3', { outcome: 'incomplete_ingest', score: 0, rubric: [] });
+    writeFileSync(join(dir, 'summary.json'), JSON.stringify({ delivered_context: { ok: false } }));
+    expect(incompleteness(dir).map(i => i.kind).sort()).toEqual(['delivered_context_gate', 'judge_failure', 'no_scored_row', 'unscored_rubric_item']);
+
+    const rows = [] as { split: string; conversation: string; qid: string; d: number }[];
+    for (let c = 0; c < 6; c++) for (let q = 0; q < 4; q++) rows.push({ split: '100k', conversation: `100k/${c}`, qid: `${c}_x_${q}`, d: 0.2 + 0.01 * q });
+    expect(analyse(rows, 3.5, 199, 20261005).outcome).toBe('ahead');
+    const out = analyse(rows, 3.5, 199, 20261005, [{ cell_id: 'c', kind: 'judge_failure', query_id: '1_a_1' }]);
+    expect(out.outcome_from_bounds).toBe('ahead');
+    expect(out.outcome).toBe('inconclusive');
+    expect(out.complete).toBe(false);
+    expect(out.incomplete).toEqual({ c: { judge_failure: 1 } });
+    expect(JSON.stringify(out)).not.toContain('1_a_1');
+  });
 });

@@ -61,6 +61,6 @@ for f in glob.glob('$C/sealed-rejudge-$1/*/cell.json'):
 print(cells[('gbrain', '$2')] + ':' + cells[('comparator', 'combined')])"; }
     for arm in combined raw; do
       bun eval/runner/memory-proof-wave-sealed-analysis.ts --pair "$(pair 100k $arm)" --pair "$(pair 500k $arm)" --pair "$(pair 1m $arm)" \
-        --margin 3.5 --draws 9999 --seed 20261005 --out "$C/sealed-analysis-$arm.json" --rows "$C/sealed-rows-$arm.jsonl"
+        --margin 3.5 --draws 9999 --seed 20261005 --cells-dir "$C/sealed-cells" --out "$C/sealed-analysis-$arm.json" --rows "$C/sealed-rows-$arm.jsonl"
     done ;;
 esac
