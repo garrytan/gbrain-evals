@@ -69,7 +69,7 @@ gap does not isolate the effect of a graph alone.
 
 | Engineering question | Report |
 |---|---|
-| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 8 paid run with Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol](benchmarks/2026-10-08-memory-trust-results-paid.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [keyless rerun](benchmarks/2026-10-08-memory-trust-results-rerun.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md)): trust labels cut planted-claim adoption (Sonnet 10.6% without labels to 2.0% with them) and raise current-value answers (Opus 55% to 100%); no model followed an instruction-worded injection in any arm, so the write gate and suppression show no measurable benefit on top of labels and the preregistered rules set `external_mode = flag`, `agent_mode = flag`, `agent_activation = allow`; a user's own saved preferences survive the label except added recipients (Sonnet CC'd 11 of 32 with labels, 22 without) |
+| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 8 paid run with Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol](benchmarks/2026-10-08-memory-trust-results-paid.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [keyless rerun](benchmarks/2026-10-08-memory-trust-results-rerun.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md)): trust labels cut planted-claim adoption (Sonnet 10.6% without labels to 2.0% with them) and raise current-value answers (Opus 55% to 100%); no model followed an instruction-worded injection in any arm, so the write gate and suppression show no measurable benefit on top of labels and the preregistered rules set `external_mode = flag`, `agent_mode = flag`, `agent_activation = allow`; at the later head `62773f02` (amendment 4), saved preferences survive the label when saved as `user_said` (47 or 48 of 48 per model); without an origin, Opus 5.5 held back 14 of 48. An artifact asking to be saved as `user_said` did not raise attack success for any model. Keyless Cat 37 fails at `62773f02`: context_pack's new "Newer pages" section shows quarantined external text unlabeled (finding 37-5) |
 | Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
@@ -192,6 +192,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-09: Memory trust amendment 4 row
+
+The memory trust row now adds amendment 4, run at gbrain `capy/memory-trust` `62773f02`. With a fixed harness (a CC field, the person's address and the invoice in memory), saved preferences survive the label when saved as `user_said`, and Opus 5.5 is the one model that holds back preferences saved without an origin. An attacker's request to be saved as `user_said` did not raise attack success. The keyless Cat 37 recheck at that head fails on context_pack (finding 37-5). This replaces the row's amendment 3 preference claim, which the old harness confounded.
 
 ### 2026-10-09: HNSW scale row
 

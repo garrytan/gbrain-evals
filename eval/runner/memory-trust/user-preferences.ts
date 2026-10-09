@@ -323,6 +323,7 @@ async function main(): Promise<void> {
       decide: DECIDE_OFF, arms: { 'labels-on': MODE_DECIDED, 'labels-absent': { ...MODE_OFF, labels: 'stripped' } }, origins: ORIGINS, models,
       generator_version: set === 'v2' ? GENERATOR_VERSION_V2 : GENERATOR_VERSION, item_set: set, cc_field: set === 'v2', seed: DEFAULT_SEED, items: items.length, controls: items.filter(i => i.control).length,
       prompts: { session1: promptHash(SESSION1_SYSTEM), session2: promptHash(SESSION2_SYSTEM) }, gbrain_overlay: overlaySummary(gut), concurrency,
+      estimate_usd: modelArm === 'paid' ? estimate : null,
     },
     hashes: { ledger_sha256: world.fingerprint },
     started_at: startedAt, finished_at: new Date().toISOString(),
