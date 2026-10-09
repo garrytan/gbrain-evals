@@ -107,3 +107,5 @@ The preregistered rule returned **pass**. The arms were A = merge base 0e52ac91 
 - **Errors and spend:** 0 errors in either arm and 0 budget skips. Estimated spend is $10.18 against the $12 cap, including $0.15 for two aborted starts. That's an estimate from token counts, not metered.
 
 The reranker-settings extension was not run; it is still waiting on Sina's approval. Machine-readable scores: `docs/benchmarks/2026-10-09-verbatim-probe-verdict.json`.
+
+Provenance note: this experiment's manifest entry (`preregistrations.d/verbatim-probe.json`) was added with the results, not in the preregistration commit. The order check still holds, since 35d1fa74 and 0bad8444 precede the results commit and were pushed to origin before the first counted cell. The runner (`lme-pair.ts`, outside this repo) did not call `attestPreregistration`, so no receipt attestation exists.
