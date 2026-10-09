@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "a6-evidence-brief-confirmation",
+      "preregistration": "docs/benchmarks/2026-10-08-evidence-brief-confirmation-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-0*-evidence-brief-confirmation/**",
+        "docs/benchmarks/2026-10-0*-evidence-brief-confirmation.md"
+      ]
+    }
+  ]
+}

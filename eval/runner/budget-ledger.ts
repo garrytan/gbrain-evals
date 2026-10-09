@@ -539,6 +539,24 @@ export function setProgramCap(options: { ledgerPath: string; programCapUsd: numb
   });
 }
 
+/**
+ * Raise one run's budget (a campaign run whose cap the user raised; `shootout-cell.ts raise-cap`). Refuses a lower
+ * budget than the run's current one, and a budget above the ledger's program cap.
+ */
+export function setRunBudget(options: { ledgerPath: string; runId: string; budgetUsd: number }): { run_id: string; budget_usd: number; previous_budget_usd: number } {
+  const paths = ledgerPaths(options.ledgerPath);
+  if (!Number.isFinite(options.budgetUsd) || options.budgetUsd <= 0) throw new BudgetExceededError('a run budget must be a positive number of dollars');
+  if (!existsSync(paths.ledger)) throw new BudgetExceededError(missingLedgerMessage(paths.ledger));
+  return write(paths.ledger, 'set-run-budget', db => {
+    const run = db.query('SELECT budget_usd FROM runs WHERE run_id = ?').get(options.runId) as { budget_usd: number } | null;
+    if (!run) throw new BudgetExceededError(`no run ${options.runId} in ${paths.ledger}`);
+    if (options.budgetUsd < run.budget_usd) throw new BudgetExceededError(`refusing to lower run ${options.runId} from $${run.budget_usd.toFixed(2)} to $${options.budgetUsd.toFixed(2)}`);
+    if (options.budgetUsd > currentCap(db) + 1e-9) throw new BudgetExceededError(`run budget $${options.budgetUsd.toFixed(2)} is above the program cap $${currentCap(db).toFixed(2)}; raise the cap first`);
+    db.query('UPDATE runs SET budget_usd = ? WHERE run_id = ?').run(options.budgetUsd, options.runId);
+    return { run_id: options.runId, budget_usd: options.budgetUsd, previous_budget_usd: run.budget_usd };
+  });
+}
+
 // ─── Readers ────────────────────────────────────────────────────────
 
 const ENTRY_COLUMNS = 'id, run_id, description, reserved_usd, actual_usd, status, input_tokens, output_tokens, created_at, settled_at, participant';
@@ -1299,6 +1317,24 @@ globalThis.fetch = delegatingFetch;
 /** Most recent OpenAI responses remembered for continuation pricing. */
 const CHAIN_MEMORY = 100_000;
 
+/** Provider usage from a server-sent-events body: OpenAI `usage` chunks and `response.completed`, Anthropic `message_start` and `message_delta`. */
+export function sseUsage(text: string): Record<string, unknown> | null {
+  const merged: Record<string, unknown> = {};
+  let found = false;
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('data:')) continue;
+    const data = line.slice(5).trim();
+    if (!data || data === '[DONE]') continue;
+    let obj: Record<string, any>;
+    try { obj = JSON.parse(data); } catch { continue; }
+    for (const u of [obj?.usage, obj?.response?.usage, obj?.message?.usage]) {
+      if (!u || typeof u !== 'object') continue;
+      for (const [k, v] of Object.entries(u)) if (typeof v === 'number' || (v && typeof v === 'object')) { merged[k] = v; found = true; }
+    }
+  }
+  return found ? merged : null;
+}
+
 /**
  * Route every fetch to a paid host through the ledger: price, reserve, send,
  * then reconcile from the response usage. A refused reservation rejects the
@@ -1315,7 +1351,13 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
   const measure = async (price: RequestPrice, response: Response) => {
     // A 4xx answer without usage settles at $0, as the metering proxy does: providers do not bill rejected requests.
     const rejected = response.status >= 400 && response.status < 500 ? { usd: 0, input_tokens: 0, output_tokens: 0 } : null;
-    if ((response.headers.get('content-type') ?? '').includes('event-stream')) return rejected;
+    if ((response.headers.get('content-type') ?? '').includes('event-stream')) {
+      // A streamed response is read to its end (the caller still gets the whole stream) and settled from its usage events.
+      let text: string;
+      try { text = await response.clone().text(); } catch { return rejected; }
+      const usage = sseUsage(text);
+      return (usage ? usageCost(price, { usage }) : null) ?? rejected;
+    }
     let parsed: unknown;
     try { parsed = await response.clone().json(); } catch { return rejected; }
     const cost = usageCost(price, parsed) ?? rejected;

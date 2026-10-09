@@ -1,0 +1,26 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain",
+  "config": "facts-probe",
+  "notes": "Budgeted delivery E1 saved-facts probe (plan C4 step 1): memory-qa's existing facts lane as it is, LoCoMo dev, main reader, with the facts token count recorded. Legacy adapter, its own ingest and extraction, unbounded context.",
+  "cells": [
+    {
+      "id": "e1-facts-locomo",
+      "benchmark": "locomo",
+      "lease_usd": 6,
+      "lease_basis": "plan estimate $1.80 extraction and $1 QA, x2 headroom",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system gbrain --facts conversation --qa reader --qa-context facts --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --output \"$SHOOTOUT_OUT/facts\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "timeout_hours": 4
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-query",
+  "config": "common",
+  "notes": "Budgeted delivery E2, label-free retrieval freeze at gbrain ca2c447bd (overlay): one chunk-unit query call at limit 25 per question (reranked, real embeddings), conversation shards in parallel on one VM per group. No delivery, reader or judge call.",
+  "cells": [
+    {
+      "id": "e2-freeze-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 15,
+      "lease_basis": "embeddings for the 500 haystacks about $7.65 (plan cost table), 500 frozen queries and 500 readiness probes with the Voyage reranker about $0.80, x1.5 and headroom",
+      "command": "bash eval/runner/budgeted-delivery/e2-parallel.sh 8 \"$SHOOTOUT_OUT/lme-s\" -- --benchmark lme-s --system gbrain-query --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=freeze",
+      "setup_command": "BUN_VERSION=1.4.2 bash eval/systems/bootstrap.sh setup --datasets lme-s && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-16"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "timeout_hours": 6
+    },
+    {
+      "id": "e2-freeze-locomo-beam",
+      "benchmark": "locomo,beam-100k",
+      "lease_usd": 4,
+      "lease_basis": "embeddings about $0.13, 707 frozen queries and readiness probes with the reranker about $1.20, x1.5 and headroom",
+      "command": "bash eval/runner/budgeted-delivery/e2-parallel.sh 3 \"$SHOOTOUT_OUT/locomo\" -- --benchmark locomo --split dev --system gbrain-query --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=freeze; ra=$?; bash eval/runner/budgeted-delivery/e2-parallel.sh 6 \"$SHOOTOUT_OUT/beam-100k\" -- --benchmark beam-100k --split dev --system gbrain-query --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=freeze; rb=$?; exit $((ra | rb))",
+      "setup_command": "BUN_VERSION=1.4.2 bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "timeout_hours": 6
+    }
+  ]
+}

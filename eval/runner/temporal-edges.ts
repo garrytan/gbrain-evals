@@ -26,16 +26,25 @@
  *
  * Hermetic: provider keys stripped, PGLite in memory, zero LLM.
  *
- * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--phrasing A|A2|A3] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
+ * Usage: bun eval/runner/temporal-edges.ts [--seeds 3,5] [--phrasing A|A2|A3 | --dev-phrasing-file <path>] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
  *   [--pack <pack.yaml>] [--single-value-pass]   (P3 E5: bind a test schema pack before any page; run one declared-only
  *   edge_contradictions pass before the probes and add sv_wrong_closures / sv_conflicts_closed rows)
  *   [--render relation-lines]   (P5 delta H7: a seeded half of the people state employment only as typed relation lines
  *   with @effective ranges; person probe rows gain `render` and a numeric `range_page` 0/1, and every person rendered as
  *   prose gets a `transitions_sig` row, a SHA-256 of that page's link_transitions rows, so two arms compare exactly)
  *   [--e5-probe]   (P5 delta H10: adds 36 probe people per seed with one long current stint and a later dated advisory
- *   line. Rows per probe person: e5_extra_works_at_starts, works_at start transitions beyond the ledger's one (the
+ *   line. Rows per probe person: e5_false_starts, works_at start transitions no ledger start matches by identity (the
  *   advisory line read as a new job; any build), and with --pack and --single-value-pass e5_wrong_closures, applied
- *   single-value closures the ledger contradicts (svClosureWrong; needs a build whose schema packs accept cardinality))
+ *   single-value closures the ledger's intervals contradict (svClosureWrong; needs a build whose schema packs accept
+ *   cardinality))
+ *
+ * Transition identity (Q2, every run): per person (and E5 probe person) rows ti_wrong (observed transitions no gold
+ * transition matches by subject, target, type, kind and date, with the ids in ti_wrong_ids), ti_missing (gold not
+ * observed), ti_start_recall and ti_end_recall; applied single-value closures count as observed ends
+ * (eval/runner/q2/transitions.ts). The decision kit takes set differences of the ids against a comparator.
+ *   [--q2-ledger]  explicit ledger interval semantics: concurrent jobs beside the gaps and rejoins of the plain world
+ *   [--c-gate]     the Q2 C-gate configuration: --q2-ledger, --e5-probe, --single-value-pass on every arm, and --pack
+ *                  (default eval/data/p3-single-value/works-at-one-per-from.yaml); recorded as c_gate in the receipt
  *
  * Arm config: GBRAIN_EVAL_CONFIG (eval/runner/eval-config.ts), for example
  * `line_grammar.effective_ranges=true`, is applied to both brains (scored and mirror) before any page or pack is
@@ -44,6 +53,10 @@
  * Custodian (held-out) mode: --phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>.
  * The phrasing file lives outside the repository; every read appends a line to access-log.jsonl beside it, and the
  * receipt records only the phrasing file's SHA-256, never its text.
+ *
+ * Development phrasing file: --dev-phrasing-file <path> (dev seeds only) runs a fresh development phrasing written as a
+ * JSON { id, templates } PhrasingTemplates file. It is development material, not custody: no access log is written,
+ * and the receipt records the file's id and SHA-256 so a later run can confirm it used the same text.
  */
 import { join } from 'node:path';
 import type { OperationContext } from 'gbrain/operations';
@@ -58,8 +71,9 @@ import {
 } from '../generators/temporal-edges-gen.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { dirname } from 'node:path';
-import { appendAccessLog } from './sealed-confirmation-lib.ts';
+import { custodyTemplatesInput } from './sealed-confirmation-lib.ts';
+import { campaignGuard } from './q2/campaign.ts';
+import { TRANSITION_TYPES, closureCorrect, goldTransitions, transitionMetrics, type Transition } from './q2/transitions.ts';
 import { applyEvalConfig, evalConfigRecord, parseEvalConfig } from './eval-config.ts';
 
 export const CATEGORY = 'temporal-edges';
@@ -256,21 +270,48 @@ async function singleValuePass(gut: GbrainUnderTest, sut: Sut): Promise<{ closur
   return { closures, undated, sameDate, detail: `${r.status}: ${r.detail}` };
 }
 
-/** Wrong: the ledger says the ended employer is current, or the close date is not the start of the ledger's next stint. */
+/**
+ * Wrong unless the ledger's explicit intervals end that employer exactly on the close date and none covers it (gaps,
+ * concurrent jobs and rejoins included; q2/transitions.ts closureCorrect).
+ */
 export function svClosureWrong(p: TePerson, ending: string, closeDate: string): boolean {
-  if (currentEmployers(p).includes(ending)) return true;
-  const k = [...p.stints.keys()].filter(i => p.stints[i]!.company === ending && p.stints[i]!.from < closeDate).pop();
-  if (k === undefined) return true;
-  const next = p.stints[k + 1];
-  return !next || next.from !== closeDate;
+  return !closureCorrect(p.stints, ending, closeDate);
+}
+
+/** Observed transitions (works_at, advises) whose subject is one of `people`, plus applied single-value closures as ends. */
+async function observedTransitions(sut: Sut, people: readonly string[], closures: ReadonlyArray<{ person: string; ending: string; close_date: string; status: string }>): Promise<Map<string, Transition[]>> {
+  // A build without temporal edges has no link_transitions table: it observes no transition, which is the comparison, not an error.
+  const [table] = await sut.engine.executeRaw<{ t: string | null }>(`SELECT to_regclass('link_transitions')::text AS t`);
+  const rows = !table?.t ? [] : await sut.engine.executeRaw<{ subject: string; target: string; type: string; kind: 'start' | 'end'; date: string; precision: 'day' | 'month' | 'year'; producer: string }>(
+    `SELECT f.slug AS subject, t.slug AS target, lt.link_type AS type, lt.kind, lt.occurred_on::text AS date, lt.date_precision AS precision, lt.producer
+       FROM link_transitions lt JOIN pages f ON f.id = lt.from_page_id JOIN pages t ON t.id = lt.to_page_id
+      WHERE f.slug = ANY($1::text[]) AND lt.link_type = ANY($2::text[])`, [people, TRANSITION_TYPES]);
+  const by = new Map<string, Transition[]>(people.map(p => [p, []]));
+  for (const r of rows) by.get(r.subject)?.push({ ...r, date: r.date.slice(0, 10) });
+  for (const c of closures) if (c.status === 'applied' && c.ending && c.close_date) by.get(c.person)?.push({ subject: c.person, target: c.ending, type: 'works_at', kind: 'end', date: c.close_date.slice(0, 10), precision: 'day', producer: 'single_value' });
+  return by;
+}
+
+/** Identity rows for one person: one metric per row, as the decision kit pairs them. */
+export function transitionRows(seed: number, p: TePerson | (TePerson & { e5: unknown }), observed: readonly Transition[], tags: Record<string, unknown> = {}): TeRow[] {
+  const m = transitionMetrics(goldTransitions(p), observed);
+  const base = { cluster: `s${seed}:${p.slug}`, seed, ...tags };
+  const rows: TeRow[] = [
+    { probe_id: `s${seed}:ti-wrong:${p.slug}`, kind: 'transitions_identity', ...base, ti_wrong: m.wrong.length, ti_wrong_ids: m.wrong },
+    { probe_id: `s${seed}:ti-missing:${p.slug}`, kind: 'transitions_identity', ...base, ti_missing: m.missing.length, ti_missing_ids: m.missing },
+  ];
+  if (m.gold_starts) rows.push({ probe_id: `s${seed}:ti-start:${p.slug}`, kind: 'transitions_identity', ...base, ti_start_recall: m.observed_starts / m.gold_starts });
+  if (m.gold_ends) rows.push({ probe_id: `s${seed}:ti-end:${p.slug}`, kind: 'transitions_identity', ...base, ti_end_recall: m.observed_ends / m.gold_ends });
+  if ('e5' in p) rows.push({ probe_id: `s${seed}:e5-false-starts:${p.slug}`, kind: 'e5', ...base, e5_false_starts: m.false_works_at_starts.length, e5_false_start_ids: m.false_works_at_starts });
+  return rows;
 }
 
 export interface TeRunResult { worlds: TemporalEdgesWorld[]; rows: TeRow[]; acc: ProbeAccounting; harnessError: string | null; singleValue: Array<Record<string, unknown>> | null; evalConfig: Record<string, unknown> | null }
 
-export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; pack?: TePack; singleValuePass?: boolean; render?: RenderMode; e5Probe?: boolean; evalConfig?: Record<string, string> }): Promise<TeRunResult> {
+export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: readonly number[]; log?: (s: string) => void; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; pack?: TePack; singleValuePass?: boolean; render?: RenderMode; e5Probe?: boolean; q2Ledger?: boolean; evalConfig?: Record<string, string> }): Promise<TeRunResult> {
   return withHermeticEnv('temporal-edges', async () => {
     const log = opts.log ?? (() => {});
-    const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed, phrasing: opts.sealedPhrasing ? undefined : opts.phrasing, sealedPhrasing: opts.sealedPhrasing, render: opts.render, e5Probe: opts.e5Probe }));
+    const worlds = (opts.seeds ?? DEV_SEEDS).map(seed => generateTemporalEdgesWorld({ seed, phrasing: opts.sealedPhrasing ? undefined : opts.phrasing, sealedPhrasing: opts.sealedPhrasing, render: opts.render, e5Probe: opts.e5Probe, q2Ledger: opts.q2Ledger }));
     let evalConfig: Record<string, unknown> | null = null;
     const acc = new ProbeAccounting(0);
     const rows: TeRow[] = [];
@@ -291,8 +332,10 @@ export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: rea
         await writePages(mirror, [...companies].reverse());
         await writePages(mirror, people.map(p => ({ slug: p.slug, content: p.content.replace(/## Timeline[\s\S]*$/, '') })));
         await writePages(mirror, [...people].reverse());
+        let closures: SvClosure[] = [];
         if (opts.singleValuePass) {
           const sv = await singleValuePass(opts.gut, sut);
+          closures = sv.closures;
           await singleValuePass(opts.gut, mirror);
           log(`seed ${world.seed}: single-value pass ${sv.detail}`);
           const key = (p: string, t: string) => `${p}\u0000${t}`;
@@ -313,15 +356,14 @@ export async function runTemporalEdges(opts: { gut: GbrainUnderTest; seeds?: rea
             statuses: sv.closures.reduce<Record<string, number>>((m, c) => ({ ...m, [c.status]: (m[c.status] ?? 0) + 1 }), {}),
             undated_live: sv.undated.size, same_date_live: sv.sameDate.size });
         }
-        if (world.e5_probes) {
-          const starts = await sut.engine.executeRaw<{ person: string; n: number }>(
-            `SELECT o.slug AS person, count(*)::int AS n FROM link_transitions lt JOIN pages o ON o.id = lt.origin_page_id
-              WHERE lt.link_type = 'works_at' AND lt.kind = 'start' AND o.slug = ANY($1::text[]) GROUP BY o.slug`, [world.e5_probes.map(p => p.slug)]);
-          for (const p of world.e5_probes) {
-            const probe_id = `s${world.seed}:e5-starts:${p.slug}`;
-            rows.push({ probe_id, kind: 'e5', cluster: `s${world.seed}:${p.slug}`, seed: world.seed,
-              e5_extra_works_at_starts: Math.max(0, Number(starts.find(r => r.person === p.slug)?.n ?? 0) - p.stints.length), e5_form: p.e5.form, e5_target: p.e5.target });
-            acc.score(probe_id, rows[rows.length - 1]!.e5_extra_works_at_starts as number);
+        const subjects = [...world.people, ...(world.e5_probes ?? [])];
+        const observed = await observedTransitions(sut, subjects.map(p => p.slug), closures);
+        const ranged = world.range_people ? new Set(world.range_people) : null;
+        for (const p of subjects) {
+          const tags = 'e5' in p ? { e5_form: (p as { e5: { form: string } }).e5.form, e5_target: (p as { e5: { target: string } }).e5.target } : ranged ? { render: ranged.has(p.slug) ? 'relation_lines' : 'prose', range_page: Number(ranged.has(p.slug)) } : {};
+          for (const row of transitionRows(world.seed, p, observed.get(p.slug) ?? [], tags)) {
+            rows.push(row);
+            acc.score(row.probe_id, Object.entries(row).find(([k, v]) => typeof v === 'number' && !['seed', 'range_page'].includes(k))![1] as number);
           }
         }
         await probeWorld(world, sut, mirror, acc, rows);
@@ -351,6 +393,17 @@ export function summarize(rows: readonly TeRow[]): Record<string, { n: number; m
   return out;
 }
 
+/** Loads a development { id, templates } phrasing file; refuses held-out seeds, because dev text never meets custody seeds. */
+export function loadDevPhrasingFile(path: string, seeds: readonly number[]): { phrasing: { id: string; templates: PhrasingTemplates }; sha256: string } {
+  const held = seeds.filter(s => !DEV_SEEDS.includes(s));
+  if (held.length) throw new Error(`--dev-phrasing-file runs development seeds only (${DEV_SEEDS.join(', ')}); seeds ${held.join(', ')} are held out. Rerun with --seeds ${DEV_SEEDS.join(',')}, or give a custody file to the custodian's --phrasing-file mode instead.`);
+  const bytes = readFileSync(path);
+  let parsed: { id?: unknown; templates?: unknown };
+  try { parsed = JSON.parse(bytes.toString('utf8')); } catch (e) { throw new Error(`--dev-phrasing-file ${path} is not JSON (${(e as Error).message}); write { "id": "<name>", "templates": { ...PhrasingTemplates } } and rerun.`); }
+  if (typeof parsed.id !== 'string' || !parsed.id.trim()) throw new Error(`--dev-phrasing-file ${path} needs a non-empty string "id" beside "templates"; add one and rerun.`);
+  return { phrasing: { id: parsed.id, templates: validatePhrasing(parsed.templates) }, sha256: createHash('sha256').update(bytes).digest('hex') };
+}
+
 function argValue(argv: readonly string[], flag: string): string | undefined {
   const at = argv.indexOf(flag);
   if (at >= 0) return argv[at + 1];
@@ -358,24 +411,25 @@ function argValue(argv: readonly string[], flag: string): string | undefined {
 }
 
 async function main(): Promise<void> {
-  const argv = process.argv.slice(2);
+  const rawArgv = process.argv.slice(2);
+  const campaign = campaignGuard(rawArgv);
+  const argv = campaign && !rawArgv.includes('--output') ? [...rawArgv, '--output', campaign.output] : rawArgv;
   const json = argv.includes('--json');
   const log = json ? () => {} : (s: string) => console.log(s);
   const seeds = (argValue(argv, '--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
   const phrasingFile = argValue(argv, '--phrasing-file');
   let sealedPhrasing: { id: string; templates: PhrasingTemplates } | undefined;
   let phrasingSha: string | null = null;
-  if (phrasingFile) {
-    const decisionId = argValue(argv, '--decision-id');
-    const purpose = argValue(argv, '--purpose');
-    if (!decisionId || !purpose) throw new Error('custodian mode needs --decision-id and --purpose, recorded in the access log before the phrasing file is read');
-    const bytes = readFileSync(phrasingFile);
-    phrasingSha = createHash('sha256').update(bytes).digest('hex');
-    appendAccessLog(join(dirname(phrasingFile), 'access-log.jsonl'), { action: 'open', purpose, decision_id: decisionId, labels_sha256: phrasingSha, run_sha256: null });
-    const parsed = JSON.parse(bytes.toString('utf8')) as { id: string; templates: unknown };
-    sealedPhrasing = { id: parsed.id, templates: validatePhrasing(parsed.templates) };
-  } else if (!seeds.every(s => DEV_SEEDS.includes(s))) {
-    throw new Error(`only dev seeds ${DEV_SEEDS.join(', ')} run here; held-out seeds belong to the custodian`);
+  const devPhrasingFile = argValue(argv, '--dev-phrasing-file');
+  let devFile: { id: string; sha256: string } | undefined;
+  if (devPhrasingFile && (phrasingFile || argValue(argv, '--phrasing'))) throw new Error('--dev-phrasing-file replaces --phrasing and cannot run with the custodian\'s --phrasing-file; pass exactly one phrasing source and rerun.');
+  if (devPhrasingFile) {
+    const loaded = loadDevPhrasingFile(devPhrasingFile, seeds);
+    sealedPhrasing = loaded.phrasing;
+    devFile = { id: loaded.phrasing.id, sha256: loaded.sha256 };
+  } else {
+    const custody = custodyTemplatesInput(argv, seeds, DEV_SEEDS);
+    if (custody) { phrasingSha = custody.sha256; sealedPhrasing = { id: custody.parsed.id, templates: validatePhrasing(custody.parsed.templates) }; }
   }
   const output = argValue(argv, '--output');
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
@@ -383,14 +437,16 @@ async function main(): Promise<void> {
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   log(`# temporal-edges (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
   const devPhrasing = argValue(argv, '--phrasing') ?? 'A';
-  const packFile = argValue(argv, '--pack');
+  const cGate = argv.includes('--c-gate');
+  const packFile = argValue(argv, '--pack') ?? (cGate ? join(import.meta.dir, '../data/p3-single-value/works-at-one-per-from.yaml') : undefined);
   const pack = packFile ? (() => { const text = readFileSync(packFile, 'utf8'); const name = /^name:\s*([A-Za-z0-9_-]+)\s*$/m.exec(text)?.[1]; if (!name) throw new Error('--pack file needs a top-level name:'); return { name, text }; })() : undefined;
-  const singleValuePassFlag = argv.includes('--single-value-pass');
+  const singleValuePassFlag = cGate || argv.includes('--single-value-pass');
   const render = argValue(argv, '--render') as RenderMode | undefined;
   if (render !== undefined && !(RENDER_MODES as readonly string[]).includes(render)) throw new Error(`--render ${render}: use ${RENDER_MODES.join(' or ')}`);
-  const e5Probe = argv.includes('--e5-probe');
+  const e5Probe = cGate || argv.includes('--e5-probe');
+  const q2Ledger = cGate || argv.includes('--q2-ledger');
   const evalConfig = parseEvalConfig();
-  const r = await runTemporalEdges({ gut, seeds, log, phrasing: devPhrasing, sealedPhrasing, pack, singleValuePass: singleValuePassFlag, render, e5Probe, evalConfig });
+  const r = await runTemporalEdges({ gut, seeds, log, phrasing: devPhrasing, sealedPhrasing, pack, singleValuePass: singleValuePassFlag, render, e5Probe, q2Ledger, evalConfig });
   const a = r.acc.summary();
   const summary = summarize(r.rows);
   const byRender = r.worlds.some(w => w.range_people) ? {
@@ -415,7 +471,8 @@ async function main(): Promise<void> {
     resolved_config: {
       engine: 'pglite-in-memory',
       caller: 'operation handlers with OperationContext { remote: false, sourceId: default }',
-      seeds, phrasing: sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : `${devPhrasing} (development)`, generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
+      seeds, phrasing: devFile ? `development file ${devFile.id} (sha256 ${devFile.sha256})` : sealedPhrasing ? `held-out set ${sealedPhrasing.id} (custody file sha256 ${phrasingSha})` : `${devPhrasing} (development)`, generator_version: TEMPORAL_EDGES_GENERATOR_VERSION,
+      ...(devFile ? { dev_phrasing_file: { id: devFile.id, sha256: devFile.sha256, access_log: 'none (development material, not custody)' } } : {}),
       oracle: 'employment stints from the generator ledger; set arithmetic for now / as-of / during',
       gbrain_overlay: overlaySummary(gut),
       ...(pack ? { pack: { name: pack.name, sha256: createHash('sha256').update(pack.text).digest('hex') } } : {}),
@@ -424,6 +481,9 @@ async function main(): Promise<void> {
       ...(render === 'relation-lines' ? { range_selection: 'people whose sha256(`${seed}:${slug}`) has an odd first byte; employment as typed relation lines with @effective ranges under ## Roles' } : {}),
       ...(e5Probe ? { e5_probe: `${E5_PROBES_PER_SEED} probe people per seed on dedicated probe companies: one long current stint and a later dated advisory line (forms tl_advise, became_advisor_at, took_advisory_role_with; target same or other)` } : {}),
       eval_config: r.evalConfig ?? { channel: 'GBRAIN_EVAL_CONFIG', requested: evalConfig, applied: false },
+      transition_identity: 'subject, target, type, kind, date (at the observed precision); types works_at and advises; applied single-value closures count as observed ends',
+      ...(q2Ledger ? { q2_ledger: 'concurrent jobs for a seeded fifth of people with a current job (own RNG), plus the plain world gaps and rejoins' } : {}),
+      c_gate: cGate,
     },
     hashes: Object.fromEntries(r.worlds.map(w => [`ledger_seed_${w.seed}`, w.fingerprint])),
     started_at: startedAt,
@@ -431,6 +491,7 @@ async function main(): Promise<void> {
     data: { summary, ...(byRender ? { summary_by_render: byRender } : {}), ...(e5ByCell ? { e5_by_cell: e5ByCell } : {}), rows: r.rows, harness_error: r.harnessError, ...(r.singleValue ? { single_value: r.singleValue } : {}) },
   } as Receipt;
   writeReceipt(outPath, receipt);
+  campaign?.finish(outPath, 0);
   log('\n| metric | n | mean |\n|---|---|---|');
   for (const [k, v] of Object.entries(summary)) log(`| ${k} | ${v.n} | ${v.mean.toFixed(3)} |`);
   if (byRender) for (const [label, part] of [['relation lines', byRender.relation_lines], ['prose', byRender.prose]] as const) log(`${label}: ${Object.entries(part).map(([k, v]) => `${k} ${v.mean.toFixed(3)} (n ${v.n})`).join(', ')}`);

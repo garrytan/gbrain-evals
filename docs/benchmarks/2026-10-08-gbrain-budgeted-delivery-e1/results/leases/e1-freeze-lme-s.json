@@ -1,0 +1,8 @@
+{
+  "run_id": "e1-freeze-lme-s-a1-26890972",
+  "lease_usd": 8,
+  "committed_usd": 1.8219874799999953,
+  "requests": 5401,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

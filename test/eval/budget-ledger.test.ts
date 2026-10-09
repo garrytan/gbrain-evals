@@ -310,3 +310,20 @@ describe('provider SDKs that capture fetch', () => {
     expect(entries.map(e => [e.status, e.actual_usd! > 0])).toEqual([['reconciled', false], ['charged-reservation', true]]);
   });
 });
+
+describe('streamed responses settle from their usage events', () => {
+  test('Anthropic message_start plus message_delta, and OpenAI response.completed', async () => {
+    const { sseUsage, usageCost, priceRequest } = await import('../../eval/runner/budget-ledger.ts');
+    const anthropic = [
+      'event: message_start', 'data: {"type":"message_start","message":{"id":"m","usage":{"input_tokens":12,"cache_creation_input_tokens":1000,"cache_read_input_tokens":5000,"output_tokens":1}}}', '',
+      'event: content_block_delta', 'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"hi"}}', '',
+      'event: message_delta', 'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":250}}', '',
+    ].join('\n');
+    expect(sseUsage(anthropic)).toEqual({ input_tokens: 12, cache_creation_input_tokens: 1000, cache_read_input_tokens: 5000, output_tokens: 250 });
+    const price = priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-sonnet-5-5', max_tokens: 1000, messages: [{ role: 'user', content: 'hi' }] })!;
+    expect(usageCost(price, { usage: sseUsage(anthropic) })!.output_tokens).toBe(250);
+    const openai = 'event: response.completed\ndata: {"type":"response.completed","response":{"usage":{"input_tokens":40,"output_tokens":7}}}\n';
+    expect(sseUsage(openai)).toEqual({ input_tokens: 40, output_tokens: 7 });
+    expect(sseUsage('data: {"type":"ping"}\n')).toBeNull();
+  });
+});

@@ -1,0 +1,2134 @@
+{
+ "version": "pw-v1",
+ "sims": 2000,
+ "seed": 20261008,
+ "risk_ratio": {
+  "validation_design": {
+   "personas": 8,
+   "tasks": 4,
+   "readers": 3,
+   "repeats": 2
+  },
+  "validation": [
+   {
+    "scenario": "null-central",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 1,
+    "coverage": 0.951,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0.026,
+     "worse": 0.023,
+     "inconclusive": 0.951
+    },
+    "median_factor_lower_bound": 0.818515466712799,
+    "p20_factor_lower_bound": 0.7440498316984807
+   },
+   {
+    "scenario": "null-central",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 1,
+    "coverage": 0.8975,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0.054,
+     "worse": 0.0485,
+     "inconclusive": 0.8975
+    },
+    "median_factor_lower_bound": 0.8545454545454545,
+    "p20_factor_lower_bound": 0.7739130434782608
+   },
+   {
+    "scenario": "null-central",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 1,
+    "coverage": 1,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0,
+     "worse": 0,
+     "inconclusive": 1
+    },
+    "median_factor_lower_bound": 0.700030338352168,
+    "p20_factor_lower_bound": 0.6436351893710279
+   },
+   {
+    "scenario": "null-sparse",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 1,
+    "coverage": 0.944,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0.0255,
+     "worse": 0.0305,
+     "inconclusive": 0.944
+    },
+    "median_factor_lower_bound": 0.6121160101946577,
+    "p20_factor_lower_bound": 0.4728371021707256
+   },
+   {
+    "scenario": "null-sparse",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 1,
+    "coverage": 0.9055,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0.0475,
+     "worse": 0.047,
+     "inconclusive": 0.9055
+    },
+    "median_factor_lower_bound": 0.6551724137931034,
+    "p20_factor_lower_bound": 0.4871794871794871
+   },
+   {
+    "scenario": "null-sparse",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 1,
+    "coverage": 0.9995,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0,
+     "worse": 0.0005,
+     "inconclusive": 0.9995
+    },
+    "median_factor_lower_bound": 0.4573616266897635,
+    "p20_factor_lower_bound": 0.3554562366610645
+   },
+   {
+    "scenario": "null-heterogeneous",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 1,
+    "coverage": 0.953,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0.0265,
+     "worse": 0.0205,
+     "inconclusive": 0.953
+    },
+    "median_factor_lower_bound": 0.8351516001980528,
+    "p20_factor_lower_bound": 0.7539502628867141
+   },
+   {
+    "scenario": "null-heterogeneous",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 1,
+    "coverage": 0.9035,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0.0485,
+     "worse": 0.048,
+     "inconclusive": 0.9035
+    },
+    "median_factor_lower_bound": 0.8584070796460176,
+    "p20_factor_lower_bound": 0.7723577235772358
+   },
+   {
+    "scenario": "null-heterogeneous",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 1,
+    "coverage": 1,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0,
+     "worse": 0,
+     "inconclusive": 1
+    },
+    "median_factor_lower_bound": 0.7350979308976072,
+    "p20_factor_lower_bound": 0.6749206779243665
+   },
+   {
+    "scenario": "tenfold-boundary",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.10000000000000356,
+    "coverage": 0.9555,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.003,
+     "improvement": 0.997,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 4.188924517799211,
+    "p20_factor_lower_bound": 3.2443746049482294
+   },
+   {
+    "scenario": "tenfold-boundary",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.10000000000000356,
+    "coverage": 0.8865,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.07,
+     "improvement": 0.93,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 5.666666666666666,
+    "p20_factor_lower_bound": 4.391304347826087
+   },
+   {
+    "scenario": "tenfold-boundary",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.10000000000000356,
+    "coverage": 0.981,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.0095,
+     "improvement": 0.9905,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 4.429393837500972,
+    "p20_factor_lower_bound": 3.5685717986622274
+   },
+   {
+    "scenario": "fivefold",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.20000000000000712,
+    "coverage": 0.9505,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0.9995,
+     "worse": 0,
+     "inconclusive": 0.0005
+    },
+    "median_factor_lower_bound": 2.75324225918053,
+    "p20_factor_lower_bound": 2.250580983756798
+   },
+   {
+    "scenario": "fivefold",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.20000000000000712,
+    "coverage": 0.887,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.0005,
+     "improvement": 0.9995,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 3.342857142857143,
+    "p20_factor_lower_bound": 2.74468085106383
+   },
+   {
+    "scenario": "fivefold",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.20000000000000712,
+    "coverage": 0.9835,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0.9995,
+     "worse": 0,
+     "inconclusive": 0.0005
+    },
+    "median_factor_lower_bound": 2.729566557360372,
+    "p20_factor_lower_bound": 2.285487145376463
+   },
+   {
+    "scenario": "tenfold-sparse",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.09999999999999924,
+    "coverage": 0.846,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.082,
+     "improvement": 0.832,
+     "worse": 0,
+     "inconclusive": 0.086
+    },
+    "median_factor_lower_bound": 2.13078108548265,
+    "p20_factor_lower_bound": 1.3517228245710147
+   },
+   {
+    "scenario": "tenfold-sparse",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.09999999999999924,
+    "coverage": 0.8115,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.145,
+     "improvement": 0.813,
+     "worse": 0,
+     "inconclusive": 0.042
+    },
+    "median_factor_lower_bound": 3.5454545454545454,
+    "p20_factor_lower_bound": 2.142857142857143
+   },
+   {
+    "scenario": "tenfold-sparse",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.09999999999999924,
+    "coverage": 0.987,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0,
+     "improvement": 0.905,
+     "worse": 0,
+     "inconclusive": 0.095
+    },
+    "median_factor_lower_bound": 2.000684846357263,
+    "p20_factor_lower_bound": 1.302461083285863
+   },
+   {
+    "scenario": "tenfold-heterogeneous",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.10000000000000005,
+    "coverage": 0.9385,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.0125,
+     "improvement": 0.987,
+     "worse": 0,
+     "inconclusive": 0.0005
+    },
+    "median_factor_lower_bound": 4.795961750795104,
+    "p20_factor_lower_bound": 3.658470884731655
+   },
+   {
+    "scenario": "tenfold-heterogeneous",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.10000000000000005,
+    "coverage": 0.8715,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.0755,
+     "improvement": 0.9245,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 6.037037037037037,
+    "p20_factor_lower_bound": 4.657142857142857
+   },
+   {
+    "scenario": "tenfold-heterogeneous",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.10000000000000005,
+    "coverage": 0.9805,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.011,
+     "improvement": 0.989,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 4.90135944284451,
+    "p20_factor_lower_bound": 3.8766753015649837
+   },
+   {
+    "scenario": "twentyfold",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.05000000000000178,
+    "coverage": 0.909,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.0825,
+     "improvement": 0.9175,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 6.046610223262154,
+    "p20_factor_lower_bound": 4.353739318643724
+   },
+   {
+    "scenario": "twentyfold",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.05000000000000178,
+    "coverage": 0.8845,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.432,
+     "improvement": 0.568,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 9.266666666666667,
+    "p20_factor_lower_bound": 6.739130434782609
+   },
+   {
+    "scenario": "twentyfold",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.05000000000000178,
+    "coverage": 0.9895,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.141,
+     "improvement": 0.859,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 6.751260205991036,
+    "p20_factor_lower_bound": 5.131299718632605
+   },
+   {
+    "scenario": "ceiling-zero-candidate",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0,
+    "coverage": null,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 1,
+     "improvement": 0,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 50.071220280071834,
+    "p20_factor_lower_bound": 42.66156412172286
+   },
+   {
+    "scenario": "ceiling-zero-candidate",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0,
+    "coverage": null,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 1,
+     "improvement": 0,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 95,
+    "p20_factor_lower_bound": 77
+   },
+   {
+    "scenario": "ceiling-zero-candidate",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0,
+    "coverage": null,
+    "verdicts": {
+     "ceiling": 0,
+     "10x": 0.995,
+     "improvement": 0.005,
+     "worse": 0,
+     "inconclusive": 0
+    },
+    "median_factor_lower_bound": 17.12525607309633,
+    "p20_factor_lower_bound": 14.957239471046826
+   },
+   {
+    "scenario": "ceiling-rare-baseline",
+    "method": "delta-t",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.10000000000000135,
+    "coverage": 0.8991470145509283,
+    "verdicts": {
+     "ceiling": 0.0035,
+     "10x": 0.005,
+     "improvement": 0.7265,
+     "worse": 0,
+     "inconclusive": 0.265
+    },
+    "median_factor_lower_bound": 1.7872637218556306,
+    "p20_factor_lower_bound": 0.7923347176349417
+   },
+   {
+    "scenario": "ceiling-rare-baseline",
+    "method": "bootstrap",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.10000000000000135,
+    "coverage": 0.8700451580531862,
+    "verdicts": {
+     "ceiling": 0.0035,
+     "10x": 0.0385,
+     "improvement": 0.6595,
+     "worse": 0,
+     "inconclusive": 0.2985
+    },
+    "median_factor_lower_bound": 2.428571428571429,
+    "p20_factor_lower_bound": 1
+   },
+   {
+    "scenario": "ceiling-rare-baseline",
+    "method": "cond-binomial",
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "sims": 2000,
+    "true_ratio": 0.10000000000000135,
+    "coverage": 0.994982438534872,
+    "verdicts": {
+     "ceiling": 0.0035,
+     "10x": 0,
+     "improvement": 0.4565,
+     "worse": 0,
+     "inconclusive": 0.54
+    },
+    "median_factor_lower_bound": 0.9163558573154609,
+    "p20_factor_lower_bound": 0.4259327020096535
+   }
+  ],
+  "method": {
+   "method": "cond-binomial",
+   "qualified": [
+    "cond-binomial"
+   ],
+   "min_coverage": {
+    "delta-t": 0.846,
+    "bootstrap": 0.8115,
+    "cond-binomial": 0.9805
+   }
+  },
+  "detectable": [
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 0.978,
+    "p20_factor_lower_bound": 1.5016995063399723
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 10,
+    "p_10x": 0.003,
+    "p_improvement": 0.995,
+    "p20_factor_lower_bound": 2.1547461605087963
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 20,
+    "p_10x": 0.012,
+    "p_improvement": 0.999,
+    "p20_factor_lower_bound": 2.841634870396155
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": "infinite",
+    "p_10x": 0.074,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 5.477837160001943
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 1.9923311361451348
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 10,
+    "p_10x": 0.006,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.0944346314430917
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 20,
+    "p_10x": 0.099,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 4.360148079520904
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": "infinite",
+    "p_10x": 0.843,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 10.351085303659366
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.2822748095088583
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 10,
+    "p_10x": 0.011,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.635369707762309
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 20,
+    "p_10x": 0.163,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 5.2087991741577655
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": "infinite",
+    "p_10x": 0.997,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 14.686250725170742
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.634601778458592
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 10,
+    "p_10x": 0.006,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 4.299622969169919
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 20,
+    "p_10x": 0.273,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 6.475652334424055
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 23.087930972881875
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.1,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 0.727,
+    "p20_factor_lower_bound": 0.9092319808840166
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.1,
+    "true_factor": 10,
+    "p_10x": 0,
+    "p_improvement": 0.883,
+    "p20_factor_lower_bound": 1.2003601494732463
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.1,
+    "true_factor": 20,
+    "p_10x": 0,
+    "p_improvement": 0.95,
+    "p20_factor_lower_bound": 1.5266271682382002
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.1,
+    "true_factor": "infinite",
+    "p_10x": 0,
+    "p_improvement": 0.993,
+    "p20_factor_lower_bound": 2.2415214750972794
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.2,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 0.973,
+    "p20_factor_lower_bound": 1.3865439080323978
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.2,
+    "true_factor": 10,
+    "p_10x": 0,
+    "p_improvement": 0.997,
+    "p20_factor_lower_bound": 1.9649696107022163
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.2,
+    "true_factor": 20,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.663760576163821
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.2,
+    "true_factor": "infinite",
+    "p_10x": 0.007,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 4.66678472332273
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.3,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 0.997,
+    "p20_factor_lower_bound": 1.642406223795383
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.3,
+    "true_factor": 10,
+    "p_10x": 0.003,
+    "p_improvement": 0.999,
+    "p20_factor_lower_bound": 2.4752655253847724
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.3,
+    "true_factor": 20,
+    "p_10x": 0.026,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.3774328029454708
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.3,
+    "true_factor": "infinite",
+    "p_10x": 0.16,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 6.8306777183030265
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.5,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.0327981382551688
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.5,
+    "true_factor": 10,
+    "p_10x": 0.003,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.1135112452313742
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.5,
+    "true_factor": 20,
+    "p_10x": 0.1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 4.393842046486651
+   },
+   {
+    "design": {
+     "personas": 8,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 1
+    },
+    "base_rate": 0.5,
+    "true_factor": "infinite",
+    "p_10x": 0.922,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 11.163804433766336
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.155269195637676
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 10,
+    "p_10x": 0.006,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.292146907124297
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 20,
+    "p_10x": 0.108,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 4.695540884536202
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": "infinite",
+    "p_10x": 0.966,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 12.24753633702959
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.62968446968468
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 10,
+    "p_10x": 0.003,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 4.2767932622011395
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 20,
+    "p_10x": 0.243,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 6.42189990737325
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 22.545844042913686
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.870075170300683
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 10,
+    "p_10x": 0.011,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 4.7995436624473795
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 20,
+    "p_10x": 0.392,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 7.562800286602357
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 31.49063871887523
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.1981128759415043
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 10,
+    "p_10x": 0.015,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 5.403361781089395
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 20,
+    "p_10x": 0.586,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 8.832342869369251
+   },
+   {
+    "design": {
+     "personas": 16,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 48.02593783531002
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.524845497171262
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 10,
+    "p_10x": 0.009,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.9966243865186333
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 20,
+    "p_10x": 0.211,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 6.0507487899705525
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 19.564446241938953
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.950000995126548
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 10,
+    "p_10x": 0.01,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 4.984351051784853
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 20,
+    "p_10x": 0.426,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 7.787920756580053
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 35.01448560373077
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.1750371017373964
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 10,
+    "p_10x": 0.012,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 5.420536754414916
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 20,
+    "p_10x": 0.598,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 8.855096448500294
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 48.568088920771494
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.4461637633515534
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 10,
+    "p_10x": 0.016,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 6.024258850935973
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 20,
+    "p_10x": 0.82,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 10.13977189531774
+   },
+   {
+    "design": {
+     "personas": 24,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 73.77842032539841
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 2.7418282743903237
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 10,
+    "p_10x": 0.008,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 4.521413951936887
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": 20,
+    "p_10x": 0.297,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 6.920616661872041
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.1,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 26.34052308303011
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.1501579029287754
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 10,
+    "p_10x": 0.011,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 5.489477709210009
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": 20,
+    "p_10x": 0.603,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 8.912831594058009
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.2,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 47.212712015737125
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.389249233620515
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 10,
+    "p_10x": 0.007,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 5.927847487098491
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": 20,
+    "p_10x": 0.772,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 9.865347918795788
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.3,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 65.37492749864575
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 5,
+    "p_10x": 0,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 3.6172379762867513
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 10,
+    "p_10x": 0.018,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 6.435984525843751
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": 20,
+    "p_10x": 0.938,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 11.136340759325192
+   },
+   {
+    "design": {
+     "personas": 32,
+     "tasks": 4,
+     "readers": 3,
+     "repeats": 2
+    },
+    "base_rate": 0.5,
+    "true_factor": "infinite",
+    "p_10x": 1,
+    "p_improvement": 1,
+    "p20_factor_lower_bound": 98.44687840735222
+   }
+  ]
+ },
+ "size_contrast": {
+  "validation": [
+   {
+    "scenario": "central",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "sims": 2000,
+    "delta_logit": 0,
+    "true_points": 0,
+    "coverage": 0.9485,
+    "reject_rate": 0.0515
+   },
+   {
+    "scenario": "central",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "sims": 2000,
+    "delta_logit": 0.3,
+    "true_points": 5.286728401465493,
+    "coverage": 0.9415,
+    "reject_rate": 0.3815
+   },
+   {
+    "scenario": "central",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "sims": 2000,
+    "delta_logit": 0,
+    "true_points": 0,
+    "coverage": 0.9575,
+    "reject_rate": 0.0425
+   },
+   {
+    "scenario": "central",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "sims": 2000,
+    "delta_logit": 0.3,
+    "true_points": 5.286728401465493,
+    "coverage": 0.9505,
+    "reject_rate": 0.575
+   },
+   {
+    "scenario": "ceiling",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "sims": 2000,
+    "delta_logit": 0,
+    "true_points": 0,
+    "coverage": 0.955,
+    "reject_rate": 0.045
+   },
+   {
+    "scenario": "ceiling",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "sims": 2000,
+    "delta_logit": 0.3,
+    "true_points": 2.473581506926652,
+    "coverage": 0.953,
+    "reject_rate": 0.2145
+   },
+   {
+    "scenario": "ceiling",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "sims": 2000,
+    "delta_logit": 0,
+    "true_points": 0,
+    "coverage": 0.957,
+    "reject_rate": 0.043
+   },
+   {
+    "scenario": "ceiling",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "sims": 2000,
+    "delta_logit": 0.3,
+    "true_points": 2.473581506926652,
+    "coverage": 0.9495,
+    "reject_rate": 0.348
+   },
+   {
+    "scenario": "sparse",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "sims": 2000,
+    "delta_logit": 0,
+    "true_points": 0,
+    "coverage": 0.9495,
+    "reject_rate": 0.0505
+   },
+   {
+    "scenario": "sparse",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "sims": 2000,
+    "delta_logit": 0.3,
+    "true_points": 2.831348980790492,
+    "coverage": 0.944,
+    "reject_rate": 0.2225
+   },
+   {
+    "scenario": "sparse",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "sims": 2000,
+    "delta_logit": 0,
+    "true_points": 0,
+    "coverage": 0.9455,
+    "reject_rate": 0.0545
+   },
+   {
+    "scenario": "sparse",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "sims": 2000,
+    "delta_logit": 0.3,
+    "true_points": 2.831348980790492,
+    "coverage": 0.9505,
+    "reject_rate": 0.3565
+   },
+   {
+    "scenario": "heterogeneous",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "sims": 2000,
+    "delta_logit": 0,
+    "true_points": 0,
+    "coverage": 0.957,
+    "reject_rate": 0.043
+   },
+   {
+    "scenario": "heterogeneous",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "sims": 2000,
+    "delta_logit": 0.3,
+    "true_points": 4.433397924141015,
+    "coverage": 0.9435,
+    "reject_rate": 0.148
+   },
+   {
+    "scenario": "heterogeneous",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "sims": 2000,
+    "delta_logit": 0,
+    "true_points": 0,
+    "coverage": 0.9515,
+    "reject_rate": 0.0485
+   },
+   {
+    "scenario": "heterogeneous",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "sims": 2000,
+    "delta_logit": 0.3,
+    "true_points": 4.433397924141015,
+    "coverage": 0.954,
+    "reject_rate": 0.1815
+   }
+  ],
+  "mdd": [
+   {
+    "scenario": "central",
+    "design": {
+     "personas": 5,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 14.236227889772838,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "central",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 10.310408554565019,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "central",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "mdd_points": 8.670521821230786,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "central",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 6.994945934413295,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "ceiling",
+    "design": {
+     "personas": 5,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": null,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "ceiling",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 5.983228480393247,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "ceiling",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "mdd_points": 4.541161546478163,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "ceiling",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 3.8946896270796536,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "sparse",
+    "design": {
+     "personas": 5,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 14.809956978983841,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "sparse",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 7.317644449951046,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "sparse",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "mdd_points": 6.118806459386733,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "sparse",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 4.971533181831728,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "heterogeneous",
+    "design": {
+     "personas": 5,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 20.233884138188266,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "heterogeneous",
+    "design": {
+     "personas": 8,
+     "questions": 50,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 14.120013256507832,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "heterogeneous",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 2
+    },
+    "mdd_points": 14.120013256507832,
+    "descriptive_only": true
+   },
+   {
+    "scenario": "heterogeneous",
+    "design": {
+     "personas": 10,
+     "questions": 100,
+     "readers": 3,
+     "missing": 0
+    },
+    "mdd_points": 12.14259590348993,
+    "descriptive_only": true
+   }
+  ]
+ }
+}

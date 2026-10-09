@@ -54,6 +54,9 @@ export const MODEL_SETTINGS: Record<string, { provider: Provider; reasoning: boo
   'gpt-6.1-sol': { provider: 'openai', reasoning: true, effort: 'medium', max_output_tokens: 12000 },
   'gpt-5.4': { provider: 'openai', reasoning: true, effort: 'medium', max_output_tokens: 12000 },
   'gpt-4o-2024-08-06': { provider: 'openai', reasoning: false, effort: null, max_output_tokens: 10 },
+  // Wave 1 pilot cheap models (10x memory advantage plan, A4/A5): builders, digests and the DIRECT arm, at low effort.
+  'gpt-6-luna': { provider: 'openai', reasoning: true, effort: 'low', max_output_tokens: 8000 },
+  'claude-haiku-5-5': { provider: 'anthropic', reasoning: true, effort: 'low', max_output_tokens: 8000 },
 };
 
 export const JUDGE_SECONDARY = { model: 'gpt-6.1-sol', effort: 'low', max_output_tokens: 2000 } as const;

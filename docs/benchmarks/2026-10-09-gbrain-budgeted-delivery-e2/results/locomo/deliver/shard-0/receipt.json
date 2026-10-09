@@ -1,0 +1,349 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "locomo",
+  "split": "dev",
+  "started_at": "2026-10-09T13:44:39.088Z",
+  "finished_at": "2026-10-09T14:27:13.887Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#fc548317f628f25c6708049e17af22ee6b4e28ad",
+    "declared_sha": "fc548317f628f25c6708049e17af22ee6b4e28ad",
+    "version": "0.60.124.0",
+    "package_sha256": "2bbca3da37dce5c531463a91a0d54743d282ca2b6ae00fad87c8f0ea241dd93b",
+    "loaded_git_head": "ca2c447bd39b31beb142247de424c096eefc8525"
+  },
+  "overlay": {
+    "requested": "~/gbrain-master@ca2c447bd39b31beb142247de424c096eefc8525",
+    "ref": "ca2c447bd39b31beb142247de424c096eefc8525",
+    "commit": "ca2c447bd39b31beb142247de424c096eefc8525",
+    "tree": "4242bbb909f90e622e6427a525005c23b16b66f8",
+    "version": "0.60.124.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "4242bbb909f90e622e6427a525005c23b16b66f8",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.124.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "arm_config": {
+    "search.reranker.enabled": "false"
+  },
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "hash",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "LoCoMo (locomo10.json)",
+    "files": [
+      {
+        "path": "locomo/locomo10.json",
+        "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4"
+      }
+    ],
+    "revision": "3eb6f2c",
+    "license": "CC BY-NC 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "e2-read-locomo-beam-a1-f23256e3",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 0,
+    "sessions": 0,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 2034
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "d647285b4515ddadbd2a5f4ae428f372d7d29390c2b2003237fe195520873471",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 3
+    },
+    "conversations": 1,
+    "questions_expected": 158
+  },
+  "system": {
+    "name": "replay:gbrain-query",
+    "capability_system": "gbrain-query",
+    "capabilities": {
+      "system": "gbrain-query",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.124.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null,
+        "connector": "gbrain-query-connector-v1"
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "notes": "gbrain balanced defaults plus the query-path pins"
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each block cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "retrieval_policies": {
+        "fixed-evidence": {
+          "settings": {
+            "limit": 25
+          }
+        },
+        "vendor-default": {
+          "settings": {
+            "limit": 25
+          }
+        }
+      },
+      "query_path_pins": {
+        "search.cache.enabled": "false",
+        "decide.provider": "none",
+        "search.crag_escalation": "false",
+        "search.crag_think": "false",
+        "search.track_retrieval": "false"
+      },
+      "measured_path": "trusted local caller (remote: false); remote lean rows and safe-chunk rules are not exercised",
+      "deviations_from_vendor_code": [
+        "expand: false (agent default true), matching the shootout retrieval"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-query",
+      "config": null,
+      "versions": null
+    }
+  },
+  "counts": {
+    "rows": 158,
+    "scored": 123,
+    "errors": 0,
+    "abstention": 35
+  },
+  "summary": {
+    "recall_all_at_5": 0.7560975609756098,
+    "recall_any_at_5": 0.9512195121951219,
+    "recall_all_at_10": 0.8373983739837398,
+    "ndcg_at_10": 0.8503858880995008,
+    "latency_p50_ms": 1129.9,
+    "latency_p95_ms": 1267.7099999999998
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 158,
+    "outcomes": {
+      "scored": 158,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 632
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.pseudo-off.b8000.sonnet-5-5",
+      "dir": "arms/fixed-evidence.pseudo-off.b8000.sonnet-5-5",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 158,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 158,
+        "scored": 123,
+        "errors": 0,
+        "abstention": 35
+      },
+      "summary": {
+        "recall_all_at_5": 0.7560975609756098,
+        "recall_any_at_5": 0.9512195121951219,
+        "recall_all_at_10": 0.8373983739837398,
+        "ndcg_at_10": 0.8503858880995008,
+        "latency_p50_ms": 1129.9,
+        "latency_p95_ms": 1267.7099999999998,
+        "qa_score": 0.8481012658227848,
+        "qa_rows": 158,
+        "qa_errors": 0,
+        "qa_service_score": 0.8481012658227848,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.pseudo-cap_only.b8000.sonnet-5-5",
+      "dir": "arms/fixed-evidence.pseudo-cap_only.b8000.sonnet-5-5",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 158,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 158,
+        "scored": 123,
+        "errors": 0,
+        "abstention": 35
+      },
+      "summary": {
+        "recall_all_at_5": 0.7560975609756098,
+        "recall_any_at_5": 0.9512195121951219,
+        "recall_all_at_10": 0.8373983739837398,
+        "ndcg_at_10": 0.8503858880995008,
+        "latency_p50_ms": 1129.9,
+        "latency_p95_ms": 1267.7099999999998,
+        "qa_score": 0.8607594936708861,
+        "qa_rows": 158,
+        "qa_errors": 0,
+        "qa_service_score": 0.8607594936708861,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.pseudo-breadth_capped.b8000.sonnet-5-5",
+      "dir": "arms/fixed-evidence.pseudo-breadth_capped.b8000.sonnet-5-5",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 158,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 158,
+        "scored": 123,
+        "errors": 0,
+        "abstention": 35
+      },
+      "summary": {
+        "recall_all_at_5": 0.7560975609756098,
+        "recall_any_at_5": 0.9512195121951219,
+        "recall_all_at_10": 0.8373983739837398,
+        "ndcg_at_10": 0.8503858880995008,
+        "latency_p50_ms": 1129.9,
+        "latency_p95_ms": 1267.7099999999998,
+        "qa_score": 0.8354430379746836,
+        "qa_rows": 158,
+        "qa_errors": 0,
+        "qa_service_score": 0.8354430379746836,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.pseudo-depth_first.b8000.sonnet-5-5",
+      "dir": "arms/fixed-evidence.pseudo-depth_first.b8000.sonnet-5-5",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 158,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 158,
+        "scored": 123,
+        "errors": 0,
+        "abstention": 35
+      },
+      "summary": {
+        "recall_all_at_5": 0.7560975609756098,
+        "recall_any_at_5": 0.9512195121951219,
+        "recall_all_at_10": 0.8373983739837398,
+        "ndcg_at_10": 0.8503858880995008,
+        "latency_p50_ms": 1129.9,
+        "latency_p95_ms": 1267.7099999999998,
+        "qa_score": 0.8670886075949367,
+        "qa_rows": 158,
+        "qa_errors": 0,
+        "qa_service_score": 0.8670886075949367,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    }
+  ]
+}

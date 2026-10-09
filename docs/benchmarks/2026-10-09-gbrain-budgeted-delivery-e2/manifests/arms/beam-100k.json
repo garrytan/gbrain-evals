@@ -1,0 +1,38 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "pseudo-off",
+    "pseudo-cap_only",
+    "pseudo-breadth_capped",
+    "pseudo-depth_first"
+  ],
+  "recipes": {
+    "pseudo-off": {
+      "items": "off-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-cap_only": {
+      "items": "cap_only-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-breadth_capped": {
+      "items": "breadth_capped-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-depth_first": {
+      "items": "depth_first-b_pseudo",
+      "render": "pseudo-session"
+    }
+  },
+  "readers": [
+    {
+      "id": "sonnet-5-5",
+      "model": "anthropic:claude-sonnet-5-5"
+    }
+  ],
+  "judge": "openai:gpt-4.1-mini"
+}

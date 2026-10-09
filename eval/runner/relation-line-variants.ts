@@ -36,12 +36,19 @@
  * The file holds `{ "id": ..., "templates": RelationLineTemplates }` and lives outside the repository; every read appends
  * a line to access-log.jsonl beside it, and the receipt records only the file's SHA-256, never its text (decoy rows then
  * omit stated and stored types, which come from the held-out vocabulary).
+ *
+ * Fresh-seed custodian mode (Q2 G5): --seeds-file <custody path> --decision-id <id> --purpose <text> --output <dir
+ * outside every git worktree>. The file holds `{ "id": ..., "seeds": [..] }`; the templates stay the generator's own
+ * (set A). Its read is access-logged, development seeds 1-3 are refused, and the receipt records only the file's
+ * SHA-256 and the seed values. Accepts --campaign/--step/--run.
  */
 import { join } from 'node:path';
 import { parseEvalConfig } from './eval-config.ts';
 import { gbrainSpecFrom, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { withHermeticEnv } from './hermetic-env.ts';
 import { argValue, custodyInput, openP5Brain, p5Receipt, renderWorldPage, type StoredEdge } from './p5-brain.ts';
+import { custodySeedsInput } from './sealed-confirmation-lib.ts';
+import { campaignGuard } from './q2/campaign.ts';
 import { receiptPath, writeReceipt } from './receipt.ts';
 import { buildGoldEdges, loadCorpus, score, type RichPage } from './world-v1-gold.ts';
 import {
@@ -158,11 +165,14 @@ export async function runRelationLineVariants(opts: {
 }
 
 async function main(): Promise<void> {
-  const argv = process.argv.slice(2);
+  const rawArgv = process.argv.slice(2);
+  const campaign = campaignGuard(rawArgv);
+  const argv = campaign && !rawArgv.includes('--output') ? [...rawArgv, '--output', campaign.output] : rawArgv;
   const json = argv.includes('--json');
   const log = json ? () => {} : (s: string) => console.log(s);
-  const seeds = (argValue(argv, '--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
-  const custody = custodyInput(argv, seeds, DEV_SEEDS);
+  const seedsFile = custodySeedsInput(argv, DEV_SEEDS);
+  const seeds = seedsFile?.seeds ?? (argValue(argv, '--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
+  const custody = seedsFile ? null : custodyInput(argv, seeds, DEV_SEEDS);
   const sealedTemplates = custody ? { id: custody.parsed.id, templates: validateTemplates(custody.parsed.templates) } : undefined;
   const devTemplates = argValue(argv, '--phrasing') ?? 'A';
   const keepProse = argv.includes('--keep-prose');
@@ -198,7 +208,8 @@ async function main(): Promise<void> {
       engine: 'pglite-in-memory',
       caller: 'put_page operation handler, OperationContext { remote: false, sourceId: default }',
       seeds, keep_prose: keepProse, type_rows: typeRowsFlag, generator_version: RELATION_LINE_VARIANTS_GENERATOR_VERSION,
-      templates: sealedTemplates ? `held-out set ${sealedTemplates.id} (custody file sha256 ${custody!.sha256})` : `${devTemplates} (development)`,
+      templates: sealedTemplates ? `held-out set ${sealedTemplates.id} (custody file sha256 ${custody!.sha256})` : `${devTemplates} (the generator's own)`,
+      ...(seedsFile ? { seeds_file: { id: seedsFile.id, sha256: seedsFile.sha256, seeds: seedsFile.seeds } } : {}),
       extraction: 'extractStaleFromDB (gbrain extract --stale, catch-up) after every page is written; a second brain per seed with line_grammar.enabled=false',
       oracle: 'gold company relationships from world-v1-gold.ts buildGoldEdges; decoy stated types from the generator',
       eval_config: r?.config ?? { channel: 'GBRAIN_EVAL_CONFIG', requested: config },
@@ -206,6 +217,7 @@ async function main(): Promise<void> {
     hashes: Object.fromEntries((r?.worlds ?? []).map(w => [`world_seed_${w.seed}`, w.fingerprint])),
   });
   writeReceipt(outPath, receipt);
+  campaign?.finish(outPath, 0);
   log(`receipt: ${outPath}`);
   if (harnessError) console.error(`harness error: ${harnessError}`);
   if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, summary }, null, 2) + '\n');

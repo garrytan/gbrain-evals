@@ -1,0 +1,33 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-query",
+  "config": "common",
+  "notes": "Budgeted delivery E2, deliveries at the A1 budgets, $0: hash-vector re-import, every E2 variant through assembleEvidenceForHits with the per-call auto_packing, and the guard 1 record. No live call (the live cell does those on the slice).",
+  "cells": [
+    {
+      "id": "e2-deliver-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 0.5,
+      "lease_basis": "no provider call expected (hash vectors, reranker off)",
+      "command": "bash eval/runner/budgeted-delivery/e2-parallel.sh 16 \"$SHOOTOUT_OUT/lme-s\" -- --benchmark lme-s --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting b_pseudo={{b_pseudo_lme_s}} --policy-setting b_native={{b_native_lme_s}} --policy-setting b16_pseudo={{b16_pseudo_lme_s}} --frozen-from .e2-transfer/lme-s/frozen.ndjson",
+      "setup_command": "BUN_VERSION=1.4.2 bash eval/systems/bootstrap.sh setup --datasets lme-s && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-30"
+      },
+      "timeout_hours": 4
+    },
+    {
+      "id": "e2-deliver-locomo-beam",
+      "benchmark": "locomo,beam-100k",
+      "lease_usd": 0.5,
+      "lease_basis": "no provider call expected (hash vectors, reranker off)",
+      "command": "bash eval/runner/budgeted-delivery/e2-parallel.sh 3 \"$SHOOTOUT_OUT/locomo\" -- --benchmark locomo --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting deliver_set=primary --policy-setting b_pseudo={{b_pseudo_locomo}} --frozen-from .e2-transfer/locomo/frozen.ndjson; ra=$?; bash eval/runner/budgeted-delivery/e2-parallel.sh 6 \"$SHOOTOUT_OUT/beam-100k\" -- --benchmark beam-100k --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting deliver_set=primary --policy-setting b_pseudo={{b_pseudo_beam_100k}} --frozen-from .e2-transfer/beam-100k/frozen.ndjson; rb=$?; exit $((ra | rb))",
+      "setup_command": "BUN_VERSION=1.4.2 bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-8"
+      },
+      "timeout_hours": 4
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "query-auto"
+  ],
+  "recipes": {
+    "query-auto": {
+      "items": "auto-b_native",
+      "render": "native-dated"
+    }
+  },
+  "readers": [
+    {
+      "id": "main",
+      "model": "openai:gpt-4o-mini"
+    }
+  ],
+  "judge": "openai:gpt-4o-2024-08-06"
+}
