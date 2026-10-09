@@ -10,8 +10,8 @@ ENV LETTA_CODE_TELEM=0 \
     DISABLE_AUTOUPDATER=1 \
     LETTA_LOCAL_BACKEND_EXPERIMENTAL=1 \
     SHIM_PORT=8700 \
-    LETTA_APP_SERVER_PORT=4500 \
-    LETTA_WS_TOKEN_FILE=/run/agent-runtime/token
+    AGENT_RUNTIME_APP_SERVER_PORT=4500 \
+    AGENT_RUNTIME_WS_TOKEN_FILE=/run/agent-runtime/token
 WORKDIR /workspace
 EXPOSE 8700 4500
 CMD ["python3", "/app/agent-runtime/shim.py"]

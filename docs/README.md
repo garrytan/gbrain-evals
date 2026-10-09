@@ -20,6 +20,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | Which agent-written labels has a person checked? | [October 6 review packets and their rules](benchmarks/2026-10-06-w11-review/README.md) ([preregistration](benchmarks/2026-10-06-w11-review-preregistration.md)): awaiting human review |
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
+| How does gbrain compare with open-source memory systems run through one harness, with one reader? | [October 6 to 8 open-source comparison](benchmarks/2026-10-06-oss-memory-shootout.md) ([preregistration](benchmarks/2026-10-06-oss-memory-shootout-preregistration.md), [update-and-forget preregistration](benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md)): gbrain finds the right sessions as well as or better than every system, but as measured through this adapter its evidence leads the reader to fewer correct answers than three of the five. Systems are named by kind; [one table](comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
 | What will the next categories measure, and what does gbrain implement for each of them? | [October 1 eval-category wave plan](plans/2026-10-01-eval-category-wave/README.md), [capability and entrypoint matrix](benchmarks/2026-10-01-capability-matrix.md) |
 
@@ -84,6 +85,7 @@ gap does not isolate the effect of a graph alone.
 | Does fix wave 12's move of the `forget` caveat into the memory clause, or its restored put_page request_id UUID line, change how agents do? | [October 7 wave 12 agent smoke (Cat 40, GBRA-57)](benchmarks/2026-10-07-wave12-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave12-agent-smoke-preregistration.md)): the caveat move regresses Opus 5.5 write-back (20/20 to 15/20; the old instructions on the wave 12 build give 19/20) and was reverted before merge; the UUID line does no harm, does not measurably cut non-UUID first writes (17/30 to 14/30), and shipped in gbrain v0.60.106.0 ([`7aa2caa`](https://github.com/garrytan/gbrain/commit/7aa2caa0aa2a9f031730cd351cd516cf4f9f5802), #6269) |
 | How fast does a managed Postgres brain catch up a backlog far from its database, and how long does a page save take meanwhile? | [October 7 lanes and foreground mirror](benchmarks/2026-10-07-managed-sync-lanes-foreground.md) (follows the [October 5 catch-up mirror](benchmarks/2026-10-05-managed-sync-catchup.md)) |
 | Does a managed Postgres catch-up still stop when one write cannot finish preparing, and what happens to that write? | [October 8 preparation stall mirror](benchmarks/2026-10-08-managed-sync-preparation-stall.md) (gbrain #6298, v0.60.112.0): a stuck write is cut off and held in 240 s and a 15,000-entry catch-up drains in two to three passes where v0.60.105.0 never did; a table lock still pins the pool |
+| How soon does a managed Postgres catch-up commit its first page, and how slow is a page save during it? | [October 8 follow-up mirror](benchmarks/2026-10-08-managed-sync-followup-wave.md) (gbrain follow-up wave at `d6d9d5956`): first page at 15.5 s (was 19.3 s; target 15 s), slowest saves within 0.8 s of idle with none failed; corrects the October 7 catch-up-while-saving row to 60 to 63% |
 | Why did a managed Postgres sync behind a transaction-mode pooler wedge for eighteen days, and were two consumers on one host the cause? | [October 8 ClientRead wedge mirror](benchmarks/2026-10-08-managed-sync-clientread-wedge.md) (gbrain #6278, #6317; the two-consumer arms, the on-demand reproduction and the named await) |
 | Which MCP tool surface should gbrain register for agents: seven verbs, `starter` or `full`? | [October 5 registration-surface cell](benchmarks/2026-10-05-registration-surface.md) ([preregistration](benchmarks/2026-10-05-registration-surface-preregistration.md)) |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
@@ -183,6 +185,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-08: Open-source comparison row
+
+Added the open-source comparison report and its two preregistrations, which the index did not list. The row
+describes the systems by kind and links the one table that names them.
 
 ### 2026-10-08: BEAM-1M failure analysis row
 
