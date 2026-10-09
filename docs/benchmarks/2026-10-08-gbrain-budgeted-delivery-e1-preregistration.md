@@ -4,7 +4,7 @@
 label-free retrieval freeze; they are filled by amendment A1 below, before any live parity call or reader call. Nothing
 else changes after the first paid cell runs; a later change gets a new dated amendment, before any cell it affects.
 
-Plan: [docs/plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md](../plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md)
+Plan: [docs/plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md](https://github.com/garrytan/gbrain-evals/blob/capy/gbrain-budgeted-delivery-plan/docs/plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md)
 (v3, approved by Garry on 2026-10-08 with all eight recommended defaults; E1 cap $100). This file is the plan's E1
 step 5 and fixes the arms, calls, settings, recipes, renderer, sizing rule, readings, reproduction band and drop order.
 
@@ -257,7 +257,38 @@ than B. On the full 25-hit list gbrain delivered more than B on nearly every que
 contexts are cut by the arm's packer and the cuts are counted. No Cell A or Cell B frozen list lacked rerank scores
 (0 of 807 in each cell), so no rerank retry fired. BEAM reads only `B_native`.
 
+### A2 (2026-10-09): deviations found while running, recorded before the report
+
+- **Base.** PR #89 merged to main during E1; the branch merged main (0.10.46, then 0.10.57). E1's harness changes moved
+  with the memory-system runner into `eval/runner/memory-qa/run-systems.ts`; `run.ts` routes `--frozen-from` there.
+- **Header dates on BEAM.** `sessionDay` used `isoSessionDate`, which does not read BEAM's `March-15-2024`, so the first
+  BEAM dated arms carried no header (an undated session gets none by rule). It now reads every form the sanitizer's
+  event time reads (`eventTimeOf`); no header changes on the slice or LoCoMo (0 of 24,139 sessions differ). BEAM's
+  Cell A and Cell B arms were reread into fresh outputs from the same frozen retrievals; the first outputs are kept as
+  superseded receipts. This was found after the first BEAM scores were seen.
+- **`query-auto-default`.** As run, the arm reads the 24,000-token delivery under the policy's 8,000-token packer (the
+  first whole conversations in rank order), not whole. After seeing it, `query-auto-default-whole` was added on the
+  slice and LoCoMo: the same delivery with a per-recipe harness budget of null (`RecipeSpec.budget_tokens`, part of the
+  recipe hash). Both are reported; reading 5 decides nothing.
+- **Sonnet 5.5 refuses `temperature`.** The pre-merge reader sent `temperature: 0`; 574 Sonnet calls were refused
+  (HTTP 400, unbilled by the provider, charged at their reservation by the ledger: $16.65) and retried on main's reader,
+  which omits it for this model. Thirteen slice questions in `rehydrated` and `query-rehydrated` (identical prompts)
+  were read with `temperature: 0` first. The Sonnet resume used a Sonnet-only arms file (`lme-s-cell-b-sonnet.json`)
+  with the same arm ids and recipe hashes.
+- **Readers' code.** The frozen-reader arms on the slice and LoCoMo ran on the pre-merge reader; the Sonnet arms, the
+  BEAM rereads and the two `query-auto-default-whole` arms ran on main's. Both send the same request to the frozen
+  OpenAI readers.
+- **Drop order.** The planner ran before the optional LoCoMo arms with $60.65 left and a $10 reserve; nothing was
+  dropped.
+- **Facts probe extraction model.** Not pinned by flag: the lane used gbrain `c5fb0201`'s default, recorded from the
+  metering proxy as `anthropic:claude-sonnet-4-6` (102 requests). gbrain master now defaults to Claude Haiku 5.5.
+
 ## Changelog
+
+### 2026-10-09: amendment A2
+
+Deviations found while running (BEAM header dates, the as-shipped arm read whole, Sonnet `temperature`, the merge),
+recorded before the report.
 
 ### 2026-10-08: A1 budgets
 

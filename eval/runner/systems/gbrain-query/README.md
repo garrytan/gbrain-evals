@@ -3,7 +3,7 @@
 This module measures gbrain through `query`, the operation an agent calls, instead of the internal ranking function
 the open-source memory comparison used. It calls gbrain in process as a trusted local caller (`remote: false`), so
 remote lean rows and safe-chunk rules are not exercised. It was built for the budgeted delivery plan
-([PLAN.md](../../../../docs/plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md), C0) and is meant to be imported by
+([PLAN.md](https://github.com/garrytan/gbrain-evals/blob/capy/gbrain-budgeted-delivery-plan/docs/plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md), C0) and is meant to be imported by
 other waves.
 
 - `connector.ts`: the wire requests, the pin check, the frozen hit list, deliveries and their records, live parity.
