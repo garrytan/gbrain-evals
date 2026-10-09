@@ -1,9 +1,8 @@
-"""temporal-graph shim: graphiti-core 0.30.2 on Neo4j 5.26 (protocol v1, see eval/systems/PROTOCOL.md).
+"""temporal-graph shim: the open-source temporal-graph library on Neo4j 5.26 (protocol v1, see eval/systems/PROTOCOL.md).
 
-temporal-graph open source, not Zep Cloud. Starts from Zep's published LoCoMo harness
-(getzep/zep-papers@4b7f26c, kg_architecture_agent_memory/locomo_eval/zep_locomo_ingestion.py and
-zep_locomo_search.py), translated from the Zep Cloud client to the graphiti-core API it wraps. Deviations are
-listed in capability.json and README.md.
+The open-source library, not the vendor's hosted service. Starts from the vendor's published LoCoMo harness (its
+ingestion and search scripts; docs/comparison-systems.md has the repository and commit), translated from the hosted
+service's client to the library API that client wraps. Deviations are listed in capability.json and README.md.
 """
 from __future__ import annotations
 
@@ -20,7 +19,7 @@ import openai
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "_shim"))
 from shim import Adapter, Item, ShimError, serve  # noqa: E402
 
-from graphiti_core import Graphiti  # noqa: E402
+from graphiti_core import Graphiti as TemporalGraph  # noqa: E402
 from graphiti_core.cross_encoder.openai_reranker_client import OpenAIRerankerClient  # noqa: E402
 from graphiti_core.embedder.openai import OpenAIEmbedder, OpenAIEmbedderConfig  # noqa: E402
 from graphiti_core.llm_client import LLMConfig, OpenAIClient  # noqa: E402
@@ -39,7 +38,7 @@ def _iso(value: datetime | None) -> str | None:
     return value.isoformat() if value else None
 
 
-class GraphitiAdapter(Adapter):
+class TemporalGraphAdapter(Adapter):
     def __init__(self) -> None:
         with open(os.path.join(HERE, "capability.json")) as f:
             self.record = json.load(f)
@@ -49,12 +48,12 @@ class GraphitiAdapter(Adapter):
             raise SystemExit(f"SHIM_GRANULARITY must be session or message, got {GRANULARITY!r}")
         self.loop = asyncio.new_event_loop()
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
-        self.graphiti: Graphiti = self._run(self._connect())
+        self.graph: TemporalGraph = self._run(self._connect())
         self.episode_source: dict[str, tuple[str, str]] = {}
         self.ns_locks: dict[str, threading.Lock] = {}
 
     def _run(self, coro: Any) -> Any:
-        """graphiti-core is async and its Neo4j driver is bound to one loop; every call goes through it.
+        """The library is async and its Neo4j driver is bound to one loop; every call goes through it.
         A 402 from the metering proxy (over the lease or an unpriced model) becomes the protocol's budget error."""
         try:
             return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
@@ -66,17 +65,17 @@ class GraphitiAdapter(Adapter):
                 cause = cause.__cause__ or cause.__context__
             raise
 
-    async def _connect(self) -> Graphiti:
+    async def _connect(self) -> TemporalGraph:
         roles = self.record["configs"][CONFIG]["model_roles"]
         base_url, api_key = os.environ["OPENAI_BASE_URL"], os.environ["OPENAI_API_KEY"]
         llm = OpenAIClient(config=LLMConfig(api_key=api_key, base_url=base_url, model=roles["extraction"], small_model=roles["small"]))
         embedder = OpenAIEmbedder(config=OpenAIEmbedderConfig(api_key=api_key, base_url=base_url,
                                                               embedding_model=roles["embedder"], embedding_dim=roles["dims"]))
         reranker = OpenAIRerankerClient(config=LLMConfig(api_key=api_key, base_url=base_url, model=roles["reranker"]))
-        graphiti = Graphiti(os.environ.get("NEO4J_URI", "bolt://neo4j:7687"), os.environ.get("NEO4J_USER", "neo4j"),
+        graph = TemporalGraph(os.environ.get("NEO4J_URI", "bolt://neo4j:7687"), os.environ.get("NEO4J_USER", "neo4j"),
                             os.environ["NEO4J_PASSWORD"], llm_client=llm, embedder=embedder, cross_encoder=reranker)
-        await graphiti.build_indices_and_constraints()
-        return graphiti
+        await graph.build_indices_and_constraints()
+        return graph
 
     def _lock(self, ns: str) -> threading.Lock:
         return self.ns_locks.setdefault(ns, threading.Lock())
@@ -86,18 +85,18 @@ class GraphitiAdapter(Adapter):
 
     def health(self) -> dict[str, Any]:
         try:
-            self._run(self.graphiti.driver.health_check())
+            self._run(self.graph.driver.health_check())
         except Exception as e:
             raise ShimError("product_error", f"neo4j not ready: {e}", 503) from e
         return {"ok": True, "config": CONFIG, "granularity": GRANULARITY}
 
     def reset(self, ns: str) -> None:
         with self._lock(ns):
-            self._run(clear_data(self.graphiti.driver, group_ids=[ns]))
+            self._run(clear_data(self.graph.driver, group_ids=[ns]))
             self.episode_source = {u: v for u, v in self.episode_source.items() if v[0] != ns}
 
     def ingest(self, ns: str, session: dict[str, Any]) -> dict[str, Any]:
-        """Zep's harness adds one `message` episode per turn, `speaker: text`, dated with the session time."""
+        """The vendor's harness adds one `message` episode per turn, `speaker: text`, dated with the session time."""
         source_id, turns = session["source_id"], session["turns"]
         if not session["event_time"]:
             raise ShimError("invalid_request", "event_time is required; the shim never defaults to the wall clock", 400)
@@ -113,7 +112,7 @@ class GraphitiAdapter(Adapter):
         nodes = edges = 0
         with self._lock(ns):
             for name, body, reference_time in episodes:
-                result = self._run(self.graphiti.add_episode(name=name, episode_body=body, source_description=SOURCE_DESCRIPTION,
+                result = self._run(self.graph.add_episode(name=name, episode_body=body, source_description=SOURCE_DESCRIPTION,
                                                              reference_time=reference_time, source=EpisodeType.message, group_id=ns))
                 self.episode_source[result.episode.uuid] = (ns, source_id)
                 nodes, edges = nodes + len(result.nodes), edges + len(result.edges)
@@ -127,7 +126,7 @@ class GraphitiAdapter(Adapter):
         """Map episode uuids to this namespace's source ids through the public node API. Returns (sources, all_mapped)."""
         missing = [u for u in episode_uuids if u not in self.episode_source]
         if missing:
-            for ep in self._run(EpisodicNode.get_by_uuids(self.graphiti.driver, missing)):
+            for ep in self._run(EpisodicNode.get_by_uuids(self.graph.driver, missing)):
                 self.episode_source[ep.uuid] = (ep.group_id, ep.name.split("#")[0])
         found = [self.episode_source[u][1] for u in episode_uuids if self.episode_source.get(u, ("", ""))[0] == ns]
         return list(dict.fromkeys(found)), len(found) == len(episode_uuids)
@@ -152,12 +151,12 @@ class GraphitiAdapter(Adapter):
             raise ShimError("invalid_request", f"unknown search recipe {settings['recipe']!r}", 400)
         config = recipe.model_copy(deep=True)
         config.limit = int(settings["limit"])
-        results = self._run(self.graphiti.search_(question, config=config, group_ids=[ns]))
+        results = self._run(self.graph.search_(question, config=config, group_ids=[ns]))
         items: list[Item] = []
         for e in results.edges:
             items.append(self._item(ns, len(items) + 1, e.uuid, "fact", e.fact, e.episodes, _iso(e.valid_at), _iso(e.invalid_at)))
         for n in results.nodes:
-            mentions = [ep.uuid for ep in self._run(EpisodicNode.get_by_entity_node_uuid(self.graphiti.driver, n.uuid))] \
+            mentions = [ep.uuid for ep in self._run(EpisodicNode.get_by_entity_node_uuid(self.graph.driver, n.uuid))] \
                 if settings["node_provenance"] == "mentions" else None
             items.append(self._item(ns, len(items) + 1, n.uuid, "entity", f"{n.name}: {n.summary}", mentions, exact_if_complete=False))
         for ep in results.episodes:
@@ -173,14 +172,14 @@ class GraphitiAdapter(Adapter):
 
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
         with self._lock(ns):
-            episodes = [ep for ep in self._run(EpisodicNode.get_by_group_ids(self.graphiti.driver, [ns]))
+            episodes = [ep for ep in self._run(EpisodicNode.get_by_group_ids(self.graph.driver, [ns]))
                         if ep.name.split("#")[0] == source_id]
             for ep in episodes:
-                self._run(self.graphiti.remove_episode(ep.uuid))
+                self._run(self.graph.remove_episode(ep.uuid))
                 self.episode_source.pop(ep.uuid, None)
         return {"status": "deleted" if episodes else "partial",
-                "receipt": {"episodes_removed": [ep.uuid for ep in episodes], "method": "Graphiti.remove_episode per episode"}}
+                "receipt": {"episodes_removed": [ep.uuid for ep in episodes], "method": "remove_episode per episode"}}
 
 
 if __name__ == "__main__":
-    serve(GraphitiAdapter())
+    serve(TemporalGraphAdapter())

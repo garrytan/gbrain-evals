@@ -28,7 +28,7 @@
       "benchmark": "precisionmembench",
       "lease_usd": 0.5,
       "lease_basis": "1.5 x eval/systems/extract-first/PILOT.md, per add call: $0.00142 per common add (8,399 input tokens, mostly extract-first's own prompt) x 50 one-turn sessions = $0.071; $0.50 floor so one reservation fits",
-      "command": "MEM0_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system extract-first --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --finish-timeout-s 14400 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system extract-first; exit $s",
+      "command": "EXTRACT_FIRST_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system extract-first --config common --timeout 1800 && { bun eval/runner/precisionmembench-system.ts --system http://127.0.0.1:8700 --finish-timeout-s 14400 --output \"$SHOOTOUT_OUT/pmb\"; }; s=$?; bash eval/systems/bootstrap.sh down --system extract-first; exit $s",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system extract-first",
       "vm": {
         "size": "standard-8"

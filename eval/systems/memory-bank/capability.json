@@ -1,12 +1,12 @@
 {
   "system": "memory-bank",
   "versions": {
-    "package": "memory-bank server 0.10.2 (vectorize-io/hindsight@5fc4ce20917b916240cef27c212c387a177f115b, tag v0.10.2) + hindsight-client==0.10.2",
+    "package": "see comparison-systems table: memory-bank (server at upstream commit 5fc4ce20917b916240cef27c212c387a177f115b, plus the matching Python client)",
     "lock_sha256": "f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8",
-    "image": "ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
+    "image": "see comparison-systems table: memory-bank (vendor image digest sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70)",
     "backend_image": "pgvector/pgvector:0.8.1-pg18@sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c",
     "shim_base_image": "python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
-    "vendor_benchmark_code": "vectorize-io/agent-memory-benchmark@f618ed7b1f0eb9cad7b42e876f91a42f0eadb150 (src/memory_bench/memory/hindsight.py, provider hindsight-http; the ref memory-bank's own hindsight-system-evals runs, AMB_REF=main); vectorize-io/hindsight-benchmarks@55c51f1d6e2477ee69c0a730a80b96a1596ff475 benchmarks the extraction LLM directly, not server ingestion, so it is not used"
+    "vendor_benchmark_code": "see comparison-systems table: memory-bank (vendor benchmark code at commit f618ed7b1f0eb9cad7b42e876f91a42f0eadb150: the HTTP provider module of the vendor's agent memory benchmark, the ref memory-bank's own system evals run, AMB_REF=main; the vendor's separate extraction benchmark at commit 55c51f1d6e2477ee69c0a730a80b96a1596ff475 scores the extraction LLM directly, not server ingestion, so it is not used)"
   },
   "configs": {
     "recipe": {
@@ -52,7 +52,7 @@
         "max_tokens": 4096,
         "include_chunks": false
       },
-      "notes": "hindsight-client 0.10.2 `recall` defaults (hindsight_client.py:618-639): token-budgeted, not top-k. budget mid, max_tokens 4096 of fact text, chunks off, entities off, all fact types. query_timestamp is always the question date."
+      "notes": "The pinned Python client's `recall` defaults (its client module, lines 618-639): token-budgeted, not top-k. budget mid, max_tokens 4096 of fact text, chunks off, entities off, all fact types. query_timestamp is always the question date."
     },
     "fixed-evidence": {
       "settings": {
@@ -95,7 +95,7 @@
   "agent_surface": {
     "kind": "vendor-mcp",
     "transport": "http",
-    "version": "memory-bank server 0.10.2, mounted at /mcp/{bank_id} (api/mcp.py), HINDSIGHT_API_MCP_ENABLED"
+    "version": "memory-bank server at the pinned release, mounted at /mcp/{bank_id} (api/mcp.py), HINDSIGHT_API_MCP_ENABLED"
   },
   "deviations_from_vendor_code": [
     "No raw dataset ids anywhere: AMB sets document_id and metadata.doc_id to '<sample_id>_<session>' and context to '... (session_N of conv-26)' or 'Session <question_id>_<session_id> ...'; the shim sends document_id = opaque source_id, no metadata at all (metadata influences extraction), and context = 'Conversation between <speakers>'.",
