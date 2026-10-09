@@ -74,6 +74,8 @@ describe('degraded query meta is a harness failure (plan contract 4.8.4)', () =>
     ['reranker failed', { degraded: [{ stage: 'rerank_failed', reason: 'provider_error' }], crag: { reason: 'cosine_top' } }, ['degraded:rerank_failed', 'rerank_missing']],
     ['reranker skipped (no key)', { degraded: [{ stage: 'reranker_skipped', reason: 'no_key' }] }, ['degraded:reranker_skipped']],
     ['rerank silently absent in a reranked mode', { crag: { confidence: 'weak', reason: 'cosine_top' } }, ['rerank_missing']],
+    ['an identity-tier grade carries no rerank score by construction (A12)', { crag: { confidence: 'strong', reason: 'high_vector_match' } }, []],
+    ['an exact lookup grade likewise', { crag: { confidence: 'strong', reason: 'exact_lookup' } }, []],
     ['expansion call failed', { degraded: [{ stage: 'expansion_failed', reason: 'provider_error' }], expansion_applied: false }, ['degraded:expansion_failed', 'expansion_not_applied']],
     ['expansion fell back silently (proxy 402)', { expansion_applied: false }, ['expansion_not_applied']],
     ['vector arm off', { vector_enabled: false }, ['vector_disabled']],

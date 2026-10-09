@@ -271,6 +271,11 @@ def tool_payload(result: dict[str, Any]) -> tuple[Any, dict[str, Any], list[Any]
     return body, meta, notices
 
 
+# CRAG reasons gbrain grades before its rerank branch at the pin: an exact or alias hit, an exact
+# title match, or a near-identical vector match. Their confidence block has no top_rerank_score by construction.
+CRAG_IDENTITY_REASONS = frozenset({"exact_lookup", "alias_hit", "exact_title_match", "high_vector_match"})
+
+
 def classify_query_meta(meta: dict[str, Any], resolved_search: dict[str, Any], shipped_behavior: frozenset[str] = SHIPPED_BEHAVIOR) -> dict[str, Any]:
     """Plan contract 4.8.4: a degraded stage, a missing rerank block in a reranked mode, an expansion that did not
     apply, an unavailable vector arm or a delivery fallback is a harness failure (retried after quiesce); a semantic
@@ -281,9 +286,12 @@ def classify_query_meta(meta: dict[str, Any], resolved_search: dict[str, Any], s
         reasons.append(f"degraded:{d.get('stage') if isinstance(d, dict) else d}")
     # The default reranker reports failure as a degraded stage (reranker_skipped, rerank_passthrough, rerank_failed);
     # its success shows as the confidence block's top_rerank_score. meta.rerank is System One's field, off by default.
+    # An identity-tier grade (CRAG_IDENTITY_REASONS) is decided before the rerank branch, so at the pin it carries no
+    # top_rerank_score even though the reranker ran (amendment A12); only a non-identity grade without it is a miss.
     rows = meta.get("returned_count") or meta.get("retrieved_count") or 0
     crag = meta.get("crag")
-    if resolved_search.get("reranker_enabled") is True and rows and isinstance(crag, dict) and "top_rerank_score" not in crag:
+    if (resolved_search.get("reranker_enabled") is True and rows and isinstance(crag, dict) and "top_rerank_score" not in crag
+            and crag.get("reason") not in CRAG_IDENTITY_REASONS):
         reasons.append("rerank_missing")
     if resolved_search.get("expansion") is True and meta.get("expansion_applied") is False:
         reasons.append("expansion_not_applied")

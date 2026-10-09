@@ -350,7 +350,11 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
     `41a92703001f703ebd8be683931848e6c65ec0f942a4b9f6ac6488a19c22de94`.
   - `q1-scoreboard-public-r5`: the S5 reruns after A11; 6 launch units; cap $170. Hash
     `83d357e982d3a313be21b7ad18a07393b9107d06011540df1a12b1fa4f9163b3`.
-  The six caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
+  - `q1-scoreboard-public-v2`: every public cell, rerun after the results were lost (A13); 41 launch units; cap $441.
+    Hash `59c00444d1633f50034b35e404e73d209ede8343754db8687fc32a095f19986e`. It replaces the public campaign and r2 to
+    r5, which are retired with nothing counted.
+  The sealed cap ($7,200), the public spend (about $150 lost under A13 plus the v2 cap of $441) and the $60 of dev work
+  stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
   digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
   bundles build are covered by their Dockerfiles and lockfiles in the hashed tree.
@@ -548,7 +552,35 @@ shards are pooled per cell, as S1's shards are. Wall-clock time per haystack is 
   markdown-kb S5 shard that holds the colliding session; $152.48 in leases, $170 cap. The stopped gbrain-defaults S5
   cell and markdown-kb shard 5 had answered nothing.
 
+**A12 (2026-10-09): the gbrain read classifier misread identity-tier grades.** gbrain's confidence grade (CRAG)
+decides an exact lookup, an alias hit, an exact title match or a near-identical vector match (`high_vector_match`)
+before its rerank branch, so at the pin those grades carry no `top_rerank_score` even though the reranker ran. The
+shim treated the absent field as `rerank_missing`, a harness failure. An exact-quote query is the typical trigger:
+another thread rebuilt 13 of the 89 LongMemEval-S readiness-probe misses (A11's run) and gbrain returned the target at
+rank 1 in all 13; 12 were this misread and one was a real gbrain fault (a passage with a 73-dash line overflows the
+keyword query parser, so both lexical arms report a degraded read, which stays a harness failure under the read
+contract). The shim now checks for the rerank score only on grades that pass through the rerank branch; a reranker
+failure still shows as a degraded stage. The fix is in the executed tree, so the sealed campaign is re-frozen.
+
+**A13 (2026-10-09): the public results were lost and the public sets rerun.** The launching machine's storage was
+replaced on 2026-10-09 while public cells ran. Everything pulled to it was lost: the settled public cells' rows,
+receipts and lease ledgers (they were not yet committed), and the SSH keys of the 15 VMs still running, which were
+destroyed unread. None of those runs is counted or published; what they taught is recorded in A9 to A12, and their
+spend (about $150, reconstructed from the reports above because the ledgers were lost) is reported. All public cells
+rerun once as `q1-scoreboard-public-v2` at the A12 tree, sized from the measured ingest rates (A10): 41 launch units,
+long cells split into haystack shards of about 6 to 8 hours, each with a timeout of twice its hours and a lease of 1.5
+times its share (at least $2); verbatim-session keeps A9's $13 lease; $400.80 in leases, $441 cap. The launching host
+now pushes each campaign's state (leases, ledgers, rows, receipts; not store snapshots) to the results branch
+`evals/q1-scoreboard-results` every 10 minutes (`eval/runner/q1/persist.sh`; public campaigns only), so a lost host
+loses only the cells still in flight. `q1-scoreboard-public` and its reruns r2 to r5 are retired.
+
 ## Changelog
+
+### 2026-10-09: amendments A12 and A13
+
+The gbrain read classifier stops misreading identity-tier confidence grades (sealed re-frozen); the public results
+were lost with the launching machine's storage, so every public cell reruns as `q1-scoreboard-public-v2`, with state
+pushed to `evals/q1-scoreboard-results` as it runs.
 
 ### 2026-10-09: amendment A11
 
