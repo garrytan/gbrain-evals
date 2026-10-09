@@ -1,6 +1,6 @@
 # Preregistration: the head-to-head memory scoreboard (2026-10-06)
 
-**Status: frozen on 2026-10-08** at gbrain-evals commit `c0b68a7f740f3c9b561b32ae7b57f2aeb8e0cbeb` (after A11), before any counted
+**Status: frozen on 2026-10-08** at gbrain-evals commit `274bf9f6fc5daca09f891a7fdcc82069c47a9c32` (after A12), before any counted
 cell reserved a lease. The freeze checklist below fills every value that was open. Nothing below changes after the
 first counted cell runs; a later change is a dated amendment at the end of this file, written before any cell it
 affects, and a change to a bar or a family needs the program owner's approval first. The D8 reserve's hash-list SHA
@@ -338,7 +338,7 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
   cell executes (159 files at the A9 tree) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
-    from the custodian's host. Hash `c39f267c7f070cb756a137bc08eaedc598f2ef88eb88cc62b486e8c2b9a3afaf`.
+    from the custodian's host. Hash `99069170cc35abf41c1d7b0edb70341f689d2c1b14d2bc7d1e09f4c91a2e8adf`.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
     `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` at its launch tree (`a22e3d81`, 156 files); it
     renders from that tree (A8).
@@ -580,7 +580,7 @@ loses only the cells still in flight. `q1-scoreboard-public` and its reruns r2 t
 
 The gbrain read classifier stops misreading identity-tier confidence grades (sealed re-frozen); the public results
 were lost with the launching machine's storage, so every public cell reruns as `q1-scoreboard-public-v2`, with state
-pushed to `evals/q1-scoreboard-results` as it runs.
+pushed to `evals/q1-scoreboard-results` as it runs. Sealed re-frozen at `274bf9f6` (hash `99069170`).
 
 ### 2026-10-09: amendment A11
 
