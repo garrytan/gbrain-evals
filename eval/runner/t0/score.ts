@@ -170,3 +170,56 @@ export function aggregate(scores: readonly T0Score[]): Aggregate {
   const failures = scores.filter(s => s.failed).length;
   return { runs: scores.length, failures, failure_rate: scores.length ? failures / scores.length : 0, complete: scores.filter(s => s.complete).length, by_kind };
 }
+
+// ─── T0b: several commitments and corrections per task ──────────────
+
+export const T0B_SCORER_VERSION = 't0b-score-v1';
+
+export interface ItemsGold {
+  commitments: Matcher[];
+  date: { old: Matcher; new: Matcher };
+  corrections: Array<{ kind: string; stale: Matcher; corrected: Matcher }>;
+  namesake: Matcher[];
+}
+
+export interface ItemsScore extends Omit<T0Score, 'version' | 'commitment_hit' | 'corrected_hit'> {
+  version: typeof T0B_SCORER_VERSION;
+  commitments_hit: string[];
+  commitments_missed: string[];
+  corrected_hit: string[];
+}
+
+/**
+ * T0b scorer (preregistered with the T0b workload): the t0-score-v3 rules applied to every item. Prose reading,
+ * change cues, "a stale mention fails only when its current value is absent", namesake values excused in a line
+ * or paragraph that tells the people apart. A run fails when any commitment is missing, any stale value stands
+ * without its current value, any namesake value is claimed, or the session ended in an error.
+ */
+export function scoreItems(gold: ItemsGold, answer: string | null | undefined, opts: { executionError?: string | null } = {}): ItemsScore {
+  const raw = answer ?? '';
+  const text = proseOf(raw);
+  const commitments_hit = gold.commitments.filter(m => matches(m, text)).map(m => m.label);
+  const commitments_missed = gold.commitments.filter(m => !matches(m, text)).map(m => m.label);
+  const new_date_hit = matches(gold.date.new, text);
+  const staleDate = staleMentions(gold.date.old, text, 't0-score-v3');
+  const staleDateFails = staleDate.asserted.length > 0 && !new_date_hit;
+  const corr = gold.corrections.map(c => ({ c, hit: matches(c.corrected, text), stale: staleMentions(c.stale, text, 't0-score-v3') }));
+  const staleCorr = corr.filter(x => x.stale.asserted.length > 0 && !x.hit);
+  const namesake_hits = gold.namesake.filter(m => m.label.startsWith('namesake ') && linesMatching(m, text).some(x => !DISAMBIGUATION_V3.test(x))).map(m => m.label);
+  const kinds: FailureKind[] = [];
+  if (opts.executionError || !raw.trim()) kinds.push('execution_error');
+  if (commitments_missed.length) kinds.push('missed_commitment');
+  if (staleDateFails) kinds.push('stale_date');
+  if (staleCorr.length) kinds.push('stale_correction');
+  if (namesake_hits.length) kinds.push('unsupported');
+  const failed = kinds.length > 0;
+  const corrected_hit = corr.filter(x => x.hit).map(x => x.c.corrected.label);
+  return {
+    version: T0B_SCORER_VERSION, failed, kinds, commitments_hit, commitments_missed, new_date_hit, corrected_hit,
+    stale_date_mentions: staleDate.asserted, stale_correction_mentions: staleCorr.flatMap(x => x.stale.asserted),
+    excused_mentions: [...staleDate.excused, ...corr.flatMap(x => x.stale.excused)], namesake_hits,
+    omissions: { date: !new_date_hit && !staleDateFails, correction: corr.some(x => !x.hit && !x.stale.asserted.length) },
+    complete: !failed && new_date_hit && corrected_hit.length === gold.corrections.length,
+    answer_chars: raw.length,
+  };
+}

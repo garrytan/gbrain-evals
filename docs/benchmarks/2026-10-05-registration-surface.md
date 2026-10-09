@@ -9,6 +9,21 @@ model reached 100% on both, so this cell cannot show a difference between them.
 Preregistration: [2026-10-05-registration-surface-preregistration.md](2026-10-05-registration-surface-preregistration.md).
 Raw results: [2026-10-05-registration-surface/](2026-10-05-registration-surface/).
 
+<a id="correction-2026-10-09"></a>
+
+> **Correction, 2026-10-09: every surface searched without gbrain's reranker.** Each restored slot brain kept the
+> slot build's metering-proxy port in its Voyage URL, and that port was closed when the cells ran, so every rerank
+> request failed and gbrain quietly returned unreranked results (fixed in
+> gbrain-evals #76, commit `7709a70`, and #109). No cell's metered gbrain calls include a rerank request: 0 of 40 on
+> each of `verbs`, `starter` and `full` ([audit](2026-10-08-program-primary-hard/root-cause/restore-audit.json)), and
+> in every `starter` and `full` cell at least one search result carries gbrain's `rerank_failed` notice. The three surfaces share the
+> condition, so the comparison stays internally valid and the keep decision stands; the success counts describe
+> gbrain without its reranker. The original numbers below stay as measured. For scale, the only measurement of the
+> reranker's effect comes from a different world and tier: on the Cat 40 Hard development world, Sonnet 5.5 on gbrain
+> `8e11aa1f3` finished 21 of 50 tasks with reranking and 19 of 50 without (7 tasks won, 5 lost, within noise;
+> gbrain-evals [#76](https://github.com/garrytan/gbrain-evals/pull/76), `docs/benchmarks/2026-10-07-model-ladder-hard.md`).
+> It is context, not a correction factor.
+
 ## The question
 
 [gbrain](https://github.com/garrytan/gbrain) is a memory system for agents. An agent harness (Claude Code, Codex,
@@ -110,3 +125,7 @@ builds, about 32 minutes of agent time on one machine. Each surface folder holds
 `experiment.json` binding, the budget receipt, the served tool list and instructions, the run log and gzipped
 transcripts; `summary.json` is the analysis output. Machine paths are redacted to `<evals>`, `<gbrain>`, `<work>`
 and `<home>`.
+
+## Changelog
+
+- 2026-10-09: [Correction](#correction-2026-10-09) added: all 120 cells searched without gbrain's reranker (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). The surfaces shared the condition, so the keep decision stands. Original numbers unchanged.
