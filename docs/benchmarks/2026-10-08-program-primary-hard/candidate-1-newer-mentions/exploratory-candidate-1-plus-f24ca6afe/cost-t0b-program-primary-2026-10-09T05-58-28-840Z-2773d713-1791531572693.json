@@ -1,0 +1,14 @@
+{
+  "usd": 1.283785,
+  "input_tokens": 1303479,
+  "output_tokens": 16596,
+  "basis": "budget ledger t0b-program-primary-2026-10-09T05-58-28-840Z-2773d713: 161 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "/workspace/gbrain-evals/.budget/ledger.sqlite",
+  "program_cap_usd": 500,
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+    "p50": 0,
+    "p99": 1,
+    "max": 2359.7
+  }
+}

@@ -17,6 +17,14 @@ and uncapped tool results. Spend was $179.66, recorded in the ledger.
 | `holdout` | held-out world, 6 models × 2 repeats, the wave | `a714410a5` | 600 |
 | `control` | the same on v0.60.35.0 (gate UC2) | `566a242a` | 600 |
 
+<a id="correction-2026-10-09"></a>
+
+> **Correction, 2026-10-09: every run here searched without gbrain's reranker.** Each restored slot brain kept the slot build's metering-proxy port in its Voyage URL, and that port was closed when the cells ran, so every rerank request failed and gbrain quietly returned unreranked results (fixed in gbrain-evals #76, commit `7709a70`, and #109). None of the 1,709 cells' metered gbrain calls include a rerank request ([audit](../../2026-10-08-program-primary-hard/root-cause/restore-audit.json)); embedding requests did reach the proxy, so vector search worked. The wave and its control share the condition, so their comparison stays internally valid for gbrain without its reranker. See the [Cat 40 report correction](../../2026-10-02-model-ladder.md#correction-2026-10-09).
+
 The `holdout/ship-rule.md` file is the output of `holdout_stats.py holdout control --ship-rule
 gbrain-c1234-holdout,gbrain-566a242a-control`. Results and the correction are in the Cat 40 report.
 Machine paths are redacted to `<work>`, `<evals>`, `<gbrain>` and `<home>`.
+
+## Changelog
+
+- 2026-10-09: [Correction](#correction-2026-10-09) added: all seven runs (1,709 cells) ran without reranking (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). Original numbers unchanged.

@@ -64,7 +64,7 @@ export const COUNTED_READERS = ['claude-opus-5-5', 'claude-sonnet-5-5', 'gpt-6.1
 export const FROZEN_RELEASE = { version: '0.60.106.0', commit: '7aa2caa0aa2a9f031730cd351cd516cf4f9f5802' } as const;
 export const MAX_TURNS = 20;
 const SURFACE = 'starter';
-const WRITE_TOOLS = new Set(['put_page', 'edit_page', 'remember', 'capture', 'add_timeline_entry', 'forget', 'synthesize']);
+export const WRITE_TOOLS = new Set(['put_page', 'edit_page', 'remember', 'capture', 'add_timeline_entry', 'forget', 'synthesize']);
 
 export const T0_SUBMIT: ToolSpec = {
   name: 'submit_answer',
@@ -79,7 +79,7 @@ export const T0_SUBMIT: ToolSpec = {
   },
 };
 
-export function systemPrompt(p: PPPersona, day: string, instructions: string): string {
+export function systemPrompt(p: Pick<PPPersona, 'principal'>, day: string, instructions: string): string {
   return [
     `You are ${p.principal.first}'s AI assistant in their agent harness. ${p.principal.name} is the ${p.principal.role} of ${p.principal.company}, which builds a ${p.principal.product}. Today is ${humanDate(day)}, ${day.slice(0, 4)} (${day}).`,
     `${p.principal.first}'s personal brain (gbrain) is their long-term memory across sessions. You reach it through the MCP tools listed. The gbrain server's instructions follow.\n<mcp_server_instructions server="gbrain">\n${instructions}\n</mcp_server_instructions>`,
@@ -88,7 +88,7 @@ export function systemPrompt(p: PPPersona, day: string, instructions: string): s
 }
 
 /** gbrain's MCP tools as the agent sees them (the server's own list and descriptions). */
-class BrainArm implements Arm {
+export class BrainArm implements Arm {
   readonly name = 'gbrain';
   constructor(private slot: GbrainSlot) {}
   private get client() { if (!this.slot.client) throw new Error('gbrain slot not started'); return this.slot.client; }
@@ -178,7 +178,7 @@ export interface CellRecord {
   started_at: string;
 }
 
-interface Ctx {
+export interface Ctx {
   build: BuildInfo;
   proxy: MeteringProxy;
   slots: Map<string, GbrainSlot>;
@@ -193,13 +193,17 @@ export const cellKey = (task: string, reader: string, arm: string, repeat: numbe
 
 async function settle(ms: number) { await new Promise(r => setTimeout(r, ms)); }
 
-async function runSession(ctx: Ctx, slot: GbrainSlot, p: PPPersona, t: PPTask, reader: string, arm: T0Arm, repeat: number, n: 1 | 2, receipts: UsageReceipt[]): Promise<{ rec: SessionRecord; run: AgentRun }> {
+/** Session days and the scripted (hermetic) models a workload supplies to the shared session runner. */
+export interface SessionPlan { day: string; drop: boolean; scripted?: (injected: string) => ScriptedModel; lane?: string }
+
+/** One session of the carrier: settle, both hooks, the injected user turn, the model loop, usage receipts. */
+export async function runSessionWith(ctx: Ctx, slot: GbrainSlot, p: Pick<PPPersona, 'id' | 'principal'>, t: { id: string; session1: string; session2: string }, reader: string, arm: string, repeat: number, n: 1 | 2, receipts: UsageReceipt[], plan: SessionPlan): Promise<{ rec: SessionRecord; run: AgentRun }> {
   const sessionId = createHash('sha256').update(`${cellKey(t.id, reader, arm, repeat)}|s${n}|${Date.now()}`).digest('hex').slice(0, 32);
   const ws = join(ctx.workspaceRoot, `${p.id}-${sessionId.slice(0, 8)}`);
   const prompt = n === 1 ? t.session1 : t.session2;
   await settle(DELIVERY_CONTRACT.timing.settle_ms_after_initialize);
   const env = slot.run.env as Record<string, string | undefined>;
-  const drop = arm === 'ablation-push-off' || (arm === 'mutant-forced-drop' && n === 2);
+  const drop = plan.drop;
   const raw = [
     await runHook(ctx.build.dir, env, ws, 'session-start', { session_id: sessionId, cwd: ws, source: 'startup', hook_event_name: 'SessionStart' }),
     await runHook(ctx.build.dir, env, ws, 'user-prompt', { session_id: sessionId, cwd: ws, prompt, hook_event_name: 'UserPromptSubmit' }),
@@ -207,7 +211,7 @@ async function runSession(ctx: Ctx, slot: GbrainSlot, p: PPPersona, t: PPTask, r
   const hooks = drop ? raw.map(dropped) : raw;
   const user = renderUserTurn(prompt, hooks);
   const injected = hooks.map(h => h.text).join('\n');
-  const day = n === 1 ? PP_TODAY : PP_SESSION2_DAY;
+  const day = plan.day;
   const brainArm = new BrainArm(slot);
   let attempt = 0;
   const onAttempt = (a: ProviderAttempt) => {
@@ -218,7 +222,7 @@ async function runSession(ctx: Ctx, slot: GbrainSlot, p: PPPersona, t: PPTask, r
       : c.type === 'message' ? ((c.content as Array<Record<string, unknown>>) ?? []).map(x => String(x.text ?? '')) : c.type === 'function_call' ? [`[tool_use ${String(c.name)}] ${String(c.arguments)}`] : [])).join('\n');
     const finishRaw = isAnthropic ? (r.stop_reason as string | undefined) ?? null : (r.status as string | undefined) ?? null;
     receipts.push(receipt({
-      lane: 't0-program-primary', role: 'reader', question_id: `${t.id}:${arm}:s${n}`, replicate: repeat, attempt: attempt++,
+      lane: plan.lane ?? 't0-program-primary', role: 'reader', question_id: `${t.id}:${arm}:s${n}`, replicate: repeat, attempt: attempt++,
       model: `${provider(reader)}:${reader}`, response_model: (r.model as string | undefined) ?? null, status: a.status, error: a.error, from_cache: false,
       finish: normalizeFinish(finishRaw), finish_raw: finishRaw, answer: text, usage: a.response ? normalizeUsage(usageSourceOf(reader), r.usage) : null,
       usage_raw: (r.usage as Record<string, unknown> | undefined) ?? null,
@@ -228,7 +232,7 @@ async function runSession(ctx: Ctx, slot: GbrainSlot, p: PPPersona, t: PPTask, r
   const t0 = Date.now();
   const run = await runAgent({
     model: ctx.scripted ? 'scripted' : reader, arm: brainArm, system: systemPrompt(p, day, slot.client!.instructions), user, maxTurns: MAX_TURNS, submitTool: T0_SUBMIT, onAttempt,
-    scripted: ctx.scripted ? (n === 1 ? scriptedWriter(p, t) : scriptedReader(t, injected)) : undefined,
+    scripted: ctx.scripted && plan.scripted ? plan.scripted(injected) : undefined,
   });
   const answer = run.final?.answer ?? run.text ?? '';
   return {
@@ -240,6 +244,14 @@ async function runSession(ctx: Ctx, slot: GbrainSlot, p: PPPersona, t: PPTask, r
       answer,
     },
   };
+}
+
+async function runSession(ctx: Ctx, slot: GbrainSlot, p: PPPersona, t: PPTask, reader: string, arm: T0Arm, repeat: number, n: 1 | 2, receipts: UsageReceipt[]): Promise<{ rec: SessionRecord; run: AgentRun }> {
+  return runSessionWith(ctx, slot, p, t, reader, arm, repeat, n, receipts, {
+    day: n === 1 ? PP_TODAY : PP_SESSION2_DAY,
+    drop: arm === 'ablation-push-off' || (arm === 'mutant-forced-drop' && n === 2),
+    scripted: injected => (n === 1 ? scriptedWriter(p, t) : scriptedReader(t, injected)),
+  });
 }
 
 /** Rolls session 1 back and writes the commitment and the moved meeting, but not the correction, to the contact page. */

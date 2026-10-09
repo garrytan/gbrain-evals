@@ -1,0 +1,70 @@
+{
+  "benchmark": "locomo",
+  "questions": 587,
+  "native": {
+    "rendering": "native",
+    "budget": 7300,
+    "steps": [
+      {
+        "budget": 8000,
+        "r_max": 1.0607960741548528,
+        "next": 7300
+      },
+      {
+        "budget": 7300,
+        "r_max": 1.0606664252082578,
+        "next": 7300
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 587,
+    "ratio": {
+      "max": 1.0606664252082578,
+      "p50": 1.0117468097692892,
+      "p90": 1.0482936826160563,
+      "p99": 1.0581846392552365,
+      "mean": 1.0174344088907947
+    },
+    "verification": {
+      "overflow": 587,
+      "overflow_from_gbrain_overrun": 587,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 587
+    }
+  },
+  "pseudo": {
+    "rendering": "pseudo",
+    "budget": 6400,
+    "steps": [
+      {
+        "budget": 8000,
+        "r_max": 1.2182216656230431,
+        "next": 6400
+      },
+      {
+        "budget": 6400,
+        "r_max": 1.2182216656230431,
+        "next": 6400
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 1174,
+    "ratio": {
+      "max": 1.2182216656230431,
+      "p50": 1.1655634618566937,
+      "p90": 1.2016260162601626,
+      "p99": 1.210930576070901,
+      "mean": 1.1732859697024014
+    },
+    "verification": {
+      "overflow": 587,
+      "overflow_from_gbrain_overrun": 587,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 587
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "query-auto-pseudo",
+    "query-auto-l5-pseudo"
+  ],
+  "recipes": {
+    "query-auto-pseudo": {
+      "items": "auto-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "query-auto-l5-pseudo": {
+      "items": "auto-l5-b_pseudo",
+      "render": "pseudo-session"
+    }
+  },
+  "readers": [
+    {
+      "id": "main",
+      "model": "openai:gpt-4o-mini"
+    }
+  ],
+  "judge": "openai:gpt-4o-2024-08-06"
+}

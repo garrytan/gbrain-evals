@@ -140,7 +140,8 @@ export class MeteringProxy {
   get port(): number { return this.server!.port as number; }
   /** Charge the slot's provider requests to `key` (a cell id) from now on. */
   bind(slot: string, key: string) { this.bindings.set(slot, key); }
-  unbind(slot: string) { this.bindings.delete(slot); }
+  /** With `key`, only drops the binding if it is still that key: a released slot may already be bound to the next cell. */
+  unbind(slot: string, key?: string) { if (key === undefined || this.bindings.get(slot) === key) this.bindings.delete(slot); }
   private meter(key: string): Meter { let m = this.meters.get(key); if (!m) this.meters.set(key, m = newMeter()); return m; }
   private settled(key: string) {
     const n = (this.inflight.get(key) ?? 1) - 1;

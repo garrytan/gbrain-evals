@@ -51,6 +51,52 @@ decision) ran 2 repeats per model.
   the three new models.
 - **Full tables:** [headline-wave.md](2026-10-02-model-ladder/entity-recall/holdout/headline-wave.md).
 
+<a id="correction-2026-10-09"></a>
+
+> **Correction, 2026-10-09: gbrain searched without its reranker in most runs of this report, including the
+> finding.** The runner builds gbrain slots in one process and runs cells in later ones. Each slot snapshot kept the
+> build process's metering-proxy port in its Voyage URL, so in a later process every rerank request went to a closed
+> port and gbrain quietly returned its unreranked results. Embedding requests still reached the proxy, so vector
+> search ran. gbrain-evals #76 (commit `7709a70`) points every slot start at the current proxy, and #109 rewrites the
+> URL on every restore and refuses a paid run until a search reaches the reranker. The original numbers below stay as
+> measured. Cells whose metered gbrain calls include a rerank request, counted from each folder's `results.jsonl`
+> ([audit](2026-10-08-program-primary-hard/root-cause/restore-audit.json)):
+>
+> | Run | gbrain cells that reranked |
+> |---|---|
+> | `holdout/` (the held-out check of the fix wave) | 1691 of 1800: not affected |
+> | `entity-recall/holdout/wave` (the finding, `51f865d78`) | 0 of 500 |
+> | `entity-recall/holdout/a714410a5-new-models` | 0 of 300 |
+> | `entity-recall/dev-frontier/` master, round 1, round 2; `entity-recall/uc3/` master, keyword-only | 0 of 250 each; 0 of 150 each |
+> | `followups/` (7 runs: control, holdout, dev-base, dev1, dev2, dev-51a30c1-E, dev-566a242a-E) | 0 of 1709 |
+> | `dev-rounds/` | 0 of 750 |
+> | `fix-wave-ladder/`, `fix-wave-ladder-round4/` | 0 of 550; 0 of 708 |
+> | `scale-tier/` | 0 of 200 |
+> | `baseline-uncapped/` (the release ladder) | 362 of 1456: repeat 0's families A to C and 33 of its 110 family E cells; no family F cell and no cell of repeats 1 and 2 |
+> | `pilot-capped-20k/` | 185 of 300: 45 to 48 of 60 per family in A to E, 0 of 60 in F |
+>
+> What this changes:
+> - **Comparisons between gbrain builds where neither side reranked stay internally valid.** The entity-recall wave
+>   against `a714410a5` (+0.4 points, renewal briefs +7.0, cost −26%), the cost wave against its control (+2.2
+>   points, cost −32%), the development rounds and the keyword-only variant compare gbrain builds with the reranker
+>   off. Whether each gap holds with the reranker on was not measured.
+> - **Comparisons of gbrain with another arm measure gbrain without its reranker.** The finding's tie with plain files
+>   (95.6% each), the earlier six-model set (75.7% against 72.8%, with +16 and +17 points on Haiku 4.5 and Sonnet 4.6),
+>   the scale tier (−16 points) and round 4's tie with files (103 of 150) all describe a gbrain whose reranker failed.
+>   The file, memory-tool, Postgres and oracle arms have no reranker to lose.
+> - **The fixed-build ladder mixes conditions.** Its fixed rows (0 of 550 reranked) are compared with repeat 0 of the
+>   release ladder, where 362 of 550 release cells reranked, so its "release to fixed" column is not a like-for-like
+>   comparison. The held-out check reranked on all three gbrain builds (586, 579 and 526 of 600 cells) and replicates the improvement (+16.7 points),
+>   so that conclusion rests on the held-out check.
+> - **Costs stand.** Where reranking ran, in the held-out check, it cost $0.0004 to $0.0007 per task, under 1% of
+>   gbrain's cost per task in this report.
+>
+> For scale, the only measurement of the reranker's effect comes from a different world and tier. On the Cat 40 Hard
+> development world (50 tasks), Sonnet 5.5 on gbrain `8e11aa1f3` finished 21 of 50 tasks with reranking and 19 of 50
+> without; paired, reranking won 7 tasks and lost 5, which is within noise (gbrain-evals
+> [#76](https://github.com/garrytan/gbrain-evals/pull/76), `docs/benchmarks/2026-10-07-model-ladder-hard.md`). It is
+> context, not a correction factor for the numbers here.
+
 > **Correction, 2026-10-04: gbrain's AI search was partly switched off in every gbrain run below.**
 > The old budget ledger stalled the runner's event loop, and the same loop carries gbrain's embedding requests
 > through the metering proxy. When those requests stalled, gbrain quietly fell back to keyword-only search.
@@ -457,3 +503,7 @@ python3 $D/holdout/holdout_stats.py $D/entity-recall/simple-arms-rescored/result
 
 Keys: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `VOYAGE_API_KEY` (gbrain's reranker). Spend across the whole program
 was $1,763 across four machines' ledgers, under a $2,000 authorization. Each folder's README or receipt lists its own spend.
+
+## Changelog
+
+- 2026-10-09: [Correction](#correction-2026-10-09) added: gbrain ran without reranking in the finding's runs and in all or part of every other run here except the held-out check (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109), with per-run counts from the restore audit. Original numbers unchanged.

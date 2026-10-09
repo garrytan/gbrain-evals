@@ -1,0 +1,94 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "pseudo-off",
+    "pseudo-cap_only",
+    "pseudo-breadth_capped",
+    "pseudo-depth_first",
+    "pseudo-off-l5",
+    "pseudo-window",
+    "sweep16-off",
+    "sweep16-cap_only",
+    "sweep16-breadth_capped",
+    "sweep16-depth_first"
+  ],
+  "recipes": {
+    "pseudo-off": {
+      "items": "off-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-cap_only": {
+      "items": "cap_only-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-breadth_capped": {
+      "items": "breadth_capped-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-depth_first": {
+      "items": "depth_first-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-off-l5": {
+      "items": "off-l5-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-window": {
+      "items": "window-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "sweep16-off": {
+      "items": "off-b16_pseudo",
+      "render": "pseudo-session",
+      "budget_tokens": 16000
+    },
+    "sweep16-cap_only": {
+      "items": "cap_only-b16_pseudo",
+      "render": "pseudo-session",
+      "budget_tokens": 16000
+    },
+    "sweep16-breadth_capped": {
+      "items": "breadth_capped-b16_pseudo",
+      "render": "pseudo-session",
+      "budget_tokens": 16000
+    },
+    "sweep16-depth_first": {
+      "items": "depth_first-b16_pseudo",
+      "render": "pseudo-session",
+      "budget_tokens": 16000
+    }
+  },
+  "readers": [
+    {
+      "id": "sonnet-5-5",
+      "model": "anthropic:claude-sonnet-5-5",
+      "contexts": [
+        "pseudo-off",
+        "pseudo-cap_only",
+        "pseudo-breadth_capped",
+        "pseudo-depth_first",
+        "pseudo-off-l5"
+      ]
+    },
+    {
+      "id": "sonnet-5-5-slice",
+      "model": "anthropic:claude-sonnet-5-5",
+      "slice": {
+        "limit": 100,
+        "seed": 42
+      },
+      "contexts": [
+        "pseudo-window",
+        "sweep16-off",
+        "sweep16-cap_only",
+        "sweep16-breadth_capped",
+        "sweep16-depth_first"
+      ]
+    }
+  ],
+  "judge": "openai:gpt-4o-2024-08-06"
+}

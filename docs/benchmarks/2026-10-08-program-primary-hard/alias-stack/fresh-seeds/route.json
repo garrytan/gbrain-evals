@@ -1,0 +1,141 @@
+{
+ "master": {
+  "claude-opus-5-5": {
+   "runs": 24,
+   "failures": 5,
+   "classes": {
+    "terms": 5
+   },
+   "route": {
+    "entity_on_champion": 0,
+    "context_pack_on_champion": 24,
+    "neither": 0,
+    "opened_contact_page": 23,
+    "opened_date_page": 23,
+    "tool_calls": 265,
+    "opened_terms_page": 12
+   },
+   "mean_input_tokens": 171252.91666666666,
+   "mean_output_tokens": 3121.7083333333335,
+   "p95_session2_ms": 35253,
+   "mean_usd": 0.2915539870833333
+  },
+  "claude-sonnet-5-5": {
+   "runs": 24,
+   "failures": 13,
+   "classes": {
+    "hop": 3,
+    "namesake": 1,
+    "terms": 10
+   },
+   "route": {
+    "entity_on_champion": 17,
+    "context_pack_on_champion": 24,
+    "neither": 0,
+    "opened_contact_page": 21,
+    "opened_date_page": 22,
+    "opened_terms_page": 9,
+    "tool_calls": 237
+   },
+   "mean_input_tokens": 159843.08333333334,
+   "mean_output_tokens": 3585.1666666666665,
+   "p95_session2_ms": 25681,
+   "mean_usd": 0.15512269874999998
+  },
+  "gpt-6.1-sol": {
+   "runs": 24,
+   "failures": 0,
+   "classes": {},
+   "route": {
+    "entity_on_champion": 24,
+    "context_pack_on_champion": 24,
+    "neither": 0,
+    "opened_contact_page": 24,
+    "opened_date_page": 24,
+    "opened_terms_page": 24,
+    "tool_calls": 366
+   },
+   "mean_input_tokens": 98781.66666666667,
+   "mean_output_tokens": 1358.7083333333333,
+   "p95_session2_ms": 51766,
+   "mean_usd": 0.08131505958333334
+  }
+ },
+ "alias": {
+  "claude-opus-5-5": {
+   "runs": 24,
+   "failures": 1,
+   "classes": {
+    "terms": 1
+   },
+   "route": {
+    "entity_on_champion": 0,
+    "context_pack_on_champion": 24,
+    "neither": 0,
+    "opened_date_page": 23,
+    "opened_terms_page": 22,
+    "tool_calls": 281,
+    "opened_contact_page": 23
+   },
+   "mean_input_tokens": 158434.75,
+   "mean_output_tokens": 3151.7916666666665,
+   "p95_session2_ms": 38640,
+   "mean_usd": 0.2886456345833333
+  },
+  "claude-sonnet-5-5": {
+   "runs": 24,
+   "failures": 3,
+   "classes": {
+    "terms": 3
+   },
+   "route": {
+    "entity_on_champion": 13,
+    "context_pack_on_champion": 24,
+    "neither": 0,
+    "opened_contact_page": 24,
+    "opened_date_page": 22,
+    "opened_terms_page": 17,
+    "tool_calls": 259
+   },
+   "mean_input_tokens": 174704.58333333334,
+   "mean_output_tokens": 3440.2083333333335,
+   "p95_session2_ms": 29983,
+   "mean_usd": 0.17227597958333332
+  },
+  "gpt-6.1-sol": {
+   "runs": 24,
+   "failures": 0,
+   "classes": {},
+   "route": {
+    "entity_on_champion": 17,
+    "context_pack_on_champion": 24,
+    "neither": 0,
+    "opened_contact_page": 24,
+    "opened_date_page": 24,
+    "opened_terms_page": 24,
+    "tool_calls": 360
+   },
+   "mean_input_tokens": 106501.0,
+   "mean_output_tokens": 1363.375,
+   "p95_session2_ms": 63307,
+   "mean_usd": 0.08909091666666667
+  }
+ },
+ "envelope": {
+  "claude-opus-5-5": {
+   "p95_session2_latency_x": 1.0960769296230108,
+   "mean_tokens_x": 0.9266631636722754,
+   "mean_usd_x": 0.990024651938069
+  },
+  "claude-sonnet-5-5": {
+   "p95_session2_latency_x": 1.1675168412444998,
+   "mean_tokens_x": 1.0900489460461498,
+   "mean_usd_x": 1.1105787932491946
+  },
+  "gpt-6.1-sol": {
+   "p95_session2_latency_x": 1.2229455627245682,
+   "mean_tokens_x": 1.0771317263391513,
+   "mean_usd_x": 1.095626285256109
+  }
+ }
+}

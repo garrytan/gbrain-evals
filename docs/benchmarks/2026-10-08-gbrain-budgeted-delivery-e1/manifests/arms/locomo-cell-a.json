@@ -1,0 +1,32 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "native",
+    "chunk-dated",
+    "chunk-undated-twin",
+    "rehydrated"
+  ],
+  "recipes": {
+    "chunk-dated": {
+      "items": "retrieved",
+      "render": "native-dated"
+    },
+    "chunk-undated-twin": {
+      "items": "retrieved",
+      "render": "native",
+      "select_from": "chunk-dated",
+      "reuse_from": "native"
+    }
+  },
+  "readers": [
+    {
+      "id": "main",
+      "model": "openai:gpt-4o-mini"
+    }
+  ],
+  "judge": "openai:gpt-4o-2024-08-06"
+}

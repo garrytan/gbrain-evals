@@ -1,0 +1,878 @@
+{
+ "h306480323-t1": {
+  "persona": "h306480323",
+  "champion": "Odette Haddad",
+  "champion_slug": "people/odette-haddad",
+  "company": "Thalesso Foods",
+  "docs": {
+   "contact": "inbox/2026-09-22-haddad-procurement-handoff",
+   "date": "inbox/2026-10-11-haddad-reschedule",
+   "terms": "meetings/2026-10-13-thalesso-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Rania Holmgren",
+    "patterns": [
+     "(?<![a-z])(?:Rania|Ran)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$35 per seat",
+    "patterns": [
+     "\\$35(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$35(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-20",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?20(?:st|nd|rd|th)?\\b",
+     "\\b0?20(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?20\\b(?!/\\d{3})",
+     "\\b2026-10-20\\b"
+    ]
+   }
+  },
+  "session1": "Give me a short checklist for preparing a board deck. Also, please note in my brain that I promised Odette Haddad I'd send our benchmark results on their monorepo.",
+  "session1_commitment": "our benchmark results on their monorepo"
+ },
+ "h306480323-t2": {
+  "persona": "h306480323",
+  "champion": "Joaquin Abara",
+  "champion_slug": "people/joaquin-abara",
+  "company": "Orvesso Retail",
+  "docs": {
+   "contact": "inbox/2026-09-21-abara-procurement-handoff",
+   "date": "inbox/2026-10-09-abara-reschedule",
+   "terms": "meetings/2026-10-11-orvesso-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Ayla Yilmaz",
+    "patterns": [
+     "(?<![a-z])(?:Ayla|Ayla)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$38 per seat",
+    "patterns": [
+     "\\$38(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$38(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-23",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?23(?:st|nd|rd|th)?\\b",
+     "\\b0?23(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?23\\b(?!/\\d{3})",
+     "\\b2026-10-23\\b"
+    ]
+   }
+  },
+  "session1": "What are three good questions to ask a candidate for a founding designer role? Also, please note in my brain that I promised Joaquin Abara I'd send the migration runbook.",
+  "session1_commitment": "the migration runbook"
+ },
+ "h306480323-t3": {
+  "persona": "h306480323",
+  "champion": "Matteo Kowalczyk",
+  "champion_slug": "people/matteo-kowalczyk",
+  "company": "Iskenza Insurance",
+  "docs": {
+   "contact": "inbox/2026-09-25-kowalczyk-procurement-handoff",
+   "date": "inbox/2026-10-10-kowalczyk-reschedule",
+   "terms": "meetings/2026-10-10-iskenza-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Kofi Nakashima",
+    "patterns": [
+     "(?<![a-z])(?:Kofi|Kofi)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "70 seats",
+    "patterns": [
+     "\\b70[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-26",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?26(?:st|nd|rd|th)?\\b",
+     "\\b0?26(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?26\\b(?!/\\d{3})",
+     "\\b2026-10-26\\b"
+    ]
+   }
+  },
+  "session1": "Help me write a two-sentence bio for a conference speaker page. Also, please note in my brain that I promised Matteo Kowalczyk I'd send the uptime report for last quarter.",
+  "session1_commitment": "the uptime report for last quarter"
+ },
+ "h316602389-t1": {
+  "persona": "h316602389",
+  "champion": "Wren Delacroix",
+  "champion_slug": "people/wren-delacroix",
+  "company": "Orvari Foods",
+  "docs": {
+   "contact": "inbox/2026-09-23-delacroix-procurement-handoff",
+   "date": "inbox/2026-10-12-delacroix-reschedule",
+   "terms": "meetings/2026-10-11-orvari-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Odette Brandt",
+    "patterns": [
+     "(?<![a-z])(?:Odette|Odette)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$38 per seat",
+    "patterns": [
+     "\\$38(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$38(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-21",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?21(?:st|nd|rd|th)?\\b",
+     "\\b0?21(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?21\\b(?!/\\d{3})",
+     "\\b2026-10-21\\b"
+    ]
+   }
+  },
+  "session1": "Help me write a two-sentence bio for a conference speaker page. Also, please note in my brain that I promised Wren Delacroix I'd send the migration runbook.",
+  "session1_commitment": "the migration runbook"
+ },
+ "h316602389-t2": {
+  "persona": "h316602389",
+  "champion": "Petra Morales",
+  "champion_slug": "people/petra-morales",
+  "company": "Vorquent Insurance",
+  "docs": {
+   "contact": "inbox/2026-09-21-morales-procurement-handoff",
+   "date": "inbox/2026-10-09-morales-reschedule",
+   "terms": "meetings/2026-10-12-vorquent-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Bram Osei",
+    "patterns": [
+     "(?<![a-z])(?:Bram|Bram)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "12 seats",
+    "patterns": [
+     "\\b12[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-23",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?23(?:st|nd|rd|th)?\\b",
+     "\\b0?23(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?23\\b(?!/\\d{3})",
+     "\\b2026-10-23\\b"
+    ]
+   }
+  },
+  "session1": "Suggest a name for our internal hackathon. Something fun. Also, please note in my brain that I promised Petra Morales I'd send the revised statement of work.",
+  "session1_commitment": "the revised statement of work"
+ },
+ "h316602389-t3": {
+  "persona": "h316602389",
+  "champion": "Joaquin Aziz",
+  "champion_slug": "people/joaquin-aziz",
+  "company": "Dovique Robotics",
+  "docs": {
+   "contact": "inbox/2026-09-25-aziz-procurement-handoff",
+   "date": "inbox/2026-10-09-aziz-reschedule",
+   "terms": "meetings/2026-10-12-dovique-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Emil Osei",
+    "patterns": [
+     "(?<![a-z])(?:Emil|Emil)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "48 seats",
+    "patterns": [
+     "\\b48[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-26",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?26(?:st|nd|rd|th)?\\b",
+     "\\b0?26(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?26\\b(?!/\\d{3})",
+     "\\b2026-10-26\\b"
+    ]
+   }
+  },
+  "session1": "Suggest a name for our internal hackathon. Something fun. Also, please note in my brain that I promised Joaquin Aziz I'd send the updated order form.",
+  "session1_commitment": "the updated order form"
+ },
+ "h384540222-t1": {
+  "persona": "h384540222",
+  "champion": "Matteo Eskildsen",
+  "champion_slug": "people/matteo-eskildsen",
+  "company": "Yarumbr Energy",
+  "docs": {
+   "contact": "inbox/2026-09-26-eskildsen-procurement-handoff",
+   "date": "inbox/2026-10-10-eskildsen-reschedule",
+   "terms": "meetings/2026-10-13-yarumbr-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Omari Castellan",
+    "patterns": [
+     "(?<![a-z])(?:Omari|Om)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$28 per seat",
+    "patterns": [
+     "\\$28(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$28(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-26",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?26(?:st|nd|rd|th)?\\b",
+     "\\b0?26(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?26\\b(?!/\\d{3})",
+     "\\b2026-10-26\\b"
+    ]
+   }
+  },
+  "session1": "Give me a short checklist for preparing a board deck. Also, please note in my brain that I promised Matteo Eskildsen I'd send the migration runbook.",
+  "session1_commitment": "the migration runbook"
+ },
+ "h384540222-t2": {
+  "persona": "h384540222",
+  "champion": "Joaquin Udeh",
+  "champion_slug": "people/joaquin-udeh",
+  "company": "Xermiro Logistics",
+  "docs": {
+   "contact": "inbox/2026-09-23-udeh-procurement-handoff",
+   "date": "inbox/2026-10-11-udeh-reschedule",
+   "terms": "meetings/2026-10-13-xermiro-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Suki Draxler",
+    "patterns": [
+     "(?<![a-z])(?:Suki|Suki)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "100 seats",
+    "patterns": [
+     "\\b100[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-23",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?23(?:st|nd|rd|th)?\\b",
+     "\\b0?23(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?23\\b(?!/\\d{3})",
+     "\\b2026-10-23\\b"
+    ]
+   }
+  },
+  "session1": "Can you give me three subject lines for our launch email? Something punchy. Also, please note in my brain that I promised Joaquin Udeh I'd send the updated order form.",
+  "session1_commitment": "the updated order form"
+ },
+ "h384540222-t3": {
+  "persona": "h384540222",
+  "champion": "Dario Varga",
+  "champion_slug": "people/dario-varga",
+  "company": "Vesenza Foods",
+  "docs": {
+   "contact": "inbox/2026-09-21-varga-procurement-handoff",
+   "date": "inbox/2026-10-10-varga-reschedule",
+   "terms": "meetings/2026-10-10-vesenza-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Talia Udeh",
+    "patterns": [
+     "(?<![a-z])(?:Talia|Talia)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "40 seats",
+    "patterns": [
+     "\\b40[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-19",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?19(?:st|nd|rd|th)?\\b",
+     "\\b0?19(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?19\\b(?!/\\d{3})",
+     "\\b2026-10-19\\b"
+    ]
+   }
+  },
+  "session1": "Can you give me three subject lines for our launch email? Something punchy. Also, please note in my brain that I promised Dario Varga I'd send the customer reference list.",
+  "session1_commitment": "the customer reference list"
+ },
+ "h476843991-t1": {
+  "persona": "h476843991",
+  "champion": "Arjun Osei",
+  "champion_slug": "people/arjun-osei",
+  "company": "Vortiva Analytics",
+  "docs": {
+   "contact": "inbox/2026-09-21-osei-procurement-handoff",
+   "date": "inbox/2026-10-10-osei-reschedule",
+   "terms": "meetings/2026-10-10-vortiva-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Desmond Jaramillo",
+    "patterns": [
+     "(?<![a-z])(?:Desmond|Des)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$35 per seat",
+    "patterns": [
+     "\\$35(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$35(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-19",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?19(?:st|nd|rd|th)?\\b",
+     "\\b0?19(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?19\\b(?!/\\d{3})",
+     "\\b2026-10-19\\b"
+    ]
+   }
+  },
+  "session1": "What are three good questions to ask a candidate for a founding designer role? Also, please note in my brain that I promised Arjun Osei I'd send the draft pilot success criteria.",
+  "session1_commitment": "the draft pilot success criteria"
+ },
+ "h476843991-t2": {
+  "persona": "h476843991",
+  "champion": "Matteo Kowalczyk",
+  "champion_slug": "people/matteo-kowalczyk",
+  "company": "Naxithe Media",
+  "docs": {
+   "contact": "inbox/2026-09-22-kowalczyk-procurement-handoff",
+   "date": "inbox/2026-10-10-kowalczyk-reschedule",
+   "terms": "meetings/2026-10-12-naxithe-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Ayla Petrov",
+    "patterns": [
+     "(?<![a-z])(?:Ayla|Ayla)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$21 per seat",
+    "patterns": [
+     "\\$21(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$21(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-20",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?20(?:st|nd|rd|th)?\\b",
+     "\\b0?20(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?20\\b(?!/\\d{3})",
+     "\\b2026-10-20\\b"
+    ]
+   }
+  },
+  "session1": "Suggest a name for our internal hackathon. Something fun. Also, please note in my brain that I promised Matteo Kowalczyk I'd send the migration runbook.",
+  "session1_commitment": "the migration runbook"
+ },
+ "h476843991-t3": {
+  "persona": "h476843991",
+  "champion": "Bram Mehta",
+  "champion_slug": "people/bram-mehta",
+  "company": "Iskique Foods",
+  "docs": {
+   "contact": "inbox/2026-09-20-mehta-procurement-handoff",
+   "date": "inbox/2026-10-10-mehta-reschedule",
+   "terms": "meetings/2026-10-11-iskique-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Calla Udeh",
+    "patterns": [
+     "(?<![a-z])(?:Calla|Calla)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "40 seats",
+    "patterns": [
+     "\\b40[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-26",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?26(?:st|nd|rd|th)?\\b",
+     "\\b0?26(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?26\\b(?!/\\d{3})",
+     "\\b2026-10-26\\b"
+    ]
+   }
+  },
+  "session1": "What are three good questions to ask a candidate for a founding designer role? Also, please note in my brain that I promised Bram Mehta I'd send the security architecture diagram.",
+  "session1_commitment": "the security architecture diagram"
+ },
+ "h615322188-t1": {
+  "persona": "h615322188",
+  "champion": "Anouk Yilmaz",
+  "champion_slug": "people/anouk-yilmaz",
+  "company": "Thalanta Retail",
+  "docs": {
+   "contact": "inbox/2026-09-21-yilmaz-procurement-handoff",
+   "date": "inbox/2026-10-12-yilmaz-reschedule",
+   "terms": "meetings/2026-10-12-thalanta-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Talia Haddad",
+    "patterns": [
+     "(?<![a-z])(?:Talia|Talia)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$24 per seat",
+    "patterns": [
+     "\\$24(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$24(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-19",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?19(?:st|nd|rd|th)?\\b",
+     "\\b0?19(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?19\\b(?!/\\d{3})",
+     "\\b2026-10-19\\b"
+    ]
+   }
+  },
+  "session1": "Can you give me three subject lines for our launch email? Something punchy. Also, please note in my brain that I promised Anouk Yilmaz I'd send the security architecture diagram.",
+  "session1_commitment": "the security architecture diagram"
+ },
+ "h615322188-t2": {
+  "persona": "h615322188",
+  "champion": "Petra Varga",
+  "champion_slug": "people/petra-varga",
+  "company": "Kestvane Media",
+  "docs": {
+   "contact": "inbox/2026-09-26-varga-procurement-handoff",
+   "date": "inbox/2026-10-10-varga-reschedule",
+   "terms": "meetings/2026-10-13-kestvane-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Kofi Abara",
+    "patterns": [
+     "(?<![a-z])(?:Kofi|Kofi)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "80 seats",
+    "patterns": [
+     "\\b80[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-22",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?22(?:st|nd|rd|th)?\\b",
+     "\\b0?22(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?22\\b(?!/\\d{3})",
+     "\\b2026-10-22\\b"
+    ]
+   }
+  },
+  "session1": "Draft a one-line LinkedIn post celebrating our tenth customer. Also, please note in my brain that I promised Petra Varga I'd send the revised statement of work.",
+  "session1_commitment": "the revised statement of work"
+ },
+ "h615322188-t3": {
+  "persona": "h615322188",
+  "champion": "Lior Delacroix",
+  "champion_slug": "people/lior-delacroix",
+  "company": "Fenumbr Retail",
+  "docs": {
+   "contact": "inbox/2026-09-20-delacroix-procurement-handoff",
+   "date": "inbox/2026-10-10-delacroix-reschedule",
+   "terms": "meetings/2026-10-13-fenumbr-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Ilse Holmgren",
+    "patterns": [
+     "(?<![a-z])(?:Ilse|Ilse)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$11 per seat",
+    "patterns": [
+     "\\$11(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$11(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-23",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?23(?:st|nd|rd|th)?\\b",
+     "\\b0?23(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?23\\b(?!/\\d{3})",
+     "\\b2026-10-23\\b"
+    ]
+   }
+  },
+  "session1": "Draft a one-line LinkedIn post celebrating our tenth customer. Also, please note in my brain that I promised Lior Delacroix I'd send the updated order form.",
+  "session1_commitment": "the updated order form"
+ },
+ "h691467441-t1": {
+  "persona": "h691467441",
+  "champion": "Kofi Nakashima",
+  "champion_slug": "people/kofi-nakashima",
+  "company": "Caelura Foods",
+  "docs": {
+   "contact": "inbox/2026-09-23-nakashima-procurement-handoff",
+   "date": "inbox/2026-10-11-nakashima-reschedule",
+   "terms": "meetings/2026-10-11-caelura-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Kenji Petrov",
+    "patterns": [
+     "(?<![a-z])(?:Kenji|Kenji)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$42 per seat",
+    "patterns": [
+     "\\$42(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$42(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-23",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?23(?:st|nd|rd|th)?\\b",
+     "\\b0?23(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?23\\b(?!/\\d{3})",
+     "\\b2026-10-23\\b"
+    ]
+   }
+  },
+  "session1": "Can you give me three subject lines for our launch email? Something punchy. Also, please note in my brain that I promised Kofi Nakashima I'd send a sandbox account for their team.",
+  "session1_commitment": "a sandbox account for their team"
+ },
+ "h691467441-t2": {
+  "persona": "h691467441",
+  "champion": "Niko Osei",
+  "champion_slug": "people/niko-osei",
+  "company": "Branadyn Robotics",
+  "docs": {
+   "contact": "inbox/2026-09-24-osei-procurement-handoff",
+   "date": "inbox/2026-10-12-osei-reschedule",
+   "terms": "meetings/2026-10-10-branadyn-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Petra Draxler",
+    "patterns": [
+     "(?<![a-z])(?:Petra|Petra)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$18 per seat",
+    "patterns": [
+     "\\$18(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$18(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-20",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?20(?:st|nd|rd|th)?\\b",
+     "\\b0?20(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?20\\b(?!/\\d{3})",
+     "\\b2026-10-20\\b"
+    ]
+   }
+  },
+  "session1": "Help me write a two-sentence bio for a conference speaker page. Also, please note in my brain that I promised Niko Osei I'd send the revised statement of work.",
+  "session1_commitment": "the revised statement of work"
+ },
+ "h691467441-t3": {
+  "persona": "h691467441",
+  "champion": "Dario Castellan",
+  "champion_slug": "people/dario-castellan",
+  "company": "Caelostra Retail",
+  "docs": {
+   "contact": "inbox/2026-09-26-castellan-procurement-handoff",
+   "date": "inbox/2026-10-09-castellan-reschedule",
+   "terms": "meetings/2026-10-11-caelostra-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Desmond Jaramillo",
+    "patterns": [
+     "(?<![a-z])(?:Desmond|Des)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "90 seats",
+    "patterns": [
+     "\\b90[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-19",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?19(?:st|nd|rd|th)?\\b",
+     "\\b0?19(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?19\\b(?!/\\d{3})",
+     "\\b2026-10-19\\b"
+    ]
+   }
+  },
+  "session1": "Give me a short checklist for preparing a board deck. Also, please note in my brain that I promised Dario Castellan I'd send the security architecture diagram.",
+  "session1_commitment": "the security architecture diagram"
+ },
+ "h731983881-t1": {
+  "persona": "h731983881",
+  "champion": "Kofi Wexler",
+  "champion_slug": "people/kofi-wexler",
+  "company": "Vesivel Media",
+  "docs": {
+   "contact": "inbox/2026-09-25-wexler-procurement-handoff",
+   "date": "inbox/2026-10-12-wexler-reschedule",
+   "terms": "meetings/2026-10-10-vesivel-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Rania Yilmaz",
+    "patterns": [
+     "(?<![a-z])(?:Rania|Ran)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "45 seats",
+    "patterns": [
+     "\\b45[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-22",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?22(?:st|nd|rd|th)?\\b",
+     "\\b0?22(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?22\\b(?!/\\d{3})",
+     "\\b2026-10-22\\b"
+    ]
+   }
+  },
+  "session1": "Can you give me three subject lines for our launch email? Something punchy. Also, please note in my brain that I promised Kofi Wexler I'd send our benchmark results on their monorepo.",
+  "session1_commitment": "our benchmark results on their monorepo"
+ },
+ "h731983881-t2": {
+  "persona": "h731983881",
+  "champion": "Petra Zeller",
+  "champion_slug": "people/petra-zeller",
+  "company": "Ondrellis Energy",
+  "docs": {
+   "contact": "inbox/2026-09-21-zeller-procurement-handoff",
+   "date": "inbox/2026-10-12-zeller-reschedule",
+   "terms": "meetings/2026-10-11-ondrellis-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Niko Udeh",
+    "patterns": [
+     "(?<![a-z])(?:Niko|Niko)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "48 seats",
+    "patterns": [
+     "\\b48[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-20",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?20(?:st|nd|rd|th)?\\b",
+     "\\b0?20(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?20\\b(?!/\\d{3})",
+     "\\b2026-10-20\\b"
+    ]
+   }
+  },
+  "session1": "Suggest a name for our internal hackathon. Something fun. Also, please note in my brain that I promised Petra Zeller I'd send the uptime report for last quarter.",
+  "session1_commitment": "the uptime report for last quarter"
+ },
+ "h731983881-t3": {
+  "persona": "h731983881",
+  "champion": "Soren Abara",
+  "champion_slug": "people/soren-abara",
+  "company": "Murmiro Energy",
+  "docs": {
+   "contact": "inbox/2026-09-24-abara-procurement-handoff",
+   "date": "inbox/2026-10-11-abara-reschedule",
+   "terms": "meetings/2026-10-13-murmiro-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Rania Quist",
+    "patterns": [
+     "(?<![a-z])(?:Rania|Ran)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "15 seats",
+    "patterns": [
+     "\\b15[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-26",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?26(?:st|nd|rd|th)?\\b",
+     "\\b0?26(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?26\\b(?!/\\d{3})",
+     "\\b2026-10-26\\b"
+    ]
+   }
+  },
+  "session1": "Draft a one-line LinkedIn post celebrating our tenth customer. Also, please note in my brain that I promised Soren Abara I'd send the revised statement of work.",
+  "session1_commitment": "the revised statement of work"
+ },
+ "h767687777-t1": {
+  "persona": "h767687777",
+  "champion": "Calla Kowalczyk",
+  "champion_slug": "people/calla-kowalczyk",
+  "company": "Lumvane Media",
+  "docs": {
+   "contact": "inbox/2026-09-25-kowalczyk-procurement-handoff",
+   "date": "inbox/2026-10-11-kowalczyk-reschedule",
+   "terms": "meetings/2026-10-10-lumvane-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Tobin Zeller",
+    "patterns": [
+     "(?<![a-z])(?:Tobin|Toby)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$28 per seat",
+    "patterns": [
+     "\\$28(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$28(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-22",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?22(?:st|nd|rd|th)?\\b",
+     "\\b0?22(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?22\\b(?!/\\d{3})",
+     "\\b2026-10-22\\b"
+    ]
+   }
+  },
+  "session1": "What are three good questions to ask a candidate for a founding designer role? Also, please note in my brain that I promised Calla Kowalczyk I'd send the SOC 2 bridge letter.",
+  "session1_commitment": "the SOC 2 bridge letter"
+ },
+ "h767687777-t2": {
+  "persona": "h767687777",
+  "champion": "Lena Thorne",
+  "champion_slug": "people/lena-thorne",
+  "company": "Lumari Energy",
+  "docs": {
+   "contact": "inbox/2026-09-22-thorne-procurement-handoff",
+   "date": "inbox/2026-10-12-thorne-reschedule",
+   "terms": "meetings/2026-10-13-lumari-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Niko Thorne",
+    "patterns": [
+     "(?<![a-z])(?:Niko|Niko)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "40 seats",
+    "patterns": [
+     "\\b40[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+    ]
+   },
+   "date": {
+    "label": "2026-10-20",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?20(?:st|nd|rd|th)?\\b",
+     "\\b0?20(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?20\\b(?!/\\d{3})",
+     "\\b2026-10-20\\b"
+    ]
+   }
+  },
+  "session1": "What are three good questions to ask a candidate for a founding designer role? Also, please note in my brain that I promised Lena Thorne I'd send the draft pilot success criteria.",
+  "session1_commitment": "the draft pilot success criteria"
+ },
+ "h767687777-t3": {
+  "persona": "h767687777",
+  "champion": "Lena Sato",
+  "champion_slug": "people/lena-sato",
+  "company": "Orvmiro Retail",
+  "docs": {
+   "contact": "inbox/2026-09-20-sato-procurement-handoff",
+   "date": "inbox/2026-10-12-sato-reschedule",
+   "terms": "meetings/2026-10-13-orvmiro-call"
+  },
+  "stale": {
+   "contact": {
+    "label": "Kenji Kowalczyk",
+    "patterns": [
+     "(?<![a-z])(?:Kenji|Kenji)(?![a-z])"
+    ]
+   },
+   "terms": {
+    "label": "$45 per seat",
+    "patterns": [
+     "\\$45(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+     "\\$45(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+    ]
+   },
+   "date": {
+    "label": "2026-10-21",
+    "patterns": [
+     "\\boct(?:ober)?\\.?\\s+0?21(?:st|nd|rd|th)?\\b",
+     "\\b0?21(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+     "\\b0?10/0?21\\b(?!/\\d{3})",
+     "\\b2026-10-21\\b"
+    ]
+   }
+  },
+  "session1": "Suggest a name for our internal hackathon. Something fun. Also, please note in my brain that I promised Lena Sato I'd send a sandbox account for their team.",
+  "session1_commitment": "a sandbox account for their team"
+ }
+}

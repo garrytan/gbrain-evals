@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-08",
+  "updated": "2026-10-09",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -4884,6 +4884,42 @@
         "/arms/2/resolved_extraction_models/0": "anthropic:claude-haiku-5-5"
       },
       "note": "The GPT-6 Luna arm hit the 3-hour drain limit with 372 jobs queued; its dollar row is partial and the report labels the extrapolation as an estimate."
+    },
+    {
+      "claim_id": "cat41-rebaseline-dda603a",
+      "readme_anchor": "docs/benchmarks/2026-10-09-cat41-rebaseline.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-09-cat41-rebaseline/rebaseline-dda603a/summary.json",
+      "artifact_sha256": "2be193a2c69cbfb694c2964725f5440c48106b562fabd3f153d16137ad7d57d1",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+        "/totals/runs": 12,
+        "/totals/successes": 12,
+        "/totals/consent_violations": 0,
+        "/cells/0/harness": "claude",
+        "/cells/0/mean_wall_s": 98.8,
+        "/cells/1/harness": "codex",
+        "/cells/1/mean_wall_s": 161.9
+      },
+      "note": "Preregistered (8655d2f, amendments ff54526 and c2e8cd1) Cat 41 fresh_install_to_wired_recall on gbrain dda603ac9 (v0.60.130.0), Claude Code and Codex, six runs each; the wave 2 D8 comparator."
+    },
+    {
+      "claim_id": "cat41-rebaseline-control-b3f4e8b",
+      "readme_anchor": "docs/benchmarks/2026-10-09-cat41-rebaseline.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-09-cat41-rebaseline/control-b3f4e8b/summary.json",
+      "artifact_sha256": "6f161e9ea5f72fd9fec59ac48a02da7f4125f9d67158ae1a32507f426a069404",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+        "/totals/runs": 12,
+        "/totals/successes": 12,
+        "/totals/consent_violations": 0,
+        "/cells/0/harness": "claude",
+        "/cells/0/mean_wall_s": 107,
+        "/cells/1/harness": "codex",
+        "/cells/1/mean_wall_s": 175.4
+      },
+      "note": "Same-window control for the Cat 41 re-baseline: the published b3f4e8b build rerun interleaved with dda603ac9 on 2026-10-09, six runs per harness."
     }
   ]
 }

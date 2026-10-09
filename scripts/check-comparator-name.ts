@@ -10,7 +10,8 @@
  * lock files (DEPENDENCY_FILE), Python imports of the vendor client, the
  * vendor's own upper-case environment variables (`<NAME>_API_...`), and the
  * public benchmark harness's repository path (`<maker>-io/agent-memory-benchmark`),
- * which public benchmark citations need.
+ * which public benchmark citations need, and in compressed receipts (raw model
+ * and dataset text) the product name as an ordinary lower-case English word.
  *
  * Gzip files are scanned decompressed. The names are never written here. Each is stored as a 64-bit Bun.hash
  * (wyhash) plus a sha256 of the lowercase name and its length. The scan
@@ -58,6 +59,8 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
 /** Dependency, lock and container files, which pin vendor packages and images by their upstream names. */
 export const DEPENDENCY_FILE = /(^|\/)(Dockerfile[^/]*|[^/]*\.lock|package-lock\.json|requirements[^/]*\.txt|pyproject\.toml|(docker-)?compose[^/]*\.ya?ml)$/;
 const PYTHON_IMPORT = /^\s*(from|import)\s/;
+/** Compressed receipts: raw model output and dataset text. */
+const RECEIPT_TEXT = /\.(jsonl|ndjson)\.gz$/;
 /**
  * Both names are also ordinary English. The product name is skipped in the
  * idioms "in/with/of <name>" and "<name> bias"; the maker name counts only in its organisation
@@ -85,10 +88,25 @@ function isDocumentedIdentifier(bytes: Uint8Array, start: number, end: number): 
   return true;
 }
 
+const JOINER = new Set([45, 95, 47, 46, 64]);
+function isOrdinaryWord(bytes: Uint8Array, start: number, end: number): boolean {
+  for (let i = start; i < end; i++) if (bytes[i] < 97 || bytes[i] > 122) return false;
+  const letter = (b: number | undefined) => b !== undefined && ((b >= 65 && b <= 90) || (b >= 97 && b <= 122));
+  // A joiner glues the name into an identifier, path, version or domain only when a letter or digit sits beyond it (a sentence-ending period does not).
+  const word = (b: number | undefined) => letter(b) || (b !== undefined && b >= 48 && b <= 57);
+  const joins = (b: number | undefined, next: number | undefined) => b !== undefined && JOINER.has(b) && word(next);
+  const before = bytes[start - 1], after = bytes[end];
+  return !letter(before) && !letter(after) && !joins(before, bytes[start - 2]) && !joins(after, bytes[end + 1]);
+}
+
 export interface Hit { path: string; needle: Needle['id']; line: number }
 
 /** Every needle occurrence in `bytes` (1-based line numbers). ASCII letters only; case-insensitive. */
-export function findNeedles(input: string | Uint8Array, needles: readonly Needle[] = NEEDLES): Array<{ needle: Needle['id']; line: number }> {
+/**
+ * `ordinaryWords`: skip an all-lower-case name standing alone between spaces or punctuation (not `-`, `_`, `/`, `.`
+ * or `@`), the ordinary English word. Used for compressed receipts, whose text is raw model output and dataset text.
+ */
+export function findNeedles(input: string | Uint8Array, needles: readonly Needle[] = NEEDLES, ordinaryWords = false): Array<{ needle: Needle['id']; line: number }> {
   const bytes = typeof input === 'string' ? Buffer.from(input, 'latin1') : input;
   const hits: Array<{ needle: Needle['id']; line: number }> = [];
   const len = needles[0].length;
@@ -113,6 +131,7 @@ export function findNeedles(input: string | Uint8Array, needles: readonly Needle
     if (!needle || createHash('sha256').update(window).digest('hex') !== needle.sha256) continue;
     if (!isProperNoun(bytes, i - len + 1, i + 1, needle.id)) continue;
     if (isDocumentedIdentifier(bytes, i - len + 1, i + 1)) continue;
+    if (ordinaryWords && isOrdinaryWord(bytes, i - len + 1, i + 1)) continue;
     hits.push({ needle: needle.id, line });
   }
   return hits;
@@ -139,7 +158,7 @@ export function scan(root: string, files = repoFiles(root)): { violations: Hit[]
       continue;
     }
     const lines = rel.endsWith('.py') ? Buffer.from(bytes).toString('latin1').split('\n') : null;
-    for (const { needle, line } of [...findNeedles(bytes), ...findNeedles(rel).map(h => ({ ...h, line: 0 }))]) {
+    for (const { needle, line } of [...findNeedles(bytes, NEEDLES, RECEIPT_TEXT.test(rel)), ...findNeedles(rel).map(h => ({ ...h, line: 0 }))]) {
       if (lines && line > 0 && PYTHON_IMPORT.test(lines[line - 1])) continue;
       const hit = { path: rel, needle, line };
       (ALLOWED[rel]?.includes(needle) ? allowed : violations).push(hit);

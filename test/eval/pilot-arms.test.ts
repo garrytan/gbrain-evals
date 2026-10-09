@@ -106,3 +106,39 @@ describe('decision rule', () => {
     expect(decide([row(`a0:${R}`, 93, 6, 0.047), row(`brief@2000:gpt-6-luna:${R}`, 89, 5, 0.011), row(`brief@2000:claude-haiku-5-5:${R}`, 89, 6, 0.008)], []).brief_misses).toBe(true);
   });
 });
+
+describe('A6 confirmation', () => {
+  test('cells, split and families', async () => {
+    const { CONFIRM_CELLS, SECONDARIES, PRIMARY, confirmIds, confirmCohortIds, PRIMARY_FAMILY, SECONDARY_FAMILY } = await import('../../eval/runner/pilot/confirm.ts');
+    expect(confirmIds()).toEqual(confirm);
+    expect(confirmCohortIds().every(id => confirm.includes(id))).toBe(true);
+    expect(confirmCohortIds()).toHaveLength(24);
+    expect(CONFIRM_CELLS.slice(0, 3).every(c => c.startsWith('a0:'))).toBe(true);
+    expect(CONFIRM_CELLS).toContain(PRIMARY.arm);
+    expect(SECONDARIES).toHaveLength(9);
+    expect(PRIMARY_FAMILY.alpha).toBe(0.025);
+    expect(SECONDARY_FAMILY.comparisons.every(c => c.gate === 'noninferiority' && c.tolerance === 0.03)).toBe(true);
+  });
+
+  test('the decision passes a near-identical arm and fails a clearly worse one', async () => {
+    const { decideConfirmation, PRIMARY, SECONDARIES } = await import('../../eval/runner/pilot/confirm.ts');
+    const ids = confirm;
+    const base = new Map(ids.map((id, i) => [id, (i % 10 === 0 ? 0 : 1) as 0 | 1]));
+    const same = new Map(ids.map((id, i) => [id, (i % 10 === 0 || i === 5 ? 0 : 1) as 0 | 1]));
+    const worse = new Map(ids.map((id, i) => [id, (i % 10 === 0 || i % 10 === 5 ? 0 : 1) as 0 | 1]));
+    const correct = new Map<string, Map<string, 0 | 1>>();
+    for (const c of [PRIMARY.comparator, ...SECONDARIES.map(x => x[2])]) correct.set(c, base);
+    correct.set(PRIMARY.arm, same);
+    for (const [, arm] of SECONDARIES) correct.set(arm, worse);
+    const d = decideConfirmation(correct, ids);
+    expect(d.primary.verdict).toBe('pass');
+    expect(d.secondary.comparisons.every(c => c.status === 'fail')).toBe(true);
+  });
+
+  test('keyless 2-question smoke of every A6 cell', async () => {
+    const { CONFIRM_CELLS, CONFIRM_BUILD } = await import('../../eval/runner/pilot/confirm.ts');
+    const r = await runSmoke({ cells: CONFIRM_CELLS, build: CONFIRM_BUILD });
+    expect(r.cells).toBe(CONFIRM_CELLS.length);
+    expect(Object.keys(r.correct_by_cell)).toEqual(CONFIRM_CELLS);
+  }, 60_000);
+});

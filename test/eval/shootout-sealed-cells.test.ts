@@ -12,6 +12,7 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
+import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 import { loadCampaign, runRemote, type CellSpec } from '../../eval/runner/shootout-cell.ts';
 import { DATASET_ROOT, LOCOMO_FILE, loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
 import { loadSplit } from '../../eval/runner/decisions/splits.ts';
@@ -105,7 +106,7 @@ async function runSealed(cellId: string, transform: (cmd: string) => string, lea
   const cell = cells().find(c => c.id === cellId)!;
   const provider = standIn();
   const out = join(tmp, lease, 'out'), custodyBase = join(tmp, lease, 'custody');
-  const port = 24000 + Math.floor(Math.random() * 9000);
+  const port = await freePort(0);
   const prev = process.env.OPENAI_API_KEY;
   process.env.OPENAI_API_KEY = 'placeholder-real-key';
   let code: number;
@@ -145,7 +146,7 @@ function assertOnlyAggregatesLeft(out: string, custody: string) {
 describe('sealed mode in runRemote', () => {
   test('a sealed cell command refuses to run without its custody root', async () => {
     const out = join(tmp, 'unsealed', 'out');
-    const code = await runRemote({ lease_id: 'unsealed-lease', lease_usd: 0.1, out, command: cells()[0].command }, { port: 24000 + Math.floor(Math.random() * 9000) });
+    const code = await runRemote({ lease_id: 'unsealed-lease', lease_usd: 0.1, out, command: cells()[0].command }, { port: await freePort(0) });
     closeLedgers();
     expect(code).not.toBe(0);
     expect(existsSync(join(out, 'sealed'))).toBe(false);
