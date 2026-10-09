@@ -106,4 +106,19 @@ gpt-6.1-sol and Opus cells, then the baseline's second repeat.
 
 ## Amendments
 
-None yet.
+### Amendment 1 (2026-10-08, Pacific): Candidate 0, a measurement of current gbrain master
+
+Candidate 0 is gbrain master at `fc548317f628f25c6708049e17af22ee6b4e28ad` (v0.60.122.0), measured as it ships. It is
+a measurement of current master, not a tuned candidate: nothing in gbrain or in this harness is changed for it, and it
+carries no claim that a change was made to fix T0b. It runs the frozen protocol unchanged (`program-primary-hard-v1`,
+`DEFAULT_KNOBS`, `t0b-score-v1`, the T0 delivery contract, `--surface starter`, 20 turns) on the same development
+seeds 20261101 to 20261108, with the three counted readers (Opus 5.5, Sonnet 5.5, gpt-6.1-sol), the `baseline` arm,
+2 repeats: 144 cells. Each candidate cell is paired with the v0.60.106.0 baseline cell of the same task, reader and
+repeat. The statistics are PW's frozen ones (`eval/runner/power/risk-ratio.ts` `decide`, conditional-binomial, 95%,
+loss tolerance 3.0 points, persona clusters), reported per reader first, because gpt-6.1-sol sits near its ceiling
+(1 of 48), then pooled over the three readers; a reader at 0 baseline failures is reported as `ceiling`. The
+resource envelope (1.2x p95 session-2 latency, 1.5x mean tokens, 1.5x mean dollars) is checked per reader. After the
+baseline arm, with whatever budget remains, both mutants run once on master as the validity check; if the ledger
+would cross its cap, mutant cells drop in this order: forced-drop Opus, forced-drop Sonnet, stale-correction Opus,
+then the rest, and the report names any check not run. Budget-ledger program cap: $60, shared with the $0-intent
+replay of recorded tool calls used for the root-cause report. Dev seeds only; no sealed seed is opened.
