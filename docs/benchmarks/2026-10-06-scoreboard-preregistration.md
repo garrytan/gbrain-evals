@@ -346,7 +346,9 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
     `8da287a424a121e2039ff184ab22b493b642082b25c31f86948538ba27ae9d35`.
   - `q1-scoreboard-public-r3`: both verbatim-session reruns with $13 leases (A9); cap $30. Hash
     `dbd109d8982ced34cddeb10bc09c9eb54fc852979b56e3c1f11c62d474c1e84b`.
-  The four caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
+  - `q1-scoreboard-public-r4`: three cells split into haystack shards (A10); 16 launch units; cap $90. Hash
+    `41a92703001f703ebd8be683931848e6c65ec0f942a4b9f6ac6488a19c22de94`.
+  The five caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
   digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
   bundles build are covered by their Dockerfiles and lockfiles in the hashed tree.
@@ -514,7 +516,22 @@ cells rerun in full as `q1-scoreboard-public-r3`, with $13 leases and a $30 cap;
 partial S4 cell ($8.39) is reported as spend only. The sealed campaign's verbatim-session leases are not changed by this; a sealed cell that runs
 out of lease is reported partial and resumed under the same rule.
 
+**A10 (2026-10-09): public cells that outran their wall-clock limits.** Three public cells were sized from estimates,
+not pilots, and ingest ran far slower: the markdown-kb kind took about 8.5 minutes per LongMemEval-S haystack (92 of
+100 ingested when its 13-hour limit stopped it, with no answer spent) and about 88 minutes per LongMemEval-M haystack
+(8 of 100 in 12 hours, a projected 148 hours against a 72-hour limit); the in-process hybrid baseline took about 23
+minutes per LongMemEval-M haystack (31 of 100 in 12 hours, a projected 38 hours against 14). Each haystack is far
+inside the 48-hour per-conversation limit, so no configuration changes. The S5 cells were stopped during ingest,
+before any answer, and all three rerun as `q1-scoreboard-public-r4`: the same cells split into haystack shards with
+the runner's existing `--shard i/n` (2 for the S4 slice, 10 and 4 for S5), each shard with its own VM, a timeout of
+twice its projected hours and a lease of 1.5 times its share (at least $2); $76.96 in leases, $90 cap. Rows from the
+shards are pooled per cell, as S1's shards are. Wall-clock time per haystack is reported for every cell.
+
 ## Changelog
+
+### 2026-10-09: amendment A10
+
+Three public cells that outran their time limits rerun in haystack shards as `q1-scoreboard-public-r4`.
 
 ### 2026-10-08: amendments A8 and A9
 
