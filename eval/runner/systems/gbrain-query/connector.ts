@@ -62,10 +62,18 @@ export function wireRequest(name: WireName, query: string, opts: { limit: number
   }
 }
 
-/** The `assembleEvidenceForHits` input for a delivery variant (`budget` null omits it: gbrain's own default applies). */
-export function assembleRequest(hits: FrozenHit[], unit: ReturnUnit, budget: number | null): Record<string, unknown> {
-  return { hits, return_unit: unit, ...(budget === null ? {} : { budget_tokens: budget }), caller: { remote: false } };
+/**
+ * The `assembleEvidenceForHits` input for a delivery variant (`budget` null omits it: gbrain's own default applies).
+ * `packing` is gbrain's library-only per-call `auto_packing` (gbrain#6367, v0.60.124.0 and later); null omits it.
+ */
+export function assembleRequest(hits: FrozenHit[], unit: ReturnUnit, budget: number | null, packing: AutoPacking | null = null): Record<string, unknown> {
+  return { hits, return_unit: unit, ...(budget === null ? {} : { budget_tokens: budget }), ...(packing === null ? {} : { auto_packing: packing }), caller: { remote: false } };
 }
+
+/** gbrain's `search.auto_packing` values (gbrain#6367): `off` is the uncapped `auto`; the others make an explicit budget a hard cap. */
+export const AUTO_PACKINGS = ['off', 'cap_only', 'breadth_capped', 'depth_first'] as const;
+export type AutoPacking = typeof AUTO_PACKINGS[number];
+export const AUTO_PACKING_KEY = 'search.auto_packing';
 
 export type ReturnUnit = 'chunk' | 'window' | 'section' | 'page' | 'auto';
 export interface FrozenHit { source_id: string; slug: string; chunk_id: number }
@@ -106,7 +114,7 @@ export async function loadConnectorModules(load: <T>(rel: string) => Promise<T>)
 
 export interface DeliveredEvidence { unit: string; chunk_ids: number[]; match_spans: Array<{ chunk_id: number; start: number; end: number }>; tokens: number; truncated: boolean; fallback_reason?: string; reason?: string; unmapped_chunk_ids?: number[] }
 export interface DeliveredRow { slug: string; source_id?: string; title?: string; type?: string | null; chunk_text: string; chunk_id: number; chunk_index?: number; effective_date?: string | Date | null; rerank_score?: number; score?: number; delivered?: DeliveredEvidence }
-export interface DeliveryMeta { requested_unit: string; applied_unit: string; return_window: number; budget_tokens: number; budget_used: number; tokens_delivered: number; tokenizer: string; blocks: number; dropped: number; dropped_reasons: Record<string, number>; fallbacks: string[]; budget_clamped?: unknown }
+export interface DeliveryMeta { requested_unit: string; applied_unit: string; return_window: number; budget_tokens: number; budget_used: number; tokens_delivered: number; tokenizer: string; blocks: number; dropped: number; dropped_reasons: Record<string, number>; fallbacks: string[]; budget_clamped?: unknown; auto_packing?: string }
 
 /** A pinned key's check: registered in gbrain and read back equal from the brain the handler reads. */
 export interface PinCheck { key: string; value: string; registered: 'known' | 'decide' | 'unknown'; read_back: string | null; applied: boolean }
@@ -122,6 +130,8 @@ export interface DeliveryRecord {
   budget_used: number | null;
   tokens_delivered: number | null;
   tokenizer: string | null;
+  /** The packing gbrain reports it ran (`delivery.auto_packing`, present only when an explicit budget engaged the cap), else null. */
+  auto_packing: string | null;
   overrun_tokens: number;
   over_budget: boolean;
   blocks: number;
@@ -173,7 +183,7 @@ export function deliveryRecord(source: DeliveryRecord['source'], request: Record
   const bytes = evidenceBytes(rows);
   return {
     source, request: stripHits(request), requested_unit: meta?.requested_unit ?? null, applied_unit: meta?.applied_unit ?? null, budget_tokens: budget, budget_explicit: typeof budgetParam === 'number',
-    budget_used: used, tokens_delivered: meta?.tokens_delivered ?? null, tokenizer: meta?.tokenizer ?? null,
+    budget_used: used, tokens_delivered: meta?.tokens_delivered ?? null, tokenizer: meta?.tokenizer ?? null, auto_packing: meta?.auto_packing ?? null,
     overrun_tokens: used !== null && budget !== null ? Math.max(0, used - budget) : 0, over_budget: used !== null && budget !== null && used > budget,
     blocks: rows.length, units: count(per_block.map(b => b.unit)), reasons: count(per_block.map(b => b.reason)),
     spilled_blocks: spilled.length, spilled_pages: new Set(spilled.map(b => b.slug)).size, passthrough_blocks: per_block.filter(b => b.reason === 'not_conversation').length,
@@ -223,6 +233,33 @@ export function retrievalMetaRecord(meta: Record<string, unknown> | null): Recor
   return { present: true, ...pick('decide'), ...pick('crag'), ...pick('degraded'), ...pick('cache'), ...pick('delivery'), ...pick('vector_enabled'), ...pick('expansion_applied'), ...pick('retrieved_count'), ...pick('autocut'), ...pick('token_budget') };
 }
 
+/** Reranker network time inside a handler call: the requests to a `/rerank` route, their count and summed wall time. */
+export interface RerankTiming { calls: number; ms: number }
+
+/**
+ * Times every `fetch` to a `/rerank` route in this process (gbrain's reranker calls the global `fetch`), so a live
+ * handler call's latency can be reported with the reranker's network time separated out (plan guard 9). Installed
+ * on first use; other requests pass through untouched.
+ */
+export const rerankClock = (() => {
+  let calls = 0, ms = 0, installed = false;
+  const install = () => {
+    if (installed) return;
+    installed = true;
+    const prev = globalThis.fetch;
+    globalThis.fetch = Object.assign(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (!/\/rerank(?:[/?]|$)/.test(url)) return prev(input, init);
+      const t0 = performance.now();
+      try { return await prev(input, init); } finally { calls++; ms += performance.now() - t0; }
+    }, { preconnect: prev.preconnect?.bind(prev) }) as typeof fetch;
+  };
+  return {
+    snapshot(): RerankTiming { install(); return { calls, ms }; },
+    since(s: RerankTiming): RerankTiming { return { calls: calls - s.calls, ms: Math.round((ms - s.ms) * 10) / 10 }; },
+  };
+})();
+
 /**
  * One brain, one local operation context. Methods never mutate gbrain config
  * after `checkPins`; every call records its request object as sent.
@@ -253,6 +290,18 @@ export class GbrainQueryConnector {
   /** gbrain's semantic result cache at runtime: `disabled` in every build in scope (query-cache.ts). */
   cacheStatus(): 'disabled' | 'available' { return this.mods.semanticResultCacheAvailable() ? 'available' : 'disabled'; }
 
+  /**
+   * Write `search.auto_packing` to the brain's config table (the channel the `query` handler reads) and check it read
+   * back; refused when this build does not register the key. The E2 live checks switch it between calls.
+   */
+  async setPacking(value: AutoPacking): Promise<PinCheck> {
+    if (!this.mods.knownConfigKeys.includes(AUTO_PACKING_KEY)) throw new Error(`${AUTO_PACKING_KEY} is not a registered key in this gbrain build (needs gbrain#6367, v0.60.124.0 or later)`);
+    await this.engine.setConfig(AUTO_PACKING_KEY, value);
+    const read_back = (await this.engine.getConfig(AUTO_PACKING_KEY)) ?? null;
+    if (read_back !== value) throw new Error(`${AUTO_PACKING_KEY}=${value} did not land (read back ${JSON.stringify(read_back)})`);
+    return { key: AUTO_PACKING_KEY, value, registered: 'known', read_back, applied: true };
+  }
+
   async query(params: Record<string, unknown>): Promise<{ rows: DeliveredRow[]; meta: Record<string, unknown> | null; service_ms: number }> {
     const op = this.mods.operations.find(o => o.name === 'query');
     if (!op) throw new Error('this gbrain build has no query operation');
@@ -274,21 +323,23 @@ export class GbrainQueryConnector {
     return { request, rows, meta: retrievalMetaRecord(res.meta), service_ms: res.service_ms, rerank_present: rows.some(r => r.rerank_score !== null) };
   }
 
-  /** Delivery on frozen hits through assembleEvidenceForHits (gbrain's documented seam for a frozen candidate list). */
-  async deliver(hits: readonly FrozenRow[], unit: ReturnUnit, budget: number | null): Promise<Delivery> {
+  /** Delivery on frozen hits through assembleEvidenceForHits (gbrain's documented seam for a frozen candidate list), optionally under a per-call packing. */
+  async deliver(hits: readonly FrozenRow[], unit: ReturnUnit, budget: number | null, packing: AutoPacking | null = null): Promise<Delivery> {
     const frozen: FrozenHit[] = hits.map(h => ({ source_id: h.source_id, slug: h.slug, chunk_id: h.chunk_id }));
-    const request = assembleRequest(frozen, unit, budget);
+    const request = assembleRequest(frozen, unit, budget, packing);
     const out = await this.mods.assembleEvidenceForHits(this.engine, request);
     const record = deliveryRecord('assemble', request, out.results, out.delivery, this.mods.evidenceFingerprint(out.results), { unresolved: out.unresolved.length, hits });
     return { record, blocks: toBlocks(out.results), rows: out.results };
   }
 
   /** A live `query` call under a named wire request, recorded the same way as an assembled delivery. */
-  async live(name: WireName, query: string, limit: number, budget?: number): Promise<Delivery & { meta: Record<string, unknown>; service_ms: number }> {
+  async live(name: WireName, query: string, limit: number, budget?: number): Promise<Delivery & { meta: Record<string, unknown>; service_ms: number; rerank: RerankTiming }> {
     const request = wireRequest(name, query, { limit, budget });
+    const before = rerankClock.snapshot();
     const res = await this.query(request);
+    const rerank = rerankClock.since(before);
     const delivery = (res.meta?.delivery ?? null) as DeliveryMeta | null;
     const record = deliveryRecord('query', request, res.rows, delivery, this.mods.evidenceFingerprint(res.rows), { hits: res.rows });
-    return { record, blocks: toBlocks(res.rows), rows: res.rows, meta: retrievalMetaRecord(res.meta), service_ms: res.service_ms };
+    return { record, blocks: toBlocks(res.rows), rows: res.rows, meta: retrievalMetaRecord(res.meta), service_ms: res.service_ms, rerank };
   }
 }

@@ -1,0 +1,25 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-query",
+  "config": "common",
+  "notes": "Budgeted delivery E2, the live checks and guard 9 on the LongMemEval-S slice: real embeddings and the reranker, one process on its own VM, three rounds of one live query per packing with search.auto_packing switched through the config table.",
+  "cells": [
+    {
+      "id": "e2-live-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 8,
+      "lease_basis": "embeddings for the 100 slice haystacks about $1.53, 1,300 reranked queries about $1.10, x1.5 and headroom",
+      "command": "bash eval/runner/budgeted-delivery/e2-parallel.sh 1 \"$SHOOTOUT_OUT/lme-s\" -- --benchmark lme-s --limit 100 --seed 42 --system gbrain-query --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=live --policy-setting b_pseudo={{b_pseudo_lme_s}} --policy-setting live_reps=3 --frozen-from .e2-transfer/lme-s/frozen.ndjson",
+      "setup_command": "BUN_VERSION=1.4.2 bash eval/systems/bootstrap.sh setup --datasets lme-s && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "timeout_hours": 4
+    }
+  ]
+}

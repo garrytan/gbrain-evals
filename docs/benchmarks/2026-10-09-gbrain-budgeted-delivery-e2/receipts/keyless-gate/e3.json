@@ -1,0 +1,130 @@
+{
+  "readings": {
+    "lme-s-slice": {
+      "questions": 5,
+      "rerank_scale": 0,
+      "recall_all_at_5": {
+        "n": 5,
+        "clusters": 5,
+        "today": 0.4,
+        "fused": 0.4,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      },
+      "recall_all_at_10": {
+        "n": 5,
+        "clusters": 5,
+        "today": 0.4,
+        "fused": 0.4,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      }
+    },
+    "lme-s-500": {
+      "questions": 5,
+      "rerank_scale": 0,
+      "recall_all_at_5": {
+        "n": 5,
+        "clusters": 5,
+        "today": 0.4,
+        "fused": 0.4,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      },
+      "recall_all_at_10": {
+        "n": 5,
+        "clusters": 5,
+        "today": 0.4,
+        "fused": 0.4,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      }
+    },
+    "locomo": {
+      "questions": 9,
+      "rerank_scale": 0,
+      "recall_all_at_5": {
+        "n": 9,
+        "clusters": 3,
+        "today": 0.3333333333333333,
+        "fused": 0.3333333333333333,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      },
+      "recall_all_at_10": {
+        "n": 9,
+        "clusters": 3,
+        "today": 0.4444444444444444,
+        "fused": 0.4444444444444444,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      }
+    },
+    "beam-100k": {
+      "questions": 7,
+      "rerank_scale": 0,
+      "recall_all_at_5": {
+        "n": 7,
+        "clusters": 4,
+        "today": 0.14285714285714285,
+        "fused": 0.14285714285714285,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      },
+      "recall_all_at_10": {
+        "n": 7,
+        "clusters": 4,
+        "today": 0.2857142857142857,
+        "fused": 0.2857142857142857,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      }
+    }
+  },
+  "gate": {
+    "slice_non_inferior": true,
+    "beam_superior": false,
+    "pass": false,
+    "qa_follow_up": "not earned"
+  }
+}

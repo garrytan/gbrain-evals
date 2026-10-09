@@ -19,6 +19,8 @@
  *   bun eval/runner/shootout-cell.ts init    --campaign <manifest.json> --state <dir>
  *   bun eval/runner/shootout-cell.ts reserve --campaign <manifest.json> --state <dir> --cell <id>
  *   bun eval/runner/shootout-cell.ts launch  --campaign <manifest.json> --state <dir> --cell <id> [--dry-run]
+ *     (a cell marked `local: true` runs the same remote step on this host instead of a VM: its own lease proxy on a
+ *     port derived from the lease, the command in this checkout, the lease summary written into the results directory)
  *   bun eval/runner/shootout-cell.ts settle  --campaign <manifest.json> --state <dir> --lease <id>
  *   bun eval/runner/shootout-cell.ts abandon --campaign <manifest.json> --state <dir> --lease <id> --reason <text> [--unstarted --log <launch log>]
  *   bun eval/runner/shootout-cell.ts status  --campaign <manifest.json> --state <dir>
@@ -52,6 +54,8 @@ export interface CellSpec {
   vm?: { size?: string; location?: string; storage_gib?: number };
   /** Local environment variables forwarded to the VM; the proxy alone reads them. */
   pass?: string[];
+  /** Run on this host instead of a VM (reader replays over results already on the host): same lease, proxy and settlement. */
+  local?: boolean;
   timeout_hours?: number;
   /**
    * A custodian sealed cell (Phase 7): the VM gets a custody root, ~/custody/<lease id>, outside the pulled output,
@@ -226,9 +230,13 @@ export class Campaign {
 
   resultsDir(l: LeaseState) { return join(this.stateDir, 'results', l.cell, l.lease_id); }
 
-  /** The ubi-runner invocation for a lease: provision, sync, set up, run the cell remotely, pull its output, destroy. */
+  /** The ubi-runner invocation for a lease: provision, sync, set up, run the cell remotely, pull its output, destroy. A local cell runs the remote step here. */
   launchArgv(l: LeaseState): string[] {
     const c = this.cell(l.cell);
+    if (c.local) {
+      const payload = Buffer.from(JSON.stringify({ lease_id: l.lease_id, lease_usd: l.usd, max_output_tokens: l.max_output_tokens, command: c.command, out: this.resultsDir(l) })).toString('base64');
+      return [process.execPath, join(REPO_ROOT, 'eval/runner/shootout-cell.ts'), 'remote', '--cell-b64', payload, '--port', String(localPort(l.lease_id))];
+    }
     const remoteOut = `eval/reports/shootout/${l.cell}/${l.lease_id}`;
     const payload = Buffer.from(JSON.stringify({ lease_id: l.lease_id, lease_usd: l.usd, max_output_tokens: l.max_output_tokens, command: c.command, out: remoteOut, ...(c.sealed ? { sealed: true } : {}) })).toString('base64');
     let setup = c.setup ? (existsSync(resolve(REPO_ROOT, c.setup)) ? resolve(REPO_ROOT, c.setup) : resolve(c.setup)) : null;
@@ -363,6 +371,9 @@ export async function runRemote(payload: { lease_id: string; lease_usd: number; 
   }
   return code ?? 1;
 }
+
+/** A local cell's proxy port, derived from its lease id so concurrent local cells do not collide (9000 to 9899). */
+export const localPort = (leaseId: string) => 9000 + parseInt(createHash('sha256').update(leaseId).digest('hex').slice(0, 6), 16) % 900;
 
 async function ubiRunner(argv: string[]): Promise<number | null> {
   const p = Bun.spawn(argv, { stdout: 'inherit', stderr: 'inherit', env: process.env });

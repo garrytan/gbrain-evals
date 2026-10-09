@@ -1,0 +1,87 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-query",
+  "config": "common",
+  "notes": "Budgeted delivery E2, reader replays on this host (local cells: the lease proxy runs here) over the deliver cells' frozen contexts, copied to .e2-transfer/<benchmark>/deliver. Only one phase 2 cell runs: the one for the frontier candidate the readings name.",
+  "cells": [
+    {
+      "id": "e2-read-lme-s-phase1",
+      "benchmark": "lme-s",
+      "lease_usd": 115,
+      "local": true,
+      "lease_basis": "Sonnet 5.5 on 5 arms x 500 questions about $0.026 each with the judge ($65), the window arm ($2.60) and the four 16,000-token sweep arms on the slice ($18), x1.25",
+      "command": "export GBRAIN_EVALS_QA_CACHE=\"$SHOOTOUT_OUT/qa-cache\" && bash eval/runner/budgeted-delivery/e2-parallel.sh 24 .e2-transfer/lme-s/deliver -- --benchmark lme-s --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting b_pseudo={{b_pseudo_lme_s}} --policy-setting b_native={{b_native_lme_s}} --policy-setting b16_pseudo={{b16_pseudo_lme_s}} --frozen-from .e2-transfer/lme-s/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/lme-s-phase1.json --replay",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 8
+    },
+    {
+      "id": "e2-read-locomo",
+      "benchmark": "locomo",
+      "lease_usd": 75,
+      "local": true,
+      "lease_basis": "Sonnet 5.5 on 4 arms x 587 questions about $0.023 each with the judge ($54), x1.4",
+      "command": "export GBRAIN_EVALS_QA_CACHE=\"$SHOOTOUT_OUT/qa-cache\" && bash eval/runner/budgeted-delivery/e2-parallel.sh 3 .e2-transfer/locomo/deliver -- --benchmark locomo --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting deliver_set=primary --policy-setting b_pseudo={{b_pseudo_locomo}} --frozen-from .e2-transfer/locomo/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/locomo.json --replay",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 10
+    },
+    {
+      "id": "e2-read-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 20,
+      "local": true,
+      "lease_basis": "Sonnet 5.5 on 4 arms x 120 questions about $0.025 each with the judge ($12), x1.6",
+      "command": "export GBRAIN_EVALS_QA_CACHE=\"$SHOOTOUT_OUT/qa-cache\" && bash eval/runner/budgeted-delivery/e2-parallel.sh 6 .e2-transfer/beam-100k/deliver -- --benchmark beam-100k --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting deliver_set=primary --policy-setting b_pseudo={{b_pseudo_beam_100k}} --frozen-from .e2-transfer/beam-100k/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/beam-100k.json --replay",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 6
+    },
+    {
+      "id": "e2-read-lme-s-phase2-cap-only",
+      "benchmark": "lme-s",
+      "lease_usd": 40,
+      "local": true,
+      "lease_basis": "on the slice: Opus 5.5 x 200 ($10), gpt-6.1-sol x 200 ($8), Sonnet rank order x 100 ($2.60), gpt-4o native x 200 ($5), Fable smoke x 12 ($1.50), x1.4",
+      "command": "export GBRAIN_EVALS_QA_CACHE=\"$SHOOTOUT_OUT/qa-cache\" && bash eval/runner/budgeted-delivery/e2-parallel.sh 24 .e2-transfer/lme-s/deliver -- --benchmark lme-s --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting b_pseudo={{b_pseudo_lme_s}} --policy-setting b_native={{b_native_lme_s}} --policy-setting b16_pseudo={{b16_pseudo_lme_s}} --frozen-from .e2-transfer/lme-s/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/lme-s-phase2-cap_only.json --replay",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 6
+    },
+    {
+      "id": "e2-read-lme-s-phase2-breadth-capped",
+      "benchmark": "lme-s",
+      "lease_usd": 40,
+      "local": true,
+      "lease_basis": "on the slice: Opus 5.5 x 200 ($10), gpt-6.1-sol x 200 ($8), Sonnet rank order x 100 ($2.60), gpt-4o native x 200 ($5), Fable smoke x 12 ($1.50), x1.4",
+      "command": "export GBRAIN_EVALS_QA_CACHE=\"$SHOOTOUT_OUT/qa-cache\" && bash eval/runner/budgeted-delivery/e2-parallel.sh 24 .e2-transfer/lme-s/deliver -- --benchmark lme-s --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting b_pseudo={{b_pseudo_lme_s}} --policy-setting b_native={{b_native_lme_s}} --policy-setting b16_pseudo={{b16_pseudo_lme_s}} --frozen-from .e2-transfer/lme-s/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/lme-s-phase2-breadth_capped.json --replay",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 6
+    },
+    {
+      "id": "e2-read-lme-s-phase2-depth-first",
+      "benchmark": "lme-s",
+      "lease_usd": 40,
+      "local": true,
+      "lease_basis": "on the slice: Opus 5.5 x 200 ($10), gpt-6.1-sol x 200 ($8), Sonnet rank order x 100 ($2.60), gpt-4o native x 200 ($5), Fable smoke x 12 ($1.50), x1.4",
+      "command": "export GBRAIN_EVALS_QA_CACHE=\"$SHOOTOUT_OUT/qa-cache\" && bash eval/runner/budgeted-delivery/e2-parallel.sh 24 .e2-transfer/lme-s/deliver -- --benchmark lme-s --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting b_pseudo={{b_pseudo_lme_s}} --policy-setting b_native={{b_native_lme_s}} --policy-setting b16_pseudo={{b16_pseudo_lme_s}} --frozen-from .e2-transfer/lme-s/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/lme-s-phase2-depth_first.json --replay",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 6
+    }
+  ]
+}
