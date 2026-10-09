@@ -101,7 +101,7 @@ export function benchReadings(name: string, c: BenchConfig) {
   const arms: Record<string, Row[]> = {};
   for (const [cell, get] of [[c.cell_a, A], [c.cell_b, B]] as const) {
     if (!existsSync(join(cell, 'arms'))) continue;
-    for (const d of readdirSync(join(cell, 'arms'))) if (!d.endsWith('.retrieval')) arms[d] = get(d);
+    for (const d of readdirSync(join(cell, 'arms')).sort()) if (!d.endsWith('.retrieval')) arms[d] = get(d);
   }
   const key = (recipe: string, reader = 'main') => `fixed-evidence.${recipe}.b8000.${reader}`;
   const get = (recipe: string, reader = 'main') => arms[key(recipe, reader)] ?? [];

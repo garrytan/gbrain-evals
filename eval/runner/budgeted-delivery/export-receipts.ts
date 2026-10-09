@@ -11,6 +11,10 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
+import { scrubMachinePaths as scrubLocal } from '../receipt.ts';
+
+/** Local paths, then a cell VM's (ubi-runner syncs the checkout to ~/work/<repo> as user ubi). */
+const scrubMachinePaths = <T,>(v: T): T => scrubLocal(scrubLocal(v), '/home/ubi/work/gbrain-evals', '/home/ubi', '');
 
 type Row = Record<string, any>;
 
@@ -32,17 +36,19 @@ export function stripRow(r: Row): Row {
 }
 
 const readRows = (p: string): Row[] => existsSync(p) ? readFileSync(p, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
-const gz = (rows: Row[]) => gzipSync(rows.map(r => JSON.stringify(stripRow(r)) + '\n').join(''));
+const gz = (rows: Row[]) => gzipSync(rows.map(r => JSON.stringify(scrubMachinePaths(stripRow(r))) + '\n').join(''));
+const scrubbedJson = (p: string) => JSON.stringify(scrubMachinePaths(JSON.parse(readFileSync(p, 'utf8'))), null, 2) + '\n';
 
 export function exportCell(cell: string, to: string): string[] {
   const written: string[] = [];
   const put = (rel: string, data: string | Buffer) => { const p = join(to, rel); mkdirSync(join(p, '..'), { recursive: true }); writeFileSync(p, data); written.push(rel); };
-  if (existsSync(join(cell, 'receipt.json'))) put('receipt.json', readFileSync(join(cell, 'receipt.json')));
+  if (existsSync(join(cell, 'receipt.json'))) put('receipt.json', scrubbedJson(join(cell, 'receipt.json')));
   put('retrievals/rows.ndjson.gz', gz(readRows(join(cell, 'retrievals/rows.ndjson'))));
   const arms = join(cell, 'arms');
-  for (const arm of existsSync(arms) ? readdirSync(arms) : []) {
+  for (const arm of existsSync(arms) ? readdirSync(arms).sort() : []) {
     if (arm.endsWith('.retrieval')) continue;
-    for (const f of ['receipt.json', 'outcomes.ndjson', 'manifest.json']) if (existsSync(join(arms, arm, f))) put(`arms/${arm}/${f}`, readFileSync(join(arms, arm, f)));
+    for (const f of ['outcomes.ndjson', 'manifest.json']) if (existsSync(join(arms, arm, f))) put(`arms/${arm}/${f}`, readFileSync(join(arms, arm, f)));
+    if (existsSync(join(arms, arm, 'receipt.json'))) put(`arms/${arm}/receipt.json`, scrubbedJson(join(arms, arm, 'receipt.json')));
     put(`arms/${arm}/rows.ndjson.gz`, gz(readRows(join(arms, arm, 'rows.ndjson'))));
   }
   return written;

@@ -14,7 +14,7 @@
     "loaded_git_head": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
   },
   "overlay": {
-    "requested": "/home/user/gbrain-master@c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "requested": "~/gbrain-master@c5fb0201d1960a0a5a81c35d77718311b03154b7",
     "ref": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
     "commit": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
     "tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
@@ -69,7 +69,7 @@
     "input_tokens": 6790904,
     "output_tokens": 313396,
     "basis": "budget ledger oss-shootout:gbrain-budgeted-delivery-e1-2026-10-08T15-44-41-703Z-9019632a: 2241 paid requests, 0 charged at their reservation because usage was unavailable",
-    "ledger": "/workspace/gbrain-evals/.budget/gbrain-budgeted-delivery-e1.sqlite",
+    "ledger": ".budget/gbrain-budgeted-delivery-e1.sqlite",
     "program_cap_usd": 100,
     "overshoot_usd": 0,
     "event_loop_lag_ms": {

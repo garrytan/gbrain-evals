@@ -74,7 +74,7 @@ export function runGate(opts: { cellA: string; cellB: string; bNative: number; b
   for (const cell of [opts.cellA, opts.cellB]) {
     const dir = join(cell, 'arms');
     if (!existsSync(dir)) continue;
-    for (const arm of readdirSync(dir).filter(a => !a.endsWith('.retrieval'))) {
+    for (const arm of readdirSync(dir).sort().filter(a => !a.endsWith('.retrieval'))) {
       const rows = readRows(join(dir, arm, 'rows.ndjson'));
       const s = stats.arms[arm] = { rows: rows.length, cut_rows: 0, reused: 0 };
       for (const r of rows) {
