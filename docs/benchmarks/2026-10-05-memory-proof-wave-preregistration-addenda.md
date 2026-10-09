@@ -94,13 +94,15 @@ So the raw arm measures gbrain pages-only with just an embedding key. It does no
 
 What was recorded before the loss stands. The sealed decision (`ahead`, +2.64 points, one-sided 95% bounds +0.90 and +4.41), every published aggregate and the nine sealed cell ids are in [the sealed results](2026-10-09-memory-proof-wave-sealed-results.md) (commit `f8444fe3`). The code that produced them is in `dee6d36c`, `f0aef0fe` and `33cba827`. The addenda above (`4116575f`, `3e5904dd`, `aa147f8c`) were also pushed before the loss.
 
-Three things this preregistration promised can no longer happen unless a copy of custody turns up:
+Three things this preregistration promised are unrecoverable unless the salt or the private grouping file is found in the owner's custody. No copy exists on any Capy machine, including the custodian lane's two machines, which were checked by hash:
 
 - the publication of the full sealed and validation receipts after scoring;
 - the custody hand-off to the owner's machine;
 - the Q1 export of frozen per-question contexts.
 
-The sealed and validation ids cannot be rebuilt without the private grouping file, so the pre-merge equivalence check moves to the public dev conversations. It tests whether the two builds deliver the same contexts, which does not need sealed ids. The matched secondary cells are rerun from their pushed specs. Numbers from the lost runs are not published.
+If the salt turns up, the split is deterministic and can be regenerated. Clusters are ordered per stratum by HMAC-SHA256(salt, "<stratum>/<cluster id>") over `inputs.json` (sha256 `1cbfed98…725d`) at harness commit `f618ed7b`, and the result is checked against the recorded file (2,018 bytes, sha256 `2229…0413`). Until then, the sealed and validation ids cannot be rebuilt, so the pre-merge equivalence check moves to the public dev conversations. It tests whether the two builds deliver the same contexts, which does not need sealed ids. The matched secondary cells are rerun from their pushed specs. Numbers from the lost runs are not published.
+
+The BEAM 1M hold on per-question rows was released on October 9, once the parser-gap decision was recorded (gbrain-evals#88, `e31deacf`). Our 1M per-question rows were lost with custody, so nothing beyond the published aggregates can be released. BEAM 10M stays untouched, as before.
 
 **Spend, reconstructed.** With the ledgers lost, spend is rebuilt from figures reported during the run. It is not read from a ledger.
 

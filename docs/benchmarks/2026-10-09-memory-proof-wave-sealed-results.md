@@ -104,7 +104,7 @@ gbrain's ingest is cheaper because its fact extraction reads whole-turn windows 
 | `beam-500k-comparator-rag-69c671ace78a` | comparator | 7,665 / 8,403 |
 | `beam-1m-comparator-rag-2f4cdd9ae33b` | comparator | 7,846 / 8,618 |
 
-Cell ids hash the sealed schedule. Conversation ids, schedules and per-question rows were held in custody, and were lost with the run machine on October 9, 2026 (see [receipts lost](#receipts-lost)). This page reports 1M only as the aggregates above, as the custody rule for the parser-gap decision `q2-parser-gaps-2026-10` required.
+Cell ids hash the sealed schedule. Conversation ids, schedules and per-question rows were held in custody, and were lost with the run machine on October 9, 2026 (see [receipts lost](#receipts-lost)). This page reports 1M only as the aggregates above, as the custody rule for the parser-gap decision `q2-parser-gaps-2026-10` required while it was in force.
 
 ### Incomplete rows
 
@@ -137,7 +137,7 @@ The sealed primary was capped at $450. It used $211.75: $87.57 for the six gbrai
 
 ### Receipts lost
 
-On October 9, 2026, between 9:33 AM and 11:39 AM Pacific, the cloud machine that held custody was replaced, and every local file was lost. That covers the private grouping file, the access log, the sealed and validation ids and specs, every cell receipt and store, the re-judge outputs, the per-question rows and the budget ledgers. Everything on this page was computed, written and pushed before the loss (commit `f8444fe3`, with the analysis code in `dee6d36c`, `f0aef0fe` and `33cba827`), so the decision and aggregates stand as recorded. The full receipts the preregistration promised for after scoring cannot be published. The custody hand-off and the Q1 frozen-context export cannot happen either, unless a copy turns up. With the ledgers gone, the wave's spend before the reruns is a reconstructed range of $1,031 to $1,156 ([addendum](2026-10-05-memory-proof-wave-preregistration-addenda.md#custody-and-receipts-lost-with-the-run-machine-october-9-2026)).
+On October 9, 2026, between 9:33 AM and 11:39 AM Pacific, the cloud machine that held custody was replaced, and every local file was lost. That covers the private grouping file, the access log, the sealed and validation ids and specs, every cell receipt and store, the re-judge outputs, the per-question rows and the budget ledgers. Everything on this page was computed, written and pushed before the loss (commit `f8444fe3`, with the analysis code in `dee6d36c`, `f0aef0fe` and `33cba827`), so the decision and aggregates stand as recorded. The full receipts the preregistration promised for after scoring cannot be published. The custody hand-off and the Q1 frozen-context export cannot happen either. All three are unrecoverable unless the salt or the private grouping file is found in the owner's custody. The BEAM 1M hold has since been released (gbrain-evals#88), but the 1M per-question rows were among the lost files. With the ledgers gone, the wave's spend before the reruns is a reconstructed range of $1,031 to $1,156 ([addendum](2026-10-05-memory-proof-wave-preregistration-addenda.md#custody-and-receipts-lost-with-the-run-machine-october-9-2026)).
 
 ### Reproduce
 
