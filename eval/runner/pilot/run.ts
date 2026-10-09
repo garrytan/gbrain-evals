@@ -15,7 +15,7 @@
  *
  * Paid flags: --paid --budget-run-id <id> --budget-ledger <path> (requirePaidArm, then the ledger's fetch guard).
  * State: $PILOT_STATE_DIR (default ~/.capy/work/pilot). The brief builder is gbrain's
- * src/eval/longmemeval/evidence-brief.ts, loaded from $PILOT_GBRAIN_ROOT (default ../gbrain).
+ * src/eval/longmemeval/evidence-brief.ts from the pinned dependency (or $PILOT_GBRAIN_ROOT).
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -34,9 +34,8 @@ import { cl100k, headCut, loadPilotEvidence, pilotSplit, truncEvidence, withEvid
 const ROOT = resolve(import.meta.dir, '../../..');
 export const STATE_DIR = process.env.PILOT_STATE_DIR ?? join(homedir(), '.capy/work/pilot');
 const BRIEF_FILE = 'src/eval/longmemeval/evidence-brief.ts';
-/** The gbrain whose evidence-brief.ts the pilot loads: $PILOT_GBRAIN_ROOT, else the pinned dependency when it carries the module, else a sibling checkout. */
-export const GBRAIN_ROOT = process.env.PILOT_GBRAIN_ROOT ?? [join(ROOT, 'node_modules/gbrain'), resolve(ROOT, '../gbrain')].find(r => existsSync(join(r, BRIEF_FILE))) ?? resolve(ROOT, '../gbrain');
-export const briefModuleAvailable = () => existsSync(join(GBRAIN_ROOT, BRIEF_FILE));
+/** The gbrain whose evidence-brief.ts the pilot loads: $PILOT_GBRAIN_ROOT (a candidate checkout), else the pinned dependency. */
+export const GBRAIN_ROOT = process.env.PILOT_GBRAIN_ROOT ?? join(ROOT, 'node_modules/gbrain');
 /** Selected by the preregistered ladder (samples 1 and 2); it failed confirmation on hedged precision, so labels feed only the commitment axis and FALLBACK's routing. */
 export const LABEL_MODEL = process.env.PILOT_LABEL_MODEL ?? 'claude-sonnet-5-5';
 export const JUDGE_MODEL = 'gpt-4o-2024-08-06';

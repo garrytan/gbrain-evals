@@ -11,7 +11,6 @@ import { bodySha, type ArmManifest } from '../../eval/runner/batch/manifest.ts';
 import { cacheBody, escalate, frontierBody, qualityCells } from '../../eval/runner/pilot/cells.ts';
 import { cl100k, loadPilotEvidence, pilotSplit, truncEvidence, withEvidence } from '../../eval/runner/pilot/evidence.ts';
 import { runSmoke } from '../../eval/runner/pilot/smoke.ts';
-import { briefModuleAvailable } from '../../eval/runner/pilot/run.ts';
 
 const ROOT = join(import.meta.dir, '../..');
 const manifest = (arm: string) => JSON.parse(readFileSync(join(ROOT, 'docs/benchmarks/2026-10-06-longmemeval-w10-manifests', `${arm}.json`), 'utf8')) as ArmManifest;
@@ -79,9 +78,7 @@ describe('arms', () => {
     expect(bodySha(rest)).toBe(bodySha(frontierBody('gpt-6.1-sol', q.capture)));
   });
 
-  // The brief builder is gbrain's src/eval/longmemeval/evidence-brief.ts (wave 1 A3); it loads from the pinned
-  // dependency once that carries it, else from a sibling gbrain checkout.
-  test.skipIf(!briefModuleAvailable())('keyless 2-question smoke runs every arm end to end', async () => {
+  test('keyless 2-question smoke runs every arm end to end', async () => {
     const r = await runSmoke();
     expect(r.cells).toBe(qualityCells().length);
     expect(r.rows.every(x => x.n === 2)).toBe(true);

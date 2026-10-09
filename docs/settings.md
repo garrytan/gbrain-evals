@@ -6,10 +6,10 @@ autocut off. That setup retrieves all labeled conversations for 451/470 answerab
 with opaque session ids at gbrain `109b992`. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
 [original experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-This page describes the gbrain this repository installs, master `61624308b` (v0.60.120.0, declared in
+This page describes the gbrain this repository installs, master `fc548317f` (v0.60.122.0, declared in
 `package.json`). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
 number. The `balanced`, `conservative` and `tokenmax` mode definitions (`MODE_BUNDLES` in
-`src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `61624308b`, apart from three keys v0.60.60.0
+`src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `fc548317f`, apart from three keys v0.60.60.0
 added for the multi-relation planner (`relational_planner`, on in `balanced` and `tokenmax`). The planner plans none
 of LongMemEval's 500 questions, so the conversation measurements describe the installed modes; other code differs. Existing per-key overrides take precedence over a mode, so a mode name alone
 is not a complete description of an experiment. Everything above [Changelog](#changelog) is current.
@@ -148,6 +148,10 @@ the [refresh report](benchmarks/2026-09-09-retrieval-refresh.md) gives the full
 reproducible matrix used here.
 
 ## Changelog
+
+### 2026-10-08: Installed pin moves to `fc548317f`
+
+gbrain-evals v0.10.53. The installed gbrain commit changed from `61624308b` (v0.60.120.0) to `fc548317f` (v0.60.122.0, the merge of gbrain #6350). `src/core/search/mode.ts` is identical at both commits, so the mode-definition note stands with the new end commit.
 
 ### 2026-10-08: Installed pin moves to `61624308b`
 

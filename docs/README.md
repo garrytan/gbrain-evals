@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.52, with gbrain master `61624308b` (v0.60.120.0) as the product under test. Results measured at
+gbrain-evals v0.10.53, with gbrain master `fc548317f` (v0.60.122.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -186,9 +186,9 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
 
-### 2026-10-08: Evidence architecture pilot row
+### 2026-10-08: Pin `fc548317f`; evidence architecture pilot row
 
-The LongMemEval rows gained the October 8 evidence architecture pilot (plan items A3, A4, A5, A10): seven ways of handing gbrain's retrieved conversations to a reader, compared at matched budgets on a 100-question development split; the preregistered off-ramp fired in favor of a cheap reader on whole sessions.
+gbrain-evals v0.10.53. The opening names gbrain master `fc548317f` (v0.60.122.0, was `61624308b`), the merge of gbrain #6350, and v0.10.53 instead of v0.10.52. The LongMemEval rows gained the October 8 evidence architecture pilot (plan items A3, A4, A5, A10): seven ways of handing gbrain's retrieved conversations to a reader, compared at matched budgets on a 100-question development split; the preregistered off-ramp fired in favor of a cheap reader on whole sessions.
 
 ### 2026-10-08: Program primary rows
 

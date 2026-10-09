@@ -296,9 +296,10 @@ PILOT_STATE_DIR=<dir> bun eval/runner/pilot/run.ts report
 ```
 
 - **Code.** gbrain-evals `eval/runner/pilot/` and `eval/runner/outcomes/`; the brief builder is gbrain
-  `src/eval/longmemeval/evidence-brief.ts` (sha256 `a8da5b9b...`, unchanged from the preregistration; the driver
-  loads it from `PILOT_GBRAIN_ROOT`, the installed dependency, or a sibling checkout), tested by gbrain
-  `test/evidence-brief.test.ts`. Bun 1.4.2.
+  `src/eval/longmemeval/evidence-brief.ts`, shipped in gbrain v0.60.122.0 (`fc548317f`, the pin) with the same
+  sha256 `a8da5b9b...` the preregistration froze and the pilot ran (the run loaded it from a checkout of that
+  code before the release existed); the driver loads the pinned copy, or `PILOT_GBRAIN_ROOT` for a candidate.
+  Tested by gbrain `test/evidence-brief.test.ts`. Bun 1.4.2.
 - **Receipts** in [`2026-10-08-evidence-architecture-pilot/`](2026-10-08-evidence-architecture-pilot/):
   `pilot-report.json` (every row), `decision.json` (the rule's evaluation and CACHE dollars), `reads`, `builds`,
   `judges`, `labels` and `cohort` (`.ndjson.gz`, every call with its usage-receipt/v1 records),
