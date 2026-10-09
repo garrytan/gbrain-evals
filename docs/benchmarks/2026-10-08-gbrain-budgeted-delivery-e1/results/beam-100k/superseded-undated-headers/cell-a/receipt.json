@@ -1,0 +1,356 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "beam-100k",
+  "split": "dev",
+  "started_at": "2026-10-08T20:43:44.390Z",
+  "finished_at": "2026-10-08T21:15:38.434Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "declared_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "version": "0.60.95.0",
+    "package_sha256": "d463f36620585760ae2f9c1ca3602b89961ae5a5a28b3be879d61dcf8c6fa9e5",
+    "loaded_git_head": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
+  },
+  "overlay": {
+    "requested": "/home/user/gbrain-master@c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "ref": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "commit": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+    "version": "0.60.95.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.95.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 0,
+      "misses": 0,
+      "inserts": 0,
+      "bytes": 0
+    }
+  },
+  "dataset": {
+    "name": "BEAM 100k",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": {
+    "usd": 1.118214,
+    "input_tokens": 2191866,
+    "output_tokens": 158645,
+    "basis": "budget ledger oss-shootout:gbrain-budgeted-delivery-e1-2026-10-08T15-44-41-703Z-9019632a: 876 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/gbrain-budgeted-delivery-e1.sqlite",
+    "program_cap_usd": 100,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 1,
+      "max": 3931
+    }
+  },
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "budget-ledger"
+  },
+  "ingest": {
+    "conversations": 0,
+    "sessions": 0,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 510
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "3b380b5ed4f360cf9f2f8112cb79daab7070c61625342713996eaee3b077c625",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 6,
+    "questions_expected": 120
+  },
+  "system": {
+    "name": "replay:gbrain-shootout",
+    "capability_system": "gbrain-shootout",
+    "capabilities": {
+      "system": "gbrain-shootout",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.95.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "gbrain init defaults for search; embedder from the run"
+        },
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "unsettable": [
+            "extraction"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each chunk cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 40
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [
+        "retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-shootout",
+      "config": "{}",
+      "versions": null
+    }
+  },
+  "counts": {
+    "rows": 120,
+    "scored": 108,
+    "errors": 0,
+    "abstention": 12
+  },
+  "summary": {
+    "recall_all_at_5": 0.5740740740740741,
+    "recall_any_at_5": 0.8611111111111112,
+    "recall_all_at_10": 0.6481481481481481,
+    "ndcg_at_10": 0.6360886265589941,
+    "latency_p50_ms": 896.9,
+    "latency_p95_ms": 1340.9899999999993
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 120,
+    "outcomes": {
+      "scored": 120,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 480
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.native.b8000.main",
+      "dir": "arms/fixed-evidence.native.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.5740740740740741,
+        "recall_any_at_5": 0.8611111111111112,
+        "recall_all_at_10": 0.6481481481481481,
+        "ndcg_at_10": 0.6360886265589941,
+        "latency_p50_ms": 896.9,
+        "latency_p95_ms": 1340.9899999999993,
+        "qa_score": 0.5819576719576719,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5819576719576719,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.chunk-dated.b8000.main",
+      "dir": "arms/fixed-evidence.chunk-dated.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.5740740740740741,
+        "recall_any_at_5": 0.8611111111111112,
+        "recall_all_at_10": 0.6481481481481481,
+        "ndcg_at_10": 0.6360886265589941,
+        "latency_p50_ms": 896.9,
+        "latency_p95_ms": 1340.9899999999993,
+        "qa_score": 0.5819576719576719,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5819576719576719,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.chunk-undated-twin.b8000.main",
+      "dir": "arms/fixed-evidence.chunk-undated-twin.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.5740740740740741,
+        "recall_any_at_5": 0.8611111111111112,
+        "recall_all_at_10": 0.6481481481481481,
+        "ndcg_at_10": 0.6360886265589941,
+        "latency_p50_ms": 896.9,
+        "latency_p95_ms": 1340.9899999999993,
+        "qa_score": 0.5819576719576719,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5819576719576719,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.rehydrated.b8000.main",
+      "dir": "arms/fixed-evidence.rehydrated.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.5740740740740741,
+        "recall_any_at_5": 0.8611111111111112,
+        "recall_all_at_10": 0.6481481481481481,
+        "ndcg_at_10": 0.6360886265589941,
+        "latency_p50_ms": 896.9,
+        "latency_p95_ms": 1340.9899999999993,
+        "qa_score": 0.5790674603174604,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5790674603174604,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    }
+  ]
+}

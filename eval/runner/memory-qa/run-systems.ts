@@ -779,7 +779,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
           items = items.filter(i => chosen.has(i.id));
           if (items.length !== chosen.size) throw new Error(`recipe ${name}: ${chosen.size - items.length} items selected by ${depName} are not in its item source`);
         }
-        const pack = packRecipe(spec.render, q, items, { budgetTokens: budget, sessionOf, fallbackDate: lastDate(conv.sessions) });
+        const pack = packRecipe(spec.render, q, items, { budgetTokens: 'budget_tokens' in spec ? spec.budget_tokens ?? null : budget, sessionOf, fallbackDate: lastDate(conv.sessions) });
         const prompt_sha256 = createHash('sha256').update(pack.prompt).digest('hex');
         const { chars, utf8_bytes } = readerBytes(pack.prompt);
         return { prompt: pack.prompt, meta: { mode: pack.mode, render: pack.render, recipe: name, recipe_hash: recipeHash(name, a.arms!), tokenizer: pack.tokenizer, renderer: pack.renderer, budget_tokens: pack.budget_tokens,

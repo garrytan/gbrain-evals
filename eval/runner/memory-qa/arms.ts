@@ -47,9 +47,11 @@ export type PolicyMode = RetrievalPolicy['mode'];
  *                twin; the same blocks under another renderer);
  *   reuse_from   a context whose scored row is copied when this recipe's
  *                prompt hash equals that context's for the question and the
- *                reader and judge match (marked `reused_from`).
+ *                reader and judge match (marked `reused_from`);
+ *   budget_tokens  the harness budget for this recipe's context, when it
+ *                differs from the policy's (null reads the items whole).
  */
-export interface RecipeSpec { items: 'retrieved' | string; render: RecipeRender; select_from?: string; reuse_from?: string }
+export interface RecipeSpec { items: 'retrieved' | string; render: RecipeRender; select_from?: string; reuse_from?: string; budget_tokens?: number | null }
 
 export interface ArmsSpec {
   policies: Partial<Record<PolicyMode, { budget_tokens: number | null }>>;
@@ -86,6 +88,7 @@ export function parseArms(text: string, source = 'arms file'): ArmsSpec {
     if (!ID.test(name) || name === 'native' || name === 'rehydrated') problems.push(`recipe name ${JSON.stringify(name)} must be 1-40 characters of [A-Za-z0-9._-] and not native or rehydrated`);
     if (!RENDERS.includes(r?.render)) problems.push(`recipe ${name}: render must be one of ${RENDERS.join(', ')}`);
     if (typeof r?.items !== 'string' || !(r.items === 'retrieved' || /^[A-Za-z0-9._-]{1,40}$/.test(r.items))) problems.push(`recipe ${name}: items must be retrieved or a delivery variant name`);
+    if (r && 'budget_tokens' in r && r.budget_tokens !== null && !(Number.isInteger(r.budget_tokens) && (r.budget_tokens as number) > 0)) problems.push(`recipe ${name}: budget_tokens must be a positive integer or null`);
     for (const k of ['select_from', 'reuse_from'] as const) if (r?.[k] !== undefined && !(r[k] === 'native' || r[k] === 'rehydrated' || (r[k]! in recipes && r[k] !== name))) problems.push(`recipe ${name}: ${k} must name another context`);
   }
   if (spec.contexts.some(c => c !== 'native' && c !== 'rehydrated' && !(c in recipes))) problems.push('contexts must be native, rehydrated or a recipe the file defines');
@@ -137,7 +140,7 @@ export function recipeHash(name: string, spec: Pick<ArmsSpec, 'recipes'>, seen: 
   if (seen.includes(name)) throw new Error(`recipe ${name} selects from itself`);
   const dep = (k: 'select_from' | 'reuse_from') => r[k] ? recipeHash(r[k]!, spec, [...seen, name]) : null;
   return createHash('sha256').update(JSON.stringify({ format: 'recipe-v1', name, items: r.items, render: r.render, renderer: r.render === 'native' || r.render === 'rehydrated' ? RENDERER_VERSION : DATED_RENDERER_VERSION,
-    header: C1_HEADER_PREFIX, select_from: dep('select_from'), reuse_from: dep('reuse_from') })).digest('hex');
+    header: C1_HEADER_PREFIX, select_from: dep('select_from'), reuse_from: dep('reuse_from'), ...('budget_tokens' in r ? { budget_tokens: r.budget_tokens } : {}) })).digest('hex');
 }
 
 /** The arm's definition hash: changes to one arm never invalidate another arm's rows. */

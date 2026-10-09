@@ -1,0 +1,8 @@
+{
+  "run_id": "e1-freeze-beam-100k-a1-a77bd602",
+  "lease_usd": 2,
+  "committed_usd": 0.3083884999999994,
+  "requests": 865,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

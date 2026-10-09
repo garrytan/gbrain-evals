@@ -1,0 +1,268 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "locomo",
+  "split": "dev",
+  "started_at": "2026-10-08T23:44:39.253Z",
+  "finished_at": "2026-10-09T00:24:52.097Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "declared_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "version": "0.60.95.0",
+    "package_sha256": "d463f36620585760ae2f9c1ca3602b89961ae5a5a28b3be879d61dcf8c6fa9e5",
+    "loaded_git_head": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
+  },
+  "overlay": {
+    "requested": "/home/user/gbrain-master@c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "ref": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "commit": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+    "version": "0.60.95.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.95.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 0,
+      "misses": 0,
+      "inserts": 0,
+      "bytes": 0
+    }
+  },
+  "dataset": {
+    "name": "LoCoMo (locomo10.json)",
+    "files": [
+      {
+        "path": "locomo/locomo10.json",
+        "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4"
+      }
+    ],
+    "revision": "3eb6f2c",
+    "license": "CC BY-NC 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": {
+    "usd": 1.341662,
+    "input_tokens": 4334083,
+    "output_tokens": 177898,
+    "basis": "budget ledger oss-shootout:gbrain-budgeted-delivery-e1-2026-10-08T15-44-41-703Z-9019632a: 1150 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/workspace/gbrain-evals/.budget/gbrain-budgeted-delivery-e1.sqlite",
+    "program_cap_usd": 100,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 1,
+      "max": 2574.8
+    }
+  },
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "budget-ledger"
+  },
+  "ingest": {
+    "conversations": 0,
+    "sessions": 0,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 2034
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "1e5ab7884af72d9c91a3f668845f3b011942ad7913bb9a67fb300b689da3d684",
+  "cell_run_config_hash": "99418caf312dcbf0992ada740960e385297d6018f990c45c185ab8d0dbdc1977",
+  "arm": {
+    "id": "fixed-evidence.query-auto-default.b8000.main",
+    "policy": "fixed-evidence",
+    "context": "query-auto-default",
+    "budget_tokens": 8000,
+    "reader": {
+      "id": "main",
+      "model": "openai:gpt-4o-mini",
+      "slice": null
+    },
+    "recipe": {
+      "name": "query-auto-default",
+      "hash": "6d3e310e1f51e3c8854c82c68f906b4809fe01be8d54d7afe42c2f29f5680a7c"
+    }
+  },
+  "retrieval_path": "MemorySystem.retrieve (replay:gbrain-query, policy gbrain-query:fixed-evidence), one retrieval per question and policy shared by every arm",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 3,
+    "questions_expected": 587,
+    "reader_slice": null
+  },
+  "counts": {
+    "rows": 587,
+    "scored": 464,
+    "errors": 0,
+    "abstention": 123
+  },
+  "summary": {
+    "recall_all_at_5": 0.875,
+    "recall_any_at_5": 0.9655172413793104,
+    "recall_all_at_10": 0.9245689655172413,
+    "ndcg_at_10": 0.9072691736789548,
+    "latency_p50_ms": 570.1,
+    "latency_p95_ms": 1242.9999999999995,
+    "qa_score": 0.7444633730834753,
+    "qa_rows": 587,
+    "qa_errors": 0,
+    "qa_service_score": 0.7444633730834753,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "reader": "openai:gpt-4o-mini",
+    "judge": "openai:gpt-4o-2024-08-06",
+    "runs": 1,
+    "context": "query-auto-default",
+    "budget_tokens": 8000,
+    "reader_prompt": "recipe query-auto-default (native-dated, 6d3e310e1f51e3c8)",
+    "judge_prompts": "LongMemEval official per-type prompts",
+    "contexts_file": "../../contexts.ndjson"
+  },
+  "system": {
+    "name": "replay:gbrain-query",
+    "capability_system": "gbrain-query",
+    "capabilities": {
+      "system": "gbrain-query",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.95.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null,
+        "connector": "gbrain-query-connector-v1"
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "notes": "gbrain balanced defaults plus the query-path pins"
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each block cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "retrieval_policies": {
+        "fixed-evidence": {
+          "settings": {
+            "limit": 25
+          }
+        },
+        "vendor-default": {
+          "settings": {
+            "limit": 25
+          }
+        }
+      },
+      "query_path_pins": {
+        "search.cache.enabled": "false",
+        "decide.provider": "none",
+        "search.crag_escalation": "false",
+        "search.crag_think": "false",
+        "search.track_retrieval": "false"
+      },
+      "measured_path": "trusted local caller (remote: false); remote lean rows and safe-chunk rules are not exercised",
+      "deviations_from_vendor_code": [
+        "expand: false (agent default true), matching the shootout retrieval"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-query",
+      "config": null,
+      "versions": null
+    }
+  },
+  "context": "query-auto-default",
+  "policy": {
+    "name": "gbrain-query:fixed-evidence",
+    "mode": "fixed-evidence",
+    "settings": {
+      "limit": 25,
+      "stage": "deliver",
+      "b_native": "7300",
+      "b_pseudo": "6400"
+    },
+    "settings_source": "settings"
+  },
+  "manifest_sha256": "39ca985d122ae48f258d9a8819063659301f06438e68613c991ad08ac6efa650",
+  "outcomes": {
+    "scored": 587,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 587,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "rows_file": "rows.ndjson",
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

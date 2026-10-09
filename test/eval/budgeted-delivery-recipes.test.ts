@@ -110,6 +110,7 @@ describe('recipe identity', () => {
     expect(h(mutate(s => { s.recipes!['chunk-dated'].render = 'pseudo-session'; }), 'chunk-undated-twin')).not.toBe(base);
     expect(h(mutate(s => { s.recipes!['chunk-undated-twin'].items = 'auto-b_native'; }), 'chunk-undated-twin')).not.toBe(base);
     expect(h(mutate(s => { delete s.recipes!['chunk-undated-twin'].reuse_from; }), 'chunk-undated-twin')).not.toBe(base);
+    expect(h(mutate(s => { s.recipes!['chunk-undated-twin'].budget_tokens = null; }), 'chunk-undated-twin')).not.toBe(base);
     const more = mutate(s => { s.readers.push({ id: 'sonnet', model: 'anthropic:claude-sonnet-5-5' }); });
     expect(h(more, 'chunk-undated-twin')).toBe(base);
     const a1 = expandArms(spec)[2], a2 = expandArms(mutate(s => { s.recipes!['chunk-dated'].render = 'pseudo-session'; }))[2];

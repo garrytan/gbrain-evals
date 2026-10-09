@@ -1,0 +1,241 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "locomo",
+  "split": "dev",
+  "started_at": "2026-10-08T19:26:36.639Z",
+  "finished_at": "2026-10-08T20:20:48.551Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "declared_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+    "version": "0.60.95.0",
+    "package_sha256": "d463f36620585760ae2f9c1ca3602b89961ae5a5a28b3be879d61dcf8c6fa9e5",
+    "loaded_git_head": "c5fb0201d1960a0a5a81c35d77718311b03154b7"
+  },
+  "overlay": {
+    "requested": "/home/ubi/gbrain-master@c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "ref": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "commit": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+    "version": "0.60.95.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "3475087d3971ac3ed4d59892f1296920f7e51c33",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.95.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 733,
+      "misses": 0,
+      "inserts": 0,
+      "bytes": 0
+    }
+  },
+  "dataset": {
+    "name": "LoCoMo (locomo10.json)",
+    "files": [
+      {
+        "path": "locomo/locomo10.json",
+        "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4"
+      }
+    ],
+    "revision": "3eb6f2c",
+    "license": "CC BY-NC 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 590
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "e1-freeze-locomo-a1-dd34a870",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 3,
+    "sessions": 89,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 2034
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "3b8fa7ecbd44b61d00742feb44326c886629d1f00da376ce50369dac10150855",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 3,
+    "questions_expected": 587
+  },
+  "system": {
+    "name": "gbrain-query",
+    "capability_system": "gbrain-query",
+    "capabilities": {
+      "system": "gbrain-query",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.95.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null,
+        "connector": "gbrain-query-connector-v1"
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "notes": "gbrain balanced defaults plus the query-path pins"
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each block cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "retrieval_policies": {
+        "fixed-evidence": {
+          "settings": {
+            "limit": 25
+          }
+        },
+        "vendor-default": {
+          "settings": {
+            "limit": 25
+          }
+        }
+      },
+      "query_path_pins": {
+        "search.cache.enabled": "false",
+        "decide.provider": "none",
+        "search.crag_escalation": "false",
+        "search.crag_think": "false",
+        "search.track_retrieval": "false"
+      },
+      "measured_path": "trusted local caller (remote: false); remote lean rows and safe-chunk rules are not exercised",
+      "deviations_from_vendor_code": [
+        "expand: false (agent default true), matching the shootout retrieval"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-query",
+      "config": null,
+      "versions": null
+    }
+  },
+  "counts": {
+    "rows": 587,
+    "scored": 464,
+    "errors": 0,
+    "abstention": 123
+  },
+  "summary": {
+    "recall_all_at_5": 0.875,
+    "recall_any_at_5": 0.9655172413793104,
+    "recall_all_at_10": 0.9245689655172413,
+    "ndcg_at_10": 0.9072691736789548,
+    "latency_p50_ms": 398.35,
+    "latency_p95_ms": 755.3299999999995
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 587,
+    "outcomes": {
+      "scored": 587,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 0
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.retrieval",
+      "dir": "arms/fixed-evidence.retrieval",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 587,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 587,
+        "scored": 464,
+        "errors": 0,
+        "abstention": 123
+      },
+      "summary": {
+        "recall_all_at_5": 0.875,
+        "recall_any_at_5": 0.9655172413793104,
+        "recall_all_at_10": 0.9245689655172413,
+        "ndcg_at_10": 0.9072691736789548,
+        "latency_p50_ms": 398.35,
+        "latency_p95_ms": 755.3299999999995
+      }
+    }
+  ]
+}
