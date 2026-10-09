@@ -22,7 +22,8 @@ readers and two repeats (144 pairs), with search reranking live in every cell:
 The change removes the two failure classes it targets. Greeting the procurement contact who had handed off, and giving
 the old meeting date, fell from 74 failed items on master to 1. The remaining failures are stale prices or seat counts,
 which come from a call note that names no entity and so never reaches the card, and missed commitments. Cost stays
-inside the frozen resource envelope for every reader. We recommend shipping it on by default, which is how it is built.
+inside the frozen resource envelope for every reader. It shipped on by default in gbrain v0.60.126.0 (#6362, merge
+`8a3eedeac`), the commit this repository now pins.
 
 The result carries to new worlds. On eight personas drawn from fresh seeds after the code was frozen (one repeat, 72
 pairs), failures fell from 33 to 9: factor 3.53, 95% interval for R 0.12 to 0.58, `improvement`. Every validity mutant
@@ -91,8 +92,8 @@ both. Latency of that call: median 393 ms on Candidate 1, 370 ms on master; the 
 - Harness: gbrain-evals `edff99d1`, which carries the `GbrainSlot.restore` fix that rewrites the reranker's provider
   URL on every restore (taken from PR #109 by fast-forwarding this checkout to its head), plus [amendment 2](2026-10-08-program-primary-hard-preregistration.md)
   (`3a5e1f41`, committed before any cell) and its sizing note (`7d30975d`). Both arms ran concurrently from the same
-  checkout. Reranking was live in both repeats of both arms: gbrain's internal spend is nonzero in all 288 cells (the
-  frozen baseline's repeat 2 was not).
+  checkout. Reranking was live in both repeats of both arms: gbrain's internal (reranker) spend is nonzero in all 288 cells,
+  and in all 144 fresh-seed cells (the frozen baseline's repeat 2 was not).
 - Protocol: frozen T0b (`program-primary-hard-v1`, `DEFAULT_KNOBS`, `t0b-score-v1`, T0 delivery contract,
   `--surface starter`, 20 turns), seeds 20261101 to 20261108, readers Opus 5.5, Sonnet 5.5 and gpt-6.1-sol. Statistics
   are PW's frozen conditional-binomial interval for the failure-risk ratio R (candidate over master failures), persona
@@ -255,6 +256,11 @@ Receipts in [`2026-10-08-program-primary-hard/candidate-1-newer-mentions/`](2026
 | **Ledger total** | **42.38 of 45** |
 
 ## Changelog
+
+### 2026-10-09: shipped in gbrain v0.60.126.0
+
+The finding names the release that ships Candidate 1 (`8a3eedeac`) instead of recommending it, and the arms note
+counts the reranker spend in the fresh-seed cells too.
 
 ### 2026-10-09: validity mutants and a fresh-seed check
 
