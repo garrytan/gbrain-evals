@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.53, with gbrain master `fc548317f` (v0.60.122.0) as the product under test. Results measured at
+gbrain-evals v0.10.54, with gbrain master `fc548317f` (v0.60.122.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -39,6 +39,7 @@ describe current behavior first, then the older work behind a decision.
 | Is gbrain worth it compared with pasting the whole history into the reader? | [October 7 full-context comparison](benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
 | How much of what gbrain delivers to the reader does the answer need, how much does a reader write down, and how often does a wrong answer commit to a wrong value? | [October 8 reading headroom recount](benchmarks/2026-10-08-reading-headroom.md) ($0, from the W10 receipts, not preregistered): the answer's own sessions are 41% of the 15,823 chars/4 tokens delivered (8,981 on multi-session questions), frontier readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value, by reader |
 | Can a smaller hand-off than whole conversations keep the reader's accuracy for less money? | [October 8 evidence architecture pilot](benchmarks/2026-10-08-evidence-architecture-pilot.md) ([preregistration](benchmarks/2026-10-08-evidence-architecture-pilot-preregistration.md); development, 100 questions): a Haiku-written brief keeps Sonnet 5.5 at 92 against 93 for whole sessions at $0.0079 against $0.0473 a question, but Haiku reading the whole sessions itself (89, $0.0025) matches the brief at lower cost and latency, so the preregistered off-ramp fires; truncation and small digests lose 20 to 50 points |
+| Does the evidence brief hold up on questions the pilot never saw? | [October 8 evidence brief confirmation (A6)](benchmarks/2026-10-08-evidence-brief-confirmation.md) ([preregistration](benchmarks/2026-10-08-evidence-brief-confirmation-preregistration.md); development, 400 questions): the 2,000-token Haiku brief costs Sonnet 5.5 3.0 points (375 to 363, 95% interval -5.25 to -0.75), so it is not shown non-inferior at the 3-point tolerance and does not go to the sealed set; FALLBACK loses 1.25 points at 44% of the dollars (inconclusive after Holm); truncation fails |
 | Does the LongMemEval answer score notice broken retrieval? | [October 6 LongMemEval negative control](benchmarks/2026-10-06-w8-longmemeval-control.md) ([preregistration](benchmarks/2026-10-06-w8-longmemeval-control-preregistration.md)) |
 | Do the published LongMemEval retrieval and reading-notes numbers hold with opaque session ids, and what does a frontier reader score on gbrain's retrieval? | [October 4 opaque-id follow-ups and frontier reader](benchmarks/2026-10-04-longmemeval-opaque-followups.md) ([preregistration](benchmarks/2026-10-04-longmemeval-opaque-followups-preregistration.md)) |
 | With the answer key hidden, how accurate are gbrain's answers, and does the reader prompt or the amount of evidence matter more? | [September 29 opaque-id answer re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
@@ -185,6 +186,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-08: Evidence brief confirmation row
+
+gbrain-evals v0.10.54. The opening names v0.10.54 instead of v0.10.53. The LongMemEval rows gained the October 8 evidence brief confirmation (plan item A6): on the 400-question confirm split the brief is not shown non-inferior to whole sessions, so it does not join the sealed v2 opening.
 
 ### 2026-10-08: Pin `fc548317f`; evidence architecture pilot row
 
