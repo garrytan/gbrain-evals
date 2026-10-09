@@ -1,6 +1,6 @@
 # Preregistration: the head-to-head memory scoreboard (2026-10-06)
 
-**Status: frozen on 2026-10-08** at gbrain-evals commit `cb6119cc3f2279f693945262621b2b318b02a550` (after A8 and A9), before any counted
+**Status: frozen on 2026-10-08** at gbrain-evals commit `c0b68a7f740f3c9b561b32ae7b57f2aeb8e0cbeb` (after A11), before any counted
 cell reserved a lease. The freeze checklist below fills every value that was open. Nothing below changes after the
 first counted cell runs; a later change is a dated amendment at the end of this file, written before any cell it
 affects, and a change to a bar or a family needs the program owner's approval first. The D8 reserve's hash-list SHA
@@ -338,7 +338,7 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
   cell executes (159 files at the A9 tree) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
-    from the custodian's host. Hash `9bf88a3f4bb968cc6537abd9f8c0d15e6d5dbecc68470d39d8725521ea40b857`.
+    from the custodian's host. Hash `c39f267c7f070cb756a137bc08eaedc598f2ef88eb88cc62b486e8c2b9a3afaf`.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
     `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` at its launch tree (`a22e3d81`, 156 files); it
     renders from that tree (A8).
@@ -553,7 +553,7 @@ shards are pooled per cell, as S1's shards are. Wall-clock time per haystack is 
 ### 2026-10-09: amendment A11
 
 A false leak tripwire (a hex question id inside a hashed source id) and an unbounded shim write to a stalled gbrain
-serve fixed; sealed campaign re-frozen; S5 reruns as `q1-scoreboard-public-r5`.
+serve fixed; sealed campaign re-frozen at `c0b68a7f` (hash `c39f267c`); S5 reruns as `q1-scoreboard-public-r5`.
 
 ### 2026-10-09: amendment A10
 
