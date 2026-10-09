@@ -117,3 +117,23 @@ harness is attributed to the day, not the release; if `b3f4e8b` today reproduces
 slower, the change is attributed to the release, and the per-session transcript counts (registration surface, tools
 offered, input tokens in the recall session, commands per session) say which part. With n = 3 per cell, overlapping
 ranges are reported as no measured difference.
+
+## Amendment 2 (2026-10-09, after the six control sessions, before any further session)
+
+**What the control showed.** `b3f4e8b` run today: Claude Code 104.6 s (86.7 to 114.0), Codex 146.6 s (111.7 to
+171.3), all 6 successful, 0 consent violations. Against `dda603a` (Claude Code 91.2 s, 68.6 to 110.6; Codex 171.8 s,
+153.9 to 183.9) both harnesses' ranges overlap, so by amendment 1's rule there is no measured difference yet. Most of
+the Codex gap to the published 121.7 s is the day: the same `b3f4e8b` code is 25 s slower today. A 25 s residual
+between the two builds on Codex remains, and n = 3 per cell cannot tell it from noise.
+
+**Added cells: repeats 4 to 6 on both builds**, same scenario, image, models, ledger run and concurrency 1, in
+alternating order so neither build owns a time slot: `dda603a` repeat 4, `b3f4e8b` repeat 4, `dda603a` repeat 5,
+`b3f4e8b` repeat 5, `dda603a` repeat 6, `b3f4e8b` repeat 6 (each step both harnesses; the runner skips repeats already
+scored). Expected spend about $6.70, total about $13.40 against the $30 cap.
+
+**How it is read.** Each build then has n = 6 per harness, 3 of them interleaved. The report gives the n = 3 first
+pass (the plan's comparator as preregistered) and the n = 6 pooled means, ranges and medians for both builds. A
+difference is reported as measured only when the two n = 6 ranges' middle halves (25th to 75th percentile) do not
+overlap; otherwise as no measured difference with the means stated. The transcript counts from amendment 1 decide the
+attribution sentence either way. The wave 2 comparator is the `dda603a` n = 6 mean, with the n = 3 value stated beside
+it.
