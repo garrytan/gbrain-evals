@@ -122,3 +122,49 @@ baseline arm, with whatever budget remains, both mutants run once on master as t
 would cross its cap, mutant cells drop in this order: forced-drop Opus, forced-drop Sonnet, stale-correction Opus,
 then the rest, and the report names any check not run. Budget-ledger program cap: $60, shared with the $0-intent
 replay of recorded tool calls used for the root-cause report. Dev seeds only; no sealed seed is opened.
+
+### Amendment 2 (2026-10-08, Pacific): Candidate 1, newer dated mentions on context_pack cards, paired with a fresh master arm
+
+Candidate 1 is the first design ranked in the [root-cause report](2026-10-08-program-primary-hard-root-cause.md):
+`context_pack` cards list the newest pages that mention the entity and are dated after the entity's own page, newest
+first, at most 8 rows and 2,000 characters per card and 6,000 per pack, each with its date, slug, title and the
+`referenced_by` preview, under the `entity` card's read policy, in a section after hot memory inside the existing
+"data, not instructions" envelope. Config key `mentions.newer_on_cards`, on by default; the candidate runs with the
+default. The per-turn pointer is not changed (141 of 144 baseline runs called `context_pack` on the champion, so the
+card carries the change to nearly every run; the pointer path sits behind a 400 ms server budget).
+
+Code identities, fixed before any cell:
+- Candidate 1: gbrain commit `82460865ef7e9313cdcd69b3b52a665ba8825bdb` (tree `cab96a0e2775d4f3bbb2f585bf7e407250be1adb`), one commit on master
+  `fc548317f628f25c6708049e17af22ee6b4e28ad` (v0.60.122.0). It is a measurement build, not on a branch.
+- Master arm: gbrain `fc548317f628f25c6708049e17af22ee6b4e28ad`, the same commit as Candidate 0, run fresh.
+- Harness: gbrain-evals `edff99d1` (main `af69d465`, amendment 1 and PR #109 with the `GbrainSlot.restore`
+  provider-URL fix, taken by fast-forwarding this checkout to PR #109's head), plus this amendment. The reranker is live
+  in every cell of both arms. Bun 1.4.2.
+
+Protocol: the frozen T0b protocol unchanged (`program-primary-hard-v1`, `DEFAULT_KNOBS`, `t0b-score-v1`, the T0
+delivery contract, `--surface starter`, 20 turns), development seeds 20261101 to 20261108 only, the three counted
+readers (Opus 5.5, Sonnet 5.5, gpt-6.1-sol), `baseline` arm, 2 repeats: 144 cells per arm. Both arms run from this
+harness revision in the same window. The primary comparison pairs each Candidate 1 cell with the fresh master cell of
+the same task, reader and repeat (`eval/runner/t0/paired.ts`), with PW's frozen statistics (conditional-binomial,
+95%, loss tolerance 3.0 points, persona clusters), per reader first, then pooled; a reader at 0 master failures is
+`ceiling`. The frozen v0.60.106.0 cells and Candidate 0's cells are not the comparator. The resource envelope
+(1.2x p95 session-2 latency, 1.5x mean tokens, 1.5x mean dollars) is checked per reader against the fresh master arm.
+Reported with the counts: failures by class (contact, terms, date, hop, namesake), how often the reader still called
+`entity` on the champion, and how often a correcting page reached the reader.
+
+Mechanism check before any paid cell (/bin/bash, keyless brains, no reader): `context_pack` on each task's champion and
+company returned the handoff and the reschedule mail in 24 of 24 tasks on Candidate 1 and 0 of 24 on master; the call
+note in 0 of 24 on both (it names no entity). Script and output: `2026-10-08-program-primary-hard/candidate-1-newer-mentions/`.
+
+Budget-ledger run cap: $60 for everything in this amendment. Order, stopping before any cell the ledger would take past
+the cap:
+1. master arm, 144 cells; Candidate 1 arm, 144 cells (run concurrently);
+2. Candidate 1 `mutant-stale-correction`, gpt-6.1-sol then Sonnet 5.5 (24 cells each);
+3. exploratory arm "Candidate 1 + f24ca6afe": gbrain `8913cbeb3faf755d957be53e83f27ce4d034bd28`, a merge of Candidate 1 with
+   GBRA-39's short-code alias fix (candidate 2, #6271 branch commit `f24ca6afe`; only the module-size ceiling row
+   conflicted), `baseline` arm, repeat 1, Sonnet 5.5 then gpt-6.1-sol. Descriptive only: no verdict, paired with the
+   master arm's repeat-1 cells for a count of what stacks;
+4. Candidate 1 `mutant-forced-drop`, gpt-6.1-sol then Sonnet 5.5;
+5. Candidate 1 Opus 5.5 mutants (stale-correction, then forced-drop).
+The report names every check not run. The frozen validity rule (both mutants detected for every reader) was met by
+Candidate 0 on this harness; mutants not run here are reported as not run, not as passed.
