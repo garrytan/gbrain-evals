@@ -334,7 +334,23 @@ shards at a time (`E2_PARALLEL_MAX=4`); the LoCoMo and BEAM readers run together
 (`e2-read-locomo-beam`, lease $196 for an estimate of $66), which copies the deliver outputs into its pulled output.
 Readers, recipes, arms and budgets are unchanged.
 
+### A4 (2026-10-09): phase 1 finished; the frontier candidate; a BEAM rerun
+
+Recorded after the phase 1 readings and before any phase 2 call. By the rule above, the phase 1 readings name
+**`depth_first`** as the frontier candidate F (highest primary point estimate among the packings whose interval
+against `off` is above zero, that pass guards 1 to 9 and lose no more than 3 points on LoCoMo or BEAM; `breadth_capped`
+also qualifies, `cap_only` does not). Phase 2 runs `e2-read-lme-s-phase2-depth-first`.
+
+The VM reader cell started its BEAM half before the copy of the BEAM deliveries finished (the shell's `&` covered the
+copy too), so the six BEAM shards refused to start and sent no reader call; its LoCoMo half ran in full. The BEAM
+readers then ran as the local cell `e2-read-beam-100k` (lease $36), with the same arms and contexts; the manifest's
+VM command now groups the copies before the parallel shards.
+
 ## Changelog
+
+### 2026-10-09: amendment A4
+
+Phase 1 names `depth_first` as the frontier candidate; BEAM readers rerun locally after the VM cell's copy race.
 
 ### 2026-10-09: amendment A3
 

@@ -23,7 +23,7 @@
       "benchmark": "locomo,beam-100k",
       "lease_usd": 196,
       "lease_basis": "estimate $66: Sonnet 5.5 on 4 arms x 587 LoCoMo questions ($54) and 4 arms x 120 BEAM questions ($12), with the judges; lease about 3x (Garry 2026-10-09)",
-      "command": "export GBRAIN_EVALS_QA_CACHE=\"$SHOOTOUT_OUT/qa-cache\" && cp -r .e2-transfer/locomo/deliver \"$SHOOTOUT_OUT/locomo\" && cp -r .e2-transfer/beam-100k/deliver \"$SHOOTOUT_OUT/beam-100k\" && ( bash eval/runner/budgeted-delivery/e2-parallel.sh 3 \"$SHOOTOUT_OUT/locomo\" -- --benchmark locomo --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting deliver_set=primary --policy-setting b_pseudo={{b_pseudo_locomo}} --frozen-from .e2-transfer/locomo/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/locomo.json --replay ) & pa=$!; ( bash eval/runner/budgeted-delivery/e2-parallel.sh 6 \"$SHOOTOUT_OUT/beam-100k\" -- --benchmark beam-100k --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting deliver_set=primary --policy-setting b_pseudo={{b_pseudo_beam_100k}} --frozen-from .e2-transfer/beam-100k/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/beam-100k.json --replay ) & pb=$!; wait $pa; ra=$?; wait $pb; rb=$?; exit $((ra | rb))",
+      "command": "export GBRAIN_EVALS_QA_CACHE=\"$SHOOTOUT_OUT/qa-cache\" && cp -r .e2-transfer/locomo/deliver \"$SHOOTOUT_OUT/locomo\" && cp -r .e2-transfer/beam-100k/deliver \"$SHOOTOUT_OUT/beam-100k\" && { ( bash eval/runner/budgeted-delivery/e2-parallel.sh 3 \"$SHOOTOUT_OUT/locomo\" -- --benchmark locomo --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting deliver_set=primary --policy-setting b_pseudo={{b_pseudo_locomo}} --frozen-from .e2-transfer/locomo/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/locomo.json --replay ) & pa=$!; ( bash eval/runner/budgeted-delivery/e2-parallel.sh 6 \"$SHOOTOUT_OUT/beam-100k\" -- --benchmark beam-100k --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting deliver_set=primary --policy-setting b_pseudo={{b_pseudo_beam_100k}} --frozen-from .e2-transfer/beam-100k/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/beam-100k.json --replay ) & pb=$!; wait $pa; ra=$?; wait $pb; rb=$?; exit $((ra | rb)); }",
       "setup_command": "BUN_VERSION=1.4.2 bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
       "vm": {
         "size": "standard-16"
@@ -33,6 +33,19 @@
         "OPENAI_API_KEY"
       ],
       "timeout_hours": 8
+    },
+    {
+      "id": "e2-read-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 36,
+      "local": true,
+      "lease_basis": "estimate $12: Sonnet 5.5 on 4 arms x 120 questions with the judge; lease 3x (Garry 2026-10-09). Rerun locally after the VM cell's BEAM half started before its copy finished (amendment A4)",
+      "command": "export GBRAIN_EVALS_QA_CACHE=\"$SHOOTOUT_OUT/qa-cache\" E2_PARALLEL_MAX=4 && bash eval/runner/budgeted-delivery/e2-parallel.sh 6 .e2-transfer/beam-100k/deliver -- --benchmark beam-100k --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --policy-setting variants=e2 --policy-setting stage=deliver --policy-setting deliver_set=primary --policy-setting b_pseudo={{b_pseudo_beam_100k}} --frozen-from .e2-transfer/beam-100k/frozen.ndjson --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/beam-100k.json --replay",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 6
     },
     {
       "id": "e2-read-lme-s-phase2-cap-only",
