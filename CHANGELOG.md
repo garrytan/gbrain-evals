@@ -2,6 +2,44 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.65] - 2026-10-09
+
+### HNSW scale: a 20,000-tuple pooled scan fixes random selective scopes at 1M to 2M chunks; topic-coherent sources remain a gap; mirrored from gbrain #6380
+
+gbrain #6380 (merged as `2e84d234e` in v0.60.135.0) makes every pooled vector attempt scan up to 20,000 tuples and
+refreshes `content_chunks` and search-filter page statistics after import, sync, reindex and embed drains. Real-vector
+spend $13.07 (voyage-4, 1M Wikipedia chunks).
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-hnsw-scale.md), with `budget-ledger.json` and `results-summary.json`).
+  Same database, master against the fix: random 10% source or visibility recall@50 rises from 0.52 to 0.63 to 0.96 to
+  0.99 on 1M and 2M synthetic chunks, and from 0.765 to 0.970 on 1M real chunks, at +16 to 36 ms p50. Unscoped search
+  is identical. Escalate-when-short, the other candidate, ends in the exact fallback at up to 8.6 s p95. Measured again
+  on top of gbrain v0.60.131.0's exact scope scan, the budget still adds recall wherever the pool runs. Topic-coherent
+  10% sources reach 0.76 to 0.78; since v0.60.134.0 (#6390) a source up to 120,000 counted chunks takes the exact scan
+  instead.
+- **Index**: `docs/README.md` and `README.md` name the report.
+
+## [0.10.64] - 2026-10-09
+
+### T0b alias stack: short-code aliases on top of Candidate 1 cut fresh-seed failures from 18 to 4; development inconclusive
+
+Measures GBRA-39's short-code alias fix (gbrain #6271 at `f24ca6afe`, merged locally with master `dda603ac` as the
+unbranched build `9ac26bea`) against current master, which carries Candidate 1. Paid spend $61.78 of a $70 ledger and
+$49.68 of a $60 ledger.
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-alias-stack.md), [preregistration](docs/benchmarks/2026-10-08-program-primary-hard-preregistration.md)
+  amendment 4 and its note, `78271606` and `7cc77a65`). Paired cell by cell with the reranker live: 18 to 4 of 72 failed
+  runs on eight fresh seeds drawn after the build froze (factor 4.11, 95% interval for R 0.05 to 0.68, `improvement`)
+  and 25 to 11 of 144 on the development seeds (factor 2.22, R 0.12 to 1.41, `inconclusive`; Sonnet 5.5 20 to 3,
+  `improvement`; Opus 5.5 4 to 8), so the preregistered "stacks" criterion is not met. On the 38 of 48 tasks whose call
+  note the code links, stale-terms failures fall from 25 to 0. Both validity mutants are detected on the alias build for
+  all three readers. 9 of the 10 unlinked tasks are codes the T0b generator gives two companies in one brain; the report
+  asks the next generator version to draw unique codes.
+- **Harness**: eight fresh development seeds (`PPH_FRESH_SEEDS_ALIAS`) join the seeds the T0b runner accepts, with a test
+  that they are new and solvable. The $0 alias probe, the `context_pack` replay and the route analysis sit beside the
+  receipts in `docs/benchmarks/2026-10-08-program-primary-hard/alias-stack/`. `docs/README.md` and `README.md` name the
+  report.
+
 ## [0.10.63] - 2026-10-09
 
 ### Slug-conflict judgment: three frontier models give no harmful answer on 48 pairs; Opus 5.5 merges the most true duplicates; mirrored from gbrain #6377
