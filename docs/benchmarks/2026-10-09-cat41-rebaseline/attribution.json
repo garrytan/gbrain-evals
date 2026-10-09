@@ -1,0 +1,2133 @@
+{
+  "dda603a": [
+    {
+      "harness": "claude",
+      "repeat": 1,
+      "gbrain": "0.60.130.0",
+      "download_ms": 8747,
+      "wall_ms": 94265,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 70238,
+          "cost_usd": 0.24503280000000002,
+          "shell_commands": 9,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface full 2>&1; claude mcp list 2>&1 | tail -5"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed and connected, and it remembers that your favorite tea is genmaicha. I checked the save from the command line and again from a fresh Claude Code session over MCP, where it answered \"genmaicha\" using `mcp__gbrain__recall`.\n\n- **Install:** gbrain 0.60.130.0 from the commit you pinn"
+        },
+        {
+          "index": 2,
+          "wall_ms": 13145,
+          "cost_usd": 0.2943626,
+          "shell_commands": 2,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "Both defaults are set, and `gbrain search modes` shows the active mode as conservative.\n\n- **Search mode:** `conservative`, the smallest and cheapest result size.\n- **Automatic saving:** `salient`. When you state a lasting fact (a preference, decision or commitment), I'll save it to gbrain with a no"
+        },
+        {
+          "index": 3,
+          "wall_ms": 10882,
+          "cost_usd": 0.0570798,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 143,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea mixed with roasted brown rice. gbrain has this saved as a preference you told me directly earlier today (2026-10-09)."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 2,
+      "gbrain": "0.60.130.0",
+      "download_ms": 7988,
+      "wall_ms": 68617,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 58371,
+          "cost_usd": 0.2600544,
+          "shell_commands": 11,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface full; claude mcp list 2>&1 | tail -5"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, keyless, and connected to Claude Code as an MCP server. Your favorite tea, genmaicha, is saved in it.\n\n**What I did and checked:**\n- **Install:** `gbrain 0.60.130.0` from the commit you pinned, at `~/.bun/bin/gbrain`.\n- **Brain:** a local database at `~/.gbrain/brain.pglite`, se"
+        },
+        {
+          "index": 2,
+          "wall_ms": 10246,
+          "cost_usd": 0.053676,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 143,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea blended with roasted brown rice. You told me this earlier today (2026-10-09), and it's saved in gbrain."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 3,
+      "gbrain": "0.60.130.0",
+      "download_ms": 8435,
+      "wall_ms": 110615,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 81276,
+          "cost_usd": 0.2828292,
+          "shell_commands": 14,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface full 2>&1; claude mcp list 2>&1 | tail -5",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface full 2>&1; claude mcp list 2>&1 | tail -3; gbrain doctor --only harness_wiring --json 2>&1 | head -60"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed and connected to Claude Code, and it has saved that your favorite tea is genmaicha.\n\n- **Install:** gbrain 0.60.130.0, from the exact commit you gave. Bun blocked one postinstall step, so I ran the setup migrations by hand and they finished without errors.\n- **Keyless brain:** It"
+        },
+        {
+          "index": 2,
+          "wall_ms": 22988,
+          "cost_usd": 0.37028079999999997,
+          "shell_commands": 3,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "The defaults are applied: search mode is `conservative` and auto-save is `salient`.\n\n- **Auto-save works through the MCP connection itself.** When a Claude Code session connects, gbrain's server sends it instructions: load relevant memories at the start, and save your preferences, corrections, decis"
+        },
+        {
+          "index": 3,
+          "wall_ms": 6351,
+          "cost_usd": 0.0586878,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall",
+            "search"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 143,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea mixed with roasted brown rice. It's saved in gbrain as a preference you told me directly earlier today (2026-10-09)."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 4,
+      "gbrain": "0.60.130.0",
+      "download_ms": 7965,
+      "wall_ms": 100665,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 77397,
+          "cost_usd": 0.3213806,
+          "shell_commands": 12,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface full 2>&1; claude mcp list 2>&1 | grep -i gbrain",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface full 2>&1; cd /home/agent/work && claude mcp list 2>&1 | grep -i gbrain; claude mcp get gbrain 2>&1 | head"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, set up with no API keys, connected to Claude Code, and holds your tea preference.\n\n- **Install:** gbrain 0.60.130.0 from the pinned commit, at `~/.bun/bin/gbrain`.\n- **Brain:** a local embedded database at `~/.gbrain/brain.pglite`, with no API keys and no background services. Se"
+        },
+        {
+          "index": 2,
+          "wall_ms": 16491,
+          "cost_usd": 0.38063299999999994,
+          "shell_commands": 1,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "Both defaults are on and checked: search mode is **conservative** (`gbrain search modes` shows it active), and automatic saving is **salient**.\n\nWith no API keys, gbrain can't pull facts out of conversations by itself. So in practice \"salient\" means I'll use `remember` to save lasting things you tel"
+        },
+        {
+          "index": 3,
+          "wall_ms": 6777,
+          "cost_usd": 0.056929799999999996,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 143,
+          "final_text": "Your favorite tea is **genmaicha**. You asked me to remember that earlier today (2026-10-09), and it's saved in gbrain."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 5,
+      "gbrain": "0.60.130.0",
+      "download_ms": 7824,
+      "wall_ms": 106886,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 82797,
+          "cost_usd": 0.2403592,
+          "shell_commands": 11,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface full 2>&1; claude mcp list 2>&1 | tail -5",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface full 2>&1 && claude mcp list 2>&1 | tail -3"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed and connected to Claude Code, and it remembers that your favorite tea is genmaicha. I checked by asking a brand-new Claude Code session, which found the tea fact through the gbrain MCP tool.\n\n- **Install:** gbrain 0.60.130.0 from the commit you pinned, at `~/.bun/bin/gbrain`.\n- *"
+        },
+        {
+          "index": 2,
+          "wall_ms": 16916,
+          "cost_usd": 0.2940296,
+          "shell_commands": 2,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "Setup is finished with the defaults:\n\n- **Search mode:** conservative. `gbrain search modes` shows it's the active mode.\n- **Auto-save:** on, set to save only lasting facts you state directly (preferences, decisions, commitments), with a note of where each came from. Running gbrain servers apply thi"
+        },
+        {
+          "index": 3,
+          "wall_ms": 7173,
+          "cost_usd": 0.05713060000000001,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 143,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea blended with roasted brown rice. My gbrain memory has it saved as something you told me directly earlier today (2026-10-09)."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 6,
+      "gbrain": "0.60.130.0",
+      "download_ms": 7878,
+      "wall_ms": 111514,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 84023,
+          "cost_usd": 0.3566694,
+          "shell_commands": 15,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface full 2>&1; claude mcp list 2>&1 | tail -5",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface full 2>&1; claude mcp list 2>&1 | tail -3; gbrain doctor --only harness_wiring --json 2>&1 | head -40"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, set up with no API keys, and connected to Claude Code. It has saved that your favorite tea is genmaicha.\n\n**What's done:**\n- **Installed** from the commit you pinned (`gbrain 0.60.130.0`). Bun blocked the package's post-install script, so I ran the setup migrations it skips myse"
+        },
+        {
+          "index": 2,
+          "wall_ms": 16257,
+          "cost_usd": 0.4192062,
+          "shell_commands": 2,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "I've applied the defaults:\n\n- **Search mode:** `conservative` (at most 10 chunks per search, about 4K tokens). `gbrain search modes` confirms it.\n- **Automatic saving:** `salient`. I'll save lasting facts you tell me directly, like preferences, decisions and commitments, each with a note of where it"
+        },
+        {
+          "index": 3,
+          "wall_ms": 11234,
+          "cost_usd": 0.0595314,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall",
+            "search"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 143,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea blended with roasted brown rice. According to gbrain, you told me this directly earlier today (2026-10-09)."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 1,
+      "gbrain": "0.60.130.0",
+      "download_ms": 3975,
+      "wall_ms": 183872,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 135618,
+          "cost_usd": null,
+          "shell_commands": 13,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the exact pinned gbrain version and initialized local, keyless storage.\n\nPlease select **Conservative**, **Balanced**, or **Tokenmax**. [GBrain’s setup instructions](https://github.com/garrytan/gbrain/blob/dda603ac9e152be45afd6f4edd3789bc11e000b8/INSTALL_FOR_AGENTS.md#step-35-confirm-searc"
+        },
+        {
+          "index": 2,
+          "wall_ms": 38835,
+          "cost_usd": null,
+          "shell_commands": 6,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent --env GBRAIN_SOURCE=default -- /home/agent/.bun/bin/gbrain serve --surface full --source-guard && /home/agent/.bun/bin/gbrain remember 'The user’s favorite tea is genmaicha.' --entity user "
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version, configured local keyless storage, and registered it as a Codex CLI MCP server. Connection checks passed.\n\nSaved and verified: **your favorite tea is genmaicha**.\n\nConservative search is enabled; automatic capture is off. Restart Codex CLI to load the MCP server i"
+        },
+        {
+          "index": 3,
+          "wall_ms": 9419,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved gbrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 2,
+      "gbrain": "0.60.130.0",
+      "download_ms": 4001,
+      "wall_ms": 177715,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 115015,
+          "cost_usd": null,
+          "shell_commands": 12,
+          "web_calls": 4,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned GBrain version and initialized local keyless storage.\n\nSetup is awaiting your search-mode choice: **conservative** (recommended), balanced, or tokenmax. GBrain’s instructions require this confirmation.\n\nMCP registration and saving “my favorite tea is genmaicha” remain pending."
+        },
+        {
+          "index": 2,
+          "wall_ms": 52165,
+          "cost_usd": null,
+          "shell_commands": 9,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent --env GBRAIN_SOURCE=default -- /home/agent/.bun/bin/gbrain serve --surface full --source-guard"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done. Installed the exact pinned GBrain version, configured keyless storage with conservative retrieval, and registered it as a Codex MCP server.\n\nSaved **your favorite tea is genmaicha** and verified retrieval through MCP. Automatic capture is off.\n\nRestart Codex to load the server in a new session"
+        },
+        {
+          "index": 3,
+          "wall_ms": 10535,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall",
+            "context_pack"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved GBrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 3,
+      "gbrain": "0.60.130.0",
+      "download_ms": 3912,
+      "wall_ms": 153907,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 96137,
+          "cost_usd": null,
+          "shell_commands": 9,
+          "web_calls": 2,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned GBrain version and initialized local, keyless storage with embeddings disabled.\n\nThe search-mode choice above is required by its instructions. Once you answer, I’ll connect Codex CLI and save and verify that your favorite tea is **genmaicha**."
+        },
+        {
+          "index": 2,
+          "wall_ms": 48630,
+          "cost_usd": null,
+          "shell_commands": 7,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface full --source-guard"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done: installed the pinned GBrain version, configured local keyless memory with conservative search, and registered it as a Codex CLI MCP server. Automatic capture is off.\n\nSaved **your favorite tea is genmaicha** and verified persistence and MCP retrieval. Health checks pass.\n\nRestart Codex CLI to "
+        },
+        {
+          "index": 3,
+          "wall_ms": 9140,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved gbrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 4,
+      "gbrain": "0.60.130.0",
+      "download_ms": 3973,
+      "wall_ms": 187709,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 152834,
+          "cost_usd": null,
+          "shell_commands": 25,
+          "web_calls": 4,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface full --source-guard'"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the exact pinned gbrain version with keyless local storage and registered it as Codex’s MCP server.\n\nSaved and retrieved: **Your favorite tea is genmaicha.** MCP initialization, tool discovery, and recall passed. Automatic capture is off.\n\nRestart Codex to load the new MCP tools; recall in"
+        },
+        {
+          "index": 2,
+          "wall_ms": 22750,
+          "cost_usd": null,
+          "shell_commands": 4,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Setup is complete with conservative search, no API keys, and automatic capture off.\n\nGbrain is live through Codex’s MCP connection. I verified through MCP that your favorite tea is **genmaicha**."
+        },
+        {
+          "index": 3,
+          "wall_ms": 12125,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "context_pack",
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved gbrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 5,
+      "gbrain": "0.60.130.0",
+      "download_ms": 11937,
+      "wall_ms": 169366,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 102074,
+          "cost_usd": null,
+          "shell_commands": 11,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned GBrain version and initialized keyless local storage.\n\nSetup is paused for your search-mode choice above, as GBrain’s instructions require. MCP registration and saving **genmaicha** remain pending."
+        },
+        {
+          "index": 2,
+          "wall_ms": 54681,
+          "cost_usd": null,
+          "shell_commands": 9,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface full --source-guard && /home/agent/.bun/bin/gbrain remember 'The user’s favorite tea is genmaicha.' --entity user --provenance 'User explicitl"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done. Installed the pinned GBrain version, configured keyless conservative search, and registered it as a Codex CLI MCP server. Automatic capture is off.\n\nSaved **your favorite tea is genmaicha** and verified retrieval through MCP.\n\nRestart Codex CLI to load the server in your next conversation. Cro"
+        },
+        {
+          "index": 3,
+          "wall_ms": 12611,
+          "cost_usd": null,
+          "shell_commands": 2,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "context_pack",
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved gbrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 6,
+      "gbrain": "0.60.130.0",
+      "download_ms": 3789,
+      "wall_ms": 98609,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 54054,
+          "cost_usd": null,
+          "shell_commands": 10,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned GBrain version and initialized keyless local storage.\n\nSetup is waiting on your one search-mode choice above. After that, I’ll connect Codex CLI and save and verify that your favorite tea is genmaicha."
+        },
+        {
+          "index": 2,
+          "wall_ms": 34960,
+          "cost_usd": null,
+          "shell_commands": 6,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface full --source-guard; /home/agent/.bun/bin/gbrain remember 'The user’s favorite tea is genmaicha.' --entity user --kind preference --provenance"
+          ],
+          "surfaces": [
+            "full"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the exact pinned GBrain version and connected it to Codex CLI as an MCP server.\n\n- Keyless local storage with conservative search; automatic capture is off.\n- Saved and retrieved: **your favorite tea is genmaicha**.\n- MCP initialization, tool discovery, and recall checks passed.\n- Added pe"
+        },
+        {
+          "index": 3,
+          "wall_ms": 9595,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall",
+            "context_pack"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved GBrain memory."
+        }
+      ]
+    }
+  ],
+  "control-b3f4e8b": [
+    {
+      "harness": "claude",
+      "repeat": 1,
+      "gbrain": "0.60.38.0",
+      "download_ms": 7799,
+      "wall_ms": 113985,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 79262,
+          "cost_usd": 0.28890499999999997,
+          "shell_commands": 12,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | tail -5",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | tail -3; gbrain doctor --only harness_wiring --json 2>&1 | head -60"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed and connected to Claude Code, and it remembers that your favorite tea is genmaicha. I checked that in a brand-new Claude Code session: it answered \"Genmaicha\" using gbrain's recall tool.\n\n- **Install:** gbrain 0.60.38.0 from the commit you pinned, at `~/.bun/bin/gbrain`. A newer "
+        },
+        {
+          "index": 2,
+          "wall_ms": 28695,
+          "cost_usd": 0.37276279999999995,
+          "shell_commands": 3,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "Done. Both settings are applied, and auto-save works in Claude Code without any extra setup.\n\n- **Search mode:** `conservative`. Each recall sends at most about 4,000 tokens and 10 results, and doesn't call any paid service.\n- **Auto-save:** `salient`. When a Claude Code session connects to gbrain, "
+        },
+        {
+          "index": 3,
+          "wall_ms": 6028,
+          "cost_usd": 0.0463734,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**. That's saved in gbrain from something you said in a Claude Code chat earlier today (2026-10-09)."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 2,
+      "gbrain": "0.60.38.0",
+      "download_ms": 3694,
+      "wall_ms": 113163,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 79349,
+          "cost_usd": 0.3113482000000001,
+          "shell_commands": 12,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; echo ---; claude mcp list 2>&1",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1 && claude mcp list 2>&1"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, set up with no API keys, and connected to Claude Code. It remembers that your favorite tea is genmaicha.\n\n**What I did**\n- **Install:** installed gbrain 0.60.38.0 from the commit you pinned. It says a newer version (0.60.130.0) is available, but I didn't upgrade since you pinned"
+        },
+        {
+          "index": 2,
+          "wall_ms": 23690,
+          "cost_usd": 0.3788162000000001,
+          "shell_commands": 2,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "I've applied both defaults:\n\n- **Search mode:** conservative. Each lookup returns at most 10 chunks within a 4K-token budget. It doesn't use query expansion or a reranker, and makes no paid calls.\n- **Automatic saving:** salient. Facts you state that are likely to matter later (preferences, decision"
+        },
+        {
+          "index": 3,
+          "wall_ms": 10124,
+          "cost_usd": 0.047481600000000006,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**. That's from your gbrain memory, which has it saved from something you said in a Claude Code chat earlier today (2026-10-09)."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 3,
+      "gbrain": "0.60.38.0",
+      "download_ms": 8059,
+      "wall_ms": 86693,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 63189,
+          "cost_usd": 0.220039,
+          "shell_commands": 10,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | tail -5"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, keyless, connected to Claude Code, and it has saved your tea preference.\n\n- **Install:** gbrain 0.60.38.0 from the commit you pinned. It says 0.60.130.0 is available; I didn't upgrade, since you pinned this version.\n- **Brain:** a local database at `~/.gbrain/brain.pglite` with "
+        },
+        {
+          "index": 2,
+          "wall_ms": 13643,
+          "cost_usd": 0.2581446,
+          "shell_commands": 1,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "I've applied the defaults:\n\n- **Search mode:** `conservative`. Each lookup returns at most 10 results and about 4,000 tokens of text. Query expansion and reranking are off, so nothing is sent to outside services.\n- **Auto-save:** `salient`. When you mention lasting facts like preferences, decisions "
+        },
+        {
+          "index": 3,
+          "wall_ms": 9861,
+          "cost_usd": 0.047390800000000004,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**. That's from a note in gbrain saved today (2026-10-09), recorded from something you said in an earlier chat."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 4,
+      "gbrain": "0.60.38.0",
+      "download_ms": 7481,
+      "wall_ms": 115625,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 76889,
+          "cost_usd": 0.25377879999999997,
+          "shell_commands": 11,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | tail -5"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, set up with no API keys, and connected to Claude Code. It remembers that your favorite tea is genmaicha.\n\n- **Install:** I used the exact pinned commit (`gbrain 0.60.38.0`, at `~/.bun/bin/gbrain`). It reports a newer version is available. I didn't upgrade because you pinned that"
+        },
+        {
+          "index": 2,
+          "wall_ms": 32168,
+          "cost_usd": 0.32663119999999995,
+          "shell_commands": 3,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "I've applied both defaults:\n\n- **Search mode:** `conservative` (up to 10 results, about 4K tokens per search). `gbrain search modes` confirms it's active.\n- **Saving facts automatically:** set to `salient`. gbrain will now be told to save durable facts you state directly, with a note of where each c"
+        },
+        {
+          "index": 3,
+          "wall_ms": 6568,
+          "cost_usd": 0.0474416,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**. You told me so in a Claude Code chat earlier today (2026-10-09), and gbrain has it saved as a preference."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 5,
+      "gbrain": "0.60.38.0",
+      "download_ms": 3769,
+      "wall_ms": 99840,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 75987,
+          "cost_usd": 0.29231000000000007,
+          "shell_commands": 10,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; echo ----; gbrain config get memory.auto_writeback 2>&1; gbrain search modes 2>&1 | head -15"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, running with no API keys, and connected to Claude Code. It remembers that your favorite tea is genmaicha.\n\n**What's done:**\n- **Installed:** the gbrain commit you specified (version 0.60.38.0) is at `~/.bun/bin/gbrain`.\n- **Keyless setup:** I created the brain with `gbrain init "
+        },
+        {
+          "index": 2,
+          "wall_ms": 16058,
+          "cost_usd": 0.34772900000000007,
+          "shell_commands": 2,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "I set both defaults, and gbrain's config confirms them:\n- **Search mode:** conservative.\n- **Automatic saving:** salient. With no API keys, gbrain won't pull facts out of conversations on its own. Instead, I'll save lasting things you tell me, like preferences, decisions and commitments, each with a"
+        },
+        {
+          "index": 3,
+          "wall_ms": 7795,
+          "cost_usd": 0.047445400000000006,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**. That comes from gbrain, which recorded it from something you said in a Claude Code chat earlier today (2026-10-09)."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 6,
+      "gbrain": "0.60.38.0",
+      "download_ms": 7672,
+      "wall_ms": 112493,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 83322,
+          "cost_usd": 0.273938,
+          "shell_commands": 11,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | tail -5",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | tail -3"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, running with no API keys, connected to Claude Code, and has saved that your favorite tea is genmaicha.\n\n**What's set up:**\n- **Install:** gbrain 0.60.38.0 from the commit you pinned, at `~/.bun/bin/gbrain`.\n- **Brain:** a local database at `~/.gbrain/brain.pglite`, with no embed"
+        },
+        {
+          "index": 2,
+          "wall_ms": 19561,
+          "cost_usd": 0.3263984,
+          "shell_commands": 2,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "I applied the defaults, and setup is finished:\n\n- **Search mode:** set to `conservative`. Each lookup returns at most 10 results, about 4,000 tokens of text.\n- **Automatic saving:** set to `salient`. Lasting facts you state, like preferences, decisions and commitments, will now be saved with a note "
+        },
+        {
+          "index": 3,
+          "wall_ms": 9610,
+          "cost_usd": 0.0473454,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**. You told me in a Claude Code chat earlier today (2026-10-09), and it's saved in gbrain."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 1,
+      "gbrain": "0.60.38.0",
+      "download_ms": 3478,
+      "wall_ms": 171346,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 118320,
+          "cost_usd": null,
+          "shell_commands": 11,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized local keyless storage with no API keys.\n\nSetup is waiting for your search-mode choice: **conservative** (recommended), **balanced**, or **tokenmax**. gbrain’s instructions require that choice before continuing.\n\nThe Codex MCP connection and saving "
+        },
+        {
+          "index": 2,
+          "wall_ms": 44262,
+          "cost_usd": null,
+          "shell_commands": 7,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface verbs"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done. Installed the pinned gbrain version, configured local keyless memory with conservative search, and registered it as a Codex CLI MCP server.\n\nSaved **your favorite tea is genmaicha** and verified retrieval through MCP. Automatic capture is off.\n\nRestart Codex CLI to load the server into a new s"
+        },
+        {
+          "index": 3,
+          "wall_ms": 8764,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "context_pack",
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved gbrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 2,
+      "gbrain": "0.60.38.0",
+      "download_ms": 7201,
+      "wall_ms": 156720,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 102245,
+          "cost_usd": null,
+          "shell_commands": 11,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized keyless local storage.\n\nSetup is waiting on your search-mode choice above, required by gbrain’s instructions. After you choose, I’ll connect Codex CLI and save and verify **genmaicha** as your favorite tea."
+        },
+        {
+          "index": 2,
+          "wall_ms": 47340,
+          "cost_usd": null,
+          "shell_commands": 8,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface verbs; /home/agent/.bun/bin/gbrain search modes'"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done. Installed the pinned gbrain version, configured keyless local memory, and registered it as a Codex CLI MCP server.\n\nSaved and verified through MCP: **your favorite tea is genmaicha**.\n\nConservative retrieval is active; automatic capture and paid enrichment are off. Restart Codex CLI to load th"
+        },
+        {
+          "index": 3,
+          "wall_ms": 7135,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "context_pack",
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved GBrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 3,
+      "gbrain": "0.60.38.0",
+      "download_ms": 3584,
+      "wall_ms": 111730,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 75876,
+          "cost_usd": null,
+          "shell_commands": 12,
+          "web_calls": 4,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the exact pinned gbrain version and initialized local, keyless storage.\n\nSetup is waiting on your search-mode choice above, as gbrain’s instructions require. After that, I’ll connect Codex’s MCP server and save and verify that your favorite tea is genmaicha."
+        },
+        {
+          "index": 2,
+          "wall_ms": 29224,
+          "cost_usd": null,
+          "shell_commands": 5,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface verbs'"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version, configured keyless conservative search, and connected it to Codex as an MCP server.\n\nSaved and retrieved: **your favorite tea is genmaicha**. The MCP connection check passed; automatic capture is off.\n\nRestart Codex to load the server. Recall in a new Codex conve"
+        },
+        {
+          "index": 3,
+          "wall_ms": 6630,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved GBrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 4,
+      "gbrain": "0.60.38.0",
+      "download_ms": 7811,
+      "wall_ms": 238439,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 174128,
+          "cost_usd": null,
+          "shell_commands": 11,
+          "web_calls": 4,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized keyless local storage with embeddings disabled.\n\nSetup is waiting on your retrieval-size choice above. After that, I’ll finish migrations, connect Codex CLI, and save and verify your favorite tea: **genmaicha**."
+        },
+        {
+          "index": 2,
+          "wall_ms": 54765,
+          "cost_usd": null,
+          "shell_commands": 9,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent --env GBRAIN_SOURCE=default -- /home/agent/.bun/bin/gbrain serve --surface verbs'"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done. Installed the pinned gbrain version, configured keyless memory with conservative retrieval, and registered it as a Codex CLI MCP server. Automatic capture is off.\n\nSaved **your favorite tea is genmaicha**, and verified retrieval through both a fresh CLI process and MCP.\n\nRestart Codex CLI to l"
+        },
+        {
+          "index": 3,
+          "wall_ms": 9546,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall",
+            "context_pack"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved GBrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 5,
+      "gbrain": "0.60.38.0",
+      "download_ms": 8093,
+      "wall_ms": 205955,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 139031,
+          "cost_usd": null,
+          "shell_commands": 12,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized its keyless local database.\n\nMCP connection and saving “your favorite tea is genmaicha” are pending your search-mode choice. I recommend **conservative**.\n\n[gbrain’s setup instructions](https://github.com/garrytan/gbrain/blob/b3f4e8ba5935004066b471"
+        },
+        {
+          "index": 2,
+          "wall_ms": 60214,
+          "cost_usd": null,
+          "shell_commands": 9,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface verbs && /home/agent/.bun/bin/gbrain search modes && /home/agent/.bun/bin/gbrain remember 'The user’s favorite tea is genmaicha.' --provenance"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done. Installed the pinned gbrain version, configured keyless conservative search, and connected it to Codex CLI through MCP.\n\nSaved and verified through MCP: **your favorite tea is genmaicha**.\n\nAutomatic capture is off. Restart Codex to load the server in a fresh session; cross-conversation recall"
+        },
+        {
+          "index": 3,
+          "wall_ms": 6710,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall",
+            "context_pack"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved gbrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 6,
+      "gbrain": "0.60.38.0",
+      "download_ms": 3583,
+      "wall_ms": 168207,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 118068,
+          "cost_usd": null,
+          "shell_commands": 16,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized local keyless storage.\n\nSetup is awaiting your search-mode choice: **conservative** (recommended), **balanced**, or **tokenmax**. After your reply, I’ll connect Codex’s MCP server and save and verify “my favorite tea is genmaicha.”"
+        },
+        {
+          "index": 2,
+          "wall_ms": 43589,
+          "cost_usd": null,
+          "shell_commands": 7,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface verbs'"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed your pinned gbrain version, configured keyless local memory, and registered it as Codex’s MCP server.\n\nSaved and verified through MCP: **your favorite tea is genmaicha**.\n\nConservative search is enabled; automatic capture is off. Start a new Codex session to load the connection and memory "
+        },
+        {
+          "index": 3,
+          "wall_ms": 6550,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved gbrain memory."
+        }
+      ]
+    }
+  ],
+  "published-b3f4e8b": [
+    {
+      "harness": "claude",
+      "repeat": 1,
+      "gbrain": "0.60.38.0",
+      "download_ms": 7067,
+      "wall_ms": 85499,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 68872,
+          "cost_usd": 0.2743278,
+          "shell_commands": 10,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs; claude mcp list 2>&1 | tail -5",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs; claude mcp list 2>&1 | grep gbrain; gbrain remember --help 2>&1 | head -30"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, set up without any API keys, connected to Claude Code, and it has saved that your favorite tea is genmaicha.\n\n**What's set up:**\n- **Install:** gbrain 0.60.38.0 from the commit you gave. Its database migrations ran and finished.\n- **Storage:** everything stays on this machine in"
+        },
+        {
+          "index": 2,
+          "wall_ms": 10746,
+          "cost_usd": 0.30959960000000003,
+          "shell_commands": 1,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "Setup is finished with the settings I recommended:\n\n- **Search mode: conservative.** It's now your confirmed choice, not just gbrain's automatic pick. Each search returns at most 10 results and about 4,000 tokens of text. It doesn't use any paid add-ons.\n- **Automatic saving: off.** gbrain only save"
+        },
+        {
+          "index": 3,
+          "wall_ms": 5881,
+          "cost_usd": 0.04697540000000001,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**. You told me this in chat earlier today (2026-10-04)."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 2,
+      "gbrain": "0.60.38.0",
+      "download_ms": 8004,
+      "wall_ms": 102301,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 73771,
+          "cost_usd": 0.202452,
+          "shell_commands": 11,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | tail -5",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs && claude mcp list 2>&1 | tail -3"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed and connected to Claude Code, and it has saved that your favorite tea is genmaicha.\n\n- **Install:** gbrain 0.60.38.0 from the commit you pinned. I also added `~/.bun/bin` to your PATH in `~/.bashrc`.\n- **Keyless brain:** it's a local database at `~/.gbrain/brain.pglite` with no A"
+        },
+        {
+          "index": 2,
+          "wall_ms": 21781,
+          "cost_usd": 0.2668078,
+          "shell_commands": 3,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "I've applied both default settings:\n- **Search mode:** `conservative`, confirmed with `gbrain search modes`.\n- **Automatic saving:** `salient`, which saves durable facts you mention, like preferences, decisions and commitments. Saved facts can be read by any agent connected to this brain. To turn it"
+        },
+        {
+          "index": 3,
+          "wall_ms": 6749,
+          "cost_usd": 0.0469134,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea mixed with roasted brown rice. gbrain saved this from something you said in a Claude Code chat earlier today, and the record isn't marked as replaced or out of date."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 3,
+      "gbrain": "0.60.38.0",
+      "download_ms": 7267,
+      "wall_ms": 102380,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 64299,
+          "cost_usd": 0.23649019999999998,
+          "shell_commands": 11,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | tail -5",
+            "claude mcp add -s user gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; cd /home/agent/work && claude mcp list 2>&1 | tail -3"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed and connected to Claude Code, and it has saved that your favorite tea is genmaicha.\n\n**What I did:**\n- **Install:** I installed gbrain 0.60.38.0 from the commit you gave. Running a command through bun's install folder puts `gbrain` at `~/.bun/bin/gbrain`.\n- **Keyless setup:** I c"
+        },
+        {
+          "index": 2,
+          "wall_ms": 31484,
+          "cost_usd": 0.316711,
+          "shell_commands": 3,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "Both settings are applied and checked:\n\n- **Search mode:** `conservative` (`gbrain search modes` shows it active).\n- **Automatic saving:** `salient` (`memory.auto_writeback` reads back as `salient`).\n\nNo other changes are needed. I checked the instructions the gbrain MCP server sends to Claude Code "
+        },
+        {
+          "index": 3,
+          "wall_ms": 6597,
+          "cost_usd": 0.0467334,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea mixed with roasted brown rice. gbrain has this saved from something you said in a Claude Code chat earlier today (2026-10-04)."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 1,
+      "gbrain": "0.60.38.0",
+      "download_ms": 3421,
+      "wall_ms": 125655,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 102798,
+          "cost_usd": null,
+          "shell_commands": 18,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface verbs; /home/agent/.bun/bin/gbrain config set memory.auto_writeback off; /home/agent/.bun/bin/gbrain remember \\\"The user's favorite tea is gen"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain commit, configured local keyless storage, and registered its MCP server with Codex CLI.\n\nSaved **your favorite tea is genmaicha** and verified recall through MCP and a fresh CLI process. Automatic capture is off; conservative search remains the default pending your choice"
+        },
+        {
+          "index": 2,
+          "wall_ms": 16249,
+          "cost_usd": null,
+          "shell_commands": 3,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Done—keeping conservative search, local keyless storage, and automatic capture off.\n\nThe gbrain MCP server is now active in this Codex session. I recalled your saved preference successfully: **your favorite tea is genmaicha**."
+        },
+        {
+          "index": 3,
+          "wall_ms": 6608,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved gbrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 2,
+      "gbrain": "0.60.38.0",
+      "download_ms": 7032,
+      "wall_ms": 101148,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 68002,
+          "cost_usd": null,
+          "shell_commands": 13,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized keyless local storage.\n\nSetup is waiting on your search-mode choice above, as gbrain’s instructions require. After you choose, I’ll connect Codex CLI and save “My favorite tea is genmaicha.”"
+        },
+        {
+          "index": 2,
+          "wall_ms": 25901,
+          "cost_usd": null,
+          "shell_commands": 4,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent -- /home/agent/.bun/bin/gbrain serve --surface verbs"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed gbrain at the requested commit, configured keyless local storage with conservative search, and registered its MCP server with Codex CLI.\n\nSaved and retrieved: **Your favorite tea is genmaicha.** MCP connection checks passed; automatic capture is off.\n\nRestart Codex CLI to load the server. "
+        },
+        {
+          "index": 3,
+          "wall_ms": 7245,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 2,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "context_pack",
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved GBrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 3,
+      "gbrain": "0.60.38.0",
+      "download_ms": 3722,
+      "wall_ms": 138201,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 97444,
+          "cost_usd": null,
+          "shell_commands": 15,
+          "web_calls": 2,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized local keyless storage.\n\nThe installer requires your search-size choice before I finish connecting Codex and saving **“My favorite tea is genmaicha.”** Please answer the pending question; I recommend **Conservative**.\n\nThis requirement comes from [g"
+        },
+        {
+          "index": 2,
+          "wall_ms": 35270,
+          "cost_usd": null,
+          "shell_commands": 9,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent --env GBRAIN_SOURCE=default -- /home/agent/.bun/bin/gbrain serve --surface verbs'"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done. Installed the pinned gbrain version, configured keyless conservative search, and registered it as Codex CLI’s MCP server.\n\nSaved and verified through MCP: **Your favorite tea is genmaicha.**\n\nRestart Codex to load the server in a new conversation. Local persistence and MCP retrieval passed; cr"
+        },
+        {
+          "index": 3,
+          "wall_ms": 5487,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved GBrain memory."
+        }
+      ]
+    }
+  ],
+  "published-566a242": [
+    {
+      "harness": "claude",
+      "repeat": 1,
+      "gbrain": "0.60.35.0",
+      "download_ms": 7879,
+      "wall_ms": 100196,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 81787,
+          "cost_usd": 0.28096200000000005,
+          "shell_commands": 12,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add --scope user gbrain -- /home/agent/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | grep -i gbrain; claude mcp get gbrain 2>&1"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, set up with no API keys, and connected to Claude Code as an MCP server. It remembers that your favorite tea is genmaicha.\n\n- **Install:** `gbrain 0.60.35` is at `~/.bun/bin/gbrain`. Bun blocked its post-install script, but `gbrain doctor` says the database is set up correctly, s"
+        },
+        {
+          "index": 2,
+          "wall_ms": 10403,
+          "cost_usd": 0.31420840000000005,
+          "shell_commands": 1,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "Done. Search mode is now saved as **conservative** in gbrain's config, and `gbrain search modes` confirms it's active. Automatic memory capture is still off: gbrain has no setting for it, so it only saves what you ask it to remember.\n\nThere's nothing left to set up. In your next Claude Code session,"
+        },
+        {
+          "index": 3,
+          "wall_ms": 8006,
+          "cost_usd": 0.0482996,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea blended with roasted brown rice. You told me this earlier today, and it's the only tea fact saved in gbrain."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 2,
+      "gbrain": "0.60.35.0",
+      "download_ms": 8005,
+      "wall_ms": 95582,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 78545,
+          "cost_usd": 0.24643000000000004,
+          "shell_commands": 12,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add -s user gbrain -- $HOME/.bun/bin/gbrain serve --surface verbs; claude mcp list 2>&1 | tail -5"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed and connected to Claude Code, and it remembers that your favorite tea is genmaicha.\n\n- **Install:** gbrain v0.60.35.0 from the commit you specified, installed with `bun install -g` to `~/.bun/bin/gbrain`. Bun blocked gbrain's post-install script, but `gbrain doctor` shows the dat"
+        },
+        {
+          "index": 2,
+          "wall_ms": 9148,
+          "cost_usd": 0.2741942,
+          "shell_commands": 1,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 0,
+          "final_text": "Setup is finished. I set the search mode to **conservative** explicitly, so it's now your choice rather than an automatic default, and `gbrain search modes` shows it as active. Genmaicha is still saved under `people/me` and comes back when I check.\n\nYour other settings stay as they were: no API keys"
+        },
+        {
+          "index": 3,
+          "wall_ms": 7889,
+          "cost_usd": 0.048344200000000004,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea mixed with roasted brown rice. gbrain has this saved from earlier today (2026-10-03), when you told me directly."
+        }
+      ]
+    },
+    {
+      "harness": "claude",
+      "repeat": 3,
+      "gbrain": "0.60.35.0",
+      "download_ms": 8346,
+      "wall_ms": 84454,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 70725,
+          "cost_usd": 0.23940039999999999,
+          "shell_commands": 11,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "claude mcp add -s user gbrain -- $HOME/.bun/bin/gbrain serve --surface verbs 2>&1; claude mcp list 2>&1 | tail -5"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": 0,
+          "final_text": "gbrain is installed, running with no API keys, and connected to Claude Code. It's remembering that your favorite tea is genmaicha.\n\n- **Install:** `gbrain 0.60.35.0` from the pinned commit. Bun blocked one install script, which the docs say can skip database upgrade steps. The health check found no "
+        },
+        {
+          "index": 2,
+          "wall_ms": 13729,
+          "cost_usd": 0.048682199999999995,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": 7,
+          "final_text": "Your favorite tea is **genmaicha**, the Japanese green tea blended with roasted brown rice. gbrain has this as a fact you told me directly on 2026-10-03. It's the only tea-related memory stored, and no later fact replaces it."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 1,
+      "gbrain": "0.60.35.0",
+      "download_ms": 3918,
+      "wall_ms": 465675,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 247918,
+          "cost_usd": null,
+          "shell_commands": 15,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized local keyless storage with embeddings disabled.\n\nYour one setup question is pending: conservative, balanced, or tokenmax retrieval. I recommend **conservative**. [gbrain’s guide requires this choice](https://github.com/garrytan/gbrain/blob/566a242a"
+        },
+        {
+          "index": 2,
+          "wall_ms": 208199,
+          "cost_usd": null,
+          "shell_commands": 5,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent --env GBRAIN_SOURCE=default -- /home/agent/.bun/bin/gbrain serve --surface verbs --source-guard"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done. Installed the pinned gbrain version, configured keyless conservative retrieval, and registered it as a Codex MCP server.\n\nSaved **your favorite tea is genmaicha** and verified retrieval through MCP and after reopening the database.\n\nRestart Codex to load the server in a new session. Automatic "
+        },
+        {
+          "index": 3,
+          "wall_ms": 9558,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 3,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "list_mcp_resources",
+            "list_mcp_resource_templates",
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved GBrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 2,
+      "gbrain": "0.60.35.0",
+      "download_ms": 4210,
+      "wall_ms": 503260,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 375544,
+          "cost_usd": null,
+          "shell_commands": 15,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized local keyless storage with embeddings disabled.\n\nSetup is awaiting your answer to the single retrieval-budget question, as required by gbrain’s instructions. Codex MCP registration and saving “my favorite tea is genmaicha” are still pending."
+        },
+        {
+          "index": 2,
+          "wall_ms": 120598,
+          "cost_usd": null,
+          "shell_commands": 8,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent --env GBRAIN_SOURCE=default -- /home/agent/.bun/bin/gbrain serve --surface verbs --source-guard'"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Done. Installed the pinned gbrain version, configured keyless local storage with conservative retrieval, and registered its MCP server with Codex.\n\nSaved and verified: **your favorite tea is genmaicha**. It persisted after reopening the brain. Automatic capture remains off.\n\nStart a new Codex sessio"
+        },
+        {
+          "index": 3,
+          "wall_ms": 7118,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved GBrain memory."
+        }
+      ]
+    },
+    {
+      "harness": "codex",
+      "repeat": 3,
+      "gbrain": "0.60.35.0",
+      "download_ms": 3899,
+      "wall_ms": 344825,
+      "provider_requests": 0,
+      "rerank_requests": 0,
+      "sessions": [
+        {
+          "index": 1,
+          "wall_ms": 220766,
+          "cost_usd": null,
+          "shell_commands": 12,
+          "web_calls": 3,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the pinned gbrain version and initialized local, keyless storage.\n\nSetup is waiting on your one search-mode choice; I recommend **Conservative**. After your reply, I’ll connect Codex CLI’s MCP server and save and verify your favorite tea: **genmaicha**."
+        },
+        {
+          "index": 2,
+          "wall_ms": 118260,
+          "cost_usd": null,
+          "shell_commands": 5,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 0,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [],
+          "registrations": [
+            "codex mcp add gbrain --env GBRAIN_HOME=/home/agent --env GBRAIN_SOURCE=default -- /home/agent/.bun/bin/gbrain serve --surface verbs --source-guard; /home/agent/.bun/bin/gbrain remember 'The user’s favorite tea is genmaicha.' --provenance 'U"
+          ],
+          "surfaces": [
+            "verbs"
+          ],
+          "gbrain_tools_offered": null,
+          "final_text": "Installed the exact pinned gbrain version, configured keyless storage with Conservative retrieval, and registered it as Codex CLI’s MCP server.\n\nSaved **your favorite tea is genmaicha** and verified retrieval through MCP after reopening the database. Added persistent memory instructions for future s"
+        },
+        {
+          "index": 3,
+          "wall_ms": 5799,
+          "cost_usd": null,
+          "shell_commands": 0,
+          "web_calls": 0,
+          "gbrain_mcp_calls": 1,
+          "gbrain_mcp_errors": 0,
+          "mcp_tools": [
+            "recall"
+          ],
+          "registrations": [],
+          "surfaces": [],
+          "gbrain_tools_offered": null,
+          "final_text": "Your favorite tea is **genmaicha**, according to your saved gbrain memory."
+        }
+      ]
+    }
+  ]
+}
