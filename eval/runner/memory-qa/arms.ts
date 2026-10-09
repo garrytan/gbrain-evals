@@ -42,7 +42,7 @@ export type PolicyMode = RetrievalPolicy['mode'];
  *
  *   items        `retrieved` (the retrieval's items) or a delivery variant the
  *                system recorded in the row's accounting (`deliveries.<name>`);
- *   render       native | native-dated | pseudo-session | rehydrated;
+ *   render       native | native-dated | pseudo-session | pseudo-session-rank | rehydrated;
  *   select_from  render exactly the items another context packed (the undated
  *                twin; the same blocks under another renderer);
  *   reuse_from   a context whose scored row is copied when this recipe's
@@ -83,7 +83,7 @@ export function parseArms(text: string, source = 'arms file'): ArmsSpec {
   spec.contexts ??= [];
   spec.readers ??= [];
   const recipes = spec.recipes ?? {};
-  const RENDERS: RecipeRender[] = ['native', 'native-dated', 'pseudo-session', 'rehydrated'];
+  const RENDERS: RecipeRender[] = ['native', 'native-dated', 'pseudo-session', 'pseudo-session-rank', 'rehydrated'];
   for (const [name, r] of Object.entries(recipes)) {
     if (!ID.test(name) || name === 'native' || name === 'rehydrated') problems.push(`recipe name ${JSON.stringify(name)} must be 1-40 characters of [A-Za-z0-9._-] and not native or rehydrated`);
     if (!RENDERS.includes(r?.render)) problems.push(`recipe ${name}: render must be one of ${RENDERS.join(', ')}`);

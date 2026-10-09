@@ -1,0 +1,98 @@
+{
+  "benchmark": "lme-s",
+  "questions": 500,
+  "b_pseudo": {
+    "name": "b_pseudo",
+    "grid": "b8",
+    "variants": [
+      "off",
+      "cap_only",
+      "breadth_capped",
+      "depth_first",
+      "off-l5",
+      "window"
+    ],
+    "rendering": "pseudo",
+    "budget": 5500,
+    "steps": [
+      {
+        "budget": 7000,
+        "r_max": 1.4273052180128663,
+        "next": 5400
+      },
+      {
+        "budget": 5400,
+        "r_max": 1.4108168179292462,
+        "next": 5500
+      },
+      {
+        "budget": 5500,
+        "r_max": 1.4089912280701755,
+        "next": 5500
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 3000,
+    "ratio": {
+      "max": 1.4089912280701755,
+      "p50": 1.1885593220338984,
+      "p90": 1.2520810890216434,
+      "p99": 1.3293084522502745,
+      "mean": 1.1895862834037647
+    },
+    "verification": {
+      "overflow": 500,
+      "overflow_from_gbrain_overrun": 500,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 500
+    }
+  },
+  "b_native": {
+    "name": "b_native",
+    "grid": "b8",
+    "variants": [
+      "off",
+      "cap_only",
+      "breadth_capped",
+      "depth_first"
+    ],
+    "rendering": "native",
+    "budget": 5700,
+    "steps": [
+      {
+        "budget": 7000,
+        "r_max": 1.3844174410293066,
+        "next": 5600
+      },
+      {
+        "budget": 5600,
+        "r_max": 1.368439906860111,
+        "next": 5700
+      },
+      {
+        "budget": 5700,
+        "r_max": 1.3700386371619249,
+        "next": 5700
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 2000,
+    "ratio": {
+      "max": 1.3700386371619249,
+      "p50": 1.1394857344135259,
+      "p90": 1.2003162888771746,
+      "p99": 1.2759044608359678,
+      "mean": 1.1392703560515993
+    },
+    "verification": {
+      "overflow": 500,
+      "overflow_from_gbrain_overrun": 500,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 500
+    }
+  }
+}

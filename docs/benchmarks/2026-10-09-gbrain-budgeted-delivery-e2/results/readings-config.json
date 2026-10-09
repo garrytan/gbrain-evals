@@ -1,0 +1,46 @@
+{
+ "lme-s": {
+  "cells": [
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-0",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-1",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-10",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-11",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-12",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-13",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-14",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-15",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-2",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-3",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-4",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-5",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-6",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-7",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-8",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/deliver/shard-9"
+  ],
+  "live": [
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/live/shard-0"
+  ],
+  "slice": {
+   "limit": 100,
+   "seed": 42
+  }
+ },
+ "locomo": {
+  "cells": [
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/locomo/deliver/shard-0",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/locomo/deliver/shard-1",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/locomo/deliver/shard-2"
+  ]
+ },
+ "beam-100k": {
+  "cells": [
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/deliver/shard-0",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/deliver/shard-1",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/deliver/shard-2",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/deliver/shard-3",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/deliver/shard-4",
+   "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/deliver/shard-5"
+  ]
+ }
+}

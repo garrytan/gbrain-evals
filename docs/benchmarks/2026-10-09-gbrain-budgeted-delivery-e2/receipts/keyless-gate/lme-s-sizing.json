@@ -1,0 +1,88 @@
+{
+  "benchmark": "lme-s",
+  "questions": 6,
+  "b_pseudo": {
+    "name": "b_pseudo",
+    "grid": "b8",
+    "variants": [
+      "off",
+      "cap_only",
+      "breadth_capped",
+      "depth_first",
+      "off-l5",
+      "window"
+    ],
+    "rendering": "pseudo",
+    "budget": 5500,
+    "steps": [
+      {
+        "budget": 7000,
+        "r_max": 1.3330218068535826,
+        "next": 5800
+      },
+      {
+        "budget": 5500,
+        "r_max": null,
+        "next": 5500
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 36,
+    "ratio": {
+      "max": 1.3279854147675478,
+      "p50": 1.1887272727272726,
+      "p90": 1.2654545454545454,
+      "p99": 1.3050630597696948,
+      "mean": 1.1923699590241617
+    },
+    "verification": {
+      "overflow": 6,
+      "overflow_from_gbrain_overrun": 6,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 6
+    }
+  },
+  "b_native": {
+    "name": "b_native",
+    "grid": "b8",
+    "variants": [
+      "off",
+      "cap_only",
+      "breadth_capped",
+      "depth_first"
+    ],
+    "rendering": "native",
+    "budget": 6000,
+    "steps": [
+      {
+        "budget": 7000,
+        "r_max": 1.2694420352703093,
+        "next": 6100
+      },
+      {
+        "budget": 6000,
+        "r_max": null,
+        "next": 6000
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 24,
+    "ratio": {
+      "max": 1.2696422601136743,
+      "p50": 1.1290430143381127,
+      "p90": 1.1770903010033444,
+      "p99": 1.268756252084028,
+      "mean": 1.1410917069821314
+    },
+    "verification": {
+      "overflow": 6,
+      "overflow_from_gbrain_overrun": 6,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 6
+    }
+  }
+}

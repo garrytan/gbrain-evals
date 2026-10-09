@@ -1,0 +1,524 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "lme-s",
+  "split": "dev",
+  "started_at": "2026-10-09T15:08:21.239Z",
+  "finished_at": "2026-10-09T15:12:41.803Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#fc548317f628f25c6708049e17af22ee6b4e28ad",
+    "declared_sha": "fc548317f628f25c6708049e17af22ee6b4e28ad",
+    "version": "0.60.124.0",
+    "package_sha256": "2bbca3da37dce5c531463a91a0d54743d282ca2b6ae00fad87c8f0ea241dd93b",
+    "loaded_git_head": "ca2c447bd39b31beb142247de424c096eefc8525"
+  },
+  "overlay": {
+    "requested": "~/gbrain-master@ca2c447bd39b31beb142247de424c096eefc8525",
+    "ref": "ca2c447bd39b31beb142247de424c096eefc8525",
+    "commit": "ca2c447bd39b31beb142247de424c096eefc8525",
+    "tree": "4242bbb909f90e622e6427a525005c23b16b66f8",
+    "version": "0.60.124.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "4242bbb909f90e622e6427a525005c23b16b66f8",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.124.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "arm_config": {
+    "search.reranker.enabled": "false"
+  },
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "hash",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "LongMemEval-S cleaned",
+    "files": [
+      {
+        "path": "longmemeval/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+      }
+    ],
+    "revision": "98d7416c",
+    "license": "MIT"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:9780",
+    "slot": "harness",
+    "lease_id": "e2-read-lme-s-phase2-depth-first-a1-7143f906",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 0,
+    "sessions": 0,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 19701
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "fa1c7290fbdfce6c7b618ee4f0381cdea87fc08814dd0bf947f0a2f1f074c2ab",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 9,
+      "count": 16
+    },
+    "conversations": 31,
+    "questions_expected": 31
+  },
+  "system": {
+    "name": "replay:gbrain-query",
+    "capability_system": "gbrain-query",
+    "capabilities": {
+      "system": "gbrain-query",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.124.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null,
+        "connector": "gbrain-query-connector-v1"
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "notes": "gbrain balanced defaults plus the query-path pins"
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each block cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "retrieval_policies": {
+        "fixed-evidence": {
+          "settings": {
+            "limit": 25
+          }
+        },
+        "vendor-default": {
+          "settings": {
+            "limit": 25
+          }
+        }
+      },
+      "query_path_pins": {
+        "search.cache.enabled": "false",
+        "decide.provider": "none",
+        "search.crag_escalation": "false",
+        "search.crag_think": "false",
+        "search.track_retrieval": "false"
+      },
+      "measured_path": "trusted local caller (remote: false); remote lean rows and safe-chunk rules are not exercised",
+      "deviations_from_vendor_code": [
+        "expand: false (agent default true), matching the shootout retrieval"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-query",
+      "config": null,
+      "versions": null
+    }
+  },
+  "counts": {
+    "rows": 31,
+    "scored": 31,
+    "errors": 0,
+    "abstention": 0
+  },
+  "summary": {
+    "recall_all_at_5": 0.9032258064516129,
+    "recall_any_at_5": 0.967741935483871,
+    "recall_all_at_10": 0.9354838709677419,
+    "ndcg_at_10": 0.9131669482944331,
+    "latency_p50_ms": 1899.4,
+    "latency_p95_ms": 2410.75
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 31,
+    "outcomes": {
+      "scored": 31,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 211
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.pseudo-off.b8000.opus-5-5",
+      "dir": "arms/fixed-evidence.pseudo-off.b8000.opus-5-5",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 7,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 7,
+        "scored": 7,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 1,
+        "recall_any_at_5": 1,
+        "recall_all_at_10": 1,
+        "ndcg_at_10": 1,
+        "latency_p50_ms": 1899.4,
+        "latency_p95_ms": 2405.6499999999996,
+        "qa_score": 0.7142857142857143,
+        "qa_rows": 7,
+        "qa_errors": 0,
+        "qa_service_score": 0.7142857142857143,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.pseudo-off.b8000.gpt-6-1-sol",
+      "dir": "arms/fixed-evidence.pseudo-off.b8000.gpt-6-1-sol",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 7,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 7,
+        "scored": 7,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 1,
+        "recall_any_at_5": 1,
+        "recall_all_at_10": 1,
+        "ndcg_at_10": 1,
+        "latency_p50_ms": 1899.4,
+        "latency_p95_ms": 2405.6499999999996,
+        "qa_score": 0.7142857142857143,
+        "qa_rows": 7,
+        "qa_errors": 0,
+        "qa_service_score": 0.7142857142857143,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.pseudo-off.b8000.fable-5-1-smoke",
+      "dir": "arms/fixed-evidence.pseudo-off.b8000.fable-5-1-smoke",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 0,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 0,
+        "scored": 0,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": null,
+        "recall_any_at_5": null,
+        "recall_all_at_10": null,
+        "ndcg_at_10": null,
+        "latency_p50_ms": null,
+        "latency_p95_ms": null,
+        "qa_score": null,
+        "qa_rows": 0,
+        "qa_errors": 0,
+        "qa_service_score": null,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.pseudo-depth_first.b8000.opus-5-5",
+      "dir": "arms/fixed-evidence.pseudo-depth_first.b8000.opus-5-5",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 7,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 7,
+        "scored": 7,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 1,
+        "recall_any_at_5": 1,
+        "recall_all_at_10": 1,
+        "ndcg_at_10": 1,
+        "latency_p50_ms": 1899.4,
+        "latency_p95_ms": 2405.6499999999996,
+        "qa_score": 0.8571428571428571,
+        "qa_rows": 7,
+        "qa_errors": 0,
+        "qa_service_score": 0.8571428571428571,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.pseudo-depth_first.b8000.gpt-6-1-sol",
+      "dir": "arms/fixed-evidence.pseudo-depth_first.b8000.gpt-6-1-sol",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 7,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 7,
+        "scored": 7,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 1,
+        "recall_any_at_5": 1,
+        "recall_all_at_10": 1,
+        "ndcg_at_10": 1,
+        "latency_p50_ms": 1899.4,
+        "latency_p95_ms": 2405.6499999999996,
+        "qa_score": 0.8571428571428571,
+        "qa_rows": 7,
+        "qa_errors": 0,
+        "qa_service_score": 0.8571428571428571,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.pseudo-depth_first.b8000.fable-5-1-smoke",
+      "dir": "arms/fixed-evidence.pseudo-depth_first.b8000.fable-5-1-smoke",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 0,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 0,
+        "scored": 0,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": null,
+        "recall_any_at_5": null,
+        "recall_all_at_10": null,
+        "ndcg_at_10": null,
+        "latency_p50_ms": null,
+        "latency_p95_ms": null,
+        "qa_score": null,
+        "qa_rows": 0,
+        "qa_errors": 0,
+        "qa_service_score": null,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.rank-depth_first.b8000.sonnet-5-5-slice",
+      "dir": "arms/fixed-evidence.rank-depth_first.b8000.sonnet-5-5-slice",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 7,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 7,
+        "scored": 7,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 1,
+        "recall_any_at_5": 1,
+        "recall_all_at_10": 1,
+        "ndcg_at_10": 1,
+        "latency_p50_ms": 1899.4,
+        "latency_p95_ms": 2405.6499999999996,
+        "qa_score": 0.8571428571428571,
+        "qa_rows": 7,
+        "qa_errors": 0,
+        "qa_service_score": 0.8571428571428571,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.native-off.b8000.gpt-4o",
+      "dir": "arms/fixed-evidence.native-off.b8000.gpt-4o",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 7,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 7,
+        "scored": 7,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 1,
+        "recall_any_at_5": 1,
+        "recall_all_at_10": 1,
+        "ndcg_at_10": 1,
+        "latency_p50_ms": 1899.4,
+        "latency_p95_ms": 2405.6499999999996,
+        "qa_score": 0.7142857142857143,
+        "qa_rows": 7,
+        "qa_errors": 0,
+        "qa_service_score": 0.7142857142857143,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.native-depth_first.b8000.gpt-4o",
+      "dir": "arms/fixed-evidence.native-depth_first.b8000.gpt-4o",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 7,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 7,
+        "scored": 7,
+        "errors": 0,
+        "abstention": 0
+      },
+      "summary": {
+        "recall_all_at_5": 1,
+        "recall_any_at_5": 1,
+        "recall_all_at_10": 1,
+        "ndcg_at_10": 1,
+        "latency_p50_ms": 1899.4,
+        "latency_p95_ms": 2405.6499999999996,
+        "qa_score": 0.8571428571428571,
+        "qa_rows": 7,
+        "qa_errors": 0,
+        "qa_service_score": 0.8571428571428571,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    }
+  ]
+}

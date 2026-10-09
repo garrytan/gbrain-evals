@@ -6,7 +6,10 @@
  * scores and outcomes, packed ids, prompt hashes and byte counts, token counts,
  * and the delivery records (units, budgets, overruns, spill, parity).
  *
- *   bun eval/runner/budgeted-delivery/export-receipts.ts --cell <cell output dir> --to <results dir>
+ * With `--arm-accounting none`, arm rows drop the copied retrieval accounting
+ * (each arm row names its `retrieval_key`; the retrieval rows keep it once).
+ *
+ *   bun eval/runner/budgeted-delivery/export-receipts.ts --cell <cell output dir> --to <results dir> [--arm-accounting none]
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -36,10 +39,10 @@ export function stripRow(r: Row): Row {
 }
 
 const readRows = (p: string): Row[] => existsSync(p) ? readFileSync(p, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
-const gz = (rows: Row[]) => gzipSync(rows.map(r => JSON.stringify(scrubMachinePaths(stripRow(r))) + '\n').join(''));
+const gz = (rows: Row[], dropAccounting = false) => gzipSync(rows.map(r => { const s = stripRow(r); if (dropAccounting) delete s.accounting; return JSON.stringify(scrubMachinePaths(s)) + '\n'; }).join(''));
 const scrubbedJson = (p: string) => JSON.stringify(scrubMachinePaths(JSON.parse(readFileSync(p, 'utf8'))), null, 2) + '\n';
 
-export function exportCell(cell: string, to: string): string[] {
+export function exportCell(cell: string, to: string, opts: { armAccounting?: 'keep' | 'none' } = {}): string[] {
   const written: string[] = [];
   const put = (rel: string, data: string | Buffer) => { const p = join(to, rel); mkdirSync(join(p, '..'), { recursive: true }); writeFileSync(p, data); written.push(rel); };
   if (existsSync(join(cell, 'receipt.json'))) put('receipt.json', scrubbedJson(join(cell, 'receipt.json')));
@@ -49,7 +52,7 @@ export function exportCell(cell: string, to: string): string[] {
     if (arm.endsWith('.retrieval')) continue;
     for (const f of ['outcomes.ndjson', 'manifest.json']) if (existsSync(join(arms, arm, f))) put(`arms/${arm}/${f}`, readFileSync(join(arms, arm, f)));
     if (existsSync(join(arms, arm, 'receipt.json'))) put(`arms/${arm}/receipt.json`, scrubbedJson(join(arms, arm, 'receipt.json')));
-    put(`arms/${arm}/rows.ndjson.gz`, gz(readRows(join(arms, arm, 'rows.ndjson'))));
+    put(`arms/${arm}/rows.ndjson.gz`, gz(readRows(join(arms, arm, 'rows.ndjson')), opts.armAccounting === 'none'));
   }
   return written;
 }
@@ -57,5 +60,5 @@ export function exportCell(cell: string, to: string): string[] {
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-  console.log(exportCell(one('--cell')!, one('--to')!).length, 'files');
+  console.log(exportCell(one('--cell')!, one('--to')!, { armAccounting: one('--arm-accounting') === 'none' ? 'none' : 'keep' }).length, 'files');
 }
