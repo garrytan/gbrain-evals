@@ -1,11 +1,9 @@
 {
-  "at": "2026-10-09T19:50:44.829Z",
+  "at": "2026-10-09T20:01:51.539Z",
   "s4.gbrain-defaults.shipped-defaults.c0": "running",
   "s4.gbrain-defaults.shipped-defaults.c1": "running",
-  "s5.gbrain-defaults.shipped-defaults.c0": "running",
   "s5.gbrain-defaults.shipped-defaults.c1": "running",
   "s5.gbrain-defaults.shipped-defaults.c2": "running",
-  "s5.gbrain-defaults.shipped-defaults.c3": "running",
   "s5.ext-verbatim-session.recipe": "running",
   "s4-slice.ext-markdown-kb.recipe.c0": "running",
   "s4-slice.ext-markdown-kb.recipe.c1": "running",
@@ -31,5 +29,7 @@
   "s5.ext-markdown-kb.recipe.c19": "running",
   "s4-slice.ext-verbatim-session.recipe": "settled",
   "s5.baseline-hybrid.baseline.c0": "settled",
-  "s5.baseline-hybrid.baseline.c1": "settled"
+  "s5.baseline-hybrid.baseline.c1": "settled",
+  "s5.gbrain-defaults.shipped-defaults.c3": "settled",
+  "s5.gbrain-defaults.shipped-defaults.c0": "settled"
 }

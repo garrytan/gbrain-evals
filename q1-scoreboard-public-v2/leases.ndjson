@@ -73,3 +73,5 @@
 {"event":"settled","lease_id":"s5.baseline-hybrid.baseline.c3-a1-c5218600","at":"2026-10-09T19:19:50.031Z","actual_usd":3.5243694699999986,"requests":7678,"max_output_tokens":null,"cell_exit_code":4}
 {"event":"finished","lease_id":"s5.baseline-hybrid.baseline.c2-a1-8cd18f9e","at":"2026-10-09T19:20:31.059Z","exit_code":4}
 {"event":"settled","lease_id":"s5.baseline-hybrid.baseline.c2-a1-8cd18f9e","at":"2026-10-09T19:20:31.067Z","actual_usd":3.4809045700000083,"requests":7727,"max_output_tokens":null,"cell_exit_code":4}
+{"event":"settled","lease_id":"s5.gbrain-defaults.shipped-defaults.c3-a1-e5a533ae","at":"2026-10-09T19:55:00.353Z","actual_usd":6.952657469999921,"requests":18623,"max_output_tokens":null,"cell_exit_code":4}
+{"event":"settled","lease_id":"s5.gbrain-defaults.shipped-defaults.c0-a1-0584f459","at":"2026-10-09T19:57:15.178Z","actual_usd":7.419359409999894,"requests":19387,"max_output_tokens":null,"cell_exit_code":4}

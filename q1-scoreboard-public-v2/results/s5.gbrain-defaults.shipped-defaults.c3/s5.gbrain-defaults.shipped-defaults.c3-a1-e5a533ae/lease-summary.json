@@ -1,0 +1,13 @@
+{
+  "run_id": "s5.gbrain-defaults.shipped-defaults.c3-a1-e5a533ae",
+  "lease_usd": 34.37,
+  "committed_usd": 6.952657469999921,
+  "requests": 18623,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 4,
+  "timeout_hours": 12,
+  "timed_out": false,
+  "checkpoint_rows": 25,
+  "realization_id": "real-s5.gbrain-defaults.shipped-defaults.c3-1ce3783743028252",
+  "realization_status": "failed"
+}
