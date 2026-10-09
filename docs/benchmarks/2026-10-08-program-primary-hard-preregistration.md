@@ -175,3 +175,33 @@ whose estimate exceeds what is left, so the exploratory arm runs on the first pe
 on seeds 20261101 to 20261106 (18 cells), then gpt-6.1-sol on as many leading seeds as the preflight then admits. Still
 descriptive only, paired with the master arm's repeat-1 cells of the same tasks. Steps 4 and 5 (forced-drop mutants and
 the Opus mutants) do not fit and are not run.
+
+### Amendment 3 (2026-10-09, Pacific): Candidate 1 validity mutants and a fresh-seed check
+
+Code under test is unchanged from amendment 2: Candidate 1 is gbrain tree `cab96a0e` (measurement commit `82460865`,
+the same tree as garrytan/gbrain#6362's head `658fca5d`), master is `fc548317` (v0.60.122.0). Harness: this commit,
+which adds only the fresh seeds below to the seeds the T0b runner accepts (`PPH_FRESH_SEEDS_C1`,
+`PPH_RUNNABLE_SEEDS`) and a test that they are new and solvable. New budget-ledger run, cap $45. Protocol otherwise
+frozen as in amendment 2 (`program-primary-hard-v1`, `DEFAULT_KNOBS`, `t0b-score-v1`, T0 delivery contract,
+`--surface starter`, 20 turns, reranker live).
+
+**Fresh-seed check, not a custodian-sealed confirmation.** Eight new development personas, seeds
+306480323, 316602389, 384540222, 476843991, 615322188, 691467441, 731983881, 767687777, drawn at random on 2026-10-09 07:45 UTC, after Candidate 1's code was frozen and after its
+development result was known. They appear in no earlier run (world digest `081ea8b8`). They are public in this
+repository, so they test whether the development result carries to new worlds from the same generator; they are not a
+held-out set and support no held-out claim. Arms: master and Candidate 1, `baseline` arm, the three counted readers,
+1 repeat: 72 cells per arm, each Candidate 1 cell paired with the master cell of the same task and reader. Both arms run
+from this harness revision in the same window, in batches of two personas with both arms running concurrently, so a
+budget stop leaves complete persona pairs. Statistics: PW's frozen conditional-binomial interval for R, persona
+clusters, loss tolerance 3.0 points, per reader then pooled, failure classes and the reader's route as in amendment 2.
+Reversal, frozen here: the pooled verdict is `worse`, or the pooled point estimate of R is 1 or more. On a reversal
+the work stops and the result goes to the coordinating thread before anything ships.
+
+**Validity mutants on Candidate 1** (development seeds 20261101 to 20261108, repeat 1, detection by the frozen rule
+against Candidate 1's amendment-2 repeat-1 cells): `mutant-stale-correction` for Opus 5.5 (gpt-6.1-sol and Sonnet 5.5
+ran under amendment 2), and `mutant-forced-drop` for gpt-6.1-sol, Sonnet 5.5 and Opus 5.5.
+
+Order, stopping before any invocation the ledger would take past $45 (the runner's preflight prices cells at its
+calibration estimates, so a stop can come before the cap): (1) stale-correction Opus 5.5; (2) forced-drop gpt-6.1-sol,
+then Sonnet 5.5; (3) the fresh-seed check, persona batches in seed order; (4) forced-drop Opus 5.5, on as many leading
+personas as the preflight admits. The report names every check not run or run partially.

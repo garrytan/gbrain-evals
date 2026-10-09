@@ -68,6 +68,13 @@ export const DEFAULT_KNOBS: HardKnobs = { tasks_per_persona: 3, session1: 'expli
 /** Development seeds the calibration rounds used; the development baseline runs on the other eight. */
 export const PPH_CALIBRATION_SEEDS: readonly number[] = [20261109, 20261110, 20261111, 20261112, 20261113, 20261114];
 export const PPH_BASELINE_SEEDS: readonly number[] = PPH_DEV_SEEDS.slice(0, 8);
+/**
+ * Fresh development seeds for Candidate 1's fresh-seed check (preregistration amendment 3): drawn at random on
+ * 2026-10-09 after Candidate 1's code was frozen, never used before. Public, so not a custodian-sealed set.
+ */
+export const PPH_FRESH_SEEDS_C1: readonly number[] = [306480323, 316602389, 384540222, 476843991, 615322188, 691467441, 731983881, 767687777];
+/** Every seed the T0b runner and this generator's CLI accept. */
+export const PPH_RUNNABLE_SEEDS: readonly number[] = [...PPH_DEV_SEEDS, ...PPH_FRESH_SEEDS_C1];
 
 export interface HardTask {
   id: string;
@@ -347,7 +354,7 @@ if (import.meta.main) {
   const argv = process.argv.slice(2);
   const flag = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const seeds = flag('--seeds')?.split(',').map(Number) ?? [...PPH_DEV_SEEDS];
-  const bad = seeds.filter(s => !PPH_DEV_SEEDS.includes(s));
+  const bad = seeds.filter(s => !PPH_RUNNABLE_SEEDS.includes(s));
   if (bad.length) throw new Error(`only development seeds run here; got ${bad.join(', ')}`);
   const world = generateHardWorld(seeds);
   const problems = world.personas.flatMap(hardSolvabilityProblems);
