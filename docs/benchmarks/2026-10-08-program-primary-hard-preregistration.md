@@ -270,3 +270,18 @@ probe's alias table on the fresh brains.
 3. development repeat 2, both arms concurrently, in batches of two personas in seed order, as far as the budget admits.
 No validity mutants run (Candidate 1's were all detected on this harness under amendments 2 and 3). The report names
 every step not run or run partially.
+
+Amendment 4, note before further cells (2026-10-09, Pacific): steps 1 and 2 ran in full and step 3 ran on seeds
+20261101 and 20261102 before the $70 run stopped (ledger run `t0b-program-primary-2026-10-09T13-52-11-329Z-b10c88bb`,
+$61.78). Garry's standing rule for development rounds is that planned repeats are not left unrun for budget, so a
+second budget-ledger run, cap $60 (reallocated inside the approved $420 from candidate 3's unused slot), runs the rest.
+Code identities, harness revision, protocol, statistics and the "stacks" criterion are unchanged. Order, stopping
+before any invocation the ledger or the runner's preflight would take past $60:
+4. development repeat 2 on seeds 20261103 to 20261108, both arms concurrently, in batches of two personas in seed
+   order; the development comparison then covers all 144 pairs;
+5. validity mutants on "master + alias fix", development seeds, repeat 1, one invocation per mutant and reader:
+   `mutant-stale-correction` for gpt-6.1-sol, Sonnet 5.5 and Opus 5.5, then `mutant-forced-drop` in the same reader
+   order. Detection follows the frozen rule against the alias arm's own repeat-1 cells (`eval/runner/t0/analyze.ts`:
+   persona-clustered risk difference, 95% lower bound above 0; the stale-correction mutant must also raise
+   `stale_correction` above the baseline's).
+The rerank probe runs on every slot of every invocation. The report names any step not run or run partially.
