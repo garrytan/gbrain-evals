@@ -572,7 +572,9 @@ long cells split into haystack shards of about 6 to 8 hours, each with a timeout
 times its share (at least $2); verbatim-session keeps A9's $13 lease; $400.80 in leases, $441 cap. The launching host
 now pushes each campaign's state (leases, ledgers, rows, receipts; not store snapshots) to the results branch
 `evals/q1-scoreboard-results` every 10 minutes (`eval/runner/q1/persist.sh`; public campaigns only), so a lost host
-loses only the cells still in flight. `q1-scoreboard-public` and its reruns r2 to r5 are retired.
+loses only the cells still in flight. `q1-scoreboard-public` and its reruns r2 to r5 are retired. The public block's
+$500 line is exceeded: about $150 lost plus up to $441 for v2 (about $250 expected at measured rates), caused by the
+lost machine, not by scope. The program owner approved v2 on 2026-10-09; the program total stays under $8,500.
 
 ## Changelog
 
