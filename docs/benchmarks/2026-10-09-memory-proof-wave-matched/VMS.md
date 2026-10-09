@@ -4,3 +4,4 @@ Every VM the matched secondary cells use, recorded when it is created and when i
 
 | Time (UTC) | Cell | VM | SSH key directory | Event |
 |---|---|---|---|---|
+| 2026-10-09T18:47:00Z | longmemeval-s-gbrain-raw | `ubirun-gbra52-1791571596-ab0b5492` | `~/.local/state/ubi-runner/ubirun-gbra52-1791571596-ab0b5492/` on the run machine | created |
