@@ -1,11 +1,16 @@
 #!/usr/bin/env bun
 /**
  * Fail when the comparator's product name or its maker's name appears in a
- * tracked or untracked (non-ignored) file the memory proof wave publishes or
- * shares (IN_SCOPE): its reports, harness, workload suites and tests, plus the
- * repository's front pages (README, docs/README, CHANGELOG). Other
- * evaluations in this repository name the systems they measure by design and
- * are outside this guard.
+ * tracked or untracked (non-ignored) file of this repository. Other memory
+ * systems are described by kind everywhere; names, versions and upstream
+ * identities live only in docs/comparison-systems.md.
+ *
+ * Documented exceptions (gbrain-evals 0.10.50, amendment A6b), where the
+ * upstream identity is needed to pin or run the vendor code: dependency and
+ * lock files (DEPENDENCY_FILE), Python imports of the vendor client, the
+ * vendor's own upper-case environment variables (`<NAME>_API_...`), and the
+ * public benchmark harness's repository path (`<maker>-io/agent-memory-benchmark`),
+ * which public benchmark citations need.
  *
  * Gzip files are scanned decompressed. The names are never written here. Each is stored as a 64-bit Bun.hash
  * (wyhash) plus a sha256 of the lowercase name and its length. The scan
@@ -40,21 +45,19 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
   'docs/plans/2026-09-28-gbrain-10x/audit/evals-docs-infra.md': ['product'],
   'eval/harness-provider/harness.lock.json': ['maker'],
   'eval/data/memory-proof-wave/harness.lock.json': ['maker'],
+  // Raw model answer text in receipts, where the maker name is an ordinary capitalised verb starting a list item.
+  'docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/a1-nomem-opus55/shard-1/answers.ndjson.gz': ['maker'],
+  'docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/a1-nomem-opus55/shard-1/rows.ndjson.gz': ['maker'],
+  // Dated history (a 2026-10-05 plan review); dated history and third-party leaderboard rows stay until Garry decides.
+  'docs/plans/2026-10-05-oss-memory-shootout/reviews/ceo-claude.md': ['maker'],
   // Raw receipts of earlier runs: gbrain research file paths inside agent transcripts.
   'docs/benchmarks/2026-10-03-agent-operator/after-7d16702/runs.tar.gz': ['product'],
   'docs/benchmarks/2026-10-03-agent-operator/after-b3f4e8b/runs.tar.gz': ['product'],
 };
 
-/** Repo-relative path prefixes the guard covers. */
-export const IN_SCOPE: readonly string[] = [
-  'README.md', 'docs/README.md', 'CHANGELOG.md', 'package.json', 'eval/registry.ts', 'docs/comparison-systems.md',
-  'docs/benchmarks/2026-10-05-', 'docs/plans/2026-09-28-gbrain-10x/',
-  'eval/harness-provider/', 'eval/workload-suites/', 'eval/data/memory-proof-wave/', 'eval/data/workload-suites/',
-  'eval/schemas/workload-suite.schema.json', 'eval/runner/memory-proof-wave', 'eval/runner/harness-',
-  'eval/runner/coding-spike.ts', 'eval/runner/stub-upstream.ts', 'eval/runner/metering-proxy-testkit.ts',
-  'test/eval/harness-', 'test/eval/memory-proof-wave', 'test/eval/workload-suites', 'test/eval/comparator-server',
-  'test/eval/coding-spike', 'scripts/check-comparator-name.ts',
-];
+/** Dependency, lock and container files, which pin vendor packages and images by their upstream names. */
+export const DEPENDENCY_FILE = /(^|\/)(Dockerfile[^/]*|[^/]*\.lock|package-lock\.json|requirements[^/]*\.txt|pyproject\.toml|(docker-)?compose[^/]*\.ya?ml)$/;
+const PYTHON_IMPORT = /^\s*(from|import)\s/;
 /**
  * Both names are also ordinary English. The product name is skipped in the
  * idioms "in/with/of <name>" and "<name> bias"; the maker name counts only in its organisation
@@ -68,6 +71,18 @@ function isProperNoun(bytes: Uint8Array, start: number, end: number, id: Needle[
   if (/^[-._]?io(?![a-z])/.test(after)) return true;
   const nextIsLetter = /^[a-z]/.test(after);
   return !nextIsLetter && bytes[start] === 86;
+}
+
+/**
+ * The vendor's own environment variables (`<NAME>_API_LLM_MODEL`: the upper-case name followed by an underscore)
+ * and the public benchmark harness's repository path (the maker's organisation followed by `/agent-memory-benchmark`).
+ */
+function isDocumentedIdentifier(bytes: Uint8Array, start: number, end: number): boolean {
+  const after = Buffer.from(bytes.subarray(end, end + 26)).toString('latin1').toLowerCase();
+  if (/^[-._]?io\/agent-memory-benchmark/.test(after)) return true;
+  if (bytes[end] !== 95) return false;
+  for (let i = start; i < end; i++) if (bytes[i] < 65 || bytes[i] > 90) return false;
+  return true;
 }
 
 export interface Hit { path: string; needle: Needle['id']; line: number }
@@ -97,6 +112,7 @@ export function findNeedles(input: string | Uint8Array, needles: readonly Needle
     const needle = needles.find(n => n.wyhash === h);
     if (!needle || createHash('sha256').update(window).digest('hex') !== needle.sha256) continue;
     if (!isProperNoun(bytes, i - len + 1, i + 1, needle.id)) continue;
+    if (isDocumentedIdentifier(bytes, i - len + 1, i + 1)) continue;
     hits.push({ needle: needle.id, line });
   }
   return hits;
@@ -112,7 +128,7 @@ export function scan(root: string, files = repoFiles(root)): { violations: Hit[]
   const violations: Hit[] = [];
   const allowed: Hit[] = [];
   for (const rel of files) {
-    if (!IN_SCOPE.some(prefix => rel.startsWith(prefix))) continue;
+    if (DEPENDENCY_FILE.test(rel)) continue;
     const path = join(root, rel);
     let bytes: Uint8Array;
     try {
@@ -122,7 +138,9 @@ export function scan(root: string, files = repoFiles(root)): { violations: Hit[]
     } catch {
       continue;
     }
+    const lines = rel.endsWith('.py') ? Buffer.from(bytes).toString('latin1').split('\n') : null;
     for (const { needle, line } of [...findNeedles(bytes), ...findNeedles(rel).map(h => ({ ...h, line: 0 }))]) {
+      if (lines && line > 0 && PYTHON_IMPORT.test(lines[line - 1])) continue;
       const hit = { path: rel, needle, line };
       (ALLOWED[rel]?.includes(needle) ? allowed : violations).push(hit);
     }
