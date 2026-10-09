@@ -3,7 +3,7 @@
 Target: `/workspace/gbrain-evals/docs/plans/2026-10-05-oss-memory-shootout/PLAN.md` (v2, uncommitted, amended after the CEO phase).
 Repository HEAD: `d47c40d`. gbrain pin in `package.json:45`: `739e5cc` (installed `node_modules/gbrain` reports 0.60.46.0).
 Mode: /autoplan engineering phase, auto-decide, no questions. Method: plan-eng-review (Scope Challenge, Sections 1 to 4, required outputs). Preamble, telemetry, review log and the gstack test-plan artifact are skipped under the hard rule "write only this file"; the test plan is inline below and is **not persisted** elsewhere.
-Evidence: every finding quotes or cites code I read on this machine. Vendor claims come from the pinned wheels (`graphiti-core 0.30.2`, `graph-pipeline 1.6.2`, `mem0ai 2.2.1`, `hindsight-client 0.10.2`, `markdown-notes 0.23.2`, all confirmed on PyPI and unpacked into `/tmp`). agent-runtime and the vendor MCP servers were not unpacked.
+Evidence: every finding quotes or cites code I read on this machine. Vendor claims come from the pinned wheels (temporal-graph, graph-pipeline, extract-first, the memory-bank client and markdown-notes at the pins the comparison table lists, all confirmed on PyPI and unpacked into `/tmp`). agent-runtime and the vendor MCP servers were not unpacked.
 
 ## 1. Verdict
 
@@ -37,7 +37,7 @@ Fix: size each cell shard to finish in under 8 hours using Phase 0's measured pe
 
 ### Code quality and contracts
 
-**C1. [P1] (9/10) PLAN contract 2 (`{ text, source_ids[], event_time?, score? }`); `graphiti_core/edges.py:267` (`episodes: list[str]`), temporal-graph edge validity fields; `mem0/memory/main.py:1393-1403` (`reference_date`, `show_expired`) — the evidence item cannot say a fact stopped being true.**
+**C1. [P1] (9/10) PLAN contract 2 (`{ text, source_ids[], event_time?, score? }`); temporal-graph `edges.py:267` (`episodes: list[str]`), temporal-graph edge validity fields; extract-first `memory/main.py:1393-1403` (`reference_date`, `show_expired`) — the evidence item cannot say a fact stopped being true.**
 temporal-graph keeps superseded facts as edges with a validity window by design; flattening them to text presents an invalidated fact as current. That biases P1 temporal and knowledge-update questions and all of P2 against the systems whose design is temporal, while the plan's own mitigation ("report retrieval as not measurable") does not cover it. extract-first search also takes `reference_date`, which the interface never passes, so it ranks 2023 conversations relative to a 2026 wall clock.
 Fix: `Item = { text, source_ids, event_time?, valid_from?, valid_to?, score? }`; the one renderer prints `[valid 2023-05-01 to 2023-06-02]` when present; `retrieve(ns, question, { k, now })` passes the public `question_date` (corpus.ts:29, already public in `readerPrompt`, qa.ts:64) as `now`.
 
@@ -57,7 +57,7 @@ Fix: keep one reader-independent budget unit (`approxTokens`, already tested at 
 Defaults differ (extract-first `top_k: int = 20`, main.py:1397; graph-pipeline `top_k: int = 15`, recall.py:353). Calling `retrieve` twice doubles query cost and can return different rankings.
 Fix: one `retrieve` per (system, configuration, question) at `k_fill` large enough for 8,000 tokens; store the raw items in the attempt row; derive both budgets and both context modes offline with a pure `packItems()` function; the default-amount context is the first `k_default` items. Phase 0 adds a prefix-stability probe (top `k_default` at `k_fill` equals the result at `k_default`) per system and records the result. Reader runs (including D2) then replay from rows without touching vendor stores.
 
-**C6. [P2] (7/10) `eval/runner/memory-qa/corpus.ts:61-74, 254`; `graphiti_core/graphiti.py:1043-1055` (`reference_time: datetime` required) — `event_time` can be missing.**
+**C6. [P2] (7/10) `eval/runner/memory-qa/corpus.ts:61-74, 254`; temporal-graph client module lines 1043-1055 (`reference_time: datetime` required) — `event_time` can be missing.**
 `isoSessionDate` returns null for any format other than LongMemEval, LoCoMo or ISO (line 73). BEAM takes `time_anchor` as-is (line 254); its format was not checked here (dataset not downloaded), hence 7/10. A shim that falls back to `datetime.now()` silently dates every fact to 2026.
 Fix: a keyless test per benchmark loader: every session yields an ISO `event_time` or a disclosed synthetic one (monotone, anchored to the first dated session), with the fallback count written to the receipt. Shims reject a missing `event_time` instead of defaulting.
 
@@ -68,7 +68,7 @@ Fix: `ingestSession` passes the whole session (turns with roles); the adapter ch
 The scorer drives `searchText(query, scope[])` and scores returned belief ids. Scope cases need a scope filter or several namespaces per query. The structural categories (pinned facts, relation expansion, open questions) are harness-computed and identical for every provider (precisionmembench.ts header), so the headline precision compresses real differences.
 Fix: `retrieve` accepts `ns: string | string[]`, and the shim protocol states the merge rule for systems that cannot search several namespaces at once (round-robin by rank, preregistered). Belief ids map from `source_ids`; a merged item counts as returning every belief it cites. Report the searchText categories (alias, scope, fuzzy, supersession, ranking) as the P3 headline, structural categories separately.
 
-**C9. [P2] (8/10) `cognee/api/v1/recall/recall.py:353-363` (`auto_route: bool = True`; comment: "only_context / verbose inspect retriever-specific shapes. Pin query_type: unspecified hybrid may defer to GRAPH_COMPLETION"); `mem0/memory/telemetry.py:14` (`MEM0_TELEMETRY = os.environ.get("MEM0_TELEMETRY", "True")`) — capability records must pin vendor switches the plan does not name.**
+**C9. [P2] (8/10) graph-pipeline `api/v1/recall/recall.py:353-363` (`auto_route: bool = True`; comment: "only_context / verbose inspect retriever-specific shapes. Pin query_type: unspecified hybrid may defer to GRAPH_COMPLETION"); extract-first `memory/telemetry.py:14` (`MEM0_TELEMETRY = os.environ.get("MEM0_TELEMETRY", "True")`) — capability records must pin vendor switches the plan does not name.**
 Fix: the graph-pipeline record pins `query_type` and `auto_route`, and the shim normalizes that one shape; `include_references=True` for provenance. Every record lists telemetry switches set off (extract-first `MEM0_TELEMETRY=false`), so fail-closed egress does not surface as ingest errors.
 
 **C10. [P2] (9/10) `node_modules/gbrain/src/core/ai/defaults.ts:15` (`DEFAULT_EMBEDDING_MODEL = 'voyage:voyage-4'`) — gbrain's "documented recipe" row needs a Voyage key that this environment does not have.**
@@ -83,7 +83,7 @@ Fix: parity at `6622a119e` is a harness check only; counted gbrain rows run at t
 The registry test fails on any unclassified directory under `eval/runner/` (`if (!RUNNER_HELPER_DIRS.includes(name)) unclassified.push(...)`).
 Fix: add `systems` (and `shootout` if used) to `RUNNER_HELPER_DIRS`, `metering-proxy.ts` to `RUNNER_HELPERS`, and a `lifecycle-lite` registry row with promotion rules in the same commit as its runner, before any counted run.
 
-**C13. [P2] (8/10) PLAN P2 and Phase 5; `eval/generators/n5-forget-residue-gen.ts`, `eval/generators/n1-knowledge-update-gen.ts`, `eval/runner/mutation-kit.ts` (`FAKE_SYSTEM_KINDS = ['empty', 'always-positive', 'always-refuse', 'stale', 'wrong-source']`); `graphiti.py:1824-1834`; `mem0/memory/main.py:1883` — lifecycle-lite should reuse two existing oracles and needs a witness step.**
+**C13. [P2] (8/10) PLAN P2 and Phase 5; `eval/generators/n5-forget-residue-gen.ts`, `eval/generators/n1-knowledge-update-gen.ts`, `eval/runner/mutation-kit.ts` (`FAKE_SYSTEM_KINDS = ['empty', 'always-positive', 'always-refuse', 'stale', 'wrong-source']`); temporal-graph client module lines 1824-1834; extract-first `memory/main.py:1883` — lifecycle-lite should reuse two existing oracles and needs a witness step.**
 N5 already solves "is the fact gone": each canary carries a unique token (`cnry` plus 8 letters) and a witness checkpoint proves presence before the forget. Without a witness, a system whose extractor dropped the fact scores as a perfect forget. Deletion semantics differ: temporal-graph `remove_episode` deletes only edges whose first episode is the deleted one (`if edge.episodes and edge.episodes[0] == episode.uuid`); extract-first deletes memories, not sources (`def delete(self, memory_id)`).
 Fix: lifecycle-lite renders N1-style dated value chains and N5 canary tokens as chat sessions, with a witness read before every delete or correction; a pair not witnessed carries no signal and is counted, never scored. Map the plan's mutation list onto the kit: delete-everything is the `empty` fake, stale post-delete is `stale`; leaked ids, inflated provenance and dropped failures are harness contract tests (C3, C2, A1), not answer-space fakes. Each capability record states its delete semantics.
 
@@ -107,7 +107,7 @@ Retrieval interleaved with other namespaces' ingest measures contention. Per-que
 Fix: shims report `service_ms` around the vendor call and the gbrain adapter times the same boundary; queries run as a serial pass after `finishIngest`; the shim calls the proxy's existing `bind(slot, key)` and `finalize(key)` (gbrain-arm.ts:64, 75) around each `retrieve`, so query-time LLM and embedding calls land on the question's row. Ingest cost is attributed per namespace the same way.
 
 **P2. [P2] (7/10) PLAN contract 6 (`finishIngest` waits for quiescence) — a quiescence signal that lies yields silently low scores.**
-Fix: after `finishIngest`, a per-namespace readiness probe queries a verbatim sentence from the last ingested session and expects its `source_id` in the top k; failure marks the namespace `ingest-degraded` (the existing 1% rule) and is reported. This adds no inputs to the benchmark data. memory-bank exposes an operations API for `retain_async` (hindsight_client.py:457-471, 388) that the shim can poll.
+Fix: after `finishIngest`, a per-namespace readiness probe queries a verbatim sentence from the last ingested session and expects its `source_id` in the top k; failure marks the namespace `ingest-degraded` (the existing 1% rule) and is reported. This adds no inputs to the benchmark data. memory-bank exposes an operations API for `retain_async` (the pinned Python client module, lines 457-471, 388) that the shim can poll.
 
 ### Cat 40 (P4)
 

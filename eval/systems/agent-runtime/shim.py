@@ -1,6 +1,6 @@
-"""Protocol v1 shim for agent-runtime 0.34.4, local backend (see README.md in this directory).
+"""Protocol v1 shim for agent-runtime at the pinned release, local backend (see README.md in this directory).
 
-agent-runtime 0.34.4 has no passive memory retrieval API on its local backend: no archival passages, no embeddings and no
+agent-runtime has no passive memory retrieval API on its local backend: no archival passages, no embeddings and no
 query-ranked read. Writes to agent-runtime's memory happen through agent turns or memory-file writes, and only the agent
 decides what to read back. So this shim serves the capability record and reports `unsupported` for ingest, retrieve
 and delete; agent-runtime runs in the shootout only as a native agent on Cat 40 tasks.
@@ -23,10 +23,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "_shim"))
 from shim import Adapter, ShimError, serve  # noqa: E402
 
 CONFIG = os.environ.get("SHIM_CONFIG", "recipe")
-APP_SERVER_PORT = int(os.environ.get("LETTA_APP_SERVER_PORT", "4500"))
-TOKEN_FILE = Path(os.environ.get("LETTA_WS_TOKEN_FILE", "/run/agent-runtime/token"))
+APP_SERVER_PORT = int(os.environ.get("AGENT_RUNTIME_APP_SERVER_PORT", "4500"))
+TOKEN_FILE = Path(os.environ.get("AGENT_RUNTIME_WS_TOKEN_FILE", "/run/agent-runtime/token"))
+VENDOR_CLI = "letta"
 CAPABILITY = json.loads((Path(__file__).resolve().parent / "capability.json").read_text())
-NO_PASSIVE_API = "agent-runtime 0.34.4 local backend has no passive memory retrieval API; agent-runtime runs only as a native agent (capability agent_surface)"
+NO_PASSIVE_API = "agent-runtime's local backend has no passive memory retrieval API; agent-runtime runs only as a native agent (capability agent_surface)"
 
 HANDSHAKE = """
 const tok = require("fs").readFileSync(process.argv[1], "utf8").trim();
@@ -43,20 +44,20 @@ def start_app_server() -> subprocess.Popen:
     if not TOKEN_FILE.exists():
         TOKEN_FILE.write_text(secrets.token_urlsafe(32))
         TOKEN_FILE.chmod(0o600)
-    subprocess.run(["letta", "backend", "local"], check=True, capture_output=True)
+    subprocess.run([VENDOR_CLI, "backend", "local"], check=True, capture_output=True)
     base_url = os.environ.get("OPENAI_BASE_URL")
     if base_url:
-        subprocess.run(["letta", "connect", "openai-compatible", "--base-url", base_url, "--api-key", os.environ.get("OPENAI_API_KEY", "dummy")],
+        subprocess.run([VENDOR_CLI, "connect", "openai-compatible", "--base-url", base_url, "--api-key", os.environ.get("OPENAI_API_KEY", "dummy")],
                        check=True, capture_output=True)
     anthropic_url = os.environ.get("ANTHROPIC_BASE_URL")
     if anthropic_url:
-        subprocess.run(["letta", "connect", "anthropic", "--api-key", os.environ.get("ANTHROPIC_API_KEY", "dummy"), "--base-url", anthropic_url],
+        subprocess.run([VENDOR_CLI, "connect", "anthropic", "--api-key", os.environ.get("ANTHROPIC_API_KEY", "dummy"), "--base-url", anthropic_url],
                        check=True, capture_output=True)
-    return subprocess.Popen(["letta", "server", "--listen", f"ws://0.0.0.0:{APP_SERVER_PORT}", "--ws-auth", "capability-token",
+    return subprocess.Popen([VENDOR_CLI, "server", "--listen", f"ws://0.0.0.0:{APP_SERVER_PORT}", "--ws-auth", "capability-token",
                              "--ws-token-file", str(TOKEN_FILE), "--backend", "local"])
 
 
-class LettaAdapter(Adapter):
+class AgentRuntimeAdapter(Adapter):
     def __init__(self, server: subprocess.Popen):
         self.server = server
 
@@ -91,4 +92,4 @@ if __name__ == "__main__":
     server = start_app_server()
     time.sleep(1)
     print(json.dumps({"shim": "agent-runtime", "config": CONFIG, "app_server_pid": server.pid, "app_server_port": APP_SERVER_PORT}), flush=True)
-    serve(LettaAdapter(server))
+    serve(AgentRuntimeAdapter(server))

@@ -52,7 +52,7 @@ API cannot say, and `source_ids` is empty. A shim never queries a vendor databas
 ```json
 {
   "system": "extract-first", "protocol": 1,
-  "versions": { "package": "mem0ai==2.2.1", "lock_sha256": "…", "image": "…@sha256:…", "vendor_benchmark_code": "repo@commit or null" },
+  "versions": { "package": "<package>==<version>", "lock_sha256": "…", "image": "…@sha256:…", "vendor_benchmark_code": "repo@commit or null" },
   "configs": {
     "recipe": { "model_roles": { "extraction": "…", "small": "…", "embedder": "…", "dims": 0, "reranker": null }, "notes": "documented local install" },
     "common": { "model_roles": { "extraction": "gpt-4.1-mini", "embedder": "text-embedding-3-large", "dims": 1536 }, "unsettable": [] }

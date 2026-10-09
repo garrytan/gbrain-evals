@@ -2,8 +2,8 @@
 # metering proxy (PROXY_UPSTREAM, on the VM host by default). The shim holds a dummy key; the proxy injects the real one.
 #
 #   docker compose -f eval/systems/extract-first/docker-compose.yml up -d --build
-#   SHIM_CONFIG=common MEM0_CHUNK_TURNS=1 docker compose -f eval/systems/extract-first/docker-compose.yml up -d
-# MEM0_CHUNK_TURNS follows extract-first's benchmark code: 1 for LoCoMo, 2 for LongMemEval and BEAM (the default).
+#   SHIM_CONFIG=common EXTRACT_FIRST_CHUNK_TURNS=1 docker compose -f eval/systems/extract-first/docker-compose.yml up -d
+# EXTRACT_FIRST_CHUNK_TURNS follows extract-first's benchmark code: 1 for LoCoMo, 2 for LongMemEval and BEAM (the default).
 # The harness reaches the shim at 127.0.0.1:${SHIM_HOST_PORT:-8702}.
 name: shootout-extract-first
 
@@ -19,7 +19,7 @@ services:
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
       SHIM_IMAGE: ${SHIM_IMAGE:-}
-      MEM0_CHUNK_TURNS: ${MEM0_CHUNK_TURNS:-2}
+      EXTRACT_FIRST_CHUNK_TURNS: ${EXTRACT_FIRST_CHUNK_TURNS:-2}
       OPENAI_API_KEY: sk-dummy-metering-proxy-injects-the-real-key
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-${PROXY_URL:-http://proxy:8787}/${PROXY_SLOT:-extract-first}/openai/v1}
     volumes:

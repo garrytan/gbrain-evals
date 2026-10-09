@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.50] - 2026-10-08
+## [0.10.51] - 2026-10-08
 
 ### Q2 parser gaps: guards for typed list lines, a held-out frame for grammar precision and recall, relationship-phrasing units, and the custodian harness
 
@@ -13,8 +13,20 @@ Paired with gbrain #6343 (branch `capy/q2-parser-gaps`, frozen build `4ec7fbbe4`
 - **Harness.** `eval/runner/q2/` (grammar gates G1–G4 and G2 with two-judge labels and no adjudication, the runner's own zero-tolerance classes, the K conformance scorer, transition-identity C-gates with Holm selection and a fixed-sequence evaluator, the crossed bootstrap for G6, the power simulation, the campaign guard, preflight and allowlisted export); custody roots outside every git worktree with symlinks resolved; receipts that keep gate outcomes apart from execution status; resumable answer and judge checkpoints; the career-chronicle corpus and its development generator. The [custodian runbook](docs/benchmarks/2026-10-06-q2-parser-gaps-runbook.md) and [campaign manifest](docs/benchmarks/2026-10-06-q2-parser-gaps-campaign.json) fix the order of runs.
 - **Defects found in the sealed run, fixed after the decision.** `junk-audit.ts g2-sample` and `label` now write receipts with `run_status` (the custodian had recorded wrapper receipts); W manifests may key their list `pages` and the career manifest `documents`; `campaign.ts not-run` records a step a failed upstream gate stops, so the export runs inside the guard when G6 does not.
 - **CI flake fix.** `budget-ledger-sqlite.test.ts` "verify passes a healthy ledger" timed out on a CI runner (`tests (3)` on `35027cff`): its 400 reserve and settle pairs make 825 `synchronous = FULL` fsyncs, so on a busy runner disk it outlasts the 5 s test timeout. Its ledger now lives on tmpfs, as the scale test's does; the assertions are unchanged. Forced probe: with fsync delayed 10 ms on a disk path the test body takes 10.1 s, on tmpfs 0.7 s.
-- **Pin.** The `gbrain` dependency moves from `a865f8f` (v0.60.104.0) to `61624308b` (v0.60.120.0), the merge of gbrain #6343; `bun.lock` follows. Committed results keep the commits they were measured at.
-- **Version.** Main is at 0.10.49, so this release is 0.10.50.
+- **Pin.** The `gbrain` dependency moves from `a865f8f` (v0.60.104.0) to `61624308b` (v0.60.120.0), the merge of gbrain #6343; `bun.lock` follows. README, docs/README, the settings page (`src/core/search/mode.ts` is identical at both commits) and the comparison page name the new pin; `cat36-grounded-answers.ts` narrows a usage value the new pin's types mark optional (same check). Committed results keep the commits they were measured at.
+- **Version.** Main is at 0.10.50, so this release is 0.10.51.
+
+## [0.10.50] - 2026-10-08
+
+### Open-source memory comparison: the remaining project names move to the one systems table (amendment A6b)
+
+[Systems table](docs/comparison-systems.md#systems-in-the-open-source-comparison), [amendment A6b](docs/benchmarks/2026-10-06-oss-memory-shootout-preregistration.md#amendments), [hash manifest](docs/benchmarks/2026-10-06-oss-memory-shootout/rename-a6b.json). Finishes the naming pass that 0.10.46 started: other memory systems are described by kind everywhere in the comparison, and names, versions, licenses and links appear only in the systems table. No number changed.
+
+- **Receipts and capability records.** Upstream identities (package pins, vendor images, vendor benchmark code, vendor MCP servers) read `see comparison-systems table: <label>` and keep their commits and digests; the table holds the full identities. Prose describes vendor code by kind. 454 receipt and row files in both campaigns changed only in those strings.
+- **Harness names.** The shims' own environment variables (`EXTRACT_FIRST_CHUNK_TURNS`, `MEMORY_BANK_LLM_PROVIDER`, `MEMORY_BANK_URL`, `AGENT_RUNTIME_APP_SERVER_PORT`, `AGENT_RUNTIME_WS_TOKEN_FILE`), the memory-bank Postgres credentials and the shim classes use the labels. Vendor imports, vendor-read environment variables, Dockerfiles, lock files and compose image references keep the upstream identifiers that pinning needs.
+- **Plan, reviews, preregistrations, shim READMEs and pilot notes** describe the systems by kind and link the table instead of the projects. The docs index gains the comparison report.
+- **Evidence that only labels changed.** `scripts/verify-a6b-rename.py` checks the before and after sha256 of every changed file and that every JSON, NDJSON and gzipped NDJSON file in both campaigns, the sealed aggregates included, keeps the same shape, numbers, booleans and nulls. Both campaign hashes move because the extract-first cell commands name the renamed variable (`36ba918f` to `f7a22503`, `ae18af15` to `90c4956c`); the PrecisionMemBench system test pins the new hash.
+- **Version.** Main is at 0.10.48, so this release is 0.10.49.
 
 ## [0.10.49] - 2026-10-08
 

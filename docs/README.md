@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.50, with gbrain master `61624308b` (v0.60.120.0) as the product under test. Results measured at
+gbrain-evals v0.10.51, with gbrain master `61624308b` (v0.60.120.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -20,6 +20,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | Which agent-written labels has a person checked? | [October 6 review packets and their rules](benchmarks/2026-10-06-w11-review/README.md) ([preregistration](benchmarks/2026-10-06-w11-review-preregistration.md)): awaiting human review |
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
+| How does gbrain compare with open-source memory systems run through one harness, with one reader? | [October 6 to 8 open-source comparison](benchmarks/2026-10-06-oss-memory-shootout.md) ([preregistration](benchmarks/2026-10-06-oss-memory-shootout-preregistration.md), [update-and-forget preregistration](benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md)): gbrain finds the right sessions as well as or better than every system, but as measured through this adapter its evidence leads the reader to fewer correct answers than three of the five. Systems are named by kind; [one table](comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
 | What will the next categories measure, and what does gbrain implement for each of them? | [October 1 eval-category wave plan](plans/2026-10-01-eval-category-wave/README.md), [capability and entrypoint matrix](benchmarks/2026-10-01-capability-matrix.md) |
 
@@ -185,7 +186,12 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-10-08: Pin `61624308b`; Q2 parser-gaps verdicts in the held-out program row
 
-gbrain-evals v0.10.50. The opening names gbrain master `61624308b` (v0.60.120.0, was `a865f8f`), the merge of gbrain #6343, and v0.10.50 instead of v0.10.45. The held-out program row links the Q2 record (P5's follow-up): typed relation lines stay opt-in because 459 of 583 lines the grammar minted on held-out natural text are wrong, all but one from template-, glossary- and changelog-shaped notes, while relation lines agents wrote are 299 of 300 correct; the link-typing units U34 and U1 ship and U25 and U6 are reverted.
+gbrain-evals v0.10.51. The opening names gbrain master `61624308b` (v0.60.120.0, was `a865f8f`), the merge of gbrain #6343, and v0.10.51 instead of v0.10.45. The held-out program row links the Q2 record (P5's follow-up): typed relation lines stay opt-in because 459 of 583 lines the grammar minted on held-out natural text are wrong, all but one from template-, glossary- and changelog-shaped notes, while relation lines agents wrote are 299 of 300 correct; the link-typing units U34 and U1 ship and U25 and U6 are reverted.
+
+### 2026-10-08: Open-source comparison row
+
+Added the open-source comparison report and its two preregistrations, which the index did not list. The row
+describes the systems by kind and links the one table that names them.
 
 ### 2026-10-08: BEAM-1M failure analysis row
 

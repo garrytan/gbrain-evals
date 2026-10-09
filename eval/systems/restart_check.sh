@@ -10,7 +10,7 @@
 #
 # FAKE_PROVIDER=<script> swaps in a vendor's own fake provider (extract-first's: eval/systems/extract-first/fake_provider.py), with
 # BOOTSTRAP_PROXY_CHECK=off since it has no proxy status route; other variables reach the compose stack, so
-# HINDSIGHT_LLM_PROVIDER=mock selects memory-bank's built-in test LLM.
+# MEMORY_BANK_LLM_PROVIDER=mock selects memory-bank's built-in test LLM.
 #
 # Results per system in eval/reports/restart-check/<system>/ (RESTART_CHECK_OUT moves them): up, lifecycle-lite and
 # compose logs, and the lifecycle-lite run directory with its receipt. Exits non-zero if any system failed to come up
