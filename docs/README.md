@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.63, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
+gbrain-evals v0.10.64, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -193,7 +193,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-10-09: Alias stack row
 
-The agent-task row gained the alias-stack report: short-code aliases (#6271 at `f24ca6afe`) on top of Candidate 1 cut
+gbrain-evals v0.10.64 (the opening names it; was v0.10.63). The agent-task row gained the alias-stack report: short-code aliases (#6271 at `f24ca6afe`) on top of Candidate 1 cut
 T0b failures from 18 to 4 of 72 on fresh seeds and from 25 to 11 of 144 on development seeds (inconclusive there), with
 both validity mutants detected.
 
