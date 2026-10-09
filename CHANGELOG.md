@@ -2,6 +2,23 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.61] - 2026-10-09
+
+### Cat 41 re-baseline: fresh install to wired recall on gbrain v0.60.130.0
+
+The wave 2 (D8) time-to-hello-world comparator from the "10x memory advantage" plan. Paid spend $14.09 of a $30
+ledger.
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-cat41-rebaseline.md), [preregistration](docs/benchmarks/2026-10-09-cat41-rebaseline-preregistration.md)
+  with amendments 1 and 2). The unchanged `fresh_install_to_wired_recall` scenario on gbrain `dda603ac9` (v0.60.130.0),
+  Claude Code (`claude-opus-5-5`) and Codex (`gpt-6.1-sol`), six runs each: 98.8 s and 161.9 s mean wall time,
+  `download_ms` 8.1 s and 5.3 s, one scripted reply in 11 of 12 runs, 12 of 12 successful, 0 consent violations. The
+  published `b3f4e8b` build, rerun interleaved the same hour, took 107.0 s and 175.4 s (published: 96.7 s and
+  121.7 s), so the release is not measurably slower and the published Codex number reflects a faster day. Every run
+  registered `--surface full` (143 tools), which adds about 32K input tokens and 3 s to Codex's recall session.
+- **Artifacts** in `docs/benchmarks/2026-10-09-cat41-rebaseline/`: both passes' scores, summaries and run archives,
+  the token overhead per surface, and `attribution.ts` with its per-session output for all four passes.
+
 ## [0.10.60] - 2026-10-09
 
 ### Candidate 3 diagnostic: the remaining T0b terms and hop failures are notes linked only by a declared short code
