@@ -10,7 +10,8 @@ covered enough pages to be accepted but stopped short of the true neighbours. `e
 the plan proposed (`search.hnsw_ef_search_floor`), barely moved it: at the GUC ceiling of 1,000,
 random-scope recall@50 reached only 0.93 on real vectors.
 
-The fix ships in gbrain: every pooled attempt now scans up to 20,000 tuples, pgvector's own default.
+The fix ships in gbrain v0.60.135.0 (#6380, merged as `2e84d234e`): every pooled attempt now scans up
+to 20,000 tuples, pgvector's own default.
 Measured on the same database against master:
 
 | corpus | scope | recall@50, master → fixed | recall@10, master → fixed | p50 cost |
@@ -92,6 +93,10 @@ full walk answers.
   0.82. The lever there is the walk's own budget.
 - Raising the scan cap to 150,000 chunks makes the 104,000-chunk real topic source exact (recall@50 0.985),
   at about 770 ms p50.
+
+Since gbrain v0.60.134.0 (#6390) the exact scan counts a scope's chunks, and its cap is 120,000. A
+104,000-chunk source like the real topic source above now takes the exact scan. The measurements here
+predate that change.
 
 ## Same-database comparisons
 
@@ -180,3 +185,10 @@ Ubicloud compute was four standard-16 VMs for about 4.5 VM-hours in total, all d
 - **One real corpus.** A personal brain's mail and notes may cluster differently from Wikipedia.
 - **Scopes.** Scopes were either random or whole topic clusters. Real sources sit somewhere between.
 - **Latency.** All latency is server-local. Production adds network round trips.
+
+## Changelog
+
+- 2026-10-09: pinned to gbrain #6380's merge commit `2e84d234e` (v0.60.135.0). Noted that #6390
+  (v0.60.134.0) moves 104,000-chunk sources onto the exact scope scan.
+- 2026-10-09: measured again on top of gbrain v0.60.131.0's exact scope scan; the pooled budget stays.
+- 2026-10-09: first report, mirroring gbrain's E5.4 HNSW scale bench.

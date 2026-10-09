@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.64, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
+gbrain-evals v0.10.65, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -46,6 +46,7 @@ describe current behavior first, then the older work behind a decision.
 | Do the published LongMemEval retrieval and reading-notes numbers hold with opaque session ids, and what does a frontier reader score on gbrain's retrieval? | [October 4 opaque-id follow-ups and frontier reader](benchmarks/2026-10-04-longmemeval-opaque-followups.md) ([preregistration](benchmarks/2026-10-04-longmemeval-opaque-followups-preregistration.md)) |
 | With the answer key hidden, how accurate are gbrain's answers, and does the reader prompt or the amount of evidence matter more? | [September 29 opaque-id answer re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
 | Does taking brief notes before answering help when the original conversations remain available? | [September 25 reading-notes comparison](benchmarks/2026-09-25-reading-notes.md) |
+| How well does scoped vector search hold up at 1M to 2M chunks, and what fixes it? | [October 9 HNSW scale mirror, from gbrain #6380 (`2e84d234e`)](benchmarks/2026-10-09-hnsw-scale.md): pooled attempts that scan 20,000 tuples lift random 10% scope recall@50 from 0.52 to 0.77 to 0.96 to 0.99 at +16 to 36 ms p50; chunk statistics refreshed after bulk writes keep the HNSW plan; topic-coherent selective sources remain a gap |
 | Does relaxed HNSW scan order help filtered vector search on Postgres, and what does it cost? | [October 7 fix wave 11 mirror, W6.3 from gbrain `capy/fix-wave-11`](benchmarks/2026-10-07-hnsw-relaxed-order.md): on real 1024- and 1536-dimension embeddings, recall@10 at a 50% source filter rises 2.1 and 1.7 points with latency unchanged within noise, so `relaxed_order` ships default-on |
 | Does gbrain link Korean names without matching inside longer words? | [October 5 Hangul mention boundaries](benchmarks/2026-10-05-hangul-mention-boundaries.md) |
 | Does relationship retrieval still help when the question is reworded? | [September 29 paraphrase check](benchmarks/2026-09-29-relational-paraphrase.md) |
@@ -190,6 +191,12 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-09: HNSW scale row
+
+gbrain-evals v0.10.65 (the opening names it; was v0.10.64). The retrieval table gained a row for the October 9 HNSW scale
+mirror of gbrain #6380 (merged as `2e84d234e`): a 20,000-tuple pooled scan fixes random selective scopes at 1M to 2M
+chunks, and topic-coherent selective sources remain a gap.
 
 ### 2026-10-09: Alias stack row
 
