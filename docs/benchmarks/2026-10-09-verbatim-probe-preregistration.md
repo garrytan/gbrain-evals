@@ -41,7 +41,7 @@ All metrics come from gold labels (`answer_session_ids`) or the probe's own defi
   - any-gold recall at 10;
   - nDCG@10 over cited sessions (binary relevance).
 - **Probe:**
-  - clean rate: the shim's `classify_query_meta` with the 0.60.106.0 classifier unchanged, outcome `scored`;
+  - clean rate: the shim's `classify_query_meta` as it stood when the misses were recorded (`eval/systems/gbrain-defaults/shim.py` at `846fa6dd`, before amendment A12), outcome `scored`;
   - found rate: the target session among the cited sources.
 - **Touched subsets, reported separately:** questions whose text the query-intent regex classifies as image, and questions or probes containing a run of 32 or more dash negations.
 
