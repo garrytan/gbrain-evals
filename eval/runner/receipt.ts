@@ -57,6 +57,43 @@ export type RunStatus = 'completed' | 'error' | 'skipped' | 'not_run';
 export type ReceiptVerdict = 'pass' | 'partial' | 'fail';
 export type FailureOrigin = 'sut' | 'harness' | 'dependency' | 'judge';
 
+/**
+ * Gate outcome, kept apart from execution status: a run can complete and still fail, be insufficient, or not reach a
+ * gate. `failed_threshold` names the bar that failed (or the floor an insufficient run missed).
+ */
+export type GateOutcomeStatus = 'pass' | 'fail' | 'insufficient' | 'not_run' | 'blocked';
+export const GATE_OUTCOMES: readonly GateOutcomeStatus[] = ['pass', 'fail', 'insufficient', 'not_run', 'blocked'];
+export interface GateDenominators { planned: number; attempted: number; scored: number; errors: number }
+export interface GateOutcome {
+  gate: string;
+  outcome: GateOutcomeStatus;
+  /** The preregistered bar in words, e.g. "Wilson upper bound of wrong mints <= 2 per 100,000 list lines". */
+  threshold: string;
+  observed: number | null;
+  denominators: GateDenominators;
+  failed_threshold?: string;
+  reason?: string;
+}
+
+/** The receipt verdict a set of gates implies: pass only when every gate passed; any fail, insufficient or blocked gate fails; otherwise partial. */
+export function verdictFromGates(gates: readonly GateOutcome[]): ReceiptVerdict {
+  if (gates.length && gates.every(g => g.outcome === 'pass')) return 'pass';
+  if (gates.some(g => g.outcome === 'fail' || g.outcome === 'insufficient' || g.outcome === 'blocked')) return 'fail';
+  return 'partial';
+}
+
+export function validateGateOutcomes(gates: unknown): string[] {
+  if (!Array.isArray(gates)) return ['gates must be an array'];
+  const v: string[] = [];
+  for (const g of gates as Array<Record<string, unknown>>) {
+    const d = g?.denominators as Record<string, unknown> | undefined;
+    if (typeof g?.gate !== 'string' || !GATE_OUTCOMES.includes(g.outcome as GateOutcomeStatus) || typeof g.threshold !== 'string') v.push(`gates[]: ${String(g?.gate)} needs gate, outcome (${GATE_OUTCOMES.join('|')}) and threshold`);
+    else if (!d || !['planned', 'attempted', 'scored', 'errors'].every(k => typeof d[k] === 'number' && (d[k] as number) >= 0)) v.push(`gates[]: ${g.gate} needs planned, attempted, scored and errors denominators`);
+    else if ((g.outcome === 'fail' || g.outcome === 'insufficient') && typeof g.failed_threshold !== 'string') v.push(`gates[]: ${g.gate} is ${g.outcome} and must name failed_threshold`);
+  }
+  return v;
+}
+
 export interface ProbeError {
   probe_id: string;
   origin: FailureOrigin;
@@ -162,6 +199,8 @@ export interface Receipt {
   latency_ms?: LatencySummary | null;
   delivered_tokens?: DeliveredTokens | null;
   execution?: ExecutionIdentity;
+  /** Gate outcomes, separate from run_status (execution). */
+  gates?: GateOutcome[];
 }
 
 const RUN_STATUSES: RunStatus[] = ['completed', 'error', 'skipped', 'not_run'];
@@ -207,6 +246,7 @@ export function validateReceipt(obj: unknown): string[] {
     }
   }
   if (typeof r.started_at !== 'string' || typeof r.finished_at !== 'string') v.push('started_at/finished_at missing');
+  if (r.gates !== undefined) v.push(...validateGateOutcomes(r.gates));
   if (r.schema_version === RECEIPT_SCHEMA_VERSION) v.push(...validateV2(r, false));
   return v;
 }
