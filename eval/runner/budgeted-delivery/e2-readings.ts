@@ -14,6 +14,7 @@
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import { loadCorpus } from '../memory-qa/corpus.ts';
 import { devConversations } from '../decisions/splits.ts';
 import { selectQuestions } from '../memory-qa/run-systems.ts';
@@ -35,7 +36,11 @@ export interface E2Config {
   'beam-100k'?: { cells: string[] };
 }
 
-const readNdjson = (p: string): Row[] => existsSync(p) ? readFileSync(p, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
+/** An ndjson file, or its committed `.gz` receipt when only that exists. */
+const readNdjson = (p: string): Row[] => {
+  const text = existsSync(p) ? readFileSync(p, 'utf8') : existsSync(`${p}.gz`) ? gunzipSync(readFileSync(`${p}.gz`)).toString('utf8') : '';
+  return text.split('\n').filter(Boolean).map(l => JSON.parse(l));
+};
 /** An arm's canonical rows across shard cells. */
 export const armRows = (cells: string[], arm: string): Row[] => cells.flatMap(c => readNdjson(join(c, 'arms', arm, 'rows.ndjson')));
 /** The canonical retrieval rows across shard cells. */

@@ -20,6 +20,7 @@
  *   bun eval/runner/budgeted-delivery/e3-retrieval-gate.ts --config <e3-config.json> [--out <file.json>]
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { loadCorpus } from '../memory-qa/corpus.ts';
 import { recallAllAtK } from '../metrics.ts';
 import { opaqueSourceId } from '../systems/sanitize.ts';
@@ -54,7 +55,7 @@ export function recallRows(b: E3Bench) {
   const session = new Map<string, string>();
   for (const c of corpus.conversations) for (const s of c.sessions) session.set(opaqueSourceId(c.id, s.id), s.id);
   const out: Array<{ id: string; conversation: string; scale: string; today5: number; today10: number; fused5: number; fused10: number }> = [];
-  for (const p of b.freeze) for (const line of readFileSync(p, 'utf8').split('\n')) {
+  for (const p of b.freeze) for (const line of (p.endsWith('.gz') ? gunzipSync(readFileSync(p)).toString('utf8') : readFileSync(p, 'utf8')).split('\n')) {
     if (!line.trim()) continue;
     const r = JSON.parse(line) as Row;
     const id = String(r.question_id ?? String(r.id).split('|')[0]);

@@ -1,0 +1,8 @@
+{
+  "run_id": "e2-read-locomo-beam-a1-f23256e3",
+  "lease_usd": 196,
+  "committed_usd": 49.40934650000007,
+  "requests": 3760,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 1
+}
