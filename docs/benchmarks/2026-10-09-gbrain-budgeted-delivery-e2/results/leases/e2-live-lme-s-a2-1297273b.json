@@ -1,0 +1,8 @@
+{
+  "run_id": "e2-live-lme-s-a2-1297273b",
+  "lease_usd": 8,
+  "committed_usd": 2.5125138299999703,
+  "requests": 6413,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

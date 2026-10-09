@@ -197,7 +197,7 @@ export interface MemoryQaRow {
   truncated?: boolean;
   harness_ms?: number;
   ingest?: { sessions: number; failed_sessions: number; synthetic_times: number; finish_ready: boolean; completeness: string; readiness_probe: ProbeResult; degraded: boolean; errors: IngestError[]; provider?: MemoryQaRow['provider'] };
-  qa_context?: { mode: ContextMode; tokenizer: string; renderer: string; budget_tokens: number | null; tokens: number; item_ids: string[]; source_ids: string[]; prompt_sha256: string; recipe?: string; recipe_hash?: string; tokens_before?: number; items_cut?: number; reader_bytes?: { chars: number; utf8_bytes: number } };
+  qa_context?: { mode: ContextMode; tokenizer: string; renderer: string; budget_tokens: number | null; tokens: number; item_ids: string[]; source_ids: string[]; prompt_sha256: string; recipe?: string; recipe_hash?: string; tokens_before?: number; items_cut?: number; reader_bytes?: { chars: number; utf8_bytes: number }; gold?: { count: number; offered: number; packed: number } };
   qa_prompt?: string;
   provider?: { usd: number; requests: number; unpriced: number; upstream?: Meter['upstream'] };
   upstream_retry?: { first_error: string | null; first_provider: MemoryQaRow['provider'] | null };
@@ -681,10 +681,13 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
        * gbrain's budget_used); the delivered text never reaches the row.
        */
       const withSizing = (acc: Record<string, unknown>): Record<string, unknown> => {
-        const grid = system instanceof GbrainQuerySystem ? system.lastSizing : null;
-        if (!grid) return acc;
         const nativeTokens = (blocks: Parameters<typeof blocksToItems>[0]) => datedItems(blocksToItems(blocks, slugSource), daySourceOf).reduce((n, i) => n + TOKENIZER.count(renderItem(i) + '\n'), 0);
         const pseudoTokens = (blocks: Parameters<typeof blocksToItems>[0]) => TOKENIZER.count(renderHistory(pseudoSessions(datedItems(blocksToItems(blocks, slugSource), daySourceOf), sessionOf).map(x => x.session)));
+        const e2 = system instanceof GbrainQuerySystem ? system.lastSizingE2 : null;
+        if (e2) return { ...acc, sizing_e2: e2.map(g => ({ grid: g.grid, budget: g.budget, variants: Object.fromEntries(Object.entries(g.variants).map(([name, d]) => [name,
+          { budget_used: d.record.budget_used, blocks: d.record.blocks, over_budget: d.record.over_budget, auto_packing: d.record.auto_packing, pseudo: pseudoTokens(d.blocks), ...(g.grid === 'b8' ? { native: nativeTokens(d.blocks) } : {}) }])) })) };
+        const grid = system instanceof GbrainQuerySystem ? system.lastSizing : null;
+        if (!grid) return acc;
         return { ...acc, sizing: grid.map(g => ({ budget: g.budget,
           full: { budget_used: g.full.record.budget_used, blocks: g.full.record.blocks, over_budget: g.full.record.over_budget, native: nativeTokens(g.full.blocks), pseudo: pseudoTokens(g.full.blocks) },
           prefix: { budget_used: g.prefix.record.budget_used, blocks: g.prefix.record.blocks, over_budget: g.prefix.record.over_budget, pseudo: pseudoTokens(g.prefix.blocks) } })) };
@@ -781,10 +784,13 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         }
         const pack = packRecipe(spec.render, q, items, { budgetTokens: 'budget_tokens' in spec ? spec.budget_tokens ?? null : budget, sessionOf, fallbackDate: lastDate(conv.sessions) });
         const prompt_sha256 = createHash('sha256').update(pack.prompt).digest('hex');
+        const gold = new Set(q.gold);
+        const goldIn = (srcs: Iterable<string>) => new Set([...srcs].map(src => sessionOf(src)?.id).filter((id): id is string => !!id && gold.has(id))).size;
         const { chars, utf8_bytes } = readerBytes(pack.prompt);
         return { prompt: pack.prompt, meta: { mode: pack.mode, render: pack.render, recipe: name, recipe_hash: recipeHash(name, a.arms!), tokenizer: pack.tokenizer, renderer: pack.renderer, budget_tokens: pack.budget_tokens,
           tokens: pack.tokens, tokens_before: pack.tokens_before, items_cut: pack.items_cut, dated_items: pack.dated_items, item_ids: pack.item_ids, source_ids: pack.source_ids, prompt_sha256,
-          reader_bytes: { chars, utf8_bytes }, ...(spec.items !== 'retrieved' ? { delivery: spec.items } : {}), ...(spec.select_from ? { select_from: spec.select_from } : {}) } };
+          reader_bytes: { chars, utf8_bytes }, gold: { count: gold.size, offered: goldIn(items.flatMap(i => i.source_ids)), packed: goldIn(pack.source_ids) },
+          ...(spec.items !== 'retrieved' ? { delivery: spec.items } : {}), ...(spec.select_from ? { select_from: spec.select_from } : {}) } };
       };
       /** Twin reuse: the same final prompt bytes as `reuse_from`'s context, the same reader and judge, and a scored row there: copy it, marked. */
       const reuseRow = (q: MemoryQuestion, s: (typeof armState)[number], key: string, built: RecipeBuild | null): Partial<MemoryQaRow> | null => {

@@ -1,0 +1,8 @@
+{
+  "run_id": "e2-read-lme-s-phase1-a2-abe29427",
+  "lease_usd": 215,
+  "committed_usd": 73.95263399999982,
+  "requests": 5535,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}
