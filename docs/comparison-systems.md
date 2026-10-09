@@ -1,6 +1,6 @@
 # Comparing memory systems without comparing different things
 
-This page compares gbrain, as this repository pins it (master `a865f8f`, v0.60.104.0), with published results for other memory systems. Every row keeps its own measurement or access date; external sources were last checked September 9, 2026. A source check confirms what an author published; it does not mean we reproduced the system. Everything above [Changelog](#changelog) is current.
+This page compares gbrain, as this repository pins it (master `61624308b`, v0.60.120.0), with published results for other memory systems. Every row keeps its own measurement or access date; external sources were last checked September 9, 2026. A source check confirms what an author published; it does not mean we reproduced the system. Everything above [Changelog](#changelog) is current.
 
 Before comparing two memory scores, ask what each system had to do. Find one useful conversation? Find every conversation needed? Return only the right facts? Write the right answer? Those are different jobs, and a system can do one well while struggling with another.
 
@@ -25,7 +25,7 @@ A fifth detail matters: what does K count? Gbrain's ordinary LongMemEval path re
 
 The official [retrieval evaluator](https://github.com/xiaowu0162/LongMemEval/blob/main/src/retrieval/eval_utils.py) distinguishes `recall_all` from `recall_any`. Its [printing code](https://github.com/xiaowu0162/LongMemEval/blob/main/src/evaluation/print_retrieval_metrics.py) excludes abstention questions for retrieval. For the cleaned small split, that leaves 470 of 500 questions. Answer accuracy includes the 30 abstention questions.
 
-The September 6 run measured gbrain v0.48.4.0 at `2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d` (receipts from the pre-squash branch head `fd7e7fd9`). This repository now installs a different commit, gbrain master `a865f8f` (v0.60.104.0), so a fresh `bun install` does not reproduce that code exactly. The run used cached OpenAI `text-embedding-3-large` embeddings at 1,536 dimensions, balanced search, Voyage `rerank-2.5`, autocut off, relational pin three, and lexical metadata gating. The embedding choice pins this experiment; the current new-install embedding default is a different setting.
+The September 6 run measured gbrain v0.48.4.0 at `2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d` (receipts from the pre-squash branch head `fd7e7fd9`). This repository now installs a different commit, gbrain master `61624308b` (v0.60.120.0), so a fresh `bun install` does not reproduce that code exactly. The run used cached OpenAI `text-embedding-3-large` embeddings at 1,536 dimensions, balanced search, Voyage `rerank-2.5`, autocut off, relational pin three, and lexical metadata gating. The embedding choice pins this experiment; the current new-install embedding default is a different setting.
 
 Without reranking, gbrain found all evidence on 439/470 questions (93.40%) and some evidence on 464/470 (98.72%). With reranking, the counts were 449/470 (95.53%) and 469/470 (99.79%). The paired strict comparison gained 18 questions and lost eight. The result supports the reranker in this configuration, while making its losses visible. October 4, 2026: [recounted with opaque session ids](benchmarks/2026-10-04-longmemeval-opaque-followups.md) at gbrain `109b992`, the counts are 434/470 and 463/470 without the reranker and 451/470 and 470/470 with it (+23/−6 paired); the published numbers are confirmed.
 
@@ -180,7 +180,58 @@ Record the question the benchmark asks, dataset revision and subset, result budg
 
 A causal explanation needs a controlled change. If two systems use different models and chunking, report the observed difference without assigning it to one component. If gbrain has not run the benchmark, say so. The purpose of this page is to help choose the next useful experiment and the right configuration, not to manufacture one leaderboard from incompatible scores.
 
+## Systems in the open-source comparison
+
+The [open-source memory shootout](plans/2026-10-05-oss-memory-shootout/PLAN.md) names each system by its kind.
+This table is the one place that maps a label to its project; the preregistrations, the manifests, the capability
+records, the receipts and the reports link here instead of naming projects, versions, licenses or upstream links.
+
+| Label | Kind | Project | Version and upstream identity | License | Upstream | Vendor benchmark code | Former ids and names |
+|---|---|---|---|---|---|---|---|
+| `temporal-graph` | a temporal knowledge-graph library | Graphiti (the open-source library, not Zep Cloud) | `graphiti-core` 0.30.2 (tag `v0.30.2`, commit `eaa4128681bc53487138a4bbc22d58336ebe70d2`), Neo4j 5.26.2; vendor MCP server `mcp-v1.1.0` (commit `11538f6d45561bcce9a4400b374fb2dc533dccb6`), whose pyproject declares `graphiti-core[falkordb]>=0.30.1` | Apache-2.0 | [getzep/graphiti](https://github.com/getzep/graphiti) | [getzep/zep-papers@4b7f26c](https://github.com/getzep/zep-papers/tree/4b7f26cc76cca20743314ba9acb8c2cb6adc42f6/kg_architecture_agent_memory/locomo_eval): `zep_locomo_ingestion.py` and `zep_locomo_search.py`, written for the Zep Cloud client | id `graphiti`; campaign parameter `graphiti_beam_recipe`; capability key `graphiti_recipe` |
+| `graph-pipeline` | a knowledge-graph pipeline | Cognee | `cognee` 1.6.2 (tag `v1.6.2`, commit `ba3631f2ed363a6ea50d649c34c56885af6b36fe`); vendor MCP server `cognee-mcp` 0.5.6 | Apache-2.0 | [topoteretes/cognee](https://github.com/topoteretes/cognee) | [topoteretes/cognee@ba3631f](https://github.com/topoteretes/cognee/tree/ba3631f2ed363a6ea50d649c34c56885af6b36fe): `cognee/eval_framework/beam/local_ingest.py`, `preprocessing/preprocess.py`, `report_artifacts/100k_fixed/beam_hybrid_completion_20_20_qa_v1_config.json` | id `cognee` |
+| `extract-first` | an extract-first memory server | Mem0 (open source, not the platform) | `mem0ai[nlp]` 2.2.1, Qdrant 1.19.2; vendor MCP server OpenMemory (being sunset, not used) | Apache-2.0 | [mem0ai/mem0](https://github.com/mem0ai/mem0) | [mem0ai/memory-benchmarks@4b61c5d](https://github.com/mem0ai/memory-benchmarks/tree/4b61c5d31b9c668a12b4f5e78064248a02c82d2b): `benchmarks/locomo/run.py`, `benchmarks/longmemeval/run.py`, `benchmarks/beam/run.py`, `benchmarks/common/mem0_client.py` | id `mem0`; env `MEM0_CHUNK_TURNS` |
+| `agent-runtime` | a stateful agent runtime | Letta (Letta Code App Server, local backend) | Letta Code 0.34.4 (`@letta-ai/letta-code@0.34.4`), image `letta/letta:0.34.4@sha256:8ee7fb697e7f08b121a487b48315d45c64b195c12418264b091371c9e8ab3a5c` (OCI revision `f898fda60932b34ddbcfd389ea414515b0a5d272`, tag `v0.34.4` of `letta-ai/letta-code`); CLI `letta` | Apache-2.0 | [letta-ai/letta-code](https://github.com/letta-ai/letta-code) | none | id `letta`; env `LETTA_APP_SERVER_PORT`, `LETTA_WS_TOKEN_FILE` |
+| `markdown-notes` | a Markdown notes server | Basic Memory | `basic-memory` 0.23.2 (tag `v0.23.2`, commit `c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048`) | AGPL-3.0 | [basicmachines-co/basic-memory](https://github.com/basicmachines-co/basic-memory) | [basicmachines-co/basic-memory@c0bd87c](https://github.com/basicmachines-co/basic-memory/tree/c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048/benchmarks): `benchmarks/src/basic_memory_benchmarks/{converters/locomo_to_corpus.py,providers/bm_local.py,scoring/qa.py}` | id `basic-memory` |
+| `memory-bank` | a memory-bank server | Hindsight | server 0.10.2 (tag `v0.10.2`, commit `5fc4ce20917b916240cef27c212c387a177f115b`) and `hindsight-client` 0.10.2; image `ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70` | MIT | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | [vectorize-io/agent-memory-benchmark@f618ed7](https://github.com/vectorize-io/agent-memory-benchmark/blob/f618ed7b1f0eb9cad7b42e876f91a42f0eadb150/src/memory_bench/memory/hindsight.py): provider `hindsight-http`, the code `hindsight-system-evals` runs; `vectorize-io/hindsight-benchmarks@55c51f1d6e2477ee69c0a730a80b96a1596ff475` scores extraction LLMs directly and is not used | id `hindsight`; env `HINDSIGHT_LLM_PROVIDER`, `HINDSIGHT_URL`; Postgres user and database `hindsight` |
+
+Versions are the pins of the 2026-10-06 preregistrations. Each label's shim lives in `eval/systems/<label>/`, with its
+capability record, lock file and pilot notes. A capability record or receipt field that reads
+`see comparison-systems table: <label>` held the upstream identity in this row's version and benchmark-code columns;
+any commit or digest it kept is the same value.
+
+**Former ids and names** are what the harness used until amendment A6 (ids) and A6b (environment variables, the
+capability key and the Postgres credentials), both on 2026-10-08. An earlier cell, lease or result id is the current
+one with the label replaced by the former id (`extract-first-common-locomo-r1-a2-7c50fc54` carried the extract-first
+former id in place of `extract-first`). Ledger entries and logs written before A6 use the former ids; logs written
+before A6b use the former environment variable names. The hashes of every file A6b changed, before and after, are in
+[rename-a6b.json](benchmarks/2026-10-06-oss-memory-shootout/rename-a6b.json).
+
 ## Changelog
+
+### 2026-10-08: Re-pin to gbrain `61624308b`
+
+gbrain-evals v0.10.51. The pin named in the opening and in the LongMemEval installed-dependency note changed from `a865f8f` (v0.60.104.0) to `61624308b` (v0.60.120.0). No comparison row changed.
+
+### 2026-10-08: Upstream identities move into the systems table (A6b)
+
+The systems table gains the upstream identities that the capability records and receipts used to carry (package pins
+with commits, vendor images with digests, vendor MCP servers, vendor benchmark code) and the former environment
+variable names, capability key and Postgres credentials that amendment A6b replaced. Those records now point here.
+The paragraph under the table no longer names a project outside the table. No number changed.
+
+### 2026-10-07: Systems in the open-source comparison
+
+Added the table that maps the open-source shootout's kind labels (`temporal-graph`, `graph-pipeline`,
+`extract-first`, `agent-runtime`, `markdown-notes`, `memory-bank`) to their projects, versions, licenses and upstream
+repositories. The shootout's code, manifests, results and preregistrations now use the labels and link here.
+
+### 2026-10-08: Systems in the open-source comparison and their matched results
+
+Added the table that maps the open-source shootout's kind labels (`temporal-graph`, `graph-pipeline`,
+`extract-first`, `agent-runtime`, `markdown-notes`, `memory-bank`) to their projects, versions, licenses and upstream
+repositories, and the matched results from [the comparison report](benchmarks/2026-10-06-oss-memory-shootout.md). The
+shootout's code, manifests, results and preregistrations now use the labels and link here.
 
 ### 2026-10-07: Re-pin to gbrain `a865f8f`
 

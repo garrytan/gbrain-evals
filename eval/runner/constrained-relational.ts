@@ -16,15 +16,13 @@
  *            logged next to the phrasing file before it is read. Implementers run development seeds only.
  */
 import './budget-ledger.ts';
-import { readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest } from './gbrain-under-test.ts';
 import { GbrainInlineAdapter } from './adapters/gbrain-inline.ts';
 import { ndcgAtK, recallAllAtK, uniqueInOrder } from './metrics.ts';
 import { evalSearchPins, RELATIONAL_PINS } from './relational-ab.ts';
-import { appendAccessLog } from './sealed-confirmation-lib.ts';
+import { custodyTemplatesInput } from './sealed-confirmation-lib.ts';
 import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
 import { homedir } from 'node:os';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
@@ -46,20 +44,10 @@ const argValue = (argv: readonly string[], flag: string) => { const at = argv.in
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const seeds = (argValue(argv, '--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
-  const phrasingFile = argValue(argv, '--phrasing-file');
   let sealedPhrasing: { id: string; templates: PhrasingTemplates } | undefined;
   let phrasingSha: string | null = null;
-  if (phrasingFile) {
-    const decisionId = argValue(argv, '--decision-id'), purpose = argValue(argv, '--purpose');
-    if (!decisionId || !purpose) throw new Error('custodian mode needs --decision-id and --purpose, recorded in the access log before the phrasing file is read');
-    const bytes = readFileSync(phrasingFile);
-    phrasingSha = createHash('sha256').update(bytes).digest('hex');
-    appendAccessLog(join(dirname(phrasingFile), 'access-log.jsonl'), { action: 'open', purpose, decision_id: decisionId, labels_sha256: phrasingSha, run_sha256: null });
-    const parsed = JSON.parse(bytes.toString('utf8')) as { id: string; templates: unknown };
-    sealedPhrasing = { id: parsed.id, templates: validatePhrasing(parsed.templates) };
-  } else if (!seeds.every(s => DEV_SEEDS.includes(s))) {
-    throw new Error(`only dev seeds ${DEV_SEEDS.join(', ')} run here; held-out seeds belong to the custodian`);
-  }
+  const custody = custodyTemplatesInput(argv, seeds, DEV_SEEDS);
+  if (custody) { phrasingSha = custody.sha256; sealedPhrasing = { id: custody.parsed.id, templates: validatePhrasing(custody.parsed.templates) }; }
   const outPath = argValue(argv, '--output') ? join(argValue(argv, '--output')!, 'receipt.json') : receiptPath(CATEGORY);
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));

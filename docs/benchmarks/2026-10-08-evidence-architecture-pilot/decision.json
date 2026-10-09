@@ -1,7 +1,7 @@
 {
  "decision": {
   "tolerance_points": 3,
-  "tolerance_status": "working value (plan proposal); provisional on T0, whose preregistration is not committed",
+  "tolerance_status": "the plan proposal, used as a working value; T0 froze the same 3.0 points (1e5caf37)",
   "reader": "claude-sonnet-5-5",
   "a0": {
    "cell": "a0:claude-sonnet-5-5",

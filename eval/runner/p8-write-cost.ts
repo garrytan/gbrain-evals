@@ -17,8 +17,12 @@
  * calls and tokens, dollars by model, all also per 1,000 messages and per
  * 1,000 pages, and seconds to settle.
  *
+ * Arms: `off` (extraction disabled), `on` (the shipped default model) and
+ * `on:<provider:model>` (extraction on with `facts.extraction_model` set; the
+ * write-cost decision data of the 10x plan's R2).
+ *
  * Usage:
- *   bun eval/runner/p8-write-cost.ts --gbrain <checkout>@<ref> [--sessions 200] [--arms on,off]
+ *   bun eval/runner/p8-write-cost.ts --gbrain <checkout>@<ref> [--sessions 200] [--arms on,off,on:openai:gpt-6-luna]
  *     [--settle-s 90] [--root <dir outside any repo>] --budget-usd <n> [--budget-ledger <path>] --out eval/reports/p8-write-cost/<name>
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -28,6 +32,7 @@ import { GbrainSlot, McpClient, MeteringProxy, GBRAIN_EMBED_MODEL, type Meter } 
 import { runCli } from './lifecycle/drivers.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
 import { budgetOptionsFrom, startPaidRun } from './budget-ledger.ts';
+import { scrubMachinePaths } from './receipt.ts';
 
 const argv = process.argv.slice(2);
 const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
@@ -74,8 +79,15 @@ async function settle(path: string, quietMs: number, capMs: number): Promise<num
   return capMs / 1000;
 }
 
-async function runArm(arm: 'on' | 'off', buildDir: string, root: string, sessions: Array<{ slug: string; session: Session }>, proxy: MeteringProxy, settleS: number) {
-  const slot = new GbrainSlot(`wc-${arm}`, root, buildDir, proxy.port, 'full');
+/** `on:<provider:model>` sets facts.extraction_model; `on` keeps the default; `off` disables extraction. */
+export function parseWriteCostArm(arm: string): { arm: string; enabled: boolean; model: string | null; slot: string } {
+  if (arm !== 'on' && arm !== 'off' && !/^on:[a-z0-9-]+:.+/.test(arm)) throw new Error(`write-cost arm "${arm}" must be on, off or on:<provider:model>`);
+  return { arm, enabled: arm !== 'off', model: arm.startsWith('on:') ? arm.slice(3) : null, slot: `wc-${arm.replace(/[^a-z0-9]+/gi, '-')}` };
+}
+
+async function runArm(arm: string, buildDir: string, root: string, sessions: Array<{ slug: string; session: Session }>, proxy: MeteringProxy, settleS: number) {
+  const spec = parseWriteCostArm(arm);
+  const slot = new GbrainSlot(spec.slot, root, buildDir, proxy.port, 'full');
   const callLog = join(slot.dir, 'ai-calls.jsonl');
   slot.run.env.GBRAIN_AI_CALL_LOG = callLog;
   for (const d of ['home', 'uh']) mkdirSync(join(slot.dir, d), { recursive: true });
@@ -85,7 +97,8 @@ async function runArm(arm: 'on' | 'off', buildDir: string, root: string, session
     return r;
   };
   await cli(['init', '--pglite', '--path', join(slot.dir, 'home', 'brain.pglite'), '--embedding-model', GBRAIN_EMBED_MODEL, '--non-interactive']);
-  await cli(['config', 'set', 'facts.extraction_enabled', arm === 'on' ? 'true' : 'false']);
+  await cli(['config', 'set', 'facts.extraction_enabled', spec.enabled ? 'true' : 'false']);
+  if (spec.model) await cli(['config', 'set', 'facts.extraction_model', spec.model]);
   writeFileSync(callLog, '');
   const meterKey = `arm:${arm}`;
   proxy.bind(slot.id, meterKey);
@@ -143,7 +156,8 @@ async function runArm(arm: 'on' | 'off', buildDir: string, root: string, session
   const per = (x: number, n: number) => n ? Number((x * 1000 / n).toFixed(4)) : null;
   const embedTokens = lines.filter(l => l.kind === 'embedding').reduce((a, l) => a + tokens(l.input_tokens), 0);
   return {
-    arm, pages: sessions.length, messages, facts_remembered: facts, write_errors: errors,
+    arm, extraction_model_setting: spec.model, resolved_extraction_models: [...new Set(generative.filter(l => l.effect === 'facts-absorb' || l.job_name === 'facts-absorb').map(l => l.model))],
+    pages: sessions.length, messages, facts_remembered: facts, write_errors: errors,
     put_page_ms: { p50: pct(putMs, 0.5), p95: pct(putMs, 0.95) }, remember_ms: { p50: pct(rememberMs, 0.5), p95: pct(rememberMs, 0.95) },
     write_wall_s: writeS, settled_after_write_s: settledAfterS, jobs_queued_at_settle: queued, job_drain_s: drainS, jobs_after_drain: outstanding,
     commit_path_generative_attempts: commitPath.length,
@@ -160,7 +174,7 @@ async function main() {
   const out = flag('--out');
   if (!spec || !out) throw new Error('usage: --gbrain <checkout>@<ref> --out <dir> --budget-usd <n>');
   const [repo, ref] = spec.split('@') as [string, string];
-  const arms = (flag('--arms') ?? 'on,off').split(',') as Array<'on' | 'off'>;
+  const arms = (flag('--arms') ?? 'on,off').split(',').map(a => parseWriteCostArm(a).arm);
   const sessions = pickSessions(Number(flag('--sessions') ?? 200));
   const settleS = Number(flag('--settle-s') ?? 90);
   // Brains live outside any Git worktree (gbrain refuses a content root inside another repository).
@@ -175,16 +189,16 @@ async function main() {
   try {
     for (const arm of arms) {
       const allowance = budget.allowance(Number(flag('--arm-allowance-usd') ?? 10), `write-cost arm ${arm}`);
-      proxy.allowances.set(`wc-${arm}`, allowance);
+      proxy.allowances.set(parseWriteCostArm(arm).slot, allowance);
       try { results.push(await runArm(arm, build.dir, root, sessions, proxy, settleS)); }
-      finally { proxy.allowances.delete(`wc-${arm}`); allowance.close(); }
+      finally { proxy.allowances.delete(parseWriteCostArm(arm).slot); allowance.close(); }
       log(`${arm}: ${JSON.stringify(results.at(-1))}`);
     }
   } finally { proxy.stop(); }
   const summary = budget.close({ finish: results.length === arms.length });
   const receipt = { schema: 'p8-write-cost-v1', gbrain: { repo, commit: build.commit, version: build.version }, embedding_model: GBRAIN_EMBED_MODEL, dataset: 'LongMemEval-S cleaned (98d7416c), first distinct sessions', arms: results, budget: summary };
-  writeFileSync(join(resolve(out), 'receipt.json'), JSON.stringify(receipt, null, 2));
+  writeFileSync(join(resolve(out), 'receipt.json'), JSON.stringify(scrubMachinePaths(receipt), null, 2));
   console.log(JSON.stringify(receipt, null, 2));
 }
 
-await main();
+if (import.meta.main) await main();

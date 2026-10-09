@@ -51,6 +51,13 @@ describe('pricing', () => {
     expect(routed).toMatchObject({ input: 3, output: 15 });
   });
 
+  test('the cheap extraction candidates carry their list prices', () => {
+    expect(priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-haiku-5-5', max_tokens: 10, messages: [] }))
+      .toMatchObject({ kind: 'chat', input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 });
+    expect(priceRequest('https://api.openai.com/v1/responses', { model: 'gpt-6-luna', max_output_tokens: 10, input: 'x' }))
+      .toMatchObject({ kind: 'chat', input: 0.1, output: 0.5 });
+  });
+
   test('dated snapshots use the family list price; Voyage rerank is priced from query and documents', () => {
     expect(priceRequest('https://api.openai.com/v1/chat/completions', { model: 'gpt-4o-2024-08-06', max_tokens: 10, messages: [] }))
       .toMatchObject({ kind: 'chat', input: 2.5, output: 10, maxOutputTokens: 10 });
@@ -288,5 +295,35 @@ describe('provider SDKs that capture fetch', () => {
     expect(attempts).toBe(2);
     expect(entries.map(e => e.status)).toEqual(['charged-reservation', 'reconciled']);
     expect(entries[1].input_tokens).toBe(12);
+  });
+
+  test('a 4xx answer without usage settles at $0, as the metering proxy settles it; a 5xx keeps its reservation', async () => {
+    const path = ledgerPath();
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: path });
+    let status = 400;
+    const guard = installPaidRequestGuard(run, { fetchImpl: (async () => new Response(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: '`temperature` is deprecated for this model.' } }),
+      { status, headers: { 'content-type': 'application/json' } })) as unknown as typeof fetch });
+    const call = () => fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(anthropicBody) });
+    try { expect((await call()).status).toBe(400); status = 500; expect((await call()).status).toBe(500); }
+    finally { guard.uninstall(); }
+    const entries = read(path).entries;
+    expect(entries.map(e => [e.status, e.actual_usd! > 0])).toEqual([['reconciled', false], ['charged-reservation', true]]);
+  });
+});
+
+describe('streamed responses settle from their usage events', () => {
+  test('Anthropic message_start plus message_delta, and OpenAI response.completed', async () => {
+    const { sseUsage, usageCost, priceRequest } = await import('../../eval/runner/budget-ledger.ts');
+    const anthropic = [
+      'event: message_start', 'data: {"type":"message_start","message":{"id":"m","usage":{"input_tokens":12,"cache_creation_input_tokens":1000,"cache_read_input_tokens":5000,"output_tokens":1}}}', '',
+      'event: content_block_delta', 'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"hi"}}', '',
+      'event: message_delta', 'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":250}}', '',
+    ].join('\n');
+    expect(sseUsage(anthropic)).toEqual({ input_tokens: 12, cache_creation_input_tokens: 1000, cache_read_input_tokens: 5000, output_tokens: 250 });
+    const price = priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-sonnet-5-5', max_tokens: 1000, messages: [{ role: 'user', content: 'hi' }] })!;
+    expect(usageCost(price, { usage: sseUsage(anthropic) })!.output_tokens).toBe(250);
+    const openai = 'event: response.completed\ndata: {"type":"response.completed","response":{"usage":{"input_tokens":40,"output_tokens":7}}}\n';
+    expect(sseUsage(openai)).toEqual({ input_tokens: 40, output_tokens: 7 });
+    expect(sseUsage('data: {"type":"ping"}\n')).toBeNull();
   });
 });

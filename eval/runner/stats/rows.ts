@@ -7,7 +7,10 @@
  *      `is_abs=true`, the LongMemEval abstention questions that have no
  *      evidence label).
  *   2. A row whose error origin is `harness`, `dependency` or `judge` is
- *      ineligible: the system under test was never fairly measured.
+ *      ineligible: the system under test was never fairly measured. So is a
+ *      row with a reader or judge failure (`qa_error`) when the metric is a
+ *      reading-lane metric (`qa_*`); the multi-system join in
+ *      memory-qa/outcomes.ts then excludes that id from every system.
  *   3. A row whose error origin is `sut` is eligible and scores 0 when the
  *      metric is missing, following the probe-accounting rule that a system
  *      failure is a miss that stays in the denominator.
@@ -63,6 +66,7 @@ export function toObservation(row: Row, selection: RowSelection): Observation {
   const failed = row.error !== undefined && row.error !== null;
   if (failed && typeof origin === 'string' && EXCLUDED_ORIGINS.has(origin)) return ineligible(`${origin} error`);
   if (failed && origin !== 'sut') return ineligible('error without a known origin');
+  if (!failed && selection.metric.startsWith('qa_') && typeof row.qa_error === 'string') return ineligible('reader or judge error');
   const raw = getPath(row, selection.metric);
   const value = typeof raw === 'boolean' ? Number(raw) : raw;
   if (typeof value === 'number' && Number.isFinite(value)) return { id, cluster, value, eligible: true };

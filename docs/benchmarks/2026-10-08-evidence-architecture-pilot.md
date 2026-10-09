@@ -5,9 +5,10 @@ Date: 2026-10-08 (Pacific). Wave 1 items A3, A4, A5 and A10 of the approved "Bui
 (LongMemEval-S, a 100-question pilot split; no sealed set opened). Preregistration:
 [2026-10-08-evidence-architecture-pilot-preregistration.md](2026-10-08-evidence-architecture-pilot-preregistration.md),
 committed before any paid request (`6d192070`), with amendment 1 (`1fd8a2d7`) committed after a $0.11 shape probe
-and before any counted cell. Spend: $60.48 of an $80 ledger cap. Status: every preregistered cell **complete**;
-the verdict is provisional on T0's loss tolerance, which is not frozen yet (this pilot used the plan's proposed
-3.0 points).
+and before any counted cell. Spend: $60.48 of an $80 ledger cap. Status: every preregistered cell **complete**.
+Loss tolerance: 3.0 points, the plan's proposal, which this pilot used as a working value. T0 froze the same
+3.0 points in its own preregistration (`1e5caf37`, committed on its branch while this pilot ran and merged in #105),
+so the verdict needs no recomputation.
 
 [gbrain](https://github.com/garrytan/gbrain) is a Markdown-first memory system for agents. When an agent asks a
 question about old conversations, gbrain retrieves the five best-matching conversations and hands a reader model
@@ -257,7 +258,7 @@ passed with every candidate. Cost: $1.61.
   saves no latency here.
 - **Do not expect representation to cut confident wrong answers.** No arm moved committed-wrong; that lever is the
   answerability threshold and read policy of bet (a).
-- **Limits.** One development split of 100 questions; one judge; the tolerance is provisional on T0; the cohort
+- **Limits.** One development split of 100 questions; one judge; the cohort
   timed only the 2,000-token cells; DIRECT and FALLBACK were measured on LongMemEval's five-session hand-off, not on
   the program primary's agent tasks; committed-wrong uses a labeler that passed the abstain bar but not the hedged
   bar.
@@ -267,12 +268,13 @@ passed with every candidate. Cost: $1.61.
 The pilot says the reading step is not where gbrain's remaining failures are: frontier readers on whole sessions
 already answer 92 to 94 of 100, cheap readers 84 to 89, and no representation reduced committed-wrong answers. The
 measured gaps are in retrieval at scale (plain files lead by 11 to 16 points past 50,000 documents) and in the
-end-to-end task failures the program primary counts, which T0 has not baselined yet. So, in order:
+end-to-end task failures the program primary counts. T0's baseline on the frozen release puts that workload at its
+ceiling for Sonnet 5.5 and gpt-6.1-sol (0 of 64 failures each), so it cannot yet show a factor either. So, in order:
 
 1. **Wave 3, scale**, first: its retrieval fixes and the bet (a) answerability lever target the largest measured
    deficits, and the cheap-reader policies cut the reader cost of its runs by about 2x (FALLBACK) to 19x (DIRECT).
-2. **Wave 5, the proactive brief**, second, once T0's baseline exists: its family-P tasks carry the program primary
-   (missed commitments after a correction), the failure type this pilot cannot see.
+2. **Wave 5, the proactive brief**, second: its family-P tasks carry the program primary (missed commitments after a
+   correction), the failure type this pilot cannot see; it needs a harder task set than T0's ceilinged baseline.
 3. **Wave 2's paid findability run**, third (its $0 DX items already have a fixed slot).
 4. **Wave 4, time travel**, fourth: it is parity with an existing kind of system, not a gap.
 5. **Wave 6, the extended benchmark**, last, so it measures the waves above.

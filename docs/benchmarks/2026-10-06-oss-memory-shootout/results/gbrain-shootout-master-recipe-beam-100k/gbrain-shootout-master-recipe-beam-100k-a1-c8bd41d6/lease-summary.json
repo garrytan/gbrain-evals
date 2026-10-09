@@ -1,0 +1,8 @@
+{
+  "run_id": "gbrain-shootout-master-recipe-beam-100k-a1-c8bd41d6",
+  "lease_usd": 6,
+  "committed_usd": 2.684576960000001,
+  "requests": 2616,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

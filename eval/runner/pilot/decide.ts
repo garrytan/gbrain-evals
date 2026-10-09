@@ -38,7 +38,7 @@ export function decide(rows: Row[], cohort: Array<Record<string, any>>) {
     });
   const offRamp = briefMisses || cheaper.some(c => c.wins);
   return {
-    tolerance_points: TOLERANCE_POINTS, tolerance_status: 'working value (plan proposal); provisional on T0, whose preregistration is not committed',
+    tolerance_points: TOLERANCE_POINTS, tolerance_status: 'the plan proposal, used as a working value; T0 froze the same 3.0 points (1e5caf37)',
     reader, a0: { cell: a0.cell, success: a0.correct, committed_wrong: a0.committed_wrong, usd_per_q: a0.usd_per_q, p95_ms: p95(a0.cell) },
     briefs_at_2000: briefs.map(b => ({ cell: b.cell, success: b.correct, gap_points: pts(a0) - pts(b), within_tolerance: pts(a0) - pts(b) <= TOLERANCE_POINTS, committed_wrong: b.committed_wrong, usd_per_q: b.usd_per_q, p95_ms: p95(b.cell), mcnemar_p: b.discordance_vs_a0 ? mcnemarP(b.discordance_vs_a0) : null })),
     best_brief: best.cell, brief_misses: briefMisses, cheaper_designs: cheaper, off_ramp_fires: offRamp,
