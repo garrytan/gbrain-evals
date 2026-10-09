@@ -1,0 +1,2525 @@
+{
+  "amendment": "A6b",
+  "date": "2026-10-08",
+  "what": "Labels, prose and paths only. Product names, versions, licenses and upstream links moved to the one table in docs/comparison-systems.md#systems-in-the-open-source-comparison; numbers did not change.",
+  "base_commit": "aeabaf7fb4149f1c76a8c31025a95e509cd8e26b",
+  "verify": "python3 scripts/verify-a6b-rename.py",
+  "files": [
+    {
+      "path": "docs/README.md",
+      "sha256_before": "644fa33ddc182a9ae36f33e035ddd5099090808f74d8c132ced7681f956f760f",
+      "sha256_after": "8c6231d60b2f8d821d9d282cde0ee109fd14e0cc9fb9151883d33211276579bf",
+      "note": "sha256_after updated after merging main (0.10.49, #103 added an index row); the rename part of the diff is unchanged"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md",
+      "sha256_before": "62ecbbf1f976bbb71dde3d82e1917287821643252562efcdc977577aaf05fa68",
+      "sha256_after": "8f070f2550275939c6308448fbc3d651e4fff58e9e485a6f5408386cb9d818fc"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/manifests/cells/extract-first-common.json",
+      "sha256_before": "33cdac0366c08ad78114fa58e0f44fb7f04f0e7b1ea0b83ff35171c3c55f6e7e",
+      "sha256_after": "c9586126f54a194dae23ba0f60d40766bbae13993cd229418ce8ea2f25c54438"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/results/extract-first-common-lifecycle-lite/extract-first-common-lifecycle-lite-a1-1dc8e598/lifecycle-lite/receipt.json",
+      "sha256_before": "949cc9334c998a420978d95bf4dce7163d90a08ebe4cd28b9e8c8f8708288c39",
+      "sha256_after": "f01f88ca0e9c18a5b68ea1ae3a8ed6c76db43dee60343d0e14d1ae744c233b42"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/results/graph-pipeline-common-lifecycle-lite/graph-pipeline-common-lifecycle-lite-a1-3096e0e5/lifecycle-lite/receipt.json",
+      "sha256_before": "8d7d2f9a205d81d3b123a3f17df6541a982ea006ac50fc74747c67c99573e62a",
+      "sha256_after": "666309f6221025ae84cf822bf7d6b2ff2f9b654d7f550b6bf522ae6eff7bce83"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/results/markdown-notes-common-lifecycle-lite/markdown-notes-common-lifecycle-lite-a1-a00dd9e2/lifecycle-lite/receipt.json",
+      "sha256_before": "1e0c5892ae9fd7db86580cdb677b3907077e54b7d6c961b5378c2657b07acaf7",
+      "sha256_after": "2d79ce67190710665a6a6d974647e1827da2579ec578e357403cced5889869cb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/results/memory-bank-common-lifecycle-lite/memory-bank-common-lifecycle-lite-a1-cc7f9e3b/lifecycle-lite/receipt.json",
+      "sha256_before": "27de3d06a7fd8ae72cefb4c43241a5ddbb451a2f91f99b347556a2937bbaaba1",
+      "sha256_after": "5909533c87c9ba4bab92b64a7014612fc8f393183a32adc3431a542f16de718f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/results/temporal-graph-common-lifecycle-lite/temporal-graph-common-lifecycle-lite-a1-a8cef442/lifecycle-lite/deletes.ndjson.gz",
+      "sha256_before": "63d881d13bf6e4212647ac3287934bf2d2b4bc0a3de722e7576ff253dc0117ef",
+      "sha256_after": "513e622148085d3055b0228eb89723481a912d7401f564397047c5ebce130069"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite/results/temporal-graph-common-lifecycle-lite/temporal-graph-common-lifecycle-lite-a1-a8cef442/lifecycle-lite/receipt.json",
+      "sha256_before": "6ad9ec61643ae456c674c97a202257647810a4fa7bd890150784251078d68ffd",
+      "sha256_after": "d259d70a8eb540a254bdfb42c0532b1eea1a0d1a66995acf8ec0a21ada16417e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout-preregistration.md",
+      "sha256_before": "e1ebc68b5b0da710f5df8b1623801f3a81683f6e422cf88fa255cb0e13e61778",
+      "sha256_after": "e080c04ce074979fa2900af5d2bcaed145f30b3c48fd8646c7a547afbc67a10a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/cells/extract-first-common.json",
+      "sha256_before": "309cb6e546db756aad2bed953be2885cc8744df4a7a1e83e419c2e47733f12fd",
+      "sha256_after": "321879f91c7065b6b751642bee93d44991cc8cb7c3ed819b28bd35e586a40d3e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/cells/extract-first-recipe.json",
+      "sha256_before": "872707629dbb438080dd837a80d1523a80d8f9b23e992afd14b2bcc8ec6627e0",
+      "sha256_after": "52ce94b58d80fde573ee4efa9d3161027087ecb2ef9914f0dc535061b00d0527"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/cells/pmb.json",
+      "sha256_before": "fb133a5fd2bbf405e963754262ccc1f0f67beeda25d5bcd6105f7cd0402251af",
+      "sha256_after": "65c1e4a3b0b64b5210c58a283b435aa0720a8a1445391ebb1b3ce6b67664c8f8"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/manifests/cells/sealed.json",
+      "sha256_before": "3eb3704e5eaa8b4cbd57fb48ec514633e94eb6fba93a1dd79f9149369ac0a999",
+      "sha256_after": "f2ebe19f2068f9a714a07c8c2669faff3d290a8506185c0184a09053a71f9c61"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-beam-100k/extract-first-common-beam-100k-a1-f41a8eff/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "47f6231268c727af483170cf75c877cd604365a77bf454aff9fcdf40f64626b1",
+      "sha256_after": "4317a54d5a58376f7cdd4fc1183e70aa36f67552f11e7bebe1bceb60f83a26d9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-beam-100k/extract-first-common-beam-100k-a1-f41a8eff/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "c89f981627c4336230c3affd0c32eb04bb38d8c2d0d5ecb2de684b7f3b98402e",
+      "sha256_after": "944cae370e58356df98217a645f1eddf7b6d7a2c15e1e5c6dd04e2728118240e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-beam-100k/extract-first-common-beam-100k-a1-f41a8eff/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "1234653721c5ea415f9f83def367ee448ef82f12d9d2f56067f1a074c44c799b",
+      "sha256_after": "917f2361c21746bc2837a08c053408d5eb9fb3aef107254878e3c99dd6ffbbd6"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-beam-100k/extract-first-common-beam-100k-a1-f41a8eff/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "b885f78cf5ba95c9458fc7727f4438472092d8fd6dca3052aef9e2bfe8ba5438",
+      "sha256_after": "5f38cf2779a688d79091b258f3ec99f621ea1137429e17825ba03dfc7bb1822f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-beam-100k/extract-first-common-beam-100k-a1-f41a8eff/receipt.json",
+      "sha256_before": "41be932a1d7f9740832340ac4525052f132f49b725340da4386a0b0908ee05bc",
+      "sha256_after": "c7ea7383d5a5ae2a44db212a43f6f872bbeefbd87b8900917cda9dfe6519a95c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-0/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "cf86c8ed3479f3ffee0d2c30f577e4d07f4d952c2499687ccfece829024431f7",
+      "sha256_after": "d1568214206762f77df44b0ae3464dbf246dfa0f424d8a66aa7f4f28fa041b0e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-0/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "519a1bbdd94d193ae8717e43f4ee40fa8873e55b56c49b266627c00d97346563",
+      "sha256_after": "adf21e69b01222578f437ffb5e7dd83d86387eed8cdb708e20d086a675ab7649"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-0/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "6519b13700556fbc22896d3bd62bf4807ec95882de7f9639cf3370aa80a52398",
+      "sha256_after": "a949c7acedc4515280e9b0b36a37d265c69fa58f12c08a6b1e6735ccc87f7332"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-0/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "1fd4940ee872081a1dd4f84b34ea12386a483cbb5f2b477523ce34abd64b7496",
+      "sha256_after": "e5a258a28b397e9dfdc9270698084f278472d43bdabe52a323183e8a747470bf"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-0/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "c2495ed86608f616fea384ac4f834c28ddc09d3b1afd11402494433074f4df7f",
+      "sha256_after": "6e32a50b591f0533dda1dc3fc9bbc1bc2f84741c53f4ece1e22f1bddce84838c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-0/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "daf1756661f7e75fa3dbc1629b9347ce70b0293cacd85c603d736660ae3eee38",
+      "sha256_after": "08649d9348c7976da4af6f4f56ad6928cc3db37c5ab4c5b808fa85f8248da84d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-0/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "6ef49c3f8f591043ea50078e71f22fd462afacf4a85577327f3f56641b72ce80",
+      "sha256_after": "f42631bfad46b5aeedcb5887494447041cec82cf31edf8d809a44afe86012735"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-0/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "a4f6a43cd7469f97adb7f16cb54a3456e2126220b96852a8d7b301672bcce8c8",
+      "sha256_after": "c188380b7419647da017025fb504b4d356df25d882f0de45a15b3fb2d4df2df2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-0/receipt.json",
+      "sha256_before": "cf713032756d9e43cc8c14308ace4d8e0fbf7c23f717906e30cc9039c3efb395",
+      "sha256_after": "09c877eeed1f2b4ef1366beae1dcb91e6d58bea6567af2b3283ede5e82679ecb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-1/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "0617d3c5261382f4227a2c0709605e4d15445765578c97d329219afc9c9659be",
+      "sha256_after": "7f611252ade84f3ea3adac15caf3a664ba7158467996111d556b93c1972b24e4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-1/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "7b617873a596d02ef4e420d690d75df5d8c4507ed84d6f3ad83a06f899adc815",
+      "sha256_after": "fb9e976a305766992479bf4ea51be9f5235983618fd75a37fa6cbecebf36453d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-1/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "7369f1906cd0ef4e6aadede49a8131b7fa35d490341267e7d095f4c9e304ff4a",
+      "sha256_after": "0f52394a3f4c48b247d80deedfd4a282fa9fcb896a0c23ce74b310e0bef3f4d6"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-1/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "afd6091c395fa4ae7974bef9ff9a47de83981b304c57d236256bc4d1a61af5fd",
+      "sha256_after": "8b30dc6fc72a169622fcd7ac36ca1f81d00ad0345c5129e9b7e42ee15460caeb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-1/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "f5a75b5f726e1455ee9e5c67bbe27bca6ef72ae81c62f83bcc4c27eed75e2a87",
+      "sha256_after": "8e43dc4d4de350491b8a7a95ac3b5f537419f5681277571e25d8d2e7fa224adb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-1/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "f796daa20afe1331fbe5166ff6e669bf51a23a8a6e4670fd15a2ffbef0287d98",
+      "sha256_after": "643ba811ff960fa9026a25b52f8c9f216bf2425ca4254f894c27ce5925bd8efc"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-1/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "a7b1e7d4cf3d288deec3f712d04daaf2e01a6ece0310a89b3c8cb507fe1b8355",
+      "sha256_after": "13d965aa819d6cb4ffebc813366bf9b4105864b10ef5f4cf0dba351ef1a2a404"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-1/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "c900a7026f9cb1713de7eed0fa62c9453b77935d7280e0f9537b3be393642d4b",
+      "sha256_after": "9674ea6f8b1a33f1f4033e792120d2e23b801945befcc10888652d5065d0f15c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-1/receipt.json",
+      "sha256_before": "773c67cfdc7d45c985fdc5659f5fef85c1ea382b7806382430a6c3f4dcd9dcfd",
+      "sha256_after": "5e0aaa1a4b66c6837183bc6edeae8bf1fa0dbf619954d50075abfcf88d8227d5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-2/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "910c07bdaa76ac1cd86277786bdbe112f0fe7a5e2d590e0c4399bae368a3d12a",
+      "sha256_after": "5684c6da8f98366a7ae2e2350ab04adbb5aefc3d7f04dd0f02ebaf3df1b519d9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-2/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "5f38584ae195a49b47b53e69f29d52317229ba7d1871b3ee038d56b857caa0aa",
+      "sha256_after": "370ee895fbdfc49034596f34971f1f5ca9cc38148e4fa3fb9ed766d46957e348"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-2/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "19ea7362c898f80b2ddad3d02f0e4f2a5316f473abc124e38c487d33d92864e3",
+      "sha256_after": "1c8c6119ea273afa1295550f042efbcc11677902aee32aaf7c3c8f304861e7dd"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-2/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "b352ccfb1f370c72a488e957c3f66ceb6375e59cf3c6d2948940a6e31ad4540e",
+      "sha256_after": "f2e34d9c8ede4143897e4fb9e704f86fac418478e385bca13db6559ec606277b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-2/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "5e1f9cb6fe573a9b4658a3d93fd13fdc294c8bd41d5b10b296f63fd6d30db3d0",
+      "sha256_after": "b36b39df1278cfdb6fd4680db8d9637410cda3bfe66bec99ec3b0090169818cd"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-2/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "7616dbd9bf01fb4a0a0f1e78e3dd89e9cb51275497c9328080c85edcaf3505eb",
+      "sha256_after": "11798b5fdadff67532d2b719005c8442c11d61dda92482d4c5ff4c93c0391e65"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-2/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "fdd4c0c35d44ca66509d984417080fb4b5a15c36e8cb9c0c59d6215b6ed785ed",
+      "sha256_after": "56c2cb8a115691a113daf4d5f5ee9648fbcbe5288b85cbd196b6224bd22364d1"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-2/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "c435ef762447d0e8696e7dfec0c5ea57b69c38c8010ea80cda265629dcc4bbb4",
+      "sha256_after": "c83bbb65a12c9e5ea8323cee664c5ea8f4e5da96dd5efb5049bea415cc6b4852"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-2/receipt.json",
+      "sha256_before": "be4e0b1e95445c26a2343a187eedd95ffeeab3d9c0fac7c4e93bef906201578f",
+      "sha256_after": "aad6a45146180c9438d2b27ff61c3faf0c27cc441940243a83689efc75dd6353"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-3/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "8ae7560e6dfbe719cbb6274bbb6aac351cbd1972395e3f0c82c881ac059b8c0a",
+      "sha256_after": "8f4fd98cd781420366f83559f35b7b4e75d33deabc84b7e001e9812d69c3b251"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-3/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "126d29172895ad3d9bbae7974b891b4a3bfe395bb693ed5d3c1f692b98ef1357",
+      "sha256_after": "993eea473bceed8cd70c9ccb22b2ebc2d0a8746e701caf0e9cf9dd3c36517334"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-3/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "98dbf2e49fba7bc19e154adcb85788ac1c4b3ed69e421cbfbdb71b4ad802c720",
+      "sha256_after": "0cd4eeba4764ba24c6b3af5cd636191b72f9c3c879ed10e75e7a2e893268fb39"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-3/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "4b08bd844cdbc9b334b17920a25163d011a0ca55b2afb78481c8ad599f1d25a4",
+      "sha256_after": "e94eaa0cff5a9732782cec78629de1cde88420ee1c7aee7f1ef4ed746b9f62c5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-3/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "ce10ab3368364d7c9ad72dcfb4d68e9d90c8a9a69877fe3847310b170691992d",
+      "sha256_after": "6bb732b26e452d48951ea289da65e19aae201d07486de6a7d17359fa97e8aa39"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-3/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "0984353bfd6dc09586fe77ec32ab6ea33bed569c7302d4389e2e156ffd7692b6",
+      "sha256_after": "a93f4e2ba3aee4e65390582b24ef927fcda28b4714ad3178fa3c3337a374cc56"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-3/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "171bb25c7644b0f02cf5eb98e5112050842dc7c054c9b78eb09bad2d60d83fa4",
+      "sha256_after": "4e614fac2ae6262cc859f0facec50a22b4de5dd663ade8753e98369fa7a284a3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-3/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "a0fddbffcbd5e81e21b03cbe881928e5478be5282b1fbd03d6a8513f2a529201",
+      "sha256_after": "133ca61f5040aa2140ca02b28662dfe418b068ed6e83beec960c78531ae5e524"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-3/receipt.json",
+      "sha256_before": "209b0dae659854fa55c9f05114d2250eff9347d55fa8d267dcc95d657dd8bbd9",
+      "sha256_after": "5fe50d59bbd8f18dc40a8894c246ee6043c1472bba826dce0f134dee328f70aa"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-4/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "1e9ae04961d5ec358036d4abc8f7d68c1fa092808aec3ccd2f82d196ce0129ab",
+      "sha256_after": "f41f404c50f8603724e1e44bad657a5942157bf259e6721ec68bb1db05831c01"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-4/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "0e6fa998a0baa2b3b420ca9dc3a44ffd2851943117aeacc34a96194fab00e205",
+      "sha256_after": "b9c677ee3551206d6ffbcd22f0159b719f2622c3dfd9adab6307c11821d753aa"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-4/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "a09294d705c1ab2ddee6a9117952ae7e1800a7ff897ae840f67a4139d136f9fd",
+      "sha256_after": "6898aadc6c7c609a6d734d4890f13095c58b42c5e038d877ce09152f1d66f78d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-4/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "f9762ef3ba4e268b4068b5ac3c9d1e19bcc5e1f1bda449c6aece3717edbdd756",
+      "sha256_after": "7a9b772f19a9346bd112ba424718fd021890ab461291bffe2ae53c703eae4efe"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-4/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "a466790fa2c7069a8eba08588a245d90f388b04c10c430ef277218df8c378dd8",
+      "sha256_after": "87ebc7f94075b450319867d836b94a39fd4fa5fd74f925a4d18edfae4ac83555"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-4/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "18c825726f6ed72173ac82554c174d77fc60eb091f82a460b92942ae59f7379b",
+      "sha256_after": "165c46f19225c5a78d99bcf465e7f56b199ee8e8021276fa279b2ef3f4b8890f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-4/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "e052385e132e9f19466696ff22c9284347f29cbd4880c00d225a03ea248846de",
+      "sha256_after": "329c8bbbb80106372d1400586c95a4027c15c1a7df621acf8e6334a720e747d9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-4/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "5e94c53eea86cc4d072ca3091bd8e0f28a0ad4ce1866a584d282b430c83ad1b1",
+      "sha256_after": "542e68f088337a16abca4df07b5700698278cc63b5e88a37abbdc99522b864fe"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-4/receipt.json",
+      "sha256_before": "d20ea121dde3726e116677915666736e3e1c8a2ac7c428d9b35ab0745376312e",
+      "sha256_after": "1161e88b931b4a80c94e4d76650330a67922f49d116bf08af43c9bc8edecbfa0"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-5/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "ec897df8388c96073faeaa4ac56751819e081d3b4577021480b7d632829d6636",
+      "sha256_after": "7a1370bc93607d69c08195746d395e1ef6b106d6b6b522797664890ed44ece18"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-5/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "78370eb3d4300474b867aea07d4f461616308cdf164b250d2bd81f0d540f8134",
+      "sha256_after": "022257cee0c6c5140509fbdd89fca37615895dd1770cd82a1f24b28447297966"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-5/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "bb75fe47a472fce0495882f288ca3366ff4eed4d0ae239079870da2ea8b0d9ec",
+      "sha256_after": "4a547d92462e6d454264a8a586c45938a6bc4fe3485e23fea2887594430256f1"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-5/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "8eac7c3371434a327920c37029ab5e7baafdb02f49ca5df0135d87d9080221bd",
+      "sha256_after": "08b16babe0e3ca3a0dec682493c99b9c7a7c42f6dafccacdacc71b6afdac9ea0"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-5/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "b53f64b3346b2fe70a0e84bb6248bb89d8dd3e99b67da892b7a17a1f36749e27",
+      "sha256_after": "28c7a3a610bf235fa860e93824b2548bf467428f98b64c6e2f18baf607996123"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-5/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "2fc130242642a90285a2aef572c7c7fbf30a0ed4da1b2642b7892a5cea8b6942",
+      "sha256_after": "f2aeff78f6750aa020115f8a5b69cfa81638cca15b1f3b8ff5639197f6220a3d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-5/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "e4ed112c026a4fda7460cc122ae5b0de29180855f468551265a1e51c6905ed84",
+      "sha256_after": "fd7e3a2dd55eba270809cde52e259bbb7783e7c868f8387954370684c3228a2f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-5/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "eb5cf6c2b0eeaa8f7d31a0cf2adadf14305d62c16ef4ec17c36167f1fcfbbb9f",
+      "sha256_after": "8cac6552417ffbb4f1b47635d33a13c874888371f4af885480f81c6c2bcddc5b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-5/receipt.json",
+      "sha256_before": "648bbfe10767226a1aa278adafd6703521eec48776cf5e1598da2af54f95d593",
+      "sha256_after": "fc21eafe22b2bf7a1a3c342ed1ddb3b4cc693adc8b0ed395f0b0360ad727b915"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-6/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "3b8783174ceb980e8af4b90232edb085a14c4df6fff1eec92a4f5fc34f4b5ac9",
+      "sha256_after": "1f39b3bbd2eb516b84f46d4babc58c7cd0cd730d8771e824a1cf9418d0d86240"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-6/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "c2b5263c206bc8d2c687be2f3cb5160099b761d2b5bac9472736126d3f20942d",
+      "sha256_after": "76424e363f73fb32bc2b9dd51897e518bd0e5788c22f4c2f2e371085e5355252"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-6/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "39195868ea126bcd1398cb01096b6f9408647f13a29af67f6ad85bb17b58e268",
+      "sha256_after": "94ab40b9d23968d3605a8e535e0d58bebd33dab8b8bbbba1482392900dae1b8a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-6/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "5cee4d91a7bd9a04a1352b0d6671a44265e8705e888ac238ac50100defaf5425",
+      "sha256_after": "87dac026a9449263e4b97ea04613e46a9287c4e498dcc94e28383e6cd5cb62c7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-6/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "28f09d0391c4607c2effa91e078e64f78d550318294184845731ce05e3e679ae",
+      "sha256_after": "ad431ad259e28b5d0852a569eb1e9fcfe484e7d72a0bd47a2395d20b0ae84d61"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-6/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "c047156417184cb2e6854d82271f12d1d4111004d8d2ff32cf0cc7c362d5f3ae",
+      "sha256_after": "e076389853882e658eab88e477136ff01bb9ddf981aab915f513787f0562e681"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-6/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "80aaa50132899fcd785ff1b1e3b62de45c1e2758e14a8267105d817d2d0f270d",
+      "sha256_after": "bba97a8dd391177813e0cbc0caffc635464cad453f51635011d152f08b4639c9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-6/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "ab6f18e89c9ef1194facd5ec1aea9ba9db12c7f53011d73b6510d5307ec7459b",
+      "sha256_after": "aeaaede0a9570a6f706df709e05a4f50d7603b3297e4a157024371ddb9a28bfb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-6/receipt.json",
+      "sha256_before": "564f57a43154de7631a23923646d151807085db3232528ba12fa0349f46bade1",
+      "sha256_after": "4ec7c9c4b30ce7e160c341fafe1d650073a537397120fc74bbfc8e5466689d4e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-7/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "871c8a3d7cbc23e5db83fe348c3976e29d6ee762f421c2bd4476421eb79dc41c",
+      "sha256_after": "f563fbe2c894bba3995c4c9a97334309866c967b6cdaf25bb8fa9966db2fcd9d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-7/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "c714ad02181c451811e390815a20ba5dd7af963761ca265fe13b85986aea9dd6",
+      "sha256_after": "32cd5d2ce2bb4ea24d3ecb63e635eaeda443d576afd824549a2212847d20f832"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-7/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "86542e811b7d07b5a7de02e84c87463eb1e6bb1c8ed98487380aa575d8d63ce3",
+      "sha256_after": "2f69532ef5d09b30b01b54600e9ca22f6ef93dac90d757a61a8b57fdeffd5d51"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-7/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "891bfb63724630a5b54399cca73ededfb24dd24cfed737a23ae9556c13504ef9",
+      "sha256_after": "6672e23591f9fc145b3942a6bc1d5a63339e77c17931de54c8a58935fef6f0bd"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-7/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "5c6d74d492f930d03fccdf43fe545c4dbcce1cbc4977c2a2451ec06f35a3f892",
+      "sha256_after": "2c9b9d7f2bbb66dcf5d7a01e667a69ad19eacc9c771f505bbe3ff326c95a81f1"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-7/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "1f4d9f79f77110bfba967c976b5e715ea5ecedb4063e64cc3df280752cf92b83",
+      "sha256_after": "5111544bdcb8276763cf67c0202c156ce900cade6e9923cab7fcb7d365c5bc62"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-7/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "5822e31737fc239cd94e90caba09ef189e9dabbd75c551c718da53783f25bdc9",
+      "sha256_after": "ac37b1e2be710dc6810903b72b598663e2ffd5628cfc703013ee186124f9c7bc"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-7/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "9618bc1e8feb7e160bcb6233cd7e9e6b73efe732d0fcb77aac5489c3c2b849b1",
+      "sha256_after": "93aafdc29de9f6d6f5f47b4adeafbbf8832f6497ffe56bce509874b48411a0bb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-lme-s/extract-first-common-lme-s-a1-c05f5e45/shard-7/receipt.json",
+      "sha256_before": "3d7c40968e8efe3ed19bc4593c91249fa71db3a8c348032b406d6bc5d5dc1add",
+      "sha256_after": "9b08e5d49c2cdc77beb0ad560bd490dfb260c6962759b49c3622ce2746b72e9c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a1-757e7284/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "0ebc380fa52fd5f5b133995267ea46db6bc6a059e2231fd65ad90c4b380c4313",
+      "sha256_after": "17a130728a7d6c1d38dbe4c18d79b08e48371f5c31619fbe82fb3329ab189e36"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a1-757e7284/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "2010ccdb21c68d36df104b2dac36af6531d6352d77deb65d4dc43ded63de25e4",
+      "sha256_after": "7cb56a7c991272bbf67d5c149f7f224101149547c772efd4e4d1c7e8aec220e6"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a1-757e7284/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "e8d6c7428b5029d5a57effb9f34314ef70e98899268b8c39e8f660d0c69702e0",
+      "sha256_after": "189818ebf0ffde80e802e0833ba794d06f438dc76d9de8f527b0c87d16874f17"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a1-757e7284/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "cf1cbe3e8199621c93ac880ab098777e17a75bc7d695cca142443e607d424d88",
+      "sha256_after": "a86a49136b295ba6557f78ddab43d4782d2630f4a41bfe774903a69836e96feb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a1-757e7284/receipt.json",
+      "sha256_before": "3022dc74470ea4cbe78c3cfa67e4900f703bf9abd868dc570a6891b266d0644b",
+      "sha256_after": "56299fa189c3311f6f2f457c93becc46a80d01f73773c9ae52ace31005e3976a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a2-7c50fc54/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "bd3a827765132639a2d803fe1f638d48beef59004170ed108ccc363fd069b848",
+      "sha256_after": "44a6099dbe460c9852e56156a524eee71e273925bf68a60fb1d6006d281f290a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a2-7c50fc54/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "d16897f16c92d8cd35ce641d42ac77fd10a6ae0a6c8677d42a57f567b5eaae5f",
+      "sha256_after": "3e5ee66f45fae2ba1fa66dd2c7fbdf0d76989fc92f5ce1489873e3fbf9fdadf3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a2-7c50fc54/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "fd348b08e3443371431070791f3822c12066f4c0a6997ec87f2398a7e2ab8abb",
+      "sha256_after": "2e2a744e353c6fc1bf7fbe8d44af1c290d054abfe789e33c84df9ec44a60786c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a2-7c50fc54/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "99f6382ac305e1d52ccee5fda4f42f3528c3e7865ee655543b7995eb41ad309f",
+      "sha256_after": "72f3f82e666d5c08d8852db1abff8b81c551cb756f343e1721b08440e42025f2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r1/extract-first-common-locomo-r1-a2-7c50fc54/receipt.json",
+      "sha256_before": "c69e385bea5e9a8c7b825a9f6a89627937cdc36685a487736996f56930b4910e",
+      "sha256_after": "cb5a798a7666f1b8409e63661148da14219106bc0a0126959d4e55561ac54f01"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r2/extract-first-common-locomo-r2-a1-d2491cb9/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "3bfd51b2524ed8636c5e4697f8df570ed9cedeeb71f9d751f484ea67db68d236",
+      "sha256_after": "1b0a169b947b8704ca918171684797edd26782d7600e2f39a972f60187ddebb4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r2/extract-first-common-locomo-r2-a1-d2491cb9/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "570e072081bd5080e82c7b19fee0ea1e540b6dbfd2584828555d9efede993d78",
+      "sha256_after": "2e20bea39fac88ee763835c280682b35bd35eb27974a77362361a78b1d79341d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-locomo-r2/extract-first-common-locomo-r2-a1-d2491cb9/receipt.json",
+      "sha256_before": "43547b0959541ae340ee5568221353d6bb1f15a5cfe8d700556ca4c6877c460b",
+      "sha256_after": "747a845940f3bf7eb3b0f4531bd9577bbb856341d98a45af4e8bd607deb7c55f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-common-pmb/extract-first-common-pmb-a1-9b3647c9/pmb/receipt.json",
+      "sha256_before": "6a7c109d107137a8465452339db04b0fa5f79ab78573f9324c0a287a72f0977f",
+      "sha256_after": "6559197a2a5d11d203e3a5582f9e69eb509de2824f07bbba6f5615713144d9bd"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-beam-100k/extract-first-recipe-beam-100k-a1-314ee4e4/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "a713a2cbcacd9fa5a86ed66954eb91d503ac84c810fc1f0acd81dd5fcb028132",
+      "sha256_after": "829af4d4b5d4e27e043ad3c9aa7c04e1cbd4cd5cc3ad8c38166306cb50f90826"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-beam-100k/extract-first-recipe-beam-100k-a1-314ee4e4/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "97e6c73aff80a6c0d0ebeac851af5604fcd359fcd745e37180e9ef785a91b076",
+      "sha256_after": "208c71bf088db99675cc8ccae8b9cb9ac23bab58a7bb09e907e4582547fbb101"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-beam-100k/extract-first-recipe-beam-100k-a1-314ee4e4/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "b4917f8c4942923fb548c6535ae7aed839ebcf54335a639ec435c055378dfa99",
+      "sha256_after": "0570280bceb5fd31f2b828ecde83937f3148613fd59fffb7f690e86f3222d1f5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-beam-100k/extract-first-recipe-beam-100k-a1-314ee4e4/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "ba84b6daa42ea47b646a16fe1a6f1a122106bc19f346d0544b9f8460efe23eae",
+      "sha256_after": "e75a32d63e89827e5ea5dfa5971518ea7dc79937d3750e7fbf36f001a43f80e4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-beam-100k/extract-first-recipe-beam-100k-a1-314ee4e4/receipt.json",
+      "sha256_before": "45de8dbff89bd45c092b9c4543ce59283d53540531b92b170491c3465d36958b",
+      "sha256_after": "20cd04a1fdf98fb03843c0e7ce50d55b462938da0ccb0b4c5972e50af3f8ecd3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-locomo-r1/extract-first-recipe-locomo-r1-a1-d7fc8c1d/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "15dbc5e06398ca53ff8485a095de1e9780b1d64f499fd405dc167c68e535a5cb",
+      "sha256_after": "0e4c291245d7af92fc316bfa9a2e87ed52b5b40b0ec137459eb3cfa7ff6f2d72"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-locomo-r1/extract-first-recipe-locomo-r1-a1-d7fc8c1d/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "817d882cad11764132c27744de85a35d61567c69555a5b2f6146d37294d61786",
+      "sha256_after": "998794bc33e27292e75a3a5d58889537b821f84d0a9cbdd2c5c0455c39f95e7e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-locomo-r1/extract-first-recipe-locomo-r1-a1-d7fc8c1d/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "b0c01ee1217e35cc4d88f44b0c7af851eb53697b8bb55c723d9ea043a1988268",
+      "sha256_after": "c99efa71760d6cf58448a013691707afc4525119b2c30dad7b4e8f78999c93a9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-locomo-r1/extract-first-recipe-locomo-r1-a1-d7fc8c1d/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "a4686e8800134a71ec1f4f23ad6773f3517b1fd36c41c91bd8695aea85a927ff",
+      "sha256_after": "57a4f67d1d4000de478d2a1a38f3e4400434cccf673d4ef5d6c3054b96c2337c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-locomo-r1/extract-first-recipe-locomo-r1-a1-d7fc8c1d/receipt.json",
+      "sha256_before": "e1d8936f8f1aa0e381e069669c94275737b03e812715491a327bc70164a3b70d",
+      "sha256_after": "ef08f17e93ac73a5a80a8defb792b7200c32266bdb7833b1ad0abc645b31ff02"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-locomo-r2/extract-first-recipe-locomo-r2-a1-96999a94/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "ac6f43ee1090109901533291958a863f79b1c5ab49189c068c36d1561ade76e7",
+      "sha256_after": "39fd830a319bcea64f05367ee02ca712c5f5f77a2f75b80de9cc1f6fbafc43c5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-locomo-r2/extract-first-recipe-locomo-r2-a1-96999a94/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "7f84ff4cd37426350fedc8a7bfa145bef5fe5d105cf10edec19a03b3c1491fe6",
+      "sha256_after": "af5eb4b86d5be5f1a3aeac3b973782909d934f684569692d7c74d15fb2853773"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/extract-first-recipe-locomo-r2/extract-first-recipe-locomo-r2-a1-96999a94/receipt.json",
+      "sha256_before": "92ce25aa31b3331cfb74d35019532c0272f1b63f00ed10bcaa353cd95e25dbe8",
+      "sha256_after": "281c921aab8cb188bdb312de6bad26348e4e6ae1eb29d516ac2ba785291bdc40"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-beam-100k/graph-pipeline-common-beam-100k-a1-6cd08e90/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "8bdb05577f71f135189aa9bd80bd5878fd2658202803639a7a4f8d989dc00187",
+      "sha256_after": "b7e0a0afd681877ddf8cde06159c5a58b86903a911e2ed444c50744e0d4591c7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-beam-100k/graph-pipeline-common-beam-100k-a1-6cd08e90/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "79212c13e673ca3b7460040999da72b1dec526bf34ee3929e590999f087f2d7e",
+      "sha256_after": "44acecd62b9f2b99a78adc13e590331be15da6104f6bd0442d5117171ad2af23"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-beam-100k/graph-pipeline-common-beam-100k-a1-6cd08e90/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "532ab59674423b8e95fb74fbcbe5ea178b67c265f90bd2fa26629ca865f4dfa6",
+      "sha256_after": "644afba5e93d03f22699509bd3f48576d2ecfc24b0db25a531739b892aad2bef"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-beam-100k/graph-pipeline-common-beam-100k-a1-6cd08e90/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "140c7c3817f3a26a72d2933389dfd402837b129d66f7c92c1670e51f3e19313e",
+      "sha256_after": "62e77eb6e88acde93822371036077223133fba4dada2a180edd8065912a2fb05"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-beam-100k/graph-pipeline-common-beam-100k-a1-6cd08e90/receipt.json",
+      "sha256_before": "b4e5bac1ae7ba8856d893025363764be766d99bb5f4e51f63903e645c083c829",
+      "sha256_after": "dd1a193733c29f4f1f9fe6cac18641e84e41cca72f956257a046af9847d2f8e5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard0of3/graph-pipeline-common-lme-s-shard0of3-a1-9def76c0/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "8f05112261680ac4586d48222b06416806afa74585c9c2098d630025cc195a44",
+      "sha256_after": "45a1d4ea0c6e9a0a275ed796ad2d70bc399d92d5d632ce00a1e3362eb5af4409"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard0of3/graph-pipeline-common-lme-s-shard0of3-a1-9def76c0/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "db26a7950b8b41eefe2d7287094c44d066cbc8b9d0884e416abeffdf1775d017",
+      "sha256_after": "b53ead32bed3d58af68bb30ae3f02ee6c420c262aaae9befee0dfb431e76d66f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard0of3/graph-pipeline-common-lme-s-shard0of3-a1-9def76c0/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "852362c296d987ca984cc8c81761751840992f99ff0f061395ae00a55ea3997f",
+      "sha256_after": "6ecb7571ea38abc9f14081adebe4e5026efba9edf1cef4063393e68161f3c69b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard0of3/graph-pipeline-common-lme-s-shard0of3-a1-9def76c0/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "138c0b57c7b0d8b76466824dab332dce6af2a1aa484bb6043f52dc349ad2849f",
+      "sha256_after": "6c7ec576404ca9c059e951aca1b8e4e94e11a12af3c30cfc8302dd4afb962846"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard0of3/graph-pipeline-common-lme-s-shard0of3-a1-9def76c0/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "0eddfd42a020c0947c0a8523968885e8210bc4a5ee602e9583296eefd5f952d5",
+      "sha256_after": "0551b28e69d4511bdcad0b93fe8f3749765a1f415701da4657f5e4b8a20309d3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard0of3/graph-pipeline-common-lme-s-shard0of3-a1-9def76c0/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "321690928a5f389a9c6ab4fe9a1ad22acf6bfe7265d8e8f6da4a6038f28cd906",
+      "sha256_after": "ce25c4114a7f564cf19e25d3e5bc5fbb80495b9accb7832a6a29447d1781f6d9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard0of3/graph-pipeline-common-lme-s-shard0of3-a1-9def76c0/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "fa032e8cdb2f706dcb73c816560b063e7e8538a1405aad417f87ed3d54adb74d",
+      "sha256_after": "8f6c8f70c170d0c197e2c1ae4e6d14ffad707576daa1310335f029e58f1a4664"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard0of3/graph-pipeline-common-lme-s-shard0of3-a1-9def76c0/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "ea42584113597a90f7a7b109fd584870056212bf149bfd8ba6a14479740b7982",
+      "sha256_after": "d007aaf7f08a87c855fa4f8204b8c448fa44d859ddbacd46956855b114acaa01"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard0of3/graph-pipeline-common-lme-s-shard0of3-a1-9def76c0/receipt.json",
+      "sha256_before": "4b1d5c5106f7a93ac73be892b256dcdbeee77b5f66d037755f0e24f853c2c5d7",
+      "sha256_after": "1f47aed4a3222efd0e37c833a123811edc364d13662b269ab51c1c84d1dd13d9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard1of3/graph-pipeline-common-lme-s-shard1of3-a1-76b01fab/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "0a1fc6db0bb0d740ae39161a8fc2f41ed106d657d7e578d8782142988082ca02",
+      "sha256_after": "bc9c6070d0eeedd55c7db8ca6fb7e8f6f7ff8a370c56c7268f2847ad80533713"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard1of3/graph-pipeline-common-lme-s-shard1of3-a1-76b01fab/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "f3ce2bea58d1f06236ae316ee255097ada57c101929c50b742bfbd96abfe4432",
+      "sha256_after": "c83961cb1c2c037d3a7c3e2171b2a294291c801cf5a42b5a1b94020de9313bc9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard1of3/graph-pipeline-common-lme-s-shard1of3-a1-76b01fab/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "c63ec80d08e7cc3589a97ea07563e28d80f4bdbcf455b4df0070fe4eb89c52d5",
+      "sha256_after": "77f9da6531497a8e8fba1693dc5d88292aeab2de400c1bf4a30e4ebe7c68bfcb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard1of3/graph-pipeline-common-lme-s-shard1of3-a1-76b01fab/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "38ea3e7d0ae074c2bf3e9fb28849e5ddb9ae1e0afe04ed69efd053371ea6ec5f",
+      "sha256_after": "b3109ff1056865809a7e3083cdb956041324bda6d4b4fa5837345bace8839e43"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard1of3/graph-pipeline-common-lme-s-shard1of3-a1-76b01fab/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "779bca4b83fbdadf1b85fdbf8f978af244cdd110208d2b86bee09f72a3a654b2",
+      "sha256_after": "49362cd980ec7a898982a61eceb049361d2d78412db3feb22d20e38e15b0f3bb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard1of3/graph-pipeline-common-lme-s-shard1of3-a1-76b01fab/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "5c4fff3dd69c17ed86612d1ffa9a892ca5e428077bf9b3a6dd75bb7dd040b9ec",
+      "sha256_after": "2d08a905741d00736aed32d929f018cec134e7e81a5cce57da339df566d7fc20"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard1of3/graph-pipeline-common-lme-s-shard1of3-a1-76b01fab/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "f97efea0b5330168a0f36217b9ac44447dd0cf73fcc31ffe2d278be02b43c445",
+      "sha256_after": "684c7f65c306c11cc7ca5391aaf681d0cba5d670ddbdd60345966f79f9d6671a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard1of3/graph-pipeline-common-lme-s-shard1of3-a1-76b01fab/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "56df02130ef1c9dd744ac9e9e0ad38a42b10704bbee7226f90a227d61c1c69fa",
+      "sha256_after": "1f79a36a86d2c94983224409315ec3718f78518ccf7f284f1ec8151ed27c0704"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard1of3/graph-pipeline-common-lme-s-shard1of3-a1-76b01fab/receipt.json",
+      "sha256_before": "afc9f8e9c5ac5d9d503c45fea5521569d145e04c2ed111bf16aa28620180e793",
+      "sha256_after": "3aa9411cab53bf0bbf4a7e71948e3740b289ac324779bbc8821d08a8481284ed"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard2of3/graph-pipeline-common-lme-s-shard2of3-a1-2bdca2ba/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "6ff161ba9c585533fa6e72c65244199c6963f8d296d74d68cc6621cbc6aaa326",
+      "sha256_after": "fc97d60c3ab029a717c8f523672ee12327233017a2adf738a5cf90604b3e4471"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard2of3/graph-pipeline-common-lme-s-shard2of3-a1-2bdca2ba/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "e2657ea322a54baa3509ab542b32b16d6d7288dec8aafdb074787af703d130f1",
+      "sha256_after": "cbd2e223f865f9b55e8bbc8ada117cbbed90f5723b5519d32a69529261f9684f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard2of3/graph-pipeline-common-lme-s-shard2of3-a1-2bdca2ba/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "5d6f8e7885066e97be5ccdcebdcab2b9f18eb6802ab881e75d9aeacb7273d40b",
+      "sha256_after": "7d518762476b10cd6536a0f3e2d2d3b38c61d89e9943d75e329fbc7dd0d05e3a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard2of3/graph-pipeline-common-lme-s-shard2of3-a1-2bdca2ba/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "525a0fb517dc7425c300aa4f94fa41ca0c0d7fd417e6b6884c84d301acf9e594",
+      "sha256_after": "f369d7f632dce22eb88842f06994c3154a563fb4499c990601938d632d637411"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard2of3/graph-pipeline-common-lme-s-shard2of3-a1-2bdca2ba/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "63da4bee0ee77235a137c55881a8348967711d79e86914236cd629d3efc27653",
+      "sha256_after": "65696dcd51dbfa4eb24f7d69f1b53ea93dae75d7d23810e2514513d4101d01c2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard2of3/graph-pipeline-common-lme-s-shard2of3-a1-2bdca2ba/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "84e3e33eb0f08a54f3927421cc2e4ea41ae1d3daa8465a96170964b9b1f41c7d",
+      "sha256_after": "f3f3f53a84b5d27fdb07d4657573e61eb1330554f04fbe2aaaad4c6d62483280"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard2of3/graph-pipeline-common-lme-s-shard2of3-a1-2bdca2ba/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "10731adf540698a0c3866011a7c51a37128d290922ce71ddb5d443e4debde10f",
+      "sha256_after": "a0c3f99a282253fe0f4eedb96216d12b4773b20c6f4d1f55ebdee7039bd4fa7b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard2of3/graph-pipeline-common-lme-s-shard2of3-a1-2bdca2ba/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "b615545af8d97334b304a075abc8d01fce1292fbb92e274114eb732726d7a4cf",
+      "sha256_after": "5ea6f417ef06425ac4107ab347b355f9b6db17f5220c2e1cc9de1e8f114756f2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-lme-s-shard2of3/graph-pipeline-common-lme-s-shard2of3-a1-2bdca2ba/receipt.json",
+      "sha256_before": "03ed17f6ffdd225b55f97ff2b96655ad1a82c294b357fc5698f04d29465d0513",
+      "sha256_after": "485af0fb5cbec24864bdd78e85c56f5af236ef6427f68f68d1ebe68386e01929"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r1/graph-pipeline-common-locomo-r1-a1-20780434/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "fcd133f9fad71f9db34c3c5dcdcd0ece8040eb904a158a7c579654225415c78d",
+      "sha256_after": "a3465d26674ae1fdab260aeeb86967cfbee3c80b4fb470a539a2a87c2b6f524d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r1/graph-pipeline-common-locomo-r1-a1-20780434/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "f55b48c76951cdcf477030842ff0abd7c9516b61c7d0311bab8f92fd586f67dd",
+      "sha256_after": "0457ad813c50d1dd5fda7c37a13258fe1e5316b091bbb1853b9f9386c489653e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r1/graph-pipeline-common-locomo-r1-a1-20780434/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "102300cdf6d92998876956c344cb84de6197da2d127585a963da2434dfff72b0",
+      "sha256_after": "87e1224af29c0cf281149b396c3ec3942a9cc35bbedebdd2780d8c1a109b3061"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r1/graph-pipeline-common-locomo-r1-a1-20780434/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "785d5a110a4cf0e54cceb0e376889ad20e77d3354f50b68faaf7bd73cec02e70",
+      "sha256_after": "d6278ff09c2fa8574f10705184d77305c041f5a4cd97eb758e999f67bf5eb297"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r1/graph-pipeline-common-locomo-r1-a1-20780434/receipt.json",
+      "sha256_before": "b17b908ee718beaac626caf0e6d4ded1795cdb67894fb7be9723c6bd43016084",
+      "sha256_after": "6af17554ef66f61ee03c54f8ee894cc70d2fed9a5e3683fbd1594d9ae6f31d24"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r2/graph-pipeline-common-locomo-r2-a1-3aa83ae3/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "0a294438400853acfed5d68fec8f646a7ba87a7152433955f612a4949c4d58a9",
+      "sha256_after": "f68057c8331b12326b863bc541445d509fe26c810cfa53bfa220fdaaef6a5d38"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r2/graph-pipeline-common-locomo-r2-a1-3aa83ae3/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "01e88b754bea81d937044e565b363b00a0eb530e2d5a896785c164b79f3ef620",
+      "sha256_after": "6a97c01c1edfabd3d80f189a5e4b20d49ba95131a8ee5c4296da61099f7dbbb6"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r2/graph-pipeline-common-locomo-r2-a1-3aa83ae3/receipt.json",
+      "sha256_before": "48dda98503482a7d402eae54120d63062d5ea8d96c285f5be17a845e79a98d58",
+      "sha256_after": "49c5044dc76467f37abc118816f4a296c363bd6ba5174268482152327defdd6c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r2/graph-pipeline-common-locomo-r2-a2-1295319b/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "a06869fcd103426ef00ab4c01eebcd5935e9902e19f81deaf0757f35e61e84ed",
+      "sha256_after": "2a5586dc9c6552355dfa7130ee72e27824427fbb2b210458f54f79a8378f6330"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r2/graph-pipeline-common-locomo-r2-a2-1295319b/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "bbe879dab39bc75e5ac67d1c6df870a504dd2ec99947948fb4fb40f0b95d671f",
+      "sha256_after": "5ef2b81b8ad2e0fde3fff9e7d251e8389b9fd81e00761b3372015385b4c4a5cf"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-locomo-r2/graph-pipeline-common-locomo-r2-a2-1295319b/receipt.json",
+      "sha256_before": "c8db7ed48160d83cde57452377703f5ae7f36916be5fd5ecae3d5b0b99771ef3",
+      "sha256_after": "ce9c5bb26e62184f43c8df1f3ddcbaea03126481a8548495746d80a7738a3334"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-common-pmb/graph-pipeline-common-pmb-a1-5df45023/pmb/receipt.json",
+      "sha256_before": "93a8ce70d30031a649ca6024cd7a34933487260c3b3f7d5abea31502df360e2c",
+      "sha256_after": "13dbed1b7e6efec6d7a1dc58eec190b3f388bec3abe0f81c70d965d73ac22206"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-beam-100k/graph-pipeline-recipe-beam-100k-a1-b67d8e5f/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "0bc0dd45ff9d7fc9258949dcd78012f6b9631ae9a7517d5d314b0ca1c0444087",
+      "sha256_after": "e24b86775dd9ed06c678127236ba52ef07b4e4c0a7fead91807edbbdc3307d78"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-beam-100k/graph-pipeline-recipe-beam-100k-a1-b67d8e5f/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "dc8af31fd5e58bc54ee4b9fe2b67855044ef6ee7caa5e1295dd8036efb38411f",
+      "sha256_after": "b380c56cf0d134d6d251d14f1b6662b42ee56cf3bccbd030780cb38f30958748"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-beam-100k/graph-pipeline-recipe-beam-100k-a1-b67d8e5f/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "4f5fe6952b1ab66ca7f71f488fd48f3e1f6b917ee02ec789f53208a26387db51",
+      "sha256_after": "6627909346640fe26135ee12c5a4fc44d2d680e7c3f8c43b0c1a18ff1b6f95f0"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-beam-100k/graph-pipeline-recipe-beam-100k-a1-b67d8e5f/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "d077fdd70b4bbc84c49026c65654539c77503dde4acdcb446beefc274ab48861",
+      "sha256_after": "4b813430157145a063f520b4daf88b6045495c7fcac8df80cb7cebf303c2e5f6"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-beam-100k/graph-pipeline-recipe-beam-100k-a1-b67d8e5f/receipt.json",
+      "sha256_before": "e8dd44b119a2485fb7521a124c143a823f070aa80a769916d749c04611e1af3d",
+      "sha256_after": "b3a0f4c42d5da9b8d82022153c8fbbc15f0e1bd08a1815a70c43e53dacf58cb4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r1/graph-pipeline-recipe-locomo-r1-a1-586baa70/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "6ba6b73af9f917466768e4c22a91f988449cf1d227075e4051331d413e5979fb",
+      "sha256_after": "aa97daafdff3fa6ec513951ba9b1e0eef80f88ba2dcd4d81aa8d5ac45fc1d2af"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r1/graph-pipeline-recipe-locomo-r1-a1-586baa70/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "180c3b36b2cc31af87358cd4c6687374eed7eab8549fc9bc5adc9e9e10f198a7",
+      "sha256_after": "7f1cde0dda6d73e5418a63d674ed19f07c19cdc3dc03779a635d520e065960fb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r1/graph-pipeline-recipe-locomo-r1-a1-586baa70/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "3943f4f215b0fd847ba0e40879b21347cb87637e6fce01387684f20df3ac8c7b",
+      "sha256_after": "c164ab1773240228cf34b6531f8be1958c58063c2b5b5a3024f7a3f2f6a94cf7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r1/graph-pipeline-recipe-locomo-r1-a1-586baa70/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "343327c6422b9a928db85958e023e74660806e45c828175bda23ee633c27f4a0",
+      "sha256_after": "0ca8ae70a56f3d50dd8162734fd7d3e3674c7c971653dcb3a2fc86005adea15f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r1/graph-pipeline-recipe-locomo-r1-a1-586baa70/receipt.json",
+      "sha256_before": "42241459156d6b648fa3bdd4b32fbdea7ad82c0e128e169c277a6711d04a0b98",
+      "sha256_after": "1ffc07526cb60c87ae28fa6bd6c663c15b03fe8c265a16c38ba3f29d59268bc2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r2/graph-pipeline-recipe-locomo-r2-a1-acf4475f/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "3bc1595d0e13dd9576a0051fe0dc2865b36d7a2168e4cab7e01229cba982b0a8",
+      "sha256_after": "362d68d7762450807fd0f2aaa79de88c2be708059275f309f2c5f29d02e34eee"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r2/graph-pipeline-recipe-locomo-r2-a1-acf4475f/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "3eee8d11c5368dcca42381e19ba349d3bb3e3ca289aafccfc58bbd6235ace9ba",
+      "sha256_after": "8ecaff5ee7eadeab52a90a2586a2ebd8580ce312265e78c023c64711b5d79d7b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r2/graph-pipeline-recipe-locomo-r2-a1-acf4475f/receipt.json",
+      "sha256_before": "a90a508b8afc86a3fbc18223c9874a00849c28c1342d347f9e0bb945f7f7113a",
+      "sha256_after": "9fefee608cec5dbec9a1aff820510e1fb03ec0ffdd91ebd4eb184e86ce3ce43d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r2/graph-pipeline-recipe-locomo-r2-a2-04920c35/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "663bfd931058c89a3dd6d8c2fb4c45336f795f84433e92cd1b11c2281600ea6b",
+      "sha256_after": "3770030621938e977d377560638db48415af014497068dd825a7090c5bd65888"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r2/graph-pipeline-recipe-locomo-r2-a2-04920c35/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "b481f13b7af97d21696c2ee3497367c143daad2b813ead18d34adbaa27713e14",
+      "sha256_after": "c4acb106a9806496088a3f749b7b50320b706dbf5a4b1592131122170ec7b081"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/graph-pipeline-recipe-locomo-r2/graph-pipeline-recipe-locomo-r2-a2-04920c35/receipt.json",
+      "sha256_before": "e62108ecd62edc84128f00c6613cd9cabbf2396a2474844a45e466e219e47a9e",
+      "sha256_after": "c4534457d06eef0f1b67d7cd4552af33a130533f43b8b1fb182bd2b97b817b53"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a1-b180b106/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "17dd0f4577b55064b42fc32a0de289d03c23e1856c2c2622ddc91190d6ad67b4",
+      "sha256_after": "1b89a42c6c99e560775037c56d1160aadb6c75306712e9dfc7207c8f634e10ab"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a1-b180b106/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "81de65c8230cea1b9ab74a961cad83a88b4a9eed626e18889f946eaaa42c78aa",
+      "sha256_after": "f0f708407a8db570cba70049d42b3cf45fa42d4f537698fa946e00ec721957cb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a1-b180b106/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "cbbbd225766950d45a827d5b16341ea69eb82fc26148a879f602afc4a32d24a9",
+      "sha256_after": "98a8e5caedf37ce1b97f8e9fea6320460178e791e808f4abd93feb430f03a76f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a1-b180b106/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "a74f577c6fa8e44a53b5edb06ed0608b10559f2e7996814decfb63258a3cfbe4",
+      "sha256_after": "456b1b74a8a37f3891f1d562ed8af45056d99c63fb38549a1bc146f878d0795b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a1-b180b106/receipt.json",
+      "sha256_before": "995918d498e4af14cabfe5da272c16ef5310558161cd5fde83504646bfe2feed",
+      "sha256_after": "a11ec9bca923d90cb09b45d919201f6e14212e04c909413bbffa5b35aae35723"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a2-bf2d30ca/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "3b016c1c2cb16d1b080db17295aa92e8ed616c41ae53807a804196e449d661b0",
+      "sha256_after": "5273b73d660545909e426d6f9ad52e5da3387c4d23a09e0150575ce0d82b48af"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a2-bf2d30ca/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "bd01803b63e75a95da1386da63bc018582ad76e0ed890812a56d15335b757138",
+      "sha256_after": "bac28311d8e8acac722b1bf56eaf0a1d95d0e938432c08f98cca03e6d653bbe5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a2-bf2d30ca/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "dacbba684bc1c53acd4baa83037fa2069b74dcb971ec215c19fb135ed9ac2f86",
+      "sha256_after": "340bc0bb4b6de1ba44954ae446e05f2ef3718acc50d29db6d78638062d7521c4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a2-bf2d30ca/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "5c776e80b076188de1ab16df9282048e19aceca0fa59e7232eff3bd502db65fe",
+      "sha256_after": "ea211f21f8d1bb16d89a6c7995601d772f8e5157e6a244352ee17217ce3ac078"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-beam-100k/markdown-notes-common-beam-100k-a2-bf2d30ca/receipt.json",
+      "sha256_before": "9aa9f6639c8b383be3cc420e72817fa6bad8a6df752f97954812ca8af42b5419",
+      "sha256_after": "852d05e27628d188fc1bcf403b31047933873a18203409ceb4942b4b3fb15163"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard0of2/markdown-notes-common-lme-s-shard0of2-a1-321b5c2f/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "b47c74809ce89b64780fe7cac4cd9d9e8e7d9108f35a01b73cf5ba39f53abe3a",
+      "sha256_after": "8b8f8d4d79476bc85907aa0ee01166cd0f6c13fb8a6043d829853bac27891449"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard0of2/markdown-notes-common-lme-s-shard0of2-a1-321b5c2f/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "e9380ceffe2e822cec89934c98f78cf95706c03d51fcf7ae385a0f00d6ed76c8",
+      "sha256_after": "56a07cda667c2842e8792b5f68d69457e109dc067a1ef7d18ebb9521354a6f98"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard0of2/markdown-notes-common-lme-s-shard0of2-a1-321b5c2f/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "e5a7e30bcac9ae5963a383a250a51057ed65cdbe5bd1d15112f537da57175c7e",
+      "sha256_after": "c2f39d008c21c7d573dde2815018883ded770b9745353bc5ca00023b0f7a9a4f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard0of2/markdown-notes-common-lme-s-shard0of2-a1-321b5c2f/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "05592bdd2ef59b338ce12fef658f041b827f3ea5c04db855f7071a78314ecdad",
+      "sha256_after": "7091aba6885d754ca155d5c3dda51ab9cb51ccb4bf5ad578ad0a974e7394d14a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard0of2/markdown-notes-common-lme-s-shard0of2-a1-321b5c2f/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "cd566da88de4c61c0ed498c907ba02c828882a0dbe396be90ff4498e27204cf5",
+      "sha256_after": "9de884fbd233b5081074a70a3eeda3b7b75f68a4edc366b382137a2dc689b418"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard0of2/markdown-notes-common-lme-s-shard0of2-a1-321b5c2f/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "2dc21566d5ed2fd7a76be9b32ec2669a3a1c8a604a0d8771304d235134d473b6",
+      "sha256_after": "c8de7236b8d4bec18b81ea793126abe91c126d8880426b9d645e368c528d5ff2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard0of2/markdown-notes-common-lme-s-shard0of2-a1-321b5c2f/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "a4df07fd0b512547f05cd751c67510fb1988ff2de41390c46cd5e1c31451699a",
+      "sha256_after": "50a5148f53a9ff62e05afa2234e1afd83b01bc0460d96d8a8f55a4f5113f2b8a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard0of2/markdown-notes-common-lme-s-shard0of2-a1-321b5c2f/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "79f1e0c335738919bb869a53c63f6c91ce66bc29832874e8dfa276666ca9829c",
+      "sha256_after": "a08c13f9e2f081ddc469c080e49a7d642841c6101a92502704a99e804ed99612"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard0of2/markdown-notes-common-lme-s-shard0of2-a1-321b5c2f/receipt.json",
+      "sha256_before": "16f62f68fd1ad1dce0060fa41ec5211808898301fb258cdc8c8e5ae6b6263c6a",
+      "sha256_after": "9918c14494507d4442f88bab457bcfb5cd06e7153c3f2a773b548bb73d93bdef"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard1of2/markdown-notes-common-lme-s-shard1of2-a1-da8c6507/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "c7e267d9013526add824535f5ee0448703b5db43b5bae947c50f5be42d7c27be",
+      "sha256_after": "888fc7acc4ddfdaf3acd67922be4e459de78fb16c8347e510c1eb5cbe7e7e88d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard1of2/markdown-notes-common-lme-s-shard1of2-a1-da8c6507/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "4105e486fe41b834ddb40bfc5d9ef86be18d6e01237344df75cf59101c04410d",
+      "sha256_after": "c9dd0c218d2d258c8c1e44d05617eca29ce37409c29b7ae70aac278f14156373"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard1of2/markdown-notes-common-lme-s-shard1of2-a1-da8c6507/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "bc7e5f8829aad45e51c299b7f0ae74727328dfa8319a8814edaaa049a5b7e006",
+      "sha256_after": "73cc611d8b751eacbaccf57b9ae9b55d5633a6def7e52cceb80436c3fd404618"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard1of2/markdown-notes-common-lme-s-shard1of2-a1-da8c6507/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "9ef60c536e7427d947a98edf3aafcd570b6026a361f33d60a256157e86a1386f",
+      "sha256_after": "8d874cd7fdd847187e7d2cf6eb47e60f5aa7b758b14d9fde16c9ce5bb3a429a5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard1of2/markdown-notes-common-lme-s-shard1of2-a1-da8c6507/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "6c75a60321fdb33b310d6710519b5c2f8c25ef58905ed194eb62e45946e5c24d",
+      "sha256_after": "f103baa7e635776ef082fbd141ed25e47795c0e5ff9d82ab1d0f22d51f63bdae"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard1of2/markdown-notes-common-lme-s-shard1of2-a1-da8c6507/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "4dbb5eaf80b3e68c73d32981fa98bc8e16062b03dc1972c059fbea38e703acf4",
+      "sha256_after": "75315a5f2e02aab7ba10452dd306d318d0a3185631adc7429e78cafaad8551ae"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard1of2/markdown-notes-common-lme-s-shard1of2-a1-da8c6507/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "e59de90a2067080c5defd9b953b053d0973c86dd9cb6ebb7bf8704211ae57b70",
+      "sha256_after": "0c748b1f038175e67851cbff527080481c2de92b59794d55c0de48f1149bd697"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard1of2/markdown-notes-common-lme-s-shard1of2-a1-da8c6507/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "31e2ed87c21c40d756efedd24864ddb151ec8a432b530baef9c3f51b4a7a6e26",
+      "sha256_after": "e730be5f51093a9d88fc01a61ab2b815c3607391910674ae41b57dd6b78c5c53"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-lme-s-shard1of2/markdown-notes-common-lme-s-shard1of2-a1-da8c6507/receipt.json",
+      "sha256_before": "200d3eeaf0d8ed1e4b3568e0bf4c5713029a480b283da531d4d089820ecd510b",
+      "sha256_after": "681eb7e09c44e2a138e819d96c23ddb1a4fbcea50c3ace924a255e6d29b63536"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-locomo-r1/markdown-notes-common-locomo-r1-a1-ad985fda/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "1c1c7d67f2500d25e02f1e427fec0475d149c8a0342d722f51fd506916b7db82",
+      "sha256_after": "cb2680f2b5369a7f6e3a213425138a3b0a7232533b12c04312b509aee0b34942"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-locomo-r1/markdown-notes-common-locomo-r1-a1-ad985fda/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "68c459edf7fb7edeb48bc5661627fb1e273b58cd0e6b5c861f2cd1fb3b0f97e1",
+      "sha256_after": "15393f63e664583b9a96562b22d6433928403d5a4c18f133b503e8159e632f13"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-locomo-r1/markdown-notes-common-locomo-r1-a1-ad985fda/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "a500e735ea64cb4e7f3bd41dd5ac01dfa49be4748540d1dbd6ba88e00d76119b",
+      "sha256_after": "fe0a43342eabfa6709e2bb787dc2cd9e20f360936a97a068b1d8598e6d8dd4bd"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-locomo-r1/markdown-notes-common-locomo-r1-a1-ad985fda/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "f1359b14302b06211a62a98cf2b85a6d07f4dcca4f361f64b38896c662948463",
+      "sha256_after": "6e7ede688419f2341c2075f6d69e4e7638bf9609264c76ad7d89fa2a421f9fb3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-locomo-r1/markdown-notes-common-locomo-r1-a1-ad985fda/receipt.json",
+      "sha256_before": "ef971039852dc2da2f62eb755d0e03a4d9540510e8bb860083c275fe1856ab6d",
+      "sha256_after": "6822b7f3669e19273f2df2c09ef9f0cce95d9283366fdbceaeef08c0161c43bf"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-locomo-r2/markdown-notes-common-locomo-r2-a1-6921a487/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "02765f268d70ac16c3e2a46778481cf03e3f4cee0c96d97669c9375f49f30475",
+      "sha256_after": "6323cddfba7c74780146918b21646097c3caf98ce2685e773228423bc0b647aa"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-locomo-r2/markdown-notes-common-locomo-r2-a1-6921a487/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "654f0b65ec777aa0cee565d5f3030df3fa90ff58d80507359f4e874f85ce5b47",
+      "sha256_after": "0d37200af0544b78f0e6635d4f7db350bb624121739eec7e9fbb66fe78c7d58d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-locomo-r2/markdown-notes-common-locomo-r2-a1-6921a487/receipt.json",
+      "sha256_before": "935fdb9d67293adb98ff5f2e7fe883f71d7a2b06abaa93b36c81b569e59d864d",
+      "sha256_after": "efc5e3e1a0ae2a06a310bd802e0a29785be358ef0994c954a2a7a5f7388af26e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-common-pmb/markdown-notes-common-pmb-a1-c76688fe/pmb/receipt.json",
+      "sha256_before": "7f04ddb3597a2ca41c2b56c3437ce0df8c0e9849b0f893f0654cc2a7655329ad",
+      "sha256_after": "8e97a6558f9b95619ea889644b3ae0c6b644a3b6554b50626c67aa5c3009e190"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-beam-100k/markdown-notes-recipe-beam-100k-a1-2e62696e/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "71c565c425dc00c2e97c5f8758753b9753bd95b94b6402778fd315f985600493",
+      "sha256_after": "0953e674ddb6042c38ed5c6676b8db54ec0aabfb3b56495a344ba707f8e785a3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-beam-100k/markdown-notes-recipe-beam-100k-a1-2e62696e/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "8e997677f94bd45991bdddb00a627a96e71bf140efb62711fd3cccfcfa95decf",
+      "sha256_after": "e3ce974e40ea9c7dcd12d5961e14b3db69bb38bc45fc1eff88efcfd173d8ee16"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-beam-100k/markdown-notes-recipe-beam-100k-a1-2e62696e/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "4f9a082439e3fbf2572b73ed22e0d380af594dc2167fdeec1005c88e44d3481b",
+      "sha256_after": "a53121abe224d9d483fd242635fbe4100e89995eb545d82fc224e91e7804b6fb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-beam-100k/markdown-notes-recipe-beam-100k-a1-2e62696e/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "806b726a403b737796f552a9523be5d439f98db06a4759af6b6779606f718848",
+      "sha256_after": "735fa76265e7e969a9e35ef0c27389fc101cb446a9c915ba449e57f6287f86d2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-beam-100k/markdown-notes-recipe-beam-100k-a1-2e62696e/receipt.json",
+      "sha256_before": "3f5457b244eea21d2de1030489b88119ac972192f6f36c11cffe651b65a36d2a",
+      "sha256_after": "e5e8684573bed411a4fcf5dde08c3ffbd7975ec7ed3964110cce898ce6cb4408"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-locomo-r1/markdown-notes-recipe-locomo-r1-a1-b21ae592/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "4831a58d22764ce11f560e5b894c65236ef27f4a43404104c6e282264dd4c951",
+      "sha256_after": "b93dbdeac4b9f26ec2ccdf10006ea673fe5342036802391e1889fd21de4ba447"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-locomo-r1/markdown-notes-recipe-locomo-r1-a1-b21ae592/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "2de5c9750d90bae583433426a4c636c21bbe5889c9d098a775a019b12e687415",
+      "sha256_after": "5b3a4ed8c1af5c69abe8e72d6c0e46c4d8ac77e32683709e1df5eece91c44613"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-locomo-r1/markdown-notes-recipe-locomo-r1-a1-b21ae592/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "3aa84836d59cc7354a309835922c343116f30c2ad226164b056b7782923b9bf5",
+      "sha256_after": "a51e231fa003b76b9e426efe3457675e85bd455da1bf92e5f6d8b7ff70b940cd"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-locomo-r1/markdown-notes-recipe-locomo-r1-a1-b21ae592/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "77d70c95bf3aca594584b5dbe89972237ad79f3a66086c8c28df588a0d30b9fe",
+      "sha256_after": "38b78fc0f89680a1188804c124ea192ed2def1fcbab3747e1d59403b29ea7fae"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-locomo-r1/markdown-notes-recipe-locomo-r1-a1-b21ae592/receipt.json",
+      "sha256_before": "df7c5938641008c403fa87b50d2042aa6fcee5acaae054fbfd294218b8b88c1f",
+      "sha256_after": "36b5a9ba4c322333d42fef007443d1b1a0fb946ef4d42372c8b04cf4cfbf7e76"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-locomo-r2/markdown-notes-recipe-locomo-r2-a1-1cedcd53/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "5ee2dcedb597dfa4e8a9d22e32c78ad8733ba6ebc91f4cfaf33c32296e389734",
+      "sha256_after": "33c308d1e974d03f71db6b5b6a8c40fc4ae7ae4cd0e64a69425f02132d027c22"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-locomo-r2/markdown-notes-recipe-locomo-r2-a1-1cedcd53/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "c056300079c1dfeeffbe80d5f303f3f6c9e093d5aba0503137b9a8859353b986",
+      "sha256_after": "b460e5e5e656a34d7588d3e09e77fc643770ac48535130e4a25b8d93dfe260a6"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/markdown-notes-recipe-locomo-r2/markdown-notes-recipe-locomo-r2-a1-1cedcd53/receipt.json",
+      "sha256_before": "295fef0f04b75eff6da4f43ef6a9867824aef5a385f6baff208fc5ee4d12f78d",
+      "sha256_after": "4481e8726d33bc30ae0a0961e6a2d241db85bc50de8f1e2caf7be9b415446dfa"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-beam-100k/memory-bank-common-beam-100k-a1-79d50738/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "06fb92735ddaee14d0cb1121c79d3e8a58dc2010a7584272e1a4105bd95fed2b",
+      "sha256_after": "374d547c8d3cdfdd3ca81f5c819d66469e0ead63d2bca6db73ed9cca4d21717f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-beam-100k/memory-bank-common-beam-100k-a1-79d50738/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "4f247d9d3b4eeea77d1ebd83fbf562c784db87fa2464a0176fb997c520a6292c",
+      "sha256_after": "65e44e3fdce9473018dffb1fcbfdf641477cd5a3cdff0461a286563ee03e3d0a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-beam-100k/memory-bank-common-beam-100k-a1-79d50738/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "7278afc2010fccb776f9ee8f1b25958a74a82270dcbdf12731d552a68fb952b7",
+      "sha256_after": "fae682d907ec7246b074b01ff3854b3673514c4f2a49d6afa243c4445b63579c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-beam-100k/memory-bank-common-beam-100k-a1-79d50738/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "d7e66ab2288419dfdbd1aca3652b2a22074403207bd3137c921d9655d4af970d",
+      "sha256_after": "42a147cbf5c60f3d2e6836fad77c20e67e0f1b1eed9ee10f2ac5c485e1b9a239"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-beam-100k/memory-bank-common-beam-100k-a1-79d50738/receipt.json",
+      "sha256_before": "408a3de1baacb999a90b7470aa61ea3e21eb5ed6a4734688fbbe62f762d3711f",
+      "sha256_after": "de04d73b6251d13d3c9f00a5dc3b6c00d797ea03f7dffe7cba3693e963269ad4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-0/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "96399db8b168c8deb8ec57d0f8f5e98c1d50acaadb3a4b7bab1b6a15ac95c559",
+      "sha256_after": "715aead9f51f6e5be68d4910fbb5e3918753b37abaf8f195343d6ebaf4a73661"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-0/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "9cc723f49aea1b6d6688110c785052b21a5c409269bc0389ed9ae347375c397b",
+      "sha256_after": "04035616b3df68a4bb14c70e1a1d2b9ea40912b208fa9e8233c197218c6d9c14"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-0/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "28f72a50547c8a01b72bdd89862315aa42911797f09019b31e8167b431b596d7",
+      "sha256_after": "f3990e1fa51e5004cbe3d2003946e16a02826250bf59444608ee8ad25884e2ad"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-0/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "d6f57a7c619f356fbc87a97bb65c573181981dada62c6c63bba6042698d97fb1",
+      "sha256_after": "046e78e6293c69bf0f9697c90f0db3d31e02e5d2576a8c41b7505dfe90a52784"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-0/receipt.json",
+      "sha256_before": "720fdf7a2ae06926974500c3ba889ba102db450eaae6d21462a37c9eda82e7bf",
+      "sha256_after": "0a0b4907e5791aebca92c7e7b4af645f5203eedb18e8e6998d0dad29aad01c88"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-1/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "c4187a4552456effb5902d1e81086ab51962646f621ad38fa948b42cc644a81a",
+      "sha256_after": "055113662501804b8389edd15b6e3d8de19d1e4f44cb51baa3654feaa07156be"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-1/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "83e6cb9a98f67299d77540d64da4ddd14065533914f5ddf373ad2dafa047159f",
+      "sha256_after": "a73dba7db1ed6bf931c457449c04e2513769bda675e84b4f3385337e924cfd4a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-1/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "a60728ae43d90584c5fd3b667f7f6f5cd02e194347de0232b149714b6acbe1c8",
+      "sha256_after": "e6d4156a1ef2c28b575b85e4ed89a52af8b18274d13248e07a0ffd31713f4630"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-1/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "d888428b90315075495afa4c86a63a3f0975af72581f5d8440bd1e0e772cee2d",
+      "sha256_after": "f84cc32c21adef02e9a37e2fb91ea265348ff8b2efb95887c9abe5aa300f6109"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-1/receipt.json",
+      "sha256_before": "e21e9097cff364fdf23002a3063b260158d514635127c71815a81e8f8bc5101e",
+      "sha256_after": "4610c1353393b7e1e7f535147400754d4ab1c9c3379c0f0c92ce9867b936ceba"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-2/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "36b95e01214710afa0a0ee587504166ad10b0db8ab0b23d991db1324fdae900b",
+      "sha256_after": "7b42654f9dfe41175a5863596067de7c1ad09d75b7e54e82d73f265a7a143e89"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-2/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "94219b2671dea6eb63e7c758591e01f41211614184c6357c8050db131fb21f00",
+      "sha256_after": "24200b39bff4b42e4ca04bd4a10191011b9b7452c142ae95a7e70f4da4b3cacb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-2/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "73b2f920ee1f3ac440346aa1b8d916a7c09f2f361f1eaf4cced3b2e552961cc7",
+      "sha256_after": "f2d42fb71c5ff5d2c64366d1c8a9b241c40cc09602d58f1b128737c17f235f39"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-2/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "da08740361415e072773c93902faa4c0b8b955c1a819fb23a85d0eeb4f5f8111",
+      "sha256_after": "6037b548840a127d4fdad45aa71d91c4c098bb698869742246059e8776be9957"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-2/receipt.json",
+      "sha256_before": "39147323c49133263e621091d12b506b23386970a9e12008455e5e1acbe5c46a",
+      "sha256_after": "95c59e3126cf6aca49451bc54c363b5c0336a56cdf5c8b24426ca5fe0834512d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-3/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "7e33cb6e75f3f1032ecd1605857a5d2bec2cac820dae592aea36c2ab0f5602e9",
+      "sha256_after": "fb891feae60dc030f7d8f87a085633874960b00ec0ee3dc91541f62fa8dd0fb4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-3/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "1ac7e70e8b132eeef8f566de577b56029eb76b65dd7d65c30052731c83c6fca9",
+      "sha256_after": "ab01dfe85fac93bc122f66258be03b6ca799a677c63728c4e82b79635f28c6c4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-3/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "bcb7c206ff8b89e6d0de16b9a9f52c27fbfd53bf4eee621f53e01b1a99738fe8",
+      "sha256_after": "8431332e403ff14270b5891602f80ad9fd5372540be5d63efa757be23d03a7fa"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-3/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "956056feef6abf81d300ad9b5065bdf28a0b78e31fa8150a82bc631822676ea1",
+      "sha256_after": "7b19caadd7ebd25148d17ea66ac57f20c897eabfe6a53c8ee67c92cd65d61195"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-3/receipt.json",
+      "sha256_before": "d3d20a0e8ca59093bc91fdfe17ee6820a72a986391cd6f31ab887a1f01c8316b",
+      "sha256_after": "6a9c9991a37b7df4da11fc1c4aa7f628de26ca0ebd7ba607fd4b169ce26dc2c0"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-4/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "44f4aee0c10541c73bc862bbb67635170f602235a3061cd31b10fc1497c5291a",
+      "sha256_after": "6f8079266b972a773f7be3ccff39af1503bf48adab00f6e1a1cdba7c05e46d8e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-4/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "867903322f1b2822e703470710849f232767fffda9ca30ccf4c73e0396d84d35",
+      "sha256_after": "8b30bcad3e8f1ea7e8adaed1ffd6a594959e4aa52cc98b7a03171383aa540135"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-4/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "371c63866de9fee6cb7d8ce3c645fd7520fe2913bf496e5090b0e1d607f16004",
+      "sha256_after": "86ee112215a6988c550252f7852828b151e5d3ec38eae5f5b30dc94538307f18"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-4/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "114bde39c7b3c29d7905104ad54636b8fc1a50746ee93e2ea064157899bece7a",
+      "sha256_after": "9dfaf1b84ac48c9e370a73509201a60c5e05c8d4e3c86566c7e0fa1027f824f5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-4/receipt.json",
+      "sha256_before": "eaa12ede10d1f8e4b37b2785fe6d68e0f46fc18097650796508a6b425b94f071",
+      "sha256_after": "360ce217fab85de6f5fe8059136458cc641db79ece493d5560c20429f7fb8b71"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-5/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "8c2895f04e1e74206bb32b378c4dc3a5710c6a3acb5cfa10ce716de0dbe150fd",
+      "sha256_after": "6a3c91aac26fe1fd86bc300f2112e3f128a0a3cbf68646beaae40d7b79c64a44"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-5/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "dc2e1121add0d4591d6107b9bc08312e119cc5dbad1f7f634b8beb47b41c1a65",
+      "sha256_after": "34b96141a3fa3d064ea70aa3629665fda765e4953400330da7c38b4a3484089c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-5/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "45c92b76db4a5e01bda0950e8d9b489aa0d9b7f051b5212177bc6dbf8a953440",
+      "sha256_after": "88c9dbed5efd0a9bed1209701bf834566f2b899ef23fc5f71c9ebc3be2685821"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-5/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "2d82e6d8a70c9299ac0cca9e9e6d20fff4929eed615b8a91dbe9794320af2e18",
+      "sha256_after": "2abc4e224081837caf94b9a941d5b72debb609224426551bf6e5f42331ac63ad"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-5/receipt.json",
+      "sha256_before": "bb148eb500a194f0ac50ed87265d2280992a41f284ce448fc40eaece66825a9f",
+      "sha256_after": "cc5edbd566145c5ce7e67c481a7c6d176fcaf4aae2797eaf5c68327770947ce0"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-6/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "60556ee11d68f7897002ffbc100a6d95954113bbbe20ef6eef29d9c35d41610d",
+      "sha256_after": "20b7ac60ab10c1c69af22edcaadf7f0d2e3b96b53cd50a4c1ad4a497edb021a8"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-6/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "d7ea645da0602683aa99fff9528bd527b9a3ae1e71af5c796a302ddf860eab82",
+      "sha256_after": "bf405991453bd8b2baf9145b1f5c3ea12a9e8ffadad315857f3a7b483903876d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-6/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "9d6a3e356980f04fc4d4fcc2ade924bf35ad9ecd8c43d5916ab87d4654396069",
+      "sha256_after": "d5a83c2ff359925dad8601d4b4d8dddfdf167e037b8fadc04038eddbe20d03f4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-6/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "e09c2548543d949ba83222b305fb2794faf9fa42fe9d56198408d5f08b5d2920",
+      "sha256_after": "508ec04b19a12e4ed5fb3b1a1a4370d8c96f57345b41c068426e948b8d300e2c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-6/receipt.json",
+      "sha256_before": "3c7bac222456880b913cc5299f35a64d847647cc130819130939b949a18454c9",
+      "sha256_after": "2910747831f6d85e3fd8ec5ca660a406b8dabcfe44f0f408d759c2f467030738"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-7/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "d01edf309b3cd0579356f5eb1a8f13164ce2a31ca52ba38f477a4d974af45bae",
+      "sha256_after": "ff9eb2a737fe8c01b9e93666b5d9405184a53393b1c553568ccb682761cde2e7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-7/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "36f08c04cb9c34017fdb0cf6ec51f05eefcf3583d03ebf21f199cac6c50e0455",
+      "sha256_after": "a74a02c2d97cfd5c435f7483ac65b72ab37073be15687c308fdbaaf632867398"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-7/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "450ea664b5702f423132b3ba8e7ddfa45a43322c0cf50cd567c5c9b5c1d42660",
+      "sha256_after": "532b4bc9022fbb34f502f2c8915bbd62945aa1e0356065d7b559f6dc874ed3e4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-7/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "fcef324482c7a1d4088094752bb2ce9d70a65830e79589c5628d76795e2609ed",
+      "sha256_after": "e4f9991eca57da2e5f9dd6ecbf5d16e001989d3ef431503a3c4cb528af7b56bd"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a2-18ab0d18/shard-7/receipt.json",
+      "sha256_before": "3f70eff0e6d7ffefb3f774db972d779f2e721d31df9b7b00280183c1e85a6d0a",
+      "sha256_after": "50b0f45625c109370ba031193aac7166d5c81d980e6f8e00a7ce0c6d6dd4004b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-0/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "3aa35953a9e5fe89e95000eec1dead0763057870282c030026653a79e2ffaea5",
+      "sha256_after": "7992a9e585e77c5dd3a46b23f9dd635fc0c5928b7ef55145c2df3acb17aef6a9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-0/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "73066b16e58b11f59d010185737e3980fd4b081f4ae12af1549eab83c0127649",
+      "sha256_after": "e32f6339116c121fa1820d01aef88d9e8cb2010fead72b94fc2a32aedcc6831f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-0/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "0b8a3522cbd252b622cb8f2d7b7388d704d1dae3f9120cca3a280ba15323f3e6",
+      "sha256_after": "182b7b722e7a75b8f68c18b46bea7da6cee6ee7a4312e20d9e61dd13309cfdf7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-0/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "e415b6104867f2cb8a62545dabb9cff58643ab214bee410226be5ac1340f8782",
+      "sha256_after": "d8606afd4a4b3e9185ac1b3538e5856db1d532ca6257d266f954f78703530d05"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-0/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "bb3d7ee5ccf84be6c760e1bd75a9fa48611fa024270a5619f915b8e6e6495a62",
+      "sha256_after": "5bf688f22237c3e64f58677de39779b282452cccdb3d8b9d2f49cc6f8341dae2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-0/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "b34396d6d88e9d69e94db0a1efee26a28fd9027ce7d35fee24a63e61dd2fddbc",
+      "sha256_after": "259931f21438a22f83b628c8e5b1d8c4fcbf24fb67ee228086c807e199ebbbaa"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-0/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "57b5ca982ade0334154fae46d289093b7253c995c59f1df0e01fd93e20891963",
+      "sha256_after": "bde267ab41ae0b8a146ad73660312b6f85d46f634b5fe01b1d5bd9482b6e79e8"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-0/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "63b9bdbba0cc525b872be97c9897053c77a00844f1b3f198b0bba0ea0eda0c5f",
+      "sha256_after": "4119985d6a55febf49ec38de4b3e59d04123e416f9b7467f90d442e08c42e0ff"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-0/receipt.json",
+      "sha256_before": "b7d3888eb43f83f0c4c4a821a57b64c47eda7e92fa94cb6cb9fa6cdddfd1b1b4",
+      "sha256_after": "6675b88cc2434d23af343794458a60c67bd1e2e4de619648c88a217b9c39bb70"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-1/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "397ff264b7ef6e506d89aadd88bbd5247b27a3b207b9a45747b91cc236cf9606",
+      "sha256_after": "817c830024baab9f49a6d88f3f8bca754428cfcb8ac209a861bcec694aeb5269"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-1/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "7c241d45811f9f9e8b4b4b6f4882ee7723312d2db817728dc1bd415f48422ac3",
+      "sha256_after": "946a6c8b5c84c34c5f0b9601bce70b1dd230bd71addbc24f52eac8444bca2508"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-1/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "c58dcf68695122c7d51cd72702d92aed6224d9d4601184ec2cf7bdf1d88abaf2",
+      "sha256_after": "f01b9fa3124acecc6fe2895ec1cda5eca572a96f34ba934bc7cfb999133dcae1"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-1/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "c0c1739029107eb57cadb092dfddd16940c426d6e4495bba715601a2b6b6da40",
+      "sha256_after": "7733469684e2835ab1646beec1301e547de2e916f9540fbab3b1e17532e9fb18"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-1/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "3656cb7478d68e6c8b47eada421c1805b11b00d2f5386634ddd4ea23a4e39879",
+      "sha256_after": "6bc9cf17f601190684bff2452695f835a1fd24bdd8cc942d476bbe57d6564d32"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-1/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "ccb1afc244badcb42620cdd04d37b4da7c0b38c6344c55448bd89bfbae877fa0",
+      "sha256_after": "e4e30a705f4125fc4de2bd6f85d4a8642b13356d85020e840f9b1d11254ab3f8"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-1/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "71def778c0086f2c6eab6cc98d3f198af0cfe83ed65ba275acbb5cbc79a36066",
+      "sha256_after": "a16b20e0d7f07c55a95b374e30317ae89879cfda71f80487b06699cd374058b1"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-1/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "67ea63ce66a5cc91067af885af6c78b4cfee55a93df7ecfa846c6e170868e57b",
+      "sha256_after": "19b4351586a1176c5cde80f74b6a6914c4256e9db6e9ae06f7e399b8690d4661"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-1/receipt.json",
+      "sha256_before": "57b13d60b5a62794be7ab14ea321aefdb256b5e229141f596f755faf8c7fd6f2",
+      "sha256_after": "71d98e227ed09039d5a0d46e3986dee68c885d1cba159f887a3ff31ac02f9e7c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-2/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "0738850bd9c780488b22d0092c1edc39aa63236d1b68322e6114594fe01ca031",
+      "sha256_after": "c1e129c48e9bf75d952242fcad9484f54fdfe60c3f46768ef19adf270b3dad60"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-2/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "11fc35216a2a9a0ee8667d02e427188962e3141c4b9ba1b5dd395ec1eaba1cab",
+      "sha256_after": "5e1a5a1a985d54a35145506a720e7bb56e46ee8f0445fb0ec53fcd806f187c55"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-2/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "83e84e023687c965f189528ac00bd97a2cd1ede988b6eddbd414e634d2cd21a4",
+      "sha256_after": "20538e160f35297f1fd1fad2a8b7b5cddd8552cc4f554ad4e62b3e6a1d636938"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-2/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "851143b0ca72923b3638309cdf7b6ef1513b4fa4916b3f604b34a06dd066a242",
+      "sha256_after": "f64b6eb973a14328748803610e82f8cc2f722dde026470598fc8f619814f37ea"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-2/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "ec82eef7b5e1f6a81ef1efdbfeb77ba5a04343a26f4af025ef41410f9ae99c38",
+      "sha256_after": "1fe07c8b44b45fe5c09486ed4c818675a81e75da580db35b151c88753f70e271"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-2/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "6fe9169624c7cc707eebd73dca0c4d33097cf9045fd51bfaef71198241039cc6",
+      "sha256_after": "3214a565658ce973c5299e8d9cfd31786582130781a4d8625a805c07abc206b5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-2/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "daa01fe546aa5b27f7e650363c1a9051fec3fa4f9d07bb7b75290f995a097fc2",
+      "sha256_after": "d032bbefbac8319733c42aba46508a2e160b5e349370ab2e961a0748bb89b9a6"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-2/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "595b55377a5c1246736010f033d99f4a69742548b26c82f34135c295d887ed70",
+      "sha256_after": "61cb35728b67b02df5cdccbbe4027cefea0984c1283e824be9267f7a49d5e8e2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-2/receipt.json",
+      "sha256_before": "4719517bab816e3db42201a4a22e99a58c225022543e6aef3d77123565f75c57",
+      "sha256_after": "e3d5eef3b2885323e489de047fc9f173278814d90fe67f6583575278b621ad1b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-3/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "bfd3d4b11035ebec83e3f3aa723ae10c97ca3279fdd753a1e339962595b7f1ec",
+      "sha256_after": "8bdb438edb7cec350a93e0eefad1c6a72576c53e445c3fe2c5a421d000794a95"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-3/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "9bc415e3e7eeffd7be8ddcecad97424431c27633e02e9414bee58427d7192cb3",
+      "sha256_after": "0552b79daf8c9cc70d03f01ab164072b4ed34298e2a50ffc037eeecb431678fe"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-3/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "9d9e256b60b7bcb184a0c52c64bfe73f374f719f9472d6e8c4945b879410cb55",
+      "sha256_after": "80e96a368be05b5aad8187d861dff841191b9433ebd7b2efda9dc65a525fb434"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-3/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "f1d6bcb84f2e7174d7af1e0ec745417206af56d9d914ffeaf4eed4fd8c6cdf3d",
+      "sha256_after": "76136acc8b904ffdb880a349b7a5472b13b09a5a82aee8dc6f7011d5c387f039"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-3/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "e9038a6a24daa0dedda4a6be9d5f15c64286b605bcabe2442f393b74425399eb",
+      "sha256_after": "dd6ff3e635a6ad3251d4289b2e2633ffe0083351d7f8fe9cd0ee4b004fc075da"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-3/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "3eb267d534fbaf631a18c26428edde870b0470e8223a4bcab53ad03e89560f45",
+      "sha256_after": "d7e7350b43d46b55661815d8eb59c22139e9f63a2b55e8a3a140ea6b2548fa89"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-3/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "0032a0aeb4ef05812d04a6e5afca6be14f73fa8b18026ff8fbdb7bd5284581e3",
+      "sha256_after": "28e166c1e25b40445d4d3619ddc8e4b86b73e11ad3ac283533b766201d0ff3c9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-3/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "98dd57e5fa9b2bd930ffa381291683754e94b2ef925ee01469fc0db4ef6c0b20",
+      "sha256_after": "db44031910819210100018e3a470118a809426dd6735b680cce243edc0e26d6f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-3/receipt.json",
+      "sha256_before": "c8b81d0a499e8b6fbc48b89b8a6df9a202cf725da60ced4c3cdf8e437d274cba",
+      "sha256_after": "fde4f1a68090e4a66156acb274a018e49d6663a0c860cdd685491ccc73759d80"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-4/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "b51577fd2cd40de06d2930ac7edbabf11dbf48ae8a12d3e5771afd89c32d39db",
+      "sha256_after": "8bb98851e55ac74bc01a1e6b40d6b0cf2dcd5d01457b52fe0317e3725345084f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-4/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "50819e107af59e83bf47e70bca9a1bcadb2f395bbe3b87dc524046c530251e86",
+      "sha256_after": "c0ea1d1711fbb60e111afe8b47f82eb269357e7f329b7ae57bdef215f8910645"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-4/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "2cbbdbdca182fb79c0af3de784c34311d6ba530ace8fd58f4e2564be532c0547",
+      "sha256_after": "ae3e53f7c2caa970f2d9650c84a471d60db2ca9557b906e6286c0132569ec310"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-4/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "c32eb654056a8eae188decd23d19061ccc7730b861276a19c940469671ef8e9e",
+      "sha256_after": "43c80f8a0571871c3c9e20b1ad4ffea91317e226f3e41c35d6bd2f56ae178bf0"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-4/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "0edd036b20906af6663b4c71669d8014ea41f6ce15cdb2d1ff50643f5fd2e9a1",
+      "sha256_after": "a80bccaff697a17c759bf7e2785e91f7414ab16ce8ffee3e367ad5bc0d91c288"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-4/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "5c5f6576bf79ee9722f77c1ab8b3455e28f3fb4f04dab487828bb8a60aa21c50",
+      "sha256_after": "96b71533db6ae9481561bb686da7c688697c48d9ed4cbef17ab9206f4fbfdc36"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-4/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "1a1265aef059aae054f45ff597d7cd52ec3ef022d32ef197fc06c30a522de2d2",
+      "sha256_after": "cdd923b439df6f197f336c3bd48aedadbbb8f865947c4f8b78bf4055172f07ce"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-4/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "5804c5bd1c20c6c157629688601f91ee4ae669870d50d53c26e116b6bda8fef2",
+      "sha256_after": "dbc9d0dade4632821e3b59277a2600d54415d9d8a28ae130602ab3f25fc8c84a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-4/receipt.json",
+      "sha256_before": "c0cb07cb51ffb58d8196f29f25c8c89aca2898f679b48324d1872dcc9e88e91a",
+      "sha256_after": "6e2a39f491b1b9c928aca30138f99eabe0e74b7b28cba2272cdcf3214f3965b1"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-5/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "fc55e5ca292fb803be367093db755e5d4308c4d41bdc2a8458fc80d0bd734b24",
+      "sha256_after": "77e7dcfece4e42c1f608f43e3313e2798cfff4652c47dff3e3efbf165aa24986"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-5/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "f43676a271c805c08c9cd4d61f248003ba2314db6be3663ebbe2dbaa836ff7a5",
+      "sha256_after": "7ac6cb568be77e87fe3d905610ee8e07ca1feea648d942a9d0ab78bf2bf1e340"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-5/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "eb0957ae2a87df7685985b0080b9212e55aeae8bd1ae8679df8e02df0e8c33a7",
+      "sha256_after": "f909bde113df3dda694db490595a6de8e8b8263b910cd9dbed68346916d55b34"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-5/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "d067d3861572fc134f60d60363ac4af82893efe77b11b8a9508a3b0cba17a631",
+      "sha256_after": "7a42bb8dbe339476bf027974c77d4d1059f4ab6637028ab39fdd5b32c566e0d1"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-5/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "b3f5e0b632b4c8f1c17a3aa4f26cfd421920ba84b3a683f6da14729a1ce55f53",
+      "sha256_after": "ddd316e493c8dfa4f604bd891ecdd5bb9df2e3b6c633a1691ad8e609ad35d793"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-5/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "2f4089a5e3eb9a490b93ca983285017cc23b0f6e067fca0f0799dc2adadee245",
+      "sha256_after": "e42dd36949ae53e3743c131d08f5cd2af4fb8b3f14ade4618b4cf125e901c18f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-5/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "67d5a874dd01df2f750d21361f7fa57c54ec15c2e1604c1ce6555c0c0bc3360b",
+      "sha256_after": "8af3ff3661bce3254fee8766a49d50c0d69ddc15afc1c54019f8cf319fca1f52"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-5/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "4e792cf632638626a81361eb6b40906e967bdcf59b485cbd772fb90cae34710a",
+      "sha256_after": "d5b1a4e9806426d1567157a7c1fbd12d1b85bcc2bbd0a274b565f80f03554ed8"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-5/receipt.json",
+      "sha256_before": "7f87556e9983a9422db09581e8e365f2a88ff19ffb99d751b4b5d0f5ae1703bd",
+      "sha256_after": "e00a2faf6bbe1cf957420eb4af0734d6682f8d8b76a5b9eba67584f1da2444c3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-6/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "2ceb84340c226a78f0d99378b93d312b0ccc3e8fccc880a97bb0e27ad733274e",
+      "sha256_after": "0218eb78734e5099f8e1144914bba0b467191ae1d98945d2e1ddcce38ab588ad"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-6/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "a1b8bd913924791bd9e2ad7d1c88bc6104ef6452c1d8f2786ef06e00aa2599d0",
+      "sha256_after": "00e083cf38fb72512ee0f483f67e8d6c0c6e3a68b677bd5ce57c90a60e98813e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-6/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "5917d142171cc1b3ee9b6e7fcd438ea7f7400c5a8393ea5e61ce14f99ce26923",
+      "sha256_after": "08d31f0bf35fd292676ec960f4496c31ee57e8cb1073b19f964d28535ebeb4db"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-6/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "a8f004082b56eac634c3d7b1dcbc1ebced7cee0775beaf5bfddd5eca4291e42c",
+      "sha256_after": "b08919addd5d00479710e65ea0cf952c0f955b9e01b54fa72708158f462e771e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-6/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "84c3a83ba57bbb9d530502fbab7e1bd4684c4571d0cadf27328586e5fccc7417",
+      "sha256_after": "ed2f17427055f05162d7203ad75d378e36cb041196937247b868d1b0a535b482"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-6/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "fe96dd22517e9dcb94dd13e7fd4ebf0c900b5c22e0db4354a51758d2551040f7",
+      "sha256_after": "5d52bd7459d9c7fd89acb6ffaf0bfc8e705d92b1f9a7c81dc6fd000f7408cb86"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-6/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "062ad765eb5660392955b42bb4b90dd3c3008484f7adbe7655d15d5af3eeba92",
+      "sha256_after": "3f916284651237cb27625352fcc5602094749ea1349330b4a775adb44d83d1d5"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-6/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "e32c928243ba38feba71372b5b6f14d3acadf704c8c3892511117ba4f805bac6",
+      "sha256_after": "d8877e97f0f64a980f0ac0fcbb1b8f79e06519ec59d0e60bc0c26992a7da2035"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-6/receipt.json",
+      "sha256_before": "e5432204d42a9dc3e6dafd8472686ab6cde2147df5d9a474751ea58eaedcd2d1",
+      "sha256_after": "a1a54677788fb30f24e1bc0c2b73f5cb72ac35e5d5660e5d77effa42d8313945"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-7/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "3a4587271b6633fdd87c8498d308a0a7f89ec000f73ce785e0164e3bedd252b8",
+      "sha256_after": "1d6631b89eed1211c0aee84bb905a423e86d1f3e706e0fd16d9b47e1fff77c28"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-7/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "f1b7306fc6e24a57b5adae9b001ee099385a1fcb4e960f1911df4196deb6ef7c",
+      "sha256_after": "c5ef9f455c9e8dab43e53112ab5e0b799a287a77297d8cea09ec0222d78b290e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-7/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "180bfb29bb876e14f2bbfab3ece97bbd05e3355ee2b6021c5459f8459dfae01e",
+      "sha256_after": "c84621032d9e5fcfcf0615640e076a6782acfd0ef77977e8c8071d76364f315b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-7/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "8a6e82e9c72802d94b8479c35e82c087605939271791211adc6194c8ffd922e1",
+      "sha256_after": "116b380bc8e979af20e56de5bf14064c39a9bc0a07183d91206eb401acf00226"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-7/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "8655e24e3c0c7044ff83140b0dc43e43dd255c7df8768fbbc3efe2760de4af7a",
+      "sha256_after": "76c4afefefffc6e543bb1434585d335b7be13ec4918a8c1d3b9b6996f98780a9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-7/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "a8a24ecb1fa31cc2d8baecc80d9426e3cdc2acd047ae250c17e41280ef7926c5",
+      "sha256_after": "8e510b8e49ca1f94719cf804a016a4cc534780adda3ac1b1ac28fcc9ff7bec69"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-7/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "f2b7588e348c7e206ada816df9ea210ceda70d613fee5b8775de661289da14c5",
+      "sha256_after": "a9ab5f7794e1d27b1e1090d96828d13777d400f95ae0c59f188f3c1740f1b07f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-7/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "ecb526b073f0c9d45a4cdd7896df0ea8eed83fa0bca3c555d2cb3e95508effd5",
+      "sha256_after": "ce1172f590e86deb8ed8ad491247e86842b7a8c0765ed8d3f8f6e5a91ecea001"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-lme-s/memory-bank-common-lme-s-a3-7c90ca22/shard-7/receipt.json",
+      "sha256_before": "3239f9cf6e6ca255e478dff416c4138d5446f7045bfac9858df6da87be0b94b7",
+      "sha256_after": "860646722890913e0a760d0355a7c150ea961c1fcadfe075d987ba995c500387"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-locomo-r1/memory-bank-common-locomo-r1-a1-aac45382/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "30a13d33fe36ad33abbeb86dce784f13785a6da1a31ef1a65f19f8b2edbfbc07",
+      "sha256_after": "4a5c30e1e13eb7670e01dc6f8dec000a0662c1dc3525aadb14393f0f0824863b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-locomo-r1/memory-bank-common-locomo-r1-a1-aac45382/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "e47f11a19048b721a3fb165a5a05fb14b1051f5180447233e5bdca12b2378f7b",
+      "sha256_after": "0c260ea8061e049b6aa9ee5f724db8814497ca76ba93a80c3db645b8b1f9b85f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-locomo-r1/memory-bank-common-locomo-r1-a1-aac45382/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "4b01ac411627494881791fb7fb9ad6cdd7a68903c58b0b4d58f0bffc9c5c20f1",
+      "sha256_after": "d1e92b29abeef6e7ee99fb1e3bcf6e6ec10194e3648ea1a31b6d81000a727046"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-locomo-r1/memory-bank-common-locomo-r1-a1-aac45382/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "5ba34e6f88f23e5599039c1909707439467156c18244892e12865295bdad5cdb",
+      "sha256_after": "cf65256abb98a4cb98e66cd34bed929db5226aace1018b9df8758307a3dbc89c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-locomo-r1/memory-bank-common-locomo-r1-a1-aac45382/receipt.json",
+      "sha256_before": "895f4e70bc468f7b0f2a1831f4b823515594172cf3e34c19b3d41a6411d77472",
+      "sha256_after": "12412b11447d34e2b005ef397b4b6bb20c67bf2084bb0042236bf9693402309e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-locomo-r2/memory-bank-common-locomo-r2-a1-e993bc5f/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "20c0068a48ec83b79330672272e1a570c1fbd505b2c0ef3891a7e8a46f585c11",
+      "sha256_after": "6d87b56c316a5134499bff465eea39e545cb116a181ff365b8e12f1ed782c09b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-locomo-r2/memory-bank-common-locomo-r2-a1-e993bc5f/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "0d3663080a447ec91ac1ad22acb756f4ee27ecd19385b3af5142803effe0b1bc",
+      "sha256_after": "a75e4f89398021fb75b537d198d2052c36201bedaf816da45d48d680e42b7c79"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-locomo-r2/memory-bank-common-locomo-r2-a1-e993bc5f/receipt.json",
+      "sha256_before": "71219f40aa2a237ece27de3350407584f2f4a82c53d4ba502f0d6bdd7cf616b8",
+      "sha256_after": "d3c78eb212163549617c20764e1674420113a53c81510ee8580b61e085ebbd27"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-common-pmb/memory-bank-common-pmb-a1-1163f90c/pmb/receipt.json",
+      "sha256_before": "ac49d728a3626f8dc5babc8a358b014830bcaf861488ae2c164ff9647cb0fc05",
+      "sha256_after": "6b04d07e173a4f4ac0ab9a02892958b55df0a1bb1d4a2689cf0eb14de269c89a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-beam-100k/memory-bank-recipe-beam-100k-a1-962649ce/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "09c2f1e05be2f3c6c21cef07c700247cb652f57281744d864046b2463473bac5",
+      "sha256_after": "a1f3ff011eb668571f9f7618bb06b944bbcf11a40f75833fd6a7dae69144a392"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-beam-100k/memory-bank-recipe-beam-100k-a1-962649ce/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "5a86793011bb21da3af6fbb7329583ed1c2704ade519cd79b8df0ea744dc5ca3",
+      "sha256_after": "41706ecbe0490a522a21c485d2afd1c25adbbb873919340b73d64dab294fda16"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-beam-100k/memory-bank-recipe-beam-100k-a1-962649ce/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "732d1479a31c19843913a1221e1bbfe863be63ffc637926f7f24eeee5dc82fea",
+      "sha256_after": "f247c5833b394ead9b52a7c7d6090e3cef211c1b18abda35ac03002411c7ff5e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-beam-100k/memory-bank-recipe-beam-100k-a1-962649ce/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "f932b94747c8471e8b03ef27fe111501e18c69ae130df20fd9aec8b1c0b9af58",
+      "sha256_after": "6a96e6edb11be80846dd9bf678de2fab82fbadbf23b36f80c01790a2ca222d6e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-beam-100k/memory-bank-recipe-beam-100k-a1-962649ce/receipt.json",
+      "sha256_before": "4e3a5ff637ff5543c5fa310c1e18276db7655dd2215ab89e6ce5e439f5f7a5bc",
+      "sha256_after": "78cfc278fd8df39b4accd3e8515c3c57c8ee383ec8dfbf7f787689c6bf2a4ed1"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-locomo-r1/memory-bank-recipe-locomo-r1-a1-80808a9e/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "65db2d6143b01432c1dde0353731ecc2e7689f74a024ca530ce47caba71c032a",
+      "sha256_after": "18e3c7712f9ece18a7ef1f5bb58970d9e8181f632dcb45cac94d775827f65491"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-locomo-r1/memory-bank-recipe-locomo-r1-a1-80808a9e/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "e90bd4702ce24dd427ed7dde801bdb5c4251fe8db51bd9f9b580f4bcf3833bda",
+      "sha256_after": "573b6de14357cbb3830f4b7d6298af790ef8aba988ac156eb094d6deb3ce2d5f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-locomo-r1/memory-bank-recipe-locomo-r1-a1-80808a9e/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "0bb67bd1a1f089ea67add5d3404aff83e3a0f0ec12d0ac18cb45f43a2045cd6b",
+      "sha256_after": "be6853654f9cbe898e3630adaa7fd8db7b79124137b48b89c16a6a738054f010"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-locomo-r1/memory-bank-recipe-locomo-r1-a1-80808a9e/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "ae47db50239070d2e6f904f2a8b8bb3661af83ece31d298f6f2c672506c5ed29",
+      "sha256_after": "7d99c2fed21a7fa95f44bfbf15d9fb81702ee213b5ce2a04ff61fdc823868933"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-locomo-r1/memory-bank-recipe-locomo-r1-a1-80808a9e/receipt.json",
+      "sha256_before": "d33ac18de861da27aef1759d0a7a647027d78321e7d3711058558f58a0104653",
+      "sha256_after": "129b0d98579392970099fd95fe78af1f31b962eb0d2281671383930452529f62"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-locomo-r2/memory-bank-recipe-locomo-r2-a1-9230ef71/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "4c2c28192ccd506ca47d05e6beedc7e068f82705f8d60ea5c6b0abfb22826b6b",
+      "sha256_after": "e1000dea2695100af5c77bc58182142e66190cdcc3e44691dff8b735303b5ddc"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-locomo-r2/memory-bank-recipe-locomo-r2-a1-9230ef71/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "69111fe114e8bf63577d727a4feeec46a7b99d8b41ac13a11bf869e40c3eb681",
+      "sha256_after": "d55a180fe7edbe50f0d2c95acebc95e6c0722d14257d1c649826baa40ba0921d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/memory-bank-recipe-locomo-r2/memory-bank-recipe-locomo-r2-a1-9230ef71/receipt.json",
+      "sha256_before": "359fdef8e7b67e69d15a8686793e2a7893f28c66f35f414b036515f6a06267e5",
+      "sha256_after": "a7026de0b14ef0081897dc29d401ba2b93fea92480fccadc16b07adee685815a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-beam-100k/temporal-graph-common-beam-100k-a1-a5530a6b/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "ef36476c928132433dde0d352020a4187ca121a5c7614e983b4769d91bce65ea",
+      "sha256_after": "df6cf2515796689248d5d2db7b592c032fbea6e942a541bce75b4f9f2eee344a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-beam-100k/temporal-graph-common-beam-100k-a1-a5530a6b/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "6e8c4f0e3e0c8617e156303ada950538a17abb78eba36d88a65af9a787dfe750",
+      "sha256_after": "9abd8fa3c3141e569753f6d5295afe77dcdd30e47696066f5b8b097ebb036734"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-beam-100k/temporal-graph-common-beam-100k-a1-a5530a6b/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "7753791a764de4d0cda0aee7a2be04d6c5adb76a3f6ed5dfd1951ecd25c01686",
+      "sha256_after": "ac5a89e26ee67ed8f2cda93605bac0438e21d585f214cefa653163e613b01932"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-beam-100k/temporal-graph-common-beam-100k-a1-a5530a6b/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "e9dee9990adf1b9139ce1c6bc4f858866c9079bde39d6a48e1a84c7b5dcf53d2",
+      "sha256_after": "ff9992fb2ebc301c848a77328a0cd2b33e54df5bfa857db2eb12555ab50bfdc4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-beam-100k/temporal-graph-common-beam-100k-a1-a5530a6b/receipt.json",
+      "sha256_before": "c4025012d1e40efe12d4e967739407472c4f570125cc2ad43f12d23045b30fa1",
+      "sha256_after": "5c46fddfd4014ba7c809c127f42b9879cc6f18e09d2ccf90a647a46b188d556e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-0/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "8098ae576ba9c4c3e0012d0622a77e9c2d639e9a5c67680ade909e3a4f19e1ea",
+      "sha256_after": "1cb136bc1ebaa499eaa1332fe2dda54986dc97c6356ea9da69a183b656dc76ae"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-0/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "ef227d6b959f3ce8974dcbdc7e9de610a2aabbe22c4a62fbc71ae4159b8068d3",
+      "sha256_after": "26b658a82483ef89f0024d8b873be985cf756146d73cde87e6ec53d6103dc81b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-0/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "9f0850002c5f5a275e213eb6105832b29e502263ae8811ffdc08d2d4c70ca1fb",
+      "sha256_after": "8f7d2b92ba5f50a16efe8b4a81e418ec44189af436133f4c9853ff8b75487d5e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-0/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "a7aa97f6e35eee9a6c2f7e097375486b0852ed5c018aac4a2ccaa2297c8633b1",
+      "sha256_after": "2c934074de15e61ea2ec629f3af725fab91d966bc58721e02609478b87b721f4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-0/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "5a462e6076513c6743dd953329011a1a9269440d6bd6f9bfef6c7f9a70e6070e",
+      "sha256_after": "22db08ba25bef1ff63636d0cfbd213c0d5180f70b96737b3d1fa5884a2214961"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-0/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "61fd8d31fd42c7a8bc2b408c9b4753dbe20f9c5aea74995b232b7b1c4de570c6",
+      "sha256_after": "69f4a2def05d713690ac6095756935e6b6dde715fbc1afba16265171db3e953f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-0/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "685afaf4300c2644c5461e7d2eadb052a864cf18c07d41c6e2785362855904af",
+      "sha256_after": "9e3e24256d5e614cff410a343e94db6036c370037c07f0a086843dd4b6bc001c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-0/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "545b8d8ccacee80427dd1e5fb837ef8a8c4400769957e4c76e6bd4b01f38e116",
+      "sha256_after": "6a2524eb29a0fa1b778d92db08f2a895f5ed8218787c48b120942cc055faee0d"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-0/receipt.json",
+      "sha256_before": "393976411d03008a3f7fd941857a23855f9590af2b0bf8f000429b3d1fdf6531",
+      "sha256_after": "1fb7764592e3ffa3a9c0f2f10a3b293f20e0f0c2721928c6524332a8cf44afd6"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-1/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "fadc2395fde24417f866ec4a18178c9f6bc54adf550124b2b41b301dc8624507",
+      "sha256_after": "23d1a5652bd05e8a69ae35590cec30755ee33da421fba807e2784233717e170e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-1/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "ba9731444b73dd79e1932af390e96452439613e354d065c085ca228fc4849918",
+      "sha256_after": "6f997f8ba42acaa2543c0df992e6eda32724e73aed637ea3d8cc53a3bf458cde"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-1/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "2d42dd974d78883511529c32240dfd9117ccf6109a75297add65a05ca17d9a33",
+      "sha256_after": "6052195cae576f29571124ec8a91f9e8f10ae617d22e8ea6b2d9df376036c06b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-1/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "55ee8013118cf38d71d59f5cb2e47b1ed3361343edfbe8dacdafa7dfd3e2dbe7",
+      "sha256_after": "e6d8449ab2e474336b93e13f5f1c03e31291da3ca02a49d19888f385667ec518"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-1/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "42ceccfb265e2e166392ce10b17907f6fde228f154f251e9766dc7fc4fa5d494",
+      "sha256_after": "defaebce41db64694377de7f31dbe0170293a4c3de1fabbe18bcb5751c9c63aa"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-1/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "e8857e1ea437bd99e2c23773e55f88333d23356c6b69e91f164961d659a3285f",
+      "sha256_after": "86a3d4e15ac1d49ecdd9993ffc4b2b90ac58b342872e8178abacf815d1ee0a61"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-1/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "504b122d16cf0d99ed8271bbf0fd0a8e8eb65b0a8aac31d32b1944f638ced47f",
+      "sha256_after": "7893d8c48cf4b1f2ffc82131aaeaf5a1e9d74e4d830ee02c666024ce34da110a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-1/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "6b3c0febbe85b842b35888c4f7b1c36897051d7ae3f3fc8c170f97a545bd5b88",
+      "sha256_after": "2aa904c5ba72af4883932b33806a41ddf3b0c922505a47e6dddfaf222d839b94"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-1/receipt.json",
+      "sha256_before": "1853d677b01cef0714dddc71b79505542d9182f50761d6751856fd8c70112e48",
+      "sha256_after": "4ae6ed449997993c3494e53521106a09c0797344c3f3fdf89677fa2ca8717d47"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-2/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "52556e6c646e1c13c7127c98b38d9f36daada8e1813f15430802c578c7ac7103",
+      "sha256_after": "1baca0906312812ea5d533a47270a88e924b03dfe1e9b4686c97150852933f01"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-2/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "3539b8ab759b0e7e186ad82bec6f6a045277b2894dab1d02a98e1ed2bc64dae4",
+      "sha256_after": "65cc8b5e8f91f871dc207c5f6cb3f51107f2832d4ba488696d28731e0923830a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-2/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "2a2fdb09cfb72df52de4d8df63a3a0d24bf015b1a8707233f30b4fae9466ee9e",
+      "sha256_after": "f28bb334417598f6bd62e098bd3e6f0feb560bb9d5892ccc272d6a4532bfdadc"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-2/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "96f4672517b9916b8ae5254a4cc244da821a533ea2911adc8ff2e6874e332625",
+      "sha256_after": "c492cb189cc5ce8d04b3d59a8d1c260708b6ca13498ef38e56141f72fd1cb65e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-2/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "5fa57ae7de7b3b113a64807a8070c37ef1f73d361b13b54958c01fcc331f0f0c",
+      "sha256_after": "7acf2bdee5ab333a5ae9bda44a61f13e5c24af4d2e61db756162c25b88eb48bf"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-2/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "fbb10b1bda74ab6fefa2ff7485256f7c2c3d86af40a6fe2b212acb960d8d0a5a",
+      "sha256_after": "bfd73eb2ca35f1d2f27eaeb5f8068cdc12f7b95ae72c72a94987993cf25d7da9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-2/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "cde4cf44bb1846b50a85b69c5fa31bfab1f87c07ba1d194e20d0e8488a623bca",
+      "sha256_after": "365c531837e0c212b4ee49279544e74b8a949b835f738a9cb8944f0160636deb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-2/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "b1ac3de627bf12a6f1bd15aeeee85a939a5f809f86693402e967892b8b971294",
+      "sha256_after": "28df829437c3610407c70990e3ce5d334255b4c04da3cd327635c3ad7968bcd2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-2/receipt.json",
+      "sha256_before": "17dfd7b34c15be702ab1c8ff1c8603e37787e84f7bf8d86d92108c5fb4345f58",
+      "sha256_after": "57497c5b21b6905f8d5dcea2ac41578518ecc328beb93d8437b70aa323885b7c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-3/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "2f4dfc03ec1e71fa941f646debf98482bdec5e13a4c474a54eafaf0fda1609a3",
+      "sha256_after": "edf28f391a351edc396ebe5d65f2385772781f6515d1265c1447ccf3f1ad893e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-3/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "4187400b70a05c34e5fe35e88387f02f2b503701c3ac2e97094f0468d09ec1ed",
+      "sha256_after": "645f217df426b77d8b9709b1b884238173d5c5cfb99795a5e2317c98b8aac5da"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-3/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "66f45c494bf24b70aca14a125721291543ae29c7f8bf1431355cd73c3d4119e9",
+      "sha256_after": "23ab60ae99db47818f40db96fdaeca6d07d5ad0e684bdcd2e39d81131aa7ceaa"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-3/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "13b73fef5826be489af0b6e63c50f275ef0c961623e414cf2af1eda74feba00b",
+      "sha256_after": "81086d08c87faaa600896ab9a85416416c39a127d699bd6205a43fc3860f77e2"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-3/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "f455df0380176e1d696284b54673f2918b1ac9d78a7288ed1df3d548429c0be8",
+      "sha256_after": "cb61e3ddc8130553f84ba3e04cccaa3940611b6f378acccb241e6361fba4532a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-3/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "e49c26ebc781c52db72f9c9e00d3b2a2b2c6b915eaf5da09608ec79dea591e69",
+      "sha256_after": "9b2c19afcb93198abba266ec9df149ef343e70808d9e3984409b88a6d91bf690"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-3/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "83c30fdf20160ca891b3f957f132731c12506a49a3d427342f85538ca078684a",
+      "sha256_after": "67512aaae09c4ca14aa8b95181da03d02aa7b0e908c50fe0d23bc506e55dc1b7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-3/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "b815ec34836404dd3aeccd818a45d605e20d3b1f5ce6e90f8a60e924cafba6cc",
+      "sha256_after": "e28ba85b99afa6a2ad6ebf7a451af23b1840d2e50557ad2a6516f490211a491f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-3/receipt.json",
+      "sha256_before": "eef4db125799b055388c584fd148ce2245959fd5600f56f48b91700e52d58055",
+      "sha256_after": "8c3eda59077b7276e6ac03967dcb5f9e60723de9e2205166b34a8f178a47dfa3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-4/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "8fa5222543f6e3b63d9d1b3867345b74d95b93828fdb70884461c2697db8bdb0",
+      "sha256_after": "6cf6393b8b923fa191c18c5ec87bb9ce73d4d3f11874d543c9c3beeb1b1ccf4f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-4/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "819174671c92fa768917b56071d7451a71b83b65cd767f0105698d21508b68c9",
+      "sha256_after": "569d8b49ca9b80315f783b713e175b2aa3f67b2dd4cc59bcdf5e73f07d7d412f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-4/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "67ecca5ea7292bca18b89733791667cf08877bef8e8ec5ca9f9c3a3df259db7b",
+      "sha256_after": "d1d489b4a93a99641b3dd277129b326feca23f2116e28cb6f9a6b077edc1a027"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-4/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "44b8e34dc562212d79a69e3759fa9551152c45779ebd7be3865073223913ca06",
+      "sha256_after": "f53cc973eb2514b45456dd745d3a10048d6f6eec67caedbb81c1bf05c9f89bfa"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-4/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "0a25cfcb9c485d40747ef72c2a03b67577f07b1df7e6e479d90536364a714a0c",
+      "sha256_after": "55f9f3f21afdcf98aae82e82157688f9a8add26bad9dfd1dbf527d6eeace2497"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-4/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "ee9f096da196d7acbf3037d6b9b8049efb4aed72d0caabfb0ed6e9b147305cff",
+      "sha256_after": "e927d238cda72c6d50ebfa2d640088d022f6b16c50f999fb3c129da1129d996b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-4/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "a8b011be1fabfd2365ffba1f9d8f810915e1ebd4534a313bcc2926199d65fada",
+      "sha256_after": "f880961c5e327674e935989f925e0eddc281225c6937bb060897eaa6da8b6a72"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-4/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "61237c580f5e50c7172917f69527f4ecbddec37eb0793031cbff6c25c807ea8e",
+      "sha256_after": "87f8c9d5747493a97a5eca597e7a5a3dbfb0ea0c7ef906cac9a7ff028368d2fb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-4/receipt.json",
+      "sha256_before": "99d687e6c80f3a277da90e4f198bcadebda358bc99d65dddcfbf40afa18214c1",
+      "sha256_after": "c80f635791e659caed93b380c9395c3d44b4a8a68f0fec871195b0283723bf26"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-5/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "3fa535012cc5dbb14c048f0a35c774178e774fc3631d6100f485ed623609a112",
+      "sha256_after": "ef43aec0d251ce7c05efe498271e58a037d958876f3a1c7254b1bc8b22109abb"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-5/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "6b95e7d6b815f058f358b5d162240f9cf05d38f4f93d8c81f7ad95f242b6b078",
+      "sha256_after": "e55042ad5c09793afaf28a897ec92dd7793a2a31fba4f5e525ca92d3b02e3ef4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-5/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "4fae3d84c9a4dc9359f8e1dff4918955e2b5e5bfb355f77b65b557413f889283",
+      "sha256_after": "d4e0b19b4c7c0fe644cfc6bd32eec2f35e612af3169201317602efb5855b20d7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-5/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "1b5f4c96401fd4ef705a7698b6930080dced7c6c623d2dad1e6db0a651497425",
+      "sha256_after": "aebac5c9712c471f0847d3bacf576786a41fd0b879e001a161b99eac2f0b8b48"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-5/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "49848edaee9529f6801667a1764d6226a67591daf80de33bfafaeeab4b4d8f07",
+      "sha256_after": "01e4526d3f5ab452bb1a1d1f12dbf256505735d9fbbf16006356b00b77398a84"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-5/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "8f7c867e3568cca61280e668d201376a8acbbeb0484a3b71665b25dbe7e88cb4",
+      "sha256_after": "d3167d94c36509739ab49639a5fe4bd376db6ebc5ccf64868dba2d6a3b95fda3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-5/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "c2891cc4d4e458901e965b8b4b18e8a0ec1ec593aeef4f7ead6aef03cd2b094e",
+      "sha256_after": "5c318f82e031ff31fd672055a7394451eb9a56bcd7b716ac9a0ba1179ef70a80"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-5/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "694e5a27da1e9dc2748096906c91dadfc1c65eac076f20a001bc4464d8633f5e",
+      "sha256_after": "6960904583008bd83893f7888e10997d02780df91b65e78f2cea32de89e1dc74"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-5/receipt.json",
+      "sha256_before": "cff7376122078db264ee8093580a711e6dcd2ea94c9b2b61c1a776f68cc9f2aa",
+      "sha256_after": "eb18ea39ec284c5234358b848bc5ae940941aad46067112f09b20aec758161a4"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-6/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "28acd8f81be844167776091a60b3c99bfed6d4b36d3dfdf9928b765549e88650",
+      "sha256_after": "8776c7951609357f07d675d25e0ca9c98a83c9e8155438ec7394bd1d707ca37f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-6/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "317850e5a143520d27a611ee20e03509ca2d551fc27186105d5991d5add380ab",
+      "sha256_after": "2d953a0a9745b5c3b67b48744c7cd21a13b32a8accdc556ee7723d9cecede829"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-6/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "0166d70201cd7a6cdc4831c32e99548cf5db15f53530e937e04ee58788a41d21",
+      "sha256_after": "1cb496bf0b741d16df2aae8f93f202f6c551f76b240a2df91b6b244d62ab3386"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-6/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "9732a374fd5af030ff4fdbc3209801c5663fb25bf1fbda3fce577627232bb900",
+      "sha256_after": "2e4411b528d3833ba4d693d2424aa1a2ce8f1708628eb304b8b5265b4bcfd973"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-6/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "ceb03ef98df46a3c2cda7eaddfe686c7e686c76f26c15888e1829fdd9b83626e",
+      "sha256_after": "7f00faf0e263bf0acdb3a2c40adb86c19d06adcb633b203c7fa02e69b456c045"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-6/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "797934659579f84d89c7666f84fd3e44cef76d53c92f55e4415f5ddb86c6cb29",
+      "sha256_after": "39de5f39e70f330dc740651e62abe210ab416761dff598fd08454325065c3e75"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-6/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "fe62214f3b3c3a581bfdb860e58c612a3742075669ad56c4c9ebc1a2d6a36ce4",
+      "sha256_after": "e2b6368e8bb408c4484f80945d851531bac57b2b9526d17fbff1907c286d149e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-6/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "1769925cffc736d18b0e996d9b25ebb05333743ddab0a9cb4a8e8a2593f8b510",
+      "sha256_after": "8be02e7ed4f61a300feab26f4602cff8ed5142d31cb274b0600efea3cc83b75f"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-6/receipt.json",
+      "sha256_before": "5389bfa65d04d0fd1d58a00e2c484ca85921cbc2d3509921e2f5e775e722da11",
+      "sha256_after": "fe341ab66b9d0c7c7f62aa503e968b8fdba48be6633bd1f64f4e306d5a449799"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-7/arms/fixed-evidence.native.b8000.fable-5-1/receipt.json",
+      "sha256_before": "e6d84b7bfd1d3cd9a64319b32080c9db167d54175767ae1b3c3670abe65d8d96",
+      "sha256_after": "3eaca8c62cab0c005e0d30c8078180293d784182951de6427fcd8a22f98a9502"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-7/arms/fixed-evidence.native.b8000.gpt-6-1-sol/receipt.json",
+      "sha256_before": "dfb75c26458c2e8d4283a6290750b6946f2968f6187acd7de177c5cc3457467a",
+      "sha256_after": "751204f7565e3191a86a461047adb825344dc49af2073a7a8252ce9b1df96e48"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-7/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "436e6ff342a3c660fc0b7e2ddc4bd05ab1909482e7d0c3301b0f5d0223789093",
+      "sha256_after": "08c348091f2abce0b691318d6939207944ca5e605d25b47d4a779ed06fc82563"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-7/arms/fixed-evidence.native.b8000.opus-5-5/receipt.json",
+      "sha256_before": "3988a6744919718e5c90bd416f76829bbe15cdfe2c8aa1efa3cb3443a853333b",
+      "sha256_after": "98f34aa5f41aa94678190d5d7b24d586adbacf4b1fb2505230a0c682d02254f7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-7/arms/fixed-evidence.native.b8000.sonnet-5-5/receipt.json",
+      "sha256_before": "a91932fa517308437bc19065d1238f47f6c5404b63f6f8f070b8c9034b1505c4",
+      "sha256_after": "277e849df14db84a65ca93e68d8c4b999c7d8ff619c2bbe9d8adb65cdf7fc8f6"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-7/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "c54d1db120c71889036c73d84bc653ca37ae13ef7f20515158a628f4bd0e34f9",
+      "sha256_after": "1b91bb2717b9a054aa5701c2908190c597f01a8bc11889e106520ede20c22174"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-7/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "b8bed75aa24f367dc80e186cbdfe2ee9557aa301f35a09b59a33bb67638504c5",
+      "sha256_after": "e18e18bdc08383df1f7d103d3738fb7c845c6b5190b71b3dcd33cda9cc13e76e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-7/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "6222a509ccda2f1c002f4b37d1740872528b40d054c3475adeec5805cda6277a",
+      "sha256_after": "a8f193f32592631d4d2f0491a84086d632023410970dd5285859787c9e67294c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-lme-s/temporal-graph-common-lme-s-a3-107c6642/shard-7/receipt.json",
+      "sha256_before": "7d93ee8df28e763690f78b894c6814d2a1a26157746d6e40a5a96b9964e14da4",
+      "sha256_after": "d1cb95d513360f6d7b4d30f4d129185e6173293ee7cbd4d1f03963d6305dfc7e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-locomo-r1/temporal-graph-common-locomo-r1-a1-4a4c66c2/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "2c5edd12a9ea821310434fd2c8ad85d724a8f9ba01860b22964f3c448ef398d9",
+      "sha256_after": "8c4a4b9633006b177d611c2eaca2edf9ea786be9894c67d9ab36af5a694304a7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-locomo-r1/temporal-graph-common-locomo-r1-a1-4a4c66c2/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "9c0838dfc0e57e16a4caa888ee17f2a950922fdbf5a273dfee9476bb48ca5bb1",
+      "sha256_after": "9f26c34fe200bac385f3021b1106f04ebb7c351f21ec62f76f842583e8c930dc"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-locomo-r1/temporal-graph-common-locomo-r1-a1-4a4c66c2/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "94e042561605f13274904396b97eac0d94b47e7b94fc64f596d854d75b3995fe",
+      "sha256_after": "3cd42a10843f654357f10a05bef02b3f5af57c7f9b851dc82c3817af4f99135a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-locomo-r1/temporal-graph-common-locomo-r1-a1-4a4c66c2/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "a1504f3ee154a167b72a2b4ae9a8b4540dce0fd340c0f9a21c914b12f037a575",
+      "sha256_after": "dfb5da8b0685d89d2dc69de190599bab3f553327a77fbb30e9195693bb4bf6d7"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-locomo-r1/temporal-graph-common-locomo-r1-a1-4a4c66c2/receipt.json",
+      "sha256_before": "387cd66b87c649c78e4c1e3062992622c2bde092a01c86fde875ffb8933414f6",
+      "sha256_after": "c020950438cea58f9e246035f0a3ed523310c42cbb069547464af8906bc25ae3"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-locomo-r2/temporal-graph-common-locomo-r2-a1-c6abc67a/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "c0e5894621bfc7736e9243e61c04f228d18b483d9b75b2413cd4deabba1c0be9",
+      "sha256_after": "c408de4a5ba2199d6894185be120be4a1a0e485f1699869a8081ceb052f36461"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-locomo-r2/temporal-graph-common-locomo-r2-a1-c6abc67a/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "09eb29057fc04d699ee6f5c5a3cd0b36a250cf04500c697852f90cfd90602816",
+      "sha256_after": "2cba026c00fde39a6df6e26f2dca2235fb2420207fafe8832eeeca25aa9e7b5b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-locomo-r2/temporal-graph-common-locomo-r2-a1-c6abc67a/receipt.json",
+      "sha256_before": "be046fae0c37d194163363d5c865e5c6fcaaec4918610b849d5b64737702ebc6",
+      "sha256_after": "32d3a7a15ef8f2b450d9e16e5f5017106ec262c9ac9b61acfa870a05190dd6cd"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-common-pmb/temporal-graph-common-pmb-a1-d52115ae/pmb/receipt.json",
+      "sha256_before": "48e10b3900468060f4253ec08cc87035aff9108653d9ba08dc6d6a50779d3916",
+      "sha256_after": "6133ff09453c927b918569a5112584c29a9d2e14750f22bbf005766c44a77f8c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-recipe-locomo-r1/temporal-graph-recipe-locomo-r1-a1-0c214030/arms/fixed-evidence.native.b8000.main/receipt.json",
+      "sha256_before": "8da6f871fe5cc092864fdc606d9b389aa9a3bc2b8c50b98c3b22c83fde416368",
+      "sha256_after": "23791e3d4f57cf461fab6650325c4cde76633ec4f10b29b1239177c838a72039"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-recipe-locomo-r1/temporal-graph-recipe-locomo-r1-a1-0c214030/arms/fixed-evidence.rehydrated.b8000.main/receipt.json",
+      "sha256_before": "7e9c054766f24020305354a92ddbfaff6d87782af0baff5df54365f4909fd380",
+      "sha256_after": "3c733e270a6c4f85fd00dd9e8a5c5bd52f9aa495a511845eda063e81d03a1b1e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-recipe-locomo-r1/temporal-graph-recipe-locomo-r1-a1-0c214030/arms/vendor-default.native.bnone.main/receipt.json",
+      "sha256_before": "479341cf9962697e8c5e4912fb8dff824b2e6269f35433730b0e3347831ad172",
+      "sha256_after": "4f6a5051526ca61b3c71280a11aba0249467f6a3dfe962780488e839d2bd0d88"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-recipe-locomo-r1/temporal-graph-recipe-locomo-r1-a1-0c214030/arms/vendor-default.rehydrated.bnone.main/receipt.json",
+      "sha256_before": "258d6b12b904907858b9b8f41af98d255520301f68c3b3069b3b4bca800c3001",
+      "sha256_after": "6c90f0c7f50b5cf1ad087b1208597cc4cc12f877585934036ecdc2e34e6fff2e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-recipe-locomo-r1/temporal-graph-recipe-locomo-r1-a1-0c214030/receipt.json",
+      "sha256_before": "5b4919c92b1ea71cd09ce48bd2a0392d9051fe171251ce8183dffa4fba90a69a",
+      "sha256_after": "2d5c476750f2f710afe7faadfca8920a4b94e599de076fb41273009c00b32c7a"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-recipe-locomo-r2/temporal-graph-recipe-locomo-r2-a1-a217baf6/arms/fixed-evidence.retrieval/receipt.json",
+      "sha256_before": "f3df4c41b462dfc707c2919e47a46f5fd6a22cfcfecaaf719afde09135d406d4",
+      "sha256_after": "01fa2af5852532254f75987f789474011964a29ea0299f8a4096a80ac2c5669c"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-recipe-locomo-r2/temporal-graph-recipe-locomo-r2-a1-a217baf6/arms/vendor-default.retrieval/receipt.json",
+      "sha256_before": "52bcdd0e1ea716222f84766a767a7f5f64b4b528bb56483408d54feb69846243",
+      "sha256_after": "98eb1234ecdf142134b2551e76b820a368db4c1af4245b2c1bc1a48c4e6aa089"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-recipe-locomo-r2/temporal-graph-recipe-locomo-r2-a1-a217baf6/receipt.json",
+      "sha256_before": "cee9eecaf41de878a0705e1a621544136717138637845c59a810c68a0f2f5946",
+      "sha256_after": "11a5a7cb5666a71cd6ddb8dd158ae4d5082f06f16b4465c16c32d9268adb2502"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-06-oss-memory-shootout/results/temporal-graph-recipe-pmb/temporal-graph-recipe-pmb-a1-f885cb5b/pmb/receipt.json",
+      "sha256_before": "69c37121f6745b40c6237cc4920f8ea96c6e26cc30102a0c103e9d5c72969462",
+      "sha256_after": "de866b900a911ab9e925ad27faa631d5fdc1b9fde632fc844cd7f64f348e3888"
+    },
+    {
+      "path": "docs/comparison-systems.md",
+      "sha256_before": "65efe03b49d77d24f671e92b9daa90ff97762c25d0984d21bd4e100d84d2c5bd",
+      "sha256_after": "d0247ac2a866a44568b29d2d6f583b356af95e94d44260a262d98ffa08d35dfc"
+    },
+    {
+      "path": "docs/plans/2026-10-05-oss-memory-shootout/PLAN.md",
+      "sha256_before": "0a9d96fabd3e633972b8ec8924f687077ebc0ed44e8c16e0ecd8c283d4753d74",
+      "sha256_after": "ecdf37f4102f0b1bf5de694018d0a59db4131a438d51c1b6f1ab0ae63332f02c"
+    },
+    {
+      "path": "docs/plans/2026-10-05-oss-memory-shootout/reviews/ceo-astra.md",
+      "sha256_before": "a2a609ea35312fbefe0825aaaec8026a0ba27f93dd2f1351cb7b04ae321ee307",
+      "sha256_after": "fbe2949b4b2e586cfe2d08341653990c7814e41ce73e4d74cd8d8f168bf55379"
+    },
+    {
+      "path": "docs/plans/2026-10-05-oss-memory-shootout/reviews/ceo-claude.md",
+      "sha256_before": "08ec347574ffcbf534af74816118c3369a761aeab41ff9fe33fa7efeea990676",
+      "sha256_after": "004fee5c3e6db80bd67b257df499f43475869de918ab45150d3619cc680b377f"
+    },
+    {
+      "path": "docs/plans/2026-10-05-oss-memory-shootout/reviews/eng-astra.md",
+      "sha256_before": "082ef84792a2626d7b509db92c48988db378d648fcacdfa19ba15f5d762f744e",
+      "sha256_after": "32011abff0f29607f1fdf9acdbff3521cd5025de2efb9d12a9c24f3ca21e231f"
+    },
+    {
+      "path": "docs/plans/2026-10-05-oss-memory-shootout/reviews/eng-claude.md",
+      "sha256_before": "6cd14f1efd14c17f1f5041693bfb7fc71d191350a75b3bf06eb7fb46b1bdc3a3",
+      "sha256_after": "7f5c54c5128f83bd77f184384221c432945abfab605103a94796d529cc6db69f"
+    },
+    {
+      "path": "eval/runner/longmemeval-chart.ts",
+      "sha256_before": "c49f7da01056369935cb0d9c93f5387f998d22c9ef16d8ae1ed9009803e5df73",
+      "sha256_after": "7808f7d608b90d2249f7e01f566a1f9d1ad1f075c6a70ed4d3a132dfd5b1e837"
+    },
+    {
+      "path": "eval/schemas/tool-schema.schema.json",
+      "sha256_before": "96a49dfc35ff9418fbb14674a3ad1992b0b0318524d689c3a1525ca68ec06530",
+      "sha256_after": "d32e4f1b0d31d4b6d47450459daa886bdac764155ce9c600f445d5797f871d58"
+    },
+    {
+      "path": "eval/systems/PROTOCOL.md",
+      "sha256_before": "4410ea8a18772e1ba63d506413055e67d0a6f258cea65aca132abad08c94d9f3",
+      "sha256_after": "73826a78ceff6943ab6fc375bfc213014e375c2ca5a914b87560166f62d2c76c"
+    },
+    {
+      "path": "eval/systems/agent-runtime/Dockerfile",
+      "sha256_before": "274255fdde25c2dd27f39380c2dd16f496cda915f84b155eb090adb3d692c394",
+      "sha256_after": "4cc7cbc25dd176b99612d0badf56d4b9e71754c1622bbfd1771cbb339c8b7e58"
+    },
+    {
+      "path": "eval/systems/agent-runtime/README.md",
+      "sha256_before": "8f058d344565ecdbbb9ca174aad42b92194cea4d14ede74c2ed2c21c0767963f",
+      "sha256_after": "e867ac22912077d26e635d6300b3f5026b46ef29296137d820dc4ecb41c5df26"
+    },
+    {
+      "path": "eval/systems/agent-runtime/capability.json",
+      "sha256_before": "63d6ec90623ab9dc09c6f26350ad2bbbcdf903d2727b2ad06e25baa1ebe7b36d",
+      "sha256_after": "d87468e7b979e866c64c30211e352bfeb1b7094111519ab242f7f5c3fc4bcf1b"
+    },
+    {
+      "path": "eval/systems/agent-runtime/docker-compose.yml",
+      "sha256_before": "994244b3defc683746ccea4a207876ef58e5fd4b2b0231e3b621021e881f8977",
+      "sha256_after": "9ab70a89ea24aa91ae1fef69c9197f0da56ce0b0b8375baf7ea72a3677093d7f"
+    },
+    {
+      "path": "eval/systems/agent-runtime/shim.py",
+      "sha256_before": "e5459d0b959408a8da6986d4959a8cbc6d39fc84b3b70ade77c7e6140c688e0e",
+      "sha256_after": "8dec95f848702a99a3aae57dd315832acc301d4a07424c65d298ee97d36c3f2a"
+    },
+    {
+      "path": "eval/systems/agent-runtime/tests/run_keyless.sh",
+      "sha256_before": "af49ebed8a3bbe8e207b936fb8c261e919c732fc72b68ca2d46abb42574c9f08",
+      "sha256_after": "95641c5302ae96fbc5b20b61765843d81b926d206d6974750d8b6e52b915cfe2"
+    },
+    {
+      "path": "eval/systems/extract-first/Dockerfile",
+      "sha256_before": "cbba35a76d344a5846d042c4e20135a3cbe66f9283bd68a1bf03e7b38fa74a4f",
+      "sha256_after": "ea8d724800939022d69b3e7903e2f663a510eff70cf5463468bc2b4b6ffb331f"
+    },
+    {
+      "path": "eval/systems/extract-first/PILOT.md",
+      "sha256_before": "4e3d6d23b750e577ba92128090b8d6c67903715d6e1474b47c0eeff80969b378",
+      "sha256_after": "81f43f5c46c0718fc3692ef608f6ede809b90727322dd471360d39bbf2331264"
+    },
+    {
+      "path": "eval/systems/extract-first/README.md",
+      "sha256_before": "9dafd97784bd6d611f3918a85d54904f158d2c61ce4f6e6ce9d93b9cfd88cc9f",
+      "sha256_after": "dfd400e6a0bf77fd972863ce25a7c6ae992a8e3a81c594c840ab2e01ce5b6392"
+    },
+    {
+      "path": "eval/systems/extract-first/capability.json",
+      "sha256_before": "9f003252b7d9d6c2310eb50210858b026ea7209c566b76211fd0da41bf2b3715",
+      "sha256_after": "2e8736dc6313fae0570761bac3caa14b44cbc20a56cc5f4a00b474ad1a3fb9ec"
+    },
+    {
+      "path": "eval/systems/extract-first/docker-compose.yml",
+      "sha256_before": "6a5fd9f8af4bdfefeffd6e8eed6d0e242c03f1cd5249da7f440ed9e877fafaaf",
+      "sha256_after": "c38ed8b1214b3c9da9ccfa38f6544edffa42689d21630fb10c053f729da7bbd9"
+    },
+    {
+      "path": "eval/systems/extract-first/shim.py",
+      "sha256_before": "5549152e51df92653cca455849f590c16657113451c8a6f364cfc64784dbd877",
+      "sha256_after": "83cbcc61fa6521071ffbdb9c325d6c033d1718fcae06108ae599396e067fff6b"
+    },
+    {
+      "path": "eval/systems/graph-pipeline/README.md",
+      "sha256_before": "54101a4fc71282d576a9135b5eb9ea651b13d0b0f2e905f6668f2cc6feaea9dd",
+      "sha256_after": "33485a23264ba41bba8b3abb2fca81007c00ced561739f6aa640b8876c93433e"
+    },
+    {
+      "path": "eval/systems/graph-pipeline/capability.json",
+      "sha256_before": "e44ca375e26c1b3219894b97314ca9e39ea46af272746dcdc855ef4a059af30f",
+      "sha256_after": "5e47f901be9496faa01a7690aac7bdb9dfe53254e767db9fe92740af1e6f2647"
+    },
+    {
+      "path": "eval/systems/graph-pipeline/shim.py",
+      "sha256_before": "801751ccdfe27811b17b2c06a161329e1e6210039df3a4df0c4261c6da4c1543",
+      "sha256_after": "0f876c36eb3af014a3104dc0d39773e8733b92e64704a064181a3ee5f52f8cc3"
+    },
+    {
+      "path": "eval/systems/markdown-notes/PILOT.md",
+      "sha256_before": "b2c2654cd1fb4a27814f4f27ab630eb6d2a43eea84c1849841e271718ba5f4ab",
+      "sha256_after": "fb26a000da2586d75913f42fc90a694b5180d3301b79ea85f6a50eed471b92ad"
+    },
+    {
+      "path": "eval/systems/markdown-notes/README.md",
+      "sha256_before": "2934996447fb176c1e9eee16b4a11d82b7913ea8a69e2d7ea8f7bfa03b34de6b",
+      "sha256_after": "92893a043eccd1dd823ca4ef6adc99a6d9c339cd17579fc4d7569c01e10e1ce5"
+    },
+    {
+      "path": "eval/systems/markdown-notes/capability.json",
+      "sha256_before": "d2fd42f000d84b6399a3eaca1fcd992151e8948f07028e044a21b7888cd2e9b2",
+      "sha256_after": "4eb880c8aeb236786cd2bb1830ee0f5ffab9e9dbd9db7e583dc7c4ec0277f574"
+    },
+    {
+      "path": "eval/systems/markdown-notes/shim.py",
+      "sha256_before": "55f64d2da2de6dbfd717fd41db9bbf4c276cbb50d942e73d4f5bca7acc1b8e50",
+      "sha256_after": "64f79191785d61846b4330fc1bd46ed3f483e8a11170640c3703232d95dcc9f4"
+    },
+    {
+      "path": "eval/systems/memory-bank/README.md",
+      "sha256_before": "4071226d04b6ae70c84fa62a3cf0c082737f9631a403f7b9165c327e579b7894",
+      "sha256_after": "7ed6d87d0e25d1cd3e1de7a34cda6993fc7961e209eb83b9157381d471f86f5a"
+    },
+    {
+      "path": "eval/systems/memory-bank/capability.json",
+      "sha256_before": "b7a913a9d7091b51031504f8314b36273446b5a462b8114609c9e667f62f1f70",
+      "sha256_after": "e0687e98989940f70d19fe31d2158d299128ad2be648e65264f1c7e25cc059ae"
+    },
+    {
+      "path": "eval/systems/memory-bank/docker-compose.yml",
+      "sha256_before": "7a2ac92484c2cccb9e5e985ccc616e7351df266761d6782bafbc21694c56893a",
+      "sha256_after": "d90c2361192114d0986944fd8e43c39ea3ca30303f776f9cc9c62222772c1cfb"
+    },
+    {
+      "path": "eval/systems/memory-bank/memory-bank.recipe.env",
+      "sha256_before": "36b6a6d5408b4fd44a970e8bd6b16e3a88504a6c394cdb99d648de7d8b9e97af",
+      "sha256_after": "30d58de83cbca21c4e737d579c6d00e7b1456655702707e31cfe8cf77b35a36d"
+    },
+    {
+      "path": "eval/systems/memory-bank/shim.py",
+      "sha256_before": "a00f505cca7c06a01497a40b2d43e579e02f294efc419903cfbdf20d1eab62a0",
+      "sha256_after": "bc0a934988f5138448bdedeb29025b5efc5eda0376483cebad64006d65fc0b19"
+    },
+    {
+      "path": "eval/systems/restart_check.sh",
+      "sha256_before": "7dc50c1f9196865bcf504fa5f99411e308e395411207112849ae449b88739f79",
+      "sha256_after": "e91ad8dd7df12a60f172cce7b7a184260f94afe8a3f9963db176a209bb8540be"
+    },
+    {
+      "path": "eval/systems/temporal-graph/PILOT.md",
+      "sha256_before": "9d2aeac1fe834c2408e90657ee975991571a5c18a3636118228c2e16f359d08b",
+      "sha256_after": "485cc10e4109406cb3754e16849d70a92e8375d8912c4abaec8214fdb8f0f5bb"
+    },
+    {
+      "path": "eval/systems/temporal-graph/README.md",
+      "sha256_before": "e47ee100804694ad38919ca9819428d1b54c905c5b0c1d8e1bfc071166f62fc1",
+      "sha256_after": "5ea4b919eb1edb89a7bccc429c6f12135992948b908715f11e7bde459dfa901d"
+    },
+    {
+      "path": "eval/systems/temporal-graph/capability.json",
+      "sha256_before": "83bd0323cb207746d3e9e0113445fe87cf739053108f848918e32bbc9129ffc1",
+      "sha256_after": "a5fc713787b03af4cb577677503491804b68e26b6b7e8374ac597af5f5a75f29"
+    },
+    {
+      "path": "eval/systems/temporal-graph/docker-compose.yml",
+      "sha256_before": "5f6dd0af45d38d30a3bbd84fc8e43610578ec8369e5db7cf41fd3501f424ae14",
+      "sha256_after": "13066bbbb55328a63d5fb75884dfa952bcb42a9c0dbf77862188320d99627fb4"
+    },
+    {
+      "path": "eval/systems/temporal-graph/shim.py",
+      "sha256_before": "b532eae2efec78c57e6a2df035afb54adf7d9a03fa11551fe80da856cf8e303f",
+      "sha256_after": "a899edc727aca6bde697bbafb98073df19cca302c8a05965da7e550f00e548a9"
+    },
+    {
+      "path": "test/eval/precisionmembench-system.test.ts",
+      "sha256_before": "bc0af21029770afd6ba2aff0e163e04a3edbd282615204fa4318d7ec347f46c8",
+      "sha256_after": "d1c41cb63a5cbb2b6c78f0ed902c666b175db1bb10afac771c65987ebc6df248"
+    },
+    {
+      "path": "test/eval/shootout-sealed-cells.test.ts",
+      "sha256_before": "b87ca7b12cdbcb24163d85a09b9653a60566fe26b3a8390992d2949e1e9b6fb7",
+      "sha256_after": "fa6d9adbc52265e3d89ce87e2d6569f20d2a602b7c30860b67df3dad4214c10b"
+    }
+  ]
+}

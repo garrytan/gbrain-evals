@@ -1,7 +1,8 @@
 # memory-bank shim
 
-This directory runs [memory-bank](https://github.com/vectorize-io/hindsight) 0.10.2 behind the shootout's shim
-protocol ([PROTOCOL.md](../PROTOCOL.md)) for the
+This directory runs memory-bank at its pinned release (the
+[comparison table](../../../docs/comparison-systems.md#systems-in-the-open-source-comparison) names the project, its
+pin and its image) behind the shootout's shim protocol ([PROTOCOL.md](../PROTOCOL.md)) for the
 [open-source memory shootout](../../../docs/plans/2026-10-05-oss-memory-shootout/PLAN.md). memory-bank stores
 conversations in memory banks: `retain` asks an LLM to extract facts from each conversation, and `recall` returns
 the facts that fit a token budget, ranked by semantic, keyword, graph and temporal search plus a local reranker.
@@ -11,8 +12,8 @@ the facts that fit a token budget, ranked by semantic, keyword, graph and tempor
 | Container | Image | Role |
 |---|---|---|
 | `db` | `pgvector/pgvector:0.8.1-pg18`, digest pinned | Postgres with pgvector, the documented external database |
-| `memory-bank` | `ghcr.io/vectorize-io/hindsight:0.10.2`, digest pinned, unmodified | the memory-bank API server with its local embedder and reranker |
-| `shim` | built from `Dockerfile` (`hindsight-client==0.10.2`, `uv.lock`) | `shim.py`, the protocol adapter |
+| `memory-bank` | the vendor's server image, digest pinned, unmodified | the memory-bank API server with its local embedder and reranker |
+| `shim` | built from `Dockerfile` (the vendor's pinned Python client, `uv.lock`) | `shim.py`, the protocol adapter |
 | `egress` | `alpine/socat`, digest pinned | the only container with a route out: publishes the shim and relays to the metering proxy |
 
 The shim speaks only memory-bank's public HTTP API: one bank per namespace, one `retain` per session with
@@ -31,7 +32,7 @@ evidence for each value at the pinned tag.
 - `common` ([memory-bank.common.env](memory-bank.common.env)): extraction `gpt-4.1-mini`, embedder
   `text-embedding-3-large` at 1,536 dimensions, reranker unchanged.
 
-`HINDSIGHT_LLM_PROVIDER=mock` swaps in memory-bank's own test LLM, which turns each input sentence into a canned fact.
+`MEMORY_BANK_LLM_PROVIDER=mock` swaps in memory-bank's own test LLM, which turns each input sentence into a canned fact.
 It proves the plumbing without a key; `/health` reports `llm_provider: mock` so such a run cannot pass for a real
 one. Its retrieval results say nothing about memory quality.
 
@@ -42,7 +43,7 @@ From this directory:
 ```bash
 docker compose build
 # keyless control run (recipe needs no provider at all with the mock LLM)
-HINDSIGHT_LLM_PROVIDER=mock SHIM_CONFIG=recipe docker compose up -d
+MEMORY_BANK_LLM_PROVIDER=mock SHIM_CONFIG=recipe docker compose up -d
 python3 test_shim.py --url http://127.0.0.1:8700
 # real run: every provider call goes to the metering proxy
 SHIM_CONFIG=common PROXY_URL=http://<proxy host:port> PROXY_OPENAI_PATH=/<slot>/openai/v1 docker compose up -d
@@ -83,10 +84,9 @@ committed.
 
 ## Deviations from the vendor's benchmark code
 
-The adapter starts from AMB's `hindsight-http` provider
-([agent-memory-benchmark@f618ed7](https://github.com/vectorize-io/agent-memory-benchmark/blob/f618ed7b1f0eb9cad7b42e876f91a42f0eadb150/src/memory_bench/memory/hindsight.py)),
-the code memory-bank's own `hindsight-system-evals` runs. `hindsight-benchmarks` scores extraction LLMs directly and
-does not ingest through the server, so it is not used. The full list is in `capability.json`
+The adapter starts from the HTTP provider of the vendor's agent memory benchmark (AMB, commit `f618ed7`; the
+comparison table links it), the code memory-bank's own system evals run. The vendor's separate extraction benchmark
+scores extraction LLMs directly and does not ingest through the server, so it is not used. The full list is in `capability.json`
 (`deviations_from_vendor_code`); in short:
 
 - Only opaque ids cross: no dataset ids in `document_id`, no `metadata` (it influences extraction), and a context

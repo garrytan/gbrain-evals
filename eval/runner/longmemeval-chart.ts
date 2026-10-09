@@ -67,8 +67,9 @@ export function chartTitle(data: RunnerOutput): string {
 // top-K distinct sessions) — the metric our headline plots. Published any-hit
 // numbers (MemPalace's 96.6% / 98.4% / "100%" are recall_any@5 per their own
 // script, which computes recall_all but never prints it) and LLM-judged QA
-// accuracy (Mastra, Mem0, MemCog, Zep, …) must NEVER be charted here. Keep in
-// sync with docs/comparison-systems.md and re-check sources quarterly.
+// accuracy (the vendor QA rows on docs/comparison-systems.md) must NEVER be
+// charted here. Keep in sync with docs/comparison-systems.md and re-check
+// sources quarterly.
 interface ExternalBaseline {
   label: string;
   recall: number;          // recall_all@K, as a fraction
