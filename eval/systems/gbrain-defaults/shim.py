@@ -189,17 +189,37 @@ class McpStdio:
             self.closed = True
             self.cond.notify_all()
 
-    def _send(self, msg: dict[str, Any]) -> None:
+    def _send(self, msg: dict[str, Any], timeout_s: float = CALL_TIMEOUT_S) -> None:
+        """Write one message, bounded: a serve that stops reading its input (its event loop busy) fills the pipe and
+        would block the write forever, so a write that misses the deadline kills serve and fails as a timeout. The next
+        call restarts serve on the same brain."""
         assert self.proc.stdin
-        self.proc.stdin.write((json.dumps(msg) + "\n").encode())
-        self.proc.stdin.flush()
+        data = (json.dumps(msg) + "\n").encode()
+        done = threading.Event()
+        failed: list[BaseException] = []
+
+        def write() -> None:
+            try:
+                self.proc.stdin.write(data)
+                self.proc.stdin.flush()
+            except BaseException as e:  # noqa: BLE001 - re-raised in the caller's thread
+                failed.append(e)
+            finally:
+                done.set()
+
+        threading.Thread(target=write, daemon=True).start()
+        if not done.wait(timeout_s):
+            self.proc.kill()
+            raise ShimError("timeout", f"gbrain serve stopped reading its input for {timeout_s:.0f}s; serve was killed and restarts on the next call")
+        if failed:
+            raise ShimError("product_error", f"gbrain serve input closed: {failed[0]}")
 
     def request(self, method: str, params: dict[str, Any], timeout_s: float = CALL_TIMEOUT_S) -> Any:
         with self.lock:
             self.next_id += 1
             rid = self.next_id
-            self._send({"jsonrpc": "2.0", "id": rid, "method": method, "params": params})
-        deadline = time.monotonic() + timeout_s
+            deadline = time.monotonic() + timeout_s
+            self._send({"jsonrpc": "2.0", "id": rid, "method": method, "params": params}, timeout_s)
         with self.cond:
             while rid not in self.pending:
                 if self.closed:
@@ -220,7 +240,10 @@ class McpStdio:
     def close(self, timeout_s: float = 30) -> None:
         try:
             if self.proc.stdin:
-                self.proc.stdin.close()
+                try:
+                    self.proc.stdin.close()
+                except (OSError, ValueError):  # a killed serve's pipe is already broken
+                    pass
             self.proc.wait(timeout=timeout_s)
         except subprocess.TimeoutExpired:
             self.proc.terminate()

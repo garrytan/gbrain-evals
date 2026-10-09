@@ -46,7 +46,10 @@ export class HttpMemorySystem implements OwnAnswerSystem {
     if (text !== undefined) {
       // The system's own public name travels in every policy (`<system>:<mode>`); a marker inside it (the category
       // `temporal` inside ext-temporal-graph) is the harness's vocabulary, not a leak, so the name is scanned out first.
-      const leaks = findLeaks(this.options.name ? text.replaceAll(this.options.name, '') : text, this.options.markers ?? []);
+      // The harness's own opaque ids (`ns-<16 hex>`, `src-<16 hex>`) are hashes, so a hex raw id (LongMemEval's 8-hex
+      // question ids) can turn up inside one by chance (amendment A11); they are scanned out too.
+      const scanned = (this.options.name ? text.replaceAll(this.options.name, '') : text).replace(/\b(?:ns|src)-[0-9a-f]{16}\b/g, '');
+      const leaks = findLeaks(scanned, this.options.markers ?? []);
       if (leaks.length) throw new SanitizerLeakError(`${method} ${path}`, leaks.length);
       this.options.onRequest?.(path, text);
     }

@@ -21,8 +21,8 @@ import { FullContextSystem } from '../../eval/runner/systems/baselines.ts';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
 import { packContext, packNative, renderItem, strictSources, TOKENIZER, validateSources } from '../../eval/runner/systems/render.ts';
-import { findLeaks, forbiddenMarkers, NS_RE, Sanitizer, SanitizerLeakError, SRC_RE } from '../../eval/runner/systems/sanitize.ts';
-import { SystemError, type Item } from '../../eval/runner/systems/types.ts';
+import { findLeaks, forbiddenMarkers, NS_RE, opaqueSourceId, Sanitizer, SanitizerLeakError, SRC_RE } from '../../eval/runner/systems/sanitize.ts';
+import { SystemError, type Item, type SessionInput } from '../../eval/runner/systems/types.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'memory-systems-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
@@ -80,6 +80,19 @@ describe('sanitizer', () => {
       await sys.reset(ns);
       await sys.retrieve(ns, { text: 'What color is my car?', query_time: null }, { name: 'ext-temporal-graph:fixed-evidence', mode: 'fixed-evidence', settings: {} });
       await expect(sys.retrieve(ns, { text: 'a temporal question', query_time: null }, { name: 'ext-temporal-graph:fixed-evidence', mode: 'fixed-evidence', settings: {} })).rejects.toBeInstanceOf(SanitizerLeakError);
+    } finally { server.stop(); }
+  });
+
+  test('a hex raw id that happens to sit inside an opaque source id does not refuse the request; the same id in the text still does', async () => {
+    const server = serveProtocol(new FakeMemorySystem());
+    try {
+      const src = opaqueSourceId('conv-x', 'session-y');
+      const marker = src.slice(8, 16);
+      const sys = new HttpMemorySystem(server.url, { markers: [marker] });
+      const ns = san.ns('gpt4_2655b836_abs');
+      await sys.reset(ns);
+      await sys.ingestSession(ns, { source_id: src, turns: [{ role: 'user', speaker: 'user', content: 'I bought a red car.' }] } as SessionInput, null);
+      await expect(sys.ingestSession(ns, { source_id: src, turns: [{ role: 'user', speaker: 'user', content: `see ${marker}` }] } as SessionInput, null)).rejects.toBeInstanceOf(SanitizerLeakError);
     } finally { server.stop(); }
   });
 

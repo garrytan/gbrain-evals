@@ -31,6 +31,35 @@ function py(expr: string, ...args: unknown[]): any {
   return JSON.parse(r.stdout.toString());
 }
 
+describe('serve stdin is bounded', () => {
+  test('a serve that stops reading its input fails the call as a timeout within the deadline, is killed, and closes cleanly', () => {
+    const code = [
+      'import importlib.util, json, sys, time, tempfile, os',
+      `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+      'shim = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(shim)',
+      'm = shim.McpStdio(["sleep", "60"], dict(os.environ), tempfile.gettempdir(), os.path.join(tempfile.mkdtemp(), "serve.log"))',
+      't0 = time.monotonic()',
+      'try:',
+      '    m.request("tools/call", {"blob": "x" * (4 << 20)}, timeout_s=2)',
+      '    out = {"raised": None}',
+      'except shim.ShimError as e:',
+      '    out = {"raised": e.kind, "message": str(e)}',
+      'out["seconds"] = time.monotonic() - t0',
+      'm.proc.wait(timeout=10)',
+      'out["killed"] = m.proc.returncode is not None',
+      'm.close()',
+      'print(json.dumps(out))',
+    ].join('\n');
+    const r = Bun.spawnSync(['python3', '-c', code], { cwd: ROOT, timeout: 60_000 });
+    expect(r.exitCode, r.stderr.toString()).toBe(0);
+    const out = JSON.parse(r.stdout.toString());
+    expect(out).toMatchObject({ raised: 'timeout', killed: true });
+    expect(out.message).toContain('stopped reading its input');
+    expect(out.seconds).toBeLessThan(10);
+  });
+});
+
 const TOKENMAX = { reranker_enabled: true, expansion: true };
 const cleanMeta = {
   returned_count: 2, retrieved_count: 2, vector_enabled: true, expansion_applied: true, cache: 'disabled', degraded: [],
