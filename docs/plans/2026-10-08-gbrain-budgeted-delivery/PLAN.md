@@ -1119,7 +1119,9 @@ arm under its own rule.
 - **Cost.** About $85: retrieval freeze $3.70 as measured in decision 1, Sonnet tight and 5-hit pairs about $16,
   judges about $3, frontier replay of the tight pair about $60; the default-budget pair costs nothing. Cap $120.
 
-One opening tests one bundle. The last opening stays in reserve for C4 or a later default-budget change. Changing the
+One opening tests one bundle. It carries this plan's candidate alone against the `auto` control: the 10x plan's
+evidence brief (GBRA-60) did not qualify to join it (gbrain-evals#111: −3.0 points on its 400-question confirm split,
+failing non-inferiority), so there is no joint opening. The last opening stays in reserve for C4 or a later default-budget change. Changing the
 default budget itself (24,000), or what a call without a budget receives, is a separate decision and is not part of
 this plan.
 
@@ -1363,6 +1365,12 @@ before the E1 preregistration is committed.
 | A55 | Guard 9 from live handler calls with reranker time separate; local measurement labeled; held-out ratio overrun terminal | Mechanical | Eng Claude performance review, Astra test plan | Applied | Replay omits retrieval, the reranker dominates handler latency, and a sealed set cannot be used to retune a budget. |
 
 ## Changelog
+
+### 2026-10-09: H1 opens alone; E1 done
+
+H1 carries this plan's candidate alone against the `auto` control, because the 10x plan's evidence brief did not
+qualify for a joint opening (gbrain-evals#111). E1 ran on branch `capy/budgeted-delivery-e1` (report
+`docs/benchmarks/2026-10-08-gbrain-budgeted-delivery-e1.md`); its readings feed the E2 and gbrain PR 1 decisions.
 
 ### 2026-10-08: approved, caps doubled
 
