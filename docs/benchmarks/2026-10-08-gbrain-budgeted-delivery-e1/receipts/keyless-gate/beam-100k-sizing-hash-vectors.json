@@ -1,0 +1,70 @@
+{
+  "benchmark": "beam-100k",
+  "questions": 120,
+  "native": {
+    "rendering": "native",
+    "budget": 6000,
+    "steps": [
+      {
+        "budget": 8000,
+        "r_max": 1.2031282370002072,
+        "next": 6500
+      },
+      {
+        "budget": 6000,
+        "r_max": null,
+        "next": 6000
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 120,
+    "ratio": {
+      "max": 1.2029800979472751,
+      "p50": 1.0250405515004055,
+      "p90": 1.1661203239490938,
+      "p99": 1.1914728682170543,
+      "mean": 1.025214260224215
+    },
+    "verification": {
+      "overflow": 117,
+      "overflow_from_gbrain_overrun": 117,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 119
+    }
+  },
+  "pseudo": {
+    "rendering": "pseudo",
+    "budget": 6000,
+    "steps": [
+      {
+        "budget": 8000,
+        "r_max": 1.2810234099854982,
+        "next": 6100
+      },
+      {
+        "budget": 6000,
+        "r_max": null,
+        "next": 6000
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 240,
+    "ratio": {
+      "max": 1.2814421173283317,
+      "p50": 1.1468453378001118,
+      "p90": 1.2451666666666668,
+      "p99": 1.2730449080258965,
+      "mean": 1.1276762309324622
+    },
+    "verification": {
+      "overflow": 119,
+      "overflow_from_gbrain_overrun": 119,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 119
+    }
+  }
+}

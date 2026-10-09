@@ -30,7 +30,7 @@ export interface CellRow {
 
 interface PerQ { id: string; verdict: boolean | null; error: string | null; text: string; usd: number; readerUsd: number; builderUsd: number; fallbackUsd: number; escalated: boolean | null; rin: number | null; rout: number | null; delivered: number | null; bin: number | null; bout: number | null; overBudget: boolean | null; fellBack: boolean | null; digestWrite: number | null }
 
-export async function buildReport(s: ReturnType<typeof stores>, identity: Record<string, unknown>, opts: { stateDir?: string; ids?: string[] } = {}) {
+export async function buildReport(s: ReturnType<typeof stores>, identity: Record<string, unknown>, opts: { stateDir?: string; ids?: string[]; cells?: string[] } = {}) {
   const ev = loadPilotEvidence();
   const ids = opts.ids ?? pilotSplit().pilot;
   const read = (cell: string, id: string) => s.reads.get(`${cell}|${id}`);
@@ -81,10 +81,11 @@ export async function buildReport(s: ReturnType<typeof stores>, identity: Record
   };
 
   const timing = existsSync(join(opts.stateDir ?? STATE_DIR, 'cohort.ndjson')) ? readNdjson(join(opts.stateDir ?? STATE_DIR, 'cohort.ndjson')) : [];
-  const cells = [...qualityCells(), ...[...new Set(s.reads.values().map(r => r.cell).filter(c => c.endsWith(OPUS)))].sort((a, b) => Number(b.startsWith('a0:')) - Number(a.startsWith('a0:')) || a.localeCompare(b))];
+  const cells = opts.cells ?? [...qualityCells(), ...[...new Set(s.reads.values().map(r => r.cell).filter(c => c.endsWith(OPUS)))].sort((a, b) => Number(b.startsWith('a0:')) - Number(a.startsWith('a0:')) || a.localeCompare(b))];
   const a0 = new Map<string, Map<string, boolean>>();
   const rows: CellRow[] = [];
   const outcomeRows: Record<string, OutcomeAxes[]> = {};
+  const correctByCell: Record<string, Record<string, 0 | 1>> = {};
   for (const cell of cells) {
     const pq = perQuestion(cell);
     if (!pq || pq.some(x => !x)) continue;
@@ -92,6 +93,7 @@ export async function buildReport(s: ReturnType<typeof stores>, identity: Record
     outcomeRows[cell] = axesRows;
     const sum = summarize(axesRows, HEDGE_AXIS.validated);
     const correct = new Map(pq.map((x, k) => [x.id, category(axesRows[k]) === 'correct']));
+    correctByCell[cell] = Object.fromEntries([...correct].map(([id, ok]) => [id, ok ? 1 : 0]));
     if (cell.startsWith('a0:')) a0.set(cell.slice(3), correct);
     const reader = cell.startsWith('direct:') ? null : (cell.split(/[:>]/).at(-1) as string);
     const ref = reader ? a0.get(reader) : null;
@@ -122,5 +124,5 @@ export async function buildReport(s: ReturnType<typeof stores>, identity: Record
     labels: round(s.labels.values().reduce((a, l) => a + l.usd, 0), 4),
     cohort: round(timing.reduce((a, r) => a + (r.usd ?? 0), 0), 4),
   };
-  return { schema: 'wave1-pilot-report/v1', identity, ids_sha256: new Bun.CryptoHasher('sha256').update(ids.join('\n')).digest('hex'), n_questions: ids.length, label_model: LABEL_MODEL, hedge_axis: HEDGE_AXIS, budgets: BUDGETS, cheap: CHEAP, frontier: FRONTIER, rows, spend_list_usd: spend };
+  return { schema: 'wave1-pilot-report/v1', identity, ids_sha256: new Bun.CryptoHasher('sha256').update(ids.join('\n')).digest('hex'), n_questions: ids.length, label_model: LABEL_MODEL, hedge_axis: HEDGE_AXIS, budgets: BUDGETS, cheap: CHEAP, frontier: FRONTIER, rows, correct_by_cell: correctByCell, spend_list_usd: spend };
 }

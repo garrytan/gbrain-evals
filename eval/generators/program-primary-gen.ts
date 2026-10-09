@@ -117,7 +117,7 @@ function mulberry32(seed: number) {
   };
 }
 
-class Rng {
+export class Rng {
   private next: () => number;
   constructor(seed: number) { this.next = mulberry32(seed); }
   int(lo: number, hi: number) { return lo + Math.floor(this.next() * (hi - lo + 1)); }
@@ -129,21 +129,21 @@ class Rng {
   }
 }
 
-function draw<T>(make: () => T, ok: (v: T) => boolean, what: string): T {
+export function draw<T>(make: () => T, ok: (v: T) => boolean, what: string): T {
   for (let i = 0; i < MAX_DRAWS; i++) { const v = make(); if (ok(v)) return v; }
   throw new Error(`program-primary-gen: ran out of ${what}`);
 }
 
 // ─── Vocabulary (invented) ──────────────────────────────────────────
 
-const FIRST = ['Mira', 'Tobin', 'Ines', 'Dario', 'Kenji', 'Lena', 'Arjun', 'Selma', 'Ruben', 'Noor', 'Calla', 'Yusuf', 'Petra', 'Omari', 'Hana', 'Felix', 'Zara', 'Emil', 'Wren', 'Idris', 'Maren', 'Joaquin', 'Suki', 'Bram', 'Lior', 'Anouk', 'Desmond', 'Ilse', 'Kofi', 'Rania', 'Soren', 'Talia', 'Vikram', 'Elodie', 'Matteo', 'Ayla', 'Niko', 'Odette'];
-const LAST = ['Okafor', 'Lindqvist', 'Marchetti', 'Haddad', 'Nakashima', 'Brandt', 'Mehta', 'Kowalczyk', 'Ferreira', 'Aziz', 'Delacroix', 'Osei', 'Varga', 'Thorne', 'Ishikawa', 'Morales', 'Petrov', 'Quist', 'Rahman', 'Sato', 'Torvik', 'Udeh', 'Valdez', 'Wexler', 'Yilmaz', 'Zeller', 'Abara', 'Castellan', 'Draxler', 'Eskildsen', 'Fairbourne', 'Galloway', 'Holmgren', 'Ivers', 'Jaramillo'];
-const SYL_A = ['Quor', 'Tel', 'Ves', 'Ondr', 'Pral', 'Kest', 'Mur', 'Zel', 'Bran', 'Cael', 'Dov', 'Fen', 'Gral', 'Hyd', 'Isk', 'Jor', 'Lum', 'Nax', 'Orv', 'Thal', 'Ulm', 'Vor', 'Wyn', 'Xer', 'Yar'];
-const SYL_B = ['vane', 'miro', 'tiva', 'ellis', 'onex', 'adyn', 'ura', 'ithe', 'oria', 'quent', 'ostra', 'ivel', 'anta', 'esso', 'umbr', 'ari', 'ovik', 'enza', 'alto', 'ique'];
-const CUSTOMER_SUFFIX = ['Logistics', 'Health', 'Foods', 'Robotics', 'Energy', 'Media', 'Retail', 'Freight', 'Analytics', 'Insurance'];
-const OTHER_SUFFIX = ['Ventures', 'Capital', 'Partners', 'Advisory', 'Talent'];
-const PRODUCTS = ['remote build cache', 'feature-flag service', 'observability agent', 'data pipeline testing tool', 'internal developer portal', 'CI flake detector'];
-const PRINCIPAL_ROLES = ['founder and CEO', 'co-founder and CTO', 'founder and head of engineering', 'co-founder and staff engineer'];
+export const FIRST = ['Mira', 'Tobin', 'Ines', 'Dario', 'Kenji', 'Lena', 'Arjun', 'Selma', 'Ruben', 'Noor', 'Calla', 'Yusuf', 'Petra', 'Omari', 'Hana', 'Felix', 'Zara', 'Emil', 'Wren', 'Idris', 'Maren', 'Joaquin', 'Suki', 'Bram', 'Lior', 'Anouk', 'Desmond', 'Ilse', 'Kofi', 'Rania', 'Soren', 'Talia', 'Vikram', 'Elodie', 'Matteo', 'Ayla', 'Niko', 'Odette'];
+export const LAST = ['Okafor', 'Lindqvist', 'Marchetti', 'Haddad', 'Nakashima', 'Brandt', 'Mehta', 'Kowalczyk', 'Ferreira', 'Aziz', 'Delacroix', 'Osei', 'Varga', 'Thorne', 'Ishikawa', 'Morales', 'Petrov', 'Quist', 'Rahman', 'Sato', 'Torvik', 'Udeh', 'Valdez', 'Wexler', 'Yilmaz', 'Zeller', 'Abara', 'Castellan', 'Draxler', 'Eskildsen', 'Fairbourne', 'Galloway', 'Holmgren', 'Ivers', 'Jaramillo'];
+export const SYL_A = ['Quor', 'Tel', 'Ves', 'Ondr', 'Pral', 'Kest', 'Mur', 'Zel', 'Bran', 'Cael', 'Dov', 'Fen', 'Gral', 'Hyd', 'Isk', 'Jor', 'Lum', 'Nax', 'Orv', 'Thal', 'Ulm', 'Vor', 'Wyn', 'Xer', 'Yar'];
+export const SYL_B = ['vane', 'miro', 'tiva', 'ellis', 'onex', 'adyn', 'ura', 'ithe', 'oria', 'quent', 'ostra', 'ivel', 'anta', 'esso', 'umbr', 'ari', 'ovik', 'enza', 'alto', 'ique'];
+export const CUSTOMER_SUFFIX = ['Logistics', 'Health', 'Foods', 'Robotics', 'Energy', 'Media', 'Retail', 'Freight', 'Analytics', 'Insurance'];
+export const OTHER_SUFFIX = ['Ventures', 'Capital', 'Partners', 'Advisory', 'Talent'];
+export const PRODUCTS = ['remote build cache', 'feature-flag service', 'observability agent', 'data pipeline testing tool', 'internal developer portal', 'CI flake detector'];
+export const PRINCIPAL_ROLES = ['founder and CEO', 'co-founder and CTO', 'founder and head of engineering', 'co-founder and staff engineer'];
 const OTHER_ROLES = ['partner at', 'advisor from', 'recruiter at', 'principal at'];
 /** Role pairs for a role correction: [stored (wrong), corrected]. Every role appears in one pair only. */
 const ROLE_PAIRS: ReadonlyArray<[string, string]> = [
@@ -152,10 +152,10 @@ const ROLE_PAIRS: ReadonlyArray<[string, string]> = [
   ['IT Manager', 'Director of Enterprise Systems'],
 ];
 /** Roles for contacts without a role correction (never one of ROLE_PAIRS). */
-const PLAIN_ROLES = ['Platform Lead', 'Head of Data', 'DevOps Manager', 'Director of Engineering', 'SRE Lead', 'Head of IT', 'Tooling Lead', 'Release Manager'];
-const TOPICS = ['pricing review', 'pilot kickoff', 'security review', 'contract walkthrough', 'roadmap session', 'technical deep dive', 'renewal discussion', 'rollout planning call', 'design partner sync', 'procurement review'];
+export const PLAIN_ROLES = ['Platform Lead', 'Head of Data', 'DevOps Manager', 'Director of Engineering', 'SRE Lead', 'Head of IT', 'Tooling Lead', 'Release Manager'];
+export const TOPICS = ['pricing review', 'pilot kickoff', 'security review', 'contract walkthrough', 'roadmap session', 'technical deep dive', 'renewal discussion', 'rollout planning call', 'design partner sync', 'procurement review'];
 /** Commitment items: [phrase in prose, recognizing patterns]. */
-const COMMITMENTS: ReadonlyArray<[string, string[]]> = [
+export const COMMITMENTS: ReadonlyArray<[string, string[]]> = [
   ['the SOC 2 bridge letter', ['soc ?2 bridge letter', 'bridge letter']],
   ['the revised statement of work', ['revised (?:statement of work|sow)', 'statement of work']],
   ['the migration runbook', ['migration runbook', 'runbook']],
@@ -169,9 +169,9 @@ const COMMITMENTS: ReadonlyArray<[string, string[]]> = [
   ['the data processing addendum', ['data processing addendum', '\\bdpa\\b']],
   ['the uptime report for last quarter', ['uptime report']],
 ];
-const DONE_ITEMS = ['security questionnaire', 'W-9 form', 'product roadmap deck', 'trial extension', 'invoice copy', 'onboarding checklist'];
-const TIMES = ['09:30', '10:00', '11:00', '13:30', '14:00', '15:30', '16:00'];
-const FILLER_LINES = [
+export const DONE_ITEMS = ['security questionnaire', 'W-9 form', 'product roadmap deck', 'trial extension', 'invoice copy', 'onboarding checklist'];
+export const TIMES = ['09:30', '10:00', '11:00', '13:30', '14:00', '15:30', '16:00'];
+export const FILLER_LINES = [
   'Spent the morning on hiring loops; two strong backend candidates.', 'Board deck draft is in progress; numbers due Friday.', 'Ran the weekly metrics review with the team.',
   'Fixed the flaky integration test in the billing service.', 'Investor update went out; two replies asking about churn.', 'Customer support queue is under control this week.',
   'Need to renew the office lease before the end of the year.', 'Discussed the Q4 roadmap with the engineering leads.', 'Tried a new on-call rotation; feedback is mixed.',
@@ -181,14 +181,14 @@ const FILLER_LINES = [
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-function slugify(s: string) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+export function slugify(s: string) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 export function addDays(iso: string, days: number) { const d = new Date(`${iso}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); }
 /** `Thursday, October 16`. */
 export function humanDate(iso: string) {
   const d = new Date(`${iso}T00:00:00Z`);
   return `${WEEKDAYS[d.getUTCDay()]}, ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
 }
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Patterns for one calendar date in the forms an answer may use: October 21, Oct 21st, 21 October, 10/21, 2026-10-21. */
 export function dateMatcher(iso: string): Matcher {

@@ -56,9 +56,23 @@ export interface Item {
   /** Set when the system marks the fact superseded. */
   valid_to: string | null;
   provenance_status: ProvenanceStatus;
+  /**
+   * The session date of the item's source, taken from the namespace's session
+   * table by the harness (never from the system's row); set only by a dated
+   * recipe. Native rendering ignores it; the dated renderers print it as the
+   * C1 header.
+   */
+  event_date?: string | null;
 }
 
-export interface RetrieveResult { items: Item[]; applied_settings: Record<string, unknown>; truncated: boolean; raw?: unknown; service_ms?: number }
+/**
+ * Typed per-row diagnostics a system returns beside its items. The runner
+ * copies it into the retrieval row as is (unlike `raw`, which it drops), so
+ * receipts assert values instead of presence.
+ */
+export type RetrieveAccounting = Record<string, unknown> & { kind: string; version: number };
+
+export interface RetrieveResult { items: Item[]; applied_settings: Record<string, unknown>; truncated: boolean; raw?: unknown; service_ms?: number; accounting?: RetrieveAccounting }
 
 export interface DeleteResult { status: 'deleted' | 'partial' | 'unsupported'; receipt: Record<string, unknown>; service_ms?: number }
 

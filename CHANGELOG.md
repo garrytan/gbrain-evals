@@ -2,6 +2,58 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.58] - 2026-10-09
+
+### Budgeted delivery E1: gbrain measured through `query`; dates were most of the LoCoMo gap, hit count is the lever at 8,000 tokens
+
+E1 of the [budgeted delivery plan](https://github.com/garrytan/gbrain-evals/blob/capy/gbrain-budgeted-delivery-plan/docs/plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md) (approved 2026-10-08, E1 cap $100), at gbrain `c5fb0201`, development data. Ledger committed $66.42, of which $16.65 is reservations charged for Sonnet 5.5 requests the provider refused unbilled.
+
+- **Report** ([doc](docs/benchmarks/2026-10-08-gbrain-budgeted-delivery-e1.md), [preregistration](docs/benchmarks/2026-10-08-gbrain-budgeted-delivery-e1-preregistration.md) with amendments A0 to A2). Both reproduction arms land inside their bands. A date line on each of the comparison's chunks lifts LoCoMo temporal from 28 to 78 of 100 (all LoCoMo 66.1% to 75.1%), so the LoCoMo shortfall is mainly the adapter. `query`'s `auto` at 8,000 tokens on 25 hits adds +4 / +0.5 / +1 points over dated chunks and overran its explicit budget on every slice and LoCoMo question; on the first five hits it reaches 82% on the LongMemEval-S slice with Sonnet 5.5, level with whole sessions (80%), so `breadth_capped` leads E2. Rendering changes nothing (+1). As shipped (24,000 tokens, read whole) gbrain answers 89% on the slice. The saved-facts probe (Sonnet 4.6 extraction, gbrain `c5fb0201`'s default) is 11 points below the best LoCoMo arm: no headroom.
+- **`gbrain-query` connector** (`eval/runner/systems/gbrain-query/`, with a README for reuse): named wire requests (frozen chunk list, native default, `auto` with an explicit budget, live parity, bare budget), pin checks against gbrain's registered keys, per-block delivery records (unit, budget, overrun, spill) and reader bytes, live parity on every consumed field, and keyless fixtures for the `auto` overrun at 8,000 tokens and the frozen-hit `effective_date` loss.
+- **memory-qa recipes**: named contexts with immutable recipe hashes in the context and arm keys (dated native, undated twin reused by prompt hash, pseudo-session with a specified block parser, rehydration of the frozen list, a per-recipe harness budget), typed `RetrieveResult.accounting`, `--frozen-from` for deliveries on frozen lists, and the facts lane's token count.
+- **Tooling**: budget sizing on the real frozen lists, the preregistered drop order, a keyless accounting gate and its stub proxy, the readings script, and a text-free receipt exporter.
+
+## [0.10.57] - 2026-10-09
+
+### Evidence brief confirmation (wave 1 A6): on 400 fresh questions the brief is not shown to match whole sessions
+
+Wave 1 item A6 of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) (GBRA-60), run on the maintainer's 2026-10-08 decision to continue and confirm after the pilot. Paid spend $94.91 of a $150 ledger cap.
+
+- **Report** ([doc](docs/benchmarks/2026-10-08-evidence-brief-confirmation.md), [preregistration](docs/benchmarks/2026-10-08-evidence-brief-confirmation-preregistration.md), commit `943385f` before any cell, no amendments). Primary: the 2,000-token Haiku 5.5 brief read by Sonnet 5.5 scores 363 of 400 against 375 for whole sessions, -3.0 points (95% interval -5.25 to -0.75): inconclusive at T0's 3.0-point tolerance, so the brief does not join the sealed v2 opening. Secondaries (Holm): the brief on Opus 5.5 and `gpt-6.1-sol` and at 1k/4k/7k tokens, DIRECT and FALLBACK are inconclusive (FALLBACK -1.25, Holm p 0.10); TRUNC at 2k and 7k fail. Builder and reader tokens, dollars and p95 on every row, from a timing cohort over all thirteen cells.
+- **Finding.** The brief validator's number check drops a correct claim that cites its session's date, which lives in the `<chat_session>` header rather than the text (3 of the 16 questions the brief lost had a number-check drop).
+- **Driver.** `eval/runner/pilot/run.ts --split confirm`, `eval/runner/pilot/confirm.ts` (the A6 cells and comparison families), a cohort over any cell set, and per-question correctness in the report.
+
+## [0.10.56] - 2026-10-09
+
+### Cat 40 corrections: published runs where gbrain ran without reranking
+
+Docs-only follow-up to the restore audit in #109 (GBRA-39). Restored Cat 40 slots kept the slot build's metering-proxy port in their Voyage URL, so in later processes every rerank request failed and gbrain returned unreranked results; #76 (`7709a70`) and #109 fixed the harness. No receipt or number is rewritten.
+
+- **Dated corrections (2026-10-09)** near the top of each affected report, with per-run counts of cells whose metered gbrain calls include a rerank request ([audit](docs/benchmarks/2026-10-08-program-primary-hard/root-cause/restore-audit.json)), and a changelog line at the bottom: the [Cat 40 report](docs/benchmarks/2026-10-02-model-ladder.md) (the finding's held-out wave 0 of 500, the cost wave 0 of 1,709, entity recall 0 of 1,850, development and fix-wave ladders, scale tier 0 of 200, release ladder 362 of 1,456 and capped pilot 185 of 300; held-out check 1,691 of 1,800, unaffected) and its scale-tier, follow-ups, release-ladder, a714410a5-headline and P8 hidden-tool pages; [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) (instruction A/B 0 of 900; the `b3f4e8b` same-window pair is 0 of 300 against 300 of 300 and confounded); [registration surface](docs/benchmarks/2026-10-05-registration-surface.md) (0 of 120); [P8](docs/benchmarks/2026-10-05-heldout-program/p8.md) (0 of 402 development cells); fix wave [11](docs/benchmarks/2026-10-07-wave11-agent-smoke.md) (0 of 316) and [12](docs/benchmarks/2026-10-07-wave12-agent-smoke.md) (0 of 280) agent smokes.
+- **What holds.** Comparisons between gbrain builds or surfaces that shared the condition stay internally valid for gbrain without its reranker. Comparisons of gbrain with files, Postgres or the memory tool measure that configuration. The F1/F10 same-window pair for `b3f4e8b`, and the 59-to-46 baseline drift it was set up to control, mix a reranked and an unreranked run. The only measurement of the effect is on the Cat 40 Hard development world (Sonnet 5.5, `8e11aa1f3`, 50 tasks: 21 with reranking, 19 without; 7 won, 5 lost; #76), a different world and tier, not a correction factor.
+- **README and docs index.** The Cat 40 results row, the agent-tasks comparison, a new Corrections bullet, and the wave 11 and wave 12 index rows link the corrections.
+
+## [0.10.55] - 2026-10-08
+
+### T0b root cause: the correcting page almost never reaches the reader; current master is not measurably better; restored slots searched without the reranker
+
+Wave 1 follow-up of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) (GBRA-60). Development seeds only. Ledger spend $53.19 of a $60 cap.
+
+- **Root cause** ([report](docs/benchmarks/2026-10-08-program-primary-hard-root-cause.md)). Every recorded T0b baseline tool call was replayed on rebuilt v0.60.106.0 brains. In 111 of 112 failed contact, terms and date items, no tool result held the correcting page or its decisive sentence; no push carried a stale value; facts extraction never ran on imported pages. The mails link only to the champion's person page, the call note links nowhere and the company's short code is not one of its names, while `context_pack` cards omit `referenced_by`. Readers that called `entity` on the champion (78 runs) never failed on the contact or the date; gpt-6.1-sol makes that call in 46 of 48 runs, Opus 5.5 in 3. Ranked candidate fixes, no build.
+- **Candidate 0** (preregistration amendment 1, `46d9ca77`, before any cell): gbrain master `fc548317` (v0.60.122.0) on the frozen protocol fails 67 of 144 runs against 74, factor 1.10 (ratio interval 0.64 to 1.28), `inconclusive` for every reader; both mutants detected; inside the resource envelope. `eval/runner/t0/paired.ts` computes the paired PW comparison.
+- **Harness: restored slots searched without the reranker.** `GbrainSlot` kept the build process's proxy port in each snapshot's Voyage URL, so every later process reranked against a dead port. `restore()` now rewrites it, and two fixes come from GBRA-39's #76: a fail-closed rerank probe before any Cat 40 or T0b paid cell, and a keyed proxy unbind. An audit of committed results (`root-cause/restore-audit.json`) lists the runs whose cells never reached the reranker; no receipt is rewritten.
+- **Fixture** for the short-code alias case in gbrain #6271: four unchanged pages from T0b dev seed 20261104.
+
+## [0.10.54] - 2026-10-08
+
+### The harder program primary (T0b): calibration, preregistration and the v0.60.106.0 development baseline
+
+Follow-up to the T0 baseline's ceiling (wave 1 of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97), GBRA-60). Ledger spend $78.19 of a $110 cap.
+
+- **Workload.** `eval/generators/program-primary-hard-gen.ts` (`program-primary-hard-v1`): 919-page founder brains; session 2 replies to a champion and an unnamed procurement lead with no cue to look; the meeting move sits in a mail thread, the corrected figure in a call note, a dated mail hands procurement to a new person, and one promise comes from a review the champion did not attend. Runner `eval/runner/t0b-program-primary.ts` on the T0 carrier, scorer `t0b-score-v1`, registry entry `program-primary-hard` (T0b).
+- **Preregistration** ([doc](docs/benchmarks/2026-10-08-program-primary-hard-preregistration.md), commit `b355a8df`): three calibration rounds on separate development seeds (18/18, 8/18, 6/18 failures); knobs frozen at 14/36.
+- **Baseline** ([report](docs/benchmarks/2026-10-08-program-primary-hard-baseline.md)): 74 of 144 runs fail (51.4%; Opus 5.5 38/48, Sonnet 5.5 35/48, gpt-6.1-sol 1/48), mostly by greeting the procurement contact who handed off. Both mutants fail 24 of 24 for every reader. The push-off ablation is inconclusive. PW's sample-size rule gives 32 personas.
+
 ## [0.10.53] - 2026-10-08
 
 ### The evidence architecture pilot (wave 1 A4, A5, A10): a 2,000-token brief keeps Sonnet 5.5 within 1 point of whole sessions at a sixth of the cost, but the preregistered off-ramp fires

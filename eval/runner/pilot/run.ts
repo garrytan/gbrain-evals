@@ -174,13 +174,16 @@ function parseCell(cell: string): { kind: string; budget: Budget | null; cheap: 
   return { kind, budget, cheap: rest[0] as Cheap, reader: rest[1] as Reader };
 }
 
-export async function runBuild(ids: string[], s: ReturnType<typeof stores>, mod: BriefModule, log: (l: string) => void): Promise<void> {
+export interface BuildPlan { builders: readonly Cheap[]; budgets: readonly Budget[]; digests: boolean }
+export const PILOT_BUILD: BuildPlan = { builders: CHEAP, budgets: BUDGETS, digests: true };
+
+export async function runBuild(ids: string[], s: ReturnType<typeof stores>, mod: BriefModule, log: (l: string) => void, plan: BuildPlan = PILOT_BUILD): Promise<void> {
   const ev = loadPilotEvidence();
   const jobs: Array<() => Promise<void>> = [];
   for (const id of ids) {
     const q = ev.get(id)!;
     const sessions = q.sessions.map(x => ({ session_id: x.session_id, ...(x.date ? { date: x.date } : {}), body: x.body }));
-    for (const budget of BUDGETS) for (const builder of CHEAP) {
+    for (const budget of plan.budgets) for (const builder of plan.builders) {
       const key = `brief@${budget}:${builder}:${id}`;
       if (!s.builds.has(key)) jobs.push(async () => {
         const p = mod.buildBriefPrompt({ question: q.question, questionDate: q.question_date, sessions, budgetTokens: budget });
@@ -188,7 +191,7 @@ export async function runBuild(ids: string[], s: ReturnType<typeof stores>, mod:
         s.builds.put({ key, kind: 'brief', budget, builder, question_id: id, session_id: null, ...lean(builder, r) });
       });
     }
-    for (const session of sessions) for (const budget of BUDGETS) for (const builder of CHEAP) {
+    if (plan.digests) for (const session of sessions) for (const budget of plan.budgets) for (const builder of plan.builders) {
       const key = `digest@${digestBudget(budget)}:${builder}:${sessionKey(session)}`;
       if (!s.builds.has(key) && !jobs.some(j => (j as any).key === key)) {
         const job = Object.assign(async () => {
@@ -245,9 +248,8 @@ export async function runRead(cells: string[], ids: string[], s: ReturnType<type
       const key = `${cell}|${id}`;
       if (s.reads.has(key)) continue;
       const q = ev.get(id)!;
-      if (committed) {
-        const r = committed.get(id);
-        if (!r) throw new Error(`${cell}: no committed A0 row for ${id}`);
+      const r = committed?.get(id);
+      if (r) {
         const usage = normalizeUsage(usageSourceOf(`${c.reader!.startsWith('claude') ? 'anthropic' : 'openai'}:${c.reader}`), r.usage_raw);
         s.reads.put({ key, cell, question_id: id, model: c.reader!, source: r.source, text: r.error ? '' : r.text, finish: r.finish, error: r.error, usage, usd: listUsd(c.reader!, usage), latency_ms: null, delivered_cl100k: cl100k(q.evidence), meta: { committed_verdict: r.verdict }, receipts: [] });
         continue;
@@ -264,9 +266,10 @@ export async function runRead(cells: string[], ids: string[], s: ReturnType<type
   await pool(jobs, CONCURRENCY, async j => { await j(); if (++done % 100 === 0) log(`read: ${done}/${jobs.length}`); });
 }
 
-export async function runJudge(s: ReturnType<typeof stores>, log: (l: string) => void): Promise<void> {
+export async function runJudge(s: ReturnType<typeof stores>, log: (l: string) => void, ids?: string[]): Promise<void> {
   const ev = loadPilotEvidence();
-  const jobs = s.reads.values().filter(r => !s.judges.has(r.key)).map(r => async () => {
+  const want = ids ? new Set(ids) : null;
+  const jobs = s.reads.values().filter(r => !s.judges.has(r.key) && (!want || want.has(r.question_id))).map(r => async () => {
     const q = ev.get(r.question_id)!;
     if (r.error) { s.judges.put({ key: r.key, cell: r.cell, question_id: r.question_id, verdict: false, raw: null, error: 'reader_error', usd: 0 }); return; }
     if (typeof r.meta.committed_verdict === 'boolean') { s.judges.put({ key: r.key, cell: r.cell, question_id: r.question_id, verdict: r.meta.committed_verdict as boolean, raw: 'committed W10 official verdict', error: null, usd: 0 }); return; }
@@ -325,8 +328,12 @@ export function paidStart(argv: string[], arm: string, estimateUsd: number): { r
 if (import.meta.main) {
   const [cmd, ...argv] = process.argv.slice(2);
   const log = (l: string) => process.stderr.write(`[pilot] ${l}\n`);
-  const { pilot } = pilotSplit();
-  const ids = flag(argv, '--limit') ? pilot.slice(0, Number(flag(argv, '--limit'))) : pilot;
+  const { pilot, confirm } = pilotSplit();
+  const confirmRun = flag(argv, '--split') === 'confirm';
+  const { CONFIRM_CELLS, CONFIRM_BUILD } = await import('./confirm.ts');
+  const splitIds = confirmRun ? confirm : pilot;
+  const ids = flag(argv, '--ids')?.split(',') ?? (flag(argv, '--limit') ? splitIds.slice(0, Number(flag(argv, '--limit'))) : splitIds);
+  const defaultCells = confirmRun ? CONFIRM_CELLS : qualityCells();
   if (cmd === 'split') {
     const sp = pilotSplit();
     console.log(JSON.stringify({ seed_rule: 'stratifiedSample(report types of W10c 150 subset, 100, 20261007)', ...sp, pilot_sha256: textKey(sp.pilot.join('\n')), confirm_sha256: textKey(sp.confirm.join('\n')) }, null, 1));
@@ -340,7 +347,7 @@ if (import.meta.main) {
   if (cmd === 'report') {
     const { buildReport } = await import('./report.ts');
     const out = flag(argv, '--out');
-    const rep = await buildReport(stores(), (await loadBriefModule()).identity);
+    const rep = await buildReport(stores(), (await loadBriefModule()).identity, { ids, cells: confirmRun ? CONFIRM_CELLS : undefined });
     if (out) writeFileSync(out, JSON.stringify(rep, null, 1) + '\n');
     else console.log(JSON.stringify(rep, null, 1));
     process.exit(0);
@@ -352,17 +359,21 @@ if (import.meta.main) {
   const { run, guard } = paidStart(argv, `wave1-pilot-${cmd}`, Number(flag(argv, '--estimate-usd') ?? estimate[cmd]));
   try {
     if (cmd === 'probe') console.log(JSON.stringify(await runProbe(mod), null, 1));
-    if (cmd === 'build') await runBuild(ids, s, mod, log);
+    if (cmd === 'build') await runBuild(ids, s, mod, log, confirmRun ? CONFIRM_BUILD : PILOT_BUILD);
     if (cmd === 'read') {
       const only = flag(argv, '--only');
-      const cells = flag(argv, '--cells')?.split(',') ?? qualityCells().filter(c => !only || new RegExp(only).test(c));
+      const cells = flag(argv, '--cells')?.split(',') ?? defaultCells.filter(c => !only || new RegExp(only).test(c));
       await runRead(cells, ids, s, mod, log);
     }
-    if (cmd === 'judge') await runJudge(s, log);
+    if (cmd === 'judge') await runJudge(s, log, ids);
     // The hedge axis failed validation, so labels go only where they change a reported number: the commitment of
     // every judged-wrong answer, and every DIRECT answer (FALLBACK's routing).
-    if (cmd === 'label') await labelTexts(s.reads.values().filter(r => !r.error && (r.cell.startsWith('direct:') || s.judges.get(r.key)?.verdict === false)).map(r => r.text), s, LABEL_MODEL, log);
-    if (cmd === 'cohort') { const { runCohort } = await import('./cohort.ts'); await runCohort(argv, s, mod, log); }
+    if (cmd === 'label') { const want = new Set(ids); await labelTexts(s.reads.values().filter(r => want.has(r.question_id) && !r.error && (r.cell.startsWith('direct:') || s.judges.get(r.key)?.verdict === false)).map(r => r.text), s, LABEL_MODEL, log); }
+    if (cmd === 'cohort') {
+      const { runCohort } = await import('./cohort.ts');
+      if (confirmRun) { const { confirmCohortIds } = await import('./confirm.ts'); await runCohort(argv, s, mod, log, STATE_DIR, { ids: confirmCohortIds(), cells: CONFIRM_CELLS, seed: (await import('./confirm.ts')).CONFIRM_SEED + 2 }); }
+      else await runCohort(argv, s, mod, log);
+    }
   } finally {
     guard.uninstall();
     const summary = run.close();

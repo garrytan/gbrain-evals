@@ -12,7 +12,7 @@ import { JUDGED_LABEL_SYSTEM } from '../outcomes/v3.ts';
 import { qualityCells } from './cells.ts';
 import { pilotSplit } from './evidence.ts';
 import { buildReport } from './report.ts';
-import { loadBriefModule, labelTexts, runBuild, runJudge, runRead, stores } from './run.ts';
+import { loadBriefModule, labelTexts, runBuild, runJudge, runRead, stores, type BuildPlan } from './run.ts';
 
 /** A provider stand-in: builders get a grounded one-claim JSON brief, labelers alternate labels, judges say yes, readers answer. */
 export function scriptedFetch(): { fetch: typeof fetch; calls: Array<{ host: string; model: string }> } {
@@ -44,7 +44,7 @@ export function scriptedFetch(): { fetch: typeof fetch; calls: Array<{ host: str
   return { fetch: fetchImpl, calls };
 }
 
-export async function runSmoke(opts: { questions?: number } = {}) {
+export async function runSmoke(opts: { questions?: number; cells?: string[]; build?: BuildPlan } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'pilot-smoke-'));
   const previous = globalThis.fetch;
   const { fetch: scripted, calls } = scriptedFetch();
@@ -57,12 +57,13 @@ export async function runSmoke(opts: { questions?: number } = {}) {
     const s = stores(dir);
     const { mod, identity } = await loadBriefModule();
     const quiet = () => {};
-    await runBuild(ids, s, mod, quiet);
-    await runRead(qualityCells(), ids, s, mod, quiet);
+    const cells = opts.cells ?? qualityCells();
+    await runBuild(ids, s, mod, quiet, opts.build);
+    await runRead(cells, ids, s, mod, quiet);
     await runJudge(s, quiet);
     await labelTexts(s.reads.values().filter(r => !r.error).map(r => r.text), s, undefined, quiet);
-    const report = await buildReport(s, identity, { stateDir: dir, ids });
-    return { ids, calls: calls.length, hosts: [...new Set(calls.map(c => c.host))], models: [...new Set(calls.map(c => c.model))].sort(), cells: report.rows.length, expected_cells: qualityCells().length, rows: report.rows.map(r => ({ cell: r.cell, n: r.n, correct: r.correct, usd_per_q: r.usd_per_q, delivered: r.delivered_cl100k })) };
+    const report = await buildReport(s, identity, { stateDir: dir, ids, cells: opts.cells });
+    return { ids, calls: calls.length, hosts: [...new Set(calls.map(c => c.host))], models: [...new Set(calls.map(c => c.model))].sort(), cells: report.rows.length, expected_cells: cells.length, correct_by_cell: report.correct_by_cell, rows: report.rows.map(r => ({ cell: r.cell, n: r.n, correct: r.correct, usd_per_q: r.usd_per_q, delivered: r.delivered_cl100k })) };
   } finally {
     globalThis.fetch = previous;
     if (keys.a !== undefined) process.env.ANTHROPIC_API_KEY = keys.a;

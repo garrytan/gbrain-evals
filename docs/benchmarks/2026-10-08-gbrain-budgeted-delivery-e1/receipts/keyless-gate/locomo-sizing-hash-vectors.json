@@ -1,0 +1,70 @@
+{
+  "benchmark": "locomo",
+  "questions": 587,
+  "native": {
+    "rendering": "native",
+    "budget": 6000,
+    "steps": [
+      {
+        "budget": 8000,
+        "r_max": 1.0566384057337646,
+        "next": 7400
+      },
+      {
+        "budget": 6000,
+        "r_max": null,
+        "next": 6000
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 587,
+    "ratio": {
+      "max": 1.0569199397109672,
+      "p50": 1.0057371349095967,
+      "p90": 1.0429431072210065,
+      "p99": 1.0522870034504115,
+      "mean": 1.0119779215497728
+    },
+    "verification": {
+      "overflow": 587,
+      "overflow_from_gbrain_overrun": 587,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 587
+    }
+  },
+  "pseudo": {
+    "rendering": "pseudo",
+    "budget": 6000,
+    "steps": [
+      {
+        "budget": 8000,
+        "r_max": 1.2296808160579138,
+        "next": 6300
+      },
+      {
+        "budget": 6000,
+        "r_max": null,
+        "next": 6000
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 1174,
+    "ratio": {
+      "max": 1.2296808160579138,
+      "p50": 1.1663177483135614,
+      "p90": 1.2037691401648998,
+      "p99": 1.2152852529601723,
+      "mean": 1.1751984455322186
+    },
+    "verification": {
+      "overflow": 587,
+      "overflow_from_gbrain_overrun": 587,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 587
+    }
+  }
+}

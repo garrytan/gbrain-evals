@@ -42,15 +42,15 @@ export interface GbrainModules {
 
 const RECYCLE_EVERY = 25;
 const PRESERVE_TABLES = new Set(['sources', 'config', 'gbrain_cycle_locks', 'subagent_rate_leases']);
-const slugOf = (sourceId: string) => `chat/${sourceId.replace(/^src-/, '')}`;
-const sourceOfSlug = (slug: string) => /^chat\/[0-9a-f]{16}$/.test(slug) ? `src-${slug.slice(5)}` : null;
+export const slugOf = (sourceId: string) => `chat/${sourceId.replace(/^src-/, '')}`;
+export const sourceOfSlug = (slug: string) => /^chat\/[0-9a-f]{16}$/.test(slug) ? `src-${slug.slice(5)}` : null;
 
 /** One brain, reused across namespaces the way memory-qa always did it. */
-abstract class GbrainBrain implements MemorySystem {
+export abstract class GbrainBrain implements MemorySystem {
   abstract readonly name: string;
   protected engine: any = null;
   private processed = 0;
-  private current: string | null = null;
+  protected current: string | null = null;
   readonly fidelity = { embedding_deferred_pages: 0, rerank_missing_queries: 0, reranked_queries: 0 };
   /** `databasePath` keeps the brain on disk so `restart()` can close and reopen it; without one the brain is in memory. */
   constructor(protected mods: GbrainModules, protected settings: Record<string, string>, readonly identity: Record<string, unknown>, protected storage: { databasePath?: string } = {}) {}
@@ -67,8 +67,12 @@ abstract class GbrainBrain implements MemorySystem {
     await e.connect(this.storage.databasePath ? { database_path: this.storage.databasePath } : {});
     await e.initSchema();
     for (const [k, v] of Object.entries(this.settings)) await e.setConfig(k, v);
+    await this.opened(e);
     return e;
   }
+
+  /** Runs once per freshly opened brain, after the settings are written (the query adapter checks its pins here). */
+  protected async opened(_engine: any): Promise<void> {}
 
   async reset(ns: string): Promise<void> {
     if (!this.engine) this.engine = await this.open();
@@ -82,7 +86,7 @@ abstract class GbrainBrain implements MemorySystem {
     this.current = ns;
   }
 
-  private live(ns: string) { if (!this.engine || this.current !== ns) throw new SystemError('invalid_request', 'gbrain holds one namespace at a time: reset(ns) first'); }
+  protected live(ns: string) { if (!this.engine || this.current !== ns) throw new SystemError('invalid_request', 'gbrain holds one namespace at a time: reset(ns) first'); }
 
   async ingestSession(ns: string, session: SessionInput, eventTime: string | null): Promise<IngestResult> {
     this.live(ns);
@@ -184,6 +188,7 @@ export class GbrainShootoutSystem extends GbrainBrain {
       const src = sourceOfSlug(r.slug);
       return { id: `${r.slug}#${i}`, rank: i + 1, type: 'chunk', text: r.chunk_text ?? '', source_ids: src ? [src] : [], valid_from: null, valid_to: null, provenance_status: src ? 'exact' : 'unavailable' };
     });
-    return { items, applied_settings: { limit: limit ?? 'search mode default' }, truncated: false, service_ms };
+    return { items, applied_settings: { limit: limit ?? 'search mode default' }, truncated: false, service_ms,
+      accounting: { kind: 'gbrain-shootout', version: 1, hits: results.length, rerank_present: results.some(r => r.rerank_score !== undefined) } };
   }
 }

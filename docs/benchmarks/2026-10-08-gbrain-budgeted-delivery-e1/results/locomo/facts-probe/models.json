@@ -1,0 +1,25 @@
+{
+  "note": "provider requests the facts cell metering proxy forwarded, by model (from usage.ndjson); the extraction model is the one chat model the extractor called",
+  "requests": [
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "requests": 102
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4o-2024-08-06",
+      "requests": 576
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "requests": 576
+    },
+    {
+      "provider": "openai",
+      "model": "text-embedding-3-large",
+      "requests": 1517
+    }
+  ]
+}
