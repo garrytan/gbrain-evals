@@ -5,10 +5,10 @@
   "gbrain_commit": "ac6e0868219439a6594d9fce0e016da203c6c4fc",
   "gbrain_branch": "capy/gbra72-content-repair",
   "gbrain_shipped_in": {
-    "version": null,
-    "merge_commit": null,
-    "pull_request": null,
-    "note": "filled when the #6377 PR merges"
+    "version": "0.60.132.0",
+    "merge_commit": "0e52ac914",
+    "pull_request": "https://github.com/garrytan/gbrain/pull/6384",
+    "note": "merged 2026-10-09; CONTENT_REPAIR_MEASURED_MODELS carries the three qualifying models in the measured order"
   },
   "harness": "gbrain evals/content-repair-judgment/ in the same PR (uncommitted on top of the recorded commit when the runs were made)",
   "harness_sha256": "3f3e07dba313addc63e286c0f23d28b2264776a7942ece1ff4ac74d29ead1e17",
