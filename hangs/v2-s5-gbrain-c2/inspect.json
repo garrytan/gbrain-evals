@@ -1,0 +1,228 @@
+[
+ {
+  "Id": "948b4966988bedb28fc94a3c7e2293f99e065ed4199defb9704b28416e61c206",
+  "Created": "2026-10-09T16:41:27.88939761Z",
+  "Path": "python3",
+  "Args": [
+   "shim.py"
+  ],
+  "State": {
+   "Status": "running",
+   "Running": true,
+   "Paused": false,
+   "Restarting": false,
+   "OOMKilled": false,
+   "Dead": false,
+   "Pid": 2872,
+   "ExitCode": 0,
+   "Error": "",
+   "StartedAt": "2026-10-09T16:41:29.684529668Z",
+   "FinishedAt": "0001-01-01T00:00:00Z"
+  },
+  "Image": "sha256:6fa9bdd2d070b6738d250ef7857211e67f407e061f8271b09f68849bd0dbed87",
+  "ResolvConfPath": "/var/lib/docker/containers/948b4966988bedb28fc94a3c7e2293f99e065ed4199defb9704b28416e61c206/resolv.conf",
+  "HostnamePath": "/var/lib/docker/containers/948b4966988bedb28fc94a3c7e2293f99e065ed4199defb9704b28416e61c206/hostname",
+  "HostsPath": "/var/lib/docker/containers/948b4966988bedb28fc94a3c7e2293f99e065ed4199defb9704b28416e61c206/hosts",
+  "LogPath": "/var/lib/docker/containers/948b4966988bedb28fc94a3c7e2293f99e065ed4199defb9704b28416e61c206/948b4966988bedb28fc94a3c7e2293f99e065ed4199defb9704b28416e61c206-json.log",
+  "Name": "/gbrain-defaults-shim-1",
+  "RestartCount": 0,
+  "Driver": "overlayfs",
+  "Platform": "linux",
+  "MountLabel": "",
+  "ProcessLabel": "",
+  "AppArmorProfile": "docker-default",
+  "ExecIDs": null,
+  "HostConfig": {
+   "Binds": [
+    "gbrain-defaults_gbrain-data:/data:rw"
+   ],
+   "ContainerIDFile": "",
+   "LogConfig": {
+    "Type": "json-file",
+    "Config": {}
+   },
+   "NetworkMode": "gbrain-defaults_sandbox",
+   "PortBindings": {},
+   "RestartPolicy": {
+    "Name": "no",
+    "MaximumRetryCount": 0
+   },
+   "AutoRemove": false,
+   "VolumeDriver": "",
+   "VolumesFrom": null,
+   "ConsoleSize": [
+    0,
+    0
+   ],
+   "CapAdd": null,
+   "CapDrop": null,
+   "CgroupnsMode": "private",
+   "Dns": null,
+   "DnsOptions": null,
+   "DnsSearch": null,
+   "ExtraHosts": [],
+   "GroupAdd": null,
+   "IpcMode": "private",
+   "Cgroup": "",
+   "Links": null,
+   "OomScoreAdj": 0,
+   "PidMode": "",
+   "Privileged": false,
+   "PublishAllPorts": false,
+   "ReadonlyRootfs": false,
+   "SecurityOpt": null,
+   "UTSMode": "",
+   "UsernsMode": "",
+   "ShmSize": 67108864,
+   "Runtime": "runc",
+   "Isolation": "",
+   "CpuShares": 0,
+   "Memory": 0,
+   "NanoCpus": 0,
+   "CgroupParent": "",
+   "BlkioWeight": 0,
+   "BlkioWeightDevice": null,
+   "BlkioDeviceReadBps": null,
+   "BlkioDeviceWriteBps": null,
+   "BlkioDeviceReadIOps": null,
+   "BlkioDeviceWriteIOps": null,
+   "CpuPeriod": 0,
+   "CpuQuota": 0,
+   "CpuRealtimePeriod": 0,
+   "CpuRealtimeRuntime": 0,
+   "CpusetCpus": "",
+   "CpusetMems": "",
+   "Devices": null,
+   "DeviceCgroupRules": null,
+   "DeviceRequests": null,
+   "MemoryReservation": 0,
+   "MemorySwap": 0,
+   "MemorySwappiness": null,
+   "OomKillDisable": null,
+   "PidsLimit": null,
+   "Ulimits": null,
+   "CpuCount": 0,
+   "CpuPercent": 0,
+   "IOMaximumIOps": 0,
+   "IOMaximumBandwidth": 0,
+   "MaskedPaths": [
+    "/proc/acpi",
+    "/proc/asound",
+    "/proc/interrupts",
+    "/proc/kcore",
+    "/proc/keys",
+    "/proc/latency_stats",
+    "/proc/sched_debug",
+    "/proc/scsi",
+    "/proc/timer_list",
+    "/proc/timer_stats",
+    "/sys/devices/virtual/powercap",
+    "/sys/firmware"
+   ],
+   "ReadonlyPaths": [
+    "/proc/bus",
+    "/proc/fs",
+    "/proc/irq",
+    "/proc/sys",
+    "/proc/sysrq-trigger"
+   ]
+  },
+  "Storage": {
+   "RootFS": {
+    "Snapshot": {
+     "Name": "overlayfs"
+    }
+   }
+  },
+  "Mounts": [
+   {
+    "Type": "volume",
+    "Name": "gbrain-defaults_gbrain-data",
+    "Source": "/var/lib/docker/volumes/gbrain-defaults_gbrain-data/_data",
+    "Destination": "/data",
+    "Driver": "local",
+    "Mode": "rw",
+    "RW": true,
+    "Propagation": ""
+   }
+  ],
+  "Config": {
+   "Hostname": "948b4966988b",
+   "Domainname": "",
+   "User": "gbrain",
+   "AttachStdin": false,
+   "AttachStdout": true,
+   "AttachStderr": true,
+   "ExposedPorts": {
+    "8700/tcp": {}
+   },
+   "Tty": false,
+   "OpenStdin": false,
+   "StdinOnce": false,
+   "Cmd": [
+    "python3",
+    "shim.py"
+   ],
+   "Image": "gbrain-defaults-shim",
+   "Volumes": {
+    "/data": {}
+   },
+   "WorkingDir": "/app/gbrain-defaults",
+   "Entrypoint": null,
+   "Labels": {
+    "com.docker.compose.config-hash": "e46759983b6f3af5a169846def01bb8877a16fbf7d221fa15c3fc371db88f940",
+    "com.docker.compose.container-number": "1",
+    "com.docker.compose.depends_on": "",
+    "com.docker.compose.image": "sha256:6fa9bdd2d070b6738d250ef7857211e67f407e061f8271b09f68849bd0dbed87",
+    "com.docker.compose.oneoff": "False",
+    "com.docker.compose.project": "gbrain-defaults",
+    "com.docker.compose.project.config_files": "/home/ubi/work/gbrain-evals/eval/systems/gbrain-defaults/docker-compose.yml",
+    "com.docker.compose.project.working_dir": "/home/ubi/work/gbrain-evals/eval/systems/gbrain-defaults",
+    "com.docker.compose.service": "shim",
+    "com.docker.compose.version": "2.40.3"
+   }
+  },
+  "NetworkSettings": {
+   "SandboxID": "73a7daaa4df601111449d99c91d95d4d34f983c2941fcacabc9c02883fc91d3c",
+   "SandboxKey": "/var/run/docker/netns/73a7daaa4df6",
+   "Ports": {
+    "8700/tcp": null
+   },
+   "Networks": {
+    "gbrain-defaults_sandbox": {
+     "IPAMConfig": null,
+     "Links": null,
+     "Aliases": [
+      "gbrain-defaults-shim-1",
+      "shim"
+     ],
+     "DriverOpts": null,
+     "GwPriority": 0,
+     "NetworkID": "ad227b0b006a426698028cd07cf65a3a2f9dae5cf36f5d6fbcc4abdc558f8959",
+     "EndpointID": "177cfb940f8d9c5a9d2314edab2df40d7cb22435cddb7404e2d60ce7756d6d52",
+     "Gateway": "",
+     "IPAddress": "172.19.0.2",
+     "MacAddress": "a2:60:6c:f3:7f:d5",
+     "IPPrefixLen": 16,
+     "IPv6Gateway": "",
+     "GlobalIPv6Address": "",
+     "GlobalIPv6PrefixLen": 0,
+     "DNSNames": [
+      "gbrain-defaults-shim-1",
+      "shim",
+      "948b4966988b"
+     ]
+    }
+   }
+  },
+  "ImageManifestDescriptor": {
+   "mediaType": "application/vnd.oci.image.manifest.v1+json",
+   "digest": "sha256:10435a68099cee3d54e989ed2a5e78c912f6b3a27c17ea7f96dfd08eded6301e",
+   "size": 2007,
+   "platform": {
+    "architecture": "amd64",
+    "os": "linux"
+   }
+  }
+ }
+]

@@ -1,0 +1,7 @@
+2026-10-09T23:19:01Z
+    PID     ELAPSED     TIME %CPU   RSS COMMAND
+  51880    05:10:47 05:09:33 99.6 1409832 bun /opt/bun/bin/gbrain serve --surface starter
+State:	R (running)
+VmRSS:	 1409832 kB
+Threads:	7
+ 23:19:01 up  6:43,  2 users,  load average: 1.00, 1.00, 1.00

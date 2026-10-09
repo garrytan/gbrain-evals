@@ -1,0 +1,9 @@
+total 36
+drwxr-xr-x  6 10001 10001 4096 Oct  9 18:08 .
+drwx-----x  3 root  root  4096 Oct  9 16:41 ..
+-rw-r--r--  1 10001 10001   19 Oct  9 18:08 active-ns
+drwxr-xr-x  5 10001 10001 4096 Oct  9 18:08 home
+drwxr-xr-x  2 10001 10001 4096 Oct  9 16:41 logs
+drwxr-xr-x 14 10001 10001 4096 Oct  9 18:08 ns
+-rw-r--r--  1 10001 10001 5171 Oct  9 16:41 reference.json
+drwxr-xr-x  2 10001 10001 4096 Oct  9 16:41 work
