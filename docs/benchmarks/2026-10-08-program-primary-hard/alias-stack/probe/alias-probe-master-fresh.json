@@ -1,0 +1,1775 @@
+{
+ "gbrain": {
+  "ref": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+  "commit": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+  "tree": "4d3f4292cb9dc69586c6b3ed8d31be6c78383cc2",
+  "version": "0.60.130.0"
+ },
+ "seeds": [
+  124371926,
+  196299785,
+  253035751,
+  446884266,
+  500901660,
+  560317357,
+  746355681,
+  868827636
+ ],
+ "summary": {
+  "tasks": 24,
+  "card_has": {
+   "contact": 24,
+   "date": 24,
+   "terms": 0
+  },
+  "declared_codes": 200,
+  "short_aliases": 0,
+  "short_aliases_declared_by_their_page": 0,
+  "false_short_aliases": [],
+  "declared_not_derived": 200,
+  "shared_codes": [
+   {
+    "persona": "h124371926",
+    "code": "MUL",
+    "slugs": [
+     "companies/murostra-logistics",
+     "companies/muroria-logistics"
+    ]
+   },
+   {
+    "persona": "h124371926",
+    "code": "CAF",
+    "slugs": [
+     "companies/caeladyn-freight",
+     "companies/caelquent-foods"
+    ]
+   },
+   {
+    "persona": "h196299785",
+    "code": "CAR",
+    "slugs": [
+     "companies/caelique-robotics",
+     "companies/caelivel-retail"
+    ]
+   },
+   {
+    "persona": "h196299785",
+    "code": "YAA",
+    "slugs": [
+     "companies/yarivel-analytics",
+     "companies/yaranta-analytics"
+    ]
+   },
+   {
+    "persona": "h196299785",
+    "code": "JOF",
+    "slugs": [
+     "companies/joresso-freight",
+     "companies/joradyn-foods"
+    ]
+   },
+   {
+    "persona": "h253035751",
+    "code": "VEF",
+    "slugs": [
+     "companies/vesoria-foods",
+     "companies/vesellis-freight"
+    ]
+   },
+   {
+    "persona": "h446884266",
+    "code": "LUF",
+    "slugs": [
+     "companies/lumtiva-foods",
+     "companies/lumadyn-freight"
+    ]
+   },
+   {
+    "persona": "h500901660",
+    "code": "HYI",
+    "slugs": [
+     "companies/hydithe-insurance",
+     "companies/hydesso-insurance",
+     "companies/hydovik-insurance"
+    ]
+   },
+   {
+    "persona": "h500901660",
+    "code": "JOH",
+    "slugs": [
+     "companies/jormiro-health",
+     "companies/jorumbr-health"
+    ]
+   },
+   {
+    "persona": "h500901660",
+    "code": "JOF",
+    "slugs": [
+     "companies/joralto-foods",
+     "companies/jormiro-freight"
+    ]
+   },
+   {
+    "persona": "h746355681",
+    "code": "ISF",
+    "slugs": [
+     "companies/iskadyn-freight",
+     "companies/iskura-freight"
+    ]
+   },
+   {
+    "persona": "h746355681",
+    "code": "KEL",
+    "slugs": [
+     "companies/kestumbr-logistics",
+     "companies/kestanta-logistics"
+    ]
+   },
+   {
+    "persona": "h746355681",
+    "code": "YAR",
+    "slugs": [
+     "companies/yarmiro-retail",
+     "companies/yarumbr-retail"
+    ]
+   },
+   {
+    "persona": "h868827636",
+    "code": "JOH",
+    "slugs": [
+     "companies/jormiro-health",
+     "companies/jorovik-health"
+    ]
+   }
+  ],
+  "call_note_links_company": 0
+ },
+ "personas": [
+  {
+   "persona": "h124371926",
+   "cards": [
+    {
+     "task": "h124371926-t1",
+     "chars": 10717,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h124371926-t2",
+     "chars": 11874,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h124371926-t3",
+     "chars": 9914,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [],
+   "declared_not_derived": [
+    {
+     "slug": "companies/thalura-insurance",
+     "code": "THI"
+    },
+    {
+     "slug": "companies/ulmovik-logistics",
+     "code": "ULL"
+    },
+    {
+     "slug": "companies/murostra-logistics",
+     "code": "MUL"
+    },
+    {
+     "slug": "companies/lumadyn-insurance",
+     "code": "LUI"
+    },
+    {
+     "slug": "companies/dovanta-retail",
+     "code": "DOR"
+    },
+    {
+     "slug": "companies/muroria-logistics",
+     "code": "MUL"
+    },
+    {
+     "slug": "companies/telumbr-health",
+     "code": "TEH"
+    },
+    {
+     "slug": "companies/caeloria-insurance",
+     "code": "CAI"
+    },
+    {
+     "slug": "companies/teltiva-freight",
+     "code": "TEF"
+    },
+    {
+     "slug": "companies/branvane-logistics",
+     "code": "BRL"
+    },
+    {
+     "slug": "companies/zeloria-robotics",
+     "code": "ZER"
+    },
+    {
+     "slug": "companies/lumique-media",
+     "code": "LUM"
+    },
+    {
+     "slug": "companies/hydumbr-analytics",
+     "code": "HYA"
+    },
+    {
+     "slug": "companies/caeladyn-freight",
+     "code": "CAF"
+    },
+    {
+     "slug": "companies/hydellis-media",
+     "code": "HYM"
+    },
+    {
+     "slug": "companies/murenza-energy",
+     "code": "MUE"
+    },
+    {
+     "slug": "companies/ulmivel-freight",
+     "code": "ULF"
+    },
+    {
+     "slug": "companies/wynesso-insurance",
+     "code": "WYI"
+    },
+    {
+     "slug": "companies/lumovik-robotics",
+     "code": "LUR"
+    },
+    {
+     "slug": "companies/graloria-robotics",
+     "code": "GRR"
+    },
+    {
+     "slug": "companies/vorique-analytics",
+     "code": "VOA"
+    },
+    {
+     "slug": "companies/caelquent-foods",
+     "code": "CAF"
+    },
+    {
+     "slug": "companies/thalura-logistics",
+     "code": "THL"
+    },
+    {
+     "slug": "companies/ulmovik-analytics",
+     "code": "ULA"
+    },
+    {
+     "slug": "companies/murostra-foods",
+     "code": "MUF"
+    }
+   ],
+   "shared_codes": [
+    {
+     "code": "MUL",
+     "slugs": [
+      "companies/murostra-logistics",
+      "companies/muroria-logistics"
+     ]
+    },
+    {
+     "code": "CAF",
+     "slugs": [
+      "companies/caeladyn-freight",
+      "companies/caelquent-foods"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h124371926-t1",
+     "company": "companies/thalura-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-23-torvik-procurement-handoff",
+       "to_slug": "people/petra-torvik",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-torvik-reschedule",
+       "to_slug": "people/petra-torvik",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h124371926-t2",
+     "company": "companies/ulmovik-logistics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-sato-procurement-handoff",
+       "to_slug": "people/mira-sato",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-sato-reschedule",
+       "to_slug": "people/mira-sato",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h124371926-t3",
+     "company": "companies/murostra-logistics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-rahman-procurement-handoff",
+       "to_slug": "people/suki-rahman",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-rahman-reschedule",
+       "to_slug": "people/suki-rahman",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h196299785",
+   "cards": [
+    {
+     "task": "h196299785-t1",
+     "chars": 9919,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h196299785-t2",
+     "chars": 11833,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h196299785-t3",
+     "chars": 9928,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [],
+   "declared_not_derived": [
+    {
+     "slug": "companies/caelique-robotics",
+     "code": "CAR"
+    },
+    {
+     "slug": "companies/yarivel-analytics",
+     "code": "YAA"
+    },
+    {
+     "slug": "companies/xerovik-analytics",
+     "code": "XEA"
+    },
+    {
+     "slug": "companies/yarique-logistics",
+     "code": "YAL"
+    },
+    {
+     "slug": "companies/jorivel-energy",
+     "code": "JOE"
+    },
+    {
+     "slug": "companies/caelivel-retail",
+     "code": "CAR"
+    },
+    {
+     "slug": "companies/zelique-retail",
+     "code": "ZER"
+    },
+    {
+     "slug": "companies/jorellis-insurance",
+     "code": "JOI"
+    },
+    {
+     "slug": "companies/joresso-freight",
+     "code": "JOF"
+    },
+    {
+     "slug": "companies/caelvane-logistics",
+     "code": "CAL"
+    },
+    {
+     "slug": "companies/ulmovik-robotics",
+     "code": "ULR"
+    },
+    {
+     "slug": "companies/quorura-robotics",
+     "code": "QUR"
+    },
+    {
+     "slug": "companies/joradyn-foods",
+     "code": "JOF"
+    },
+    {
+     "slug": "companies/naxovik-analytics",
+     "code": "NAA"
+    },
+    {
+     "slug": "companies/wynquent-media",
+     "code": "WYM"
+    },
+    {
+     "slug": "companies/yaranta-analytics",
+     "code": "YAA"
+    },
+    {
+     "slug": "companies/dovellis-health",
+     "code": "DOH"
+    },
+    {
+     "slug": "companies/zelalto-foods",
+     "code": "ZEF"
+    },
+    {
+     "slug": "companies/pralumbr-insurance",
+     "code": "PRI"
+    },
+    {
+     "slug": "companies/branovik-health",
+     "code": "BRH"
+    },
+    {
+     "slug": "companies/ondrura-freight",
+     "code": "ONF"
+    },
+    {
+     "slug": "companies/lumvane-freight",
+     "code": "LUF"
+    },
+    {
+     "slug": "companies/caelique-foods",
+     "code": "CAF"
+    },
+    {
+     "slug": "companies/yarivel-retail",
+     "code": "YAR"
+    },
+    {
+     "slug": "companies/xerovik-health",
+     "code": "XEH"
+    }
+   ],
+   "shared_codes": [
+    {
+     "code": "CAR",
+     "slugs": [
+      "companies/caelique-robotics",
+      "companies/caelivel-retail"
+     ]
+    },
+    {
+     "code": "YAA",
+     "slugs": [
+      "companies/yarivel-analytics",
+      "companies/yaranta-analytics"
+     ]
+    },
+    {
+     "code": "JOF",
+     "slugs": [
+      "companies/joresso-freight",
+      "companies/joradyn-foods"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h196299785-t1",
+     "company": "companies/caelique-robotics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-quist-procurement-handoff",
+       "to_slug": "people/kenji-quist",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-quist-reschedule",
+       "to_slug": "people/kenji-quist",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h196299785-t2",
+     "company": "companies/yarivel-analytics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-23-galloway-procurement-handoff",
+       "to_slug": "people/ayla-galloway",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-galloway-reschedule",
+       "to_slug": "people/ayla-galloway",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h196299785-t3",
+     "company": "companies/xerovik-analytics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-mehta-procurement-handoff",
+       "to_slug": "people/ayla-mehta",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-mehta-reschedule",
+       "to_slug": "people/ayla-mehta",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h253035751",
+   "cards": [
+    {
+     "task": "h253035751-t1",
+     "chars": 11257,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h253035751-t2",
+     "chars": 10832,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h253035751-t3",
+     "chars": 10416,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [],
+   "declared_not_derived": [
+    {
+     "slug": "companies/pralenza-analytics",
+     "code": "PRA"
+    },
+    {
+     "slug": "companies/jorvane-health",
+     "code": "JOH"
+    },
+    {
+     "slug": "companies/vortiva-logistics",
+     "code": "VOL"
+    },
+    {
+     "slug": "companies/murura-freight",
+     "code": "MUF"
+    },
+    {
+     "slug": "companies/pralmiro-energy",
+     "code": "PRE"
+    },
+    {
+     "slug": "companies/lumari-foods",
+     "code": "LUF"
+    },
+    {
+     "slug": "companies/vesoria-foods",
+     "code": "VEF"
+    },
+    {
+     "slug": "companies/hydostra-health",
+     "code": "HYH"
+    },
+    {
+     "slug": "companies/vesellis-freight",
+     "code": "VEF"
+    },
+    {
+     "slug": "companies/ondrithe-retail",
+     "code": "ONR"
+    },
+    {
+     "slug": "companies/fenadyn-robotics",
+     "code": "FER"
+    },
+    {
+     "slug": "companies/caelostra-energy",
+     "code": "CAE"
+    },
+    {
+     "slug": "companies/yarivel-health",
+     "code": "YAH"
+    },
+    {
+     "slug": "companies/quorellis-analytics",
+     "code": "QUA"
+    },
+    {
+     "slug": "companies/vesura-media",
+     "code": "VEM"
+    },
+    {
+     "slug": "companies/zelenza-analytics",
+     "code": "ZEA"
+    },
+    {
+     "slug": "companies/vesique-robotics",
+     "code": "VER"
+    },
+    {
+     "slug": "companies/caelari-robotics",
+     "code": "CAR"
+    },
+    {
+     "slug": "companies/jorquent-robotics",
+     "code": "JOR"
+    },
+    {
+     "slug": "companies/vorique-robotics",
+     "code": "VOR"
+    },
+    {
+     "slug": "companies/dovovik-freight",
+     "code": "DOF"
+    },
+    {
+     "slug": "companies/quorenza-freight",
+     "code": "QUF"
+    },
+    {
+     "slug": "companies/pralenza-foods",
+     "code": "PRF"
+    },
+    {
+     "slug": "companies/jorvane-insurance",
+     "code": "JOI"
+    },
+    {
+     "slug": "companies/vortiva-foods",
+     "code": "VOF"
+    }
+   ],
+   "shared_codes": [
+    {
+     "code": "VEF",
+     "slugs": [
+      "companies/vesoria-foods",
+      "companies/vesellis-freight"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h253035751-t1",
+     "company": "companies/pralenza-analytics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-22-ferreira-procurement-handoff",
+       "to_slug": "people/noor-ferreira",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-ferreira-reschedule",
+       "to_slug": "people/noor-ferreira",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h253035751-t2",
+     "company": "companies/jorvane-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-marchetti-procurement-handoff",
+       "to_slug": "people/elodie-marchetti",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-marchetti-reschedule",
+       "to_slug": "people/elodie-marchetti",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h253035751-t3",
+     "company": "companies/vortiva-logistics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-brandt-procurement-handoff",
+       "to_slug": "people/tobin-brandt",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-brandt-reschedule",
+       "to_slug": "people/tobin-brandt",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h446884266",
+   "cards": [
+    {
+     "task": "h446884266-t1",
+     "chars": 11872,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h446884266-t2",
+     "chars": 10991,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h446884266-t3",
+     "chars": 10160,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [],
+   "declared_not_derived": [
+    {
+     "slug": "companies/telellis-analytics",
+     "code": "TEA"
+    },
+    {
+     "slug": "companies/lumtiva-insurance",
+     "code": "LUI"
+    },
+    {
+     "slug": "companies/lumadyn-retail",
+     "code": "LUR"
+    },
+    {
+     "slug": "companies/ondrithe-media",
+     "code": "ONM"
+    },
+    {
+     "slug": "companies/fenumbr-foods",
+     "code": "FEF"
+    },
+    {
+     "slug": "companies/ondralto-freight",
+     "code": "ONF"
+    },
+    {
+     "slug": "companies/pralesso-retail",
+     "code": "PRR"
+    },
+    {
+     "slug": "companies/dovalto-energy",
+     "code": "DOE"
+    },
+    {
+     "slug": "companies/vesellis-freight",
+     "code": "VEF"
+    },
+    {
+     "slug": "companies/orvquent-retail",
+     "code": "ORR"
+    },
+    {
+     "slug": "companies/branoria-insurance",
+     "code": "BRI"
+    },
+    {
+     "slug": "companies/naxellis-health",
+     "code": "NAH"
+    },
+    {
+     "slug": "companies/vesari-energy",
+     "code": "VEE"
+    },
+    {
+     "slug": "companies/branesso-energy",
+     "code": "BRE"
+    },
+    {
+     "slug": "companies/branalto-logistics",
+     "code": "BRL"
+    },
+    {
+     "slug": "companies/gralonex-insurance",
+     "code": "GRI"
+    },
+    {
+     "slug": "companies/fenquent-insurance",
+     "code": "FEI"
+    },
+    {
+     "slug": "companies/kestellis-retail",
+     "code": "KER"
+    },
+    {
+     "slug": "companies/dovivel-health",
+     "code": "DOH"
+    },
+    {
+     "slug": "companies/gralostra-logistics",
+     "code": "GRL"
+    },
+    {
+     "slug": "companies/branumbr-robotics",
+     "code": "BRR"
+    },
+    {
+     "slug": "companies/hydalto-retail",
+     "code": "HYR"
+    },
+    {
+     "slug": "companies/telellis-robotics",
+     "code": "TER"
+    },
+    {
+     "slug": "companies/lumtiva-foods",
+     "code": "LUF"
+    },
+    {
+     "slug": "companies/lumadyn-freight",
+     "code": "LUF"
+    }
+   ],
+   "shared_codes": [
+    {
+     "code": "LUF",
+     "slugs": [
+      "companies/lumtiva-foods",
+      "companies/lumadyn-freight"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h446884266-t1",
+     "company": "companies/telellis-analytics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-fairbourne-procurement-handoff",
+       "to_slug": "people/matteo-fairbourne",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-fairbourne-reschedule",
+       "to_slug": "people/matteo-fairbourne",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h446884266-t2",
+     "company": "companies/lumtiva-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-21-delacroix-procurement-handoff",
+       "to_slug": "people/soren-delacroix",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-delacroix-reschedule",
+       "to_slug": "people/soren-delacroix",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h446884266-t3",
+     "company": "companies/lumadyn-retail",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-wexler-procurement-handoff",
+       "to_slug": "people/ayla-wexler",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-wexler-reschedule",
+       "to_slug": "people/ayla-wexler",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h500901660",
+   "cards": [
+    {
+     "task": "h500901660-t1",
+     "chars": 10924,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h500901660-t2",
+     "chars": 12379,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h500901660-t3",
+     "chars": 10202,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [],
+   "declared_not_derived": [
+    {
+     "slug": "companies/hydithe-insurance",
+     "code": "HYI"
+    },
+    {
+     "slug": "companies/jormiro-health",
+     "code": "JOH"
+    },
+    {
+     "slug": "companies/jorumbr-health",
+     "code": "JOH"
+    },
+    {
+     "slug": "companies/quorostra-analytics",
+     "code": "QUA"
+    },
+    {
+     "slug": "companies/hydesso-insurance",
+     "code": "HYI"
+    },
+    {
+     "slug": "companies/hydovik-insurance",
+     "code": "HYI"
+    },
+    {
+     "slug": "companies/telenza-media",
+     "code": "TEM"
+    },
+    {
+     "slug": "companies/caelellis-freight",
+     "code": "CAF"
+    },
+    {
+     "slug": "companies/ondrovik-insurance",
+     "code": "ONI"
+    },
+    {
+     "slug": "companies/wynvane-insurance",
+     "code": "WYI"
+    },
+    {
+     "slug": "companies/iskesso-freight",
+     "code": "ISF"
+    },
+    {
+     "slug": "companies/ondrellis-health",
+     "code": "ONH"
+    },
+    {
+     "slug": "companies/quoronex-logistics",
+     "code": "QUL"
+    },
+    {
+     "slug": "companies/orvvane-health",
+     "code": "ORH"
+    },
+    {
+     "slug": "companies/praltiva-health",
+     "code": "PRH"
+    },
+    {
+     "slug": "companies/joralto-foods",
+     "code": "JOF"
+    },
+    {
+     "slug": "companies/yaresso-energy",
+     "code": "YAE"
+    },
+    {
+     "slug": "companies/fenique-analytics",
+     "code": "FEA"
+    },
+    {
+     "slug": "companies/yarique-health",
+     "code": "YAH"
+    },
+    {
+     "slug": "companies/jorenza-analytics",
+     "code": "JOA"
+    },
+    {
+     "slug": "companies/ulmmiro-energy",
+     "code": "ULE"
+    },
+    {
+     "slug": "companies/xerithe-insurance",
+     "code": "XEI"
+    },
+    {
+     "slug": "companies/hydithe-logistics",
+     "code": "HYL"
+    },
+    {
+     "slug": "companies/jormiro-freight",
+     "code": "JOF"
+    },
+    {
+     "slug": "companies/jorumbr-logistics",
+     "code": "JOL"
+    }
+   ],
+   "shared_codes": [
+    {
+     "code": "HYI",
+     "slugs": [
+      "companies/hydithe-insurance",
+      "companies/hydesso-insurance",
+      "companies/hydovik-insurance"
+     ]
+    },
+    {
+     "code": "JOH",
+     "slugs": [
+      "companies/jormiro-health",
+      "companies/jorumbr-health"
+     ]
+    },
+    {
+     "code": "JOF",
+     "slugs": [
+      "companies/joralto-foods",
+      "companies/jormiro-freight"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h500901660-t1",
+     "company": "companies/hydithe-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-kowalczyk-procurement-handoff",
+       "to_slug": "people/mira-kowalczyk",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-kowalczyk-reschedule",
+       "to_slug": "people/mira-kowalczyk",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h500901660-t2",
+     "company": "companies/jormiro-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-24-castellan-procurement-handoff",
+       "to_slug": "people/niko-castellan",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-castellan-reschedule",
+       "to_slug": "people/niko-castellan",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h500901660-t3",
+     "company": "companies/jorumbr-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-quist-procurement-handoff",
+       "to_slug": "people/talia-quist",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-quist-reschedule",
+       "to_slug": "people/talia-quist",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h560317357",
+   "cards": [
+    {
+     "task": "h560317357-t1",
+     "chars": 11758,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h560317357-t2",
+     "chars": 11255,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h560317357-t3",
+     "chars": 10548,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [],
+   "declared_not_derived": [
+    {
+     "slug": "companies/vorovik-health",
+     "code": "VOH"
+    },
+    {
+     "slug": "companies/iskanta-health",
+     "code": "ISH"
+    },
+    {
+     "slug": "companies/telenza-insurance",
+     "code": "TEI"
+    },
+    {
+     "slug": "companies/quorenza-analytics",
+     "code": "QUA"
+    },
+    {
+     "slug": "companies/naxquent-energy",
+     "code": "NAE"
+    },
+    {
+     "slug": "companies/fenoria-freight",
+     "code": "FEF"
+    },
+    {
+     "slug": "companies/telvane-robotics",
+     "code": "TER"
+    },
+    {
+     "slug": "companies/voralto-energy",
+     "code": "VOE"
+    },
+    {
+     "slug": "companies/lumostra-analytics",
+     "code": "LUA"
+    },
+    {
+     "slug": "companies/naxellis-retail",
+     "code": "NAR"
+    },
+    {
+     "slug": "companies/branoria-foods",
+     "code": "BRF"
+    },
+    {
+     "slug": "companies/xeralto-logistics",
+     "code": "XEL"
+    },
+    {
+     "slug": "companies/quortiva-robotics",
+     "code": "QUR"
+    },
+    {
+     "slug": "companies/thaltiva-robotics",
+     "code": "THR"
+    },
+    {
+     "slug": "companies/jororia-retail",
+     "code": "JOR"
+    },
+    {
+     "slug": "companies/orvostra-foods",
+     "code": "ORF"
+    },
+    {
+     "slug": "companies/zelalto-analytics",
+     "code": "ZEA"
+    },
+    {
+     "slug": "companies/thalquent-health",
+     "code": "THH"
+    },
+    {
+     "slug": "companies/gralique-robotics",
+     "code": "GRR"
+    },
+    {
+     "slug": "companies/thalesso-media",
+     "code": "THM"
+    },
+    {
+     "slug": "companies/lumalto-retail",
+     "code": "LUR"
+    },
+    {
+     "slug": "companies/dovanta-energy",
+     "code": "DOE"
+    },
+    {
+     "slug": "companies/vorovik-robotics",
+     "code": "VOR"
+    },
+    {
+     "slug": "companies/iskanta-freight",
+     "code": "ISF"
+    },
+    {
+     "slug": "companies/telenza-energy",
+     "code": "TEE"
+    }
+   ],
+   "shared_codes": [],
+   "task_links": [
+    {
+     "task": "h560317357-t1",
+     "company": "companies/vorovik-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-24-zeller-procurement-handoff",
+       "to_slug": "people/bram-zeller",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-zeller-reschedule",
+       "to_slug": "people/bram-zeller",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h560317357-t2",
+     "company": "companies/iskanta-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-lindqvist-procurement-handoff",
+       "to_slug": "people/talia-lindqvist",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-lindqvist-reschedule",
+       "to_slug": "people/talia-lindqvist",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h560317357-t3",
+     "company": "companies/telenza-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-marchetti-procurement-handoff",
+       "to_slug": "people/ilse-marchetti",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-marchetti-reschedule",
+       "to_slug": "people/ilse-marchetti",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h746355681",
+   "cards": [
+    {
+     "task": "h746355681-t1",
+     "chars": 9716,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h746355681-t2",
+     "chars": 10435,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h746355681-t3",
+     "chars": 11120,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [],
+   "declared_not_derived": [
+    {
+     "slug": "companies/ondrique-retail",
+     "code": "ONR"
+    },
+    {
+     "slug": "companies/kestanta-insurance",
+     "code": "KEI"
+    },
+    {
+     "slug": "companies/iskadyn-freight",
+     "code": "ISF"
+    },
+    {
+     "slug": "companies/lumvane-foods",
+     "code": "LUF"
+    },
+    {
+     "slug": "companies/ulmoria-insurance",
+     "code": "ULI"
+    },
+    {
+     "slug": "companies/zelithe-freight",
+     "code": "ZEF"
+    },
+    {
+     "slug": "companies/dovostra-health",
+     "code": "DOH"
+    },
+    {
+     "slug": "companies/kestumbr-logistics",
+     "code": "KEL"
+    },
+    {
+     "slug": "companies/dovithe-logistics",
+     "code": "DOL"
+    },
+    {
+     "slug": "companies/zeloria-logistics",
+     "code": "ZEL"
+    },
+    {
+     "slug": "companies/ondralto-media",
+     "code": "ONM"
+    },
+    {
+     "slug": "companies/vesmiro-robotics",
+     "code": "VER"
+    },
+    {
+     "slug": "companies/zelellis-energy",
+     "code": "ZEE"
+    },
+    {
+     "slug": "companies/yarmiro-retail",
+     "code": "YAR"
+    },
+    {
+     "slug": "companies/thalanta-robotics",
+     "code": "THR"
+    },
+    {
+     "slug": "companies/ondrmiro-logistics",
+     "code": "ONL"
+    },
+    {
+     "slug": "companies/vesostra-energy",
+     "code": "VEE"
+    },
+    {
+     "slug": "companies/gralalto-analytics",
+     "code": "GRA"
+    },
+    {
+     "slug": "companies/yarumbr-retail",
+     "code": "YAR"
+    },
+    {
+     "slug": "companies/telura-freight",
+     "code": "TEF"
+    },
+    {
+     "slug": "companies/iskura-freight",
+     "code": "ISF"
+    },
+    {
+     "slug": "companies/vorostra-freight",
+     "code": "VOF"
+    },
+    {
+     "slug": "companies/ondrique-freight",
+     "code": "ONF"
+    },
+    {
+     "slug": "companies/kestanta-logistics",
+     "code": "KEL"
+    },
+    {
+     "slug": "companies/iskadyn-health",
+     "code": "ISH"
+    }
+   ],
+   "shared_codes": [
+    {
+     "code": "ISF",
+     "slugs": [
+      "companies/iskadyn-freight",
+      "companies/iskura-freight"
+     ]
+    },
+    {
+     "code": "KEL",
+     "slugs": [
+      "companies/kestumbr-logistics",
+      "companies/kestanta-logistics"
+     ]
+    },
+    {
+     "code": "YAR",
+     "slugs": [
+      "companies/yarmiro-retail",
+      "companies/yarumbr-retail"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h746355681-t1",
+     "company": "companies/ondrique-retail",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-24-osei-procurement-handoff",
+       "to_slug": "people/kenji-osei",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-osei-reschedule",
+       "to_slug": "people/kenji-osei",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h746355681-t2",
+     "company": "companies/kestanta-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-okafor-procurement-handoff",
+       "to_slug": "people/niko-okafor",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-okafor-reschedule",
+       "to_slug": "people/niko-okafor",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h746355681-t3",
+     "company": "companies/iskadyn-freight",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-okafor-procurement-handoff",
+       "to_slug": "people/maren-okafor",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-okafor-reschedule",
+       "to_slug": "people/maren-okafor",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h868827636",
+   "cards": [
+    {
+     "task": "h868827636-t1",
+     "chars": 9681,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h868827636-t2",
+     "chars": 10453,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h868827636-t3",
+     "chars": 9750,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [],
+   "declared_not_derived": [
+    {
+     "slug": "companies/iskoria-foods",
+     "code": "ISF"
+    },
+    {
+     "slug": "companies/xerovik-logistics",
+     "code": "XEL"
+    },
+    {
+     "slug": "companies/murtiva-retail",
+     "code": "MUR"
+    },
+    {
+     "slug": "companies/naxenza-energy",
+     "code": "NAE"
+    },
+    {
+     "slug": "companies/zelvane-energy",
+     "code": "ZEE"
+    },
+    {
+     "slug": "companies/ulmesso-analytics",
+     "code": "ULA"
+    },
+    {
+     "slug": "companies/pralari-energy",
+     "code": "PRE"
+    },
+    {
+     "slug": "companies/jormiro-health",
+     "code": "JOH"
+    },
+    {
+     "slug": "companies/xerique-analytics",
+     "code": "XEA"
+    },
+    {
+     "slug": "companies/branonex-robotics",
+     "code": "BRR"
+    },
+    {
+     "slug": "companies/yarenza-media",
+     "code": "YAM"
+    },
+    {
+     "slug": "companies/naxalto-robotics",
+     "code": "NAR"
+    },
+    {
+     "slug": "companies/murithe-logistics",
+     "code": "MUL"
+    },
+    {
+     "slug": "companies/thalivel-logistics",
+     "code": "THL"
+    },
+    {
+     "slug": "companies/jorovik-health",
+     "code": "JOH"
+    },
+    {
+     "slug": "companies/naxoria-logistics",
+     "code": "NAL"
+    },
+    {
+     "slug": "companies/iskithe-analytics",
+     "code": "ISA"
+    },
+    {
+     "slug": "companies/caelostra-insurance",
+     "code": "CAI"
+    },
+    {
+     "slug": "companies/hydithe-robotics",
+     "code": "HYR"
+    },
+    {
+     "slug": "companies/naxmiro-health",
+     "code": "NAH"
+    },
+    {
+     "slug": "companies/xeradyn-insurance",
+     "code": "XEI"
+    },
+    {
+     "slug": "companies/lummiro-robotics",
+     "code": "LUR"
+    },
+    {
+     "slug": "companies/iskoria-logistics",
+     "code": "ISL"
+    },
+    {
+     "slug": "companies/xerovik-foods",
+     "code": "XEF"
+    },
+    {
+     "slug": "companies/murtiva-health",
+     "code": "MUH"
+    }
+   ],
+   "shared_codes": [
+    {
+     "code": "JOH",
+     "slugs": [
+      "companies/jormiro-health",
+      "companies/jorovik-health"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h868827636-t1",
+     "company": "companies/iskoria-foods",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-wexler-procurement-handoff",
+       "to_slug": "people/omari-wexler",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-wexler-reschedule",
+       "to_slug": "people/omari-wexler",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h868827636-t2",
+     "company": "companies/xerovik-logistics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-21-morales-procurement-handoff",
+       "to_slug": "people/noor-morales",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-morales-reschedule",
+       "to_slug": "people/noor-morales",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h868827636-t3",
+     "company": "companies/murtiva-retail",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-brandt-procurement-handoff",
+       "to_slug": "people/ayla-brandt",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-brandt-reschedule",
+       "to_slug": "people/ayla-brandt",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,462 @@
+{
+  "version": "t0b-program-primary-v1",
+  "scorer": "t0b-score-v1",
+  "delivery": {
+    "version": "t0-delivery-v1",
+    "harness": "Claude Code hook protocol, emulated by the evaluator (injected-context path)",
+    "context_sources": {
+      "session_start": "`gbrain hook session-start` stdout: MEMORY.md digest of the workspace (none here), push, backup and status notes, the context pack over IPC (`context_pack`) and always-loaded core memory; src/commands/hook.ts hookSessionStart",
+      "user_prompt_submit": "`gbrain hook user-prompt` hookSpecificOutput.additionalContext: reflex pointers, volunteered pages and hot facts assembled by serve over IPC (`turn_context`); src/commands/hook.ts hookUserPrompt",
+      "not_emulated": "Stop (push debounce, opt-in ambient writeback) and SessionEnd (transcript capture into the dream corpus) are not fired; the dream cycle and autopilot do not run between sessions, so captured transcripts could not reach session 2 at this release without them"
+    },
+    "timing": {
+      "order": "per session: serve started (stdio MCP initialize answered) -> settle -> SessionStart -> UserPromptSubmit for the one user prompt -> model loop",
+      "settle_ms_after_initialize": 4000,
+      "session_start_self_deadline_ms": 1500,
+      "user_prompt_self_deadline_ms": 800,
+      "ipc_deadlines_ms": {
+        "turn_context_client": 600,
+        "turn_context_server": 400,
+        "context_pack_client": 1000,
+        "context_pack_server": 600
+      },
+      "harness_timeout_ms": {
+        "session_start": 5000,
+        "user_prompt_submit": 3000
+      },
+      "source": "src/commands/hook.ts SESSION_START_DEADLINE_MS / USER_PROMPT_DEADLINE_MS; src/core/context/resolve-ipc.ts:84-101; src/core/bootstrap/host-specs.ts CLAUDE_HOOK_DEFAULT_TIMEOUT_SECS"
+    },
+    "byte_cap": {
+      "hook_output_chars": 10000,
+      "memory_digest_bytes": 3072,
+      "prior_context_bytes": 32768,
+      "source": "src/core/bootstrap/host-specs.ts CLAUDE_HOOK_OUTPUT_CAP_CHARS; src/commands/hook.ts DIGEST_MEMORY_CAP_BYTES, PRIOR_CONTEXT_MAX_BYTES"
+    },
+    "session_reset": "each session is a new conversation with a new session_id and a new `gbrain serve` process (Claude Code spawns a stdio MCP server per session); no transcript, no transcript_path (the user-prompt window is the one prompt)",
+    "persistence": "the brain (PGLite data directory and vault checkout) persists from session 1 to session 2 unchanged; nothing is restored between sessions in the baseline arm",
+    "startup_maintenance": "serve boot runs its own startup sweep and session-cursor GC (src/mcp/server.ts); the harness waits settle_ms_after_initialize before SessionStart; GBRAIN_SKIP_STARTUP_HOOKS=1 disables only update checks; no autopilot, dream cycle or extraction drain runs between sessions",
+    "workspace": "an empty, non-git workspace directory per session (no MEMORY.md, no bootstrap manifest)",
+    "surface": "starter: the surface `gbrain bootstrap` registers for Claude Code at this release (src/core/mcp-registration.ts REGISTRATION_SURFACE)",
+    "rendering": "hook text is prepended to the user turn inside <system-reminder> blocks labelled \"SessionStart hook additional context\" and \"UserPromptSubmit hook additional context\", the way Claude Code renders hook context"
+  },
+  "knobs": {
+    "tasks_per_persona": 3,
+    "session1": "explicit",
+    "scale": 1,
+    "hop": true,
+    "supersession": true
+  },
+  "world_digest": "dccafc6f7cc28c44ce5f255713762739359f1f76ab526d99975707fedfe8504a",
+  "seeds": [
+    20261101,
+    20261102,
+    20261103,
+    20261104,
+    20261105,
+    20261106,
+    20261107,
+    20261108
+  ],
+  "readers": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "baseline"
+  ],
+  "repeat": 1,
+  "gbrain": {
+    "requested": "/workspace/gbrain@dda603ac9e152be45afd6f4edd3789bc11e000b8",
+    "commit": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+    "tree": "4d3f4292cb9dc69586c6b3ed8d31be6c78383cc2",
+    "version": "0.60.130.0",
+    "verified": {
+      "copy_tree": "4d3f4292cb9dc69586c6b3ed8d31be6c78383cc2",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.130.0",
+      "cli_version_matches": true
+    },
+    "frozen_release": false
+  },
+  "surface": "starter",
+  "max_turns": 20,
+  "resolved_config": {
+    "decide": "provider keys present (paid arm)",
+    "hermetic": false,
+    "stripped_keys": []
+  },
+  "bun": "1.4.2",
+  "builds": {
+    "h20261101-base": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4811
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1592
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 687
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 30184
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1098
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 649
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 13922
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1575
+        }
+      ],
+      "usd": 0.006787040000000048,
+      "ms": 59359
+    },
+    "h20261102-base": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4057
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1500
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 691
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 28479
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1171
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 743
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 14231
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1348
+        }
+      ],
+      "usd": 0.006786780000000043,
+      "ms": 57736
+    },
+    "h20261103-base": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4371
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1083
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 711
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 30972
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1111
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 731
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 14678
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1471
+        }
+      ],
+      "usd": 0.006752980000000038,
+      "ms": 60385
+    },
+    "h20261104-base": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4301
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2264
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 794
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 29315
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 996
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 686
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 14017
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1444
+        }
+      ],
+      "usd": 0.006771960000000042,
+      "ms": 59053
+    },
+    "h20261105-base": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4202
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1691
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 704
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 30740
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1117
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 785
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 14544
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1236
+        }
+      ],
+      "usd": 0.00680576000000004,
+      "ms": 59837
+    },
+    "h20261106-base": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4175
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2652
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 704
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 30725
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1031
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 705
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16839
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1343
+        }
+      ],
+      "usd": 0.006784180000000032,
+      "ms": 63580
+    },
+    "h20261107-base": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4485
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1905
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 762
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 31804
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1119
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 732
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 13495
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1213
+        }
+      ],
+      "usd": 0.006807060000000048,
+      "ms": 60245
+    },
+    "h20261108-base": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4111
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1716
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 782
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 30600
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1008
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 711
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 13722
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1277
+        }
+      ],
+      "usd": 0.006815380000000045,
+      "ms": 59155
+    }
+  }
+}

@@ -1,0 +1,602 @@
+{
+ "gbrain": {
+  "ref": "9ac26bea780e15cb660b2f29691613fcad5d0bf6",
+  "commit": "9ac26bea780e15cb660b2f29691613fcad5d0bf6",
+  "tree": "41f95308fc901fbafd95e4f53c14d709d9fdac60"
+ },
+ "summary": {
+  "claude-opus-5-5": {
+   "runs": 24,
+   "with_context_pack": 24,
+   "call_note_in_context_pack": 17
+  },
+  "claude-sonnet-5-5": {
+   "runs": 24,
+   "with_context_pack": 24,
+   "call_note_in_context_pack": 17
+  },
+  "gpt-6.1-sol": {
+   "runs": 24,
+   "with_context_pack": 24,
+   "call_note_in_context_pack": 17
+  }
+ },
+ "rows": [
+  {
+   "key": "h124371926-t1|claude-opus-5-5|baseline|1",
+   "task": "h124371926-t1",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h124371926-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h124371926-t1",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h124371926-t1|gpt-6.1-sol|baseline|1",
+   "task": "h124371926-t1",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h124371926-t2|claude-opus-5-5|baseline|1",
+   "task": "h124371926-t2",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h124371926-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h124371926-t2",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h124371926-t2|gpt-6.1-sol|baseline|1",
+   "task": "h124371926-t2",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h124371926-t3|claude-opus-5-5|baseline|1",
+   "task": "h124371926-t3",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h124371926-t3|claude-sonnet-5-5|baseline|1",
+   "task": "h124371926-t3",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h124371926-t3|gpt-6.1-sol|baseline|1",
+   "task": "h124371926-t3",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h196299785-t1|claude-opus-5-5|baseline|1",
+   "task": "h196299785-t1",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h196299785-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h196299785-t1",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h196299785-t1|gpt-6.1-sol|baseline|1",
+   "task": "h196299785-t1",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h196299785-t2|claude-opus-5-5|baseline|1",
+   "task": "h196299785-t2",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h196299785-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h196299785-t2",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h196299785-t2|gpt-6.1-sol|baseline|1",
+   "task": "h196299785-t2",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h196299785-t3|claude-opus-5-5|baseline|1",
+   "task": "h196299785-t3",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h196299785-t3|claude-sonnet-5-5|baseline|1",
+   "task": "h196299785-t3",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h196299785-t3|gpt-6.1-sol|baseline|1",
+   "task": "h196299785-t3",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h253035751-t1|claude-opus-5-5|baseline|1",
+   "task": "h253035751-t1",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h253035751-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h253035751-t1",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h253035751-t1|gpt-6.1-sol|baseline|1",
+   "task": "h253035751-t1",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h253035751-t2|claude-opus-5-5|baseline|1",
+   "task": "h253035751-t2",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h253035751-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h253035751-t2",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h253035751-t2|gpt-6.1-sol|baseline|1",
+   "task": "h253035751-t2",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h253035751-t3|claude-opus-5-5|baseline|1",
+   "task": "h253035751-t3",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h253035751-t3|claude-sonnet-5-5|baseline|1",
+   "task": "h253035751-t3",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h253035751-t3|gpt-6.1-sol|baseline|1",
+   "task": "h253035751-t3",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h446884266-t1|claude-opus-5-5|baseline|1",
+   "task": "h446884266-t1",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h446884266-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h446884266-t1",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h446884266-t1|gpt-6.1-sol|baseline|1",
+   "task": "h446884266-t1",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h446884266-t2|claude-opus-5-5|baseline|1",
+   "task": "h446884266-t2",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h446884266-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h446884266-t2",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h446884266-t2|gpt-6.1-sol|baseline|1",
+   "task": "h446884266-t2",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h446884266-t3|claude-opus-5-5|baseline|1",
+   "task": "h446884266-t3",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h446884266-t3|claude-sonnet-5-5|baseline|1",
+   "task": "h446884266-t3",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h446884266-t3|gpt-6.1-sol|baseline|1",
+   "task": "h446884266-t3",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h500901660-t1|claude-opus-5-5|baseline|1",
+   "task": "h500901660-t1",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h500901660-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h500901660-t1",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h500901660-t1|gpt-6.1-sol|baseline|1",
+   "task": "h500901660-t1",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h500901660-t2|claude-opus-5-5|baseline|1",
+   "task": "h500901660-t2",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h500901660-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h500901660-t2",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h500901660-t2|gpt-6.1-sol|baseline|1",
+   "task": "h500901660-t2",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h500901660-t3|claude-opus-5-5|baseline|1",
+   "task": "h500901660-t3",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h500901660-t3|claude-sonnet-5-5|baseline|1",
+   "task": "h500901660-t3",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h500901660-t3|gpt-6.1-sol|baseline|1",
+   "task": "h500901660-t3",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h560317357-t1|claude-opus-5-5|baseline|1",
+   "task": "h560317357-t1",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h560317357-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h560317357-t1",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h560317357-t1|gpt-6.1-sol|baseline|1",
+   "task": "h560317357-t1",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h560317357-t2|claude-opus-5-5|baseline|1",
+   "task": "h560317357-t2",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h560317357-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h560317357-t2",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h560317357-t2|gpt-6.1-sol|baseline|1",
+   "task": "h560317357-t2",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h560317357-t3|claude-opus-5-5|baseline|1",
+   "task": "h560317357-t3",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h560317357-t3|claude-sonnet-5-5|baseline|1",
+   "task": "h560317357-t3",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h560317357-t3|gpt-6.1-sol|baseline|1",
+   "task": "h560317357-t3",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h746355681-t1|claude-opus-5-5|baseline|1",
+   "task": "h746355681-t1",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h746355681-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h746355681-t1",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h746355681-t1|gpt-6.1-sol|baseline|1",
+   "task": "h746355681-t1",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h746355681-t2|claude-opus-5-5|baseline|1",
+   "task": "h746355681-t2",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h746355681-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h746355681-t2",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h746355681-t2|gpt-6.1-sol|baseline|1",
+   "task": "h746355681-t2",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h746355681-t3|claude-opus-5-5|baseline|1",
+   "task": "h746355681-t3",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h746355681-t3|claude-sonnet-5-5|baseline|1",
+   "task": "h746355681-t3",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h746355681-t3|gpt-6.1-sol|baseline|1",
+   "task": "h746355681-t3",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": false
+  },
+  {
+   "key": "h868827636-t1|claude-opus-5-5|baseline|1",
+   "task": "h868827636-t1",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h868827636-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h868827636-t1",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h868827636-t1|gpt-6.1-sol|baseline|1",
+   "task": "h868827636-t1",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h868827636-t2|claude-opus-5-5|baseline|1",
+   "task": "h868827636-t2",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h868827636-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h868827636-t2",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h868827636-t2|gpt-6.1-sol|baseline|1",
+   "task": "h868827636-t2",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h868827636-t3|claude-opus-5-5|baseline|1",
+   "task": "h868827636-t3",
+   "reader": "claude-opus-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h868827636-t3|claude-sonnet-5-5|baseline|1",
+   "task": "h868827636-t3",
+   "reader": "claude-sonnet-5-5",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  },
+  {
+   "key": "h868827636-t3|gpt-6.1-sol|baseline|1",
+   "task": "h868827636-t3",
+   "reader": "gpt-6.1-sol",
+   "repeat": 1,
+   "context_pack_calls": 1,
+   "call_note_in_context_pack": true
+  }
+ ]
+}
