@@ -12,11 +12,11 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain master [`61624308b`](https://github.com/garrytan/gbrain/tree/61624308b467f0203421460e9eb9458439753515) (v0.60.120.0), declared as `gbrain` in `package.json` |
+| Pinned product | gbrain master [`fc548317f`](https://github.com/garrytan/gbrain/tree/fc548317f628f25c6708049e17af22ee6b4e28ad) (v0.60.122.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
 | This repository | gbrain-evals v0.10.54 (`VERSION`) |
 
-This repository installs gbrain master `61624308b`. Some results below were measured at earlier commits; each names
+This repository installs gbrain master `fc548317f`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
 the installed modes.
 
@@ -247,7 +247,11 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 ### 2026-10-08: Repository row names v0.10.54
 
-gbrain-evals v0.10.54 adds the harder program primary (T0b): its preregistration with three calibration rounds and its development baseline at gbrain v0.60.106.0. The repository row names v0.10.54 (was v0.10.52). Results rows keep the commits they were measured at, so no row changes.
+gbrain-evals v0.10.54 adds the harder program primary (T0b): its preregistration with three calibration rounds and its development baseline at gbrain v0.60.106.0. The repository row names v0.10.54 (was v0.10.53). Results rows keep the commits they were measured at, so no row changes.
+
+### 2026-10-08: Pin gbrain `fc548317f`; repository row names v0.10.53
+
+gbrain-evals v0.10.53. The pin moves from `61624308b` (v0.60.120.0) to `fc548317f` (v0.60.122.0), the merge of gbrain #6350, which ships the eval-only evidence brief builder the wave 1 evidence architecture pilot measured. The repository row names v0.10.53 (was v0.10.52).
 
 ### 2026-10-08: Repository row names v0.10.52
 
