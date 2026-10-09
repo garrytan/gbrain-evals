@@ -1,0 +1,21 @@
+{
+  "realization_id": "real-s5.ext-markdown-kb.recipe.c11-b688927b961044a0",
+  "cell": "s5.ext-markdown-kb.recipe.c11",
+  "lease_id": "s5.ext-markdown-kb.recipe.c11-a1-e795f5df",
+  "campaign_sha256": "59c00444d1633f50034b35e404e73d209ede8343754db8687fc32a095f19986e",
+  "created_at": "2026-10-09T23:55:17.947Z",
+  "trigger": "ingest-complete",
+  "files": [
+    {
+      "path": "ext-markdown-kb.tar",
+      "sha256": "533b016c44c7d2a65f61faf2233c533ce48c098e0d16faa94dcc6f55ad6a8f45",
+      "bytes": 353597440
+    },
+    {
+      "path": "ext-markdown-kb.tar.sha256",
+      "sha256": "18fcd0166e53554df480ead74fd8befe24aa2d592944216e6b95158871b41ae2",
+      "bytes": 65
+    }
+  ],
+  "status": "complete"
+}

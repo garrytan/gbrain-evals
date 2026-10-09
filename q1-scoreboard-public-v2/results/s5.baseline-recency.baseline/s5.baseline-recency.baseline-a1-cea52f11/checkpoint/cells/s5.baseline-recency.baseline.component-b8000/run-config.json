@@ -1,0 +1,104 @@
+{
+  "schema": "gbrain-evals/q1-run-config/v1",
+  "cell_id": "s5.baseline-recency.baseline.component-b8000",
+  "run_cell": "s5.baseline-recency.baseline",
+  "cell": {
+    "schema": "gbrain-evals/q1-cell/v1",
+    "id": "s5.baseline-recency.baseline",
+    "set": "S5",
+    "block": "T2-S4-S5",
+    "benchmark": "lme-m",
+    "split": "dev",
+    "selection": {
+      "kind": "all"
+    },
+    "exclusions": [],
+    "system": "baseline-recency",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "ingest_replicate": 1,
+    "effort": "medium",
+    "canonical_instrument": "lme-m",
+    "probes": {
+      "sample": 20,
+      "seed": "q1-probes-s5",
+      "conversations": 50
+    },
+    "shards": 1,
+    "expected_hours": 8
+  },
+  "arm": {
+    "id": "component-b8000",
+    "cell_id": "s5.baseline-recency.baseline.component-b8000",
+    "set": "S5",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "questions": null,
+    "readers": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol",
+      "anthropic:claude-sonnet-5-5"
+    ],
+    "reader_replicates": {},
+    "frontier": {
+      "judges": [
+        "anthropic:claude-opus-5-5",
+        "openai:gpt-6.1-sol"
+      ],
+      "readers": null,
+      "sample": 17
+    },
+    "judge_repeats": null,
+    "label": "component, 8,000 tokens"
+  },
+  "instrument": {
+    "id": "lme-m",
+    "sha256": "535a46da75ea691ba46777c37e920e98d4bf3d33e427a0851907cefea7c89da8",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "reader": {
+    "effort": "medium",
+    "max_tokens": 2048,
+    "prompt_sha256": "215660c5a2fb85c3068e09b2b02f047c9557393b505ef22c59c08918addfd3be"
+  },
+  "renderer": "memory-render-v2",
+  "counter": {
+    "counter": "reader-max-v1",
+    "tokenizer": "@dqbd/tiktoken@1.0.22",
+    "readers": [
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "encoding": "cl100k_base",
+        "calibration": 1.4708,
+        "calibrated": true
+      },
+      {
+        "reader": "anthropic:claude-sonnet-5-5",
+        "encoding": "cl100k_base",
+        "calibration": 1.4524,
+        "calibrated": true
+      },
+      {
+        "reader": "openai:gpt-6.1-sol",
+        "encoding": "o200k_base",
+        "calibration": 1.0009,
+        "calibrated": true
+      }
+    ]
+  },
+  "dataset": {
+    "name": "LongMemEval-M cleaned",
+    "files": [
+      {
+        "path": "longmemeval/longmemeval_m_cleaned.json",
+        "sha256": "9d79e5524794a2e6900a3aa9cb7d9152c5a3e8319c9a87c25494ba1eacee495f"
+      }
+    ],
+    "revision": "98d7416c",
+    "license": "MIT"
+  },
+  "scheduled_sha256": "4a1ab4e694ab7c34d3e9f3ffd9f1022a1cd31ad3b725f73aad260edfca80cd60",
+  "limit": null
+}

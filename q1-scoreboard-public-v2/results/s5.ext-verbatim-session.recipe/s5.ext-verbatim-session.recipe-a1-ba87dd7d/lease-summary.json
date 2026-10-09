@@ -1,0 +1,13 @@
+{
+  "run_id": "s5.ext-verbatim-session.recipe-a1-ba87dd7d",
+  "lease_usd": 13,
+  "committed_usd": 8.334229499999996,
+  "requests": 676,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0,
+  "timeout_hours": 37,
+  "timed_out": false,
+  "checkpoint_rows": 100,
+  "realization_id": "real-s5.ext-verbatim-session.recipe-7d8bafd063a86d44",
+  "realization_status": "failed"
+}

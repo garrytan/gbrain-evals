@@ -1,0 +1,11 @@
+{
+  "realization_id": "real-s5.ext-verbatim-session.recipe-7d8bafd063a86d44",
+  "cell": "s5.ext-verbatim-session.recipe",
+  "lease_id": "s5.ext-verbatim-session.recipe-a1-ba87dd7d",
+  "campaign_sha256": "59c00444d1633f50034b35e404e73d209ede8343754db8687fc32a095f19986e",
+  "created_at": "2026-10-09T20:50:01.403Z",
+  "trigger": "ingest-complete",
+  "files": [],
+  "status": "failed",
+  "error": "snapshot command exited 141"
+}

@@ -1,0 +1,327 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s5.ext-markdown-kb.recipe.component-b8000",
+  "run_cell": "s5.ext-markdown-kb.recipe",
+  "config_sha256": "23ef144b1e05301168167ca60529fa76ef37038c0453767d5cbccf6388646df5",
+  "run_status": "partial",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S5",
+  "benchmark": "lme-m",
+  "split": "dev",
+  "block": "T2-S4-S5",
+  "system": {
+    "kind": "ext-markdown-kb",
+    "configuration": "recipe",
+    "runner": "shim",
+    "capability_system": "ext-markdown-kb",
+    "versions": {
+      "package": "basic-memory==0.23.2",
+      "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
+      "image": null,
+      "vendor_benchmark_code": "basicmachines-co/basic-memory@c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048 (tag v0.23.2), benchmarks/src/basic_memory_benchmarks/{converters/locomo_to_corpus.py,providers/bm_local.py,scoring/qa.py}",
+      "resolved_dependencies": "uv.lock pins every transitive dependency to basic-memory's own uv.lock at the tag; prereleases resolved: fastmcp==4.0.0b1 and fastmcp-slim==4.0.0b1 (basic-memory requires fastmcp==4.0.0b1), opentelemetry-instrumentation==0.63b1 and opentelemetry-semantic-conventions==0.63b1"
+    },
+    "capabilities": {
+      "protocol": 1,
+      "system": "ext-markdown-kb",
+      "versions": {
+        "package": "basic-memory==0.23.2",
+        "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
+        "image": null,
+        "vendor_benchmark_code": "basicmachines-co/basic-memory@c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048 (tag v0.23.2), benchmarks/src/basic_memory_benchmarks/{converters/locomo_to_corpus.py,providers/bm_local.py,scoring/qa.py}",
+        "resolved_dependencies": "uv.lock pins every transitive dependency to basic-memory's own uv.lock at the tag; prereleases resolved: fastmcp==4.0.0b1 and fastmcp-slim==4.0.0b1 (basic-memory requires fastmcp==4.0.0b1), opentelemetry-instrumentation==0.63b1 and opentelemetry-semantic-conventions==0.63b1"
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": null,
+            "small": null,
+            "embedder": "fastembed:BAAI/bge-small-en-v1.5 (local ONNX, quantized qdrant/bge-small-en-v1.5-onnx-q)",
+            "dims": 384,
+            "reranker": null
+          },
+          "notes": "documented local install (pip/uv install basic-memory, SQLite + sqlite-vec). Semantic search is on by default because fastembed and sqlite_vec import (config_models.py _default_semantic_search_enabled). The local reranker jinaai/jina-reranker-v1-tiny-en is configured but reranker_enabled defaults to False (config_models.py:430), and the vendor LoCoMo benchmark does not enable it, so the recipe runs without a reranker. No LLM anywhere in ingest or search: the recipe makes zero provider calls."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": null,
+            "embedder": "litellm:openai/text-embedding-3-large",
+            "dims": 1536,
+            "reranker": null
+          },
+          "unsettable": [
+            "extraction"
+          ],
+          "notes": "Basic Memory has no extraction model. The embedder runs through the LiteLLM provider because the built-in openai provider never sends `dimensions` (openai_provider.py embed_documents), so text-embedding-3-large would return 3,072 dimensions; the LiteLLM provider forwards `dimensions` for text-embedding-3 models. Calls go to OPENAI_BASE_URL via semantic_embedding_api_base. Basic Memory keeps its default semantic_min_similarity of 0.55 in this config. text-embedding-3-large scores lower in absolute terms than bge-small: in the 2026-10-05 metered smoke the relevant note scored 0.466 for 'What did Caroline sign up for in May 2023?', so vector search dropped it and the query returned nothing (full-text search did not match either)."
+        }
+      },
+      "time": "in-text",
+      "time_notes": "The session date is rendered into the note title, a `session_date` frontmatter field and the heading, exactly where the vendor converter puts it. Basic Memory's own created/updated timestamps are file and index times, not event times. search_notes takes no reference date, so query_time is ignored.",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one note per session named <source_id>.md; each search_notes row maps back through its file_path. Rows are whole-note entities (entity_types default), so every item cites exactly one session."
+      },
+      "delete": "native",
+      "delete_notes": "delete_note MCP tool on the session's note removes the file and its index rows. Nothing is derived across notes, so no residue is expected.",
+      "readiness": "synchronous: /finish runs `bm reindex --search --embeddings -p <ns>` (the vendor benchmark's command), which returns after full-text indexing and embedding. Completeness is `known` when its summary reports 0 embedding errors and `bm status --json` counts as many files as were written, else `degraded`. The vendor's `bm status --json` readiness poll has no readiness field to read at 0.23.2 (its helper returns None and proceeds).",
+      "namespace": "project: one Basic Memory project per namespace, named <ns>, rooted at /data/notes/<ns>",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 10
+          },
+          "maps_to": "search_notes(page_size=10, search_type='hybrid', output_format='json'): page_size default 10 in search_notes and top_k default 10 in the vendor benchmark; hybrid is the default search type when semantic search is on; semantic_min_similarity 0.55, semantic_vector_k 100, reranker off"
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 30
+          },
+          "maps_to": "same call with page_size=30, so the harness can pack an 8,000-token budget from more candidates than the default page"
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [
+        "BASIC_MEMORY_NO_PROMOS=1",
+        "BASIC_MEMORY_AUTO_UPDATE=false",
+        "BASIC_MEMORY_LOGFIRE_ENABLED=false",
+        "BASIC_MEMORY_LOGFIRE_SEND_TO_LOGFIRE=false",
+        "LITELLM_LOCAL_MODEL_COST_MAP=True",
+        "LITELLM_TELEMETRY=False",
+        "HF_HUB_OFFLINE=1",
+        "HF_HUB_DISABLE_TELEMETRY=1"
+      ],
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "stdio",
+        "version": "bm mcp (basic-memory 0.23.2, fastmcp 4.0.0b1, mcp 2.0.0)"
+      },
+      "deviations_from_vendor_code": [
+        "Sessions arrive one at a time through /ingest and are written as notes in the vendor converter's format; the vendor converter writes a whole dataset first. Indexing happens at /finish with the vendor's reindex command.",
+        "Note ids and titles use the opaque source id (src-...) instead of locomo-cNN-sNN, and the frontmatter drops dataset_id, conversation_id and session_number, which would leak dataset identity across the sanitizer.",
+        "The session date is rendered from the ISO event_time into the LoCoMo phrase format ('1:56 pm on 8 May, 2023') for every dataset; the vendor copies LoCoMo's raw string.",
+        "Real-time file watching is off (BASIC_MEMORY_INDEX_CHANGES=false) so the warm MCP server never indexes concurrently with the explicit `bm reindex`; indexing still runs only through the vendor's reindex command.",
+        "The warm MCP session starts at container start instead of after the first ingest, and serves every project.",
+        "Item text is matched_chunk with the note title prefixed when the chunk lacks it, mirroring the vendor's qa.assemble_context header; the vendor's character budget (12,000 chars, 10 hits) is replaced by the harness's shared packer.",
+        "The MCP client is an independent implementation (no vendor benchmark code is copied, because the repository is AGPL-3.0)."
+      ]
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "lme-m",
+    "sha256": "535a46da75ea691ba46777c37e920e98d4bf3d33e427a0851907cefea7c89da8",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol"
+    ],
+    "readers": null,
+    "sample": 17,
+    "instrument_ids": [
+      "lme-m@anthropic:claude-opus-5-5",
+      "lme-m@openai:gpt-6.1-sol"
+    ]
+  },
+  "selection": {
+    "questions": 100,
+    "conversations": 5,
+    "scheduled_sha256": "4a1ab4e694ab7c34d3e9f3ffd9f1022a1cd31ad3b725f73aad260edfca80cd60"
+  },
+  "counts": {
+    "rows": 5,
+    "answers": 15,
+    "answers_promised": 300,
+    "judgments": 24,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 15
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.8,
+    "openai:gpt-6.1-sol": 0.8,
+    "anthropic:claude-sonnet-5-5": 0.8
+  },
+  "realizations": [
+    {
+      "conversation": "27016adc",
+      "realization_id": "dc5e2eb126397288964c58d7e7bec0459e772a91598fbb2d24d36eef6d517b2b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6aeb4375_abs",
+      "realization_id": "9f3a14741cb714ea554256669c5179a92aa120aa343326c0249fa43712ee13f9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b29f3365",
+      "realization_id": "5571aaf3c79e0bde78ccc3d219f13836157a029bdb9079e9f1c21dd722600808",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "f685340e",
+      "realization_id": "416c5fc0c4f10b388638a10da8bc2e6769b106032d4e3dd381ec2730393acc63",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_e072b769",
+      "realization_id": "ddb0f81de5df6c68fb65504632801970a68dd888e5c13e04cf5f8204a6457e0d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 5,
+    "messages": 24391,
+    "ingested_tokens": 5161801,
+    "wall_ms": {
+      "total": 16255133,
+      "p50": 3053415,
+      "p95": 4819070.6
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [
+      51544.1,
+      29631.1,
+      148224.5,
+      539161,
+      25777.2,
+      25580,
+      23427.6,
+      43365.5,
+      43056,
+      50472.8,
+      61311.2,
+      28297.3,
+      47746.2,
+      15360.2,
+      34757.4,
+      34952.2,
+      21904.1,
+      32830.3,
+      53454,
+      30643.3,
+      19754.4,
+      63709.4,
+      26371.2,
+      26775,
+      35510.4,
+      70276.2,
+      57291.4,
+      57417.6,
+      35546.8,
+      33384.2,
+      44369.9,
+      21962.7,
+      30813,
+      42600.9,
+      40370.3,
+      20820.1,
+      62297.6,
+      38129.1,
+      663717,
+      60096.9,
+      57928.2,
+      10070,
+      78039.1,
+      78352.5,
+      62490.6,
+      62898.2,
+      74026.9,
+      29166.5,
+      69997.8,
+      51634.8,
+      19723.6,
+      67965.7,
+      84708.1,
+      81752.8,
+      66140.3,
+      19504.8,
+      14335.6,
+      29268.5,
+      59729.7,
+      76225.3,
+      57587.8,
+      57651.5,
+      45070.5
+    ],
+    "write_start_to_queryable_ms": {
+      "p50": 44369.9,
+      "p95": 84412.6,
+      "probes": 63,
+      "found": 63,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 569.9,
+      "p95": 1690.6
+    },
+    "answer_ms": {
+      "p50": 3795,
+      "p95": 6441.3
+    }
+  },
+  "usage": {
+    "input": 109780,
+    "output": 4545,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 0,
+      "retrieval": 0,
+      "reader": 0.383198,
+      "judge": 0.04542,
+      "background_tail": 0
+    },
+    "total_usd": 0.428618,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s5.ext-markdown-kb.recipe/contexts.ndjson"
+  }
+}

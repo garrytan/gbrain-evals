@@ -1,0 +1,13 @@
+{
+  "run_id": "s5.ext-markdown-kb.recipe.c12-a1-6602d939",
+  "lease_usd": 2,
+  "committed_usd": 0.3854795,
+  "requests": 30,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 4,
+  "timeout_hours": 16,
+  "timed_out": false,
+  "checkpoint_rows": 5,
+  "realization_id": "real-s5.ext-markdown-kb.recipe.c12-1891fc25203ccbc7",
+  "realization_status": "complete"
+}

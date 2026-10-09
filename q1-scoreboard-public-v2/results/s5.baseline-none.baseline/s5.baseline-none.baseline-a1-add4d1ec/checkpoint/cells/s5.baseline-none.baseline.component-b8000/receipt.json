@@ -1,0 +1,977 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s5.baseline-none.baseline.component-b8000",
+  "run_cell": "s5.baseline-none.baseline",
+  "config_sha256": "df3dea6fdf85910367c2aaed689e558a2c8ed7447dcf0eeeac0de22c8de53c3f",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S5",
+  "benchmark": "lme-m",
+  "split": "dev",
+  "block": "T2-S4-S5",
+  "system": {
+    "kind": "baseline-none",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "capability_system": "no-memory",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "system": "no-memory",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {},
+          "notes": "harness control"
+        }
+      },
+      "time": "none",
+      "provenance": {
+        "status": "unavailable",
+        "mechanism": "stores nothing"
+      },
+      "delete": "native",
+      "readiness": "nothing to wait for",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {}
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [],
+      "retrieval_metrics": "not-applicable"
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "lme-m",
+    "sha256": "535a46da75ea691ba46777c37e920e98d4bf3d33e427a0851907cefea7c89da8",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol"
+    ],
+    "readers": null,
+    "sample": 17,
+    "instrument_ids": [
+      "lme-m@anthropic:claude-opus-5-5",
+      "lme-m@openai:gpt-6.1-sol"
+    ]
+  },
+  "selection": {
+    "questions": 100,
+    "conversations": 100,
+    "scheduled_sha256": "4a1ab4e694ab7c34d3e9f3ffd9f1022a1cd31ad3b725f73aad260edfca80cd60"
+  },
+  "counts": {
+    "rows": 100,
+    "answers": 300,
+    "answers_promised": 300,
+    "judgments": 351,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 300
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.08,
+    "openai:gpt-6.1-sol": 0.08,
+    "anthropic:claude-sonnet-5-5": 0.07
+  },
+  "realizations": [
+    {
+      "conversation": "06878be2",
+      "realization_id": "ce737d92ec617cfe8180873ccee7ed9046086a27687c9f68313a2cc289779834",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "06f04340",
+      "realization_id": "a9b0015702787827c76c0bd28c2a16419541aa5ea967bcdb01298563a8409d11",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "07741c45",
+      "realization_id": "300e7ba01ab2d52608bea3d395127f10b7ca45cce6e6a4ad270da91dd64d988b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "078150f1",
+      "realization_id": "6b2a4655b4bf683420e3ac042efb79a7799f98c8b8de18fb99d3be29f4527d93",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "08e075c7",
+      "realization_id": "bd50f5f71c7b92b6908778d57ce852ee1b495ec14904acc3e3df74269335bd28",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "09ba9854_abs",
+      "realization_id": "a2ef3a3464c142dfdf390fef61d5e914e4cf1ef3f2f6334d0623672e21d4e082",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0a995998",
+      "realization_id": "a37065b43983eb59a387adb11b91e8f3c810fd39643f08b9f4b66dfbb59d32b6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0ddfec37_abs",
+      "realization_id": "93ace483120a247398da4d8ee6af3e734b9d16ca2c82702579fdd50718e710f0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "15745da0_abs",
+      "realization_id": "8890444a64302d6e51821dd964898143b38aff5c2f80688c5ede687369c77ca0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "16c90bf4",
+      "realization_id": "d19b7241b58d36f348fcd5fecffefeb7ae7b7f777c13cd250980afb6a7612276",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "18dcd5a5",
+      "realization_id": "6f0a2fa042a20bda8ba6d4ffe145513575d33310d5dbe88c3cad555b39c08bb8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1e043500",
+      "realization_id": "7ba6865d80b434990accb5eff74687d4678245bc6ac5837e0650c88d5f4386fe",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1f2b8d4f",
+      "realization_id": "1536fa67581b21c430837130a3163108b2a6d503e65bbdc27d09974bba86c27f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2133c1b5",
+      "realization_id": "eed3a8cc80590449b3d26cccd99cd1b7f46edad6e57fb6083bc361fd9e5bcf1b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "25e5aa4f",
+      "realization_id": "68a35038c8c32b4d741aa9e86770ad8d60bd8cd31e9c06a0afd0eaab25f67b0c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2698e78f_abs",
+      "realization_id": "140c412d545b2e05735203a017e3b618570b1f1addc7d62bc60bb12a35abac7c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "27016adc",
+      "realization_id": "dc0da59e63cecf3e7f53b0b952f0cf98814ffddccdc3c213c2fa7d6fb80af9cb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "28dc39ac",
+      "realization_id": "7e0c053a609b357cd14c04b357f8f2ed2458153ac5361bb6edeea34711845062",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "29f2956b",
+      "realization_id": "e8ef0f90df8752e9e9c3e5fb5798ca79c8494f9e7ece61c015907bcd07dfc349",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2ce6a0f2",
+      "realization_id": "0abd525d3f22b1fd0f82a407381e0c3aa821627a3bd51c70b4aeb67df3d8550e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "36580ce8",
+      "realization_id": "068741fda548c4a99e3bf45569bef130ed6ee3146abf7eb2401bcc58092ef780",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "36b9f61e",
+      "realization_id": "05b0a091742320f76ce180ddf56d303317f79afb2b4fd4de6cca3d2b0df72fd9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "3c1045c8",
+      "realization_id": "5abb6bb976fe7597e533090690bddd5ddb6ec322cc28cd4119c3e425e7488d9b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "488d3006",
+      "realization_id": "452bd651b18eaa1f1653de6c50c1517eeece67122a2acbdfc0f92c1edb4936fd",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4baee567",
+      "realization_id": "824ef35cc561bbec2b5f828d08cc345ca11433f44be7c7108eac80d8f10959dc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4d6b87c8",
+      "realization_id": "0547cd15f56835979d02435c78fbeebaf7f5f1d36c64afd71bef7c327499bb93",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "505af2f5",
+      "realization_id": "aa1ac1f536b52731d7473523406c4a3d9853300f2397ac833f24dd1d70bf7a9a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51a45a95",
+      "realization_id": "1d9f9246257ea1110ee791817dc5759d5dca1517a14bee03d96c9327dae13b0d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51b23612",
+      "realization_id": "55e0a9779b0e0b749b9d658a42709a2236301cee22fadb4fbe3aad9f1cd4d3c4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "545bd2b5",
+      "realization_id": "df76a6f906b0637052346822ce09190c60ec9b69d59bfe10ff856a73d8b348d3",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "561fabcd",
+      "realization_id": "a1ea231d80d13c8bd901624d80dd3be7071c4254746079d33dd9a43772413cd6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "5809eb10",
+      "realization_id": "8e3048d3a6ab155ec76ae8edb0c4bb0a90228173dbc288fa070506173c64e8d0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "60d45044",
+      "realization_id": "0fe79972f61f166d14eb220161f5eaadfdc34aaf35d985e4aba89cd6758af981",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "61f8c8f8",
+      "realization_id": "46d072fdc40d3391903005133f200178ae98483a702d575fdf1f2ce727cf4d42",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6222b6eb",
+      "realization_id": "da9c8d9ad6950b6e89ba330f2f249b6eb0db04a979fd5c1f2d2b9cbcb4b15e1f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "681a1674",
+      "realization_id": "a5fd4dfe5e3883c739335f912a336f6b9a84a1f69b5d8eb1bf8e894d0e998177",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6aeb4375_abs",
+      "realization_id": "1ef9d7a8e02bfcda0150f072120399db31397c9047c263f6114c9aedb5a9bbb5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6cb6f249",
+      "realization_id": "706ec7736f703e547325bf3d952b7a885f17c75e91417e41e0ef33d4b65b1c3e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6e984301",
+      "realization_id": "b360b285b48cce1300ff5e7c63d4f1d6accb0869737aaf16209289b9f9eb93a7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "71017276",
+      "realization_id": "0f4e6243f9e5a934fd524c850d65da56b7900c3ab5ff7b2d272db4ca40a7dff8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "71315a70",
+      "realization_id": "f1ab01d9b6fe57970db39bb6ba8c5a5f453587761916520d0281caaecafcd1a5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "71a3fd6b",
+      "realization_id": "8f2712433a878da1247b9bfd66133bb68a762664d3ce9101d18ed1b68f4532ef",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "720133ac",
+      "realization_id": "f85a1aa6d855d28405af49dbabd990ef6889371a64b6052b239b3cee22467484",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "7401057b",
+      "realization_id": "94e5edbbb25c7a3de38aecdcbda574b68d766c29dd91c6e8131583ea8616e7de",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "7527f7e2",
+      "realization_id": "219bf11b7d4c7cfcf9fb5fc3c04303da0a9071a5bb5b92e1b764ded980c2e01a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75832dbd",
+      "realization_id": "4d2ad7102df594cd4a6586706b048f8b20fc6f4921ff0a6970ca26538931a1a5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75f70248",
+      "realization_id": "fea86a859faa0cbb849620b4d593e36b205b211a1c269a8c300bea888d40ec8a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "86b68151",
+      "realization_id": "393da2a98fb5dbfd459689905da23c2aeea8e1863112ef471d0564d754aa8005",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "88432d0a",
+      "realization_id": "ec1bc1b82f1ba4b76083bd55fcfa605c2da9ccc62974c580eec23919f8451815",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8cf51dda",
+      "realization_id": "4922665e6dac4bd0b79c0d31af6cf7907d6905687a61b744a7bb5f9cb4707ed1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8fb83627",
+      "realization_id": "4868f4cb21e5c06b5c9e1df3689fabf6d97112056f4ccb161a1f02cb7d0ac228",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "993da5e2",
+      "realization_id": "46b4f6ed411cd4cbe61e547523298f0a9a276e27632735fd6ed352b50e8c0b1a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a1eacc2a",
+      "realization_id": "2a59c627e09d4d48184b8272c20197dfe055bf4974e304669aef055edeaa68a5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a2f3aa27",
+      "realization_id": "02b794f8ae49e4f5315c615b2cb7306e14ba7d7d50261921426f2a4a212fce32",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "af8d2e46",
+      "realization_id": "4419c629c9df5ab5fd4157f77d34a4d9659241a19ea391d81804dcf74feca372",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "afdc33df",
+      "realization_id": "bd45ac73c46c1b0263f3b4743e1045a3ea1e3c4d0d952878e5888cca7345a2a4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b29f3365",
+      "realization_id": "b8404cb145df4dd0d7abafdedf06dbb193c31e32f6eb006dee87a6489f33620d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b5ef892d",
+      "realization_id": "60c93edafa679bfb3d34af960e6d3178c7560e8084cbda369be39294d02dfdf4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "ba358f49",
+      "realization_id": "23f430ffe27159e44aba250708d268032d889fdc2b43db8b545314e1408ea812",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bbf86515",
+      "realization_id": "146111d264c4189c8d1248c49cf33ae8cfecbd3ba93e07344a110e3c92264bb9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bc8a6e93",
+      "realization_id": "8a67bc8c4111489138aba7dea6ffd2f749b5c27505494ded6c89dc6640fb78de",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bf659f65",
+      "realization_id": "b1c198d350cceccc1a8de2692749de6d231754dcacc4dd99457527aa81c481d2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c14c00dd",
+      "realization_id": "e94029760f6ea082bbe1ce2c56d7c37adc6feec5f9a69ede374bce0311d9de17",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c2ac3c61",
+      "realization_id": "652ddb8ef804fcbbfb12ce6a1d045394e36dcede9185c098d874a02897b71c43",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c4a1ceb8",
+      "realization_id": "f127cc531dc890e48a4181c347642eb7573aa46a13736312e2984e7b04fdc6f0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c4f10528",
+      "realization_id": "db34a8bfe8b11fe6672ac07642f5cc6405a015d657577782160a29b8bc3c8ff9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c8c3f81d",
+      "realization_id": "74f23eb623263495681f25661ae53f2d8527a3814d69daa0f5bf2a9c53c067eb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "cf22b7bf",
+      "realization_id": "4aac4f57ec4f5cd6a35fdfcab74ece6c0721f48ac20e96a9b3a8a135fbddb5cb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "dad224aa",
+      "realization_id": "f4f1f4d5f7abced735e9d8d6b6b239124cca1c3d7df5a4cdb63ab091ff9c799a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "db467c8c",
+      "realization_id": "8183cf068b88119f49244d597f345f555e4fbd34c1b6352c7378bde3a71982f7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "dd2973ad",
+      "realization_id": "1535e2e29fb066bad99a8792449030fd977c1b14f2dd2b25079a71b3eb329dc8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "e4e14d04",
+      "realization_id": "d04875241001fc912c8139f87ddb4c199bfffe1648bc1ec59d0b2d5a580f8029",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "ed4ddc30",
+      "realization_id": "c9d8c8a9a07237d231539388b12db40fb23b88bbbedc40670636da2b4e14519d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "efc3f7c2",
+      "realization_id": "9464d1a252ac6ce37a68d3295dc3c33eff308fc92e44392d54d5633603c05a09",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "f0853d11",
+      "realization_id": "4d34a63e69a1c9d8308f86893b8e6dfe5af2877d22b35f1c4b6dc0105634bfab",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "f0e564bc",
+      "realization_id": "e4001fb6f21193f04567405496244bfff34d1ce26a6bb6e4f7d6ef80e95e4312",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "f685340e",
+      "realization_id": "6a2ffa5e36486a669aa28dc052a81c4d910fa4de328153f28beece227d87da6a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "f685340e_abs",
+      "realization_id": "f1278a27f6d27cc9835fd2eb820a48f01512fcf71b475aea4951af1e040148c3",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_0a05b494",
+      "realization_id": "76a1df22a61133adc764f20cac9b57e39e959bd7f576638c59aef5f723dd5de7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_1916e0ea",
+      "realization_id": "460051e1a7ba567ea0ed5d07eac0916d368f56a81227889a6a9d8407ff8ba4df",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_1d4ab0c9",
+      "realization_id": "20564f5baedfd51bce807916c2cab0d5fc0e1fe4aea013791b35f8ad26567329",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_2ba83207",
+      "realization_id": "18f02993d3fce45df72e41d8cdbac210ac69ca0f3663303657097441c2a25a09",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_2f584639",
+      "realization_id": "ea2844be736ab9516549cf36536fc1f06971b5caef91d16e7a3507c64e609c45",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_385a5000",
+      "realization_id": "68914551f64b29e9bc87689856e54f7b8ce5751f27fcf26281825b02c191d4f2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_468eb063",
+      "realization_id": "a9e56830aabd4f3377446fbac1f5116166cde802862ad8473eb7f47c6f68c4e8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_468eb064",
+      "realization_id": "54d7ef796e5d8f53054c9c17a582c7a7dcfa4fd6abaaabbc9b9f72268c0cd7de",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_483dd43c",
+      "realization_id": "1aeda47270e36a3e52bbc91a2349fa689c52419b79dd598237aec9a0fad11aea",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_4fc4f797",
+      "realization_id": "8b85238cf57467105fa59cabeeb843124ec83a6b434e0f6be64cf1ad3371d483",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_59149c77",
+      "realization_id": "03141f5e189cfc6254311f0749a182fdb5b4dbd3941b26b98a7d3beacf783763",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_731e37d7",
+      "realization_id": "3cf3268356c3712ac8086248e1bb3563d1e5510e88aedd5fd278800f4335e443",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7abb270c",
+      "realization_id": "c1569774044f84a95a71eb137de2260e5b877de9f4c69c772ac1208fba19351b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7ca326fa",
+      "realization_id": "97d8290a0f8b63b3fd3537ca6572e31f51fdd3bd11423c269ec3caaa556364b6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_8e165409",
+      "realization_id": "ef3cbfde653cb9352f478632977e181c85e505c32aa02bf0b5b62afbd478d6b9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_93159ced",
+      "realization_id": "440cb1187fbce5e4f81edc2e1d047ee39eef9b08e473dc6b2a9feeba66b4f72d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_a2d1d1f6",
+      "realization_id": "ae8d5f9f6cfa0c6ea0157792d09542515c16b8152374660300498ee37d22624d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_d31cdae3",
+      "realization_id": "b22d3589facd8c544456ae9af92e7e8276dc56600458d835c60aad88eb3acdb8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_e072b769",
+      "realization_id": "c4e6cbb6104f5acd0a41c6636e33945ac814b78d1fc991ba19680bb34bf54629",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_ec93e27f",
+      "realization_id": "bdf7e2e7263e2875a7426ca5b85a9c421f100d8e2ef0b72a382bc51ffda1774d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_f2262a51",
+      "realization_id": "1b05ef8e4534357c356fb14543b5421d41ac51a8a760437932932043c5d4ce92",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_fe651585",
+      "realization_id": "5ba47a91d22795ee496dc04786e9e68f92244792990955c343357feec3527754",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 100,
+    "messages": 490248,
+    "ingested_tokens": 103254372,
+    "wall_ms": {
+      "total": 70433,
+      "p50": 700.5,
+      "p95": 749.3
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [],
+    "write_start_to_queryable_ms": {
+      "p50": null,
+      "p95": null,
+      "probes": 1050,
+      "found": 0,
+      "missed": 0,
+      "not_measurable": 1050
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 1.7,
+      "p95": 2.5
+    },
+    "answer_ms": {
+      "p50": 2526,
+      "p95": 6144.4
+    }
+  },
+  "usage": {
+    "input": 51526,
+    "output": 58753,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 0,
+      "retrieval": 0,
+      "reader": 0.99145,
+      "judge": 0.340093,
+      "background_tail": 0
+    },
+    "total_usd": 1.331543,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s5.baseline-none.baseline/contexts.ndjson"
+  }
+}

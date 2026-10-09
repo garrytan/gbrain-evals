@@ -1,0 +1,977 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s4-slice.baseline-none.baseline.component-b8000",
+  "run_cell": "s4-slice.baseline-none.baseline",
+  "config_sha256": "886211cff93878379b72f09ed02483f1c5a6ac8c7502f227c3b97b310ca00631",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S4-slice",
+  "benchmark": "lme-s",
+  "split": "dev",
+  "block": "T2-S4-S5",
+  "system": {
+    "kind": "baseline-none",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "capability_system": "no-memory",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "system": "no-memory",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {},
+          "notes": "harness control"
+        }
+      },
+      "time": "none",
+      "provenance": {
+        "status": "unavailable",
+        "mechanism": "stores nothing"
+      },
+      "delete": "native",
+      "readiness": "nothing to wait for",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {}
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [],
+      "retrieval_metrics": "not-applicable"
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "lme-s",
+    "sha256": "fd43b41a0a454bf7095c3753365ab438334dbb8f20957f1cd878fb1212a6c95d",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol"
+    ],
+    "readers": null,
+    "sample": 17,
+    "instrument_ids": [
+      "lme-s@anthropic:claude-opus-5-5",
+      "lme-s@openai:gpt-6.1-sol"
+    ]
+  },
+  "selection": {
+    "questions": 100,
+    "conversations": 100,
+    "scheduled_sha256": "494db589170ba9594c01caa8a1f652249571d9d5062c950141b97c96ca189672"
+  },
+  "counts": {
+    "rows": 100,
+    "answers": 300,
+    "answers_promised": 300,
+    "judgments": 351,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 300
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.11,
+    "openai:gpt-6.1-sol": 0.08,
+    "anthropic:claude-sonnet-5-5": 0.09
+  },
+  "realizations": [
+    {
+      "conversation": "06878be2",
+      "realization_id": "44399af8d4b686e99e5b64a79da074e26cb2ddffc09af829558f5504d62331a6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "07b6f563",
+      "realization_id": "0c401f5121ae04c9c135d34824783c3384f89780c8cae88f3601513b0c144a46",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "09d032c9",
+      "realization_id": "2cdda5160d8ef7bd3719807ed3fe64da1618ead2bade617ad3215994960bce09",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0a34ad58",
+      "realization_id": "355fa7a899997f8ef3abe73f11fffa89c152ab36792864a2fca24b0d652637b7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0bb5a684",
+      "realization_id": "094fded35f5fc128bbd4cb0832a111c01d596358b1dcbe26082da64993e18897",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0ddfec37",
+      "realization_id": "674edf114aef2b62b40444cde2db3b837b7c062b8565fa36bb156f63e7077be9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0e5e2d1a",
+      "realization_id": "93ee96279b94a3f96ce923193f94ab8fb0ece6008d96d94223e931c24ca62e88",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0edc2aef",
+      "realization_id": "4bf331352839496fd51cec76fcd690d5d2540e96978e49a47f1caf76fcd9f354",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "10e09553",
+      "realization_id": "d9f77f1a92456920202e66fc38a6ba7f8492d37ed3e41a52f44c990807b0fe05",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "157a136e",
+      "realization_id": "6e24ce1ec4302b3e52eb8280e6473327239306f5dbdcd1b68c217da0c319d5b8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "18bc8abd",
+      "realization_id": "513190df3b4e191d45ac4153005a7bba8c0a9080adea497dccc0e3f282dc14af",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "195a1a1b",
+      "realization_id": "8c903bdb04348ef79bf829ce3fafbe766ef54b64cf76414b9db2e1312a97834a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1a8a66a6",
+      "realization_id": "f67d2d886c8f893e4208e7ef6388471f87a52a43cf2609db5d90c1b23e4956d8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1cea1afa",
+      "realization_id": "258aa4fe3b61a04517f25274a77a5d37f47b2beaf830ea1a0f9c431113bf1853",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1d4da289",
+      "realization_id": "462374b65a83d251f9059f060f0d1358479d555dd573b13b5bc6048ea8d74f8a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1d4e3b97",
+      "realization_id": "e7453ac87f27cf31dc61bfe422a464cc73c301027360c60ed8eeddf35724b973",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1f2b8d4f",
+      "realization_id": "6489e8fd26f002e8f5e3bf78c70b28ce0fa8a4d5ab49e658342388b0a398c562",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2133c1b5_abs",
+      "realization_id": "de8f7b87c91ebf93325c12f4f6424fee6925bac3be824481a864b3144987c870",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2318644b",
+      "realization_id": "c3a6df3c4b02782cbdc41166bb5077bf2fcb775d3a05a3e7d0cc4265c48990c0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "28bcfaac",
+      "realization_id": "c2d9a5ae1ca22d018b0d703d134e173199170ad22316ff1157f0674f36ae6106",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2ce6a0f2",
+      "realization_id": "cd310a1e2ee9318c2498a61caff84734d83771977e732a0566ce60d7b9bda8bf",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "32260d93",
+      "realization_id": "6ce05e27d820f1807489eb33ac693388cc8dfec9be33951c41711d22c3acb26a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "3249768e",
+      "realization_id": "09145b96b2111d411e54d62a5aa8667a9fde488badc32870e99c4adfd6e3a24d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "352ab8bd",
+      "realization_id": "876b8727dee7ca305989cc829678bcb884c7887dc64f565e4efaa52de92a1646",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "36580ce8",
+      "realization_id": "92787f44d5759d873e3836fb9cbec53759e813d4de08ffedbf3e2ad5097e15bf",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "38146c39",
+      "realization_id": "e9ad02da18f0775af6ad0a8123e7e9b0da447482e953420d78a7f3a46a70f9b8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "3b6f954b",
+      "realization_id": "8269140e2cfd071fa16b8ca9a26fbff4b05fcbff1f55ef10eee94e6d3e7d4cd0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "45dc21b6",
+      "realization_id": "4586ffbaaad98c22e51ef3af68bb4133eaeb4cbf55f155c29e7e660c75ee272f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "488d3006",
+      "realization_id": "58ef2dc7c074b6adf0804318d958419c730159c5723316ef17ee875b26b35b7c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4b24c848",
+      "realization_id": "3cde6e63ffba6a81caf47d97cb077993a58b8b7d2550660d6e5cd89a959cc433",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4baee567",
+      "realization_id": "96dadccc2771d6bc4e50759374b22def8e17914b74de2010867d89c432177fa3",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4c36ccef",
+      "realization_id": "ea3a634ba96338b9333f23a185a872e8572a15c342b49ff9cfd7d44db4f58d9b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4d6b87c8",
+      "realization_id": "330ef74361a93b50db7403110ecd77ac432c870ad7254be873d0ab312f2a0b51",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4fd1909e",
+      "realization_id": "deecabe8a9bd24a28c720ffab04f4d97bf6c1f044af113bae3cd53fd3cd5f538",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51a45a95",
+      "realization_id": "6379658de1a5abc74bc8235bf5eec7c7b5c796276541181d29279bc1ae818e3e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51b23612",
+      "realization_id": "c9c26b43a5774d0363ad6fcb734e43ea68c87759f72282481300c9d1470c6dc9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51c32626",
+      "realization_id": "fd243e6c4ec7e5bbb649d5cc59b7fc5af52a0c61583bcc6681124a3e84cd5f30",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "58bf7951",
+      "realization_id": "183866bb93bee4f3124eb8f052d54c23428ba12398ab25592eab3d1b0dc9ab83",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "5d3d2817",
+      "realization_id": "a18715fece2a61faac3b9ac939fbba1e12f43ccefaf583a4ba95aa0128b92093",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "60472f9c",
+      "realization_id": "f3764015f2d901fbd38f27da34c811ce4a646c5fde2f7fc30f8637dea60c0acb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "65240037",
+      "realization_id": "5dcae4b55ffa8ab6857f33671557d7a8f7069c832e98972a8c9c7fb897e243bc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "69fee5aa",
+      "realization_id": "98d13cb58a3de3790db9f1a1a09650ebedb04dba9f5fbed8f46b4ba18a154d59",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6b7dfb22",
+      "realization_id": "38f6eb53844217c1d866273225b68a0e5748e64f4073125a8dd30d0682a83ea9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "71017276",
+      "realization_id": "09383ab30ff80a106c6f734849ac4e5ae02efea2b353935992a71698d6e7da70",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "7405e8b1",
+      "realization_id": "5d26c26455999d2052dc56f9c913e7842445c1e4cb4b8099704b7972be8bb453",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75499fd8",
+      "realization_id": "51663ea8f8e1c9645aca42e6feafafc7338f02d6ecd5674770086e8ed9937174",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75832dbd",
+      "realization_id": "2b0c7eb138022a7c4b693472b4094b93ca894a00c81205ade4343e65ae35dfa8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75f70248",
+      "realization_id": "3fe06f95beca6d6a995d74309eb6cd1fd4200195077e8d8ce948a492107a9540",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "76d63226",
+      "realization_id": "592b5912a4471d5c62c1076e929f78858e800bc55658f6a075564634d9e476f3",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "7a8d0b71",
+      "realization_id": "80fcf34893d668d52bd897629678ade7268a0374cf891af289043a7c864a9505",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "852ce960",
+      "realization_id": "038e2af01523a2eef09c9c7f3ca46f96bf189bbba4847833d2582cce204788f1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "86b68151",
+      "realization_id": "9fb9a8c81c5e911471200d4fb32ccf5a010f2f6ce12d1c2410321de3d128e5b6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "86f00804",
+      "realization_id": "cf67f26efe2862e4917eede0daa157782a9770c017c7dd6a5571860b01d261dd",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8a137a7f",
+      "realization_id": "f707f27895c32766fe1ddd08fc1d441274fa61e9ce216b4bdf743fd09ea82d9c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8b9d4367",
+      "realization_id": "9846b88bb895fc8c3653bd73dc8e1480f769482ab456f0e8d25b8fcfc43ed280",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8fb83627",
+      "realization_id": "9781d292f63ce43abd921744bdf3d9c71680cd1363c029eed0a2b08e6c9aabc5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "982b5123_abs",
+      "realization_id": "54665054a5d8da2c368f83e5b43e6bc673e7f92350b31160ca97fcecb6bb6b9c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "9bbe84a2",
+      "realization_id": "bbc7ca9501e41ddb4ae01a194b9cbfb72dc0aca9aadc5fcc828e813b38fa2bb4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a2f3aa27",
+      "realization_id": "0c62e117d38ff55f52dc9b68978acfe12f6c985e166915621775682f90e569ce",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a89d7624",
+      "realization_id": "a8d800d81f4be18c1b67a8a56c9aad5d7b5bbea2d0dbab9cff33b184dd13159b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a96c20ee",
+      "realization_id": "a28cbefafa72efd8322de0a1d398226d616492b4ed4bbba377e514fa1f848348",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "afdc33df",
+      "realization_id": "0ce132c49904d8effe73d0936620c4b843835f0892e7387a0b460ae8206f3361",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b01defab",
+      "realization_id": "fcb7f16b29cef71331850c2cb18c37bdaed3d54665b6c72908378b2432b3f1ae",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b0479f84",
+      "realization_id": "882a82e8573bb54dcbd6d92a2cb02330a02da2eb604d4b352cf6c68995d1111c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b3c15d39",
+      "realization_id": "b221ed697a9ac41ceec3d54f28ad527d18fd4c6b7a62d48720f6a93270b50976",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b46e15ed",
+      "realization_id": "b88aaa2517047884f8fa4600875c50dc26464e551108fa0555e99cf30f3535e4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b5ef892d",
+      "realization_id": "8927c7d8a2b76769c6d284a38e4c14d8793b880f3bafbe4a5029a27cd2427dcb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bc8a6e93",
+      "realization_id": "54d6108e2c8029b116568c8b0932307f544358f8666195760f2af874d33f9c46",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bc8a6e93_abs",
+      "realization_id": "dd8043590e52a63c14408586327cff533c17940bdec87872a6e42c872dc4a46d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bcbe585f",
+      "realization_id": "2bbdb80d36773e0df72d9af7637205925f17bcc420f2dd6feea36c462aae5e89",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c2ac3c61",
+      "realization_id": "a0e103a9e8c120239407059c9faa3e3bdfe7e97929c85f6542a686f501d9caea",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c5e8278d",
+      "realization_id": "ea86db59e08899fd9366c0c4c21559d61f6a1db8fd11a24b0787f32bf2504c22",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c7dc5443",
+      "realization_id": "e1ac04cd9826a344d5f0ba7c642d622fb95bc56da249e6aac83db889b8b17c79",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "cf22b7bf",
+      "realization_id": "9de95f64735abcc095491bb5bca2376a1e0f4f6163a1df8732845b53952a30a9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d24813b1",
+      "realization_id": "c46de18fb5f46efcdea76207d2ceb46d2aa3a44dfcf6ed1f78935365eee6f788",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d3ab962e",
+      "realization_id": "d3ed5a6ac11e1c961efa3967948c638596e74019356d4130ecdb23dab3b534c5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d52b4f67",
+      "realization_id": "864f132b7787b98ea860b8b4237a958c9329810c336cdb0c7338f0973d919ed5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d596882b",
+      "realization_id": "730d3803ce0fea18ea81bc9c78499703656548ea7a294c148727ae871954a990",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d851d5ba",
+      "realization_id": "b36bf72025bd642aa884aa7980b22915f811cb5e3661070b35c17f16899593fa",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "dc439ea3",
+      "realization_id": "099827a7f0a1c53e5df4077abefc0d24aa004447a1b307df91ed58848a71e8b9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "e5ba910e_abs",
+      "realization_id": "3411d94f474c8dd9a2f64c9a4b104b391bc0edd071adddd1562727a94e04814f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "e982271f",
+      "realization_id": "0ee9532147b42620cd79c2beb600765a4dcfb75e2cd49c909fb4b82e8cf5967f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "ed4ddc30",
+      "realization_id": "38f546d3592747fc00995f3849753a7219263b4ab84f29882efd3c65cc8daa65",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "efc3f7c2",
+      "realization_id": "731763147d6fff85231d4d81d74f5eee402f6011b20c82412527f91194cf7f58",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "faba32e5",
+      "realization_id": "6edb3c36bb8aa6a28484d6984c7d5c6b305d3a1940ca1d54d3e45740f383fde0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "fca70973",
+      "realization_id": "b6a68691df472a5c247260544e030365de6276db95e627a5517a0ab423eb424b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "fca762bc",
+      "realization_id": "3bf5950437243bcd5e3d66913b6d8b54a793e282bd46bd3f5c9358e171467d3c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "fea54f57",
+      "realization_id": "61b8beddd8f903f22d8572d625a006077af4527fddc65b367e73d71787d18924",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_468eb063",
+      "realization_id": "567a62e15e4343e3f4d55cedd3e07f71ae1a11b128af2aed471d3ce3547cae24",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_76048e76",
+      "realization_id": "2478ece264e96c0f41c5963f99011f77f36586b660503b57e46de335df1f4915",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7a0daae1",
+      "realization_id": "85f4809c85474ae6fa80d2181b18df959b6a4bbc808e20827287120cda25f1d9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7ca326fa",
+      "realization_id": "0ad76deaf1cb999703345d982f940a4e199517b2b26f57d0c093c543fde9374a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_8c8961ae",
+      "realization_id": "9c20e2337ad08e58c2ce647590452c203536d97f86fbb588b5de45f40e72b653",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_8e165409",
+      "realization_id": "cfb018d8287f8cf333ef49fe05ff40724b4da4704f94de3fee79cdd1aeab24c2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_93159ced",
+      "realization_id": "4d954bac37e9b8ba841f8071e3fbce4ad7f0e10b862333c51bb50e2450a98589",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_a2d1d1f6",
+      "realization_id": "80b1fa2c9da92a380bd2aca82a5e68b058e71694e52f59cc38d1c4d7a1ebcd80",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_ab202e7f",
+      "realization_id": "79a93de2b8475918e6013b32632f5f81e2999b6412ed4aec9e9314f2d0b17e55",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_b5700ca0",
+      "realization_id": "60eb869d81e8eed5c58ef3f10cb3b186b5a6e2da1ff3b26baaf638dc4bea3a28",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_e414231e",
+      "realization_id": "c092e03add24eeb77b313664e3ac4dfaebeb1399e2435d4a956878d0ba0fcf5d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_fe651585",
+      "realization_id": "8efdd097bf265c384034073290de73b8f153ce56cfc2c8a0817b07acb4cb4c79",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 100,
+    "messages": 49672,
+    "ingested_tokens": 10394693,
+    "wall_ms": {
+      "total": 9256,
+      "p50": 88,
+      "p95": 131.3
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [],
+    "write_start_to_queryable_ms": {
+      "p50": null,
+      "p95": null,
+      "probes": 336,
+      "found": 0,
+      "missed": 0,
+      "not_measurable": 336
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 1.6,
+      "p95": 2.4
+    },
+    "answer_ms": {
+      "p50": 2793.5,
+      "p95": 8700.9
+    }
+  },
+  "usage": {
+    "input": 51852,
+    "output": 75295,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 0,
+      "retrieval": 0,
+      "reader": 1.236816,
+      "judge": 0.376948,
+      "background_tail": 0
+    },
+    "total_usd": 1.613764,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s4-slice.baseline-none.baseline/contexts.ndjson"
+  }
+}

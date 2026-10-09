@@ -1,0 +1,13 @@
+{
+  "run_id": "s4-slice.ext-markdown-kb.recipe.c0-a1-fd2e8eec",
+  "lease_usd": 6.36,
+  "committed_usd": 3.7508110000000023,
+  "requests": 332,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 4,
+  "timeout_hours": 14,
+  "timed_out": false,
+  "checkpoint_rows": 50,
+  "realization_id": "real-s4-slice.ext-markdown-kb.recipe.c0-f29c98fa0d0c93d8",
+  "realization_status": "failed"
+}

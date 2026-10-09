@@ -1,0 +1,11 @@
+{
+  "realization_id": "real-s4-slice.ext-markdown-kb.recipe.c1-0b037143da10abac",
+  "cell": "s4-slice.ext-markdown-kb.recipe.c1",
+  "lease_id": "s4-slice.ext-markdown-kb.recipe.c1-a1-3d598c26",
+  "campaign_sha256": "59c00444d1633f50034b35e404e73d209ede8343754db8687fc32a095f19986e",
+  "created_at": "2026-10-09T20:51:15.737Z",
+  "trigger": "ingest-complete",
+  "files": [],
+  "status": "failed",
+  "error": "snapshot command exited 141"
+}
