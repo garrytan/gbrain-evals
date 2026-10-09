@@ -3,7 +3,7 @@
   "runs": [
     {
       "run_id": "harness-cell:locomo-locomo10-gbrain-rag-9af924a3f7ce-2026-10-09T19-00-18-681Z-baf59d8c",
-      "ledger": "/home/ubi/cells/ledger.sqlite",
+      "ledger": "~/cells/ledger.sqlite",
       "usd": 15.906167,
       "requests": 7287,
       "started_at": "2026-10-09T20:01:56.514Z",
