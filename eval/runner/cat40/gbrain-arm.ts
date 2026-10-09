@@ -156,16 +156,33 @@ export function coverageProblem(c: SlotCoverage): string | null {
   return `mention coverage ${c.state ?? 'unknown'} with ${c.pending ?? 'unknown'} pending pages`;
 }
 
+/**
+ * Points a restored slot's Voyage base URL at this process's metering proxy. The build writes the proxy's port into
+ * the snapshot's config.json, and each process's proxy listens on a new port, so without this a slot restored by a
+ * later process reranked against a dead port (`degraded_recall rerank_failed`; T0b root cause 2026-10-08).
+ */
+export function refreshProviderBaseUrls(home: string, voyageBase: string): boolean {
+  const cfgPath = join(home, '.gbrain', 'config.json');
+  if (!existsSync(cfgPath)) return false;
+  const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
+  if (!cfg.provider_base_urls?.voyage || cfg.provider_base_urls.voyage === voyageBase) return false;
+  cfg.provider_base_urls = { ...cfg.provider_base_urls, voyage: voyageBase };
+  writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+  return true;
+}
+
 export class GbrainSlot {
   client: McpClient | null = null;
   readonly dir: string;
   readonly run: RunEnv;
+  readonly voyageBase: string;
   /** `gbrain config set` pairs applied after every restore (the snapshot does not carry them). */
   config: Array<[string, string]> = [];
   /** `advertised`: the brain's mcp.advertised_surface (tools listed; the callable set stays `surface`). Null leaves it unset. */
   constructor(readonly id: string, root: string, readonly buildDir: string, proxyPort: number, readonly surface: string, readonly advertised: string | null = null) {
     this.dir = join(root, id);
     const base = `http://127.0.0.1:${proxyPort}/${id}`;
+    this.voyageBase = `${base}/voyage/v1`;
     this.run = {
       buildDir,
       env: {
@@ -214,7 +231,7 @@ export class GbrainSlot {
     await op('init', ['init', '--pglite', '--path', join(this.dir, 'home', 'brain.pglite'), '--embedding-model', GBRAIN_EMBED_MODEL, '--non-interactive']);
     const cfgPath = join(this.dir, 'home', '.gbrain', 'config.json');
     const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
-    cfg.provider_base_urls = { ...(cfg.provider_base_urls ?? {}), voyage: `http://127.0.0.1:${proxy.port}/${this.id}/voyage/v1` };
+    cfg.provider_base_urls = { ...(cfg.provider_base_urls ?? {}), voyage: this.voyageBase };
     writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
     const operatorAnalyze = (step: string) => {
       // gbrain does not ANALYZE after a bulk import on PGLite (no autovacuum), so the planner sees empty
@@ -309,6 +326,7 @@ export class GbrainSlot {
     const home = join(this.dir, 'home');
     for (const entry of readdirSync(home).sort()) rmSync(join(home, entry), { recursive: true, force: true });
     execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home']);
+    refreshProviderBaseUrls(home, this.voyageBase);
     for (const [key, value] of this.config) {
       const r = await runCli(this.run, ['config', 'set', key, value], 120_000);
       if (r.code !== 0) throw new Error(`gbrain ${this.id}: config set ${key} failed (exit ${r.code}): ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ')}`);

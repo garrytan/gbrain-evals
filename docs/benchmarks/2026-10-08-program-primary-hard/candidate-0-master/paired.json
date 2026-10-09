@@ -1,0 +1,212 @@
+[
+ {
+  "scope": "claude-opus-5-5",
+  "pairs": 48,
+  "personas": 8,
+  "baseline": {
+   "failures": 38,
+   "clustered": {
+    "rate": 0.7916666666666666,
+    "lower": 0.6474393554400912,
+    "upper": 0.935893977893242,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 36,
+   "clustered": {
+    "rate": 0.75,
+    "lower": 0.5675652782888194,
+    "upper": 0.9324347217111806,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.948051948051948,
+   "factor": 1.0547945205479452,
+   "baseline_failures": 38,
+   "candidate_failures": 36,
+   "clusters": 8,
+   "lower": 0.5835541395694127,
+   "upper": 1.5353596354473324
+  },
+  "risk_difference": {
+   "diff": -0.041666666666666664,
+   "lower": -0.18589397789324205,
+   "upper": 0.10256064455990874
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_date": 17,
+    "stale_correction": 37,
+    "unsupported": 2,
+    "missed_commitment": 1
+   },
+   "candidate": {
+    "stale_date": 17,
+    "stale_correction": 35,
+    "unsupported": 2
+   }
+  }
+ },
+ {
+  "scope": "claude-sonnet-5-5",
+  "pairs": 48,
+  "personas": 8,
+  "baseline": {
+   "failures": 35,
+   "clustered": {
+    "rate": 0.7291666666666666,
+    "lower": 0.5813776509421216,
+    "upper": 0.8769556823912117,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 29,
+   "clustered": {
+    "rate": 0.6041666666666666,
+    "lower": 0.3815078479019632,
+    "upper": 0.8268254854313701,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.8309859154929577,
+   "factor": 1.2033898305084745,
+   "baseline_failures": 35,
+   "candidate_failures": 29,
+   "clusters": 8,
+   "lower": 0.48855401953347344,
+   "upper": 1.3953454682664967
+  },
+  "risk_difference": {
+   "diff": -0.125,
+   "lower": -0.38029999520452135,
+   "upper": 0.13029999520452135
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_date": 16,
+    "stale_correction": 30,
+    "missed_commitment": 10
+   },
+   "candidate": {
+    "stale_date": 5,
+    "stale_correction": 23,
+    "unsupported": 2,
+    "missed_commitment": 8
+   }
+  }
+ },
+ {
+  "scope": "gpt-6.1-sol",
+  "pairs": 48,
+  "personas": 8,
+  "baseline": {
+   "failures": 1,
+   "clustered": {
+    "rate": 0.020833333333333332,
+    "lower": 0,
+    "upper": 0.07009633857484833,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 2,
+   "clustered": {
+    "rate": 0.041666666666666664,
+    "lower": 0,
+    "upper": 0.14019267714969666,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 1.6666666666666667,
+   "factor": 0.6,
+   "baseline_failures": 1,
+   "candidate_failures": 2,
+   "clusters": 8,
+   "lower": 0.0036421101089450145,
+   "upper": 76048.6078474476
+  },
+  "risk_difference": {
+   "diff": 0.020833333333333332,
+   "lower": -0.09544644241193904,
+   "upper": 0.13711310907860572
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_date": 1,
+    "stale_correction": 1
+   },
+   "candidate": {
+    "stale_correction": 1,
+    "unsupported": 1
+   }
+  }
+ },
+ {
+  "scope": "pooled",
+  "pairs": 144,
+  "personas": 8,
+  "baseline": {
+   "failures": 74,
+   "clustered": {
+    "rate": 0.5138888888888888,
+    "lower": 0.4447756143739963,
+    "upper": 0.5830021634037814,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 67,
+   "clustered": {
+    "rate": 0.4652777777777778,
+    "lower": 0.35724092070091434,
+    "upper": 0.5733146348546412,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.9060402684563759,
+   "factor": 1.1037037037037036,
+   "baseline_failures": 74,
+   "candidate_failures": 67,
+   "clusters": 8,
+   "lower": 0.6407177092776047,
+   "upper": 1.277430219923002
+  },
+  "risk_difference": {
+   "diff": -0.04861111111111111,
+   "lower": -0.14294258436664917,
+   "upper": 0.04572036214442695
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_date": 34,
+    "stale_correction": 68,
+    "unsupported": 2,
+    "missed_commitment": 11
+   },
+   "candidate": {
+    "stale_date": 22,
+    "stale_correction": 59,
+    "unsupported": 5,
+    "missed_commitment": 8
+   }
+  }
+ }
+]
