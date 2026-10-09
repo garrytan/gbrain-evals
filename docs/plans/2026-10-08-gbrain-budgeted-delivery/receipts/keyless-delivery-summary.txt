@@ -1,0 +1,12 @@
+n 100 answerable 96
+A shootout chunks: returned 19.8 items, 11710 harness tokens, packed 12.8 items/7635 tok, sessions packed 12.7 of 19.7 returned; all-gold-in-context 82.3%
+D rehydrated 8k: sessions 2.1, tok 6095, all-gold 42.7%
+auto8k_l25: hits 19.4 blocks 19.3 pages 14.8 whole 0.6 spilled 4.5; budget_used mean 10523 max 11585 over-budget 100/100; harness tokens all 12086; packed@8k blocks 12.1 tok 7678; all-gold delivered 86.5% packed@8k 82.3%; gold whole pages/q 0.03
+auto24k_l25: hits 19.4 blocks 19.3 pages 19.3 whole 6.7 spilled 0.0; budget_used mean 23998 max 24000 over-budget 0/100; harness tokens all 27598; packed@8k blocks 2.2 tok 6226; all-gold delivered 86.5% packed@8k 43.8%; gold whole pages/q 1.05
+auto8k_l5: hits 5.0 blocks 5.0 pages 5.0 whole 2.2 spilled 0.0; budget_used mean 7927 max 8000 over-budget 0/100; harness tokens all 9127; packed@8k blocks 2.8 tok 7037; all-gold delivered 61.5% packed@8k 49.0%; gold whole pages/q 0.74
+n 587 answerable 464
+A shootout chunks: returned 24.6 items, 11539 harness tokens, packed 16.8 items/7722 tok, sessions packed 16.7 of 24.5 returned; all-gold-in-context 87.5%
+D rehydrated 8k: sessions 8.4, tok 7532, all-gold 72.2%
+auto8k_l25: hits 23.8 blocks 23.6 pages 17.1 whole 5.9 spilled 6.5; budget_used mean 11430 max 12394 over-budget 587/587; harness tokens all 11641; packed@8k blocks 16.0 tok 7724; all-gold delivered 94.4% packed@8k 86.2%; gold whole pages/q 0.52
+auto24k_l25: hits 23.8 blocks 23.6 pages 23.6 whole 23.6 spilled 0.0; budget_used mean 17434 max 20413 over-budget 0/587; harness tokens all 17844; packed@8k blocks 9.7 tok 7568; all-gold delivered 94.4% packed@8k 76.1%; gold whole pages/q 1.27
+auto8k_l5: hits 5.0 blocks 5.0 pages 5.0 whole 5.0 spilled 0.0; budget_used mean 3872 max 5189 over-budget 0/587; harness tokens all 3967; packed@8k blocks 5.0 tok 3967; all-gold delivered 63.1% packed@8k 63.1%; gold whole pages/q 0.80

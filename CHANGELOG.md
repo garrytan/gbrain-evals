@@ -2,6 +2,30 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.62] - 2026-10-09
+
+### Budgeted delivery E2: how `auto` should pack an explicit token budget
+
+E2 of the approved budgeted delivery plan (v3), on gbrain `ca2c447bd` (v0.60.124.0, the merge of gbrain #6367, loaded
+as a copied overlay), development data only. Ledger: $178.46 of a $600 cap (Garry raised the caps mid-run so evals
+don't stop on a cap: E2 $270 to $600, E3 $10 to $25, program $700 to $1,500).
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2.md), [preregistration](docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2-preregistration.md)
+  with amendments A1 to A4). On all 500 LongMemEval-S questions with Claude Sonnet 5.5 at an 8,000-token reader
+  budget: `off` (today's uncapped `auto`) 69.0%, `cap_only` 67.4% (−1.6, −3.8 to +0.4; fails the question-kind
+  guard), `breadth_capped` 77.8% (+8.8, +5.2 to +12.2), `depth_first` 79.4% (+10.4, +6.4 to +14.4). `depth_first`
+  passes guards 1 to 9, loses nothing measurable on LoCoMo (−0.3) or BEAM (+4.0), and keeps its gain under Sonnet 5.5,
+  Opus 5.5 and gpt-6.1-sol (+16, +13, +13 on the slice), so by the preregistered rule it goes to H1. On multi-session
+  questions it trails `breadth_capped` by 10.5 points, which H1's preregistration should weigh for the
+  multi-session-heavy sealed set. E3 (session fusion) changes no top-five recall and stays parked.
+- **Harness.** `gbrain-query` gains the E2 stages (`variants=e2`: freeze, $0 size and deliver on hash-vector
+  re-imports with a redaction-aware chunk-text check, live checks that switch `search.auto_packing` and time the
+  reranker separately) and per-call `auto_packing`; `pseudo-session-rank` rendering (C5); `budget-sizing.ts --e2`;
+  `e2-readings.ts`, `e3-retrieval-gate.ts`, the keyless gate and a parallel shard runner; local campaign cells and
+  `shootout-cell.ts raise-cap`; the receipt exporter can drop arm-row accounting.
+- **Bootstrap.** `eval/systems/bootstrap.sh` installs Bun 1.4.2 (the CI pin gbrain needs) instead of 1.3.14;
+  `BUN_VERSION` still overrides. Every E2 VM cell already ran on 1.4.2.
+
 ## [0.10.61] - 2026-10-09
 
 ### Cat 41 re-baseline: fresh install to wired recall on gbrain v0.60.130.0
