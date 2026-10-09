@@ -1,6 +1,6 @@
 # Verbatim-probe wave (gbrain#6391): preregistration, paired retrieval verdict and reranker-settings extension
 
-**Status, 2026-10-09: preregistered, not run.** Nothing below has been measured on the confirmatory set. Everything was written before any counted cell ran. The development evidence that motivated it (109 rebuilt haystacks) is described under "Background" and is excluded from no question; the confirmatory set is all 500 questions.
+**Status, 2026-10-09: final; primary run approved with a $12 hard cap; reranker extension deferred.** Nothing below has been measured on the confirmatory set. Everything was written before any counted cell ran. The development evidence that motivated it (109 rebuilt haystacks) is described under "Background" and excludes no question; the confirmatory set is all 500 questions. The owner (Efficiency captain) approved the primary run and deferred the extension until Sina decides the reranker-settings question; the extension section stays as written and runs only with that approval and an added $8.
 
 ## Background
 
@@ -26,7 +26,7 @@ Extension (runs only if Sina approves the reranker-settings question raised in G
 - **Brains:** one PGLite brain per haystack, built once and shared by both arms. Each is built with `gbrain init --pglite`, shipped defaults (voyage-4 at 1,024 dimensions, `tokenmax`, `voyage:rerank-2.5`, expansion on), and the shim's `render_page` pages through `put_page` in event-time order. The drain continues until doctor reports 0 embeddings missing.
   - Both arms query the same brains. #6391 touches only the query path, which `git diff` confirms: nothing under ingest, chunking, embedding or persistence.
   - Facts extraction is off during the build (`facts` jobs not drained) in both arms. It is the dominant cost (about $6.50 per million ingested tokens, about $370 for the set), and `query` retrieval does not read facts in `tokenmax`. This deviation is recorded and identical across arms.
-- **Builds:** arm A is master at #6391's merge base; arm B is #6391's head. Each brain is queried by each build's `serve --surface starter`, alternating which arm goes first per haystack.
+- **Builds:** arm A is gbrain master at #6391's merge base, `0e52ac914f6a61d44e9d7c931199227696a7de59` (v0.60.132.0); arm B is #6391's head, `fecc7827fcedaa7692483bf69510df64f0a19448`. Brains are built with arm A's code (the ingest path is identical in both). Each brain is then queried by each build's `serve --surface starter`; which arm goes first is decided by the parity of the first hex digit of `sha256(question_id)`.
 - **Queries per haystack:**
   - the LongMemEval question (`query {query, limit: 50, autocut: false}`, the shim's fixed-evidence settings);
   - the readiness probe for the last session.
@@ -79,7 +79,9 @@ At list prices: voyage-4 $0.06 and rerank-2.5 $0.05 per million tokens, rerank-2
 | margin | | $3.90 |
 | **total cap** | | **$20** (primary alone: $12) |
 
-Compute is about 3.5 hours of ingest on a 4 vCPU machine at 3 haystacks in parallel. Queries take about 1 hour. All runs go through one budget-ledger campaign (`campaign-open --budget-usd 20`, or 12 without the extension), so the cap binds.
+Compute is about 3.5 hours of ingest on a 4 vCPU machine at 3 haystacks in parallel. Queries take about 1 hour.
+
+**Cap enforcement.** gbrain runs in process on the operator's machine with the operator's provider keys, not through the shim's metering proxy, so the budget-ledger campaign does not see these calls. The cap is enforced by unit count instead: at most 500 haystack builds and 2,000 queries, which is $9.70 at the measured per-unit token sizes above, under the $12 hard cap. The runner logs each build's ingested characters and each query's reranked documents, and stops if the running estimate passes $12. A replacement build after a harness failure counts against the same totals.
 
 ## Owner decisions before the counted run
 
