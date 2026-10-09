@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-09T19:11:26.971Z",
+  "at": "2026-10-09T19:20:12.950Z",
   "s4.gbrain-defaults.shipped-defaults.c0": "running",
   "s4.gbrain-defaults.shipped-defaults.c1": "running",
   "s5.gbrain-defaults.shipped-defaults.c0": "running",
@@ -30,7 +30,6 @@
   "s5.ext-markdown-kb.recipe.c18": "running",
   "s5.ext-markdown-kb.recipe.c19": "running",
   "s5.baseline-hybrid.baseline.c2": "running",
-  "s5.baseline-hybrid.baseline.c3": "running",
   "s4-slice.ext-verbatim-session.recipe": "settled",
   "s5.baseline-hybrid.baseline.c0": "settled",
   "s5.baseline-hybrid.baseline.c1": "settled"

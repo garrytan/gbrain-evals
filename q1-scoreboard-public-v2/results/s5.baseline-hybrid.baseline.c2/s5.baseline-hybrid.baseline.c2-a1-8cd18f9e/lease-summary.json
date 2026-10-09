@@ -1,0 +1,11 @@
+{
+  "run_id": "s5.baseline-hybrid.baseline.c2-a1-8cd18f9e",
+  "lease_usd": 7.37,
+  "committed_usd": 3.4809045700000083,
+  "requests": 7727,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 4,
+  "timeout_hours": 14,
+  "timed_out": false,
+  "checkpoint_rows": 17
+}

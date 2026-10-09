@@ -1,0 +1,488 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s5.baseline-hybrid.baseline.component-b8000",
+  "run_cell": "s5.baseline-hybrid.baseline",
+  "config_sha256": "a6bc0f6a26eefe247429dda3a67b1cd1eea64ea5a6e8833bf952484ac0684451",
+  "run_status": "partial",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S5",
+  "benchmark": "lme-m",
+  "split": "dev",
+  "block": "T2-S4-S5",
+  "system": {
+    "kind": "baseline-hybrid",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "capability_system": "plain-hybrid",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "system": "plain-hybrid",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large@1536",
+            "dims": 1536
+          },
+          "notes": "Postgres full-text plus pgvector cosine, reciprocal-rank fusion; whole sessions; embedding input cut at 24,000 characters"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: a session is searchable once its row is written",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 10
+          }
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 30
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "lme-m",
+    "sha256": "535a46da75ea691ba46777c37e920e98d4bf3d33e427a0851907cefea7c89da8",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol"
+    ],
+    "readers": null,
+    "sample": 17,
+    "instrument_ids": [
+      "lme-m@anthropic:claude-opus-5-5",
+      "lme-m@openai:gpt-6.1-sol"
+    ]
+  },
+  "selection": {
+    "questions": 100,
+    "conversations": 17,
+    "scheduled_sha256": "4a1ab4e694ab7c34d3e9f3ffd9f1022a1cd31ad3b725f73aad260edfca80cd60"
+  },
+  "counts": {
+    "rows": 17,
+    "answers": 51,
+    "answers_promised": 300,
+    "judgments": 57,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 51
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.411765,
+    "openai:gpt-6.1-sol": 0.470588,
+    "anthropic:claude-sonnet-5-5": 0.411765
+  },
+  "realizations": [
+    {
+      "conversation": "078150f1",
+      "realization_id": "a48b4a8c0287dd6664aae9428b6300489fce470b8c3733c07fdc20d8fff7a716",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "16c90bf4",
+      "realization_id": "db58da5e4d4fbf00440ea8f13ba146d19b3002a1232b0d59c56d4195d19ac50b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2698e78f_abs",
+      "realization_id": "e8c81daab3aa841ceb3b230be89680eeb3c9969fd757a6a379876b68885c307b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "36b9f61e",
+      "realization_id": "c6c9cb7b3bc02af3271124c39e1609d41a973bd2da83c6ac7a628c720346bdbe",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51a45a95",
+      "realization_id": "31780404692a23bf6a300beeda9780faeb68c47a65d95169753fb715c070ad71",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "61f8c8f8",
+      "realization_id": "65a12d8e44a5169829a590d1c381b2b78e97e3f80537c2c0dc7df0ab1854d7bf",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "71017276",
+      "realization_id": "a6d63ee79eeb2f9676b7902bf740fdbcd5d0611dfde38de1694723bc0494e783",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75832dbd",
+      "realization_id": "00fff58d8fc35f275cad56a67529449f2cf4514dd68979949986e86f34d07719",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "993da5e2",
+      "realization_id": "42379d0afbb196e3ee4a9b6c26d1c011adbc255db20d16b3bc7c46f26c15040a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b5ef892d",
+      "realization_id": "9b24f43940253fcadaa7ff49481bf72850d9552fe46233c19e4c3f284f2666df",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c2ac3c61",
+      "realization_id": "1a84fd27d7724910387a99e22ecb3cafdb2d2ea2a2580a0a92da832e21e97a8a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "db467c8c",
+      "realization_id": "b9942e330ce2462b4ef64ee3e21c3453286f04b86c17397852214c165fe109b8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "f0e564bc",
+      "realization_id": "50e69ae73f1c2c217494ba808bf0851234761db03bc0f93a70a77fbd651f0c3c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_2ba83207",
+      "realization_id": "d73eec3eb757da8175a531630c2e1b961584d645fee0587119d0ceb11091883d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_4fc4f797",
+      "realization_id": "1653965dd4fd44d753be532dcbbb48fc28e621371a4e4b0ebc2dcc8d7fc33a9f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_93159ced",
+      "realization_id": "55d0ab7ede7423d8b70eab14fdea6530d70faf52a6764bba928a11988a6a9c8b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_fe651585",
+      "realization_id": "3a34f41df52874e70a4a323c5e5bd869c9d6560783d220a3e147943420dbc09e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 17,
+    "messages": 84024,
+    "ingested_tokens": 17595258,
+    "wall_ms": {
+      "total": 3264949,
+      "p50": 192788,
+      "p95": 205036.8
+    },
+    "failed_sessions": 1,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [
+      606.3,
+      757.9,
+      813.1,
+      800.6,
+      582.3,
+      720.3,
+      728.1,
+      922.7,
+      656.7,
+      781.4,
+      423.6,
+      616,
+      593.2,
+      670,
+      784.1,
+      740.7,
+      603.2,
+      877,
+      801.4,
+      667.3,
+      628,
+      660.8,
+      865.2,
+      692.7,
+      799.9,
+      717.8,
+      790.5,
+      902.9,
+      1053.2,
+      770.6,
+      736.2,
+      822.9,
+      718.2,
+      826,
+      628.4,
+      856.4,
+      790.1,
+      834.3,
+      772.6,
+      559.9,
+      922.1,
+      938.5,
+      864.6,
+      734.6,
+      789.9,
+      742.7,
+      898.2,
+      688.3,
+      790.4,
+      726.6,
+      952.2,
+      857,
+      755.4,
+      1009.5,
+      830.4,
+      846.2,
+      991.8,
+      636.4,
+      859.5,
+      43,
+      974.5,
+      380.4,
+      717.4,
+      844.1,
+      781,
+      691.1,
+      822.1,
+      714.7,
+      777,
+      686.6,
+      896.7,
+      406.3,
+      834.3,
+      1599.7,
+      712,
+      41.3,
+      726.2,
+      483.2,
+      858.8,
+      980.8,
+      958.6,
+      467.1,
+      701,
+      700.2,
+      840,
+      883.8,
+      1058.7,
+      739.5,
+      890.9,
+      852,
+      847.3,
+      892,
+      840.5,
+      799.6,
+      937.9,
+      827.2,
+      823.8,
+      812.2,
+      646.5,
+      845.9,
+      645,
+      850.8,
+      751.9,
+      995.8,
+      775,
+      859.2,
+      895.6,
+      725.9,
+      833,
+      2238.9,
+      680.8,
+      407.2,
+      747.4,
+      906.3,
+      783.1,
+      648,
+      760.7,
+      649.8,
+      737.1,
+      390.2,
+      962.1,
+      838.8,
+      730.4,
+      349.8,
+      1035.2,
+      798.6,
+      1271.7,
+      822.3,
+      677.8,
+      31.6,
+      838.4,
+      926.3,
+      885.8,
+      755.7,
+      805.8,
+      802.9,
+      857.6,
+      302,
+      806.6,
+      811.7,
+      631.1,
+      943.5,
+      797.5,
+      796.4,
+      325.7,
+      765.6,
+      904.8,
+      386.5,
+      780.5,
+      677.4,
+      1070.1,
+      455.2,
+      435.7,
+      899,
+      793.8,
+      872.7,
+      602,
+      664.3,
+      814.5,
+      763.4,
+      316,
+      1705.3,
+      629.6,
+      842.2,
+      294.6,
+      613.2,
+      786.9,
+      712.7
+    ],
+    "write_start_to_queryable_ms": {
+      "p50": 785.5,
+      "p95": 1004.7,
+      "probes": 168,
+      "found": 168,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 435.3,
+      "p95": 589
+    },
+    "answer_ms": {
+      "p50": 4315,
+      "p95": 9604.5
+    }
+  },
+  "usage": {
+    "input": 375913,
+    "output": 19645,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 2.071312,
+      "retrieval": 0.000038,
+      "reader": 1.376508,
+      "judge": 0.076511,
+      "background_tail": 0
+    },
+    "total_usd": 3.524369,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s5.baseline-hybrid.baseline/contexts.ndjson"
+  }
+}
