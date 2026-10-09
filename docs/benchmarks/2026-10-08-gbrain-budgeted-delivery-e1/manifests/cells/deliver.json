@@ -1,0 +1,57 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-query",
+  "config": "common",
+  "notes": "Budgeted delivery E1, deliver cells: re-import the freeze cell's sessions (embeddings from its cache, synced as .e1-transfer/<benchmark>/), deliver every preregistered variant on the frozen lists through assembleEvidenceForHits at the A1 budgets, and make one live query parity call per question. No reader or judge call; readers replay the frozen contexts on the host.",
+  "cells": [
+    {
+      "id": "e1-deliver-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 2,
+      "lease_basis": "query embeddings from the freeze cell's cache; one live query per question with the Voyage reranker (about $0.40 per 100 questions), x1.5 and headroom",
+      "command": "export GBRAIN_EVALS_EMBED_CACHE=\"$PWD/.e1-transfer/lme-s/embed-cache\" && bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit 100 --seed 42 --system gbrain-query --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-08-gbrain-budgeted-delivery-e1/manifests/arms/retrieval-only.json --policy-setting stage=deliver --policy-setting b_native={{b_native_lme_s}} --policy-setting b_pseudo={{b_pseudo_lme_s}} --frozen-from .e1-transfer/lme-s/frozen.ndjson --output \"$SHOOTOUT_OUT/cell-b\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "timeout_hours": 4
+    },
+    {
+      "id": "e1-deliver-locomo",
+      "benchmark": "locomo",
+      "lease_usd": 1,
+      "lease_basis": "query embeddings from the freeze cell's cache; one live query per question with the Voyage reranker (about $0.40 per 100 questions), x1.5 and headroom",
+      "command": "export GBRAIN_EVALS_EMBED_CACHE=\"$PWD/.e1-transfer/locomo/embed-cache\" && bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system gbrain-query --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-08-gbrain-budgeted-delivery-e1/manifests/arms/retrieval-only.json --policy-setting stage=deliver --policy-setting b_native={{b_native_locomo}} --policy-setting b_pseudo={{b_pseudo_locomo}} --frozen-from .e1-transfer/locomo/frozen.ndjson --output \"$SHOOTOUT_OUT/cell-b\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "timeout_hours": 4
+    },
+    {
+      "id": "e1-deliver-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 1,
+      "lease_basis": "query embeddings from the freeze cell's cache; one live query per question with the Voyage reranker (about $0.40 per 100 questions), x1.5 and headroom",
+      "command": "export GBRAIN_EVALS_EMBED_CACHE=\"$PWD/.e1-transfer/beam-100k/embed-cache\" && bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split dev --system gbrain-query --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-08-gbrain-budgeted-delivery-e1/manifests/arms/retrieval-only.json --policy-setting stage=deliver --policy-setting b_native={{b_native_beam_100k}} --policy-setting b_pseudo={{b_pseudo_beam_100k}} --frozen-from .e1-transfer/beam-100k/frozen.ndjson --output \"$SHOOTOUT_OUT/cell-b\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "timeout_hours": 4
+    }
+  ]
+}

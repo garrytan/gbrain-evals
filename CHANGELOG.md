@@ -2,6 +2,17 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.58] - 2026-10-09
+
+### Budgeted delivery E1: gbrain measured through `query`; dates were most of the LoCoMo gap, hit count is the lever at 8,000 tokens
+
+E1 of the [budgeted delivery plan](https://github.com/garrytan/gbrain-evals/blob/capy/gbrain-budgeted-delivery-plan/docs/plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md) (approved 2026-10-08, E1 cap $100), at gbrain `c5fb0201`, development data. Ledger committed $66.42, of which $16.65 is reservations charged for Sonnet 5.5 requests the provider refused unbilled.
+
+- **Report** ([doc](docs/benchmarks/2026-10-08-gbrain-budgeted-delivery-e1.md), [preregistration](docs/benchmarks/2026-10-08-gbrain-budgeted-delivery-e1-preregistration.md) with amendments A0 to A2). Both reproduction arms land inside their bands. A date line on each of the comparison's chunks lifts LoCoMo temporal from 28 to 78 of 100 (all LoCoMo 66.1% to 75.1%), so the LoCoMo shortfall is mainly the adapter. `query`'s `auto` at 8,000 tokens on 25 hits adds +4 / +0.5 / +1 points over dated chunks and overran its explicit budget on every slice and LoCoMo question; on the first five hits it reaches 82% on the LongMemEval-S slice with Sonnet 5.5, level with whole sessions (80%), so `breadth_capped` leads E2. Rendering changes nothing (+1). As shipped (24,000 tokens, read whole) gbrain answers 89% on the slice. The saved-facts probe (Sonnet 4.6 extraction, gbrain `c5fb0201`'s default) is 11 points below the best LoCoMo arm: no headroom.
+- **`gbrain-query` connector** (`eval/runner/systems/gbrain-query/`, with a README for reuse): named wire requests (frozen chunk list, native default, `auto` with an explicit budget, live parity, bare budget), pin checks against gbrain's registered keys, per-block delivery records (unit, budget, overrun, spill) and reader bytes, live parity on every consumed field, and keyless fixtures for the `auto` overrun at 8,000 tokens and the frozen-hit `effective_date` loss.
+- **memory-qa recipes**: named contexts with immutable recipe hashes in the context and arm keys (dated native, undated twin reused by prompt hash, pseudo-session with a specified block parser, rehydration of the frozen list, a per-recipe harness budget), typed `RetrieveResult.accounting`, `--frozen-from` for deliveries on frozen lists, and the facts lane's token count.
+- **Tooling**: budget sizing on the real frozen lists, the preregistered drop order, a keyless accounting gate and its stub proxy, the readings script, and a text-free receipt exporter.
+
 ## [0.10.57] - 2026-10-09
 
 ### Evidence brief confirmation (wave 1 A6): on 400 fresh questions the brief is not shown to match whole sessions

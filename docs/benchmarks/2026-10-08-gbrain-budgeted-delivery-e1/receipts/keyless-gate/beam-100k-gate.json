@@ -1,0 +1,46 @@
+{
+  "passed": true,
+  "problems": [],
+  "problem_count": 0,
+  "stats": {
+    "cell_b_rows": 120,
+    "cell_a_rows": 120,
+    "over_budget": {
+      "auto-b_native": 119,
+      "auto-b_pseudo": 119
+    },
+    "spilled_rows": {
+      "auto-b_native": 119,
+      "auto-b_pseudo": 119
+    },
+    "parity_equal": 120,
+    "parity_mismatch": 0,
+    "arms": {
+      "fixed-evidence.native.b8000.main": {
+        "rows": 120,
+        "cut_rows": 0,
+        "reused": 0
+      },
+      "fixed-evidence.chunk-dated.b8000.main": {
+        "rows": 120,
+        "cut_rows": 120,
+        "reused": 0
+      },
+      "fixed-evidence.chunk-undated-twin.b8000.main": {
+        "rows": 120,
+        "cut_rows": 0,
+        "reused": 120
+      },
+      "fixed-evidence.rehydrated.b8000.main": {
+        "rows": 120,
+        "cut_rows": 0,
+        "reused": 0
+      },
+      "fixed-evidence.query-auto.b8000.main": {
+        "rows": 120,
+        "cut_rows": 117,
+        "reused": 0
+      }
+    }
+  }
+}
