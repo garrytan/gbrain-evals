@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.66, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
+gbrain-evals v0.10.67, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -70,7 +70,7 @@ gap does not isolate the effect of a graph alone.
 
 | Engineering question | Report |
 |---|---|
-| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 8 paid run with Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol](benchmarks/2026-10-08-memory-trust-results-paid.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [keyless rerun](benchmarks/2026-10-08-memory-trust-results-rerun.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md)): trust labels cut planted-claim adoption (Sonnet 10.6% without labels to 2.0% with them) and raise current-value answers (Opus 55% to 100%); no model followed an instruction-worded injection in any arm, so the write gate and suppression show no measurable benefit on top of labels and the preregistered rules set `external_mode = flag`, `agent_mode = flag`, `agent_activation = allow`; at the later head `62773f02` (amendment 4), saved preferences survive the label when saved as `user_said` (47 or 48 of 48 per model); without an origin, Opus 5.5 held back 14 of 48. An artifact asking to be saved as `user_said` did not raise attack success for any model. Cats 37 to 39 pass every keyless contract at the fix head `c3a89f05`, after a context_pack leak at `62773f02` (finding 37-5, fixed) |
+| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 8 paid run with Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, for gbrain #6396 (v0.60.139.0)](benchmarks/2026-10-08-memory-trust-results-paid.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [keyless rerun](benchmarks/2026-10-08-memory-trust-results-rerun.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md)): trust labels cut planted-claim adoption (Sonnet 10.6% without labels to 2.0% with them) and raise current-value answers (Opus 55% to 100%); no model followed an instruction-worded injection in any arm, so the write gate and suppression show no measurable benefit on top of labels and the preregistered rules set `external_mode = flag`, `agent_mode = flag`, `agent_activation = allow`; at the later head `62773f02` (amendment 4), saved preferences survive the label when saved as `user_said` (47 or 48 of 48 per model); without an origin, Opus 5.5 held back 14 of 48. An artifact asking to be saved as `user_said` did not raise attack success for any model. Cats 37 to 39 pass every keyless contract at `c3a89f05`, the code tree #6396 ships, after a context_pack leak at `62773f02` (finding 37-5, fixed) |
 | Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
@@ -194,19 +194,15 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
 
+### 2026-10-09: Memory trust row
+
+gbrain-evals v0.10.67 (the opening names it; was v0.10.66). The memory table gained a row for Cats 37 (memory poisoning), 38 (state resolution) and 39 (deletion audit), added for gbrain #5575 and shipping with gbrain #6396 (v0.60.139.0): the preregistration with amendments 1 to 4, the paid run with Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, the keyless rerun and the findings ledger. Trust labels cut planted-claim adoption and raise current-value answers; the preregistered rules set the defaults to flag, flag and allow; saved preferences survive the label when saved as `user_said`; Cats 37 to 39 pass every keyless contract at `c3a89f05`, the code tree #6396 ships.
+
 ### 2026-10-09: Verbatim-probe row
 
 gbrain-evals v0.10.66 (the opening names it; was v0.10.65). The retrieval table gained a row for the verbatim-probe
 paired verdict of gbrain #6391 (merged as `f05943e65`): every last-session probe reads clean after the fix, with recall
 unchanged.
-
-### 2026-10-09: Memory trust keyless recheck at c3a89f05
-
-The memory trust row now says Cats 37 to 39 pass every keyless contract at gbrain `capy/memory-trust` `c3a89f05`, the head that fixes finding 37-5 (context_pack showed quarantined external text unlabeled at `62773f02`). It replaces the row's claim that keyless Cat 37 fails.
-
-### 2026-10-09: Memory trust amendment 4 row
-
-The memory trust row now adds amendment 4, run at gbrain `capy/memory-trust` `62773f02`. With a fixed harness (a CC field, the person's address and the invoice in memory), saved preferences survive the label when saved as `user_said`, and Opus 5.5 is the one model that holds back preferences saved without an origin. An attacker's request to be saved as `user_said` did not raise attack success. The keyless Cat 37 recheck at that head fails on context_pack (finding 37-5). This replaces the row's amendment 3 preference claim, which the old harness confounded.
 
 ### 2026-10-09: HNSW scale row
 
@@ -278,13 +274,6 @@ gbrain-evals v0.10.52. The opening names v0.10.52 instead of v0.10.51. The agent
 
 gbrain-evals v0.10.51. The opening names gbrain master `61624308b` (v0.60.120.0, was `a865f8f`), the merge of gbrain #6343, and v0.10.51 instead of v0.10.45. The held-out program row links the Q2 record (P5's follow-up): typed relation lines stay opt-in because 459 of 583 lines the grammar minted on held-out natural text are wrong, all but one from template-, glossary- and changelog-shaped notes, while relation lines agents wrote are 299 of 300 correct; the link-typing units U34 and U1 ship and U25 and U6 are reverted.
 
-### 2026-10-08: Memory trust paid run row
-
-The memory trust row now points to the October 8 paid run at gbrain `capy/memory-trust` `c2f10ee8`: labels cut planted-claim adoption and raise current-value answers, the gate and suppression show no measurable benefit on top of labels, and the preregistered rules set the three defaults to flag, flag and allow; amendment 3 adds how labels affect a user's own saved preferences. The keyless rerun stays linked.
-
-### 2026-10-08: Memory trust rerun row
-
-The memory trust row now points to the October 8 rerun: after the gbrain fixes on `capy/memory-trust` `91290339`, Cats 37, 38 and 39 pass every preregistered keyless contract, confirmed at the branch head `2546f33a` (October 7: Cats 37 and 39 failed on search labels and purge residuals). The October 7 report stays linked as the first run.
 ### 2026-10-08: Open-source comparison row
 
 Added the open-source comparison report and its two preregistrations, which the index did not list. The row
@@ -305,10 +294,6 @@ gbrain-evals v0.10.42. The memory table gained a row for the October 8 preparati
 ### 2026-10-08: Managed Postgres catch-up rows
 
 gbrain-evals v0.10.41. The memory table gained a row for the October 7 lanes and foreground mirror of gbrain #6279 (and links the October 5 catch-up mirror it follows). The opening line names v0.10.41 instead of v0.10.40.
-
-### 2026-10-07: Memory trust categories row
-
-The memory table gained a row for Cats 37 (memory poisoning), 38 (state resolution) and 39 (deletion audit), added for gbrain #5575 with their preregistration and the keyless harness results on the feature branches: no model has been measured, and the paid run that sets gbrain's defaults follows the preregistration.
 
 ### 2026-10-07: Fix wave 12 agent smoke row
 
