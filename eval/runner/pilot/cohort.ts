@@ -38,12 +38,12 @@ export function cohortCells(): string[] {
 
 const usageOf = (model: string, raw: Record<string, unknown> | null) => normalizeUsage(usageSourceOf(`${model.startsWith('claude') ? 'anthropic' : 'openai'}:${model}`), raw);
 
-export async function runCohort(argv: string[], s: ReturnType<typeof stores>, mod: BriefModule, log: (l: string) => void, stateDir = STATE_DIR): Promise<void> {
+export async function runCohort(argv: string[], s: ReturnType<typeof stores>, mod: BriefModule, log: (l: string) => void, stateDir = STATE_DIR, plan: { ids: string[]; cells: string[]; seed: number } = { ids: cohortIds(), cells: cohortCells(), seed: PILOT_SEED + 2 }): Promise<void> {
   const ev = loadPilotEvidence();
   const path = join(stateDir, 'cohort.ndjson');
   mkdirSync(stateDir, { recursive: true });
   const done = new Set(readNdjson(path).filter(r => !r.warm).map(r => `${r.cell}|${r.question_id}`));
-  const units = seededPermutation(cohortIds().flatMap(id => cohortCells().map(cell => `${cell}|${id}`)), PILOT_SEED + 2).filter(u => !done.has(u));
+  const units = seededPermutation(plan.ids.flatMap(id => plan.cells.map(cell => `${cell}|${id}`)), plan.seed).filter(u => !done.has(u));
   log(`cohort: ${units.length} units`);
   const put = (rec: Record<string, unknown>) => appendFileSync(path, JSON.stringify({ ...rec, at: new Date().toISOString() }) + '\n');
   let k = 0;
@@ -70,13 +70,14 @@ export async function runCohort(argv: string[], s: ReturnType<typeof stores>, mo
         const { r } = await read(req.model, req.body);
         t.reader_ms = r.latency_ms;
       } else if (kind === 'brief') {
-        const [, builder, reader] = cell.split(':') as [string, Cheap, Reader];
+        const [head, builder, reader] = cell.split(':') as [string, Cheap, Reader];
+        const budget = Number(head.split('@')[1]);
         const sessions = q.sessions.map(x => ({ session_id: x.session_id, ...(x.date ? { date: x.date } : {}), body: x.body }));
-        const p = mod.buildBriefPrompt({ question: q.question, questionDate: q.question_date, sessions, budgetTokens: COHORT_BUDGET });
+        const p = mod.buildBriefPrompt({ question: q.question, questionDate: q.question_date, sessions, budgetTokens: budget });
         const b = await callModel(readerBody(builder, p), { lane: 'pilot-cohort', role: 'builder', question_id: id }, { retries: 0 });
         t.builder_ms = b.latency_ms;
         usd += listUsd(builder, usageOf(builder, b.usage));
-        const brief = briefFor(mod, q, b.status === 'succeeded' ? { status: 'succeeded', text: b.text ?? '' } as any : undefined, COHORT_BUDGET);
+        const brief = briefFor(mod, q, b.status === 'succeeded' ? { status: 'succeeded', text: b.text ?? '' } as any : undefined, budget);
         const { r } = await read(reader, frontierBody(reader, withEvidence(q, brief.evidence)));
         t.reader_ms = r.latency_ms;
       } else if (kind === 'fallback') {

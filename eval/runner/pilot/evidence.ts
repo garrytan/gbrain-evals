@@ -21,6 +21,8 @@ export const W10A_DIR = 'docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin
 export const EVIDENCE_MARKER = 'Retrieved sessions:\n';
 /** The pilot split's seed (the W10 round's seed plus the plan's wave number). */
 export const PILOT_SEED = SEED + 1;
+/** The W10 round's seed (20261006); later wave 1 seeds are offsets from it. */
+export const SEED_BASE = SEED;
 
 export interface PilotSession { session_id: string; date?: string; body: string; rank: number; gold: boolean }
 

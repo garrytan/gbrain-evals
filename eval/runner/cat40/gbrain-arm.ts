@@ -171,6 +171,30 @@ export function refreshProviderBaseUrls(home: string, voyageBase: string): boole
   return true;
 }
 
+type ProbeSlot = { id: string; client: { call(name: string, args: Record<string, unknown>): Promise<string> } | null; restore(): Promise<void> };
+type ProbeProxy = { bind(slot: string, key: string): void; unbind(slot: string, key?: string): void; finalize(key: string, timeoutMs?: number): Promise<{ byModel: Record<string, { requests: number }> }> };
+
+/**
+ * One search per started slot must reach a reranker through this process's proxy; otherwise fail closed before any
+ * cell runs (from GBRA-39's #76, Cat 40 Hard R0). Each slot is restored after its probe.
+ */
+export async function rerankProbe(slots: ProbeSlot[], proxy: ProbeProxy, query: string): Promise<void> {
+  for (const s of slots) {
+    const key = `rerank-probe:${s.id}`;
+    proxy.bind(s.id, key);
+    try { await s.client!.call('search', { query }); }
+    finally { proxy.unbind(s.id, key); }
+    const m = await proxy.finalize(key, 30_000);
+    const reranks = Object.entries(m.byModel).filter(([k]) => /rerank/i.test(k)).reduce((n, [, v]) => n + v.requests, 0);
+    if (!reranks) {
+      const e = new Error(`gbrain ${s.id}: a probe search made no rerank request (provider calls: ${JSON.stringify(m.byModel)}); the reranker is unreachable or off, so the arm would run degraded. Fix the provider endpoint, or turn reranking off on purpose (search.reranker.enabled=false) and say so in the preregistration.`);
+      e.name = 'HarnessError';
+      throw e;
+    }
+    await s.restore();
+  }
+}
+
 export class GbrainSlot {
   client: McpClient | null = null;
   readonly dir: string;

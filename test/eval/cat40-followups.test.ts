@@ -127,6 +127,23 @@ describe('slot builds and preflight (E-4)', () => {
 });
 
 describe('gbrain provider-call attribution (E-6)', () => {
+  test('a cell finishing after its released slot was bound to the next cell does not unbind the next cell (from GBRA-39\'s #76)', async () => {
+    const proxy = new MeteringProxy({ fetchImpl: (async () => Response.json({ usage: { prompt_tokens: 10, total_tokens: 10 } })) as unknown as typeof fetch });
+    proxy.start();
+    try {
+      const post = () => fetch(`http://127.0.0.1:${proxy.port}/slot0/openai/v1/embeddings`, { method: 'POST', body: JSON.stringify({ model: 'text-embedding-3-large', input: ['x'] }) });
+      proxy.bind('slot0', 'cell-A');
+      proxy.bind('slot0', 'cell-B');
+      proxy.unbind('slot0', 'cell-A');
+      await post();
+      expect((await proxy.finalize('cell-B')).requests).toBe(1);
+      expect(proxy.meters.get('slot:slot0')).toBeUndefined();
+      proxy.unbind('slot0', 'cell-B');
+      await post();
+      expect(proxy.meters.get('slot:slot0')!.requests).toBe(1);
+    } finally { proxy.stop(); }
+  });
+
   test('a request that finishes after its cell moved on is charged to that cell; a response without usage is charged its reservation', async () => {
     const body = { model: 'text-embedding-3-large', input: ['alpha beta gamma'] };
     const proxy = new MeteringProxy({ fetchImpl: (async (_url: RequestInfo | URL, init?: RequestInit) => {

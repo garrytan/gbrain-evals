@@ -158,10 +158,35 @@ a live reranker reproduces 1 of 29 result sizes; with a dead Voyage port, 22 of 
 What it changes: the baseline failure counts are nearly equal across repeats, so the baseline rate stands. The push-off
 ablation (dead reranker) was paired with repeat 1 (live reranker), so its two-direction result is not interpretable.
 Candidate 0's baseline arm ran in a single invocation with reranking, so its repeat 2 differs from the frozen repeat 2
-in reranker state; the repeat-1-only comparison below has the same condition on both sides. The fix, uncommitted in
-this branch, rewrites the URL on every restore (`refreshProviderBaseUrls`, with a unit test). It was saved while
-Candidate 0's stale-correction mutant invocation was running; the forced-drop mutant invocations after it loaded the
-fixed code.
+in reranker state; the repeat-1-only comparison below has the same condition on both sides. This branch rewrites the URL on
+every restore (`refreshProviderBaseUrls`, with a unit test; GBRA-39 fixed it the same way on gbrain-evals #76) and
+brings #76's fail-closed rerank probe: before any cell, one search per slot must reach a reranker through this
+process's proxy, in Cat 40 and in T0b paid runs. The restore fix was saved while Candidate 0's stale-correction mutant
+invocation was running; the forced-drop mutant invocations after it loaded the fixed code.
+
+**Other committed results.** Any runner that restores a `GbrainSlot` in a process other than the one that built it had
+the same defect; the Cat 40 runner builds slots in a separate `--build-slots` step. Two receipt signals show it: cells
+whose metered gbrain calls include a rerank request (a dead port never reaches the metering proxy), and the
+`rerank_failed` notice in tool results on gbrain builds that emit it. The per-run counts are in
+[restore-audit.json](2026-10-08-program-primary-hard/root-cause/restore-audit.json). These receipts are not rewritten.
+
+| Results (all Cat 40 runner unless noted) | Cells with a rerank request | Note |
+|---|---|---|
+| `2026-10-02-model-ladder/holdout` | 1691 of 1800 | reranker live |
+| `2026-10-02-model-ladder/baseline-uncapped`, `pilot-capped-20k` | 362 of 1456; 185 of 300 | mixed within the run |
+| `2026-10-02-model-ladder/dev-rounds`, `fix-wave-ladder`, `fix-wave-ladder-round4`, `scale-tier`, `followups/*` (7 runs) | 0 | no reranking in any cell |
+| `2026-10-02-model-ladder/entity-recall/*` (dev-frontier master, round1, round2; holdout wave and new-models; uc3 master and kwonly) | 0 | notice in most cells where the build emits it |
+| `2026-10-02-model-ladder/p8-hidden-tool-dev-smoke/*`, `2026-10-04-p8-dev/cat40/*` | 0 | P8 |
+| `2026-10-03-agent-operator/f1f10-instruction-ab/runs/*` (9 runs) | 0 | all arms alike |
+| `2026-10-03-agent-operator/f1f10-cat40-base-same-window-b3f4e8b` | 0 of 300 | its comparison runs `after-7d16702`, `after-b3f4e8b` and `baseline-master` reranked 300 of 300, so that comparison mixes conditions |
+| `2026-10-05-registration-surface/*` | 0 | all arms alike |
+| `2026-10-07-wave11-agent-smoke/*`, `2026-10-07-wave12-agent-smoke/*` | 0 | all arms alike |
+| `2026-10-08-program-primary/baseline` (T0 runner) | 94 of 96 in repeat 1; 0 in repeat 2, mutants and ablation | same pattern as T0b |
+| `2026-10-08-program-primary-hard/baseline` (T0b) | not metered per model | repeat 2, ablation and mutants' base sessions, shown by replay above |
+
+Where every arm lacked reranking, comparisons between arms still hold for a gbrain without its reranker, but absolute
+gbrain numbers understate the shipped read path. The wave 1 evidence pilot does not use `GbrainSlot` and is outside
+this defect. The Cat 40 Hard results live on gbrain-evals #76, which already carries a caveat.
 
 ### Candidate 0: current master on the frozen protocol
 

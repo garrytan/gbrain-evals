@@ -28,7 +28,7 @@ import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { DEFAULT_KNOBS, PPH_BASELINE_SEEDS, generateHardWorld, hardDigest, hardSolvabilityProblems, PPH_DEV_SEEDS, PPH_RUNNABLE_SEEDS, PPH_SESSION2_DAY, PPH_TODAY, renderHardDoc, type HardKnobs, type HardPersona, type HardTask } from '../generators/program-primary-hard-gen.ts';
 import { humanDate, type PPDoc } from '../generators/program-primary-gen.ts';
-import { GbrainSlot, MeteringProxy } from './cat40/gbrain-arm.ts';
+import { GbrainSlot, MeteringProxy, rerankProbe } from './cat40/gbrain-arm.ts';
 import type { ScriptedModel } from './cat40/loop.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
 import { ARMS, cellKey, COUNTED_READERS, FROZEN_RELEASE, MAX_TURNS, revisionOf, runSessionWith, WRITE_TOOLS, type Ctx, type SessionRecord, type T0Arm } from './t0-program-primary.ts';
@@ -211,6 +211,12 @@ export async function main(argv: string[]) {
       builds[id] = { steps: b.steps.map(s => ({ step: s.step, code: s.code, ms: s.ms })), usd: b.meter.usd, ms: b.ms };
       writeFileSync(stamp, JSON.stringify({ want, build: builds[id] }, null, 2));
       console.error(`[t0b] built ${id}: ${docs.length} pages, ${Math.round(b.ms / 1000)}s, $${b.meter.usd.toFixed(3)}`);
+    }
+    // Paid cells search with gbrain's reranker: every slot must reach it through this process's proxy before any cell
+    // runs (restored snapshots once kept a dead port; T0b root cause, 2026-10-08).
+    if (!scripted) {
+      for (const s of slots.values()) { await s.restore(); await rerankProbe([s], proxy, 'pilot kickoff'); await s.stop(); }
+      console.error(`[t0b] rerank probe passed on ${slots.size} slots`);
     }
     const ctx = { build, proxy, slots: slots as unknown as Map<string, GbrainSlot>, out, scripted, budgetRunId, workspaceRoot: join(root, 'ws'), countTokens } as Ctx & { slots: Map<string, GbrainSlot> };
     writeFileSync(expPath, JSON.stringify({
