@@ -282,3 +282,13 @@ describe.skipIf(!supported)('E2 stages on real PGLite (gbrain with search.auto_p
     expect((live.accounting as any).frozen_list_equal).toBe(true);
   });
 });
+
+describe('frozen chunk text against the re-import', () => {
+  test('equal except at gbrain output-redaction tokens; any other difference is a mismatch', async () => {
+    const { redactedMatch } = await import('../../eval/runner/systems/gbrain-query/system.ts');
+    expect(redactedMatch('a?token=<REDACTED:high_entropy_assignment>&orig b', 'a?token=Zx81kQ9vL2&orig b')).toBe(true);
+    expect(redactedMatch('a <REDACTED:aws_key> b <REDACTED:email> c', 'a AKIA123 b x@y.z c')).toBe(true);
+    expect(redactedMatch('a?token=<REDACTED:high_entropy_assignment>&orig b', 'a?token=Zx81&orig CHANGED')).toBe(false);
+    expect(redactedMatch('no tokens here (.*)', 'no tokens here (.*)')).toBe(false);
+  });
+});

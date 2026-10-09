@@ -280,9 +280,40 @@ Ubicloud: owner `GBRA-1`, at most about 64 vCPU at once, every VM destroyed by `
 
 ## Amendments
 
-None yet.
+### A1 (2026-10-09): budgets, frozen before any deliver cell, live call or reader call
+
+The freeze cells settled at $9.01 (`e2-freeze-lme-s` $8.41, `e2-freeze-locomo-beam` $0.60): 500, 587 and 120 frozen
+lists, every one reranked (0 unreranked), 18.5, 21.5 and 18.5 hits per question on average. The $0 size cells and
+`budget-sizing.ts --e2` gave, on the real frozen lists (receipts, counts only:
+`docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/receipts/sizing/`):
+
+| Budget | Set | Questions | Value | Ratio max (p50, p99) | Verification | Deliveries over B (all `off` or `window`) |
+|---|---|---:|---:|---|---|---:|
+| `B_pseudo` | LongMemEval-S 500 | 500 | **5,500** | 1.409 (1.189, 1.329) | passed | 500 |
+| `B_native` | LongMemEval-S 500 | 500 | **5,700** | 1.370 (1.139, 1.276) | passed | 500 |
+| `B16_pseudo` | slice, H = 16,000 | 100 | **11,700** | 1.333 (1.188, 1.323) | passed | 0 |
+| `B_pseudo` | LoCoMo dev | 587 | **6,400** | 1.224 (1.166, 1.212) | passed | 587 |
+| `B_pseudo` | BEAM-100K dev | 120 | **6,000** | 1.302 (1.148, 1.288) | passed | 119 |
+
+`B_pseudo` on the 500 equals E1's slice value (5,500), and LoCoMo's equals E1's (6,400). Operational deviations,
+recorded before any cell they affect:
+
+- **Out of memory.** The LongMemEval-S size cell ran 30 processes on one 30-vCPU VM; three of its 24 shards were killed
+  for memory before writing a row. They were rerun on this host with the identical command (hash vectors, reranker off,
+  no provider call). The LongMemEval-S deliver and reader cells therefore run 16 shards instead of 24.
+- **Redacted chunk text.** The frozen lists hold the text `query` returned, which gbrain's output redaction had
+  rewritten in three chunks (one LongMemEval-S, two BEAM; a `<REDACTED:high_entropy_assignment>` span). The re-import
+  holds the raw text, so the new chunk-text check refused those three questions. The check now accepts a difference
+  only inside gbrain's redaction tokens and counts such chunks (`redacted_chunks`); the three questions were resized on
+  this host. Delivery applies the same redaction, so the delivered evidence is unaffected.
 
 ## Changelog
+
+### 2026-10-09: amendment A1
+
+Budgets from the real frozen lists, before any deliver, live or reader call; out-of-memory shards rerun; redaction-aware
+chunk-text check; LongMemEval-S deliver and reader cells at 16 shards.
+
 
 ### 2026-10-09: frozen
 

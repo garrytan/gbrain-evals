@@ -192,22 +192,23 @@ export class GbrainQuerySystem extends GbrainBrain {
 
   /**
    * Re-resolve frozen chunk ids in this brain by (slug, chunk_index), so a re-ingested brain with different serial ids
-   * still delivers the frozen chunks; `text_mismatch` counts re-resolved chunks whose text differs from the frozen row's.
+   * still delivers the frozen chunks; `text_mismatch` counts re-resolved chunks whose text differs from the frozen row's
+   * outside gbrain's output redaction (`redacted` counts those equal once redacted spans are allowed).
    */
-  private async remap(rows: readonly FrozenRow[]): Promise<{ rows: FrozenRow[]; remapped: number; missing: number; text_mismatch: number }> {
+  private async remap(rows: readonly FrozenRow[]): Promise<{ rows: FrozenRow[]; remapped: number; missing: number; text_mismatch: number; redacted: number }> {
     const slugs = [...new Set(rows.map(r => r.slug))];
     const found = await this.engine.executeRaw(`SELECT p.slug, c.id AS chunk_id, c.chunk_index, c.chunk_text FROM content_chunks c JOIN pages p ON p.id = c.page_id WHERE p.slug = ANY($1::text[])`, [slugs]) as Array<{ slug: string; chunk_id: number; chunk_index: number; chunk_text: string }>;
     const byKey = new Map(found.map(f => [`${f.slug}\u0000${f.chunk_index}`, f]));
-    let remapped = 0, missing = 0, text_mismatch = 0;
+    let remapped = 0, missing = 0, text_mismatch = 0, redacted = 0;
     const out = rows.map(r => {
       const f = byKey.get(`${r.slug}\u0000${r.chunk_index}`);
       if (f === undefined) { missing++; return r; }
       const id = Number(f.chunk_id);
       if (id !== r.chunk_id) remapped++;
-      if (f.chunk_text !== r.chunk_text) text_mismatch++;
+      if (f.chunk_text !== r.chunk_text) redactedMatch(r.chunk_text, f.chunk_text) ? redacted++ : text_mismatch++;
       return { ...r, chunk_id: id };
     });
-    return { rows: out, remapped, missing, text_mismatch };
+    return { rows: out, remapped, missing, text_mismatch, redacted };
   }
 
   async retrieve(ns: string, question: PublicQuestion, policy: RetrievalPolicy): Promise<RetrieveResult> {
@@ -229,7 +230,7 @@ export class GbrainQuerySystem extends GbrainBrain {
       return { items: this.items(frozen.rows), applied_settings: { call: frozen.request, stage }, truncated: false, service_ms, accounting: { ...base, frozen } };
     }
     if (e2 && stage === 'size') {
-      const { frozen, rows, remapped } = await this.frozenFor(question);
+      const { frozen, rows, remapped, redacted } = await this.frozenFor(question);
       const primary = s.size_set === 'primary';
       if (s.size_set !== undefined && !primary && s.size_set !== 'all') throw new SystemError('invalid_request', `size_set must be all or primary (got ${s.size_set})`);
       const t0 = performance.now();
@@ -248,7 +249,7 @@ export class GbrainQuerySystem extends GbrainBrain {
       if (!sizing.length) throw new SystemError('invalid_request', 'stage=size needs grid (and grid16 for the sweep)');
       this.lastSizingE2 = sizing;
       return { items: this.items(frozen.rows), applied_settings: { stage, variants: 'e2', grid: s.grid ?? null, grid16: primary ? null : s.grid16 ?? null, size_set: primary ? 'primary' : 'all' }, truncated: false,
-        service_ms: performance.now() - t0, accounting: { ...base, frozen, remapped_chunk_ids: remapped } };
+        service_ms: performance.now() - t0, accounting: { ...base, frozen, remapped_chunk_ids: remapped, redacted_chunks: redacted } };
     }
     if (e2 && stage === 'deliver') return this.deliverE2(question, s, limit, base);
     if (e2 && stage === 'live') return this.liveE2(question, s, limit, attempts, base);
@@ -293,13 +294,13 @@ export class GbrainQuerySystem extends GbrainBrain {
   }
 
   /** The frozen list of a question from `--frozen-from`, re-resolved in this brain; refuses missing chunks and chunk text that differs from the freeze. */
-  private async frozenFor(question: PublicQuestion): Promise<{ frozen: FrozenRecord; rows: FrozenRow[]; remapped: number }> {
+  private async frozenFor(question: PublicQuestion): Promise<{ frozen: FrozenRecord; rows: FrozenRow[]; remapped: number; redacted: number }> {
     const frozen = this.memo().get(this.key(question));
     if (!frozen) throw new SystemError('invalid_request', 'no frozen list for this question in --frozen-from; this stage never makes a new frozen call for the frozen list');
     const mapped = await this.remap(frozen.rows);
     if (mapped.missing) throw new SystemError('invalid_request', `${mapped.missing} frozen chunks are not in this brain; the re-ingest differs from the freeze`);
     if (mapped.text_mismatch) throw new SystemError('invalid_request', `${mapped.text_mismatch} re-resolved chunks differ in text from the freeze; the re-ingest differs from the freeze`);
-    return { frozen, rows: mapped.rows, remapped: mapped.remapped };
+    return { frozen, rows: mapped.rows, remapped: mapped.remapped, redacted: mapped.redacted };
   }
 
   /** E2 deliver stage: every E2 variant on the frozen list, and the guard 1 record (no budget, each packing, bytes compared). */
@@ -308,7 +309,7 @@ export class GbrainQuerySystem extends GbrainBrain {
     if (s.deliver_set !== undefined && !primary && s.deliver_set !== 'all') throw new SystemError('invalid_request', `deliver_set must be all or primary (got ${s.deliver_set})`);
     const budgets: Partial<Record<E2Variant['budget'], number>> = primary ? { b_pseudo: budgetSetting(s, 'b_pseudo') }
       : { b_pseudo: budgetSetting(s, 'b_pseudo'), b_native: budgetSetting(s, 'b_native'), b16_pseudo: budgetSetting(s, 'b16_pseudo') };
-    const { frozen, rows, remapped } = await this.frozenFor(question);
+    const { frozen, rows, remapped, redacted } = await this.frozenFor(question);
     const t0 = performance.now();
     const deliveries: Record<string, { variant: Record<string, unknown>; record: Delivery['record']; blocks: Delivery['blocks'] }> = {};
     for (const [name, v] of Object.entries(E2_DELIVERY_VARIANTS)) {
@@ -324,7 +325,7 @@ export class GbrainQuerySystem extends GbrainBrain {
     }
     const guard1 = { packings: unbudgeted, equal: AUTO_PACKINGS.every(p => unbudgeted[p].evidence_sha256 === unbudgeted.off.evidence_sha256 && unbudgeted[p].fingerprint === unbudgeted.off.fingerprint) };
     return { items: this.items(frozen.rows), applied_settings: { stage: 'deliver', variants: 'e2', deliver_set: primary ? 'primary' : 'all', budgets, limit }, truncated: false, service_ms: performance.now() - t0,
-      accounting: { ...base, frozen, remapped_chunk_ids: remapped, budgets, deliveries, guard1 } };
+      accounting: { ...base, frozen, remapped_chunk_ids: remapped, redacted_chunks: redacted, budgets, deliveries, guard1 } };
   }
 
   /**
@@ -361,6 +362,16 @@ export class GbrainQuerySystem extends GbrainBrain {
     return { items: this.items(fresh.rows), applied_settings: { stage: 'live', variants: 'e2', b_pseudo: budget, live_reps: reps, limit }, truncated: false, service_ms,
       accounting: { ...base, frozen: fresh, frozen_list_equal: sameList, budgets: { b_pseudo: budget }, assembled_fresh: assembled(onFresh), assembled_frozen: assembled(onFrozen), live_checks: calls } };
   }
+}
+
+/**
+ * True when `stored` equals `frozen` except where `frozen` carries gbrain's output-redaction tokens
+ * (`<REDACTED:kind>`, output-redaction.ts): the frozen list holds the redacted text `query` returned, the brain the raw.
+ */
+export function redactedMatch(frozen: string, stored: string): boolean {
+  const parts = frozen.split(/<REDACTED:[a-z_]+>/);
+  if (parts.length < 2) return false;
+  return new RegExp(`^${parts.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\S]+?')}$`).test(stored);
 }
 
 /** A positive integer budget from the policy settings, else a harness refusal naming it. */
