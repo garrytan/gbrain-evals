@@ -1,0 +1,94 @@
+{
+ "n": 500,
+ "errors": {
+  "A": 0,
+  "B": 0
+ },
+ "queries": {
+  "A": 1000,
+  "B": 1000
+ },
+ "strict10": {
+  "A": 496,
+  "B": 496,
+  "b_only": 0,
+  "a_only": 0
+ },
+ "strict5": {
+  "A": 473,
+  "B": 474,
+  "b_only": 2,
+  "a_only": 1
+ },
+ "any10": {
+  "A": 500,
+  "B": 500,
+  "b_only": 0,
+  "a_only": 0
+ },
+ "probe_found": {
+  "A": 500,
+  "B": 500,
+  "b_only": 0,
+  "a_only": 0
+ },
+ "probe_clean": {
+  "A": 429,
+  "B": 500,
+  "b_only": 71,
+  "a_only": 0
+ },
+ "q_clean": {
+  "A": 500,
+  "B": 500,
+  "b_only": 0,
+  "a_only": 0
+ },
+ "ndcg10": {
+  "A": 0.9609,
+  "B": 0.9614
+ },
+ "strict10_net_by_type": {
+  "knowledge-update": 0,
+  "multi-session": 0,
+  "single-session-assistant": 0,
+  "single-session-preference": 0,
+  "single-session-user": 0,
+  "temporal-reasoning": 0
+ },
+ "probe_clean_mcnemar_p": 8.470329472543003e-22,
+ "outcome": "pass",
+ "diff_questions": [],
+ "touched": {
+  "image_routing": {
+   "count": 4,
+   "items": [
+    [
+     "0bc8ad92",
+     "probe"
+    ],
+    [
+     "8fb83627",
+     "probe"
+    ],
+    [
+     "gpt4_65aabe59",
+     "probe"
+    ],
+    [
+     "gpt4_d6585ce9",
+     "probe"
+    ]
+   ]
+  },
+  "dash_overflow": {
+   "count": 1,
+   "items": [
+    [
+     "36580ce8",
+     "probe"
+    ]
+   ]
+  }
+ }
+}

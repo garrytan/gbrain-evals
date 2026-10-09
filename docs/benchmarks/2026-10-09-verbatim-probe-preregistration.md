@@ -87,3 +87,23 @@ Compute is about 3.5 hours of ingest on a 4 vCPU machine at 3 haystacks in paral
 
 1. Approve the primary run ($12 cap).
 2. Approve or defer the extension (+$8 cap), which depends on Sina's answer on the reranker-settings eval.
+
+## Results (primary run, 2026-10-09)
+
+The preregistered rule returned **pass**. The arms were A = merge base 0e52ac91 (v0.60.132.0) and B = this PR's fecc7827. Both read the same 500 LongMemEval-S cleaned brains, with one build per question. Each question ran the real query plus the verbatim probe, so 1,000 queries per arm. Providers were voyage-4, rerank-2.5 and haiku expansion on PGLite. Scoring used gold sessions and the shim classifier pinned at 846fa6dd, with no LLM judge.
+
+| metric (n = 500) | A | B | B-only / A-only |
+|---|---|---|---|
+| strict recall@10 | 496 | 496 | 0 / 0 |
+| strict recall@5 | 473 | 474 | 2 / 1 |
+| any-gold recall@10 | 500 | 500 | 0 / 0 |
+| nDCG@10 | 0.9609 | 0.9614 | |
+| probe: target found | 500 | 500 | 0 / 0 |
+| **probe: clean read** | **429** | **500** | **71 / 0** (exact McNemar p = 8.5e-22) |
+| real query: clean read | 500 | 500 | 0 / 0 |
+
+- **Decision rule:** B strict@10 is at least A − 2 (it's equal), no question type is down by more than 2 net (every type is 0), and the probe clean rate rose with p < 0.05. Outcome: pass.
+- **Touched subsets:** image routing appears on 4 questions (0bc8ad92, 8fb83627, gpt4_65aabe59, gpt4_d6585ce9) and dash overflow on 1 (36580ce8). All 5 are clean on B. The other 66 flips are the CRAG rerank-score fix.
+- **Errors and spend:** 0 errors in either arm and 0 budget skips. Estimated spend is $10.18 against the $12 cap, including $0.15 for two aborted starts. That's an estimate from token counts, not metered.
+
+The reranker-settings extension was not run; it is still waiting on Sina's approval. Machine-readable scores: `docs/benchmarks/2026-10-09-verbatim-probe-verdict.json`.
