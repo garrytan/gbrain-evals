@@ -98,7 +98,7 @@ function step(c: Campaign, l: LeaseState): Phase {
       .filter(e => e.event === 'launched' && e.lease_id === l.lease_id).at(-1);
     const cmd = launched?.argv?.at(-1);
     if (!cmd) return 'lost';
-    const inner = `bash -l ~/.ubirun-setup.sh && ${cmd}`;
+    const inner = `sudo chown -R ubi:ubi ~/.docker 2>/dev/null; bash -l ~/.ubirun-setup.sh && ${cmd}`;
     ubi('ssh', vm, `cd ${remoteRoot} && . ~/.ubirun-env && touch ~/.q1-reattach-started && (setsid nohup bash -lc ${JSON.stringify(inner)} > ~/q1-cell.log 2>&1 < /dev/null &) ; echo started`);
     return 'started';
   }
