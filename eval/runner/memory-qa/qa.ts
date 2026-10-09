@@ -74,8 +74,8 @@ export function latestDate(sessions: Session[]): string | undefined {
   return sessions.map(x => x.date ?? '').sort((a, b) => sessionDateKey(a).localeCompare(sessionDateKey(b))).pop() || undefined;
 }
 
-export function renderHistory(sessions: Session[]): string {
-  const sorted = [...sessions].sort((a, b) => sessionDateKey(a.date).localeCompare(sessionDateKey(b.date)));
+export function renderHistory(sessions: Session[], order: 'date' | 'given' = 'date'): string {
+  const sorted = order === 'given' ? [...sessions] : [...sessions].sort((a, b) => sessionDateKey(a.date).localeCompare(sessionDateKey(b.date)));
   return sorted.map((s, i) => `\n### Session ${i + 1}:\nSession Date: ${s.date ?? 'unknown'}\nSession Content:\n\n${JSON.stringify(s.turns.map(t => ({ role: t.speaker, content: t.content })))}\n`).join('');
 }
 
