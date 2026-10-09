@@ -49,7 +49,7 @@ describe('scrubMachinePaths', () => {
 });
 
 describe('committed receipts', () => {
-  const files = execFileSync('git', ['ls-files', 'docs/benchmarks', 'results', 'baselines', 'qrels'], { cwd: ROOT, encoding: 'utf8' })
+  const files = execFileSync('git', ['ls-files', 'docs/benchmarks', 'results', 'baselines', 'qrels'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 })
     .split('\n').filter(f => /\.(json|ndjson|jsonl|log)$/.test(f));
 
   test('no receipt outside the frozen historical list contains a machine-local path', () => {

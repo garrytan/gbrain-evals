@@ -208,7 +208,7 @@ describe('committed manifest', () => {
     const m = loadManifest(path);
     expect(checkPublic(m)).toEqual([]);
     expect(m.inputs.sha256).toBe(sha256Hex(inputsRaw));
-    const tracked = execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8' });
+    const tracked = execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
     expect(tracked).not.toContain('grouping-private.json');
     const strata = m.groups.flatMap(g => g.strata);
     expect(m.groups.map(g => g.group)).toEqual(['primary', 'secondary']);
