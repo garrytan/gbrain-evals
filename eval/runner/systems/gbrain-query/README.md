@@ -47,16 +47,20 @@ UTF-8 bytes, SHA-256), and a per-block list (slug, unit, reason, tokens, truncat
 chunk ids, spans, tokens, truncation, fallback, reason) and the totals. The evidence fingerprint alone omits dates and
 titles, so it is reported separately.
 
-## Two known behaviors, pinned by keyless fixtures
+## Two behaviors pinned by keyless fixtures
 
-`test/eval/gbrain-query-system.test.ts` reproduces both on real PGLite brains with hash vectors:
+`test/eval/gbrain-query-system.test.ts` checks both on real PGLite brains with hash vectors. At the pinned gbrain
+(v0.60.126.0, which includes gbrain #6367):
 
-1. **`auto` overruns an explicit 8,000-token budget.** With 25 hits over long conversations, each hit page's matching
-   chunk is reserved first and the conversations that no longer fit are delivered as chunks outside the budget
-   (`over_budget: true`, `spilled_blocks > 0`). The same call on the first five hits stays within budget.
-2. **The frozen-hit path drops `effective_date`.** `assembleEvidenceForHits` resolves hits without the page date, so
-   its blocks carry none while live `query` blocks do, and the evidence fingerprints still match. Take dates from
-   your own session table when delivering on frozen hits at gbrain `c5fb0201`.
+1. **`auto` stays inside an explicit 8,000-token budget.** With 25 hits over long conversations, conversations that no
+   longer fit are dropped at the budget floor instead of spilling outside it (`over_budget: false`,
+   `spilled_blocks: 0`, `dropped > 0`); live `query` reports the same.
+2. **The frozen-hit path carries `effective_date`.** `assembleEvidenceForHits` blocks carry the page date as live
+   `query` blocks do, and parity with dates holds.
+
+At gbrain `c5fb0201` (the E1 measurement) both were defects: `auto` spilled chunks past the budget and the frozen-hit
+path dropped every date, so E1's receipts at that commit take dates from the session table. The E1 report keeps that
+history.
 
 ## Use it from another runner
 
@@ -74,6 +78,11 @@ const live = await c.live('live-parity', question, 25, 8000);
 ```
 
 ## Changelog
+
+### 2026-10-09: fixtures assert the behavior gbrain #6367 fixed
+
+At the v0.60.126.0 pin the two fixtures assert that `auto` stays inside its budget and that the frozen-hit path
+carries dates (they documented an overrun and a date loss at `c5fb0201`).
 
 ### 2026-10-08: first version
 

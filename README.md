@@ -12,11 +12,11 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain master [`fc548317f`](https://github.com/garrytan/gbrain/tree/fc548317f628f25c6708049e17af22ee6b4e28ad) (v0.60.122.0), declared as `gbrain` in `package.json` |
+| Pinned product | gbrain master [`8a3eedeac`](https://github.com/garrytan/gbrain/tree/8a3eedeacb6e52da5b413502019692db80c5cc5d) (v0.60.126.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.57 (`VERSION`) |
+| This repository | gbrain-evals v0.10.59 (`VERSION`) |
 
-This repository installs gbrain master `fc548317f`. Some results below were measured at earlier commits; each names
+This repository installs gbrain master `8a3eedeac`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
 the installed modes.
 
@@ -257,6 +257,13 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-09: Pin gbrain `8a3eedeac`; repository row names v0.10.59
+
+gbrain-evals v0.10.59. The pin moves from `fc548317f` (v0.60.122.0) to `8a3eedeac` (v0.60.126.0), the merge of gbrain #6362,
+which puts the newest dated mentions of each entity on `context_pack` cards, on by default, as measured in the
+[Candidate 1 report](docs/benchmarks/2026-10-09-candidate-1-newer-mentions.md). The repository row names v0.10.59
+(was v0.10.57).
 
 ### 2026-10-09: Repository row names v0.10.57
 

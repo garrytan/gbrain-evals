@@ -3,10 +3,13 @@
  * C0), keyless: real PGLite brains of the pinned gbrain, hash vectors, the
  * reranker off, no provider key.
  *
- * Includes the two fixtures other waves rely on (GBRA-60):
- *   - `auto` overrunning an explicit 8,000-token budget (spill);
- *   - the frozen-hit path (assembleEvidenceForHits) dropping effective_date
- *     while the evidence fingerprint still matches.
+ * Includes the two fixtures other waves rely on (GBRA-60). At gbrain
+ * `c5fb0201` (the E1 measurement) `auto` overran an explicit 8,000-token
+ * budget by spilling chunks, and the frozen-hit path (assembleEvidenceForHits)
+ * dropped effective_date while the fingerprint still matched; the E1 report
+ * keeps that history. gbrain #6367 (v0.60.124.0) fixed both, so at the pin the
+ * fixtures assert the fixed behavior: `auto` stays inside its budget, and the
+ * frozen-hit path carries every block's date.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
@@ -112,7 +115,7 @@ describe('frozen list, deliveries and live parity', () => {
     expect(assembled.record.request).toEqual({ return_unit: 'auto', budget_tokens: 6000, caller: { remote: false }, hits: { count: f.rows.length } });
   });
 
-  test('fixture: the frozen-hit path drops effective_date while the fingerprint still matches', async () => {
+  test('fixture (fixed in gbrain #6367): the frozen-hit path carries effective_date, and the fingerprint still matches', async () => {
     const f = await c.freeze(Q, 25);
     expect(f.rows.every(r => /^2023-\d{2}-\d{2}/.test(r.effective_date ?? ''))).toBe(true);
     const assembled = await c.deliver(f.rows, 'auto', 6000);
@@ -120,10 +123,10 @@ describe('frozen list, deliveries and live parity', () => {
     const p = parity(live, assembled, { dates: true });
     expect(p.fingerprint_equal).toBe(true);
     expect(p.live_dated_blocks).toBe(live.rows.length);
-    expect(p.assembled_dated_blocks).toBe(0);
-    expect(p.equal).toBe(false);
-    expect(p.mismatches.every(m => m.endsWith('effective_date'))).toBe(true);
-    expect(assembled.record.per_block.every(b => b.effective_date === null)).toBe(true);
+    expect(p.assembled_dated_blocks).toBe(live.rows.length);
+    expect(p.equal).toBe(true);
+    expect(p.mismatches).toEqual([]);
+    expect(assembled.record.per_block.every(b => /^2023-\d{2}-\d{2}/.test(b.effective_date ?? ''))).toBe(true);
   });
 
   test('bare budget (G7 record): token_budget without return_unit is legacy chunk budgeting, no delivery', async () => {
@@ -139,20 +142,21 @@ describe('frozen list, deliveries and live parity', () => {
   });
 });
 
-describe('fixture: auto overruns an explicit 8,000-token budget', () => {
-  test('25 hits over long conversations: floors fill the budget, the rest spill as chunks outside it', async () => {
+describe('fixture (fixed in gbrain #6367): auto stays inside an explicit 8,000-token budget', () => {
+  test('25 hits over long conversations: blocks fill the budget, the rest are dropped at the budget floor, nothing spills', async () => {
     const e = await brain(26, 120);
     const c = new GbrainQueryConnector(conn, e);
     const f = await c.freeze(Q, 25);
     expect(f.rows.length).toBeGreaterThanOrEqual(20);
     const d = await c.deliver(f.rows, 'auto', 8000);
-    expect(d.record.over_budget).toBe(true);
-    expect(d.record.budget_used!).toBeGreaterThan(8000);
-    expect(d.record.overrun_tokens).toBe(d.record.budget_used! - 8000);
-    expect(d.record.spilled_blocks).toBeGreaterThan(0);
-    expect(d.record.units.chunk).toBe(d.record.spilled_blocks);
+    expect(d.record.over_budget).toBe(false);
+    expect(d.record.budget_used!).toBeLessThanOrEqual(8000);
+    expect(d.record.overrun_tokens).toBe(0);
+    expect(d.record.spilled_blocks).toBe(0);
+    expect(d.record.dropped).toBeGreaterThan(0);
+    expect(d.record.blocks + d.record.dropped).toBe(f.rows.length);
     const live = await c.live('auto-budget', Q, 25, 8000);
-    expect(live.record).toMatchObject({ over_budget: true, budget_used: d.record.budget_used, spilled_blocks: d.record.spilled_blocks });
+    expect(live.record).toMatchObject({ over_budget: false, budget_used: d.record.budget_used, spilled_blocks: 0 });
     const five = await c.deliver(f.rows.slice(0, 5), 'auto', 8000);
     expect(five.record.over_budget).toBe(false);
     expect(five.record.spilled_blocks).toBe(0);
@@ -214,7 +218,7 @@ describe('GbrainQuerySystem', () => {
     expect(acc.deliveries['auto-l5-b_pseudo'].record.hit_count).toBe(Math.min(5, shifted.rows.length));
     expect(acc.live.record.request).toEqual({ query: question.text, limit: 25, expand: false, return_unit: 'auto', token_budget: 3000, use_cache: false });
     expect(acc.live.parity.equal).toBe(true);
-    expect(acc.live.parity.assembled_dated_blocks).toBe(0);
+    expect(acc.live.parity.assembled_dated_blocks).toBe(acc.live.parity.live_dated_blocks);
     await expect(sys2.retrieve('ns-a', { text: 'never frozen', query_time: null }, policy({ stage: 'deliver', b_native: 3000, b_pseudo: 2500 }))).rejects.toThrow(/no frozen list/);
     await expect(sys2.retrieve('ns-a', question, policy({ stage: 'deliver', b_native: 3000 }))).rejects.toThrow(/b_pseudo/);
     await sys2.close();

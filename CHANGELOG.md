@@ -2,6 +2,42 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.61] - 2026-10-09
+
+### Cat 41 re-baseline: fresh install to wired recall on gbrain v0.60.130.0
+
+The wave 2 (D8) time-to-hello-world comparator from the "10x memory advantage" plan. Paid spend $14.09 of a $30
+ledger.
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-cat41-rebaseline.md), [preregistration](docs/benchmarks/2026-10-09-cat41-rebaseline-preregistration.md)
+  with amendments 1 and 2). The unchanged `fresh_install_to_wired_recall` scenario on gbrain `dda603ac9` (v0.60.130.0),
+  Claude Code (`claude-opus-5-5`) and Codex (`gpt-6.1-sol`), six runs each: 98.8 s and 161.9 s mean wall time,
+  `download_ms` 8.1 s and 5.3 s, one scripted reply in 11 of 12 runs, 12 of 12 successful, 0 consent violations. The
+  published `b3f4e8b` build, rerun interleaved the same hour, took 107.0 s and 175.4 s (published: 96.7 s and
+  121.7 s), so the release is not measurably slower and the published Codex number reflects a faster day. Every run
+  registered `--surface full` (143 tools), which adds about 32K input tokens and 3 s to Codex's recall session.
+- **Artifacts** in `docs/benchmarks/2026-10-09-cat41-rebaseline/`: both passes' scores, summaries and run archives,
+  the token overhead per surface, and `attribution.ts` with its per-session output for all four passes.
+
+## [0.10.60] - 2026-10-09
+
+### Candidate 3 diagnostic: the remaining T0b terms and hop failures are notes linked only by a declared short code
+
+A $0.10 diagnostic in place of Candidate 3 of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) (GBRA-60), on development and fresh public seeds; no reader cells and no gbrain change.
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-candidate-3-diagnostic.md)). Replaying the 33 Candidate 1 cells that failed on terms or the hop commitment on gbrain master `dda603ac` with reranking live: the call note with the corrected figure was in no tool result in any of the 29 terms cells, and the technical review was in no tool result in any of the 7 hop cells. The call note names the company by the short code its page declares ("Call with JOF"), and every development hop failure passed that code to `context_pack`. A keyless card probe puts the call note on the card in 0 of 24 development tasks on master and 21 of 24 on master merged with gbrain #6271's short-code rule; code collisions (BRL, PRF) and stoplisted codes (THE) leave the rest, about 15% of tasks with the fresh seeds. First names, nicknames and file-name words are shared with the generator's namesakes, so no separate Candidate 3 was built; collective disambiguation of colliding codes is documented as the follow-up.
+- **Tools**: the rank replay and the card probe sit beside their receipts in `docs/benchmarks/2026-10-08-program-primary-hard/candidate-3/`; `docs/README.md` links the report from the agent-task row.
+
+## [0.10.59] - 2026-10-09
+
+### Candidate 1: newest dated mentions on `context_pack` cards cut T0b failures from 67 to 27; pin gbrain `8a3eedeac` (v0.60.126.0)
+
+The first candidate from the [T0b root cause](docs/benchmarks/2026-10-08-program-primary-hard-root-cause.md), shipped in gbrain #6362 (on by default). Paid spend $58.36 of a $60 ledger and $42.38 of a $45 ledger.
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-candidate-1-newer-mentions.md), [preregistration](docs/benchmarks/2026-10-08-program-primary-hard-preregistration.md) amendments 2 and 3). Against a fresh master arm on the same harness revision, with the reranker live in every cell: 67 to 27 of 144 failed runs on the development seeds (factor 2.45, 95% interval for R 0.25 to 0.64, `improvement`; Opus 5.5 40 to 6), and 33 to 9 of 72 on eight fresh public seeds drawn after the code freeze (factor 3.53, `improvement`). Contact and date failures fell from 74 items to 1; stale terms remain, from a call note that links to no entity. Every validity mutant was detected. An exploratory merge with the short-code alias fix (#6271's `f24ca6afe`) failed 1 of 18 Sonnet cells against 6 for Candidate 1 alone.
+- **Harness**: eight fresh development seeds (`PPH_FRESH_SEEDS_C1`) join the seeds the T0b runner accepts; the mechanism probe, gold builder and route analysis sit beside the receipts. The shootout `runRemote` tests take a free port instead of a random one in the kernel's ephemeral range.
+- **Pin**: gbrain moves from `fc548317f` (v0.60.122.0) to `8a3eedeac` (v0.60.126.0, the merge of gbrain #6362); `bun.lock` follows. At the new pin the `gbrain-query` fixtures assert what gbrain #6367 fixed (`auto` stays inside an explicit budget; the frozen-hit path carries dates), and N2 loads the CLI's `makeContext` from `src/cli/main.ts`, where gbrain #6365 moved it.
+
 ## [0.10.58] - 2026-10-09
 
 ### Budgeted delivery E1: gbrain measured through `query`; dates were most of the LoCoMo gap, hit count is the lever at 8,000 tokens

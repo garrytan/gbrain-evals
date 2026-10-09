@@ -26,7 +26,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { DEFAULT_KNOBS, PPH_BASELINE_SEEDS, generateHardWorld, hardDigest, hardSolvabilityProblems, PPH_DEV_SEEDS, PPH_SESSION2_DAY, PPH_TODAY, renderHardDoc, type HardKnobs, type HardPersona, type HardTask } from '../generators/program-primary-hard-gen.ts';
+import { DEFAULT_KNOBS, PPH_BASELINE_SEEDS, generateHardWorld, hardDigest, hardSolvabilityProblems, PPH_DEV_SEEDS, PPH_RUNNABLE_SEEDS, PPH_SESSION2_DAY, PPH_TODAY, renderHardDoc, type HardKnobs, type HardPersona, type HardTask } from '../generators/program-primary-hard-gen.ts';
 import { humanDate, type PPDoc } from '../generators/program-primary-gen.ts';
 import { GbrainSlot, MeteringProxy, rerankProbe } from './cat40/gbrain-arm.ts';
 import type { ScriptedModel } from './cat40/loop.ts';
@@ -146,7 +146,7 @@ export async function main(argv: string[]) {
   const out = resolve(flag(argv, '--output') ?? `eval/reports/t0b-program-primary/${scripted ? 'hermetic' : 'paid'}`);
   const knobs: HardKnobs = { ...DEFAULT_KNOBS, ...(flag(argv, '--knobs') ? JSON.parse(flag(argv, '--knobs')!) : {}) };
   const seeds = flag(argv, '--seeds')?.split(',').map(Number) ?? (scripted ? [PPH_DEV_SEEDS[0]] : [...PPH_BASELINE_SEEDS]);
-  const bad = seeds.filter(s => !PPH_DEV_SEEDS.includes(s));
+  const bad = seeds.filter(s => !PPH_RUNNABLE_SEEDS.includes(s));
   if (bad.length) throw new Error(`only development seeds run here; got ${bad.join(', ')}`);
   const readers = scripted ? ['scripted'] : (flag(argv, '--readers')?.split(',') ?? [...COUNTED_READERS]);
   if (readers.includes('gpt-5.4-mini')) throw new Error('gpt-5.4-mini never runs (model rules)');
