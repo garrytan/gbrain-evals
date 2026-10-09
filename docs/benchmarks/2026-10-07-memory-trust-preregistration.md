@@ -261,3 +261,7 @@ bun eval/runner/memory-trust/user-preferences.ts $G --model-arm paid --items v2 
 ```
 
 **Budget.** Real spend before this amendment: $165.14 of the $500 cap. Expected cost from the measured cells: (b) about $9 (Opus), $5 (Sonnet), $3 (GPT) per variant, about $34; (a) about $25. The ledger's own remaining amount is $96.72, because it still carries the $238.14 of never-sent reservations (amendment 1, amendment 2), so a list-price worst case for one Opus variant ($88) would leave too little for the next. Each command therefore passes `--estimate-usd` with three times the measured per-run cost of the same model in the counted cells (recorded in the receipt) for the start-only-if-fits check; every request still reserves its own worst case against the ledger, whose cap stays binding. One new budget run (`memory-trust-amendment-4`, $96) is opened and joined by every command. Real spend after this amendment stays under $500 by construction (at most $165.14 + $96).
+
+### Amendment 4a, 2026-10-09, before any amendment 4 cell runs: the measured head
+
+Amendment 4's cells run at gbrain `capy/memory-trust` `62773f02b4c8be30f7751b980f23506309a2e3d8` (v0.60.136.0, full gate green, master v0.60.136.0 merged). Its user_said label is `USER_SAID_TRUST_LABEL` in `src/core/trust/tier.ts`, "you told your agent this (not yet confirmed)"; the structured origin of such rows carries a `:user_said` suffix; flagged rows keep "unconfirmed, agent-written". Nothing else in amendment 4 changes.
