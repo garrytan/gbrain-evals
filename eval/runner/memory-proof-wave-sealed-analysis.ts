@@ -46,7 +46,7 @@ export function incompleteness(dir: string, cellsDir?: string): Incomplete[] {
   const id: string = cell.cell_id;
   const judged = new Map<string, any>();
   const judgeDir = join(dir, 'stages/judge');
-  for (const f of existsSync(judgeDir) ? readdirSync(judgeDir) : []) {
+  for (const f of existsSync(judgeDir) ? readdirSync(judgeDir).sort() : []) {
     const r = JSON.parse(readFileSync(join(judgeDir, f), 'utf8'));
     judged.set(r.query_id, r);
   }
