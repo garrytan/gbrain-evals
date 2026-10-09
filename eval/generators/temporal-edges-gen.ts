@@ -129,7 +129,7 @@ export function validatePhrasing(t: unknown): PhrasingTemplates {
 
 const fill = (t: string, v: Record<string, string>) => t.replace(/\{(name|company|slug|role|prev)\}/g, (_, k: string) => v[k] ?? '');
 
-export interface Stint { company: string; from: string; until: string | null; role: string }
+export interface Stint { company: string; from: string; until: string | null; role: string; /** Q2 ledger: a second job held alongside the main sequence. */ concurrent?: true }
 export type PersonStyle = 'timeline' | 'explicit' | 'frontmatter' | 'stale_summary';
 export interface TePerson {
   slug: string; name: string; style: PersonStyle; stints: Stint[];
@@ -152,6 +152,8 @@ export interface TemporalEdgesWorld {
   /** `e5Probe` only: probe people (not in `people`) and their probe companies (not in `companies`). */
   e5_probes?: TeE5Probe[];
   e5_companies?: TeCompany[];
+  /** Q2 ledger semantics (concurrent stints) were generated. */
+  q2_ledger?: true;
 }
 
 /** The seeded half of the people rendered as relation lines: the low bit of sha256(`${seed}:${slug}`). */
@@ -171,7 +173,13 @@ const dayIso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 const iso = (y: number, m: number, d = 1) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 const title = (s: string) => s.replace(/(^|[-\s])([a-z])/g, (_, p, c) => (p ? ' ' : '') + c.toUpperCase());
 
-export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; people?: number; companies?: number; render?: RenderMode; e5Probe?: boolean }): TemporalEdgesWorld {
+/**
+ * `q2Ledger` (Q2 C-gates, explicit ledger interval semantics): a seeded fifth of the people who hold a current job
+ * also hold a concurrent one at another company (a third of those ended), drawn from an RNG of its own, so the
+ * sequential stints, gaps and rejoins are those of the plain world. Concurrent stints are rendered with the set's
+ * join and leave templates, never as a move.
+ */
+export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: string; sealedPhrasing?: { id: string; templates: PhrasingTemplates }; people?: number; companies?: number; render?: RenderMode; e5Probe?: boolean; q2Ledger?: boolean }): TemporalEdgesWorld {
   if (opts.render !== undefined && !(RENDER_MODES as readonly string[]).includes(opts.render)) throw new Error(`render ${opts.render}: use ${RENDER_MODES.join(' or ')}`);
   if (opts.phrasing !== undefined && !(PHRASING_SETS as readonly string[]).includes(opts.phrasing)) {
     throw new Error(`phrasing set ${opts.phrasing} is held out: only the custodian's sealed generator renders it`);
@@ -217,6 +225,20 @@ export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: stri
     const cur = p.stints.find(s => s.until === null);
     if (cur && p.stints.filter(s => s.company === cur.company).length > 1 && p.style === 'timeline') p.rejoin_eu = true;
   }
+  if (opts.q2Ledger) {
+    const crng = new Rng(opts.seed * 15_485_863 + 7);
+    for (const p of people) {
+      const cur = p.stints.find(s => s.until === null);
+      if (!cur || crng.float() >= 0.2) continue;
+      const pool = companies.filter(c => !p.stints.some(s => s.company === c.slug) && c.slug !== p.advises?.company && c.slug !== p.invests_after_exit?.company && c.slug !== p.alumni_meeting?.company);
+      if (!pool.length) continue;
+      const startMs = Date.parse(cur.from) + crng.int(60, 900) * DAY;
+      if (startMs >= TODAY_LIMIT - 60 * DAY) continue;
+      const ended = crng.float() < 1 / 3;
+      const untilMs = Math.min(startMs + crng.int(120, 700) * DAY, TODAY_LIMIT - 30 * DAY);
+      p.stints.push({ company: crng.pick(pool).slug, from: dayIso(startMs), until: ended ? dayIso(untilMs) : null, role: crng.pick(ROLES), concurrent: true });
+    }
+  }
 
   const name = (slug: string) => companies.find(c => c.slug === slug)!.name;
   const link = (slug: string) => `[${name(slug)}](../${slug}.md)`;
@@ -239,7 +261,7 @@ export function generateTemporalEdgesWorld(opts: { seed: number; phrasing?: stri
     const from = iso(y, 1, 1), until = iso(y + 1, 1, 1);
     during_probes.push({ id: `during:${p.slug}:${y}`, person: p.slug, from, until, gold: employersDuring(p, from, until) });
   }
-  const world = { seed: opts.seed, phrasing, companies, people, pages: dated, asof_probes, during_probes,
+  const world = { seed: opts.seed, phrasing, companies, people, pages: dated, asof_probes, during_probes, ...(opts.q2Ledger ? { q2_ledger: true as const } : {}),
     ...(opts.render === 'relation-lines' ? { range_people: [...ranged].sort() } : {}),
     ...(e5 ? { e5_probes: e5.probes, e5_companies: e5.companies } : {}) };
   return { ...world, fingerprint: fingerprint({ v: TEMPORAL_EDGES_GENERATOR_VERSION, ...world }) };
@@ -300,8 +322,10 @@ function renderPersonLines(p: TePerson, link: (slug: string) => string, t: Phras
 }
 
 function renderPerson(p: TePerson, link: (slug: string) => string, t: PhrasingTemplates): string {
-  const cur = p.stints.find(s => s.until === null) ?? null;
-  const former = p.stints.filter(s => s.until !== null);
+  const seq = p.stints.filter(s => !s.concurrent);
+  const side = p.stints.filter(s => s.concurrent);
+  const cur = seq.find(s => s.until === null) ?? null;
+  const former = seq.filter(s => s.until !== null);
   const fm: string[] = ['type: person', `title: ${p.name}`];
   if (p.style === 'frontmatter') {
     fm.push('company:');
@@ -321,11 +345,21 @@ function renderPerson(p: TePerson, link: (slug: string) => string, t: PhrasingTe
     if (named.has(company)) continue;
     prose.push(fill(t.former, { name: p.name, company: link(company) }));
   }
+  for (const s of side) prose.push(s.until ? fill(t.former, { name: p.name, company: link(s.company) }) : fill(t.current, { name: p.name, company: link(s.company), role: s.role }));
   if (p.advises) prose.push(fill(t.advises, { name: p.name, company: link(p.advises.company) }));
 
   const lines: Array<[string, string]> = [];
-  p.stints.forEach((s, k) => {
-    const prev = p.stints[k - 1];
+  for (const s of side) {
+    if (p.style === 'explicit') {
+      lines.push([s.from, fill(t.explicit_start, { slug: s.company, role: s.role })]);
+      if (s.until) lines.push([s.until, fill(t.explicit_end, { slug: s.company })]);
+    } else {
+      lines.push([s.from, fill(t.tl_join, { company: link(s.company), role: s.role })]);
+      if (s.until) lines.push([s.until, fill(t.tl_leave, { company: link(s.company) })]);
+    }
+  }
+  seq.forEach((s, k) => {
+    const prev = seq[k - 1];
     if (p.style === 'explicit') {
       lines.push([s.from, fill(t.explicit_start, { slug: s.company, role: s.role })]);
       if (s.until) lines.push([s.until, fill(t.explicit_end, { slug: s.company })]);
@@ -333,7 +367,7 @@ function renderPerson(p: TePerson, link: (slug: string) => string, t: PhrasingTe
     }
     if (prev && prev.until === s.from) lines.push([s.from, fill(t.tl_move, { prev: link(prev.company), company: link(s.company), role: s.role })]);
     else lines.push([s.from, fill(t.tl_join, { company: link(s.company), role: s.role })]);
-    const next = p.stints[k + 1];
+    const next = seq[k + 1];
     if (s.until && !(next && next.from === s.until)) lines.push([s.until, fill(t.tl_leave, { company: link(s.company) })]);
   });
   if (p.advises) lines.push([p.advises.from, fill(t.tl_advise, { company: link(p.advises.company) })]);
