@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.52, with gbrain master `61624308b` (v0.60.120.0) as the product under test. Results measured at
+gbrain-evals v0.10.54, with gbrain master `61624308b` (v0.60.120.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -188,7 +188,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-10-08: Harder program primary (T0b) rows
 
-The agent-task row gained the T0b development baseline at gbrain v0.60.106.0 (74 of 144 runs fail; gpt-6.1-sol is near its ceiling), and the protocols table gained the T0b preregistration with its calibration record.
+gbrain-evals v0.10.54. The opening names v0.10.54 instead of v0.10.52. The agent-task row gained the T0b development baseline at gbrain v0.60.106.0 (74 of 144 runs fail; gpt-6.1-sol is near its ceiling), and the protocols table gained the T0b preregistration with its calibration record.
 
 ### 2026-10-08: Program primary rows
 
