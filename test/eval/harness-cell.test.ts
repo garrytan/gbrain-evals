@@ -112,6 +112,14 @@ describe('comparator name guard', () => {
     expect(findNeedles(`${product}_api_llm_model`)).toHaveLength(1);
     expect(findNeedles(`${maker}-io/${product}`).map(h => h.needle)).toEqual(['maker', 'product']);
   });
+  test('in receipt text, skips the name only as an ordinary lower-case word', () => {
+    expect(findNeedles(`tradeoffs and honest ${product}.\n`, undefined, true)).toEqual([]);
+    expect(findNeedles(`with ${product}, we see`, undefined, true)).toEqual([]);
+    expect(findNeedles(`honest ${product}.`)).toHaveLength(1);
+    for (const text of [`${product[0].toUpperCase()}${product.slice(1)} server`, `${product}-client`, `${product}_api`, `${product}.io`, `x/${product}`, `${product}@0.10`]) {
+      expect(findNeedles(text, undefined, true)).toHaveLength(1);
+    }
+  });
   test('scan skips dependency files and Python imports of the vendor client, nothing else', () => {
     const root = mkdtempSync(join(tmpdir(), 'name-guard-'));
     try {
