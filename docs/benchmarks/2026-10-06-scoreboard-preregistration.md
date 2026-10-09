@@ -344,7 +344,9 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
     renders from that tree (A8).
   - `q1-scoreboard-public-r2`: the two verbatim-session reruns (A9); cap $20. Hash
     `8da287a424a121e2039ff184ab22b493b642082b25c31f86948538ba27ae9d35`.
-  The three caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
+  - `q1-scoreboard-public-r3`: the S5 verbatim-session rerun with a $13 lease (A9); cap $15. Hash
+    `35a0aa45430b8d24f3c4f6424b91102126003130023fe28c25d6572c7096f92a`.
+  The four caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
   digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
   bundles build are covered by their Dockerfiles and lockfiles in the hashed tree.
@@ -505,7 +507,12 @@ default of 1,024; reproduced locally (73 of 120 namespaces failed). The bundle's
 `nofile` limit to 65,536 (300 namespaces, 0 errors). It is a harness limit, not the product's behavior, so the
 failed cell is not a counted result. Its S5 cell was stopped during setup, before its command ran, and closed at $0.
 Both verbatim-session cells rerun as `q1-scoreboard-public-r2` ($16.96 in leases, $20 cap) at the A8 tree. Sealed
-cells use the same bundle, so the sealed campaign carries the fix.
+cells use the same bundle, so the sealed campaign carries the fix. On r2 the S4 slice cell answered 99 of 100
+questions before its $8.48 lease ran out (this system returns whole sessions, so reading costs more than the
+baselines' estimate); it resumes from its ingest realization for the missing question. The S5 cell's dataset
+download failed in setup before its command ran (closed at $0); it reruns as `q1-scoreboard-public-r3` with a $13
+lease and a $15 cap. The sealed campaign's verbatim-session leases are not changed by this; a sealed cell that runs
+out of lease is reported partial and resumed under the same rule.
 
 ## Changelog
 
