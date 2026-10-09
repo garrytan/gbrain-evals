@@ -2,6 +2,23 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.65] - 2026-10-09
+
+### HNSW scale: a 20,000-tuple pooled scan fixes random selective scopes at 1M to 2M chunks; topic-coherent sources remain a gap; mirrored from gbrain #6380
+
+gbrain #6380 (merged as `2e84d234e` in v0.60.135.0) makes every pooled vector attempt scan up to 20,000 tuples and
+refreshes `content_chunks` and search-filter page statistics after import, sync, reindex and embed drains. Real-vector
+spend $13.07 (voyage-4, 1M Wikipedia chunks).
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-hnsw-scale.md), with `budget-ledger.json` and `results-summary.json`).
+  Same database, master against the fix: random 10% source or visibility recall@50 rises from 0.52 to 0.63 to 0.96 to
+  0.99 on 1M and 2M synthetic chunks, and from 0.765 to 0.970 on 1M real chunks, at +16 to 36 ms p50. Unscoped search
+  is identical. Escalate-when-short, the other candidate, ends in the exact fallback at up to 8.6 s p95. Measured again
+  on top of gbrain v0.60.131.0's exact scope scan, the budget still adds recall wherever the pool runs. Topic-coherent
+  10% sources reach 0.76 to 0.78; since v0.60.134.0 (#6390) a source up to 120,000 counted chunks takes the exact scan
+  instead.
+- **Index**: `docs/README.md` and `README.md` name the report.
+
 ## [0.10.64] - 2026-10-09
 
 ### T0b alias stack: short-code aliases on top of Candidate 1 cut fresh-seed failures from 18 to 4; development inconclusive
