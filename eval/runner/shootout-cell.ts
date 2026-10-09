@@ -24,6 +24,9 @@
  *   bun eval/runner/shootout-cell.ts settle  --campaign <manifest.json> --state <dir> --lease <id>
  *   bun eval/runner/shootout-cell.ts abandon --campaign <manifest.json> --state <dir> --lease <id> --reason <text> [--unstarted --log <launch log>]
  *   bun eval/runner/shootout-cell.ts status  --campaign <manifest.json> --state <dir>
+ *   bun eval/runner/shootout-cell.ts raise-cap --campaign <manifest.json> --state <dir> --reason <text>
+ *     (after the user raises the campaign's cap_usd in the manifest: the ledger's program cap and the campaign run's
+ *     budget move up to it; never down)
  *   bun eval/runner/shootout-cell.ts hash    --campaign <manifest.json>   (the hash a preregistration records)
  *   bun eval/runner/shootout-cell.ts remote  --cell-b64 <base64 json>        (on the VM: proxy + cell command + lease summary)
  */
@@ -31,7 +34,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { BudgetRun, initLedger, ledgerStatus } from './budget-ledger.ts';
+import { BudgetRun, initLedger, ledgerStatus, setProgramCap, setRunBudget } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS } from './metering-proxy.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
@@ -324,6 +327,17 @@ export class Campaign {
     return this.lease(leaseId);
   }
 
+  /** Move the ledger's program cap and the campaign run's budget up to the manifest's cap_usd (a cap the user raised). */
+  raiseCap(reason: string) {
+    const s = this.state();
+    if (!reason.trim()) throw new Error('raise-cap needs --reason');
+    const cap = this.manifest.cap_usd;
+    const before = ledgerStatus({ ledgerPath: s.ledger, runId: s.run_id });
+    const program = (before.totals?.program_cap_usd ?? 0) < cap ? setProgramCap({ ledgerPath: s.ledger, programCapUsd: cap, reason }) : null;
+    const run = setRunBudget({ ledgerPath: s.ledger, runId: s.run_id, budgetUsd: cap });
+    return { cap_usd: cap, program, run };
+  }
+
   status() {
     const s = this.state();
     const ledger = ledgerStatus({ ledgerPath: s.ledger, runId: s.run_id });
@@ -407,6 +421,7 @@ if (import.meta.main) {
     else if (cmd === 'settle') print(c.settle(one('--lease') ?? ''));
     else if (cmd === 'abandon') print(c.abandon(one('--lease') ?? '', one('--reason') ?? '', argv.includes('--unstarted') ? { log: one('--log') ?? '' } : undefined));
     else if (cmd === 'status') print(c.status());
+    else if (cmd === 'raise-cap') print(c.raiseCap(one('--reason') ?? ''));
     else throw new Error(`unknown command ${cmd}`);
   } catch (e) {
     console.error(`[shootout-cell] ${(e as Error).message}`);

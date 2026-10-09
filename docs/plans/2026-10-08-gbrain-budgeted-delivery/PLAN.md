@@ -1003,15 +1003,19 @@ Estimates are cold cache and priced per arm from each arm's own token envelope, 
 and a margin. Caps are proposals for approval; the budget ledger's reservations enforce them, and a spreadsheet
 estimate is not a spending limit.
 
-| Step | What it buys | v2 expected / cap | v3 expected / cap | Approved cap (2026-10-08) | Approval |
-|---|---|---:|---:|---:|---|
-| E1 | adapter-or-product split; dates, rendering, hit count, depth, each on a matched pair; facts probe | $44 / $50 | $47 / $50 | $100 | G2 |
-| E2 | dev verdict on the C2 family on the LongMemEval-S 500, frontier check, sweep, C5 | $110 / $160 | $110 / $135 | $270 | G4 |
-| E3 | C3 retrieval gate | $1.20 / $5 | $1.20 / $5 | $10 | with E2 |
-| E4 | C4 stage 1, budgeted facts lane on LoCoMo and BEAM dev | $27 / $40 | $27 / $40 | $80 | G6 |
-| H1 | held-out decision on sealed v2, one opening | $85 / $120 | $85 / $120 | $240 | after dev, with custody |
-| **Program total** | | **about $267 / $375** | **about $270 / $350** | **$700** | G4 |
-| Separate approvals | C4 slice stage (about $110); C4 production candidate; C5 on the 500 ($9.25) | | | | each its own |
+| Step | What it buys | v2 expected / cap | v3 expected / cap | Approved cap (2026-10-08) | Cap (2026-10-09) | Approval |
+|---|---|---:|---:|---:|---:|---|
+| E1 | adapter-or-product split; dates, rendering, hit count, depth, each on a matched pair; facts probe | $44 / $50 | $47 / $50 | $100 | $100 (done, $66.42) | G2 |
+| E2 | dev verdict on the C2 family on the LongMemEval-S 500, frontier check, sweep, C5 | $110 / $160 | $110 / $135 | $270 | $600 | G4 |
+| E3 | C3 retrieval gate | $1.20 / $5 | $1.20 / $5 | $10 | $25 | with E2 |
+| E4 | C4 stage 1, budgeted facts lane on LoCoMo and BEAM dev | $27 / $40 | $27 / $40 | $80 | $80 | G6 |
+| H1 | held-out decision on sealed v2, one opening | $85 / $120 | $85 / $120 | $240 | $240 | after dev, with custody |
+| **Program total** | | **about $267 / $375** | **about $270 / $350** | **$700** | **$1,500** | G4 |
+| Separate approvals | C4 slice stage (about $110); C4 production candidate; C5 on the 500 ($9.25) | | | | | each its own |
+
+Caps raised by Garry 2026-10-09 so evals don't stop on a cap; expected costs unchanged. Leases are sized at about three
+times their estimates, every call is still metered, a cell or arm past twice its estimate keeps going and is reported
+with its cause, and the cap is only a runaway guard.
 
 What moved and why. E1 adds two matched Sonnet controls (+$3.70) and replaces two `query` retrievals with one frozen
 list and one live parity call (−$0.60). E2's cap drops by the $25 v2 reserved for reader calls on the default-budget
@@ -1365,6 +1369,12 @@ before the E1 preregistration is committed.
 | A55 | Guard 9 from live handler calls with reranker time separate; local measurement labeled; held-out ratio overrun terminal | Mechanical | Eng Claude performance review, Astra test plan | Applied | Replay omits retrieval, the reranker dominates handler latency, and a sealed set cannot be used to retune a budget. |
 
 ## Changelog
+
+### 2026-10-09: caps raised so evals don't stop on a cap
+
+Garry raised the caps: E2 $270 to $600, E3 $10 to $25, program $700 to $1,500, expected costs unchanged. Leases at
+about 3x their estimates; spend-triggered drops withdrawn; overruns past 2x reported, not stopped. Recorded in the cost
+table and in E2's preregistration (amendment A2).
 
 ### 2026-10-09: H1 opens alone; E1 done
 

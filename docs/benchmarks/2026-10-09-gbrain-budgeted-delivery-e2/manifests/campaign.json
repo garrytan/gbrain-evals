@@ -2,7 +2,7 @@
   "kind": "oss-shootout-campaign",
   "schema_version": 1,
   "campaign_id": "gbrain-budgeted-delivery-e2",
-  "cap_usd": 270,
+  "cap_usd": 600,
   "ledger": ".budget/gbrain-budgeted-delivery-e2.sqlite",
   "parameters": {
     "gbrain_sha": "ca2c447bd39b31beb142247de424c096eefc8525",

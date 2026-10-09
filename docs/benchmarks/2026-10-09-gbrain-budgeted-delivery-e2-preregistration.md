@@ -307,13 +307,34 @@ recorded before any cell they affect:
   only inside gbrain's redaction tokens and counts such chunks (`redacted_chunks`); the three questions were resized on
   this host. Delivery applies the same redaction, so the delivered evidence is unaffected.
 
+### A2 (2026-10-09): caps raised by Garry so evals don't stop on a cap; expected costs unchanged
+
+Recorded after the deliver and live cells started and before any reader call. Garry, 2026-10-09: "Increase the
+budgets so we never hit the hard caps in our evals."
+
+- **Caps.** E2 $270 to **$600** (expected spend unchanged, about $110 to $185), E3 $10 to **$25** (E3 adds no
+  provider call), program $700 to **$1,500**. The campaign ledger's program cap and the campaign run's budget were
+  raised to $600 (`shootout-cell.ts raise-cap`, reason recorded in the ledger's cap history). The cap stays only as a
+  runaway guard.
+- **Leases** are sized at about three times each cell's estimate: phase 1 $215 (estimate $71), LoCoMo $160 ($54),
+  BEAM $36 ($12), each phase 2 cell $80 ($27); the live cell's $8 lease already held about 3x. Every call is still
+  metered through the lease proxy and settled to its committed total.
+- **Drop order withdrawn.** The spend-triggered drop order under "Budget, spending order and drop order" no longer
+  applies: no arm is dropped for spend. The spending order stands.
+- **Overrun alert, report only.** If a cell or arm runs past twice its estimate, it keeps going and the report names
+  it with the cause. This replaces any stop rule tied to an estimate.
+
 ## Changelog
+
+### 2026-10-09: amendment A2
+
+Caps raised by Garry (E2 $600, E3 $25, program $1,500), leases at about 3x their estimates, the spend-triggered drop
+order withdrawn, overruns past 2x reported rather than stopped.
 
 ### 2026-10-09: amendment A1
 
 Budgets from the real frozen lists, before any deliver, live or reader call; out-of-memory shards rerun; redaction-aware
 chunk-text check; LongMemEval-S deliver and reader cells at 16 shards.
-
 
 ### 2026-10-09: frozen
 
