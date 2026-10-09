@@ -5,11 +5,14 @@ Inputs (committed beside this script): master/ and candidate-1/ results.jsonl.gz
 classifier's rules (contact, terms, date, hop, namesake).
 
   python3 docs/benchmarks/2026-10-08-program-primary-hard/candidate-1-newer-mentions/analyze.py [--out route.json]
+  python3 .../analyze.py --arms fresh-seeds --gold gold-fresh.json [--out fresh-seeds/route.json]   # fresh-seed check
 """
 import collections, gzip, json, math, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-GOLD = json.load(open(os.path.join(HERE, '..', 'root-cause', 'gold.json')))
+opt = lambda name, default: sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
+ARMS = os.path.join(HERE, opt('--arms', '.'))
+GOLD = json.load(open(os.path.join(HERE, opt('--gold', os.path.join('..', 'root-cause', 'gold.json')))))
 READERS = ['claude-opus-5-5', 'claude-sonnet-5-5', 'gpt-6.1-sol']
 
 
@@ -55,9 +58,9 @@ def pct(xs, q):
 
 
 def arm(name):
-    cells = [c for c in jsonl(os.path.join(HERE, name, 'results.jsonl.gz')) if c['arm'] == 'baseline']
+    cells = [c for c in jsonl(os.path.join(ARMS, name, 'results.jsonl.gz')) if c['arm'] == 'baseline']
     usage = collections.defaultdict(list)
-    for r in jsonl(os.path.join(HERE, name, 'usage.jsonl.gz')): usage[r['cell']].append(r)
+    for r in jsonl(os.path.join(ARMS, name, 'usage.jsonl.gz')): usage[r['cell']].append(r)
     rows = {}
     for reader in READERS:
         cs = [c for c in cells if c['reader'] == reader]

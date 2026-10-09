@@ -24,7 +24,9 @@ the old meeting date, fell from 74 failed items on master to 1. The remaining fa
 which come from a call note that names no entity and so never reaches the card, and missed commitments. Cost stays
 inside the frozen resource envelope for every reader. We recommend shipping it on by default, which is how it is built.
 
-This is a development-seed result under the frozen T0b protocol. It is not a held-out confirmation, and it is not 10x.
+The result carries to new worlds. On eight personas drawn from fresh seeds after the code was frozen (one repeat, 72
+pairs), failures fell from 33 to 9: factor 3.53, 95% interval for R 0.12 to 0.58, `improvement`. Every validity mutant
+was detected. These are public development seeds, not a custodian-sealed held-out set, and the result is not 10x.
 
 ## The concrete case
 
@@ -141,12 +143,41 @@ entities.
 
 ### Validity checks
 
-The stale-correction mutant (the correction pages removed from the brain) on Candidate 1 failed 24 of 24 runs for
-gpt-6.1-sol (against 1 of 24 in Candidate 1's repeat 1) and 24 of 24 for Sonnet 5.5 (against 10 of 24), with
-`stale_correction` raised in both: detected for both readers. The Opus stale-correction mutant and all three forced-drop
-mutants did not fit in the $60 budget and were not run. Candidate 0 met the full frozen validity rule on this harness
-and scorer; for Candidate 1 the rule is met for two of three readers on one of two mutants. 288 of 288 paired cells
-were scored, with no harness errors.
+Both mutants run on Candidate 1 brains, on the development seeds, against Candidate 1's own repeat-1 cells. The
+stale-correction mutant removes the correction pages, and the forced-drop mutant removes every item page and drops the
+hook output, so no correction or commitment can reach the reader. If either did not raise failures, the scorer or the
+harness would be giving Candidate 1 credit it did not earn.
+
+| Mutant | Opus 5.5 | Sonnet 5.5 | gpt-6.1-sol |
+|---|---|---|---|
+| stale-correction | 24/24 failed (baseline 5/24), detected | 24/24 (10/24), detected | 24/24 (1/24), detected |
+| forced-drop | 9/9 on seeds 20261101 to 20261103 (2/9), detected | 24/24 (10/24), detected | 24/24 (1/24), detected |
+
+`stale_correction` rose above the baseline in every stale-correction cell. The Opus forced-drop mutant ran on the three
+leading personas the remaining budget admitted (amendment 3, step 4); with three persona clusters its risk-difference
+lower bound is still above 0. Every paired and mutant cell was scored, with no harness errors. Amendment 2 ran the
+Sonnet and gpt-6.1-sol stale-correction cells; amendment 3 ran the rest.
+
+### Fresh-seed check
+
+Amendment 3 drew eight new seeds at random on 2026-10-09 at 07:45 UTC, after Candidate 1's code was frozen
+(306480323, 316602389, 384540222, 476843991, 615322188, 691467441, 731983881, 767687777; world digest `081ea8b8`).
+Same generator, knobs, scorer, readers and code identities; one repeat, 72 pairs. They test whether the development
+result carries to worlds we never looked at. They are public in this repository, so they are not a held-out set.
+
+| Reader | Master failures | Candidate 1 failures | Factor | 95% interval for R | Risk difference (95%) | Verdict |
+|---|---:|---:|---:|---|---|---|
+| Opus 5.5 | 17/24 | 3/24 | 5.00 | 0.03 to 0.61 | −58.3 pts (−83.0 to −33.6) | improvement |
+| Sonnet 5.5 | 14/24 | 6/24 | 2.23 | 0.14 to 1.19 | −33.3 pts (−63.1 to −3.5) | inconclusive |
+| gpt-6.1-sol | 2/24 | 0/24 | 5.00 | 0.00 to 5.33 | −8.3 pts (−21.2 to +4.6) | inconclusive (near ceiling) |
+| **Pooled** | **33/72** | **9/72** | **3.53** | **0.12 to 0.58** | **−33.3 pts (−41.9 to −24.7)** | **improvement** |
+
+Failed items by class on the fresh seeds: Opus contact 16 and date 9 on master, terms 3 on Candidate 1; Sonnet contact
+12, date 11, terms 7 and namesake 1 on master, terms 5, contact 1 and hop 1 on Candidate 1; gpt-6.1-sol contact 1 and
+date 1 on master, none on Candidate 1. Contact and date fell from 50 failed items to 1. Opus opened the handoff mail in
+23 of 24 runs on Candidate 1 against 2 on master, without calling `entity` in either arm. Resource envelope, Candidate 1
+over master: p95 session-2 latency 0.83x, 1.04x and 0.92x (Opus, Sonnet, gpt-6.1-sol), mean tokens 0.95x, 1.03x and
+1.01x, mean dollars 1.03x, 1.08x and 1.01x, all inside the limits.
 
 ### Exploratory: Candidate 1 with the short-code alias fix
 
@@ -173,9 +204,9 @@ Do not read the pooled factor as the product's ceiling. Terms failures remain be
 short-code aliases (candidate 2) address that, and the exploratory arm suggests they stack. Sonnet's verdict is
 inconclusive; its contact and date failures are gone, but its terms failures carry the arm.
 
-Limits: development seeds only; the per-turn pointer is unchanged; on a busy brain the newest mentions of an entity can
-be routine mail, and this workload does not test that precision (a large-brain check belongs in the held-out gate). Two
-of three readers' mutant checks and the forced-drop mutant were not run.
+Limits: development and fresh public seeds only, no custodian-sealed set; the per-turn pointer is unchanged; on a busy
+brain the newest mentions of an entity can be routine mail, and this workload does not test that precision (a
+large-brain check belongs in the held-out gate). The Opus forced-drop mutant ran on 9 of its 24 cells.
 
 ## Reproduce and inspect
 
@@ -188,6 +219,13 @@ $R --gbrain <gbrain>@82460865ef7e9313cdcd69b3b52a665ba8825bdb --output <c1> --ar
 $R --gbrain <gbrain>@82460865ef7e9313cdcd69b3b52a665ba8825bdb --output <c1m> --arms mutant-stale-correction --readers gpt-6.1-sol   # then claude-sonnet-5-5
 bun eval/runner/t0/paired.ts --baseline <master>/results.jsonl --candidate <c1>/results.jsonl
 python3 docs/benchmarks/2026-10-08-program-primary-hard/candidate-1-newer-mentions/analyze.py
+# amendment 3 ($45 run): mutants on the development seeds, then the fresh seeds in two-persona batches, both arms at once
+$R --gbrain <gbrain>@82460865ef7e9313cdcd69b3b52a665ba8825bdb --output <c1m3> --arms mutant-stale-correction --readers claude-opus-5-5
+$R --gbrain <gbrain>@82460865ef7e9313cdcd69b3b52a665ba8825bdb --output <c1m3> --arms mutant-forced-drop --readers gpt-6.1-sol   # then claude-sonnet-5-5; Opus on --seeds 20261101,20261102,20261103
+$R --gbrain <gbrain>@<master or Candidate 1> --output <fresh-arm> --arms baseline --repeat 1 --seeds 306480323,316602389   # and the next three pairs
+bun eval/runner/t0/paired.ts --baseline <fresh-master>/results.jsonl --candidate <fresh-c1>/results.jsonl --repeats 1
+bun docs/benchmarks/2026-10-08-program-primary-hard/candidate-1-newer-mentions/gold.ts <fresh seeds> > gold-fresh.json
+python3 docs/benchmarks/2026-10-08-program-primary-hard/candidate-1-newer-mentions/analyze.py --arms fresh-seeds --gold gold-fresh.json
 # $0 mechanism check
 bun docs/benchmarks/2026-10-08-program-primary-hard/candidate-1-newer-mentions/card-probe.ts --gbrain <gbrain> --ref <sha> --label <name>
 ```
@@ -198,7 +236,8 @@ slots spawn). Each 144-cell arm took about an hour at concurrency 3.
 Receipts in [`2026-10-08-program-primary-hard/candidate-1-newer-mentions/`](2026-10-08-program-primary-hard/candidate-1-newer-mentions/):
 `master/`, `candidate-1/`, `candidate-1-mutant-stale-correction/`, `exploratory-candidate-1-plus-f24ca6afe/` (each
 `results.jsonl.gz`, `usage.jsonl.gz`, `experiment.json`, `receipt.json`, cost receipts), `paired.json`, `summary.json`,
-`route.json`, `analyze.py`, `card-probe.ts` and its two outputs.
+`route.json`, `analyze.py`, `card-probe.ts` and its two outputs; amendment 3's `candidate-1-mutants-amendment-3/` and
+`fresh-seeds/` (`master/`, `candidate-1/`, `paired.json`, `route.json`), `gold.ts` and `gold-fresh.json`.
 
 | Ledger run `t0b-program-primary-2026-10-09T05-58-28-840Z-2773d713` | Dollars (cell receipts) |
 |---|---:|
@@ -208,7 +247,20 @@ Receipts in [`2026-10-08-program-primary-hard/candidate-1-newer-mentions/`](2026
 | Exploratory arm, 30 cells | 4.04 |
 | **Ledger total (includes brain builds and provider calls outside cells)** | **58.36 of 60** |
 
+| Ledger run `t0b-program-primary-2026-10-09T07-49-07-137Z-5fce8fdd` (amendment 3) | Dollars (cell receipts) |
+|---|---:|
+| Mutants: stale-correction Opus 24, forced-drop gpt-6.1-sol 24, Sonnet 24, Opus 9 | 17.37 |
+| Fresh seeds, master arm, 72 cells | 11.48 |
+| Fresh seeds, Candidate 1 arm, 72 cells | 11.95 |
+| **Ledger total** | **42.38 of 45** |
+
 ## Changelog
+
+### 2026-10-09: validity mutants and a fresh-seed check
+
+Added amendment 3's results: every mutant detected (stale-correction for all three readers, forced-drop for all three,
+Opus on 9 cells), and the fresh-seed check (pooled 33 to 9 of 72, factor 3.53, `improvement`). The finding now states
+the fresh-seed result and the limits no longer list missing mutants.
 
 ### 2026-10-09: first version
 
