@@ -60,7 +60,7 @@ describe('sealed analysis', () => {
     judge('1_a_0', { outcome: 'answered', score: 1, rubric: [{ score: 1 }] });
     judge('1_a_1', { outcome: 'judge_failure', score: null, rubric: [{ score: null }] });
     judge('1_a_2', { outcome: 'answered', score: 0.5, rubric: [{ score: 1 }, { score: null }] });
-    judge('1_a_3', { outcome: 'incomplete_ingest', score: 0, rubric: [] });
+    judge('1_a_3', { outcome: 'incomplete_ingest', score: null, rubric: [] });
     writeFileSync(join(dir, 'summary.json'), JSON.stringify({ delivered_context: { ok: false } }));
     expect(incompleteness(dir).map(i => i.kind).sort()).toEqual(['delivered_context_gate', 'judge_failure', 'no_scored_row', 'unscored_rubric_item']);
 

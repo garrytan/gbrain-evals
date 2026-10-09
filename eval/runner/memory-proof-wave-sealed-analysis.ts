@@ -38,6 +38,9 @@ export function clusters(rows: readonly PairRow[], sign = 1): ClusterRow[] {
   return [...by.values()];
 }
 
+/** Outcomes the preregistration scores 0 and counts by type; they never make a cell incomplete. */
+export const SCORED_ZERO = new Set(['answer_failure', 'retrieval_failure', 'incomplete_ingest']);
+
 export interface Incomplete { cell_id: string; kind: 'no_scored_row' | 'judge_failure' | 'unscored_rubric_item' | 'delivered_context_gate'; query_id?: string }
 
 /** Every way a cell breaks the preregistered completeness rule. */
@@ -54,6 +57,7 @@ export function incompleteness(dir: string, cellsDir?: string): Incomplete[] {
   for (const qid of cell.resolved.schedule as string[]) {
     const r = judged.get(qid);
     if (!r) out.push({ cell_id: id, kind: 'no_scored_row', query_id: qid });
+    else if (SCORED_ZERO.has(r.outcome)) continue;
     else if (r.outcome === 'judge_failure' || typeof r.score !== 'number') out.push({ cell_id: id, kind: 'judge_failure', query_id: qid });
     else if ((r.rubric ?? []).some((item: any) => typeof item.score !== 'number')) out.push({ cell_id: id, kind: 'unscored_rubric_item', query_id: qid });
   }
