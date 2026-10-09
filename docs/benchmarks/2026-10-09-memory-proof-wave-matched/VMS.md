@@ -10,3 +10,4 @@ Every VM the matched secondary cells use, recorded when it is created and when i
 | 2026-10-09T18:48:00Z | longmemeval-s-gbrain-combined-shard2 | `ubirun-gbra52-1791571657-74a73242` | `~/.local/state/ubi-runner/ubirun-gbra52-1791571657-74a73242/` on the run machine | created |
 | 2026-10-09T18:48:21Z | longmemeval-s-gbrain-combined-shard3 | `ubirun-gbra52-1791571677-def273c0` | `~/.local/state/ubi-runner/ubirun-gbra52-1791571677-def273c0/` on the run machine | created |
 | 2026-10-09T18:48:41Z | longmemeval-s-gbrain-combined-shard4 | `ubirun-gbra52-1791571697-58566cc8` | `~/.local/state/ubi-runner/ubirun-gbra52-1791571697-58566cc8/` on the run machine | created |
+| 2026-10-09T18:57:18Z | locomo10-gbrain-raw | `ubirun-gbra52-1791572214-2a1f497b` | `~/.local/state/ubi-runner/ubirun-gbra52-1791572214-2a1f497b/` on the run machine | created |
