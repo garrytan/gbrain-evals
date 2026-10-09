@@ -89,3 +89,31 @@ starts from a measured gap. No faster-setup claim follows from this run.
 
 A harness crash is retried up to twice by the runner and otherwise reported inconclusive. A failed or partial run is
 published with the rest; nothing is rerun to get a better time.
+
+## Amendment 1 (2026-10-09, after the six `dda603a` sessions, before any `b3f4e8b` session)
+
+**What the first pass showed.** All six `dda603a` sessions succeeded with 0 consent violations. Claude Code's mean
+wall time was 91.2 s (`b3f4e8b`: 96.7 s); Codex's was 171.8 s (`b3f4e8b`: 121.7 s), outside `b3f4e8b`'s range of
+101 to 138 s. The Codex install and reply sessions are slower (115.6 s and 46.5 s against 89.4 s and 25.8 s) while their
+input tokens grew less (+14% and +28%), so part of the gap may be the model provider's speed on a different day, which
+the transcripts cannot separate from the release. Cat 40 has already measured a 13-point same-code swing between two
+windows (`2026-10-03-agent-operator.md`), so a cross-day comparison alone is not enough to attribute the change.
+
+**Added cell: a same-window control.** The same scenario, unchanged, on `b3f4e8ba5935004066b4715bdc19bc9de4721b81`
+(v0.60.38.0), both harnesses, 3 repeats, concurrency 1, same image, models and ledger run, immediately after this
+commit:
+
+```sh
+bun eval/runner/cat41-agent-operator.ts run --gbrain <gbrain checkout>@b3f4e8ba5935004066b4715bdc19bc9de4721b81 \
+  --label control-b3f4e8b --scenarios fresh_install_to_wired_recall --repeat 3 --concurrency 1 \
+  --paid --budget-ledger .budget/cat41-rebaseline.sqlite --budget-run-id "$RID" --out eval/reports/cat41/control-b3f4e8b
+```
+
+Expected spend about $3.30, so the pass stays well under the $30 cap.
+
+**How it is read.** The `dda603a` pass stays the comparator for wave 2 whatever the control shows. The control only
+decides the attribution sentence: if `b3f4e8b` today is within `dda603a`'s range on a harness, the change on that
+harness is attributed to the day, not the release; if `b3f4e8b` today reproduces its published time and `dda603a` stays
+slower, the change is attributed to the release, and the per-session transcript counts (registration surface, tools
+offered, input tokens in the recall session, commands per session) say which part. With n = 3 per cell, overlapping
+ranges are reported as no measured difference.
