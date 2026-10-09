@@ -539,6 +539,24 @@ export function setProgramCap(options: { ledgerPath: string; programCapUsd: numb
   });
 }
 
+/**
+ * Raise one run's budget (a campaign run whose cap the user raised; `shootout-cell.ts raise-cap`). Refuses a lower
+ * budget than the run's current one, and a budget above the ledger's program cap.
+ */
+export function setRunBudget(options: { ledgerPath: string; runId: string; budgetUsd: number }): { run_id: string; budget_usd: number; previous_budget_usd: number } {
+  const paths = ledgerPaths(options.ledgerPath);
+  if (!Number.isFinite(options.budgetUsd) || options.budgetUsd <= 0) throw new BudgetExceededError('a run budget must be a positive number of dollars');
+  if (!existsSync(paths.ledger)) throw new BudgetExceededError(missingLedgerMessage(paths.ledger));
+  return write(paths.ledger, 'set-run-budget', db => {
+    const run = db.query('SELECT budget_usd FROM runs WHERE run_id = ?').get(options.runId) as { budget_usd: number } | null;
+    if (!run) throw new BudgetExceededError(`no run ${options.runId} in ${paths.ledger}`);
+    if (options.budgetUsd < run.budget_usd) throw new BudgetExceededError(`refusing to lower run ${options.runId} from $${run.budget_usd.toFixed(2)} to $${options.budgetUsd.toFixed(2)}`);
+    if (options.budgetUsd > currentCap(db) + 1e-9) throw new BudgetExceededError(`run budget $${options.budgetUsd.toFixed(2)} is above the program cap $${currentCap(db).toFixed(2)}; raise the cap first`);
+    db.query('UPDATE runs SET budget_usd = ? WHERE run_id = ?').run(options.budgetUsd, options.runId);
+    return { run_id: options.runId, budget_usd: options.budgetUsd, previous_budget_usd: run.budget_usd };
+  });
+}
+
 // ─── Readers ────────────────────────────────────────────────────────
 
 const ENTRY_COLUMNS = 'id, run_id, description, reserved_usd, actual_usd, status, input_tokens, output_tokens, created_at, settled_at, participant';

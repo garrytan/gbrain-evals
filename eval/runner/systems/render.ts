@@ -33,8 +33,12 @@ import { SystemError, type Item } from './types.ts';
 export const TOKENIZER = { id: 'approx-chars-div-4', count: approxTokens } as const;
 export const RENDERER_VERSION = 'shootout-render-v1';
 export type ContextMode = 'native' | 'rehydrated';
-/** Renderers a named recipe can use (budgeted delivery plan C0); `native` and `rehydrated` are the shootout's. */
-export type RecipeRender = 'native' | 'native-dated' | 'pseudo-session' | 'rehydrated';
+/**
+ * Renderers a named recipe can use (budgeted delivery plan C0); `native` and `rehydrated` are the shootout's.
+ * `pseudo-session-rank` is `pseudo-session` with the sessions shown in delivery (rank) order instead of date order
+ * (plan C5); it packs exactly the same blocks, because the serialized length does not depend on the order.
+ */
+export type RecipeRender = 'native' | 'native-dated' | 'pseudo-session' | 'pseudo-session-rank' | 'rehydrated';
 export const DATED_RENDERER_VERSION = 'budgeted-delivery-render-v1';
 
 export const NATIVE_READER_TEMPLATE = 'I will give you items a memory system returned from past chats between you and a user, in the order the memory system ranked them. Some items carry the dates the memory system recorded for them; an item marked superseded was later replaced. Please answer the question based on these items. Answer the question step by step: first extract all the relevant information, and then reason over the information to get the answer.\n\n\nMemory Items:\n\n{items}\n\nCurrent Date: {date}\nQuestion: {question}\nAnswer (step by step):';
@@ -250,9 +254,9 @@ export function packRecipe(render: RecipeRender, q: MemoryQuestion, items: reado
     return { ...base, tokens: p.tokens, tokens_before: before, items_cut: shown.length - p.items.length, dated_items: p.items.filter(i => i.event_date).length,
       item_ids: p.items.map(i => i.id), source_ids: [...new Set(p.items.flatMap(i => i.source_ids))], prompt };
   }
-  if (render === 'pseudo-session') {
+  if (render === 'pseudo-session' || render === 'pseudo-session-rank') {
     const p = packPseudo(datedItems(items, dayOf), opts.sessionOf, opts.budgetTokens);
-    const prompt = READER_TEMPLATE.replace('{history}', renderHistory(p.sessions)).replace('{date}', date).replace('{question}', q.question);
+    const prompt = READER_TEMPLATE.replace('{history}', renderHistory(p.sessions, render === 'pseudo-session-rank' ? 'given' : 'date')).replace('{date}', date).replace('{question}', q.question);
     return { ...base, tokens: p.tokens, tokens_before: p.tokens_before, items_cut: items.length - p.items.length, dated_items: p.sessions.filter(s => s.date).length,
       item_ids: p.items.map(i => i.id), source_ids: [...new Set(p.items.flatMap(i => i.source_ids))], prompt };
   }
