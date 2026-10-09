@@ -48,7 +48,7 @@ import { runAgent, provider, priceUsage, type AgentRun, type Arm, type ScriptedM
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall, type ArmName } from './cat40/arms.ts';
 import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
-import { GbrainArm, instructionsOverride, GbrainPool, GbrainSlot, MeteringProxy, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
+import { GbrainArm, instructionsOverride, GbrainPool, GbrainSlot, MeteringProxy, rerankProbe, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
@@ -222,7 +222,7 @@ async function runCell(ctx: Ctx, model: string, armName: ArmName, task: LadderTa
       try { await slot.restore(); }
       finally {
         restoreMs = Date.now() - t;
-        ctx.proxy!.unbind(slot.id);
+        ctx.proxy!.unbind(slot.id, runId);
         ctx.pool!.release(slot);
       }
     }
@@ -304,6 +304,8 @@ export interface ExperimentManifest {
   /** The budget-ledger run every invocation on this directory charges (a resume joins it). */
   budget_run_id: string | null;
 }
+
+export { rerankProbe };
 
 export function experimentFlags(argv: readonly string[]): Record<string, string | true> {
   const flags: Record<string, string | true> = {};
@@ -514,6 +516,13 @@ export async function main(argv = process.argv.slice(2)) {
         await s.restore();
       }
       log('write probe passed on every slot');
+      // A rerank probe (from GBRA-39's #76, Cat 40 Hard R0): one search per slot must reach the reranker through this
+      // process's proxy, unless the run turned reranking off. A slot whose reranker is unreachable fails closed.
+      const rerankOff = gbrainConfig.some(([k, v]) => k === 'search.reranker.enabled' && /^(false|0|off)$/i.test(v));
+      if (!rerankOff && !ctx.scripted) {
+        await rerankProbe(slots, ctx.proxy!, world.docs?.[0]?.title ?? 'account');
+        log('rerank probe passed on every slot');
+      }
       ctx.pool = new GbrainPool(slots);
       log(`gbrain ${gbrainBuild.version} (${gbrainBuild.commit.slice(0, 12)}) ready on ${nSlots} slots, surface ${surface}`);
     }
