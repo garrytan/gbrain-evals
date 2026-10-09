@@ -66,3 +66,20 @@ The sealed gbrain cells run with `--reserve off`. Their identity records the dec
 The fix, in `register.install()`, replaces the loader's session ordering with the numeric ordering the pinned LifeBench loader already uses. Each question is now dated to the latest session that has turns. One conversation (`conv-26`) carries date stamps for sessions 20 to 35 that hold no turns; those dates are not used. Both systems read queries through the same loader and projection, so they receive the same date. The test `test_locomo_query_date.py` pins a 12-session conversation to session 12's date. It fails without the fix (session 9's date) and passes with it.
 
 No matched LoCoMo10 secondary cell had run when this was recorded, so no matched outcome had been seen. The dev-phase LoCoMo10 cells (322-question dev subset) ran with the wrong date. Their scores in the dev report stand as recorded, as development measurements under this defect, and are not comparable with the matched cells. The other loaders were checked: LongMemEval-S reads each item's own `question_date`; LifeBench already orders sessions by number; PersonaMem's date is a stated date that the wrapper withholds from both systems; and BEAM passes no question date.
+
+## The raw lane runs gbrain's conservative search mode (October 8, 2026)
+
+**The raw secondary arm ran without gbrain's reranker, by gbrain's own mode default rather than by a failure.** gbrain picks a search mode when a brain is created. A brain with no chat-model key gets `conservative`, and the raw lane gives gbrain only its embedding key. The combined lane also holds the extraction model's key, so its brains get `tokenmax`. The config rows of all 108 sealed unit brains show this: 54 raw units are `conservative` and 54 combined units are `tokenmax`.
+
+Both lanes set the token budget, the result limit and query expansion on every call, so those match. The mode still changes five retrieval settings that no call overrides:
+
+| Setting | Raw lane (`conservative`) | Combined lane (`tokenmax`) |
+|---|---|---|
+| Cross-encoder reranker | off | on (`rerank-2.5`, top 50 in) |
+| Graph signals | off | on |
+| Relational retrieval and planner | off | on |
+| Contextual retrieval | none | per-chunk synopsis |
+
+The receipts agree. The raw cells sent 0 rerank requests at every size, and none of their 1,060 retrieved rows records a skipped or failed rerank. The combined cells reranked all 1,080 questions with HTTP 200. Every dev raw cell also sent 0 rerank requests, so the raw lane was tuned under the same settings.
+
+So the raw arm measures gbrain pages-only with just an embedding key. It does not measure pages-only at the primary arm's search settings. The raw-against-combined gap mixes the facts block with this mode bundle. The arm stays as run, is reported as such, and decides nothing. No sealed cell is rerun. This was recorded before the joint re-judge finished and before any sealed raw analysis ran. The primary arm and the comparator are unaffected.
