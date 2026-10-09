@@ -348,7 +348,9 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
     `dbd109d8982ced34cddeb10bc09c9eb54fc852979b56e3c1f11c62d474c1e84b`.
   - `q1-scoreboard-public-r4`: three cells split into haystack shards (A10); 16 launch units; cap $90. Hash
     `41a92703001f703ebd8be683931848e6c65ec0f942a4b9f6ac6488a19c22de94`.
-  The five caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
+  - `q1-scoreboard-public-r5`: the S5 reruns after A11; 6 launch units; cap $170. Hash
+    `83d357e982d3a313be21b7ad18a07393b9107d06011540df1a12b1fa4f9163b3`.
+  The six caps plus the $60 spent on the stress pilot and dev smokes stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
   digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
   bundles build are covered by their Dockerfiles and lockfiles in the hashed tree.
@@ -527,7 +529,31 @@ the runner's existing `--shard i/n` (2 for the S4 slice, 10 and 4 for S5), each 
 twice its projected hours and a lease of 1.5 times its share (at least $2); $76.96 in leases, $90 cap. Rows from the
 shards are pooled per cell, as S1's shards are. Wall-clock time per haystack is reported for every cell.
 
+**A11 (2026-10-09): two harness faults found on LongMemEval-M.**
+- **A false leak tripwire.** The request leak scan checks every request body for the corpus's raw ids. LongMemEval's
+  question ids are 8 hex digits, and the harness's own opaque source ids are 16 hex digits, so one opaque id
+  (`src-1356545bd2b51a59`) happens to contain a question id (`545bd2b5`). Every shim system's ingest of that one session
+  on S5 trips the scan, and the cell ends `invalid` (the verbatim-session S5 cell did, after answering 96 questions).
+  Nothing leaked: the id is a hash. The scan now skips the harness's own `ns-`/`src-` ids before matching; a raw id in
+  the text still refuses. BEAM and LoCoMo ids contain letters outside hex (`1m-16:abstention:0`, `conv-26:q001`,
+  `session_1`), so no sealed set can produce this collision.
+- **An unbounded write to gbrain's server.** On S5 the gbrain-defaults cell stopped for 9.5 hours at 51 of 100
+  haystacks: after committing a session, `gbrain serve` (at the pin) stayed at 100% CPU and stopped reading its input,
+  and the shim's next write blocked with no deadline, so the call's own timeout never started. The shim now bounds the
+  write by the call's timeout (900 s); a serve that stops reading is killed, the call fails as a timeout (a product
+  timeout on that session, counted under the outcome rules), and serve restarts on the same brain for the next
+  session. The serve hang itself is gbrain's behavior and is reported to gbrain with the captured brain.
+- Both fixes are in the executed tree, so the sealed campaign is re-frozen (its hash below). The affected public cells
+  rerun as `q1-scoreboard-public-r5`: gbrain-defaults S5 in 4 haystack shards, verbatim-session S5, and the
+  markdown-kb S5 shard that holds the colliding session; $152.48 in leases, $170 cap. The stopped gbrain-defaults S5
+  cell and markdown-kb shard 5 had answered nothing.
+
 ## Changelog
+
+### 2026-10-09: amendment A11
+
+A false leak tripwire (a hex question id inside a hashed source id) and an unbounded shim write to a stalled gbrain
+serve fixed; sealed campaign re-frozen; S5 reruns as `q1-scoreboard-public-r5`.
 
 ### 2026-10-09: amendment A10
 
