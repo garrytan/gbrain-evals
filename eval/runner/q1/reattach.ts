@@ -62,9 +62,13 @@ function pullParts(c: Campaign, l: LeaseState, vm: string) {
   lastPull.set(l.lease_id, Date.now());
 }
 
+/** A launcher on this host still holds the lease's VM session: it pulls, settles and tears down itself, so reattach stays out. */
+const launcherAlive = (vm: string) => Bun.spawnSync(['pgrep', '-f', `ubi-runner.sh run .*-n ${vm}`]).exitCode === 0;
+
 function step(c: Campaign, l: LeaseState): Phase {
   const vm = l.vm;
   if (!vm) return 'lost';
+  if (launcherAlive(vm)) return 'running';
   const out = c.remoteOut(l);
   const p = probe(vm, out);
   const m = p.out.match(/state (\d) (\d) (\d) (\d) (\d)/);

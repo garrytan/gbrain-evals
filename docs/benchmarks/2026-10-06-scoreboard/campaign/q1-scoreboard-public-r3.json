@@ -2,11 +2,38 @@
   "kind": "q1-scoreboard-campaign",
   "schema_version": 1,
   "campaign_id": "q1-scoreboard-public-r3",
-  "cap_usd": 15,
+  "cap_usd": 30,
   "ledger": "eval/reports/scoreboard/q1-scoreboard-public-r3/campaign.sqlite",
   "parameters": {},
   "hedge_classifier": "none",
   "cells": [
+    {
+      "id": "s4-slice.ext-verbatim-session.recipe",
+      "system": "ext-verbatim-session",
+      "benchmark": "lme-s",
+      "config": "recipe",
+      "lease_usd": 13.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s4-slice.ext-verbatim-session.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
     {
       "id": "s5.ext-verbatim-session.recipe",
       "system": "ext-verbatim-session",
@@ -108,8 +135,8 @@
   },
   "blocks": {
     "T2-S4-S5": {
-      "estimate_usd": 13.0,
-      "cap_usd": 15
+      "estimate_usd": 26.0,
+      "cap_usd": 30
     }
   },
   "output_caps": {
