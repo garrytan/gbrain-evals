@@ -70,6 +70,7 @@ gap does not isolate the effect of a graph alone.
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
 | Where does a small decision model (TypeSafe Jev) help gbrain triage, rerank, prune, abstain or spot contradicting facts, and where does it hurt? | [September 30 System One v1 slots](benchmarks/2026-09-30-system-one-jev.md) |
+| Does gbrain answer questions about long conversations as well as a memory-bank server with background extraction and reflection, at lower cost per correct answer? | [Sealed BEAM results, October 9: gbrain combined is ahead by 2.6 points (lower bound +0.9); cheaper at 20 reads per stored conversation, not at 200](benchmarks/2026-10-09-memory-proof-wave-sealed-results.md) |
 | Which memory proof wave ideas did gbrain ship, keep off or make opt-in: interleaved supersession candidates, per-model supersession thresholds, pinned questions, entity-anchored query retrieval and the facts arm in query? | [October 5 gbrain decision records, mirrored from gbrain #6066](benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md) |
 | Which embedder and reranker should a gbrain brain use, and what does each cost and send off the machine? | [October 6 embedding-provider matrix](benchmarks/2026-10-06-embedding-matrix.md) ([preregistration](benchmarks/2026-10-06-embedding-matrix-preregistration.md)) |
 | Does code search find a function from a description that never names it, and does a code embedder help? | [October 6 Cat 21 paraphrase questions](benchmarks/2026-10-06-cat21-paraphrase.md) ([preregistration](benchmarks/2026-10-06-cat21-paraphrase-preregistration.md)) |
@@ -187,6 +188,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-09: Sealed BEAM results row
+
+The memory proof wave rows gained the sealed BEAM 100k + 500k + 1M results: gbrain's combined lane is `ahead` of the comparator (+2.64 points, one-sided 95% bounds +0.90 and +4.41), with lower cost per correct answer at 20 reads per stored conversation and none at 200.
 
 ### 2026-10-08: Pin `fc548317f`; evidence architecture pilot row
 
