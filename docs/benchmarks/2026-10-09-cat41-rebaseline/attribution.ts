@@ -6,10 +6,12 @@
  *   bun docs/benchmarks/2026-10-09-cat41-rebaseline/attribution.ts <label>=<runs dir> [...] > attribution.json
  *
  * A runs dir holds `fresh_install_to_wired_recall--<harness>--r<n>-a<k>/` directories (a pass's `runs/`, or a
- * published `runs.tar.gz` extracted). For crash-retried runs the last attempt is used, as the scorer does.
+ * published `runs.tar.gz` extracted). For crash-retried runs the last attempt is used, as the scorer does. Output goes
+ * through the runner's `publishable` scrub, so container paths print as `~/` and `<tmp>/`.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { publishable } from '../../../eval/runner/cat41-agent-operator.ts';
 import { parseSession } from '../../../eval/runner/cat41/transcript.ts';
 import type { ContainerResult } from '../../../eval/runner/cat41/types.ts';
 
@@ -62,4 +64,4 @@ for (const arg of process.argv.slice(2)) {
   const [label, dir] = arg.split('=');
   out[label] = runsOf(dir).map(attribute);
 }
-console.log(JSON.stringify(out, null, 2));
+console.log(JSON.stringify(publishable(out), null, 2));
