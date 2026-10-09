@@ -1,0 +1,8 @@
+{
+  "campaign_id": "q1-scoreboard-public-v2",
+  "run_id": "q1-scoreboard:q1-scoreboard-public-v2-2026-10-09T16-34-04-432Z-89e24ac5",
+  "ledger": "/workspace/gbrain-evals/eval/reports/scoreboard/q1-scoreboard-public-v2/campaign.sqlite",
+  "manifest_sha256": "59c00444d1633f50034b35e404e73d209ede8343754db8687fc32a095f19986e",
+  "created_at": "2026-10-09T16:34:04.434Z",
+  "kind": "q1-scoreboard-campaign"
+}
