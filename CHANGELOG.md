@@ -2,6 +2,18 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.52] - 2026-10-08
+
+### The program primary (T0): preregistration, delivery contract, power (PW) and the v0.60.106.0 development baseline
+
+Wave 1 items T0 and PW of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) (GBRA-60). Paid spend $61.02 (budget ledger), PW $0.
+
+- **Workload and carrier.** `eval/generators/program-primary-gen.ts` (seeded founder brains, two-session meeting and reply prep after a correction) and `eval/runner/t0-program-primary.ts`, which runs the release's own SessionStart and UserPromptSubmit hook commands at Claude Code's points under a frozen delivery contract (`eval/runner/t0/delivery.ts`); a forced-drop and a stale-correction mutant, a push-off ablation, and a native Claude Code parity slice (`eval/runner/t0/parity.ts`). Registry entry `program-primary` (T0).
+- **Preregistration** ([doc](docs/benchmarks/2026-10-08-program-primary-preregistration.md)): commits `1e5caf3`, amendment 1 (scorer `t0-score-v2`) `76910b7` and amendment 2 (parity slice) `0dcf723`, all before the cells they govern. Loss tolerance 3.0 points.
+- **Power (PW).** `eval/runner/power/`: a clustered paired failure-risk ratio whose interval (conditional binomial) was chosen by simulation because the delta method and the persona bootstrap undercover, and a within-persona size contrast for the wave 3 manifest ([power.json](docs/benchmarks/2026-10-08-program-primary/power.json)).
+- **Baseline** ([report](docs/benchmarks/2026-10-08-program-primary-baseline.md)): on gbrain v0.60.106.0 the workload is at its ceiling. Sonnet 5.5 and gpt-6.1-sol fail 0 of 64 runs and Opus 5.5's 11 scored failures are all namesake warnings, so a human reading finds no failure; both mutants fail 32 of 32 and the parity slice agrees 8 of 8.
+- **Budget ledger.** Streamed (SSE) responses settle from their usage events instead of their reservation; one `sseUsage` lives in `budget-ledger.ts`.
+
 ## [0.10.51] - 2026-10-08
 
 ### Q2 parser gaps: guards for typed list lines, a held-out frame for grammar precision and recall, relationship-phrasing units, and the custodian harness

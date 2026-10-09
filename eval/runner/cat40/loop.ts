@@ -89,7 +89,13 @@ export interface LoopConfig {
   fetchImpl?: typeof fetch;
   /** Test hook: replace the provider with a scripted model. */
   scripted?: ScriptedModel;
+  /** Replaces SUBMIT_TOOL (same name, `submit_answer`) for runners whose deliverable is not a bare value. */
+  submitTool?: ToolSpec;
+  /** Called once per provider attempt, retries included, with the parsed response or the error (for usage receipts). */
+  onAttempt?: (a: ProviderAttempt) => void;
 }
+
+export interface ProviderAttempt { status: 'ok' | 'error'; response: Record<string, unknown> | null; error: string | null; ms: number }
 
 /** A scripted model returns the next tool call (or a final submit) given the transcript so far. */
 export type ScriptedModel = (history: Array<{ name: string; args: Record<string, unknown>; result: string }>) => { name: string; args: Record<string, unknown> };
@@ -115,13 +121,19 @@ function cap(text: string, max: number | null): { text: string; truncated: boole
   return { text: `${text.slice(0, max)}\n…[truncated: ${text.length - max} more characters]`, truncated: true };
 }
 
-async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<string, string>, body: unknown): Promise<Record<string, unknown>> {
+async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<string, string>, body: unknown, onAttempt?: (a: ProviderAttempt) => void): Promise<Record<string, unknown>> {
   let lastErr = '';
   for (let attempt = 0; attempt < 6; attempt++) {
+    const t = Date.now();
     const res = await fetchImpl(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
     const text = await res.text();
-    if (res.ok) return JSON.parse(text);
+    if (res.ok) {
+      const json = JSON.parse(text) as Record<string, unknown>;
+      onAttempt?.({ status: 'ok', response: json, error: null, ms: Date.now() - t });
+      return json;
+    }
     lastErr = `${res.status}: ${text.slice(0, 500)}`;
+    onAttempt?.({ status: 'error', response: null, error: lastErr, ms: Date.now() - t });
     if (![429, 500, 502, 503, 504, 529].includes(res.status)) break;
     await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
   }
@@ -134,7 +146,7 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
   const maxChars = cfg.maxToolChars ?? null;
   const fetchImpl = cfg.fetchImpl ?? fetch;
   const run: AgentRun = { model: cfg.model, final: null, stop: 'turn_cap', turns: 0, tools: [], usage: { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 }, usd: 0, ms: 0, model_ms: 0, tool_ms: 0 };
-  const specs = (): ToolSpec[] => [...cfg.arm.tools(), SUBMIT_TOOL];
+  const specs = (): ToolSpec[] => [...cfg.arm.tools(), cfg.submitTool ?? SUBMIT_TOOL];
 
   const execute = async (name: string, args: Record<string, unknown>): Promise<{ text: string; submitted: boolean }> => {
     if (name === 'submit_answer') {
@@ -215,7 +227,7 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
     const res = await postJson(fetchImpl, 'https://api.anthropic.com/v1/messages', headers, {
       model: cfg.model, max_tokens: cfg.maxOutputTokens ?? 8192,
       system: [{ type: 'text', text: cfg.system, cache_control: { type: 'ephemeral' } }], tools: currentTools(), messages,
-    });
+    }, cfg.onAttempt);
     run.model_ms += Date.now() - s;
     const u = (res.usage ?? {}) as Record<string, number>;
     run.usage.input += u.input_tokens ?? 0; run.usage.output += u.output_tokens ?? 0;
@@ -255,7 +267,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
     const res = await postJson(fetchImpl, 'https://api.openai.com/v1/responses', headers, {
       model: cfg.model, instructions: cfg.system, input, tools: currentTools(), max_output_tokens: cfg.maxOutputTokens ?? 16_000,
       ...(previous ? { previous_response_id: previous } : {}),
-    });
+    }, cfg.onAttempt);
     run.model_ms += Date.now() - s;
     const u = (res.usage ?? {}) as Record<string, unknown>;
     const cached = ((u.input_tokens_details ?? {}) as Record<string, number>).cached_tokens ?? 0;

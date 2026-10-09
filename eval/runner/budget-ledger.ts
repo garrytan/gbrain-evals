@@ -1431,6 +1431,24 @@ export const unguardedFetch: typeof fetch = baseFetch;
 /** Most recent OpenAI responses remembered for continuation pricing. */
 const CHAIN_MEMORY = 100_000;
 
+/** Provider usage from a server-sent-events body: OpenAI `usage` chunks and `response.completed`, Anthropic `message_start` and `message_delta`. */
+export function sseUsage(text: string): Record<string, unknown> | null {
+  const merged: Record<string, unknown> = {};
+  let found = false;
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('data:')) continue;
+    const data = line.slice(5).trim();
+    if (!data || data === '[DONE]') continue;
+    let obj: Record<string, any>;
+    try { obj = JSON.parse(data); } catch { continue; }
+    for (const u of [obj?.usage, obj?.response?.usage, obj?.message?.usage]) {
+      if (!u || typeof u !== 'object') continue;
+      for (const [k, v] of Object.entries(u)) if (typeof v === 'number' || (v && typeof v === 'object')) { merged[k] = v; found = true; }
+    }
+  }
+  return found ? merged : null;
+}
+
 /**
  * Route every fetch to a paid host through the ledger: price, reserve, send,
  * then reconcile from the response usage. A refused reservation rejects the
@@ -1447,7 +1465,13 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
   const measure = async (price: RequestPrice, response: Response) => {
     // A 4xx answer without usage settles at $0, as the metering proxy does: providers do not bill rejected requests.
     const rejected = response.status >= 400 && response.status < 500 ? { usd: 0, input_tokens: 0, output_tokens: 0 } : null;
-    if ((response.headers.get('content-type') ?? '').includes('event-stream')) return rejected;
+    if ((response.headers.get('content-type') ?? '').includes('event-stream')) {
+      // A streamed response is read to its end (the caller still gets the whole stream) and settled from its usage events.
+      let text: string;
+      try { text = await response.clone().text(); } catch { return rejected; }
+      const usage = sseUsage(text);
+      return (usage ? usageCost(price, { usage }) : null) ?? rejected;
+    }
     let parsed: unknown;
     try { parsed = await response.clone().json(); } catch { return rejected; }
     const cost = usageCost(price, parsed) ?? rejected;
