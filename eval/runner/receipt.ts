@@ -302,8 +302,9 @@ function validateV2(r: Record<string, unknown>, requireAll: boolean): string[] {
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 const identityCache = new Map<string, unknown>();
 
+/** A git command's output, or null when it fails. The file listing passed 1 MB (execFileSync's default buffer) as the repo grew, so the buffer is raised. */
 function gitText(cwd: string, args: string[]): string | null {
-  try { return execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
+  try { return execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 256 * 1024 * 1024 }).trim(); }
   catch { return null; }
 }
 
