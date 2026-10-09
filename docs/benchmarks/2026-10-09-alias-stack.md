@@ -169,7 +169,9 @@ Stale terms by whether the fix linked the task's call note (all repeats):
 
 Contact and date failures stay where Candidate 1 left them: 3 failed items on master (dev Opus contact 1, Sonnet
 contact 1 and date 1) and none on the alias arm, in 432 runs. Sonnet's hop misses (3 and 3 on master) are 0 on the
-alias arm. #6271 makes no change aimed at them, and the counts are too small to attribute.
+alias arm. The [Candidate 3 diagnostic](2026-10-09-candidate-3-diagnostic.md) traced hop misses to the same code: the
+reader passes "JOF" to `context_pack` in place of the company's name, which master cannot resolve and the alias fix
+can. The counts here are too small to attribute on their own.
 
 On the three unlinked development tasks, Opus 5.5 failed on stale seats in 4 of 6 alias-arm runs and 0 of 6 on master.
 In the master runs it quoted the corrected figure from the call note as search returned it, without opening the note.
@@ -308,6 +310,11 @@ Receipts are in [`2026-10-08-program-primary-hard/alias-stack/`](2026-10-08-prog
 | **Ledger total** | **49.68** |
 
 ## Changelog
+
+### 2026-10-09: link the Candidate 3 diagnostic
+
+The hop-miss sentence now cites the [Candidate 3 diagnostic](2026-10-09-candidate-3-diagnostic.md), which traced hop
+misses to readers passing the short code to `context_pack`; it used to say #6271 makes no change aimed at them.
 
 ### 2026-10-09: complete development repeat 2, validity mutants, collision framing
 
