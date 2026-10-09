@@ -125,7 +125,7 @@ Keep trust labels on: they are what kept frontier models from adopting planted c
 | User-stated preferences (amendment 3): Opus $6.60, Sonnet $3.85, GPT $3.12 | $13.57 |
 | **Total** | **$165.14** |
 
-The ledger also holds $238.14 of reservations that never left the process: amendment 1's first capture attempt imported the batch helper's `realFetch` after modules that replace `globalThis.fetch`, so the guard wrapped a fetch that called back into itself and reserved about 3.66 million times in 16 minutes without sending a request (no reservation ever settled; a fixed run of the same capture settles every request). The cause is fixed in `eval/runner/memory-trust/utility-guard.ts` (it imports `realFetch` first). The ledger has no release command and was not hand-edited, so its committed total overstates spend by that amount and its cap stayed the binding check throughout.
+The ledger also holds $238.14 of reservations that never left the process: amendment 1's first capture attempt imported the batch helper's `realFetch` after modules that replace `globalThis.fetch`, so the guard wrapped a fetch that called back into itself and reserved about 3.66 million times in 16 minutes without sending a request (no reservation ever settled; a fixed run of the same capture settles every request). The cause is fixed in `eval/runner/memory-trust/utility-guard.ts` (it imports `realFetch` first). The ledger has no release command and was not hand-edited, so its committed total overstates spend by that amount and its cap stayed the binding check throughout. Closing the run settled those reservations at their reserved amount, so the closed run reports $403.28: the $165.14 above plus the $238.14 that was never sent.
 
 ## Reproduce and inspect
 
