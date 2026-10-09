@@ -90,6 +90,8 @@ Compute is about 3.5 hours of ingest on a 4 vCPU machine at 3 haystacks in paral
 
 ## Results (primary run, 2026-10-09)
 
+Shipped in gbrain #6391, merged as [`f05943e65`](https://github.com/garrytan/gbrain/commit/f05943e65) (v0.60.138.0). Arm B is that PR at fecc7827; the merged code adds only release restamps, merges of master and an unrelated test-timing fix.
+
 The preregistered rule returned **pass**. The arms were A = merge base 0e52ac91 (v0.60.132.0) and B = this PR's fecc7827. Both read the same 500 LongMemEval-S cleaned brains, with one build per question. Each question ran the real query plus the verbatim probe, so 1,000 queries per arm. Providers were voyage-4, rerank-2.5 and haiku expansion on PGLite. Scoring used gold sessions and the shim classifier pinned at 846fa6dd, with no LLM judge.
 
 | metric (n = 500) | A | B | B-only / A-only |
