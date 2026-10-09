@@ -1,0 +1,13 @@
+{
+  "run_id": "s4-slice.ext-verbatim-session.recipe-a1-87f2bd5e",
+  "lease_usd": 13,
+  "committed_usd": 8.512646999999996,
+  "requests": 674,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0,
+  "timeout_hours": 5,
+  "timed_out": false,
+  "checkpoint_rows": 100,
+  "realization_id": "real-s4-slice.ext-verbatim-session.recipe-854a0b9f03aa9d53",
+  "realization_status": "failed"
+}

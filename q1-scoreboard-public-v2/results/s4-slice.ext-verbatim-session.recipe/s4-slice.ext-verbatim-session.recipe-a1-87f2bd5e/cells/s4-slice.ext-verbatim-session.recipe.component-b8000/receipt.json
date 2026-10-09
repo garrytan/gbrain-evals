@@ -1,0 +1,1362 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s4-slice.ext-verbatim-session.recipe.component-b8000",
+  "run_cell": "s4-slice.ext-verbatim-session.recipe",
+  "config_sha256": "0c338066416d5bac1f6fac3003f83187d5da28b534b4023c14634c109a314145",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S4-slice",
+  "benchmark": "lme-s",
+  "split": "dev",
+  "block": "T2-S4-S5",
+  "system": {
+    "kind": "ext-verbatim-session",
+    "configuration": "recipe",
+    "runner": "shim",
+    "capability_system": "ext-verbatim-session",
+    "versions": {
+      "package": "mempalace==3.10.0",
+      "lock_sha256": "e2e066bf182dff9570e6f3c0e1b5509f2325a6c7f42d67d93752c760f7ce9b1d",
+      "image": null,
+      "vendor_benchmark_code": "MemPalace/mempalace@22fd87f09c19d5ffb2d6966486483353937931c0 (tag v3.10.0), benchmarks/locomo_bench.py (sha256 ba7178748a14bd1c7667f2479d486bf37a8d19e6a8a810b27bd7bc4b40c8aad2, imported unmodified for its corpus and scoring helpers) and benchmarks/longmemeval_bench.py (read for the raw and hybrid recipes; not run)",
+      "resolved_dependencies": "uv.lock holds all 77 transitive dependencies to mempalace's own uv.lock at the tag (chromadb==1.5.7, onnxruntime==1.24.4, tokenizers==0.22.2, numpy==2.4.4), resolved with exclude-newer 2026-10-06T00:00:00Z; PyPI wheel mempalace-3.10.0-py3-none-any.whl sha256 9f65645235ba4da58fda237e5fad0ba83a5941066a18bcfdbf178b7fc8cf7abf"
+    },
+    "capabilities": {
+      "protocol": 1,
+      "system": "ext-verbatim-session",
+      "versions": {
+        "package": "mempalace==3.10.0",
+        "lock_sha256": "e2e066bf182dff9570e6f3c0e1b5509f2325a6c7f42d67d93752c760f7ce9b1d",
+        "image": null,
+        "vendor_benchmark_code": "MemPalace/mempalace@22fd87f09c19d5ffb2d6966486483353937931c0 (tag v3.10.0), benchmarks/locomo_bench.py (sha256 ba7178748a14bd1c7667f2479d486bf37a8d19e6a8a810b27bd7bc4b40c8aad2, imported unmodified for its corpus and scoring helpers) and benchmarks/longmemeval_bench.py (read for the raw and hybrid recipes; not run)",
+        "resolved_dependencies": "uv.lock holds all 77 transitive dependencies to mempalace's own uv.lock at the tag (chromadb==1.5.7, onnxruntime==1.24.4, tokenizers==0.22.2, numpy==2.4.4), resolved with exclude-newer 2026-10-06T00:00:00Z; PyPI wheel mempalace-3.10.0-py3-none-any.whl sha256 9f65645235ba4da58fda237e5fad0ba83a5941066a18bcfdbf178b7fc8cf7abf"
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": null,
+            "small": null,
+            "embedder": "chromadb DefaultEmbeddingFunction: all-MiniLM-L6-v2 ONNX (chroma-onnx-models onnx.tar.gz, sha256 913d7300ceae3b2dbc2c50d1de4baacab4be7b9380491c27fab7418616a16ec3), baked into the image",
+            "dims": 384,
+            "reranker": null
+          },
+          "notes": "The vendor's no-LLM benchmark modes. Both benchmark scripts build each palace with chromadb directly (`client.create_collection('mempal_drawers')`, no embedding_function, so ChromaDB's default all-MiniLM-L6-v2 and its default l2 space), the same model mempalace's own `minilm` default wraps (embedding.py; the image build checks the two give the same vector). `raw` is the vendor's default `--mode raw`; `hybrid` is locomo_bench.py `--mode hybrid` without `--llm-rerank`. No LLM is called on ingest or retrieval, so this config makes zero provider calls."
+        },
+        "common": {
+          "supported": false,
+          "model_roles": {
+            "extraction": null,
+            "embedder": null,
+            "dims": null
+          },
+          "unsettable": [
+            "extraction",
+            "embedder"
+          ],
+          "notes": "Not built. The system has no extraction model, and this bundle runs only the local-embedder benchmark modes; the shim refuses SHIM_CONFIG=common at start. mempalace 3.10.0 can send embeddings to an OpenAI-compatible endpoint (embedding_model openai-compat), which a later common arm could route through the proxy."
+        }
+      },
+      "time": "native",
+      "time_notes": "event_time is stored as the drawer's `timestamp` metadata, where the vendor benchmark stores the session date, and returned as each item's valid_from. The drawer text carries no date (the vendor's session document has none), and neither recipe reads a reference date, so query_time is ignored.",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one drawer per session whose ChromaDB id is the session's source_id; every item is one whole drawer, so it cites exactly that session"
+      },
+      "delete": "native",
+      "delete_notes": "ChromaDB `collection.delete(ids=[source_id])` on the session's drawer, then `collection.get(ids=[source_id])` confirms it is gone. Nothing is derived across drawers, so no residue is expected.",
+      "readiness": "synchronous: ChromaDB embeds and indexes each drawer inside `upsert`, so /ingest returns after the write is searchable and /finish only reports the drawer count",
+      "namespace": "palace: one ChromaDB PersistentClient per namespace at /data/palaces/<ns>/palace, collection mempal_drawers",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "recipe": "raw",
+            "k": 10
+          },
+          "maps_to": "collection.query(query_texts=[question], n_results=10): locomo_bench.py's default --mode raw and --top-k 10 (session granularity). `--policy-setting recipe=hybrid` runs the vendor's hybrid recipe at the same k: query 3k candidates, then fused = distance * (1 - 0.50 * predicate-keyword overlap) * (1 - 0.60 * quoted-phrase hits) * (1 - 0.20 * person-name hits), keep the top k"
+        },
+        "fixed-evidence": {
+          "settings": {
+            "recipe": "raw",
+            "k": 50
+          },
+          "maps_to": "the same call with n_results=50 (the vendor's documented --top-k 50 run and longmemeval_bench.py's 50-candidate pool), so the harness packer, not the vendor cutoff, decides what fits the evidence budget; recipe=hybrid queries 150 candidates and keeps 50"
+        }
+      },
+      "recipes": {
+        "raw": "vector search only: the vendor's headline no-LLM mode",
+        "hybrid": "locomo_bench.py --mode hybrid with the LLM reranker off: vector candidates re-ranked by keyword, quoted-phrase and person-name boosts"
+      },
+      "streaming": "disabled",
+      "telemetry_off": [
+        "ANONYMIZED_TELEMETRY=False",
+        "HF_HUB_OFFLINE=1",
+        "HF_HUB_DISABLE_TELEMETRY=1"
+      ],
+      "agent_surface": {
+        "kind": "none",
+        "transport": null,
+        "version": "mempalace 3.10.0 ships an MCP server (mempalace-mcp); it is not wired here, because the shim builds palaces with the benchmark's ChromaDB calls rather than the mempalace miner"
+      },
+      "deviations_from_vendor_code": [
+        "Sessions arrive one at a time through /ingest and are upserted into a persistent palace per namespace; the vendor builds one palace per conversation from all sessions in one add call and deletes it afterwards. Both insert in session order; HNSW search is approximate, so batching could change near-ties at the margin.",
+        "Drawer ids are the opaque source ids (src-...) instead of doc_<i>, and the corpus_id metadata is the source id instead of session_<n>, so no dataset identity crosses the sanitizer.",
+        "The timestamp metadata is the ISO event_time; the vendor copies LoCoMo's raw date string. Neither recipe reads it.",
+        "Every dataset uses the LoCoMo session document (every turn as `Speaker said, \"text\"`). longmemeval_bench.py indexes user turns only, joined by newlines; the shim cannot tell datasets apart, so it keeps all turns, which also lets questions about what the assistant said find their session.",
+        "The hybrid recipe is locomo_bench.py's (predicate keywords 0.50, quoted phrases 0.60, person names 0.20 over 3k candidates). longmemeval_bench.py's hybrid modes (v1 to v4: keyword weight 0.30, question-date boosts, assistant-reference two-pass, synthetic preference drawers, and v4's three fixes tuned on named LongMemEval misses) are not run, because they depend on LongMemEval's question_date format and question wording.",
+        "The scoring loop in run_benchmark is re-implemented in shim.py with the vendor's constants; the corpus builder, keyword, quoted-phrase and person-name helpers and the query call are the vendor's own functions, imported from the pinned locomo_bench.py.",
+        "The embedder is baked into the image at build time and the container runs with no route to the internet; the vendor downloads it on first use."
+      ]
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "lme-s",
+    "sha256": "fd43b41a0a454bf7095c3753365ab438334dbb8f20957f1cd878fb1212a6c95d",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol"
+    ],
+    "readers": null,
+    "sample": 17,
+    "instrument_ids": [
+      "lme-s@anthropic:claude-opus-5-5",
+      "lme-s@openai:gpt-6.1-sol"
+    ]
+  },
+  "selection": {
+    "questions": 100,
+    "conversations": 100,
+    "scheduled_sha256": "494db589170ba9594c01caa8a1f652249571d9d5062c950141b97c96ca189672"
+  },
+  "counts": {
+    "rows": 100,
+    "answers": 300,
+    "answers_promised": 300,
+    "judgments": 351,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 300
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.66,
+    "openai:gpt-6.1-sol": 0.7,
+    "anthropic:claude-sonnet-5-5": 0.68
+  },
+  "realizations": [
+    {
+      "conversation": "06878be2",
+      "realization_id": "e8e2b332a8ff37c9862f8e077bc822ff7dc463fa158095946e1087159012e6db",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "07b6f563",
+      "realization_id": "881d54a4bdc20a95eb502e6a3d2de1782183050719a31133659585d8b3f7771f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "09d032c9",
+      "realization_id": "9d772fd10518f34f274d8e916c528b5e38cb6a0ffeaa63f83d97716554dc56b6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0a34ad58",
+      "realization_id": "89de9bc1890f3c970e755e3196b941bcaeff1fe8b6128e0ca06a4c3ba3cd9249",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0bb5a684",
+      "realization_id": "f0f40c2ea178f22c977da17ef7d1dcf036448bb0e8ae9ee22d45bb29137d7cfa",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0ddfec37",
+      "realization_id": "09c9b9f91070c09c185bdba61d2868b7ec7db44cbeda4a6ccbbba9e334e22735",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0e5e2d1a",
+      "realization_id": "a1141f4b2b920dab765e329ae9a645c3f8b879aa8172074724e49f032dabe56f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0edc2aef",
+      "realization_id": "c5bb3d3284beaf3c80ec08abcbfbafd67a39e613dba65b3dce3b991a9ceb77b4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "10e09553",
+      "realization_id": "5bfb7ed2b31cd01c3277e38168dc83fcc4b324986faa1a39c509868d126ade48",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "157a136e",
+      "realization_id": "8439f83ddd9ad9303e98efe5337a4359b31475f67e0ab6696d58ea2d2a8cda63",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "18bc8abd",
+      "realization_id": "752aa461edfd94d8ed3f58920b63b78918b66ad4e3521e6bad075072bfa6843a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "195a1a1b",
+      "realization_id": "dffc78cfb86b8c965570206d788f80690afddbfc74a37df00094030d1f03ae21",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1a8a66a6",
+      "realization_id": "15d93610d40af0974b608ead67383054f81dc3c41486d7d0704287faad2bd638",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1cea1afa",
+      "realization_id": "e2c43fcf1f9e51ac66282cf712bea71a81096c2eca18616d8248184fc789caf7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1d4da289",
+      "realization_id": "91f7336ce18180af8d9bd82d833d5feabcb60849ea3f9b5acdf2417f0ef92130",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1d4e3b97",
+      "realization_id": "eeb49bb8f30b4ef5c220b76a062e0e33891aa4ed806e554c67ddd0730ca87d1d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1f2b8d4f",
+      "realization_id": "510da7feee5f9d9ed92cee73e6b831c05e4366329694c8a6b5abea36c9a4e655",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2133c1b5_abs",
+      "realization_id": "52d69a7189f5d80968b227f567402e56eef8c48ccf326b32f337a74db05fa5d7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2318644b",
+      "realization_id": "9f6991d7fe0b6889f3c60f29c7e95e28d5fb66e5a288c0f65bbaa5af08f9b20e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "28bcfaac",
+      "realization_id": "ed7c984fc93ee71e4fed50cea7bc7078a3026f6e5f221b6e87956691faaeea39",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2ce6a0f2",
+      "realization_id": "89bb8bee9f56b19425ffa23665449fa26dac3de4567a18088363d3dbb521ff2e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "32260d93",
+      "realization_id": "08bb275fd3e57d420c21aabc5fe4f0f33bc7de8c9bcd4f606738b8cb8e896e8a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "3249768e",
+      "realization_id": "00362172f347bda78c8b051379bf82b5416c78bfd67cfb47e786313df3356dab",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "352ab8bd",
+      "realization_id": "b3621ee560823f9067bdfd2eb440ac68142c5a434fdf00be3d0470c1a25fd097",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "36580ce8",
+      "realization_id": "2f2eb339770c50e5a0efe41d46e7519df93bde79e7405bd6aab2f8d0ecb1243c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "38146c39",
+      "realization_id": "c61dcd8b92f2c748bfa460c2b024214170b8fe5499ce2fffb1dbbf47063b032d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "3b6f954b",
+      "realization_id": "ca1abb8af94acd11901ebe4bc2eae666b383f917dde713c778ec237eb0c4e233",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "45dc21b6",
+      "realization_id": "0146fdd14c2f52b8c15ce0df92673178888de3599acffec09af9ccc62f0f0fea",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "488d3006",
+      "realization_id": "ae09cc4fd0d812d3f9a8e312e6e32076d1e264000dfabf1860b3e3a3b7ad68da",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4b24c848",
+      "realization_id": "990430080b8359e4e1be9acda487c6482247d57203061716ea8b78cc59c45ef0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4baee567",
+      "realization_id": "7bd2a643c5e32720d379d5602502aae279976944121c0321956eebf5c7056241",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4c36ccef",
+      "realization_id": "4485d976478404f9bb3addca3439afea45638378400a4cb53744cccacb6e25a7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4d6b87c8",
+      "realization_id": "f9ef2848eac97126820a0b23b36ac8bd6cb78937a523ad559675dfa5a331dc03",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4fd1909e",
+      "realization_id": "7ad40f35b480ef295666ac2be339a6c9ab64fca44d974620cebd1b89146d4629",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51a45a95",
+      "realization_id": "2e1c55059f299a6ef38a2ca856024d696775de0cc05774b9beefaf769fa2beeb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51b23612",
+      "realization_id": "628a6a454d10f1ea18ced26ac6fd5b0abf234855051e0e977048db6d2ee3814f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51c32626",
+      "realization_id": "86b09648ec124322985eb78ea5ce0e5e61858cef89d7d8804ea6d0f1de3b4571",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "58bf7951",
+      "realization_id": "6d40b5fd6a67da18b195233f03903d69c76bda947b4c590c9215842800190c11",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "5d3d2817",
+      "realization_id": "beb3a32b12a01c4d18cdef9f23aa4f5abc9a3333be3da75b2ce211207208de4d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "60472f9c",
+      "realization_id": "d167ea6f8d31bc0c943bd71df5c3e64d802038623743990d875852d3b756fc3f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "65240037",
+      "realization_id": "e55083702252de29f8df7f9418bca54599b8123c3af4d3a9e2a614ce5355fa04",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "69fee5aa",
+      "realization_id": "9dc8ee3d1210b4da22d82789480a3f5ec96a1798041a6a1f460d810ec0b905ba",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6b7dfb22",
+      "realization_id": "6f7c771574b878caa6341fa2dd4eed91767abc5a135c56a57435f3592cd13ba9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "71017276",
+      "realization_id": "fb3b4d117334dd438e2888616d0fc964000cff54e9d77290c3dd369daf4177a8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "7405e8b1",
+      "realization_id": "294e3e7603c1b7ab7e989b3f30ab1ab4a3d90e934afa79773b3b7abdee319d04",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75499fd8",
+      "realization_id": "d14c429d61c0994690b6c89a115a7a551e828bbde0ee1aea8cdd4125f4d00216",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75832dbd",
+      "realization_id": "cecc4906d158cc24c1695210a5bd1e1c7e34ebe0a69938cdc04addc3e24a962e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75f70248",
+      "realization_id": "83736172cccab8e717065bf31101315ce18d35f851e4f3e01bdd0caace9db64a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "76d63226",
+      "realization_id": "04748ddd2e0ed3bf6f795a66ace448720d6c89fbc76d33bad8b3eecfae0dc896",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "7a8d0b71",
+      "realization_id": "aad60c24133fc631deb6e97bcda71e49ea302b59ebd32c4d434454457b846d24",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "852ce960",
+      "realization_id": "e170d63b62a6b02899e0cf7146a0634ad019032eaac3a1215f47dd215bf26fbc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "86b68151",
+      "realization_id": "a3b39d910ba7e561b3e3af9f14386a305b64d27c3e62784526c5c6d6893384a8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "86f00804",
+      "realization_id": "d0ccfbeb1b00daa3bc464339bde0e49e4953f14a301995d0f7cced483f0bc51f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8a137a7f",
+      "realization_id": "4f895c8108d97878621a1bd7a74d8ec34bc2713b2983ab66c95011fe1ab2d805",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8b9d4367",
+      "realization_id": "67df6ef284b969837f0d5cd2c77923a8dff19de36a3f41bb869bc5d45d83d85d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8fb83627",
+      "realization_id": "2ff9f9aaa095691172892d74429399f4b6512296b1dda56a75e49667654c95b4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "982b5123_abs",
+      "realization_id": "0872f1c4e5cdd23c0ffd21829bbec4a5590063ea54ce2ca6f9846e83502dae70",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "9bbe84a2",
+      "realization_id": "15fe159731574b8579a11812de55cdb6e133fe4a8c6ea7dceaa3a2770e840a88",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a2f3aa27",
+      "realization_id": "f406f2741bd8fae2f7ae8300dcbb8b2a128db705ee2f8d2f4b9a91d2d4bfb8d4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a89d7624",
+      "realization_id": "8c2790f1af103743f2ee6b72eb280daf403ebbddc3a0d0b84a80f53f51c0ec1a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a96c20ee",
+      "realization_id": "175fe130fb67dc0e1d40e85995adeae3679eb52a4d338ea367a725437a756a7c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "afdc33df",
+      "realization_id": "06caeb25a844922e7b47a73fb0ff05b4bc840ee82c9790b19cbc12effca8ffc8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b01defab",
+      "realization_id": "c58c4c0cff459b84ef850af465170e0247b09f29b7dc6ab420f8c2ea29220ae4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b0479f84",
+      "realization_id": "1fb7ad0ba46e66d0482c73b186c2e6394b33d8e75e6c90e6ff7807d3c79608cd",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b3c15d39",
+      "realization_id": "b9d2d9cd9bee54c303d86f81084c826cf0d8124029623384c1a7a74a2f90b2aa",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b46e15ed",
+      "realization_id": "eb3d2a9835b778b2af38a8ae9ba1b3e9921d1999093246dad66d15b472093adc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b5ef892d",
+      "realization_id": "0f502a94a928113ecbc0cf6a5a1074158e0c43178e3859f5018bd0262fa7857f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bc8a6e93",
+      "realization_id": "89f72883bd19d9d3240c7e66718f37ab87091f8c75394813395faae24755bdcf",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bc8a6e93_abs",
+      "realization_id": "704c18ce10bef220de62acbec9a1241b974ba501d7526163cca78bed032ebe31",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bcbe585f",
+      "realization_id": "0a6abc63cfef0a63806f63191899e24bf4b356f858e17b72a27e8498d1530437",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c2ac3c61",
+      "realization_id": "ad89421f73b7ef9a8816a229b84a1e02294105ee3377c0837a869a2e06015b81",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c5e8278d",
+      "realization_id": "8e71dfa134afc97136b7d0346f505e1b97be430b81bdddba75d1d56df788c927",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c7dc5443",
+      "realization_id": "8be5c893ed99f3087c674492c282fbf4805421a86f2697a21c4a7902b68b1931",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "cf22b7bf",
+      "realization_id": "8999c59ab2e696537aba6ae2e4d9f06dd88cc7077f9a39e5fdb026fa1666f838",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d24813b1",
+      "realization_id": "a7ac51c995e86f2342b48418bb49ac11d11591bf14199cd10526b79c636606c8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d3ab962e",
+      "realization_id": "074315e0efd232a57f443de496d54f00b2284d6fb22ba02b20ba21a1d17401e1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d52b4f67",
+      "realization_id": "b394c3f043314c0a1d1973df9460f34450c75e8a96cb21b6c162e51b0e1d3924",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d596882b",
+      "realization_id": "84d4ad1b100d615a38ddce2cf63d3cb7226e3f8e7786b4a0a37e2afcca1fa51f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d851d5ba",
+      "realization_id": "8217f5eb08800401ddf357380fbdc285327fbb14404bc690a81f7d49f95b0141",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "dc439ea3",
+      "realization_id": "0c0f0e0fc9682f44527afdcb7e83696e7548a246ee6ed60ecbcfc6015582b8b4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "e5ba910e_abs",
+      "realization_id": "adaa1220e86c4bab43166cd9e38d98273b812ca42562dddc80167153787dbd75",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "e982271f",
+      "realization_id": "c4fbae3be711eb3314f3da059f1ca79d1c3aee7ef31c1f8513bc13d78e33e964",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "ed4ddc30",
+      "realization_id": "1898b59be2d01190523ce2969494f7305a283bf98e5aacac68c9e1855731239b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "efc3f7c2",
+      "realization_id": "645fe402056b7c6112596fe4c8dd5d7949b04c0efe74a0eb7782f32d83363b15",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "faba32e5",
+      "realization_id": "155b9969a7fd76194d7eca0dc6e87b6583b427faccd3c4391d7df87989d819d0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "fca70973",
+      "realization_id": "18f5f9e0bfd83b204dab3cab0dce4e97d99454a4b2d00df003af4cfb5cf0d330",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "fca762bc",
+      "realization_id": "3643cf2539efafa11681528b917022aa01822bffa41b93ce30962e3654133745",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "fea54f57",
+      "realization_id": "76574e877b45a47eeee1ac0f5fa7a770a03a1ee63d8551aff27c9817c5c6571e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_468eb063",
+      "realization_id": "8aac3d1ac63dadaf1d6de576aeb22886150eff30a76d14cdceb0d58d3bc26737",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_76048e76",
+      "realization_id": "8351bf6caad6538f06ff9bbe22945e3b5681e695327a8417e710f853a7348e4e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7a0daae1",
+      "realization_id": "030028b0ddbd37456d6e5f69ff2e8bcb1ca91ad8dbf5b9db2e086819528cf38c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7ca326fa",
+      "realization_id": "76ae893f0b81fefc1c0890d404ffd7d3b757e1438bc0179215e060c3ef5293fa",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_8c8961ae",
+      "realization_id": "cae4e9a816781ff3b5eb6c65d8218a822e831b3b1685b5d1f763fb3c20a9a63f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_8e165409",
+      "realization_id": "9b8b30ac158c363fc176705e7b1ae29291157ed9d6bcf5d85c71c38b49a5266b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_93159ced",
+      "realization_id": "5c6b3802dd7ffa4af0a8a01795e1afcec2e4c0678690db2fe582a0f4ce18d7e6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_a2d1d1f6",
+      "realization_id": "5cf4bc992c54947ae52e105e2663f5b0c336faa21d19e5f0055073de85d8a682",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_ab202e7f",
+      "realization_id": "be04187fad083c7b52b59967e487d5935afb5e8643091091d1a08a5579cdee46",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_b5700ca0",
+      "realization_id": "0a104e412a06c91a00443a2f6c402c57d1ea60f4897434c389e4ce759e52d848",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_e414231e",
+      "realization_id": "b064ab588fc352763c5c2a0ed9bd0ce615183a1e2b212a9c8cc8f1b2ce47c173",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_fe651585",
+      "realization_id": "0d566d6fc9a898734d7caa1eb71ecd16e1c85dc4cd62553da9106297564e05af",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 100,
+    "messages": 49672,
+    "ingested_tokens": 10394693,
+    "wall_ms": {
+      "total": 1331099,
+      "p50": 12819,
+      "p95": 17364.3
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [
+      539.5,
+      686.7,
+      438.2,
+      473.8,
+      475.8,
+      541.5,
+      683,
+      817.9,
+      508.5,
+      641.8,
+      521.2,
+      549.9,
+      733,
+      745.8,
+      731.3,
+      676.1,
+      750.8,
+      650.3,
+      489.9,
+      463.7,
+      655.9,
+      511.1,
+      437.9,
+      683.2,
+      530.8,
+      698.5,
+      521.8,
+      563.3,
+      702.6,
+      700.6,
+      653.7,
+      479.5,
+      467.5,
+      472.2,
+      671.4,
+      677.8,
+      420.5,
+      675.1,
+      463.1,
+      528.5,
+      520,
+      512.8,
+      424,
+      585.9,
+      611.7,
+      495.1,
+      709.1,
+      555.3,
+      513.1,
+      457,
+      667.9,
+      597.8,
+      503.3,
+      629.6,
+      858,
+      710.2,
+      668.5,
+      619,
+      623.7,
+      779.5,
+      515.2,
+      719.3,
+      627.1,
+      431.8,
+      450.5,
+      548.9,
+      467.3,
+      484.8,
+      701.9,
+      594.8,
+      460,
+      425,
+      446.8,
+      455.2,
+      649.9,
+      815.5,
+      477.6,
+      542.4,
+      726.2,
+      705.1,
+      642.2,
+      481.8,
+      715.2,
+      531.6,
+      459.5,
+      602.6,
+      653.1,
+      480.4,
+      640.5,
+      461.8,
+      427.4,
+      636.2,
+      490.2,
+      495.1,
+      505.4,
+      713.6,
+      664.7,
+      512.8,
+      381.8,
+      456.8,
+      530,
+      491.9,
+      448.6,
+      489.4,
+      680.2,
+      506.9,
+      477.4,
+      434.6,
+      453.6,
+      461.5,
+      470.4,
+      502.3,
+      628.6,
+      418.1,
+      664.9,
+      560.9,
+      448.7,
+      675.2,
+      643.6,
+      737.9,
+      559.3,
+      482,
+      397.5,
+      707.3,
+      431.5,
+      493.8,
+      448.1,
+      659.7,
+      461.8,
+      659.4,
+      428.2,
+      654.9,
+      679.7,
+      457.7,
+      753,
+      517.3,
+      476.9,
+      511.8,
+      743.8,
+      429.9,
+      491.8,
+      519.3,
+      489.3,
+      549.1,
+      503.4,
+      692.4,
+      776.9,
+      520.7,
+      640.7,
+      535.3,
+      474.7,
+      495.3,
+      534.3,
+      707.4,
+      516.6,
+      640.1,
+      684.8,
+      720.5,
+      474.5,
+      638.1,
+      555.2,
+      727.9,
+      595.4,
+      404.1,
+      658.5,
+      487.8,
+      469.2,
+      450.4,
+      434,
+      616.5,
+      408.8,
+      621.5,
+      666.1,
+      574.6,
+      553.3,
+      417.9,
+      496.4,
+      690.6,
+      419.9,
+      539,
+      511.6,
+      732.9,
+      730.7,
+      746.8,
+      483,
+      495.4,
+      654.3,
+      736.4,
+      526.5,
+      457.3,
+      367.3,
+      481.1,
+      487.3,
+      745.8,
+      530.7,
+      463.8,
+      649.5,
+      623.7,
+      546.2,
+      463.7,
+      659.5,
+      517.7,
+      637.1,
+      694.9,
+      481.3,
+      508.1,
+      503.3,
+      373.3,
+      622.5,
+      738.4,
+      491.1,
+      646.8,
+      620.8,
+      495.9,
+      454.9,
+      452.2,
+      417.9,
+      445.1,
+      666.6,
+      629.3,
+      405.3,
+      616.2,
+      648,
+      440.5,
+      469.5,
+      668.9,
+      494.2,
+      388,
+      583.3,
+      626.1,
+      456.5,
+      435.3,
+      645.7,
+      778.3,
+      450,
+      495.1,
+      598.5,
+      471.9,
+      679.1,
+      528.8,
+      710.6,
+      806.6,
+      755.3,
+      709.5,
+      665.4,
+      605.3,
+      817.6,
+      715.4,
+      440.9,
+      542.5,
+      544,
+      483.1,
+      517.1,
+      429.2,
+      489.1,
+      648.9,
+      678.5,
+      637.6,
+      520.2,
+      508.6,
+      682.7,
+      399.4,
+      636.5,
+      462.6,
+      656.4,
+      668.7,
+      500.1,
+      429.4,
+      671.2,
+      665.9,
+      469,
+      471.1,
+      546.8,
+      475.6,
+      493.9,
+      467.2,
+      520.7,
+      551.4,
+      354.7,
+      524.3,
+      406,
+      434.7,
+      387,
+      430.7,
+      529.2,
+      462.5,
+      527,
+      574.7,
+      515.4,
+      385.4,
+      452,
+      416,
+      424.4,
+      700.6,
+      413,
+      536.3,
+      522.8,
+      439.2,
+      691.1,
+      437.5,
+      491.9,
+      754.4,
+      710.6,
+      569.4,
+      762.6,
+      510.9,
+      647.9,
+      631.4,
+      491.7,
+      704.1,
+      658.6,
+      744.2,
+      455.1,
+      663,
+      699.9,
+      409.3,
+      602.9,
+      591.9,
+      613.1,
+      505.9,
+      443.5,
+      430,
+      389.8,
+      462.6,
+      660.9,
+      699.6,
+      430.9,
+      431.6,
+      433.8,
+      423.7,
+      627.5,
+      732.2,
+      694.5,
+      451,
+      621.2,
+      654
+    ],
+    "write_start_to_queryable_ms": {
+      "p50": 529.6,
+      "p95": 743.9,
+      "probes": 336,
+      "found": 336,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 208,
+      "p95": 248
+    },
+    "answer_ms": {
+      "p50": 4158,
+      "p95": 12475.8
+    }
+  },
+  "usage": {
+    "input": 2220446,
+    "output": 109734,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 0,
+      "retrieval": 0,
+      "reader": 8.05709,
+      "judge": 0.455557,
+      "background_tail": 0
+    },
+    "total_usd": 8.512647,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s4-slice.ext-verbatim-session.recipe/contexts.ndjson"
+  }
+}

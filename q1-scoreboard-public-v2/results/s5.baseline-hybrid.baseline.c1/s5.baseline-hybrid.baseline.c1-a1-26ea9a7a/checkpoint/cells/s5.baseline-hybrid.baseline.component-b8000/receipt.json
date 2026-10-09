@@ -1,0 +1,446 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s5.baseline-hybrid.baseline.component-b8000",
+  "run_cell": "s5.baseline-hybrid.baseline",
+  "config_sha256": "a6bc0f6a26eefe247429dda3a67b1cd1eea64ea5a6e8833bf952484ac0684451",
+  "run_status": "partial",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S5",
+  "benchmark": "lme-m",
+  "split": "dev",
+  "block": "T2-S4-S5",
+  "system": {
+    "kind": "baseline-hybrid",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "capability_system": "plain-hybrid",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "system": "plain-hybrid",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large@1536",
+            "dims": 1536
+          },
+          "notes": "Postgres full-text plus pgvector cosine, reciprocal-rank fusion; whole sessions; embedding input cut at 24,000 characters"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: a session is searchable once its row is written",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 10
+          }
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 30
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "lme-m",
+    "sha256": "535a46da75ea691ba46777c37e920e98d4bf3d33e427a0851907cefea7c89da8",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol"
+    ],
+    "readers": null,
+    "sample": 17,
+    "instrument_ids": [
+      "lme-m@anthropic:claude-opus-5-5",
+      "lme-m@openai:gpt-6.1-sol"
+    ]
+  },
+  "selection": {
+    "questions": 100,
+    "conversations": 17,
+    "scheduled_sha256": "4a1ab4e694ab7c34d3e9f3ffd9f1022a1cd31ad3b725f73aad260edfca80cd60"
+  },
+  "counts": {
+    "rows": 17,
+    "answers": 51,
+    "answers_promised": 300,
+    "judgments": 54,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 51
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.470588,
+    "openai:gpt-6.1-sol": 0.352941,
+    "anthropic:claude-sonnet-5-5": 0.294118
+  },
+  "realizations": [
+    {
+      "conversation": "06f04340",
+      "realization_id": "466b4967e604000b6580171c308620adc32b62f1b71952055f8ed7160e352975",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0ddfec37_abs",
+      "realization_id": "28c315cad41437f97baa2b4eec4a91ad749c16b63f401610fb8d95ea8745a9be",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2133c1b5",
+      "realization_id": "868109db006b7e98b36c7071ed2009bbd566d7581dcd08ee1f0c8a17b4dfb60e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2ce6a0f2",
+      "realization_id": "5ae36f329cecea56c03c36594a1a4d561abc84dc0841679274855b24216875e0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4d6b87c8",
+      "realization_id": "0572bed8f9b996848735e8d87b18c42e4d55f22c362df4bcaa1eb55dd1f0d581",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "5809eb10",
+      "realization_id": "004a089518c921043f4eb4a3d1e301d17e6e0a7f916dd8c01984ed652777de81",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6cb6f249",
+      "realization_id": "9dd35890893540d72228ae98529fb303c6071fd92fb0d675e1a8196261dd2891",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "7401057b",
+      "realization_id": "26c0d170da9559eeddd8fa1cc81b7e8a81d072ccd005b6dce2aab18ffa960281",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8cf51dda",
+      "realization_id": "3523969833e7161cf143b354a09befe5b1b1b6911d8600405c250439d89c2b41",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "afdc33df",
+      "realization_id": "970a115533ff749b7425c97a6f42813dd15ede093a04b11aaf43432c489c7196",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bf659f65",
+      "realization_id": "468a2d038d9deb89171df057502a5c24b847196ed4a839764922e523c54bd737",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "cf22b7bf",
+      "realization_id": "4fd482ad7b8b8a2144248a6c93d67e7fa0e6d93e35df947a3fa30ff762e7bf41",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "efc3f7c2",
+      "realization_id": "0a45e1eabd71fd9e93289827c06cae0b93f5277ec1143385a6ab02fe0530de5e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_1916e0ea",
+      "realization_id": "4278207aaa1aabc1e0210400ed6c750d99290bc924e72cfc455677bdcec586a2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_468eb064",
+      "realization_id": "f632f65a39d734fc6ac32627da357487f7a618a3e4d3abcd2df950f3843b46df",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7ca326fa",
+      "realization_id": "9f1e2e72161a4d6e9debd22b0e7464b9296bb81f8d148a515ca6871492964ab2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_ec93e27f",
+      "realization_id": "38aba76bb88027cf0c2895375273f11bc3d52a12ea431f19b2772094ef5b92e7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 17,
+    "messages": 83206,
+    "ingested_tokens": 17528982,
+    "wall_ms": {
+      "total": 3258302,
+      "p50": 191341,
+      "p95": 216466.8
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [
+      25701.8,
+      775,
+      581.5,
+      856.1,
+      928.1,
+      787.4,
+      685.6,
+      859.6,
+      800.3,
+      901.1,
+      885.9,
+      661.9,
+      1870.1,
+      780.6,
+      611.1,
+      750.5,
+      709.1,
+      783,
+      596.7,
+      765.1,
+      727.4,
+      841.3,
+      806.1,
+      714.1,
+      986.8,
+      694.2,
+      997.5,
+      702.4,
+      809.9,
+      735.3,
+      1136.4,
+      908.8,
+      843.5,
+      662.7,
+      405.6,
+      729.2,
+      850.6,
+      709.4,
+      794.7,
+      832.8,
+      828.5,
+      1015.1,
+      815.4,
+      740.8,
+      829.4,
+      839.1,
+      808.8,
+      875.4,
+      1053.5,
+      805.5,
+      684,
+      721.9,
+      830.7,
+      944.5,
+      830.4,
+      899.8,
+      676.1,
+      727.4,
+      815.5,
+      737,
+      636.5,
+      706.5,
+      748.9,
+      1603,
+      905.4,
+      689,
+      1006.7,
+      695.8,
+      864.5,
+      1023,
+      853.1,
+      697.3,
+      763.4,
+      630.8,
+      1313.6,
+      890,
+      979.2,
+      862.2,
+      445.6,
+      384.7,
+      918,
+      1198.2,
+      946.1,
+      828.6,
+      644.6,
+      849,
+      858.1,
+      794.1,
+      823.3,
+      440,
+      848.9,
+      1009.5,
+      808.4,
+      693.3,
+      869.1,
+      886,
+      997,
+      860.4,
+      875.5,
+      839,
+      819.9,
+      719.9,
+      776.3,
+      790.5,
+      795.2,
+      397.1,
+      605.8,
+      692.3,
+      339.9,
+      791.4,
+      803.6,
+      731.8,
+      673.7,
+      741.1,
+      657.7,
+      756.6,
+      804.4,
+      832.9,
+      738.5,
+      694.9,
+      1012.6,
+      880.5,
+      768.6,
+      502.9,
+      316.4,
+      799.6
+    ],
+    "write_start_to_queryable_ms": {
+      "p50": 802,
+      "p95": 1045.9,
+      "probes": 126,
+      "found": 126,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 391.3,
+      "p95": 459.4
+    },
+    "answer_ms": {
+      "p50": 4577,
+      "p95": 9438
+    }
+  },
+  "usage": {
+    "input": 374217,
+    "output": 19191,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 2.081579,
+      "retrieval": 0.000039,
+      "reader": 1.365558,
+      "judge": 0.054554,
+      "background_tail": 0
+    },
+    "total_usd": 3.50173,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s5.baseline-hybrid.baseline/contexts.ndjson"
+  }
+}

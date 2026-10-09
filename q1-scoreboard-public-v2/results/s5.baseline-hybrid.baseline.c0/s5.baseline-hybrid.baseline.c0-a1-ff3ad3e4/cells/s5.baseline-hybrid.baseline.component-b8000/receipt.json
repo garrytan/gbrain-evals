@@ -1,0 +1,550 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s5.baseline-hybrid.baseline.component-b8000",
+  "run_cell": "s5.baseline-hybrid.baseline",
+  "config_sha256": "a6bc0f6a26eefe247429dda3a67b1cd1eea64ea5a6e8833bf952484ac0684451",
+  "run_status": "partial",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S5",
+  "benchmark": "lme-m",
+  "split": "dev",
+  "block": "T2-S4-S5",
+  "system": {
+    "kind": "baseline-hybrid",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "capability_system": "plain-hybrid",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "system": "plain-hybrid",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large@1536",
+            "dims": 1536
+          },
+          "notes": "Postgres full-text plus pgvector cosine, reciprocal-rank fusion; whole sessions; embedding input cut at 24,000 characters"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: a session is searchable once its row is written",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 10
+          }
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 30
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "lme-m",
+    "sha256": "535a46da75ea691ba46777c37e920e98d4bf3d33e427a0851907cefea7c89da8",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol"
+    ],
+    "readers": null,
+    "sample": 17,
+    "instrument_ids": [
+      "lme-m@anthropic:claude-opus-5-5",
+      "lme-m@openai:gpt-6.1-sol"
+    ]
+  },
+  "selection": {
+    "questions": 100,
+    "conversations": 17,
+    "scheduled_sha256": "4a1ab4e694ab7c34d3e9f3ffd9f1022a1cd31ad3b725f73aad260edfca80cd60"
+  },
+  "counts": {
+    "rows": 17,
+    "answers": 51,
+    "answers_promised": 300,
+    "judgments": 63,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 51
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.588235,
+    "openai:gpt-6.1-sol": 0.647059,
+    "anthropic:claude-sonnet-5-5": 0.588235
+  },
+  "realizations": [
+    {
+      "conversation": "06878be2",
+      "realization_id": "bc19d394fc54c56ca414df1785252edc7c4843f0f724297488d3806e3345c8a5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0a995998",
+      "realization_id": "d907241dde71b9d933da4709047ab1e141e8ce3d4ad144c1000b007f2459eb47",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1f2b8d4f",
+      "realization_id": "8a44e72da0564316c9174eda79bd1b89bd4f5d113641ffe31d3ab64ec6acb8bf",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "29f2956b",
+      "realization_id": "7c9ef151d44b700f2f8e1158bb2295aef68695b710b488ccc7c1b947b105d801",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4baee567",
+      "realization_id": "7a0486cfe85f2813c23a28af8903d32d228140156ba969718b9792541344a840",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "561fabcd",
+      "realization_id": "7f8c12dc3b5fd34585100c9bc0e27b3430293f69125659a4dede7f5f1c5a380c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6aeb4375_abs",
+      "realization_id": "02fab367bd6a8f420174f4db376bcf6a1d8247afb34c7b2f843700134eff6e18",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "720133ac",
+      "realization_id": "ba568783873f89f70410a9415c55f3074558182a2a261ca754522db286af89c8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "88432d0a",
+      "realization_id": "ee3eab0ea22ab0912a35eeb99fee8a4353f41133c8bb45e68db570562544382e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "af8d2e46",
+      "realization_id": "74112b604270158460525a42f6724e8e46b439a1b4f30513eef72824d8c15852",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bc8a6e93",
+      "realization_id": "0293ddb9a53a9290b8bef85d2f8a4c4d9a64827948884fffab5b3151d246030d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c8c3f81d",
+      "realization_id": "9b95f43d048551619e902e8e001f401127fbbc522c384ac26926a703480b2eef",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "ed4ddc30",
+      "realization_id": "8beb236fc48d2daac3cf65404b946e4d6e146c4cedf31522b0a46a638ba5000d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_0a05b494",
+      "realization_id": "bb0de45434b03eac454fd6a9a5f07f0f93e06e12b36130fd46a5fbb1bed169fa",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_468eb063",
+      "realization_id": "2bef9ee16241f5c92bf078df8bbde7219f8b775fbe545543ae9ceb7a0293224f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7abb270c",
+      "realization_id": "1e6ae4bd496303b59fab958dbdb42a9559f844febf8529046004636268e56dfc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_e072b769",
+      "realization_id": "dd15d6ac5b545e7f128be6c699d3d700133b09d766739407cb41e5f1d4141689",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 17,
+    "messages": 83632,
+    "ingested_tokens": 17697807,
+    "wall_ms": {
+      "total": 3303381,
+      "p50": 196394,
+      "p95": 206975.2
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [
+      781.9,
+      1158.1,
+      818,
+      892.4,
+      782.3,
+      799.6,
+      831.8,
+      817.2,
+      775,
+      740.8,
+      856.4,
+      755.8,
+      838.6,
+      806.8,
+      706.1,
+      695.9,
+      750.4,
+      661.8,
+      726.5,
+      753.6,
+      764.1,
+      798.4,
+      680.9,
+      717.3,
+      814.9,
+      581.7,
+      774.4,
+      669,
+      728.2,
+      785.1,
+      718.5,
+      698.7,
+      825.4,
+      844.8,
+      823.8,
+      729.2,
+      855.2,
+      856.6,
+      771.8,
+      896.9,
+      818.6,
+      759.6,
+      694.2,
+      669,
+      908.1,
+      754,
+      874.9,
+      830.3,
+      726.5,
+      874.1,
+      700.9,
+      857.6,
+      883.1,
+      758.6,
+      908.7,
+      933.1,
+      873.2,
+      736.1,
+      1153.6,
+      892.6,
+      632.5,
+      780.6,
+      736.3,
+      816.3,
+      784.5,
+      761.2,
+      875.9,
+      848.2,
+      914.2,
+      885.8,
+      839,
+      689.9,
+      1212.6,
+      838.3,
+      828.4,
+      814.4,
+      730.3,
+      845.2,
+      834.8,
+      742.9,
+      648.2,
+      915.4,
+      755.2,
+      709.2,
+      746.3,
+      747.9,
+      714.9,
+      749.8,
+      752.1,
+      845.2,
+      855.8,
+      1555.6,
+      668.1,
+      768.7,
+      298.6,
+      719.5,
+      600.7,
+      713.8,
+      538,
+      855.8,
+      784.9,
+      952.4,
+      801.9,
+      668.4,
+      706.5,
+      711.3,
+      833.8,
+      801.6,
+      815.2,
+      965.5,
+      578.2,
+      738.4,
+      681.7,
+      674.4,
+      859.3,
+      992,
+      916.7,
+      801.4,
+      546.2,
+      716.9,
+      740,
+      312.4,
+      671.4,
+      727.7,
+      1944.8,
+      699.3,
+      633.7,
+      669.4,
+      982.7,
+      690.9,
+      664.5,
+      723.6,
+      918.5,
+      851.5,
+      716.2,
+      378.2,
+      957.8,
+      362.8,
+      756.3,
+      814.8,
+      920.2,
+      709.6,
+      300.7,
+      769.5,
+      632.6,
+      714.3,
+      648.4,
+      265.8,
+      828.4,
+      727.2,
+      871.3,
+      925.4,
+      737.6,
+      1031.9,
+      768.8,
+      404.6,
+      753.8,
+      429,
+      748.1,
+      929.4,
+      494.9,
+      699.8,
+      833.6,
+      814.5,
+      760.7,
+      342.3,
+      478.3,
+      843,
+      270,
+      835.9,
+      845.8,
+      833.7,
+      719.1,
+      836.8,
+      411.7,
+      1010,
+      866.8,
+      856.3,
+      834.7,
+      865.1,
+      1032.7,
+      886.7,
+      755.2,
+      1159.6,
+      789.9,
+      915.9,
+      5514.2,
+      858.9,
+      985.7,
+      923,
+      785.4,
+      953.8,
+      861.2,
+      729.5,
+      846.2,
+      543.3,
+      811.3,
+      793.1,
+      970.5,
+      440,
+      914.2,
+      805.9,
+      1038.6,
+      735.6,
+      915.6,
+      862.5,
+      649.4,
+      856.2,
+      919.1,
+      923.7,
+      770.2,
+      843.8,
+      1027.6,
+      928,
+      836.1,
+      889.1,
+      439.6,
+      920.3,
+      879.9,
+      401.3,
+      1020.4,
+      977.2,
+      838.8,
+      576.1,
+      894.7,
+      773.7,
+      899.8,
+      834.9,
+      798.2,
+      400.9
+    ],
+    "write_start_to_queryable_ms": {
+      "p50": 795.7,
+      "p95": 1015.7,
+      "probes": 231,
+      "found": 230,
+      "missed": 1,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 417.1,
+      "p95": 629.8
+    },
+    "answer_ms": {
+      "p50": 4016,
+      "p95": 13796.5
+    }
+  },
+  "usage": {
+    "input": 372329,
+    "output": 19044,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 2.094755,
+      "retrieval": 0.000035,
+      "reader": 1.363199,
+      "judge": 0.126891,
+      "background_tail": 0
+    },
+    "total_usd": 3.58488,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s5.baseline-hybrid.baseline/contexts.ndjson"
+  }
+}
