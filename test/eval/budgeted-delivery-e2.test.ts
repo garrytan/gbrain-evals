@@ -168,6 +168,26 @@ describe('local campaign cells', () => {
   });
 });
 
+describe('raising a campaign cap', () => {
+  test('raise-cap moves the program cap and the campaign run budget up to the manifest cap, never down', () => {
+    const dir = join(tmp, 'raise');
+    mkdirSync(dir, { recursive: true });
+    const m: CampaignManifest = { kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: 'e2-raise', cap_usd: 10, ledger: join(dir, 'c.sqlite'),
+      cells: [{ id: 'big', system: 'fake', benchmark: 'fixture', config: 'common', lease_usd: 15, command: 'true' }] };
+    writeFileSync(join(dir, 'm.json'), JSON.stringify(m));
+    const c = new Campaign(join(dir, 'm.json'), join(dir, 'state'));
+    c.init();
+    expect(() => c.reserve('big')).toThrow();
+    writeFileSync(join(dir, 'm.json'), JSON.stringify({ ...m, cap_usd: 20 }));
+    const raised = new Campaign(join(dir, 'm.json'), join(dir, 'state'));
+    expect(() => raised.raiseCap('')).toThrow(/reason/);
+    expect(raised.raiseCap('user raised the cap')).toMatchObject({ cap_usd: 20, program: { program_cap_usd: 20, previous_cap_usd: 10 }, run: { budget_usd: 20, previous_budget_usd: 10 } });
+    expect(raised.reserve('big').usd).toBe(15);
+    writeFileSync(join(dir, 'm.json'), JSON.stringify({ ...m, cap_usd: 12 }));
+    expect(() => new Campaign(join(dir, 'm.json'), join(dir, 'state')).raiseCap('lower')).toThrow();
+  });
+});
+
 describe('keyless gate verdict', () => {
   const ok = () => ({ calls: 3, packing_reported_ok: 3, parity_fresh_equal: 3 });
   const g = { g1_compatibility: { pass: true }, g3_product_cap: { pass: true }, g4_reader_context: { pass: true } };
