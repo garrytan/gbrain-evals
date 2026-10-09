@@ -1,0 +1,205 @@
+{
+ "decision": {
+  "tolerance_points": 3,
+  "tolerance_status": "working value (plan proposal); provisional on T0, whose preregistration is not committed",
+  "reader": "claude-sonnet-5-5",
+  "a0": {
+   "cell": "a0:claude-sonnet-5-5",
+   "success": 93,
+   "committed_wrong": 6,
+   "usd_per_q": 0.047298,
+   "p95_ms": 2557
+  },
+  "briefs_at_2000": [
+   {
+    "cell": "brief@2000:gpt-6-luna:claude-sonnet-5-5",
+    "success": 91,
+    "gap_points": 2,
+    "within_tolerance": true,
+    "committed_wrong": 5,
+    "usd_per_q": 0.010982,
+    "p95_ms": 7693,
+    "mcnemar_p": 0.6875
+   },
+   {
+    "cell": "brief@2000:claude-haiku-5-5:claude-sonnet-5-5",
+    "success": 92,
+    "gap_points": 1,
+    "within_tolerance": true,
+    "committed_wrong": 6,
+    "usd_per_q": 0.007857,
+    "p95_ms": 8683,
+    "mcnemar_p": 1
+   }
+  ],
+  "best_brief": "brief@2000:claude-haiku-5-5:claude-sonnet-5-5",
+  "brief_misses": false,
+  "cheaper_designs": [
+   {
+    "cell": "cache:claude-sonnet-5-5",
+    "success": 93,
+    "committed_wrong": 6,
+    "usd_per_q": 0.047298,
+    "p95_ms": 2618,
+    "matches_accuracy_and_cw": true,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "direct:gpt-6-luna",
+    "success": 84,
+    "committed_wrong": 11,
+    "usd_per_q": 0.001797,
+    "p95_ms": 2263,
+    "matches_accuracy_and_cw": false,
+    "cheaper": true,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "direct:claude-haiku-5-5",
+    "success": 89,
+    "committed_wrong": 7,
+    "usd_per_q": 0.002475,
+    "p95_ms": 4042,
+    "matches_accuracy_and_cw": true,
+    "cheaper": true,
+    "faster": true,
+    "wins": true
+   },
+   {
+    "cell": "fallback:gpt-6-luna>claude-sonnet-5-5",
+    "success": 86,
+    "committed_wrong": 13,
+    "usd_per_q": 0.013698,
+    "p95_ms": 4774,
+    "matches_accuracy_and_cw": false,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "fallback:claude-haiku-5-5>claude-sonnet-5-5",
+    "success": 91,
+    "committed_wrong": 8,
+    "usd_per_q": 0.02046,
+    "p95_ms": 6712,
+    "matches_accuracy_and_cw": true,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "digest@1000:gpt-6-luna:claude-sonnet-5-5",
+    "success": 36,
+    "committed_wrong": 14,
+    "usd_per_q": 0.008442,
+    "p95_ms": 3692,
+    "matches_accuracy_and_cw": false,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "digest@1000:claude-haiku-5-5:claude-sonnet-5-5",
+    "success": 46,
+    "committed_wrong": 19,
+    "usd_per_q": 0.009035,
+    "p95_ms": 3012,
+    "matches_accuracy_and_cw": false,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "digest@2000:gpt-6-luna:claude-sonnet-5-5",
+    "success": 69,
+    "committed_wrong": 9,
+    "usd_per_q": 0.011019,
+    "p95_ms": 3692,
+    "matches_accuracy_and_cw": false,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "digest@2000:claude-haiku-5-5:claude-sonnet-5-5",
+    "success": 74,
+    "committed_wrong": 11,
+    "usd_per_q": 0.010633,
+    "p95_ms": 3012,
+    "matches_accuracy_and_cw": false,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "digest@4000:gpt-6-luna:claude-sonnet-5-5",
+    "success": 83,
+    "committed_wrong": 11,
+    "usd_per_q": 0.015624,
+    "p95_ms": 3692,
+    "matches_accuracy_and_cw": false,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "digest@4000:claude-haiku-5-5:claude-sonnet-5-5",
+    "success": 86,
+    "committed_wrong": 7,
+    "usd_per_q": 0.013754,
+    "p95_ms": 3012,
+    "matches_accuracy_and_cw": false,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "digest@7000:gpt-6-luna:claude-sonnet-5-5",
+    "success": 87,
+    "committed_wrong": 7,
+    "usd_per_q": 0.018313,
+    "p95_ms": 3692,
+    "matches_accuracy_and_cw": false,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   },
+   {
+    "cell": "digest@7000:claude-haiku-5-5:claude-sonnet-5-5",
+    "success": 87,
+    "committed_wrong": 8,
+    "usd_per_q": 0.014071,
+    "p95_ms": 3012,
+    "matches_accuracy_and_cw": false,
+    "cheaper": false,
+    "faster": true,
+    "wins": false
+   }
+  ],
+  "off_ramp_fires": true,
+  "verdict": "off-ramp: direct:claude-haiku-5-5 matches the brief at lower dollars and latency"
+ },
+ "cache": {
+  "sonnet": {
+   "pairs": 24,
+   "warm_hits": 24,
+   "usd_per_read": {
+    "r1": 0.05820560416666667,
+    "r2": 0.032254656250000006,
+    "r5": 0.016684087499999996
+   }
+  },
+  "sol": {
+   "pairs": 24,
+   "warm_hits": 24,
+   "usd_per_read": {
+    "r1": 0.036005687499999994,
+    "r2": 0.01917347083333333,
+    "r5": 0.009074140833333334
+   }
+  }
+ }
+}
