@@ -324,7 +324,22 @@ budgets so we never hit the hard caps in our evals."
 - **Overrun alert, report only.** If a cell or arm runs past twice its estimate, it keeps going and the report names
   it with the cause. This replaces any stop rule tied to an estimate.
 
+### A3 (2026-10-09): host restart, recorded before any reader call
+
+The first phase 1 reader launch started 16 local replay processes; each holds about 2.5 GB, so the 16 GB host ran out
+of memory and restarted before any reader call was sent (its lease proxy forwarded nothing and settled at $0). The
+restart also ended the live cell's VM runner: the VM was destroyed before its lease ledger was pulled, so that lease
+is abandoned and charged in full ($8), and the live cell runs again on a new lease. Local reader cells now run four
+shards at a time (`E2_PARALLEL_MAX=4`); the LoCoMo and BEAM readers run together on one VM cell
+(`e2-read-locomo-beam`, lease $196 for an estimate of $66), which copies the deliver outputs into its pulled output.
+Readers, recipes, arms and budgets are unchanged.
+
 ## Changelog
+
+### 2026-10-09: amendment A3
+
+Host restart from local reader memory; the live lease abandoned and the cell rerun; local readers four at a time;
+LoCoMo and BEAM readers on one VM.
 
 ### 2026-10-09: amendment A2
 
