@@ -168,3 +168,10 @@ the cap:
 5. Candidate 1 Opus 5.5 mutants (stale-correction, then forced-drop).
 The report names every check not run. The frozen validity rule (both mutants detected for every reader) was met by
 Candidate 0 on this harness; mutants not run here are reported as not run, not as passed.
+
+Amendment 2, note before step 3 (2026-10-09, Pacific): steps 1 and 2 left $5.92 of the $60 run. The runner's ledger
+preflight prices a cell at its calibration estimate (Sonnet 5.5 $0.30, gpt-6.1-sol $0.20) and refuses an invocation
+whose estimate exceeds what is left, so the exploratory arm runs on the first personas the preflight admits: Sonnet 5.5
+on seeds 20261101 to 20261106 (18 cells), then gpt-6.1-sol on as many leading seeds as the preflight then admits. Still
+descriptive only, paired with the master arm's repeat-1 cells of the same tasks. Steps 4 and 5 (forced-drop mutants and
+the Opus mutants) do not fit and are not run.
