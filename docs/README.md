@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.51, with gbrain master `61624308b` (v0.60.120.0) as the product under test. Results measured at
+gbrain-evals v0.10.52, with gbrain master `61624308b` (v0.60.120.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -13,7 +13,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | Which setup should I evaluate for my application? | [Settings by workload](settings.md) |
 | What does the current pin change, category by category? | [October re-pin to gbrain `c5fb0201`, then `a865f8f`](benchmarks/2026-10-06-followups-repin.md) ([preregistration](benchmarks/2026-10-06-followups-repin-preregistration.md)) |
 | What did the October 2026 follow-up round measure, and why? | [Follow-up round plan and its reviews](plans/2026-10-06-followups-round/PLAN.md) |
-| Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md) |
+| Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md); [October 8 program primary baseline](benchmarks/2026-10-08-program-primary-baseline.md) (v0.60.106.0): on cross-session meeting and reply prep after a correction, Sonnet 5.5, Opus 5.5 and gpt-6.1-sol fail no run on a human reading (the scorer counts 11 Opus namesake warnings), so the workload is at its ceiling; both memory-breaking mutants fail 32 of 32 and a real Claude Code process agrees 8 of 8 |
 | How do I run the benchmarks? | [Evaluation guide](../eval/README.md), [troubleshooting](../eval/RUNBOOK.md) |
 | How do I get a dev or held-out verdict for a gbrain change? | [Decision kit](decisions.md) (`bun run eval:decide`) |
 | Where does gbrain master start, and which feature ideas won or lost their held-out tests? | [October 5 nine-plan held-out program: starting line, verdicts and scorecard](benchmarks/2026-10-05-heldout-program.md); [October 6 BEAM-1M rerun with every session dated](benchmarks/2026-10-06-beam-1m-dates.md); [October 8 BEAM-1M failure analysis: the 1M no-memory floor, frontier readers, the oracle ceiling and the reranker](benchmarks/2026-10-08-beam-1m-failure-analysis.md); [Q2 parser gaps: typed list-line guards and relationship phrasings](benchmarks/2026-10-05-heldout-program/q2.md) |
@@ -128,6 +128,7 @@ These documents fix a method before measuring. They publish no capability scores
 | Can optional situation cues help find an old constraint when today's question uses different words? | [September 23 situation-recall protocol](benchmarks/2026-09-23-situation-recall-protocol.md) |
 | Does retrieval hold up on LongMemEval's harder medium histories? | [September 24 LongMemEval-M pilot preregistration](benchmarks/2026-09-24-longmemeval-m-pilot-preregistration.md) |
 | Will a release still look better on questions nobody tuned against? | [September 29 sealed confirmation set](benchmarks/2026-09-29-sealed-confirmation-protocol.md) |
+| What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 
 ## Data and methods
 
@@ -183,6 +184,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-08: Program primary rows
+
+gbrain-evals v0.10.52. The opening names v0.10.52 instead of v0.10.51. The agent-task row gained the October 8 program primary baseline (wave 1 item T0 of the 10x memory advantage plan): on gbrain v0.60.106.0 the cross-session meeting and reply workload is at its ceiling for all three counted readers, and both mutants are detected. The protocols table gained the T0 preregistration with its power work (PW).
 
 ### 2026-10-08: Pin `61624308b`; Q2 parser-gaps verdicts in the held-out program row
 

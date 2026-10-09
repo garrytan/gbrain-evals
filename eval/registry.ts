@@ -213,6 +213,25 @@ const N5_CI_RULES: PromotionRules = {
 
 
 /**
+ * T0 program primary (plan 2026-10-07 section 3.1, wave 1 T0), preregistered
+ * 2026-10-08 before any paid baseline cell
+ * (docs/benchmarks/2026-10-08-program-primary-preregistration.md). The rules
+ * decide whether a run counts, not whether gbrain is good: both mutants must
+ * be detected and nearly every cell scored. The program-level factor and its
+ * decision rule live in the preregistration and never gate CI.
+ */
+const PROGRAM_PRIMARY_RULES: PromotionRules = {
+  preregistered: '2026-10-08', basis: 'T0 preregistration, frozen before the first paid baseline cell: a run counts only when the primary detects the forced-drop mutant and the stale-correction mutant (plan section 11, eng phase) and at least 90% of cells are scored rather than harness errors; failure counts, the factor and the envelope are reported, never gated',
+  safety_contracts: [],
+  quality_thresholds: [
+    { id: 'forced-drop-detected', path: 'data.metrics.forced_drop_detected', op: '==', value: true, description: 'the forced-drop mutant (session 1 rolled back, session 2 push dropped) raises failures above the paired baseline' },
+    { id: 'stale-correction-detected', path: 'data.metrics.stale_correction_detected', op: '==', value: true, description: 'the stale-correction mutant (the correction never lands) raises failures and stale_correction failures above the paired baseline' },
+    { id: 'scored-fraction-floor', path: 'data.metrics.scored_fraction', op: '>=', value: 0.9, description: 'at least 90% of cells end in a scored record, not a harness error' },
+  ],
+  exploratory: ['data.summary.rows[] (failures, failure kinds, complete runs, clustered 95% intervals, omissions, capture and push diagnostics, envelope) per arm and reader', 'data.summary.mutants[] including ablation-push-off'],
+};
+
+/**
  * Cat 41 agent operator outcomes: the gbrain release gate of the agent-first
  * operator wave (gbrain docs/designs/AGENT_OPERATOR_WAVE.md, Lane I),
  * preregistered 2026-10-03 before the first counted run
@@ -1005,6 +1024,16 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Runs one agent loop per arm (files, memory tool, plain Postgres, gbrain MCP, and handed-over evidence) on a fictional company corpus generated from a ledger, scores answers deterministically and counts finance-only leaks. Capability is the oracle arm; the 4k-document world is development data, the seed-20261003 world is held out.',
   },
   {
+    id: 'program-primary', legacy_alias: 'T0', name: 'Program primary: end-to-end failures on cross-session meeting and reply prep after a correction, with gbrain\'s pushed context',
+    family: 'agent', tier: 'P', script: 'eval/runner/t0-program-primary.ts',
+    run: { kind: 'listed', reason: 'paid two-session agent runs per task, reader and arm against a gbrain checkout pinned explicitly with --gbrain; the hermetic scripted slice (no --paid) takes minutes, above the 60-second CI budget', command: 'bun eval/runner/t0-program-primary.ts --gbrain <checkout>@<ref> --output <dir> [--readers claude-opus-5-5,claude-sonnet-5-5,gpt-6.1-sol] [--arms baseline,mutant-forced-drop,mutant-stale-correction,ablation-push-off] [--repeat N] [--paid --budget-run-id <id>]' },
+    cost_estimate: { usd: 80, basis: 'the T0 development baseline cap in plan 2026-10-07 wave 1 (budget ledger); measured per-cell cost is in the baseline report' },
+    receipt_path: 'eval/reports/t0-program-primary/<output>/receipt.json',
+    headline: { metric: 'end-to-end failures (missed commitment, stale date, stale correction, unsupported value, execution error) per reader with persona-clustered 95% intervals; mutant detection; latency, token and dollar envelope', denominator: '8 development personas x 4 tasks (16 prep, 16 reply) per reader and repeat' },
+    gate: 'gate', promotion: PROGRAM_PRIMARY_RULES, evidence_maturity: 'synthetic-production-path',
+    contract: 'Builds one PGLite brain per seeded persona (an engineer-founder\'s people, companies, deals, meetings and notes) with the gbrain build under test, then runs two agent sessions per task through gbrain serve --surface starter over stdio: session 1 tells the agent a commitment, a moved meeting and a correction and asks it to update the brain; session 2, in a new serve process, asks for a meeting-prep brief or a reply draft without naming the facts. The build\'s own SessionStart and UserPromptSubmit hook commands run at the points Claude Code would and their context is injected (t0/delivery.ts), so this is an injected-context component test unless a native parity slice agrees. Deliverables are scored deterministically against gold drawn by the generator; stale values excused only in a change context; execution errors count as failures. Two mutants (forced drop, stale correction) and a push-off ablation run as arms. It does not exercise Stop or SessionEnd hooks, the dream cycle between sessions, or a real Claude Code process.',
+  },
+  {
     id: 'agent-operator', legacy_alias: '41', name: 'Agent operator outcomes: real Claude Code and Codex sessions operating gbrain through errors, consent gates and setup',
     family: 'agent', tier: 'P', script: 'eval/runner/cat41-agent-operator.ts',
     run: { kind: 'listed', reason: 'paid sessions of two pinned agent CLIs in Docker, a gbrain checkout and a before/after pair of passes', command: 'eval/runner/cat41/after-pass.sh <gbrain checkout> <commit> (or: bun eval/runner/cat41-agent-operator.ts run --gbrain <checkout>@<ref> --label <label> --repeat 3 --paid --budget-run-id <id>; then overhead and gate --before <dir> --after <dir> --out <file>)' },
@@ -1252,4 +1281,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'facts-absorb', 'lifecycle', 'lifecycle-lite', 'memory-qa', 'p4-stream', 'q2', 'queries', 'stats', 'system-one', 'systems', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'facts-absorb', 'lifecycle', 'lifecycle-lite', 'memory-qa', 'p4-stream', 'power', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];

@@ -46,7 +46,9 @@
  * open in the file before opening the next one.
  */
 import { appendFileSync, readFileSync } from 'node:fs';
-import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, usageCost, type BudgetAllowance } from './budget-ledger.ts';
+import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, sseUsage, usageCost, type BudgetAllowance } from './budget-ledger.ts';
+
+export { sseUsage };
 import { findLeaks } from './systems/sanitize.ts';
 
 export const UPSTREAM: Record<string, string> = { anthropic: 'https://api.anthropic.com', openai: 'https://api.openai.com', voyage: 'https://api.voyageai.com' };
@@ -108,24 +110,6 @@ export interface UsageLine {
 
 const json = (status: number, kind: string, message: string) =>
   new Response(JSON.stringify({ error: { kind, type: kind, message: `metering proxy: ${message}` } }), { status, headers: { 'content-type': 'application/json' } });
-
-/** Provider usage from a server-sent-events body: OpenAI `usage` chunks and `response.completed`, Anthropic `message_start` and `message_delta`. */
-export function sseUsage(text: string): Record<string, unknown> | null {
-  const merged: Record<string, unknown> = {};
-  let found = false;
-  for (const line of text.split('\n')) {
-    if (!line.startsWith('data:')) continue;
-    const data = line.slice(5).trim();
-    if (!data || data === '[DONE]') continue;
-    let obj: any;
-    try { obj = JSON.parse(data); } catch { continue; }
-    for (const u of [obj?.usage, obj?.response?.usage, obj?.message?.usage]) {
-      if (!u || typeof u !== 'object') continue;
-      for (const [k, v] of Object.entries(u)) if (typeof v === 'number' || (v && typeof v === 'object')) { merged[k] = v; found = true; }
-    }
-  }
-  return found ? merged : null;
-}
 
 /** The output-token field a request uses, by provider and route. */
 function outputField(provider: ProviderName, route: string): string | null {
@@ -258,7 +242,7 @@ export class MeteringProxy {
     const text = await res.text();
     if (price) {
       let cost: ReturnType<typeof usageCost> = null;
-      try { cost = usageCost(price, JSON.parse(text)); } catch { cost = null; }
+      try { cost = (res.headers.get('content-type') ?? '').includes('event-stream') ? usageCost(price, { usage: sseUsage(text) }) : usageCost(price, JSON.parse(text)); } catch { cost = null; }
       this.charge(key, prov, price.model, cost ? cost.usd : reservationUsd(price), !cost);
     } else this.charge(key, prov, null, 0, false);
     const out = new Headers(res.headers);
