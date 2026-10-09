@@ -87,15 +87,21 @@ import { devConversations, loadSplit } from '../decisions/splits.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { appendAttempt, canonicalize, DEFAULT_MAX_ATTEMPTS, freezeManifest, HARNESS_FAILURES, PRODUCT_FAILURES, readAttempts, writeCanonical, type Canonical, type Outcome } from './outcomes.ts';
-import { armHash, armsDir, ContextStore, contextKey, expandArms, loadArms, retrievalKey, retrievalsDir, type ArmsSpec } from './arms.ts';
+import { armHash, armsDir, ContextStore, contextKey, expandArms, loadArms, recipeHash, retrievalKey, retrievalsDir, type ArmsSpec } from './arms.ts';
+
+/** A recipe context packed for one question: the prompt and its frozen meta. */
+interface RecipeBuild { prompt: string; meta: Record<string, unknown> }
 import { ProxyControl, upstreamTrouble, type Meter } from '../metering-proxy.ts';
 import { checkSealedDestinations, sealedPaths, type SealedPaths } from './sealed-profile.ts';
 import { FakeMemorySystem } from '../systems/fake.ts';
 import { FullContextSystem, NoMemorySystem, PlainHybridSystem } from '../systems/baselines.ts';
 import { cachedOpenAIEmbedder, PG_EMBED_DIMS } from '../cat40/pg-arm.ts';
-import { GbrainLegacySystem, GbrainShootoutSystem, type GbrainModules } from '../systems/gbrain.ts';
+import { GbrainLegacySystem, GbrainShootoutSystem, sourceOfSlug, type GbrainModules } from '../systems/gbrain.ts';
+import { GbrainQuerySystem } from '../systems/gbrain-query/system.ts';
+import { loadConnectorModules, readerBytes } from '../systems/gbrain-query/connector.ts';
 import { HttpMemorySystem } from '../systems/http.ts';
-import { packContext, RENDERER_VERSION, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render.ts';
+import { blocksToItems, packContext, packRecipe, renderItem, datedItems, pseudoSessions, RENDERER_VERSION, sessionDay, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render.ts';
+import { renderHistory } from './qa.ts';
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
 import { policyKnobs, SystemError, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
 
@@ -144,6 +150,8 @@ export interface RunArgs {
   replay: boolean;
   /** Independent re-ingestion of the same selection (run-to-run variance); enters the run hash when above 1. */
   ingestReplicate: number;
+  /** `gbrain-query` deliver stage: a finished freeze cell's retrievals/rows.ndjson (the frozen hit lists); its hash enters the run hash. */
+  frozenFrom: string | null;
 }
 
 export interface MemoryQaRow {
@@ -189,11 +197,16 @@ export interface MemoryQaRow {
   truncated?: boolean;
   harness_ms?: number;
   ingest?: { sessions: number; failed_sessions: number; synthetic_times: number; finish_ready: boolean; completeness: string; readiness_probe: ProbeResult; degraded: boolean; errors: IngestError[]; provider?: MemoryQaRow['provider'] };
-  qa_context?: { mode: ContextMode; tokenizer: string; renderer: string; budget_tokens: number | null; tokens: number; item_ids: string[]; source_ids: string[]; prompt_sha256: string };
+  qa_context?: { mode: ContextMode; tokenizer: string; renderer: string; budget_tokens: number | null; tokens: number; item_ids: string[]; source_ids: string[]; prompt_sha256: string; recipe?: string; recipe_hash?: string; tokens_before?: number; items_cut?: number; reader_bytes?: { chars: number; utf8_bytes: number } };
   qa_prompt?: string;
   provider?: { usd: number; requests: number; unpriced: number; upstream?: Meter['upstream'] };
   upstream_retry?: { first_error: string | null; first_provider: MemoryQaRow['provider'] | null };
   arm?: string;
+  /** Typed system diagnostics (RetrieveResult.accounting), copied by value. */
+  accounting?: Record<string, unknown>;
+  /** A scored row copied from another arm whose prompt was byte-identical (twin reuse). */
+  reused_from?: { arm: string; prompt_sha256: string };
+  qa_facts_tokens?: number;
   retrieval_key?: string;
   question_id?: string;
   policy_mode?: string;
@@ -270,6 +283,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
     arms,
     replay: argv.includes('--replay'),
     ingestReplicate: Number(one('--ingest-replicate') ?? 1),
+    frozenFrom: one('--frozen-from') ? resolve(one('--frozen-from')!) : null,
   };
 }
 
@@ -353,11 +367,16 @@ export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, 
     categories: a.categories, limit: a.limit, seed: a.seed, topK: a.topK, gbrain: gut.overlay?.build.commit ?? gut.version, data: corpus.source.files, ...(a.facts !== 'none' ? { facts: a.facts } : {}),
     ...(a.system !== 'gbrain' ? { system: a.system, context: a.context, policy: a.policy, identity: identity && { system: identity.system, config: identity.config, versions: identity.versions } } : {}),
     ...(a.arms ? { qa: null, context: null, policy: null, arms_policies: Object.keys(a.arms.policies).sort() } : {}),
-    ...(a.ingestReplicate !== 1 ? { ingest_replicate: a.ingestReplicate } : {}) };
+    ...(a.ingestReplicate !== 1 ? { ingest_replicate: a.ingestReplicate } : {}),
+    ...(Object.keys(a.policySettings).length ? { policy_settings: a.policySettings } : {}),
+    ...(a.frozenFrom ? { frozen_from_sha256: createHash('sha256').update(readFileSync(a.frozenFrom)).digest('hex') } : {}) };
   return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
 }
 
 const errorText = (e: unknown) => (e as Error).message.slice(0, 300);
+
+/** The facts lane's context size: the harness count of the fact lines its prompt carries (`factsReaderPrompt` with no question text). */
+export const factsContextTokens = (facts: SavedFact[]) => approxTokens(facts.map(f => `- [${f.valid_from ? f.valid_from.slice(0, 10) : 'undated'}] ${f.fact}`).join('\n'));
 
 export type ProbeResult = 'found' | 'missed' | 'not-measurable' | 'skipped';
 /** One failed session: its opaque source id, the error kind and the message (never a request body). */
@@ -397,7 +416,7 @@ function failureRow(base: MemoryQaRow, e: unknown): MemoryQaRow {
 export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unknown>; rows: MemoryQaRow[] }> {
   const started = new Date().toISOString();
   const legacy = a.system === 'gbrain';
-  const inProcessGbrain = legacy || a.system === 'gbrain-shootout';
+  const inProcessGbrain = legacy || a.system === 'gbrain-shootout' || a.system === 'gbrain-query';
   if (!legacy && (a.facts !== 'none' || a.qa.mode === 'think' || a.qa.context === 'facts')) throw new Error('--facts, --qa think and --qa-context facts read gbrain directly; they need --system gbrain');
   if (!['native', 'rehydrated'].includes(a.context)) throw new Error('--context must be native or rehydrated');
   if (legacy && a.context !== 'rehydrated') throw new Error('--system gbrain reads the legacy rehydrated sessions; use --system gbrain-shootout for native context');
@@ -468,6 +487,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
 
   // gbrain systems run in process: hash vectors (keyless) or the real provider through the budget ledger and the content-addressed cache.
   let mods: GbrainModules | null = null;
+  let connectorMods: Awaited<ReturnType<typeof loadConnectorModules>> | null = null;
   if (inProcessGbrain) {
     const proxyUrls = a.providerProxy ? { base_urls: { voyage: `${a.providerProxy}/harness/voyage/v1` } } : {};
     const gateway = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void; __setEmbedTransportForTests: (fn: unknown) => void }>(gut, 'src/core/ai/gateway.ts');
@@ -491,6 +511,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       importFromContent: (await importGbrain<{ importFromContent: GbrainModules['importFromContent'] }>(gut, 'src/core/import-file.ts')).importFromContent,
       hybridSearch: (await importGbrain<{ hybridSearch: GbrainModules['hybridSearch'] }>(gut, 'src/core/search/hybrid.ts')).hybridSearch,
     };
+    if (a.system === 'gbrain-query') connectorMods = await loadConnectorModules(<T,>(rel: string) => importGbrain<T>(gut, rel));
   }
 
   const extractFacts = a.facts === 'conversation'
@@ -507,6 +528,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const system: MemorySystem = prior ? new ReplaySystem(prior.capabilities)
     : legacy ? new GbrainLegacySystem(mods!, { ...a.pins, ...a.config }, identity, { topK: a.topK, as: extractFacts ? 'conversation' : 'note', rerankPinned })
     : a.system === 'gbrain-shootout' ? new GbrainShootoutSystem(mods!, a.config, identity)
+    : a.system === 'gbrain-query' ? new GbrainQuerySystem(mods!, connectorMods!, a.config, identity, { frozenFrom: a.frozenFrom, rerankExpected: (a.config['search.reranker.enabled'] ?? 'true') !== 'false' })
     : a.system === 'fake' ? new FakeMemorySystem()
     : a.system === 'full-context' ? new FullContextSystem()
     : a.system === 'no-memory' ? new NoMemorySystem()
@@ -550,7 +572,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     mkdirSync(dir, { recursive: true });
     const slice = arm.reader?.slice ? new Set(selectQuestions(questions, arm.reader.slice.limit, arm.reader.slice.seed).map(q => q.id)) : null;
     const m = freezeManifest(dir, armHash(hash, arm, judgeModel, a.qa.runs), manifest.expected.filter(id => !slice || slice.has(id)));
-    return { arm, dir, manifest: m, pending: canonicalize(m, readAttempts(dir), a.maxAttempts).pending, written: 0 };
+    const canon = canonicalize(m, readAttempts(dir), a.maxAttempts);
+    return { arm, dir, manifest: m, pending: canon.pending, written: 0, latest: new Map(canon.rows.map(r => [r.id, r as unknown as MemoryQaRow])) };
   });
   const contexts = new ContextStore(join(a.output, 'contexts.ndjson'));
 
@@ -649,6 +672,24 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         : invalidReasons.length ? { ...base, error: importError!, error_origin: 'harness', outcome: 'harness_invalid' }
         : { ...base, error: `ingest failed: ${importError}`, error_origin: 'sut', outcome: 'retrieval_error' };
 
+      const daySourceOf = (src: string) => sessionDay(sessionOf(src)?.date);
+      const slugSource = (slug: string) => sourceOfSlug(slug);
+      /**
+       * gbrain-query freeze stage with a budget grid: render each grid budget's
+       * raw deliveries with the real session dates and keep only the counts the
+       * sizing script needs (the serialized harness tokens per rendering and
+       * gbrain's budget_used); the delivered text never reaches the row.
+       */
+      const withSizing = (acc: Record<string, unknown>): Record<string, unknown> => {
+        const grid = system instanceof GbrainQuerySystem ? system.lastSizing : null;
+        if (!grid) return acc;
+        const nativeTokens = (blocks: Parameters<typeof blocksToItems>[0]) => datedItems(blocksToItems(blocks, slugSource), daySourceOf).reduce((n, i) => n + TOKENIZER.count(renderItem(i) + '\n'), 0);
+        const pseudoTokens = (blocks: Parameters<typeof blocksToItems>[0]) => TOKENIZER.count(renderHistory(pseudoSessions(datedItems(blocksToItems(blocks, slugSource), daySourceOf), sessionOf).map(x => x.session)));
+        return { ...acc, sizing: grid.map(g => ({ budget: g.budget,
+          full: { budget_used: g.full.record.budget_used, blocks: g.full.record.blocks, over_budget: g.full.record.over_budget, native: nativeTokens(g.full.blocks), pseudo: pseudoTokens(g.full.blocks) },
+          prefix: { budget_used: g.prefix.record.budget_used, blocks: g.prefix.record.blocks, over_budget: g.prefix.record.over_budget, pseudo: pseudoTokens(g.prefix.blocks) } })) };
+      };
+
       /** One retrieval under one policy, metered by the proxy; a product failure during which the provider misbehaved is retried once. */
       const retrieveRow = async (q: MemoryQuestion, base: MemoryQaRow, pol: RetrievalPolicy): Promise<MemoryQaRow> => {
         const once = async (): Promise<{ row: MemoryQaRow; meter: Meter | null }> => {
@@ -671,7 +712,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
               recall_all_at_10: recallAllAtK(toSessions(at10.sources), rel, 10), ndcg_at_10: ndcgAtK(toSessions(at10.sources), new Map(q.gold.map(g => [g, 1])), 10) } : { recall_measurable: false }),
             retrieved: toSessions(atK.sources), items_returned: res.items.length, fanout_mean: atK.fanout_mean, fanout_max: atK.fanout_max,
             provenance: { exact: res.items.filter(i => i.provenance_status === 'exact').length, partial: res.items.filter(i => i.provenance_status === 'partial').length, unavailable: res.items.filter(i => i.provenance_status === 'unavailable').length },
-            items: res.items, applied_settings: res.applied_settings, truncated: res.truncated,
+            items: res.items, applied_settings: res.applied_settings, truncated: res.truncated, ...(res.accounting ? { accounting: withSizing(res.accounting) } : {}),
             latency_ms: Math.round((res.service_ms ?? harnessMs) * 10) / 10, harness_ms: Math.round(harnessMs * 10) / 10,
             ...(provider ? { provider } : {}), ...(degraded ? { ingest: degraded } : {}), error: null, outcome: degraded?.degraded ? 'ingest_degraded' : 'scored' } };
         };
@@ -682,13 +723,17 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       };
 
       /** The reading lane on one context: the frozen prompt when one exists, else packed now (and frozen when `freeze` is given). */
-      const readRow = async (question: MemoryQuestion, row: MemoryQaRow, items: Item[], context: ContextMode, budget: number | null, reader: string, judge: string,
-        freeze: { key: string } | null, keepPrompt: boolean): Promise<MemoryQaRow> => {
+      const readRow = async (question: MemoryQuestion, row: MemoryQaRow, items: Item[], context: string, budget: number | null, reader: string, judge: string,
+        freeze: { key: string } | null, keepPrompt: boolean, recipeCtx: RecipeBuild | null = null): Promise<MemoryQaRow> => {
         let prompt: string, meta: Record<string, unknown>;
         const frozen = freeze ? contexts.get(freeze.key) : undefined;
         if (frozen) { prompt = frozen.prompt; meta = { ...frozen.meta, replayed: true }; }
+        else if (recipeCtx) {
+          ({ prompt, meta } = recipeCtx);
+          if (freeze) contexts.put({ key: freeze.key, prompt_sha256: meta.prompt_sha256 as string, prompt, meta });
+        }
         else {
-          const pack = packContext(context, question, items, { budgetTokens: budget, sessionOf, fallbackDate: lastDate(conv.sessions), present: capabilities.presentation === 'event-time' ? 'event-time' : 'rank' });
+          const pack = packContext(context as ContextMode, question, items, { budgetTokens: budget, sessionOf, fallbackDate: lastDate(conv.sessions), present: capabilities.presentation === 'event-time' ? 'event-time' : 'rank' });
           prompt = pack.prompt;
           meta = { mode: pack.mode, tokenizer: pack.tokenizer, renderer: pack.renderer, budget_tokens: pack.budget_tokens, tokens: pack.tokens, item_ids: pack.item_ids, source_ids: pack.source_ids, prompt_sha256: createHash('sha256').update(pack.prompt).digest('hex') };
           if (freeze) contexts.put({ key: freeze.key, prompt_sha256: meta.prompt_sha256 as string, prompt, meta });
@@ -714,6 +759,50 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         return out;
       };
 
+      /** A recipe context, packed now: items from the retrieval or one of its recorded deliveries, optionally the exact selection of another context. */
+      const buildRecipe = (q: MemoryQuestion, r: MemoryQaRow, name: string, policy: RetrievalPolicy['mode'], budget: number | null): RecipeBuild => {
+        const spec = a.arms!.recipes![name];
+        let items: Item[];
+        if (spec.items === 'retrieved') items = r.items ?? [];
+        else {
+          const d = (r.accounting?.deliveries as Record<string, { blocks: Parameters<typeof blocksToItems>[0] }> | undefined)?.[spec.items];
+          if (!d) throw new Error(`recipe ${name}: the retrieval row has no delivery ${spec.items}`);
+          items = blocksToItems(d.blocks, sourceOfSlug);
+        }
+        if (spec.select_from) {
+          const depName = spec.select_from;
+          const depKey = contextKey(q.id, policy, depName, budget, a.arms!.recipes?.[depName] ? recipeHash(depName, a.arms!) : null);
+          const ids = (contexts.get(depKey)?.meta.item_ids as string[] | undefined)
+            ?? (a.arms!.recipes?.[depName] ? buildRecipe(q, r, depName, policy, budget).meta.item_ids as string[]
+              : packContext(depName as ContextMode, q, r.items ?? [], { budgetTokens: budget, sessionOf, fallbackDate: lastDate(conv.sessions) }).item_ids);
+          const chosen = new Set(ids);
+          items = items.filter(i => chosen.has(i.id));
+          if (items.length !== chosen.size) throw new Error(`recipe ${name}: ${chosen.size - items.length} items selected by ${depName} are not in its item source`);
+        }
+        const pack = packRecipe(spec.render, q, items, { budgetTokens: 'budget_tokens' in spec ? spec.budget_tokens ?? null : budget, sessionOf, fallbackDate: lastDate(conv.sessions) });
+        const prompt_sha256 = createHash('sha256').update(pack.prompt).digest('hex');
+        const { chars, utf8_bytes } = readerBytes(pack.prompt);
+        return { prompt: pack.prompt, meta: { mode: pack.mode, render: pack.render, recipe: name, recipe_hash: recipeHash(name, a.arms!), tokenizer: pack.tokenizer, renderer: pack.renderer, budget_tokens: pack.budget_tokens,
+          tokens: pack.tokens, tokens_before: pack.tokens_before, items_cut: pack.items_cut, dated_items: pack.dated_items, item_ids: pack.item_ids, source_ids: pack.source_ids, prompt_sha256,
+          reader_bytes: { chars, utf8_bytes }, ...(spec.items !== 'retrieved' ? { delivery: spec.items } : {}), ...(spec.select_from ? { select_from: spec.select_from } : {}) } };
+      };
+      /** Twin reuse: the same final prompt bytes as `reuse_from`'s context, the same reader and judge, and a scored row there: copy it, marked. */
+      const reuseRow = (q: MemoryQuestion, s: (typeof armState)[number], key: string, built: RecipeBuild | null): Partial<MemoryQaRow> | null => {
+        const dep = a.arms!.recipes![s.arm.context!].reuse_from;
+        if (!dep) return null;
+        const mine = built?.meta.prompt_sha256 ?? contexts.get(key)?.prompt_sha256;
+        const depKey = contextKey(q.id, s.arm.policy, dep, s.arm.budget_tokens, a.arms!.recipes?.[dep] ? recipeHash(dep, a.arms!) : null);
+        const theirs = contexts.get(depKey);
+        if (!mine || !theirs || theirs.prompt_sha256 !== mine) return null;
+        const src = armState.find(x => x.arm.context === dep && x.arm.policy === s.arm.policy && x.arm.budget_tokens === s.arm.budget_tokens && x.arm.reader?.id === s.arm.reader?.id && x.arm.reader?.model === s.arm.reader?.model);
+        const prior = src?.latest.get(q.id);
+        if (!src || !prior || typeof prior.qa_score !== 'number') return null;
+        if (built) contexts.put({ key, prompt_sha256: built.meta.prompt_sha256 as string, prompt: built.prompt, meta: built.meta });
+        const { qa_score, qa_scores, qa_runs, qa_trap, qa_input_tokens, qa_output_tokens, qa_context_tokens, qa_answer } = prior;
+        return { qa_score, qa_scores, qa_runs, qa_trap, qa_input_tokens, qa_output_tokens, qa_context_tokens, qa_answer, qa_context: { ...(built?.meta ?? contexts.get(key)!.meta) } as MemoryQaRow['qa_context'],
+          reused_from: { arm: src.arm.id, prompt_sha256: mine }, outcome: 'scored' };
+      };
+
       for (const q of qs) {
         const base: MemoryQaRow = { id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length, ...convFacts };
         if (arms.length) {
@@ -730,12 +819,19 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             const r = rByKey.get(retrievalKey(q.id, s.arm.policy));
             if (!r) continue;
             const { items, id: _rid, question_id: _qid, policy_mode: _pm, ...retrieval } = r;
-            let row: MemoryQaRow = { ...retrieval, id: q.id, arm: s.arm.id, context: s.arm.context ?? undefined, retrieval_key: retrievalKey(q.id, s.arm.policy) };
+            let row: MemoryQaRow = { ...retrieval, id: q.id, arm: s.arm.id, context: (s.arm.context ?? undefined) as ContextMode | undefined, retrieval_key: retrievalKey(q.id, s.arm.policy) };
             if (s.arm.reader && !r.error && chat) {
-              row = await readRow(q, row, items ?? [], s.arm.context!, s.arm.budget_tokens, s.arm.reader.model, judgeModel,
-                { key: contextKey(q.id, s.arm.policy, s.arm.context!, s.arm.budget_tokens) }, false);
+              const key = contextKey(q.id, s.arm.policy, s.arm.context!, s.arm.budget_tokens, s.arm.recipe?.hash ?? null);
+              let built: RecipeBuild | null = null;
+              if (s.arm.recipe && !contexts.get(key)) {
+                try { built = buildRecipe(q, r, s.arm.context!, s.arm.policy, s.arm.budget_tokens); }
+                catch (e) { row = { ...row, error: errorText(e), error_origin: 'harness', outcome: 'harness_invalid' }; appendAttempt(s.dir, row as unknown as Parameters<typeof appendAttempt>[1]); s.written++; continue; }
+              }
+              const reused = s.arm.recipe ? reuseRow(q, s, key, built) : null;
+              row = reused ? { ...row, ...reused } : await readRow(q, row, items ?? [], s.arm.context!, s.arm.budget_tokens, s.arm.reader.model, judgeModel, { key }, false, built);
             }
             appendAttempt(s.dir, row as unknown as Parameters<typeof appendAttempt>[1]);
+            s.latest.set(q.id, row);
             s.written++;
           }
           continue;
@@ -771,7 +867,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
                 row = { ...row, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length,
                   ...(q.trap ? { qa_trap: trap / scores.length } : {}), qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length),
                   qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
-                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length } : {}), qa_answer: answer.slice(0, 2000) };
+                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: factsContextTokens(readFacts) } : {}), qa_answer: answer.slice(0, 2000) };
               } catch (e) {
                 row = { ...row, qa_error: (e as Error).message.slice(0, 300) };
               }
@@ -851,7 +947,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         retrieval_path: `MemorySystem.retrieve (${system.name}, policy ${pol.policy.name}), one retrieval per question and policy shared by every arm`,
         selection: { categories: a.categories, limit: a.limit, seed: a.seed, shard: a.shard, conversations: myConvs.length, questions_expected: s.manifest.expected.length, reader_slice: s.arm.reader?.slice ?? null },
         counts: sum.counts, summary: sum.summary,
-        qa: s.arm.reader ? { reader: s.arm.reader.model, judge: judgeModel, runs: a.qa.runs, context: s.arm.context, budget_tokens: s.arm.budget_tokens, reader_prompt: readerPromptName(s.arm.context!), judge_prompts: judgePrompts, contexts_file: '../../contexts.ndjson' } : null,
+        qa: s.arm.reader ? { reader: s.arm.reader.model, judge: judgeModel, runs: a.qa.runs, context: s.arm.context, budget_tokens: s.arm.budget_tokens, reader_prompt: s.arm.recipe ? `recipe ${s.arm.recipe.name} (${a.arms!.recipes![s.arm.recipe.name].render}, ${s.arm.recipe.hash.slice(0, 16)})` : readerPromptName(s.arm.context as ContextMode), judge_prompts: judgePrompts, contexts_file: '../../contexts.ndjson' } : null,
         system: { name: system.name, capability_system: capabilities.system, capabilities, identity: sysIdentity },
         context: s.arm.context, policy: { name: pol.policy.name, mode: pol.policy.mode, settings: pol.policy.settings, settings_source: pol.source },
         manifest_sha256: s.manifest.expected_sha256, outcomes: canon.counts, attempts_this_run: s.written, comparison_complete: canon.missing.length === 0 && sum.harnessFailures === 0,

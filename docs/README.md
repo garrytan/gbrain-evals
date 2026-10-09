@@ -21,6 +21,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
 | How does gbrain compare with open-source memory systems run through one harness, with one reader? | [October 6 to 8 open-source comparison](benchmarks/2026-10-06-oss-memory-shootout.md) ([preregistration](benchmarks/2026-10-06-oss-memory-shootout-preregistration.md), [update-and-forget preregistration](benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md)): gbrain finds the right sessions as well as or better than every system, but as measured through this adapter its evidence leads the reader to fewer correct answers than three of the five. Systems are named by kind; [one table](comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project |
+| What does gbrain's `query` hand a reader at 8,000 tokens, and which lever closes the open-source comparison's gap? | [October 8 budgeted delivery E1](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1.md) ([preregistration](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1-preregistration.md); development, gbrain `c5fb0201`): a date line on each chunk lifts LoCoMo temporal questions from 28 to 78 of 100, so most of the comparison's LoCoMo gap was the adapter; at 8,000 tokens `auto` on 25 hits overruns every budget and adds little, while the same delivery on the first five hits reaches 82% on the LongMemEval-S slice with Sonnet 5.5, level with whole sessions; saved facts show no headroom |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
 | What will the next categories measure, and what does gbrain implement for each of them? | [October 1 eval-category wave plan](plans/2026-10-01-eval-category-wave/README.md), [capability and entrypoint matrix](benchmarks/2026-10-01-capability-matrix.md) |
 
@@ -187,6 +188,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-09: Budgeted delivery E1 row
+
+Added the E1 row (measuring gbrain through `query`) after the open-source comparison row, with its preregistration.
 
 ### 2026-10-09: Evidence brief confirmation row
 

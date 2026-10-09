@@ -1,0 +1,51 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "native",
+    "chunk-dated",
+    "chunk-undated-twin",
+    "chunk-dated-pseudo",
+    "rehydrated"
+  ],
+  "recipes": {
+    "chunk-dated": {
+      "items": "retrieved",
+      "render": "native-dated"
+    },
+    "chunk-undated-twin": {
+      "items": "retrieved",
+      "render": "native",
+      "select_from": "chunk-dated",
+      "reuse_from": "native"
+    },
+    "chunk-dated-pseudo": {
+      "items": "retrieved",
+      "render": "pseudo-session"
+    }
+  },
+  "readers": [
+    {
+      "id": "main",
+      "model": "openai:gpt-4o-2024-08-06",
+      "contexts": [
+        "native",
+        "chunk-dated",
+        "chunk-undated-twin",
+        "rehydrated"
+      ]
+    },
+    {
+      "id": "sonnet-5-5",
+      "model": "anthropic:claude-sonnet-5-5",
+      "contexts": [
+        "chunk-dated-pseudo",
+        "rehydrated"
+      ]
+    }
+  ],
+  "judge": "openai:gpt-4o-2024-08-06"
+}

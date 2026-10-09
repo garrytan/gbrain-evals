@@ -130,6 +130,7 @@ export interface MemoryQaRow {
   qa_receipts?: UsageReceipt[];
   qa_error?: string;
   qa_facts?: number;
+  qa_facts_tokens?: number;
   facts_count?: number;
   facts_unresolved_share?: number;
   facts_extract_error?: string;
@@ -198,7 +199,7 @@ export function ledgerRerankRequests(ledgerPath: string, runId: string, particip
 
 /** Flags only the memory-system harness (run-systems.ts) takes; any of them sends the run there. */
 const SYSTEMS_FLAGS = ['--system', '--arms', '--replay', '--sealed-profile', '--provider-proxy', '--proxy-slot', '--context', '--policy', '--policy-setting',
-  '--max-attempts', '--finish-timeout-s', '--ingest-timeout-s', '--ingest-replicate', '--no-retry-upstream-5xx', '--budget-tokens'];
+  '--max-attempts', '--finish-timeout-s', '--ingest-timeout-s', '--ingest-replicate', '--no-retry-upstream-5xx', '--budget-tokens', '--frozen-from'];
 export const isSystemsArgv = (argv: string[]) => argv.some(x => SYSTEMS_FLAGS.includes(x));
 export type SystemsRunArgs = systems.RunArgs;
 
@@ -551,7 +552,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
               const prompt = think ? null : a.qa.context === 'facts' ? factsReaderPrompt(q, readFacts, latestDate(conv.sessions)) : readerPrompt(q, pack.sessions, latestDate(conv.sessions));
               row = { ...row, ...await readAndJudge({ benchmark: a.benchmark, qa: a.qa, q, chat, think: think ? { fn: think, engine } : null, prompt, countTokens }),
                 qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
-                ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length } : {}) };
+                ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: systems.factsContextTokens(readFacts) } : {}) };
             }
           } catch (e) {
             row = { ...base, error: (e as Error).message, error_origin: /budget|BudgetExceeded/i.test((e as Error).message) ? 'harness' : 'sut' };
