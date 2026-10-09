@@ -81,15 +81,21 @@ For a new report:
 
 ### Choose models
 
-Every model-comparison run (Cat 40 Model Ladder and any agent-task or answer-model benchmark) uses current frontier
-models.
+Every model-comparison run (Cat 40 Model Ladder, answer-model benchmarks and any paid agent-task eval) uses current
+frontier models. These rules follow the gbrain project rule of 2026-10-07.
 
-- **Always run the newest frontier model of each family:** Opus, GPT, Sonnet and Fable. Before a run, check which
-  models are newest (the provider's model list, or the harness's available models). Add any that the run doesn't
-  already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+- **Always run the newest frontier model of each family:** Opus, GPT and Sonnet. Today's counted readers are
+  `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol`. Before a run, check which models are newest
+  (`bun scripts/model-freshness.ts` reads the providers' model lists) and add any that the run doesn't already
+  include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+- **Fable is for smoke tests only (Garry, 2026-10-07).** Opus 5.5 is the top Anthropic model in counted runs. Run
+  Fable only in small smoke tests (for example a pre-merge agent smoke), never in paid counted cells, practice
+  rounds or held-out runs. A run already preregistered with Fable records the change and its reason in the
+  preregistration before any new cell runs.
 - **Do not run older generations** (for example Sonnet 4.6 next to Sonnet 5.5, GPT-5.x next to GPT-6.x, Haiku 4.5,
-  older Opus). The one exception is a single older model that is the only shared link to the previous eval's results.
-  If a model that appears in both runs already gives that link, add no older model.
+  older Opus). The one exception is a single older model that is the only shared link to the previous eval's
+  results. If a model that appears in both runs already gives that link, add no older model. `gpt-4.1-mini` runs
+  only under this exception, as the bridge to earlier BEAM runs.
 - **Do not run gpt-5.4-mini.** Never base a product change, gate or release decision on a gpt-5.4-mini-only finding.
 - **Report the models people use first.** Note a ceiling (a model at 100% on every arm cannot show a difference)
   rather than counting it as a win or a tie.

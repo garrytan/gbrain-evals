@@ -396,7 +396,7 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGri
   const remaining = cell.spec.budget_usd - spent;
   if (remaining <= 0.0001) throw new Error(`cell ${cell.cell_id} has spent its $${cell.spec.budget_usd.toFixed(2)} budget. Inspect it with \`bun eval/runner/budget-ledger.ts status\`; a larger budget is a new cell.`);
 
-  const { startMeteringProxy } = await import('./metering-proxy.ts');
+  const { startMeteringProxy } = await import('./harness-metering-proxy.ts');
   let stub: Awaited<ReturnType<typeof import('./stub-upstream.ts')['startStubUpstream']>> | null = null;
   let ledgerPath = budgetOptionsFrom(ctx.argv).ledgerPath;
   if (ctx.stub) {
@@ -480,7 +480,7 @@ export async function rejudgeCells(ctx: Ctx, ids: string[], budgetUsd: number, o
   const cells = ids.map(id => JSON.parse(readFileSync(join(ctx.cellsDir, id, 'cell.json'), 'utf8')) as CellFile);
   const judge = cells[0].resolved.dataset_judge_model ?? cells[0].spec.models.judge;
   if (!judge) throw new Error('these cells have no judge model');
-  const { startMeteringProxy } = await import('./metering-proxy.ts');
+  const { startMeteringProxy } = await import('./harness-metering-proxy.ts');
   const ledgerPath = budgetOptionsFrom(ctx.argv).ledgerPath;
   const run = BudgetRun.open({ runner: `harness-rejudge:${ids.join('+')}`.slice(0, 200), budgetUsd, ledgerPath, log: ctx.log });
   mkdirSync(join(out, 'proxy'), { recursive: true });
@@ -509,7 +509,7 @@ export async function rejudgeCells(ctx: Ctx, ids: string[], budgetUsd: number, o
  */
 export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetUsd: number, out: string): Promise<number> {
   const cell = JSON.parse(readFileSync(join(ctx.cellsDir, id, 'cell.json'), 'utf8')) as CellFile;
-  const { startMeteringProxy } = await import('./metering-proxy.ts');
+  const { startMeteringProxy } = await import('./harness-metering-proxy.ts');
   const run = BudgetRun.open({ runner: `harness-reanswer:${id}-s${sample}`, budgetUsd, ledgerPath: budgetOptionsFrom(ctx.argv).ledgerPath, log: ctx.log });
   const proxyDir = join(out, `${id}-s${sample}`, 'proxy');
   mkdirSync(proxyDir, { recursive: true });
@@ -545,7 +545,7 @@ export async function replayCell(ctx: Ctx, id: string, storeDir: string, out: st
   mkdirSync(out, { recursive: true });
   const store = join(out, 'store');
   if (!existsSync(store)) cpSync(storeDir, store, { recursive: true });
-  const { startMeteringProxy } = await import('./metering-proxy.ts');
+  const { startMeteringProxy } = await import('./harness-metering-proxy.ts');
   const run = BudgetRun.open({ runner: `harness-replay:${id}`, budgetUsd, ledgerPath: budgetOptionsFrom(ctx.argv).ledgerPath, log: ctx.log });
   const proxyDir = join(out, 'proxy');
   mkdirSync(proxyDir, { recursive: true });

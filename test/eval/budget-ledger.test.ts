@@ -51,6 +51,13 @@ describe('pricing', () => {
     expect(routed).toMatchObject({ input: 3, output: 15 });
   });
 
+  test('the cheap extraction candidates carry their list prices', () => {
+    expect(priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-haiku-5-5', max_tokens: 10, messages: [] }))
+      .toMatchObject({ kind: 'chat', input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 });
+    expect(priceRequest('https://api.openai.com/v1/responses', { model: 'gpt-6-luna', max_output_tokens: 10, input: 'x' }))
+      .toMatchObject({ kind: 'chat', input: 0.1, output: 0.5 });
+  });
+
   test('dated snapshots use the family list price; Voyage rerank is priced from query and documents', () => {
     expect(priceRequest('https://api.openai.com/v1/chat/completions', { model: 'gpt-4o-2024-08-06', max_tokens: 10, messages: [] }))
       .toMatchObject({ kind: 'chat', input: 2.5, output: 10, maxOutputTokens: 10 });
@@ -71,6 +78,35 @@ describe('pricing', () => {
     expect(usageCost(chat, { content: [] })).toBeNull();
     const embed = priceRequest('https://api.openai.com/v1/embeddings', embeddingBody)!;
     expect(usageCost(embed, { usage: { prompt_tokens: 10, total_tokens: 10 } })!.input_tokens).toBe(10);
+  });
+
+  test('the current cheap models are priced: claude-haiku-5-5 and gpt-6-luna at their published short-prompt rates', () => {
+    const haiku = priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-haiku-5-5', max_tokens: 100, messages: [{ role: 'user', content: 'x'.repeat(3000) }] })!;
+    expect(haiku).toMatchObject({ provider: 'anthropic', kind: 'chat', input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 });
+    expect(reservationUsd(haiku)).toBeCloseTo((haiku.inputTokens * 0.1 + 100 * 0.5) / 1e6, 12);
+    const luna = priceRequest('https://api.openai.com/v1/chat/completions', { model: 'gpt-6-luna', max_completion_tokens: 100, messages: [] })!;
+    expect(luna).toMatchObject({ provider: 'openai', input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 });
+  });
+
+  test('a prompt over the long-prompt threshold is reserved and settled at the long rates for the whole request', () => {
+    const big = priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-haiku-5-5', max_tokens: 100, messages: [{ role: 'user', content: 'x'.repeat(400_000) }] })!;
+    expect(big.inputTokens).toBeGreaterThan(100_000);
+    expect(reservationUsd(big)).toBeCloseTo((big.inputTokens * 0.5 + 100 * 2.5) / 1e6, 12);
+    const short = priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-haiku-5-5', max_tokens: 100, messages: [] })!;
+    expect(usageCost(short, { usage: { input_tokens: 100_000, output_tokens: 10 } })!.usd).toBeCloseTo((100_000 * 0.1 + 10 * 0.5) / 1e6, 12);
+    // Cache reads count toward the threshold: 40,000 uncached + 61,000 read is a 101,000-token prompt.
+    expect(usageCost(short, { usage: { input_tokens: 40_000, cache_read_input_tokens: 61_000, output_tokens: 10 } })!.usd)
+      .toBeCloseTo((40_000 * 0.5 + 61_000 * 0.05 + 10 * 2.5) / 1e6, 12);
+    const sol = priceRequest('https://api.openai.com/v1/chat/completions', { model: 'gpt-6.1-sol', max_completion_tokens: 10, messages: [] })!;
+    expect(usageCost(sol, { usage: { prompt_tokens: 272_001, completion_tokens: 10 } })!.usd).toBeCloseTo((272_001 * 4 + 10 * 15) / 1e6, 12);
+    expect(usageCost(sol, { usage: { prompt_tokens: 272_000, completion_tokens: 10 } })!.usd).toBeCloseTo((272_000 * 2 + 10 * 10) / 1e6, 12);
+  });
+
+  test('OpenAI cache writes are a subset of prompt_tokens and settle at the cache-write price', () => {
+    const sol = priceRequest('https://api.openai.com/v1/chat/completions', { model: 'gpt-6.1-sol', max_completion_tokens: 10, messages: [] })!;
+    // The usage shape of a committed W10b gpt-6.1-sol row.
+    const usage = { prompt_tokens: 12374, completion_tokens: 88, total_tokens: 12462, prompt_tokens_details: { cached_tokens: 0, cache_write_tokens: 12371 }, completion_tokens_details: { reasoning_tokens: 52 } };
+    expect(usageCost(sol, { usage })).toEqual({ usd: (3 * 2 + 12371 * 2.5 + 88 * 10) / 1e6, input_tokens: 12374, output_tokens: 88 });
   });
 });
 
@@ -259,5 +295,35 @@ describe('provider SDKs that capture fetch', () => {
     expect(attempts).toBe(2);
     expect(entries.map(e => e.status)).toEqual(['charged-reservation', 'reconciled']);
     expect(entries[1].input_tokens).toBe(12);
+  });
+
+  test('a 4xx answer without usage settles at $0, as the metering proxy settles it; a 5xx keeps its reservation', async () => {
+    const path = ledgerPath();
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: path });
+    let status = 400;
+    const guard = installPaidRequestGuard(run, { fetchImpl: (async () => new Response(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: '`temperature` is deprecated for this model.' } }),
+      { status, headers: { 'content-type': 'application/json' } })) as unknown as typeof fetch });
+    const call = () => fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(anthropicBody) });
+    try { expect((await call()).status).toBe(400); status = 500; expect((await call()).status).toBe(500); }
+    finally { guard.uninstall(); }
+    const entries = read(path).entries;
+    expect(entries.map(e => [e.status, e.actual_usd! > 0])).toEqual([['reconciled', false], ['charged-reservation', true]]);
+  });
+});
+
+describe('streamed responses settle from their usage events', () => {
+  test('Anthropic message_start plus message_delta, and OpenAI response.completed', async () => {
+    const { sseUsage, usageCost, priceRequest } = await import('../../eval/runner/budget-ledger.ts');
+    const anthropic = [
+      'event: message_start', 'data: {"type":"message_start","message":{"id":"m","usage":{"input_tokens":12,"cache_creation_input_tokens":1000,"cache_read_input_tokens":5000,"output_tokens":1}}}', '',
+      'event: content_block_delta', 'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"hi"}}', '',
+      'event: message_delta', 'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":250}}', '',
+    ].join('\n');
+    expect(sseUsage(anthropic)).toEqual({ input_tokens: 12, cache_creation_input_tokens: 1000, cache_read_input_tokens: 5000, output_tokens: 250 });
+    const price = priceRequest('https://api.anthropic.com/v1/messages', { model: 'claude-sonnet-5-5', max_tokens: 1000, messages: [{ role: 'user', content: 'hi' }] })!;
+    expect(usageCost(price, { usage: sseUsage(anthropic) })!.output_tokens).toBe(250);
+    const openai = 'event: response.completed\ndata: {"type":"response.completed","response":{"usage":{"input_tokens":40,"output_tokens":7}}}\n';
+    expect(sseUsage(openai)).toEqual({ input_tokens: 40, output_tokens: 7 });
+    expect(sseUsage('data: {"type":"ping"}\n')).toBeNull();
   });
 });

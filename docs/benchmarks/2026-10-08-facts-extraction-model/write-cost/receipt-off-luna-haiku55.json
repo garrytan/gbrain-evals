@@ -1,0 +1,261 @@
+{
+  "schema": "p8-write-cost-v1",
+  "gbrain": {
+    "repo": "/workspace/gbrain",
+    "commit": "1935c74a9e217b276c7bbf3075ddd3c220e96a09",
+    "version": "0.60.110.0"
+  },
+  "embedding_model": "openai:text-embedding-3-large",
+  "dataset": "LongMemEval-S cleaned (98d7416c), first distinct sessions",
+  "arms": [
+    {
+      "arm": "off",
+      "extraction_model_setting": null,
+      "resolved_extraction_models": [],
+      "pages": 1000,
+      "messages": 10313,
+      "facts_remembered": 991,
+      "write_errors": 2,
+      "put_page_ms": {
+        "p50": 99,
+        "p95": 248
+      },
+      "remember_ms": {
+        "p50": 314,
+        "p95": 704
+      },
+      "write_wall_s": 503.873,
+      "settled_after_write_s": 15.005,
+      "jobs_queued_at_settle": {},
+      "job_drain_s": 1.785,
+      "jobs_after_drain": {},
+      "commit_path_generative_attempts": 0,
+      "generative_calls": 0,
+      "embedding_calls": 1989,
+      "embedding_tokens": 2424296,
+      "calls_by_cause": {
+        "embedding:openai:text-embedding-3-large effect=embedding": {
+          "calls": 998,
+          "input_tokens": 2402237,
+          "output_tokens": 0
+        },
+        "embedding:openai:text-embedding-3-large": {
+          "calls": 991,
+          "input_tokens": 22059,
+          "output_tokens": 0
+        }
+      },
+      "usd": 0.3152,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.3151584800000001,
+          "requests": 1989
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0,
+      "per_1000_messages": {
+        "usd": 0.0306,
+        "generative_calls": 0,
+        "embedding_tokens": 235071.8511
+      },
+      "per_1000_pages": {
+        "usd": 0.3152,
+        "generative_calls": 0,
+        "embedding_tokens": 2424296
+      }
+    },
+    {
+      "arm": "on:openai:gpt-6-luna",
+      "extraction_model_setting": "openai:gpt-6-luna",
+      "resolved_extraction_models": [
+        "openai:gpt-6-luna"
+      ],
+      "pages": 1000,
+      "messages": 10313,
+      "facts_remembered": 991,
+      "write_errors": 2,
+      "put_page_ms": {
+        "p50": 96,
+        "p95": 200
+      },
+      "remember_ms": {
+        "p50": 298,
+        "p95": 462
+      },
+      "write_wall_s": 433.087,
+      "settled_after_write_s": 5.003,
+      "jobs_queued_at_settle": {
+        "facts-absorb": {
+          "total": 996,
+          "waiting": 996,
+          "failed": 0,
+          "dead": 0
+        }
+      },
+      "job_drain_s": 10800.074,
+      "jobs_after_drain": {
+        "facts-absorb": {
+          "total": 996,
+          "waiting": 372,
+          "failed": 0,
+          "dead": 0
+        }
+      },
+      "commit_path_generative_attempts": 0,
+      "generative_calls": 623,
+      "embedding_calls": 6844,
+      "embedding_tokens": 2521569,
+      "calls_by_cause": {
+        "embedding:openai:text-embedding-3-large": {
+          "calls": 991,
+          "input_tokens": 22059,
+          "output_tokens": 0
+        },
+        "embedding:openai:text-embedding-3-large effect=embedding": {
+          "calls": 998,
+          "input_tokens": 2402237,
+          "output_tokens": 0
+        },
+        "chat:openai:gpt-6-luna effect=facts-absorb": {
+          "calls": 623,
+          "input_tokens": 904305,
+          "output_tokens": 932666
+        },
+        "embedding:openai:text-embedding-3-large effect=facts-absorb": {
+          "calls": 4855,
+          "input_tokens": 97273,
+          "output_tokens": 0
+        }
+      },
+      "usd": 0.8936,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.32780396999999745,
+          "requests": 6844
+        },
+        "openai:gpt-6-luna": {
+          "usd": 0.5657893299999999,
+          "requests": 624
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0,
+      "per_1000_messages": {
+        "usd": 0.0866,
+        "generative_calls": 60.4092,
+        "embedding_tokens": 244503.9271
+      },
+      "per_1000_pages": {
+        "usd": 0.8936,
+        "generative_calls": 623,
+        "embedding_tokens": 2521569
+      }
+    },
+    {
+      "arm": "on:anthropic:claude-haiku-5-5",
+      "extraction_model_setting": "anthropic:claude-haiku-5-5",
+      "resolved_extraction_models": [
+        "anthropic:claude-haiku-5-5"
+      ],
+      "pages": 1000,
+      "messages": 10313,
+      "facts_remembered": 989,
+      "write_errors": 4,
+      "put_page_ms": {
+        "p50": 89,
+        "p95": 189
+      },
+      "remember_ms": {
+        "p50": 326,
+        "p95": 819
+      },
+      "write_wall_s": 504.953,
+      "settled_after_write_s": 25.008,
+      "jobs_queued_at_settle": {
+        "facts-absorb": {
+          "total": 996,
+          "waiting": 996,
+          "failed": 0,
+          "dead": 0
+        }
+      },
+      "job_drain_s": 7316.491,
+      "jobs_after_drain": {
+        "facts-absorb": {
+          "total": 996,
+          "waiting": 0,
+          "failed": 0,
+          "dead": 0
+        }
+      },
+      "commit_path_generative_attempts": 0,
+      "generative_calls": 996,
+      "embedding_calls": 8039,
+      "embedding_tokens": 2561444,
+      "calls_by_cause": {
+        "embedding:openai:text-embedding-3-large": {
+          "calls": 991,
+          "input_tokens": 22059,
+          "output_tokens": 0
+        },
+        "embedding:openai:text-embedding-3-large effect=embedding": {
+          "calls": 998,
+          "input_tokens": 2402237,
+          "output_tokens": 0
+        },
+        "chat:anthropic:claude-haiku-5-5 effect=facts-absorb": {
+          "calls": 996,
+          "input_tokens": 4347291,
+          "output_tokens": 1234416
+        },
+        "embedding:openai:text-embedding-3-large effect=facts-absorb": {
+          "calls": 6050,
+          "input_tokens": 137148,
+          "output_tokens": 0
+        }
+      },
+      "usd": 1.3849,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.33298771999999904,
+          "requests": 8039
+        },
+        "anthropic:claude-haiku-5-5": {
+          "usd": 1.0519371000000002,
+          "requests": 996
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0,
+      "per_1000_messages": {
+        "usd": 0.1343,
+        "generative_calls": 96.5771,
+        "embedding_tokens": 248370.4063
+      },
+      "per_1000_pages": {
+        "usd": 1.3849,
+        "generative_calls": 996,
+        "embedding_tokens": 2561444
+      }
+    }
+  ],
+  "budget": {
+    "run_id": "p8-write-cost-2026-10-08T15-29-23-392Z-834d022b",
+    "budget_usd": 7,
+    "reserved_usd": 9,
+    "actual_usd": 2.5936769900000005,
+    "charged_reservations": 0,
+    "requests": 3,
+    "input_tokens": 13608687,
+    "output_tokens": 2167813,
+    "overshoot_usd": 0,
+    "ledger_path": "~/.capy/work/r2/budget/ledger.sqlite",
+    "program_cap_usd": 40,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 53.8
+    }
+  }
+}

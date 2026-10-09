@@ -1,0 +1,763 @@
+{
+  "kind": "precisionmembench-system",
+  "schema_version": 1,
+  "benchmark": "precisionmembench",
+  "contract": "PrecisionMemBench upstream contract",
+  "started_at": "2026-10-07T20:57:17.585Z",
+  "finished_at": "2026-10-07T21:06:07.058Z",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "612fe04358e21ae6444087e20a24eda3c517fd2dcfcfb86e8938bfec7872a26e",
+  "upstream": {
+    "repo": "tenurehq/precisionmembench",
+    "commit": "c9689ca63d83f8979b235fd2c0a6ddf2d28ca850",
+    "fixture_sha256": {
+      "fixtures/beliefs.seed.json": "35659b3b9a581b644fc6746e1b4e902c3e7b56c0973b546bf7b0816a69e3de98",
+      "fixtures/retrieval.cases.json": "09e99f0852280538abe34b03570f65583fdb10df3c554b7150f0f665d5db709c"
+    },
+    "scorer_sha256": {
+      "scorer/baseAdapter.ts": "0aa2bf9ec4544b548e8bd6ffbf47a23a2fa78eb236b3a60c9b46593d80c35356",
+      "scorer/belief.ts": "c3a992066d452cd6b80865640782c31d201a14e1f3fde44cd25953c0d6459353",
+      "scorer/buildRetrievalReport.ts": "809c77fccbf0e3b3001a2c396f4c6dc515d4f1f19b293373c8abca9239fcfa9b",
+      "scorer/runCases.ts": "e0e9c7bfcff2999955989e27127698cc9f4ed57284dbd9d3b87d2bbc46e61958",
+      "providers.config.json": "3b5a7fef80f5272f9b0f8d67c9a96249ee30ade34b28fcb77a44b34e7204a8eb"
+    }
+  },
+  "evaluator": "vendored BaseAdapter.buildContext and scoreCases, unchanged: persona, pinned facts, open questions, relation expansion and the budget come from the shared evaluator; only searchText calls the system (eval/precisionmembench/systemAdapter.ts)",
+  "ingestion": {
+    "unit": "one session per belief, one user turn with upstream's /add text (BaseAdapter.beliefToText)",
+    "superseded": "seeded live; no supersession field crosses",
+    "event_time": "synthetic and disclosed: 2026-05-29T00:00:00 plus one minute per fixture index (arrival order), never the belief's own dates",
+    "query_time": "the namespace's last event time",
+    "namespaces": "one per (user, scope) a case searches: that user's beliefs of that scope plus the user's universal beliefs; a belief no searched namespace holds gets its owner's own namespace"
+  },
+  "belief_mapping": "distinct cited sources in first-appearance order over items in rank order, whole items, cut at the case limit (maxBeliefs, default 20); one source is one belief of that namespace; items with provenance unavailable cite nothing; a retrieval whose items all lack provenance is not measurable",
+  "families": {
+    "search-only": "every category the vendored scorer does not list as structural (the S3 headline)",
+    "structural": "the scorer's STRUCTURAL_CATEGORIES, reported separately"
+  },
+  "selection": {
+    "cases_expected": 77,
+    "full_case_count": 77,
+    "limit": null,
+    "partial": false
+  },
+  "system": {
+    "name": "http:http://127.0.0.1:8700",
+    "capability_system": "temporal-graph",
+    "identity": {
+      "system": "temporal-graph",
+      "config": "recipe",
+      "versions": {
+        "package": "see comparison-systems table: temporal-graph (upstream commit eaa4128681bc53487138a4bbc22d58336ebe70d2)",
+        "lock_sha256": "4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13",
+        "image": "shim built from temporal-graph/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "backend_image": "neo4j:5.26.2@sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365 (the Neo4j tag in temporal-graph's own docker-compose.yml at the pinned release)",
+        "vendor_benchmark_code": "see comparison-systems table: temporal-graph (vendor benchmark code at commit 4b7f26cc76cca20743314ba9acb8c2cb6adc42f6: its LoCoMo ingestion and search scripts, written for the hosted service's client and translated to the library calls that client wraps)"
+      },
+      "health": {
+        "ok": true,
+        "config": "recipe",
+        "granularity": "session"
+      }
+    },
+    "capabilities": {
+      "protocol": 1,
+      "system": "temporal-graph",
+      "versions": {
+        "package": "see comparison-systems table: temporal-graph (upstream commit eaa4128681bc53487138a4bbc22d58336ebe70d2)",
+        "lock_sha256": "4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13",
+        "image": "shim built from temporal-graph/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "backend_image": "neo4j:5.26.2@sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365 (the Neo4j tag in temporal-graph's own docker-compose.yml at the pinned release)",
+        "vendor_benchmark_code": "see comparison-systems table: temporal-graph (vendor benchmark code at commit 4b7f26cc76cca20743314ba9acb8c2cb6adc42f6: its LoCoMo ingestion and search scripts, written for the hosted service's client and translated to the library calls that client wraps)"
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": "gpt-5.5",
+            "small": "gpt-4.1-nano",
+            "embedder": "text-embedding-3-small",
+            "dims": 1024,
+            "reranker": "gpt-4.1-nano"
+          },
+          "notes": "The library's defaults when its client is built without LLM, embedder or reranker clients: OpenAIClient (llm_client/openai_base_client.py DEFAULT_MODEL='gpt-5.5', DEFAULT_SMALL_MODEL='gpt-4.1-nano'; reasoning 'auto' resolves to effort 'none' for gpt-5.5), OpenAIEmbedder (embedder/openai.py DEFAULT_EMBEDDING_MODEL='text-embedding-3-small'; embedder/client.py EMBEDDING_DIM env default 1024, applied by truncating the returned vector), OpenAIRerankerClient (cross_encoder/openai_reranker_client.py DEFAULT_MODEL='gpt-4.1-nano', one logprob-scored chat call per candidate passage). The shim passes these same values explicitly so the record and the run cannot drift."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": "gpt-4.1-mini",
+            "small": "gpt-4.1-mini",
+            "embedder": "text-embedding-3-large",
+            "dims": 1536,
+            "reranker": "gpt-4.1-nano"
+          },
+          "unsettable": [],
+          "notes": "Both LLM roles (main and small) are set to gpt-4.1-mini. Dimensions are set the way the library sets them: OpenAIEmbedderConfig.embedding_dim truncates the 3,072-dimension text-embedding-3-large vector client-side (the API's `dimensions` parameter is never sent). The reranker is outside the common contract and stays at the recipe's gpt-4.1-nano."
+        }
+      },
+      "time": "native",
+      "time_notes": "add_episode(reference_time=session event_time). In message granularity each turn gets reference_time = event_time + turn_index milliseconds so retrieve_episodes (ORDER BY valid_at DESC) sees the conversation order instead of ties. search_ takes no query time, so query_time is ignored and applied_settings says so. An event_time or query_time without a UTC offset is read as UTC.",
+      "granularity": "session (default, SHIM_GRANULARITY=session): one EpisodeType.message episode per session whose body is the session's 'speaker: text' lines. message (SHIM_GRANULARITY=message): one episode per turn, as the vendor's LoCoMo harness does. The metered smoke measures both; the preregistration fixes one.",
+      "provenance": {
+        "status": "partial",
+        "mechanism": "Mixed by item class. Edges (facts): EntityEdge.episodes lists the episodes that produced or re-asserted the fact; episode uuids map to source ids through the episode name (source_id or source_id#turn) via EpisodicNode.get_by_uuids, provenance exact (partial if an episode was deleted). Entity nodes: EntityNode carries no episodes field at the pinned release (nodes.py:499-504); the public classmethod EpisodicNode.get_by_entity_node_uuid returns the episodes with a MENTIONS edge to the node, reported as partial because the node summary is rewritten per episode and need not reflect every mention. Set settings.node_provenance='none' to report entity nodes as unavailable. Episodes: exact (the episode itself). Communities: unavailable (none are built)."
+      },
+      "delete": "native",
+      "delete_notes": "The library's remove_episode for every episode of the source (its client module, lines 1824-1855). Its semantics are the product's: it deletes edges whose FIRST episode is the removed one (even if later episodes re-asserted them), keeps edges first created by another episode (their episodes list keeps the removed uuid), and deletes entity nodes mentioned only by the removed episode. P2 measures the residue; the shim does not repair it.",
+      "readiness": "synchronous: add_episode returns after extraction, resolution and writes; /finish has no background work to wait for",
+      "namespace": "group_id (group_id = ns, one Neo4j database); reset = graph_data_operations.clear_data(driver, group_ids=[ns])",
+      "parallel_namespaces": true,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
+            "limit": 10,
+            "node_provenance": "mentions"
+          },
+          "notes": "The library's search_() with no config argument: COMBINED_HYBRID_SEARCH_CROSS_ENCODER (edges, nodes, episodes and communities; BM25 + cosine + BFS candidates, cross-encoder rerank) at SearchConfig's default limit 10 per class (search_config.py DEFAULT_SEARCH_LIMIT)."
+        },
+        "fixed-evidence": {
+          "settings": {
+            "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
+            "limit": 50,
+            "node_provenance": "mentions"
+          },
+          "notes": "The same recipe with 50 results per class, enough to fill the 8,000-token evidence budget (facts run about 25 tokens, node summaries about 100); the harness packer truncates."
+        },
+        "allowed_settings_overrides": [
+          "recipe (any upper-case name in the library's search.search_config_recipes module)",
+          "limit",
+          "node_provenance (mentions | none)"
+        ],
+        "vendor_benchmark_reference": {
+          "searches": [
+            {
+              "scope": "nodes",
+              "reranker": "rrf",
+              "limit": 20,
+              "recipe": "NODE_HYBRID_SEARCH_RRF"
+            },
+            {
+              "scope": "edges",
+              "reranker": "cross_encoder",
+              "limit": 20,
+              "recipe": "EDGE_HYBRID_SEARCH_CROSS_ENCODER"
+            }
+          ],
+          "notes": "The vendor's LoCoMo harness (its search script) runs these two searches against the hosted service and renders facts as '<fact> (event_time: <valid_at>)' followed by entities as '<name>: <summary>'. Recorded for reference, not a shootout policy."
+        },
+        "item_mapping": "search_ returns separate ranked lists per class whose reranker scores are not on one scale, so the shim concatenates them in a fixed class order, each in temporal-graph's own rank order: edges, then entity nodes, then episodes, then communities (the vendor's harness also puts facts before entities). Edge -> type fact, text = fact, valid_from = valid_at, valid_to = invalid_at. Node -> type entity, text = '<name>: <summary>'. Episode -> type episode, text = content, valid_from = valid_at. Community -> type observation, text = '<name>: <summary>'. Raw per-class uuids and reranker scores are returned under raw."
+      },
+      "streaming": "disabled",
+      "provider_routes": [
+        "POST /v1/responses (structured extraction, responses.parse)",
+        "POST /v1/chat/completions (cross-encoder reranker with logprobs)",
+        "POST /v1/embeddings"
+      ],
+      "telemetry_off": [
+        "GRAPHITI_TELEMETRY_ENABLED=false",
+        "NEO4J_dbms_usage__report_enabled=false"
+      ],
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "http",
+        "version": "see comparison-systems table: temporal-graph (the vendor's MCP server at commit 11538f6d45561bcce9a4400b374fb2dc533dccb6); its pyproject accepts library releases newer than the pin, so the Cat 40 build must constrain the library to the pinned release"
+      },
+      "deviations_from_vendor_code": [
+        "The hosted service's graph.add(data, type='message', created_at, group_id) becomes the library's add_episode(episode_body, source=EpisodeType.message, reference_time, group_id); the hosted service is a different product built on temporal-graph.",
+        "Default granularity is one episode per session, not the vendor harness's one per message: per-message ingestion multiplies extraction calls by the turns per session (about 30x on LoCoMo) and, with every turn carrying the session time, makes temporal-graph's previous-episode window pick tied episodes in arbitrary order. SHIM_GRANULARITY=message reproduces the vendor harness's granularity, with millisecond offsets that keep turn order.",
+        "Episode body lines are 'speaker: content' exactly as the harness sends each turn; the vendor harness appended '(description of attached image: <blip_caption>)' itself, here any caption arrives inside content.",
+        "source_description='chat conversation' (the library requires one and shows it to the extraction prompt; the hosted service's add has no such field).",
+        "Episode name = opaque source_id (or source_id#turn) so provenance and deletion map back to sessions through public node APIs; names are not shown to any prompt.",
+        "group_id = opaque namespace id instead of 'locomo_experiment_user_<idx>'.",
+        "Retrieval follows the shootout's two policies over the library's search_() rather than the vendor harness's two-search recipe, which is recorded under vendor_benchmark_reference; the edge validity window travels in valid_from/valid_to instead of being printed into the text.",
+        "Provider clients are constructed explicitly with the configured models and OPENAI_BASE_URL rather than relying on temporal-graph()'s implicit defaults; for SHIM_CONFIG=recipe the values are identical."
+      ]
+    }
+  },
+  "policy": {
+    "name": "temporal-graph:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "recipe": "COMBINED_HYBRID_SEARCH_CROSS_ENCODER",
+      "limit": 10,
+      "node_provenance": "mentions"
+    },
+    "settings_source": "settings"
+  },
+  "product": null,
+  "overlay": null,
+  "gbrain_config": null,
+  "embedding": null,
+  "fidelity": null,
+  "cost": null,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "temporal-graph",
+    "lease_id": "temporal-graph-recipe-pmb-a1-f885cb5b",
+    "retry_upstream_5xx": true
+  },
+  "sanitizer": {
+    "forbidden_markers": 146
+  },
+  "ingest": {
+    "namespaces": 6,
+    "sessions": 50,
+    "failed_sessions": 0,
+    "degraded_namespaces": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "usd": 1.7276,
+    "requests": 771
+  },
+  "namespaces": [
+    {
+      "ns": "ns-5c555a84e0a42487",
+      "user": "other-user",
+      "scope": "domain:code",
+      "beliefs": 1,
+      "searched": false,
+      "ingest": {
+        "ns": "ns-5c555a84e0a42487",
+        "sessions": 1,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.022552679999999995,
+          "requests": 13,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 8
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-d12139b852338c18",
+      "user": "test-user",
+      "scope": "domain:code",
+      "beliefs": 27,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-d12139b852338c18",
+        "sessions": 27,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 1.1946710400000002,
+          "requests": 567,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 403
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-a40c2f300b3b2fe6",
+      "user": "test-user",
+      "scope": "domain:hobby",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-a40c2f300b3b2fe6",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.09037818000000006,
+          "requests": 41,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 30
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-58e053026d06312d",
+      "user": "test-user",
+      "scope": "domain:writing",
+      "beliefs": 12,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-58e053026d06312d",
+        "sessions": 12,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.34771484,
+          "requests": 112,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 89
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    },
+    {
+      "ns": "ns-c899ceb9ba152b79",
+      "user": "brand-new-user",
+      "scope": "domain:code",
+      "beliefs": 0,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-c899ceb9ba152b79",
+        "sessions": 0,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "skipped",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0,
+          "requests": 0,
+          "unpriced": 0
+        }
+      }
+    },
+    {
+      "ns": "ns-4d357ae157c677ee",
+      "user": "test-user",
+      "scope": "user:universal",
+      "beliefs": 5,
+      "searched": true,
+      "ingest": {
+        "ns": "ns-4d357ae157c677ee",
+        "sessions": 5,
+        "failed_sessions": 0,
+        "finish_ready": true,
+        "completeness": "known",
+        "readiness_probe": "found",
+        "degraded": false,
+        "error": null,
+        "errors": [],
+        "provider": {
+          "usd": 0.07227003999999998,
+          "requests": 38,
+          "unpriced": 0,
+          "upstream": {
+            "statuses": {
+              "200": 28
+            },
+            "failed": 0,
+            "unparseable": 0
+          }
+        }
+      }
+    }
+  ],
+  "costs": {
+    "ingest_usd": 1.7276,
+    "retrieval_usd": 0.0348,
+    "total_usd": 1.7624,
+    "source": "metering proxy"
+  },
+  "latency": {
+    "system_calls": 72,
+    "p50_ms": 1730.35,
+    "p95_ms": 2830.4500000000003
+  },
+  "outcomes": {
+    "scored": 77,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 77,
+  "comparison_complete": true,
+  "summary": {
+    "search-only": {
+      "cases": 43,
+      "counted": 43,
+      "harness_failures": 0,
+      "passed": 3,
+      "mean_precision": 0.134,
+      "n_precision": 40,
+      "mean_recall": 0.9902,
+      "n_recall": 34,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "structural": {
+      "cases": 34,
+      "counted": 34,
+      "harness_failures": 0,
+      "passed": 6,
+      "mean_precision": 0.0433,
+      "n_precision": 29,
+      "mean_recall": 0.9444,
+      "n_recall": 9,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "all": {
+      "cases": 77,
+      "counted": 77,
+      "harness_failures": 0,
+      "passed": 9,
+      "mean_precision": 0.0959,
+      "n_precision": 69,
+      "mean_recall": 0.9806,
+      "n_recall": 43,
+      "provenance_not_measurable": 0,
+      "metrics": "measured"
+    },
+    "categories": [
+      {
+        "category": "Type routing and open questions",
+        "family": "structural",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0417,
+        "n_precision": 6,
+        "mean_recall": 1,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Alias resolution",
+        "family": "search-only",
+        "cases": 23,
+        "counted": 23,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.1584,
+        "n_precision": 23,
+        "mean_recall": 0.9848,
+        "n_recall": 22,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Scope disambiguation",
+        "family": "structural",
+        "cases": 12,
+        "counted": 12,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.047,
+        "n_precision": 12,
+        "mean_recall": 0.875,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Supersession chain exclusion",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0,
+        "n_precision": 3,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Design boundary cases",
+        "family": "search-only",
+        "cases": 6,
+        "counted": 6,
+        "harness_failures": 0,
+        "passed": 2,
+        "mean_precision": 0.0156,
+        "n_precision": 4,
+        "mean_recall": 1,
+        "n_recall": 1,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cross-user isolation",
+        "family": "structural",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0,
+        "n_precision": 1,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Persona prelude content",
+        "family": "structural",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0,
+        "n_precision": 3,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Ranking stability",
+        "family": "structural",
+        "cases": 3,
+        "counted": 3,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": 0.1,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Fuzzy matching and prefix guards",
+        "family": "search-only",
+        "cases": 7,
+        "counted": 7,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.0842,
+        "n_precision": 7,
+        "mean_recall": 1,
+        "n_recall": 5,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Cold start behavior",
+        "family": "search-only",
+        "cases": 1,
+        "counted": 1,
+        "harness_failures": 0,
+        "passed": 1,
+        "mean_precision": null,
+        "n_precision": 0,
+        "mean_recall": null,
+        "n_recall": 0,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Budget eviction and capacity",
+        "family": "structural",
+        "cases": 5,
+        "counted": 5,
+        "harness_failures": 0,
+        "passed": 3,
+        "mean_precision": 0.1218,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Counter-signal retrieval",
+        "family": "search-only",
+        "cases": 2,
+        "counted": 2,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.1027,
+        "n_precision": 2,
+        "mean_recall": 1,
+        "n_recall": 2,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      },
+      {
+        "category": "Relation expansion",
+        "family": "search-only",
+        "cases": 4,
+        "counted": 4,
+        "harness_failures": 0,
+        "passed": 0,
+        "mean_precision": 0.2154,
+        "n_precision": 4,
+        "mean_recall": 1,
+        "n_recall": 4,
+        "provenance_not_measurable": 0,
+        "metrics": "measured"
+      }
+    ],
+    "upstream": {
+      "meanLatencyMs": 1720.27,
+      "p50LatencyMs": 1709.89,
+      "p95LatencyMs": 2868.62,
+      "caseCount": 77,
+      "meanPrecision": 0.0959,
+      "meanRecall": 0.9806,
+      "totalPassed": 9,
+      "totalCases": 77,
+      "passRate": 0.1169,
+      "activeRetrievalPasses": 0,
+      "passTypes": {
+        "activeRetrieval": 0,
+        "structural": 6,
+        "triviallyEmpty": 3
+      },
+      "categories": [
+        {
+          "category": "Alias resolution",
+          "caseCount": 23,
+          "passed": 0,
+          "failed": 23,
+          "meanPrecision": 0.1584,
+          "meanRecall": 0.9848
+        },
+        {
+          "category": "Scope disambiguation",
+          "caseCount": 12,
+          "passed": 0,
+          "failed": 12,
+          "meanPrecision": 0.047,
+          "meanRecall": 0.875
+        },
+        {
+          "category": "Fuzzy matching and prefix guards",
+          "caseCount": 7,
+          "passed": 0,
+          "failed": 7,
+          "meanPrecision": 0.0842,
+          "meanRecall": 1
+        },
+        {
+          "category": "Type routing and open questions",
+          "caseCount": 6,
+          "passed": 0,
+          "failed": 6,
+          "meanPrecision": 0.0417,
+          "meanRecall": 1
+        },
+        {
+          "category": "Design boundary cases",
+          "caseCount": 6,
+          "passed": 2,
+          "failed": 4,
+          "meanPrecision": 0.0156,
+          "meanRecall": 1
+        },
+        {
+          "category": "Budget eviction and capacity",
+          "caseCount": 5,
+          "passed": 3,
+          "failed": 2,
+          "meanPrecision": 0.1218,
+          "meanRecall": 1
+        },
+        {
+          "category": "Persona prelude content",
+          "caseCount": 4,
+          "passed": 1,
+          "failed": 3,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Relation expansion",
+          "caseCount": 4,
+          "passed": 0,
+          "failed": 4,
+          "meanPrecision": 0.2154,
+          "meanRecall": 1
+        },
+        {
+          "category": "Supersession chain exclusion",
+          "caseCount": 3,
+          "passed": 0,
+          "failed": 3,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Ranking stability",
+          "caseCount": 3,
+          "passed": 1,
+          "failed": 2,
+          "meanPrecision": 0.1,
+          "meanRecall": 1
+        },
+        {
+          "category": "Counter-signal retrieval",
+          "caseCount": 2,
+          "passed": 0,
+          "failed": 2,
+          "meanPrecision": 0.1027,
+          "meanRecall": 1
+        },
+        {
+          "category": "Cross-user isolation",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": 0,
+          "meanRecall": null
+        },
+        {
+          "category": "Cold start behavior",
+          "caseCount": 1,
+          "passed": 1,
+          "failed": 0,
+          "meanPrecision": null,
+          "meanRecall": null
+        }
+      ]
+    }
+  },
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson",
+    "report": "report.json"
+  }
+}

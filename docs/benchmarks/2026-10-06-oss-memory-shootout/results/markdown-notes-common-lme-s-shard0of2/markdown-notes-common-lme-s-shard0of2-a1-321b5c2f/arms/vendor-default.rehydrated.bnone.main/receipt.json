@@ -1,0 +1,269 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "lme-s",
+  "split": "dev",
+  "started_at": "2026-10-06T22:28:43.515Z",
+  "finished_at": "2026-10-07T06:47:01.616Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "LongMemEval-S cleaned",
+    "files": [
+      {
+        "path": "longmemeval/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+      }
+    ],
+    "revision": "98d7416c",
+    "license": "MIT"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "markdown-notes",
+    "lease_id": "markdown-notes-common-lme-s-shard0of2-a1-321b5c2f",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 50,
+    "sessions": 2393,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0.7243269799999997,
+    "upstream_trouble": 1,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 19701
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "f466a6217dc4d527ecc3ecb198444ce8f55ecef01f898febe1f7c858b31b73ad",
+  "cell_run_config_hash": "e0b54e8b62d7ecfd919ff351f4efae80081bc12b0f7f5948fabda69625bc0eb7",
+  "arm": {
+    "id": "vendor-default.rehydrated.bnone.main",
+    "policy": "vendor-default",
+    "context": "rehydrated",
+    "budget_tokens": null,
+    "reader": {
+      "id": "main",
+      "model": "openai:gpt-4o-2024-08-06",
+      "slice": null
+    }
+  },
+  "retrieval_path": "MemorySystem.retrieve (http:http://127.0.0.1:8700, policy markdown-notes:vendor-default), one retrieval per question and policy shared by every arm",
+  "selection": {
+    "categories": null,
+    "limit": 100,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 2
+    },
+    "conversations": 50,
+    "questions_expected": 50,
+    "reader_slice": null
+  },
+  "counts": {
+    "rows": 50,
+    "scored": 47,
+    "errors": 0,
+    "abstention": 3
+  },
+  "summary": {
+    "recall_all_at_5": 0.7872340425531915,
+    "recall_any_at_5": 0.9148936170212766,
+    "recall_all_at_10": 0.8723404255319149,
+    "ndcg_at_10": 0.8430617052705194,
+    "latency_p50_ms": 604.7,
+    "latency_p95_ms": 816.3,
+    "qa_score": 0.82,
+    "qa_rows": 50,
+    "qa_errors": 0,
+    "qa_service_score": 0.82,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "reader": "openai:gpt-4o-2024-08-06",
+    "judge": "openai:gpt-4o-2024-08-06",
+    "runs": 1,
+    "context": "rehydrated",
+    "budget_tokens": null,
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "judge_prompts": "LongMemEval official per-type prompts",
+    "contexts_file": "../../contexts.ndjson"
+  },
+  "system": {
+    "name": "http:http://127.0.0.1:8700",
+    "capability_system": "markdown-notes",
+    "capabilities": {
+      "protocol": 1,
+      "system": "markdown-notes",
+      "versions": {
+        "package": "see comparison-systems table: markdown-notes",
+        "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
+        "image": null,
+        "vendor_benchmark_code": "see comparison-systems table: markdown-notes (vendor benchmark code at commit c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048: the benchmarks package's converters/locomo_to_corpus.py, providers/bm_local.py and scoring/qa.py)",
+        "resolved_dependencies": "uv.lock pins every transitive dependency to markdown-notes's own uv.lock at the tag; prereleases resolved: fastmcp==4.0.0b1 and fastmcp-slim==4.0.0b1 (markdown-notes requires fastmcp==4.0.0b1), opentelemetry-instrumentation==0.63b1 and opentelemetry-semantic-conventions==0.63b1"
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": null,
+            "small": null,
+            "embedder": "fastembed:BAAI/bge-small-en-v1.5 (local ONNX, quantized qdrant/bge-small-en-v1.5-onnx-q)",
+            "dims": 384,
+            "reranker": null
+          },
+          "notes": "documented local install (pip/uv install markdown-notes, SQLite + sqlite-vec). Semantic search is on by default because fastembed and sqlite_vec import (config_models.py _default_semantic_search_enabled). The local reranker jinaai/jina-reranker-v1-tiny-en is configured but reranker_enabled defaults to False (config_models.py:430), and the vendor LoCoMo benchmark does not enable it, so the recipe runs without a reranker. No LLM anywhere in ingest or search: the recipe makes zero provider calls."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": null,
+            "embedder": "litellm:openai/text-embedding-3-large",
+            "dims": 1536,
+            "reranker": null
+          },
+          "unsettable": [
+            "extraction"
+          ],
+          "notes": "markdown-notes has no extraction model. The embedder runs through the LiteLLM provider because the built-in openai provider never sends `dimensions` (openai_provider.py embed_documents), so text-embedding-3-large would return 3,072 dimensions; the LiteLLM provider forwards `dimensions` for text-embedding-3 models. Calls go to OPENAI_BASE_URL via semantic_embedding_api_base. markdown-notes keeps its default semantic_min_similarity of 0.55 in this config. text-embedding-3-large scores lower in absolute terms than bge-small: in the 2026-10-05 metered smoke the relevant note scored 0.466 for 'What did Caroline sign up for in May 2023?', so vector search dropped it and the query returned nothing (full-text search did not match either)."
+        }
+      },
+      "time": "in-text",
+      "time_notes": "The session date is rendered into the note title, a `session_date` frontmatter field and the heading, exactly where the vendor converter puts it. markdown-notes's own created/updated timestamps are file and index times, not event times. search_notes takes no reference date, so query_time is ignored.",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one note per session named <source_id>.md; each search_notes row maps back through its file_path. Rows are whole-note entities (entity_types default), so every item cites exactly one session."
+      },
+      "delete": "native",
+      "delete_notes": "delete_note MCP tool on the session's note removes the file and its index rows. Nothing is derived across notes, so no residue is expected.",
+      "readiness": "synchronous: /finish runs `bm reindex --search --embeddings -p <ns>` (the vendor benchmark's command), which returns after full-text indexing and embedding. Completeness is `known` when its summary reports 0 embedding errors and `bm status --json` counts as many files as were written, else `degraded`. The vendor's `bm status --json` readiness poll has no readiness field to read at the pinned release (its helper returns None and proceeds).",
+      "namespace": "project: one markdown-notes project per namespace, named <ns>, rooted at /data/notes/<ns>",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 10
+          },
+          "maps_to": "search_notes(page_size=10, search_type='hybrid', output_format='json'): page_size default 10 in search_notes and top_k default 10 in the vendor benchmark; hybrid is the default search type when semantic search is on; semantic_min_similarity 0.55, semantic_vector_k 100, reranker off"
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 30
+          },
+          "maps_to": "same call with page_size=30, so the harness can pack an 8,000-token budget from more candidates than the default page"
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [
+        "BASIC_MEMORY_NO_PROMOS=1",
+        "BASIC_MEMORY_AUTO_UPDATE=false",
+        "BASIC_MEMORY_LOGFIRE_ENABLED=false",
+        "BASIC_MEMORY_LOGFIRE_SEND_TO_LOGFIRE=false",
+        "LITELLM_LOCAL_MODEL_COST_MAP=True",
+        "LITELLM_TELEMETRY=False",
+        "HF_HUB_OFFLINE=1",
+        "HF_HUB_DISABLE_TELEMETRY=1"
+      ],
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "stdio",
+        "version": "bm mcp (markdown-notes at the pinned release, fastmcp 4.0.0b1, mcp 2.0.0)"
+      },
+      "deviations_from_vendor_code": [
+        "Sessions arrive one at a time through /ingest and are written as notes in the vendor converter's format; the vendor converter writes a whole dataset first. Indexing happens at /finish with the vendor's reindex command.",
+        "Note ids and titles use the opaque source id (src-...) instead of locomo-cNN-sNN, and the frontmatter drops dataset_id, conversation_id and session_number, which would leak dataset identity across the sanitizer.",
+        "The session date is rendered from the ISO event_time into the LoCoMo phrase format ('1:56 pm on 8 May, 2023') for every dataset; the vendor copies LoCoMo's raw string.",
+        "Real-time file watching is off (BASIC_MEMORY_INDEX_CHANGES=false) so the warm MCP server never indexes concurrently with the explicit `bm reindex`; indexing still runs only through the vendor's reindex command.",
+        "The warm MCP session starts at container start instead of after the first ingest, and serves every project.",
+        "Item text is matched_chunk with the note title prefixed when the chunk lacks it, mirroring the vendor's qa.assemble_context header; the vendor's character budget (12,000 chars, 10 hits) is replaced by the harness's shared packer.",
+        "The MCP client is an independent implementation (no vendor benchmark code is copied, because the repository is AGPL-3.0)."
+      ]
+    },
+    "identity": {
+      "system": "markdown-notes",
+      "config": "common",
+      "versions": {
+        "package": "see comparison-systems table: markdown-notes",
+        "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
+        "image": null,
+        "vendor_benchmark_code": "see comparison-systems table: markdown-notes (vendor benchmark code at commit c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048: the benchmarks package's converters/locomo_to_corpus.py, providers/bm_local.py and scoring/qa.py)",
+        "resolved_dependencies": "uv.lock pins every transitive dependency to markdown-notes's own uv.lock at the tag; prereleases resolved: fastmcp==4.0.0b1 and fastmcp-slim==4.0.0b1 (markdown-notes requires fastmcp==4.0.0b1), opentelemetry-instrumentation==0.63b1 and opentelemetry-semantic-conventions==0.63b1"
+      },
+      "health": {
+        "ok": true,
+        "config": "common",
+        "bm_version": "markdown-notes version: 0.23.2"
+      }
+    }
+  },
+  "context": "rehydrated",
+  "policy": {
+    "name": "markdown-notes:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "k": 10
+    },
+    "settings_source": "settings"
+  },
+  "manifest_sha256": "b0f1166d64ae212874d696c5293020bf393199e18249f04c288fc44f7c427190",
+  "outcomes": {
+    "scored": 50,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 50,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "rows_file": "rows.ndjson",
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

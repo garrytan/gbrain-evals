@@ -1,6 +1,6 @@
 """Call each harness LLM client once and print one JSON object of outcomes.
 
-Used by test/eval/metering-proxy.test.ts to prove that a zero balance blocks
+Used by test/eval/harness-metering-proxy.test.ts to prove that a zero balance blocks
 dispatch from a harness Python process. It runs the pinned harness's own
 clients (Gemini, OpenAI, Groq) and our Anthropic client exactly as a cell
 does, with the environment the metering proxy issues for the `harness`

@@ -1,0 +1,23 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "extract-first",
+  "config": "common",
+  "notes": "Draft (Phase 6, lifecycle-lite). Five seeded histories, one namespace each; the restart goes through bootstrap.sh restart, which keeps volumes.",
+  "cells": [
+    {
+      "id": "extract-first-common-lifecycle-lite",
+      "benchmark": "lifecycle-lite",
+      "lease_usd": 1.2,
+      "lease_basis": "1.15 x estimate $1.04: ingest $0.968 per 675 add calls (PILOT.md, LoCoMo common), one add per session here: $0.48; query embeddings $0.01; reader gpt-4o-mini and judge gpt-4o-2024-08-06 at $0.0027 per probe (LoCoMo native, PILOT.md) x 205 final-checkpoint probes: $0.55",
+      "command": "EXTRACT_FIRST_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system extract-first --config common --timeout 1800 && { bun eval/runner/lifecycle-lite.ts --system http://127.0.0.1:8700 --seeds 1,2,3,4,5 --policy fixed-evidence --qa reader --restart --restart-cmd \"bash eval/systems/bootstrap.sh restart --system extract-first --timeout 1800\" --finish-timeout-s 14400 --output \"$SHOOTOUT_OUT/lifecycle-lite\"; }; s=$?; bash eval/systems/bootstrap.sh down --system extract-first; exit $s",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system extract-first",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    }
+  ]
+}

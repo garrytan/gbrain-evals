@@ -121,7 +121,7 @@ export async function main(argv: string[]): Promise<number> {
   sh(['docker', 'build', '-q', '-t', 'sdebench-base', '-f', join(SPIKE_DIR, 'Dockerfile.base'), SPIKE_DIR]);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
 
-  const { startMeteringProxy } = await import('./metering-proxy.ts');
+  const { startMeteringProxy } = await import('./harness-metering-proxy.ts');
   let stub: Awaited<ReturnType<typeof import('./stub-upstream.ts')['startStubUpstream']>> | null = null;
   let ledgerPath = budgetOptionsFrom(argv).ledgerPath;
   if (stubMode) {

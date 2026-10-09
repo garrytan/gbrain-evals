@@ -1,0 +1,24 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-shootout",
+  "config": "common",
+  "notes": "Draft (Phase 6, lifecycle-lite). gbrain-shootout at the repository pin 739e5cc, common embedder; its PGLite brain stays on disk for the run so it can restart.",
+  "cells": [
+    {
+      "id": "gbrain-shootout-common-lifecycle-lite",
+      "benchmark": "lifecycle-lite",
+      "lease_usd": 1.42,
+      "lease_basis": "1.15 x estimate $1.23: ingest embeddings about $0.01; query about $0.001 per retrieval (the Phase 4 retrieval-only basis: Voyage rerank and embeddings) x 665: $0.67; reader and judge $0.55 as the vendor cells",
+      "command": "bun eval/runner/lifecycle-lite.ts --system gbrain-shootout --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --seeds 1,2,3,4,5 --policy fixed-evidence --qa reader --restart --output \"$SHOOTOUT_OUT/lifecycle-lite\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ]
+    }
+  ]
+}

@@ -26,10 +26,22 @@
  * brain and on both invariance brains (line_grammar.enabled forced per brain).
  * Hermetic: provider keys stripped, no model call.
  *
+ * Q2 C-gate metrics (summary): typed_recall_by_type (per gold type, correctly typed / gold edges; the kit pairs the
+ * rows by edge) and spurious specific types (stored typed edges other than `mentions` whose pair has another gold
+ * type or no gold edge, over all stored specific typed edges, in points).
+ *
+ * Custodian mode (Q2 W1/W2): --dir <custody path> --decision-id <id> --purpose <text> --output <dir outside every git
+ * worktree>. Every page file read appends an access-log line beside it; the receipt is hash-only: slugs in ids,
+ * clusters and edge fields become SHA-256 prefixes (the same in every arm, so rows still pair), and no page text or
+ * slug appears.
+ *
  * Usage: bun eval/runner/line-grammar-typing.ts [--output <dir>] [--gbrain <checkout>[@ref]] [--dir eval/data/world-v1] [--json]
  */
-import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { assertCustodyRoots, manifestFiles, openCustodyFile } from './sealed-confirmation-lib.ts';
+import { campaignGuard } from './q2/campaign.ts';
 import { parseEvalConfig } from './eval-config.ts';
 import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { withHermeticEnv } from './hermetic-env.ts';
@@ -67,10 +79,62 @@ async function pagesWithRelationLines(gut: GbrainUnderTest, pages: readonly Rich
   return new Set(pages.filter(p => parseLineGrammar(p.compiled_truth).relations.length > 0).map(p => p.slug));
 }
 
-export async function runLineGrammarTyping(opts: { gut: GbrainUnderTest; dir: string; config: Record<string, string>; log?: (s: string) => void }): Promise<H1Result> {
+/**
+ * W custody pages in world-v1's page format. When the directory holds a manifest (`*manifest.json` with
+ * `files: [{ path, sha256 }]`), exactly the listed files are read and each must hash to its entry; otherwise every
+ * `*.json` except manifests is a page. Every file read is hash-logged through the access log before parsing.
+ */
+export function loadCustodyPages(dir: string, custody: { decisionId: string; purpose: string }): { pages: RichPage[]; files_sha256: string; manifest_sha256: string | null } {
+  const manifests = readdirSync(dir).filter(f => /manifest\.json$/.test(f)).sort();
+  if (manifests.length > 1) throw new Error(`--dir ${dir} holds ${manifests.length} manifests (${manifests.join(', ')}); a W set has one`);
+  let listed: Array<{ path: string; sha256: string | null }>;
+  let manifestSha: string | null = null;
+  if (manifests.length) {
+    const m = openCustodyFile({ file: join(dir, manifests[0]), flag: '--dir', decisionId: custody.decisionId, purpose: custody.purpose });
+    manifestSha = m.sha256;
+    listed = manifestFiles(JSON.parse(m.bytes.toString('utf8')), ['files', 'pages'], `${manifests[0]} (sha256 ${m.sha256})`).map(f => ({ path: f.path, sha256: f.sha256 }));
+  } else listed = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')).sort().map(path => ({ path, sha256: null }));
+  if (!listed.length) throw new Error(`--dir ${dir} holds no page files (*.json in world-v1 format); ask the custodian for the set`);
+  const hashes: string[] = [];
+  const pages = listed.map(f => {
+    if (f.path.startsWith('/') || f.path.split('/').includes('..')) throw new Error(`W manifest path ${f.path} must stay inside ${dir}`);
+    const { bytes, sha256 } = openCustodyFile({ file: join(dir, f.path), flag: '--dir', decisionId: custody.decisionId, purpose: custody.purpose });
+    if (f.sha256 && f.sha256 !== sha256) throw new Error(`W page ${f.path} hashes to ${sha256}, not the manifest's ${f.sha256}; the custody copy changed, stop and tell the custodian`);
+    hashes.push(`${f.path.length}:${sha256}`);
+    const p = JSON.parse(bytes.toString('utf8'));
+    if (Array.isArray(p.timeline)) p.timeline = p.timeline.join('\n');
+    if (Array.isArray(p.compiled_truth)) p.compiled_truth = p.compiled_truth.join('\n\n');
+    return { ...p, title: String(p.title ?? ''), compiled_truth: String(p.compiled_truth ?? ''), timeline: String(p.timeline ?? '') } as RichPage;
+  });
+  return { pages, files_sha256: createHash('sha256').update(hashes.join('\n')).digest('hex'), manifest_sha256: manifestSha };
+}
+
+/** Spurious specific types: stored typed edges other than `mentions` whose pair's gold type differs or is absent. */
+export function spuriousSpecific(rows: ReadonlyArray<{ goldType: string | null; inferredTypes: string[] }>): { specific_typed_edges: number; spurious_specific: number; spurious_specific_points: number | null } {
+  let specific = 0, spurious = 0;
+  for (const r of rows) for (const t of new Set(r.inferredTypes)) {
+    if (t === UNTYPED_FALLBACK) continue;
+    specific++;
+    if (t !== r.goldType) spurious++;
+  }
+  return { specific_typed_edges: specific, spurious_specific: spurious, spurious_specific_points: specific ? 100 * spurious / specific : null };
+}
+
+const hashSlug = (s: string) => `h:${createHash('sha256').update(s).digest('hex').slice(0, 16)}`;
+
+/** Hash-only rows for a custody receipt: slugs become stable hashes, so arms still pair by id and cluster. */
+export function redactRows(rows: readonly H1Row[]): H1Row[] {
+  return rows.map(r => {
+    const out: H1Row = { ...r, id: r.kind === 'invariance' ? `page:${hashSlug(String(r.cluster))}` : hashSlug(r.id), cluster: hashSlug(r.cluster) };
+    for (const k of ['from', 'to']) if (typeof out[k] === 'string') out[k] = hashSlug(out[k] as string);
+    return out;
+  });
+}
+
+export async function runLineGrammarTyping(opts: { gut: GbrainUnderTest; dir: string; config: Record<string, string>; log?: (s: string) => void; pages?: RichPage[] }): Promise<H1Result> {
   return withHermeticEnv(CATEGORY, async () => {
     const log = opts.log ?? (() => {});
-    const pages = loadCorpus(opts.dir);
+    const pages = opts.pages ?? loadCorpus(opts.dir);
     const gold = buildGoldEdges(pages);
     log(`world: ${pages.length} pages, ${gold.length} gold edges`);
 
@@ -98,7 +162,10 @@ export async function runLineGrammarTyping(opts: { gut: GbrainUnderTest; dir: st
       rows.push({ id: `page:${p.slug}`, kind: 'invariance', cluster: p.slug, extract_identical: Number(same) });
     }
 
+    const goldTypes = [...new Set(rows.filter(r => r.kind === 'edge').map(r => String(r.gold_type)))].sort();
     const summary = {
+      typed_recall_by_type: Object.fromEntries(goldTypes.map(t => { const xs = rows.filter(r => r.kind === 'edge' && r.gold_type === t); return [t, { gold: xs.length, correctly_typed: xs.reduce((a, r) => a + (r.correctly_typed as number), 0), recall: xs.reduce((a, r) => a + (r.correctly_typed as number), 0) / xs.length }]; })),
+      ...spuriousSpecific(s.rows),
       gold_edges: gold.length,
       stored_edges: inferred.length,
       type_accuracy: s.overallTypeAccuracy,
@@ -121,11 +188,18 @@ export async function runLineGrammarTyping(opts: { gut: GbrainUnderTest; dir: st
 }
 
 async function main(): Promise<void> {
-  const argv = process.argv.slice(2);
+  const rawArgv = process.argv.slice(2);
+  const campaign = campaignGuard(rawArgv);
+  const argv = campaign && !rawArgv.includes('--output') ? [...rawArgv, '--output', campaign.output] : rawArgv;
   const json = argv.includes('--json');
   const log = json ? () => {} : (s: string) => console.log(s);
   const dir = argValue(argv, '--dir') ?? 'eval/data/world-v1';
-  const output = argValue(argv, '--output');
+  const decisionId = argValue(argv, '--decision-id');
+  const purpose = argValue(argv, '--purpose');
+  const custodian = !!(decisionId || purpose);
+  if (custodian && (!decisionId || !purpose)) throw new Error('custodian mode needs both --decision-id and --purpose, recorded in the access log before --dir is read');
+  const output = custodian ? assertCustodyRoots({ output: argValue(argv, '--output') }).output : argValue(argv, '--output');
+  const custody = custodian ? loadCustodyPages(dir, { decisionId: decisionId!, purpose: purpose! }) : null;
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
   const config = parseEvalConfig();
   const startedAt = new Date().toISOString();
@@ -133,14 +207,16 @@ async function main(): Promise<void> {
   log(`# ${CATEGORY} (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 9)}` : ', pinned'})`);
   let r: H1Result | null = null;
   let harnessError: string | null = null;
-  try { r = await runLineGrammarTyping({ gut, dir, config, log }); } catch (e) { harnessError = e instanceof Error ? e.message : String(e); }
+  try { r = await runLineGrammarTyping({ gut, dir, config, log: custody ? () => {} : log, ...(custody ? { pages: custody.pages } : {}) }); } catch (e) { harnessError = e instanceof Error ? e.message : String(e); }
+  const summary = r && custody ? { ...r.summary, confusion: undefined, invariance: { ...(r.summary.invariance as Record<string, unknown>), differing: `${(r.summary.invariance as { pages_differing: number }).pages_differing} page(s); slugs withheld (custody)` } } : r?.summary ?? null;
   const receipt = p5Receipt({
-    category: CATEGORY, gut, startedAt, harnessError, rows: r?.rows ?? [], summary: r?.summary ?? null,
+    category: CATEGORY, gut, startedAt, harnessError, rows: r ? (custody ? redactRows(r.rows) : r.rows) : [], summary,
     basis: 'hermetic: provider keys stripped, put_page and the stale-link sweep only; no model and no paid request',
     resolvedConfig: {
       engine: 'pglite-in-memory',
       caller: 'put_page operation handler, OperationContext { remote: false, sourceId: default }',
-      corpus: dir,
+      corpus: custody ? `custody set (files sha256 ${custody.files_sha256}, ${custody.pages.length} pages)` : dir,
+      ...(custody ? { custody: { decision_id: decisionId, files_sha256: custody.files_sha256, manifest_sha256: custody.manifest_sha256, receipt: 'hash-only: slugs hashed, no page text' } } : {}),
       render: 'serializeMarkdown form: frontmatter type/title, compiled truth, <!-- timeline -->, timeline',
       extraction: 'extractStaleFromDB (gbrain extract --stale, catch-up) after every page is written',
       gold: 'world-v1-gold.ts buildGoldEdges (the type-accuracy gold)',
@@ -149,6 +225,7 @@ async function main(): Promise<void> {
     },
   });
   writeReceipt(outPath, receipt);
+  campaign?.finish(outPath, 0);
   log(`receipt: ${outPath}`);
   if (harnessError) console.error(`harness error: ${harnessError}`);
   if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, summary: r?.summary ?? null }, null, 2) + '\n');

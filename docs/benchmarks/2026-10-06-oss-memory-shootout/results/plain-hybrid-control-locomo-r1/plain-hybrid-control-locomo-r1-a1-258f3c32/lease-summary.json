@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-hybrid-control-locomo-r1-a1-258f3c32",
+  "lease_usd": 8,
+  "committed_usd": 4.2708329699999945,
+  "requests": 4676,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

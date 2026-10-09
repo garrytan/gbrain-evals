@@ -1,0 +1,162 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-v1/world.json",
+    "scale": "v1",
+    "digest": "df8c95e71b17beab176851e3b15daaea9b8719fb009ba50e02cfc68243009a20",
+    "seed": 20261002,
+    "docs": 3973,
+    "tasks": 50,
+    "templates": "A",
+    "templates_file_sha256": null,
+    "strata": {
+      "memory-only": 0,
+      "page-authoring": 10,
+      "hidden-tool": 0
+    }
+  },
+  "evals_commit": "5ee1012672725982c4e96148c36accfd021b9352",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "209b20a961fc4d64bbaf7ac37597b37dbaf00d76",
+    "label": "wave12",
+    "commit": "209b20a961fc4d64bbaf7ac37597b37dbaf00d76",
+    "version": "0.60.106.0",
+    "tree": "79a062fffb1aceb4ca9dc83dc42660959a99c587",
+    "verified": {
+      "copy_tree": "79a062fffb1aceb4ca9dc83dc42660959a99c587",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.106.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "advertised_surface": null,
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": "7f488acd37a0d481ee02186a0700d8963882903a40e7b8de7b7e03cf6d1072cf",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": null
+  },
+  "mode": "cells",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 10,
+  "slot_builds": [],
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "F"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--models",
+    "claude-opus-5-5",
+    "--arms",
+    "gbrain",
+    "--gbrain",
+    "/workspace/gbrain@209b20a961fc4d64bbaf7ac37597b37dbaf00d76",
+    "--gbrain-root",
+    "~/.capy/work/cat40/gbrain-wave12",
+    "--gbrain-label",
+    "wave12",
+    "--slots",
+    "4",
+    "--surface",
+    "starter",
+    "--max-tool-chars",
+    "none",
+    "--judge",
+    "none",
+    "--transcripts",
+    "--budget-ledger",
+    ".budget/w12-smoke.sqlite",
+    "--families",
+    "F",
+    "--repeat",
+    "1",
+    "--budget-usd",
+    "4",
+    "--out",
+    "eval/reports/cat40/w12-smoke/wave12-opus-f-extra"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-07T21-13-00-898Z-fddeb971",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot1": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot2": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    },
+    "slot:slot3": {
+      "usd": 0.00000117,
+      "requests": 3,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 2.01967,
+    "input_tokens": 1537848,
+    "output_tokens": 20514,
+    "basis": "budget ledger cat40-model-ladder-2026-10-07T21-13-00-898Z-fddeb971: 132 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/w12-smoke.sqlite",
+    "program_cap_usd": 40,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 2,
+      "max": 2004.4
+    }
+  },
+  "finished_at": "2026-10-07T21:18:47.432Z"
+}

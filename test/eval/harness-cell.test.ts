@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { cellId, cellIdentity, chatPrice, estimateCell, harnessCredentials, identityDiff, validateSpec, type CellSpec, type ResolvedCell } from '../../eval/runner/harness-cell.ts';
 import { cpuRequirements } from '../../eval/runner/harness-env.ts';
-import { findNeedles } from '../../scripts/check-comparator-name.ts';
+import { findNeedles, scan } from '../../scripts/check-comparator-name.ts';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const spec: CellSpec = {
   dataset: 'beam', split: '100k', provider: 'gbrain', mode: 'rag', lane: 'raw', seal: 'dev',
@@ -103,4 +106,23 @@ describe('comparator name guard', () => {
   test('skips the "bias" idiom', () => expect(findNeedles(`avoid ${product} bias here`)).toEqual([]));
   test('still flags the name before other words', () => expect(findNeedles(`the ${product} server`)).toHaveLength(1));
   test('reports line numbers', () => expect(findNeedles(`a\nb\n${product}`)).toEqual([{ needle: 'product', line: 3 }]));
+  test('skips the vendor\'s upper-case environment variables and the public harness repository path', () => {
+    expect(findNeedles(`${product.toUpperCase()}_API_LLM_MODEL=x`)).toEqual([]);
+    expect(findNeedles(`${maker}-io/agent-memory-benchmark@f618ed7`)).toEqual([]);
+    expect(findNeedles(`${product}_api_llm_model`)).toHaveLength(1);
+    expect(findNeedles(`${maker}-io/${product}`).map(h => h.needle)).toEqual(['maker', 'product']);
+  });
+  test('scan skips dependency files and Python imports of the vendor client, nothing else', () => {
+    const root = mkdtempSync(join(tmpdir(), 'name-guard-'));
+    try {
+      mkdirSync(join(root, 'sys'));
+      const files: Record<string, string> = {
+        'sys/uv.lock': `name = "${product}-client"\n`, 'sys/Dockerfile': `RUN pip install ${product}-client\n`,
+        'sys/docker-compose.yml': `image: ghcr.io/${maker}-io/${product}:1\n`, 'sys/pyproject.toml': `dependencies = ["${product}-client"]\n`,
+        'sys/shim.py': `from ${product}_client import Client\nclient = Client()  # the ${product} server\n`, 'sys/README.md': `the ${product} server\n`,
+      };
+      for (const [rel, text] of Object.entries(files)) writeFileSync(join(root, rel), text);
+      expect(scan(root, Object.keys(files)).violations.map(h => `${h.path}:${h.line}`).sort()).toEqual(['sys/README.md:1', 'sys/shim.py:2']);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
 });
