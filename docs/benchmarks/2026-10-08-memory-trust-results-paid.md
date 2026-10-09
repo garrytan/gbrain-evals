@@ -9,9 +9,9 @@ gbrain's memory trust feature ([#5575](https://github.com/garrytan/gbrain/issues
 - **Labels help models give the current value.** When an agent or an outside source contradicted the owner's notes, the right value came back 55% of the time without labels and 100% (Opus), 81% (Sonnet) and 68% (GPT) with them (each p < 0.0001).
 - **Purge holds against agents.** No model recovered a purged claim from a store purge sweeps (0 of 9 per model); an embedding-neighbor probe found none either.
 - **A user's own saved preferences mostly survive the label.** Opus 5.5 and Sonnet 5.5 applied every saved customer number and sign-off with labels on (64 of 64 each), but labels made them hesitate to add a recipient the user asked for: Sonnet CC'd 11 of 32 with labels against 22 of 32 without (amendment 3).
-- **The feature branch costs nothing on LongMemEval.** Retrieval found every needed conversation for 450 of 470 questions against the published 451; Sonnet 5.5 answered 467 of 500 against 468 (p = 1) and Opus 5.5 472 against 474 (p = 0.69). The GPT-6.1 Sol reader batch had not settled when this was written.
+- **The feature branch costs nothing on LongMemEval.** Retrieval found every needed conversation for 450 of 470 questions against the published 451; Sonnet 5.5 answered 467 of 500 against 468 (p = 1), Opus 5.5 472 against 474 (p = 0.69) and GPT-6.1 Sol 464 against 464 (p = 1).
 
-Real spend settled: $150.15 of the $500 cap; at most $228 once the outstanding GPT reader batch settles ([spend](#cost-and-the-ledger)).
+Real spend: $165.14 of the $500 cap ([spend](#cost-and-the-ledger)).
 
 ## The concrete case
 
@@ -103,7 +103,7 @@ No model recovered a claim from a swept store (0 of 9 per model). Of the 11 clai
 | Strict `recall_all@5`, 470 answerable | 450 | 451 (`109b992`) | yes (at most 2 apart) |
 | Sonnet 5.5 answers, 500 | 467 | 468 (W10a, `c5fb0201`); paired 4 wins, 5 losses, p = 1 | yes |
 | Opus 5.5 answers, 500 | 472 | 474 (W10b, 2026-09-29 retrieval); paired 2 wins, 4 losses, p = 0.69 | yes |
-| GPT-6.1 Sol answers, 500 | pending: the provider batch stopped at 496 of 500 for over an hour | no published 500-question row (first measurement) | n/a |
+| GPT-6.1 Sol answers, 500 | 464 | 464 (W10b, 2026-09-29 retrieval); paired 2 wins, 2 losses, p = 1 | yes |
 
 None of the 500 reader requests carried a trust label (gbrain's LongMemEval harness renders session pages without them), so the guard checks that the feature branch left retrieval and reading unchanged; it cannot show what labels do to answer quality.
 
@@ -121,12 +121,12 @@ Keep trust labels on: they are what kept frontier models from adopting planted c
 | Cat 38 model arm | $5.44 |
 | Cat 39 model arm and embedding probe | $0.85 |
 | Utility guard: capture (embeddings $7.58, rerank $0.35) | $7.93 |
-| Utility guard: Sonnet reader $23.20 and judge $0.37, Opus reader $47.28 and judge $0.38 (booked at list price; the batch APIs bill about half); GPT reader batch outstanding, reserved at $77.44 worst case | $71.24 so far |
+| Utility guard: Sonnet reader $23.20 and judge $0.37, Opus reader $47.28 and judge $0.38, GPT reader $14.72 and judge $0.27 (booked at list price; the batch APIs bill about half) | $86.23 |
 | User-stated preferences (amendment 3): Opus $6.60, Sonnet $3.85, GPT $3.12 | $13.57 |
-| **Total settled** | **$150.15** (at most $228 with the outstanding GPT batch) |
+| **Total** | **$165.14** |
 
 The ledger also holds $238.14 of reservations that never left the process: amendment 1's first capture attempt imported the batch helper's `realFetch` after modules that replace `globalThis.fetch`, so the guard wrapped a fetch that called back into itself and reserved about 3.66 million times in 16 minutes without sending a request (no reservation ever settled; a fixed run of the same capture settles every request). The cause is fixed in `eval/runner/memory-trust/utility-guard.ts` (it imports `realFetch` first). The ledger has no release command and was not hand-edited, so its committed total overstates spend by that amount and its cap stayed the binding check throughout.
 
 ## Reproduce and inspect
 
-Receipts in [`2026-10-08-memory-trust/paid/`](2026-10-08-memory-trust/paid/): one per counted Cat 37 model, the labels-absent arm, one per model for amendment 3 (`prefs-*`), the utility guard summary and capture record, the Fable smoke and GPT pre-flight (not counted), Cats 38 and 39, and the joined counted set. Commands are in the preregistration ("Commands") with `--gbrain <checkout>@c2f10ee8ba598f440f3e22549b9f6963784442da`; the join is `bun eval/runner/memory-trust/join-cat37.ts <three receipts>`; the guard is `bun eval/runner/memory-trust/utility-guard.ts capture|submit|judge|poll|summary`. Execution notes: model sessions allowed 4,096 output tokens per call (adaptive-thinking models count thinking against that limit); the Cat 37 runs used 8 concurrent sessions; Cat 38's receipt records a dirty tree because the guard driver was uncommitted while it ran (the runner code was committed). Wall time: about 15 to 31 minutes per counted Cat 37 model, 11 minutes for Cat 38, 7 for Cat 39, 3 hours for the LongMemEval capture.
+Receipts in [`2026-10-08-memory-trust/paid/`](2026-10-08-memory-trust/paid/): one per counted Cat 37 model, the labels-absent arm, one per model for amendment 3 (`prefs-*`), the utility guard summary and capture record, the Fable smoke and GPT pre-flight (not counted), Cats 38 and 39, and the joined counted set. Commands are in the preregistration ("Commands") with `--gbrain <checkout>@c2f10ee8ba598f440f3e22549b9f6963784442da`; the join is `bun eval/runner/memory-trust/join-cat37.ts <three receipts>`; the guard is `bun eval/runner/memory-trust/utility-guard.ts capture|submit|judge|poll|summary`. Execution notes: model sessions allowed 4,096 output tokens per call (adaptive-thinking models count thinking against that limit); the Cat 37 runs used 8 concurrent sessions; Cat 38's receipt records a dirty tree because the guard driver was uncommitted while it ran (the runner code was committed). Wall time: about 15 to 31 minutes per counted Cat 37 model, 11 minutes for Cat 38, 7 for Cat 39, 3 hours for the LongMemEval capture; the reader batches took 20 minutes (Sonnet) to about 24 hours (GPT, which sat at 496 of 500 overnight). Correction to the preregistration's utility-guard text: it said `gpt-6.1-sol` had no published 500-question row, but the W10b reader replay has one (464 of 500, `w10b-sol-notes`); the GPT row is paired against it.

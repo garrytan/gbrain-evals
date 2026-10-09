@@ -39,10 +39,11 @@ const DATASET = process.env.LME_DATASET ?? join(homedir(), '.capy/work/lane-e/lm
 const CAPTURES = join(STATE, 'captures.ndjson');
 const ROWS = join(STATE, 'rows.ndjson');
 const READERS = ['claude-opus-5-5', 'claude-sonnet-5-5', 'gpt-6.1-sol'] as const;
-/** Published per-question rows to pair against: W10a Sonnet 5.5 at c5fb0201, W10b Opus 5.5 on the 2026-09-29 retrieval. */
+/** Published per-question rows to pair against: W10a Sonnet 5.5 at c5fb0201, W10b Opus 5.5 and GPT-6.1 Sol on the 2026-09-29 retrieval. */
 const PUBLISHED: Record<string, { label: string; rows: string; correct: number }> = {
   'claude-sonnet-5-5': { label: 'W10a Sonnet 5.5 notes reader at c5fb0201', rows: 'docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin/arms/w10a-sonnet55-notes/rows.ndjson', correct: 468 },
   'claude-opus-5-5': { label: 'W10b Opus 5.5 notes reader on the 2026-09-29 retrieval', rows: 'docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-opus55-notes/rows.ndjson', correct: 474 },
+  'gpt-6.1-sol': { label: 'W10b GPT-6.1 Sol notes reader on the 2026-09-29 retrieval', rows: 'docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-sol-notes/rows.ndjson', correct: 464 },
 };
 
 const flag = (argv: string[], name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };

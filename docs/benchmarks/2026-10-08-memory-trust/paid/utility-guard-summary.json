@@ -48,11 +48,20 @@
   },
   "gpt-6.1-sol": {
    "questions": 500,
-   "correct": 0,
-   "reader_errors": 500,
+   "correct": 464,
+   "reader_errors": 0,
    "judge_errors": 0,
-   "usd": 0,
-   "paired": null
+   "usd": 14.9916,
+   "paired": {
+    "against": "W10b GPT-6.1 Sol notes reader on the 2026-09-29 retrieval",
+    "published_correct": 464,
+    "prior_correct_recomputed": 464,
+    "pairs": 500,
+    "wins": 2,
+    "losses": 2,
+    "p_two_sided": 1,
+    "within_noise": true
+   }
   }
  }
 }
