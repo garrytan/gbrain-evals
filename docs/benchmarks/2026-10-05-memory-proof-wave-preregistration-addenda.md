@@ -83,3 +83,31 @@ Both lanes set the token budget, the result limit and query expansion on every c
 The receipts agree. The raw cells sent 0 rerank requests at every size, and none of their 1,060 retrieved rows records a skipped or failed rerank. The combined cells reranked all 1,080 questions with HTTP 200. Every dev raw cell also sent 0 rerank requests, so the raw lane was tuned under the same settings.
 
 So the raw arm measures gbrain pages-only with just an embedding key. It does not measure pages-only at the primary arm's search settings. The raw-against-combined gap mixes the facts block with this mode bundle. The arm stays as run, is reported as such, and decides nothing. No sealed cell is rerun. This was recorded before the joint re-judge finished and before any sealed raw analysis ran. The primary arm and the comparator are unaffected.
+
+## Custody and receipts lost with the run machine (October 9, 2026)
+
+**Every private and local file of this wave was lost on October 9, 2026, between 9:33 AM and 11:39 AM Pacific, when the cloud machine that held them was replaced.** Only what had been pushed to git survives. Lost:
+
+- **Custody, never handed off.** The private grouping file, the access log, the validation and sealed id lists, the sealed specs, every validation and sealed cell receipt with its store, the joint re-judge outputs, the per-question analysis and cost rows, and the reranker receipt.
+- **The budget ledgers.** `mpw-confirm-sealed`, `mpw-dev-local` and the sealed comparator VMs' ledgers.
+- **The matched secondary cells then running or finished.** LongMemEval-S gbrain raw and comparator (finished), LongMemEval-S gbrain combined (part way, on a VM whose SSH key was on the lost disk; the VM was destroyed), and the three LoCoMo10 cells.
+
+What was recorded before the loss stands. The sealed decision (`ahead`, +2.64 points, one-sided 95% bounds +0.90 and +4.41), every published aggregate and the nine sealed cell ids are in [the sealed results](2026-10-09-memory-proof-wave-sealed-results.md) (commit `f8444fe3`). The code that produced them is in `dee6d36c`, `f0aef0fe` and `33cba827`. The addenda above (`4116575f`, `3e5904dd`, `aa147f8c`) were also pushed before the loss.
+
+Three things this preregistration promised can no longer happen unless a copy of custody turns up:
+
+- the publication of the full sealed and validation receipts after scoring;
+- the custody hand-off to the owner's machine;
+- the Q1 export of frozen per-question contexts.
+
+The sealed and validation ids cannot be rebuilt without the private grouping file, so the pre-merge equivalence check moves to the public dev conversations. It tests whether the two builds deliver the same contexts, which does not need sealed ids. The matched secondary cells are rerun from their pushed specs. Numbers from the lost runs are not published.
+
+**Spend, reconstructed.** With the ledgers lost, spend is rebuilt from figures reported during the run. It is not read from a ledger.
+
+| Part | Spend |
+|---|---|
+| Through the sealed primary | $936.97 |
+| Lost matched cells | $94 to $219 (the upper end assumes every partial cell reached its cap) |
+| **Wave total before the reruns** | **$1,031 to $1,156** |
+
+The $936.97 is made of the dev phase ($649.35), the step-1 interaction check ($36.99), the harness lane ($4.16), `mpw-confirm-sealed` ($167.57) and the comparator VMs ($78.90). From here on, ledgers and public receipts are copied off the run machine after every cell.

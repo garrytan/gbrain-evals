@@ -104,7 +104,7 @@ gbrain's ingest is cheaper because its fact extraction reads whole-turn windows 
 | `beam-500k-comparator-rag-69c671ace78a` | comparator | 7,665 / 8,403 |
 | `beam-1m-comparator-rag-2f4cdd9ae33b` | comparator | 7,846 / 8,618 |
 
-Cell ids hash the sealed schedule. Conversation ids, schedules and per-question rows stay in custody. The BEAM 1M rows stay in custody until the parser-gap decision `q2-parser-gaps-2026-10` is recorded, so this page reports 1M only as the aggregates above.
+Cell ids hash the sealed schedule. Conversation ids, schedules and per-question rows were held in custody, and were lost with the run machine on October 9, 2026 (see [receipts lost](#receipts-lost)). This page reports 1M only as the aggregates above, as the custody rule for the parser-gap decision `q2-parser-gaps-2026-10` required.
 
 ### Incomplete rows
 
@@ -135,6 +135,10 @@ None of the 1,060 retrieved raw rows records a skipped or failed rerank.
 
 The sealed primary was capped at $450. It used $211.75: $87.57 for the six gbrain cells, $78.90 for the three comparator cells (ingest included) and $45.28 for the joint re-judge. The `mpw-confirm-sealed` ledger, which also covers the validation confirmation, stands at $167.57 of its $1,165 cap.
 
+### Receipts lost
+
+On October 9, 2026, between 9:33 AM and 11:39 AM Pacific, the cloud machine that held custody was replaced, and every local file was lost. That covers the private grouping file, the access log, the sealed and validation ids and specs, every cell receipt and store, the re-judge outputs, the per-question rows and the budget ledgers. Everything on this page was computed, written and pushed before the loss (commit `f8444fe3`, with the analysis code in `dee6d36c`, `f0aef0fe` and `33cba827`), so the decision and aggregates stand as recorded. The full receipts the preregistration promised for after scoring cannot be published. The custody hand-off and the Q1 frozen-context export cannot happen either, unless a copy turns up. With the ledgers gone, the wave's spend before the reruns is a reconstructed range of $1,031 to $1,156 ([addendum](2026-10-05-memory-proof-wave-preregistration-addenda.md#custody-and-receipts-lost-with-the-run-machine-october-9-2026)).
+
 ### Reproduce
 
 ```bash
@@ -143,9 +147,13 @@ bash eval/harness-provider/mpw-sealed-run.sh analyse   # primary (combined) and 
 python -m mpw_tools.sealed_cost --pair <gbrain cell>:<comparator cell>:<gbrain re-judge>:<comparator re-judge> ...  # from eval/harness-provider, in the harness venv
 ```
 
-The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memory-proof-wave-sealed-analysis.ts) and the cost computation is [`mpw_tools/sealed_cost.py`](../../eval/harness-provider/mpw_tools/sealed_cost.py). Both read cells from custody.
+The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memory-proof-wave-sealed-analysis.ts) and the cost computation is [`mpw_tools/sealed_cost.py`](../../eval/harness-provider/mpw_tools/sealed_cost.py). Both read the cells from custody, which no longer exists, so the numbers on this page cannot be recomputed unless a copy of custody turns up.
 
 ## Changelog
+
+### 2026-10-09: Receipts lost
+
+Added the receipts-lost section. Custody, every cell receipt and the ledgers were lost with the run machine after this page was first published. The decision and aggregates are unchanged, and the full receipts cannot be published.
 
 ### 2026-10-09: First publication
 
