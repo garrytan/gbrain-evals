@@ -47,6 +47,7 @@ export function paired(a: Row[], b: Row[], cluster: BenchConfig['cluster'], filt
   const ids = new Set(a.map(r => r.id).filter(id => b.some(r => r.id === id)));
   const keep = (r: Row) => ids.has(r.id) && filter(r);
   const ex = crossSystemExclusion({ a: observations(a, cluster, keep), b: observations(b, cluster, keep) });
+  if (!ex.bySystem.a.some(o => o.eligible)) return null;
   const pairing = pairObservations(ex.bySystem.a, ex.bySystem.b);
   if (!pairing.pairs.length) return null;
   const d = clusteredPairedDelta(pairing.pairs, { seed, draws: 10000 });
@@ -107,7 +108,7 @@ export function benchReadings(name: string, c: BenchConfig) {
   const scores = Object.fromEntries(Object.entries(arms).map(([k, rows]) => [k, { ...serviceScore(rows), context: contextStats(rows) }]));
   const retrievalsB = readRows(join(c.cell_b, 'retrievals/rows.ndjson'));
   const retrievalsA = readRows(join(c.cell_a, 'retrievals/rows.ndjson'));
-  const temporal = (r: Row) => r.category === 'temporal' || r.category === 'temporal-reasoning';
+  const temporal = (r: Row) => ['temporal', 'temporal-reasoning', 'temporal_reasoning'].includes(r.category);
   const deliveryOnly = deliveryOnlyQuestions(retrievalsA, retrievalsB);
   const out: Record<string, unknown> = {
     benchmark: name, arms: scores,

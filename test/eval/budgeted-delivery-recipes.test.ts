@@ -33,6 +33,8 @@ describe('C1 header and the one date channel', () => {
     expect(c1Header('2023-05-20')).toBe('Conversation date: 2023-05-20\n\n');
     expect(sessionDay('2023/05/20 (Sat) 02:21')).toBe('2023-05-20');
     expect(sessionDay('1:56 pm on 8 May, 2023')).toBe('2023-05-08');
+    expect(sessionDay('March-15-2024')).toBe('2024-03-15');
+    expect(sessionDay(undefined)).toBeNull();
     const [d] = datedItems([item('i', 'src-a', '**user:** hi')], src => sessionDay(sessionOf(src)?.date));
     expect(d.text).toBe('Conversation date: 2023-05-20\n\n**user:** hi');
     expect(d.valid_from).toBeNull();

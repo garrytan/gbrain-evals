@@ -25,7 +25,8 @@
  *               appearance order for selection, date order for presentation
  *               (the legacy LongMemEval reading prompt, byte for byte).
  */
-import { isoSessionDate, type MemoryQuestion, type Session, type Turn } from '../memory-qa/corpus.ts';
+import type { MemoryQuestion, Session, Turn } from '../memory-qa/corpus.ts';
+import { eventTimeOf } from './sanitize.ts';
 import { READER_TEMPLATE, approxTokens, renderHistory } from '../memory-qa/qa.ts';
 import { SystemError, type Item } from './types.ts';
 
@@ -137,8 +138,13 @@ export const C1_HEADER_PREFIX = 'Conversation date: ';
 export const c1Header = (isoDay: string) => `${C1_HEADER_PREFIX}${isoDay}\n\n`;
 const HEADER_RE = /^Conversation date: (\d{4}-\d{2}-\d{2})\n\n/;
 
-/** The ISO day of a raw session date, or null for an undated session (never an invented date). */
-export const sessionDay = (raw: string | undefined): string | null => isoSessionDate(raw)?.slice(0, 10) ?? null;
+/**
+ * The ISO day of a raw session date, or null for an undated session (never an
+ * invented date). Reads every form the sanitizer's event time reads (LoCoMo,
+ * LongMemEval, ISO, and BEAM's `March-15-2024`), so the header date is the
+ * day the system was given.
+ */
+export const sessionDay = (raw: string | undefined): string | null => eventTimeOf({ id: '', date: raw, turns: [] })?.slice(0, 10) ?? null;
 
 /** One date channel: the header in the text, `valid_from` unset, no title prefix. An undated or empty item gets no header. */
 export function datedItems(items: readonly Item[], dayOf: (sourceId: string) => string | null): Item[] {
