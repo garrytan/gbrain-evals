@@ -1370,6 +1370,13 @@ before the E1 preregistration is committed.
 
 ## Changelog
 
+### 2026-10-09: E2 done
+
+E2 ran on gbrain `ca2c447bd` (report `docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2.md`, $178.46 of $600).
+`depth_first` (+10.4 points over `auto` on the LongMemEval-S 500) passes every guard and the reader check and is the
+dev rule's H1 candidate; `breadth_capped` (+8.8) leads on multi-session questions; `cap_only` alone does not help. E3's
+session fusion changes no top-five recall, so C3 stays parked.
+
 ### 2026-10-09: caps raised so evals don't stop on a cap
 
 Garry raised the caps: E2 $270 to $600, E3 $10 to $25, program $700 to $1,500, expected costs unchanged. Leases at
