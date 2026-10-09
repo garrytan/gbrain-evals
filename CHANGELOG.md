@@ -2,6 +2,20 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.66] - 2026-10-09
+
+### Verbatim probe: gbrain #6391 makes every last-session probe read clean; recall unchanged; preregistered paired verdict passes
+
+gbrain #6391 (merged as `f05943e65` in v0.60.138.0) attaches the rerank score to every confidence grade, keeps inferred
+image intent off text-only installs, and collapses long dash runs before `websearch_to_tsquery`. Estimated spend $10.18
+of a $12 cap (voyage-4 embeddings, rerank-2.5, haiku expansion; no LLM judge).
+
+- **Report** ([preregistration and results](docs/benchmarks/2026-10-09-verbatim-probe-preregistration.md), with
+  `2026-10-09-verbatim-probe-verdict.json`). Paired on 500 LongMemEval-S brains, merge base 0e52ac91 against #6391 at
+  fecc7827, scored on gold sessions with the shim classifier at 846fa6dd: the verbatim-quote probe: 71 questions gained a clean read and none lost one (429 to 500 of 500, exact McNemar p = 8.5e-22), with strict recall@10 unchanged at 496 of 500. No
+  question type moved and neither arm had errors. The reranker-settings extension did not run.
+- **Index**: `docs/README.md` and `README.md` name the report.
+
 ## [0.10.65] - 2026-10-09
 
 ### HNSW scale: a 20,000-tuple pooled scan fixes random selective scopes at 1M to 2M chunks; topic-coherent sources remain a gap; mirrored from gbrain #6380
