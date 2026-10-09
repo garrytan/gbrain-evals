@@ -191,7 +191,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-10-09: Cat 41 fresh-install re-baseline row
 
-The agent-task row gained the October 9 Cat 41 re-baseline: wired recall from a clean machine takes 98.8 s (Claude
+gbrain-evals v0.10.61. The agent-task row gained the October 9 Cat 41 re-baseline: wired recall from a clean machine takes 98.8 s (Claude
 Code) and 161.9 s (Codex) on gbrain v0.60.130.0, against 107.0 s and 175.4 s for `b3f4e8b` rerun in the same window,
 so the published 121.7 s Codex time is not a reachable comparator today.
 

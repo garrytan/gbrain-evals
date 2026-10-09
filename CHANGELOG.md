@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased] - 2026-10-09
+## [0.10.61] - 2026-10-09
 
 ### Cat 41 re-baseline: fresh install to wired recall on gbrain v0.60.130.0
 
