@@ -2,6 +2,35 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.64] - 2026-10-09
+
+### T0b alias stack: short-code aliases on top of Candidate 1 cut fresh-seed failures from 18 to 4; development inconclusive
+
+Measures GBRA-39's short-code alias fix (gbrain #6271 at `f24ca6afe`, merged locally with master `dda603ac` as the
+unbranched build `9ac26bea`) against current master, which carries Candidate 1. Paid spend $61.78 of a $70 ledger and
+$49.68 of a $60 ledger.
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-alias-stack.md), [preregistration](docs/benchmarks/2026-10-08-program-primary-hard-preregistration.md)
+  amendment 4 and its note, `78271606` and `7cc77a65`). Paired cell by cell with the reranker live: 18 to 4 of 72 failed
+  runs on eight fresh seeds drawn after the build froze (factor 4.11, 95% interval for R 0.05 to 0.68, `improvement`)
+  and 25 to 11 of 144 on the development seeds (factor 2.22, R 0.12 to 1.41, `inconclusive`; Sonnet 5.5 20 to 3,
+  `improvement`; Opus 5.5 4 to 8), so the preregistered "stacks" criterion is not met. On the 38 of 48 tasks whose call
+  note the code links, stale-terms failures fall from 25 to 0. Both validity mutants are detected on the alias build for
+  all three readers. 9 of the 10 unlinked tasks are codes the T0b generator gives two companies in one brain; the report
+  asks the next generator version to draw unique codes.
+- **Harness**: eight fresh development seeds (`PPH_FRESH_SEEDS_ALIAS`) join the seeds the T0b runner accepts, with a test
+  that they are new and solvable. The $0 alias probe, the `context_pack` replay and the route analysis sit beside the
+  receipts in `docs/benchmarks/2026-10-08-program-primary-hard/alias-stack/`. `docs/README.md` and `README.md` name the
+  report.
+
+## [0.10.63] - 2026-10-09
+
+### Slug-conflict judgment: three frontier models give no harmful answer on 48 pairs; Opus 5.5 merges the most true duplicates; mirrored from gbrain #6377
+
+gbrain #6377 (PR #6384, merged as `0e52ac914` in v0.60.132.0; runs made on branch commit `ac6e0868`) adds a content-repair lane that clears sync holds itself and asks a chat model only where identity needs judgment: a file whose frontmatter `slug:` names another page is a duplicate to merge into a canonical page (a recommendation for a person; gbrain does not merge pages yet), a stray line to delete, or a case for a person. This release mirrors the preregistered eval that decides which models may give that judgment by default.
+
+- **Report** ([doc](docs/benchmarks/2026-10-09-content-repair-judgment.md), [preregistration](docs/benchmarks/2026-10-09-content-repair-judgment-preregistration.md), frozen with the fixtures before any run). 48 synthetic pairs with placeholder names (25 true duplicates, 10 stray slugs, 8 adversarial, 5 ambiguous), three runs per model through gbrain's production prompt, call and parser, $2.05 in all. `claude-opus-5-5`, `gpt-6.1-sol` and `claude-sonnet-5-5` each gave no harmful answer in 144 pair runs (no `remove_slug` on a true duplicate, no `merge_into` of two different things, no wrong canonical, no unusable answer), removed every stray slug, deferred every ambiguous pair and never merged an adversarial pair; they recognised 69, 64 and 60 of 75 true duplicates (92.0%, 85.3%, 80.0%) and deferred the rest. All three meet the bar (zero hard failures, at least 80%); gbrain's `CONTENT_REPAIR_MEASURED_MODELS` lists them in that order. Deferrals concentrate on pairs whose two hygiene notes each read "Duplicate of the other"; a prompt change is proposed, to be measured under a new prompt version.
+- **Records**: fixtures, per-run rows with the model's `why` sentences, `summary.json`, `summary.md` and `verdict.json` in `docs/benchmarks/2026-10-09-content-repair-judgment/`; `README.md` and `docs/README.md` gain the row.
 ## [0.10.62] - 2026-10-09
 
 ### Budgeted delivery E2: how `auto` should pack an explicit token budget

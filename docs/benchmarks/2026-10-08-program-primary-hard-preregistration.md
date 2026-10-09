@@ -205,3 +205,83 @@ Order, stopping before any invocation the ledger would take past $45 (the runner
 calibration estimates, so a stop can come before the cap): (1) stale-correction Opus 5.5; (2) forced-drop gpt-6.1-sol,
 then Sonnet 5.5; (3) the fresh-seed check, persona batches in seed order; (4) forced-drop Opus 5.5, on as many leading
 personas as the preflight admits. The report names every check not run or run partially.
+
+### Amendment 4 (2026-10-09, Pacific): does the short-code alias fix stack on Candidate 1? "master (candidate 1)" vs "master + alias fix"
+
+Candidate 1 now ships on master (gbrain v0.60.126.0, #6362). This amendment measures whether GBRA-39's short-code alias
+fix (garrytan/gbrain#6271, a draft) lowers failures further when added to current master. Amendment 2's exploratory arm
+(18 Sonnet cells, 10 to 6 to 1) is the reason to run it; it is descriptive and is not part of this comparison.
+
+Code identities, fixed before any cell:
+- **"master (candidate 1)"**: gbrain master `dda603ac9e152be45afd6f4edd3789bc11e000b8` (v0.60.130.0, tree
+  `4d3f4292cb9dc69586c6b3ed8d31be6c78383cc2`), which carries Candidate 1 on by default.
+- **"master + alias fix"**: gbrain `9ac26bea780e15cb660b2f29691613fcad5d0bf6` (tree
+  `41f95308fc901fbafd95e4f53c14d709d9fdac60`), a merge commit on no branch: first parent `dda603ac`, second parent
+  `f24ca6afe3f60fd5c4aaf2b475f36417cf74a14f`, the commit on #6271's branch `capy/cat40-hard-fix` that adds the short-code
+  rule (a 2 or 3 character code an entity page declares for itself, "Also called JOF in my notes", becomes one of its
+  names and links case-sensitively as a whole token). Merging that commit brings all of #6271 up to it (27 commits:
+  the declared-name grammar, identity siblings, `match: "keyword"` paging and counts, generated-page demotion, date
+  labels on search rows, opaque `request_id`s and the rest), so this arm measures #6271's content at `f24ca6afe`, not
+  the short-code commit alone. The branch's later head `9bba4da4` (`entity` `names[]`, which changes the starter
+  surface's `entity` schema) is excluded, so readers see the same tool list as on the alias commit. Conflicts were
+  resolved without behaviour changes: #6271's migration v223 (`persistence_client_request_id`) is renumbered v225 after
+  master's v223 and v224, generated registry and goldens regenerated, module-size ceilings raised to the merged sizes,
+  both sides' behaviour-change rows and CHANGELOG entries kept. Typecheck passes on the merge.
+- Harness: this commit (gbrain-evals main `8cbc61f7` plus this amendment, the fresh seeds below in
+  `PPH_FRESH_SEEDS_ALIAS` and `PPH_RUNNABLE_SEEDS`, a test that they are new and solvable, and the $0 probe script
+  `2026-10-08-program-primary-hard/alias-stack/alias-probe.ts`). Bun 1.4.2. The runner's fail-closed rerank probe
+  (from #109) runs on every slot before any cell of every invocation; reranking is live in both arms.
+
+Mechanism check before any paid cell ($0, keyless brains of the eight development personas, no reader), with
+`alias-probe.ts`: `context_pack` on each task's champion and company carries the call note with the corrected terms in
+21 of 24 tasks on "master + alias fix" and 0 of 24 on master; the handoff and the reschedule mail in 24 of 24 on both.
+The 200 company pages declare 200 codes; 197 became names of the page that declared them, and no 2 or 3 character
+name landed on a page that did not declare it. The 3 codes not derived are `ONE` and `THE` (twice), on the short-code
+stoplist. The 3 tasks whose call note stays unlinked are one company coded `THE` and two whose code a second company
+in the same brain also declares (`BRL`, `PRF`); a code two pages declare links to neither.
+
+**Protocol.** The frozen T0b protocol unchanged (`program-primary-hard-v1`, `DEFAULT_KNOBS`, `t0b-score-v1`, the T0
+delivery contract, `--surface starter`, 20 turns), `baseline` arm only, the three counted readers (Opus 5.5,
+Sonnet 5.5, gpt-6.1-sol). Each "master + alias fix" cell is paired with the "master (candidate 1)" cell of the same
+task, reader and repeat (`eval/runner/t0/paired.ts`), both arms run from this harness revision in the same window.
+Statistics: T0b's frozen ones (PW's conditional-binomial interval for the failure-risk ratio R, alias over master,
+95%, persona clusters, loss tolerance 3.0 points, decision rule `ceiling`, `10x`, `improvement`, `worse`,
+`inconclusive`), per reader first, then pooled; a reader at 0 master failures is `ceiling`. Two comparisons, reported
+separately:
+1. **Development**: seeds 20261101 to 20261108, every pair run (repeat 1 for all eight personas; repeat 2 for the
+   leading personas the budget admits, step 3 below).
+2. **Fresh seeds**: eight new personas, seeds 124371926, 196299785, 253035751, 446884266, 500901660, 560317357,
+   746355681, 868827636, drawn at random on 2026-10-09 at 13:44 UTC after the measurement build above was frozen, never
+   used before (none appears in this repository as a seed). Repeat 1, 72 pairs. They are public development seeds,
+   not a custodian-sealed set, and support no held-out claim.
+
+The alias fix "stacks" if the development pooled verdict is `improvement` and the fresh-seed pooled point estimate
+of R is below 1. Reported with the counts: failures by class (contact, terms, date, hop, namesake), the resource
+envelope per reader (1.2x p95 session-2 latency, 1.5x mean tokens, 1.5x mean dollars, alias over master), how often
+the call note with the corrected terms reached the reader through a `context_pack` result (each session-2
+`context_pack` call re-executed on keyless rebuilds of that arm's brains, $0) and through an opened page, and the
+probe's alias table on the fresh brains.
+
+**Budget and order.** New budget-ledger run, cap $70. Stop before any invocation the ledger or the runner's preflight
+(calibration estimates: Opus 5.5 $0.60, Sonnet 5.5 $0.30, gpt-6.1-sol $0.20 per cell) would take past the cap:
+1. development, repeat 1, both arms concurrently (72 cells each);
+2. fresh seeds, repeat 1, both arms concurrently, in batches of two personas in seed order, so a stop leaves complete
+   persona pairs;
+3. development repeat 2, both arms concurrently, in batches of two personas in seed order, as far as the budget admits.
+No validity mutants run (Candidate 1's were all detected on this harness under amendments 2 and 3). The report names
+every step not run or run partially.
+
+Amendment 4, note before further cells (2026-10-09, Pacific): steps 1 and 2 ran in full and step 3 ran on seeds
+20261101 and 20261102 before the $70 run stopped (ledger run `t0b-program-primary-2026-10-09T13-52-11-329Z-b10c88bb`,
+$61.78). Garry's standing rule for development rounds is that planned repeats are not left unrun for budget, so a
+second budget-ledger run, cap $60 (reallocated inside the approved $420 from candidate 3's unused slot), runs the rest.
+Code identities, harness revision, protocol, statistics and the "stacks" criterion are unchanged. Order, stopping
+before any invocation the ledger or the runner's preflight would take past $60:
+4. development repeat 2 on seeds 20261103 to 20261108, both arms concurrently, in batches of two personas in seed
+   order; the development comparison then covers all 144 pairs;
+5. validity mutants on "master + alias fix", development seeds, repeat 1, one invocation per mutant and reader:
+   `mutant-stale-correction` for gpt-6.1-sol, Sonnet 5.5 and Opus 5.5, then `mutant-forced-drop` in the same reader
+   order. Detection follows the frozen rule against the alias arm's own repeat-1 cells (`eval/runner/t0/analyze.ts`:
+   persona-clustered risk difference, 95% lower bound above 0; the stale-correction mutant must also raise
+   `stale_correction` above the baseline's).
+The rerank probe runs on every slot of every invocation. The report names any step not run or run partially.
