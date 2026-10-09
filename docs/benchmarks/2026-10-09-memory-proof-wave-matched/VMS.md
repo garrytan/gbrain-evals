@@ -13,3 +13,6 @@ Every VM the matched secondary cells use, recorded when it is created and when i
 | 2026-10-09T18:57:18Z | locomo10-gbrain-raw | `ubirun-gbra52-1791572214-2a1f497b` | `~/.local/state/ubi-runner/ubirun-gbra52-1791572214-2a1f497b/` on the run machine | created |
 | 2026-10-09T18:57:38Z | locomo10-gbrain-combined | `ubirun-gbra52-1791572234-7f99caf9` | `~/.local/state/ubi-runner/ubirun-gbra52-1791572234-7f99caf9/` on the run machine | created |
 | 2026-10-09T18:57:53Z | locomo10-comparator | `ubirun-gbra52-1791572254-c11b8380` | `~/.local/state/ubi-runner/ubirun-gbra52-1791572254-c11b8380/` on the run machine | created |
+| 2026-10-09T22:22:50Z | locomo10-gbrain-raw | `ubirun-gbra52-1791572214-2a1f497b` | | destroyed after the receipt was pushed |
+| 2026-10-09T22:23:01Z | locomo10-comparator | `ubirun-gbra52-1791572254-c11b8380` | | destroyed after the receipt was pushed |
+| 2026-10-09T22:23:13Z | locomo10-gbrain-combined | `ubirun-gbra52-1791572234-7f99caf9` | | destroyed after the receipt was pushed |
