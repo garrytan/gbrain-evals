@@ -1,0 +1,58 @@
+{
+ "retrieval": {
+  "strict_recall_all_at_5": 450,
+  "answerable": 470,
+  "published": {
+   "correct": 451,
+   "of": 470,
+   "commit": "109b992"
+  },
+  "within_noise": true
+ },
+ "reader_requests": 500,
+ "reader_requests_with_trust_labels": 0,
+ "readers": {
+  "claude-opus-5-5": {
+   "questions": 500,
+   "correct": 472,
+   "reader_errors": 0,
+   "judge_errors": 0,
+   "usd": 47.6663,
+   "paired": {
+    "against": "W10b Opus 5.5 notes reader on the 2026-09-29 retrieval",
+    "published_correct": 474,
+    "prior_correct_recomputed": 474,
+    "pairs": 500,
+    "wins": 2,
+    "losses": 4,
+    "p_two_sided": 0.6875,
+    "within_noise": true
+   }
+  },
+  "claude-sonnet-5-5": {
+   "questions": 500,
+   "correct": 467,
+   "reader_errors": 0,
+   "judge_errors": 0,
+   "usd": 23.5728,
+   "paired": {
+    "against": "W10a Sonnet 5.5 notes reader at c5fb0201",
+    "published_correct": 468,
+    "prior_correct_recomputed": 468,
+    "pairs": 500,
+    "wins": 4,
+    "losses": 5,
+    "p_two_sided": 1,
+    "within_noise": true
+   }
+  },
+  "gpt-6.1-sol": {
+   "questions": 500,
+   "correct": 0,
+   "reader_errors": 500,
+   "judge_errors": 0,
+   "usd": 0,
+   "paired": null
+  }
+ }
+}
