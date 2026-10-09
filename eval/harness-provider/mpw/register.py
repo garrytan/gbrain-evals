@@ -74,12 +74,28 @@ def _fixed_agentic_rag():
     return FixedAgenticRAGMode
 
 
+def _numeric_locomo_sessions() -> None:
+    """Order LoCoMo sessions by number, as the pinned LifeBench loader does.
+
+    The pinned LoCoMo loader sorts session keys as strings, so session_9 sorts last and becomes
+    every conversation's question date. Both systems read queries through this one loader.
+    """
+    from memory_bench.dataset.locomo import LoComoDataset
+
+    LoComoDataset._session_keys = staticmethod(lambda conv: sorted(
+        (k for k in conv
+         if k.startswith("session_") and not k.endswith("_date_time") and isinstance(conv[k], list)),
+        key=lambda k: int(k.split("_", 1)[1]),
+    ))
+
+
 def install() -> None:
     global _installed
     if _installed:
         return
     _disable_dotenv()
     _stable_dataset_cache()
+    _numeric_locomo_sessions()
 
     import memory_bench.llm as llm_pkg
     import memory_bench.memory as memory_pkg
