@@ -1,4 +1,4 @@
-# Scoped vector search at 1M to 2M chunks: deeper scans fix random scopes, topic-coherent ones still miss
+# Scoped vector search at 1M to 2M chunks: deeper pooled scans fix random scopes, topic-coherent ones still miss
 
 ## The finding
 
@@ -47,6 +47,51 @@ the size. The defaults stay, and both are recorded as candidates for a later mig
 
 The full record is in gbrain: `docs/eval/hnsw-scale-bench.md`, with the method, every table, the
 EXPLAIN plans across statistics states, the build grid and the commands.
+
+## On top of gbrain's exact scope scan (v0.60.131.0)
+
+gbrain v0.60.131.0 scans a source scope exactly when it holds under 30% of pages and at most about 60,000
+chunks, and it widens the index walk for larger sources. That leaves the 20,000-tuple pooled budget acting
+only where search still reaches the pool: visibility-only scopes, type or date filters, sources too large for
+the exact scan, and scopes with no chunk statistics. Both arms below run v0.60.131.0, with and without the
+budget, VACUUM ANALYZEd. The synthetic arms each load their own corpus, so they carry about ±0.02 build
+variance. The real-corpus arms share one database.
+
+| corpus | scope | #6378 recall@10 / @50 | + pooled budget recall@10 / @50 | #6378 p50 @50 ms | + budget p50 @50 ms |
+|---|---|---|---|---|---|
+| 50k pages (352k chunks) | visibility 10% (random) | 0.877 / 0.736 | 0.991 / 0.993 | 45.8 | 51.9 |
+| 50k pages (352k chunks) | visibility 50% (random) | 0.978 / 0.917 | 0.993 / 0.962 | 40.5 | 41.1 |
+| 50k pages (352k chunks) | source 10% | 0.987 / 0.974 | 0.991 / 0.991 | 100.9 | 88.5 |
+| 50k pages (352k chunks) | source 30% | 0.987 / 0.860 | 0.992 / 0.985 | 31.2 | 44.9 |
+| 50k pages (352k chunks) | source 55% | 0.987 / 0.950 | 0.991 / 0.994 | 21 | 34.1 |
+| 1M chunks | visibility 10% (random) | 0.888 / 0.615 | 0.988 / 0.984 | 33.6 | 51.6 |
+| 1M chunks | visibility 50% (random) | 0.939 / 0.956 | 0.989 / 0.974 | 32.1 | 35.7 |
+| 1M chunks | source 1.1% | 1.000 / 1.000 | 1.000 / 1.000 | 67.6 | 68.9 |
+| 1M chunks | source 4% | 0.912 / 0.969 | 0.910 / 0.968 | 159.8 | 136.1 |
+| 1M chunks | source 4% + type | 1.000 / 1.000 | 1.000 / 1.000 | 226.2 | 224.3 |
+| 1M chunks | source 10% | 0.974 / 0.834 | 0.972 / 0.818 | 69.6 | 70.7 |
+| 1M chunks | source 10% + type | 0.878 / 0.601 | 0.979 / 0.979 | 21.8 | 40.2 |
+| 1M chunks | source 30% | 0.981 / 0.845 | 0.983 / 0.942 | 29.3 | 37.6 |
+| 1M chunks | source 55% | 0.971 / 0.978 | 0.973 / 0.988 | 30.7 | 31.3 |
+| 1M chunks | unscoped | 0.938 / 0.990 | 0.977 / 0.991 | 16.3 | 15.8 |
+
+| scope (1M voyage-4 chunks) | #6378 recall@10 / @50 (p50 @50) | + pooled budget | + budget, scope-scan cap 150,000 |
+|---|---|---|---|
+| unscoped | 0.970 / 0.982 (29.1 ms) | 0.970 / 0.982 (32.5 ms) | 0.970 / 0.982 (35.3 ms) |
+| topic-coherent 10% source (104k chunks) | 0.658 / 0.655 (152.9 ms) | 0.836 / 0.758 (188.6 ms) | 0.993 / 0.985 (767.8 ms) |
+| same + type filter | 0.633 / 0.614 (39.7 ms) | 0.832 / 0.764 (79.5 ms) | 1.000 / 1.000 (832.3 ms) |
+| topic-coherent 50% source | 0.874 / 0.870 (52.8 ms) | 0.961 / 0.954 (48.7 ms) | 0.961 / 0.954 (56.8 ms) |
+| random 10% visibility | 0.910 / 0.767 (64 ms) | 0.989 / 0.969 (88.7 ms) | 0.989 / 0.969 (93.7 ms) |
+| random 50% visibility | 0.956 / 0.945 (47.7 ms) | 0.965 / 0.972 (47 ms) | 0.965 / 0.972 (47.6 ms) |
+
+**The budget stays.** It lifts recall wherever the pool runs and changes nothing where the exact scan or a
+full walk answers.
+
+**Two findings go to the scope-scan owners.**
+- A 10% source of 1M chunks is above the scan cap, so the share-scaled walk answers it at recall@50 about
+  0.82. The lever there is the walk's own budget.
+- Raising the scan cap to 150,000 chunks makes the 104,000-chunk real topic source exact (recall@50 0.985),
+  at about 770 ms p50.
 
 ## Same-database comparisons
 
