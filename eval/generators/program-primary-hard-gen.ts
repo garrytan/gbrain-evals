@@ -73,8 +73,13 @@ export const PPH_BASELINE_SEEDS: readonly number[] = PPH_DEV_SEEDS.slice(0, 8);
  * 2026-10-09 after Candidate 1's code was frozen, never used before. Public, so not a custodian-sealed set.
  */
 export const PPH_FRESH_SEEDS_C1: readonly number[] = [306480323, 316602389, 384540222, 476843991, 615322188, 691467441, 731983881, 767687777];
+/**
+ * Fresh development seeds for the alias-stack check (preregistration amendment 4): drawn at random on 2026-10-09
+ * 13:44 UTC after the measurement build (gbrain 9ac26bea) was frozen, never used before. Public, so not a custodian-sealed set.
+ */
+export const PPH_FRESH_SEEDS_ALIAS: readonly number[] = [124371926, 196299785, 253035751, 446884266, 500901660, 560317357, 746355681, 868827636];
 /** Every seed the T0b runner and this generator's CLI accept. */
-export const PPH_RUNNABLE_SEEDS: readonly number[] = [...PPH_DEV_SEEDS, ...PPH_FRESH_SEEDS_C1];
+export const PPH_RUNNABLE_SEEDS: readonly number[] = [...PPH_DEV_SEEDS, ...PPH_FRESH_SEEDS_C1, ...PPH_FRESH_SEEDS_ALIAS];
 
 export interface HardTask {
   id: string;

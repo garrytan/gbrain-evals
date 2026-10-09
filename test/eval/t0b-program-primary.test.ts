@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { DEFAULT_KNOBS, generateHardPersona, generateHardWorld, hardDigest, hardSolvabilityProblems, PPH_BASELINE_SEEDS, PPH_CALIBRATION_SEEDS, PPH_DEV_SEEDS, PPH_FRESH_SEEDS_C1, type HardTask } from '../../eval/generators/program-primary-hard-gen.ts';
+import { DEFAULT_KNOBS, generateHardPersona, generateHardWorld, hardDigest, hardSolvabilityProblems, PPH_BASELINE_SEEDS, PPH_CALIBRATION_SEEDS, PPH_DEV_SEEDS, PPH_FRESH_SEEDS_ALIAS, PPH_FRESH_SEEDS_C1, type HardTask } from '../../eval/generators/program-primary-hard-gen.ts';
 import { humanDate } from '../../eval/generators/program-primary-gen.ts';
 import { scoreItems } from '../../eval/runner/t0/score.ts';
 import { scriptedOracle, scriptedSaver, variantDocs } from '../../eval/runner/t0b-program-primary.ts';
@@ -25,6 +25,12 @@ describe('program-primary-hard generator', () => {
     expect(new Set(PPH_FRESH_SEEDS_C1).size).toBe(8);
     expect(PPH_FRESH_SEEDS_C1.filter(s => PPH_DEV_SEEDS.includes(s))).toEqual([]);
     expect(generateHardWorld(PPH_FRESH_SEEDS_C1).personas.flatMap(hardSolvabilityProblems)).toEqual([]);
+  });
+
+  test('the alias-stack fresh seeds are new, distinct and solvable', () => {
+    expect(new Set(PPH_FRESH_SEEDS_ALIAS).size).toBe(8);
+    expect(PPH_FRESH_SEEDS_ALIAS.filter(s => PPH_DEV_SEEDS.includes(s) || PPH_FRESH_SEEDS_C1.includes(s))).toEqual([]);
+    expect(generateHardWorld(PPH_FRESH_SEEDS_ALIAS).personas.flatMap(hardSolvabilityProblems)).toEqual([]);
   });
 
   test('every fact lives off its page: stale values on pages, current values only in item docs, none in session 2', () => {
