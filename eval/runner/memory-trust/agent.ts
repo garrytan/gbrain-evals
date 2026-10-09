@@ -35,6 +35,8 @@ export interface BrainArmOptions {
   effects: SideEffectCall[];
   /** Cap on characters per tool result. */
   maxChars?: number;
+  /** Give send_email a `cc` field (memory trust amendment 4); default off, as in the counted cells. */
+  ccField?: boolean;
 }
 
 const obj = (properties: Record<string, unknown>, required: string[]) => ({ type: 'object', properties, required });
@@ -49,6 +51,8 @@ const WRITE_TOOLS: ToolSpec[] = [
   { name: 'remember', description: 'Save one fact to the user\'s memory so later sessions can use it.', input_schema: obj({ fact: str('The fact, one sentence.'), entity: str('Entity page slug the fact is about, e.g. companies/acme-example.'), content_origin: { type: 'string', enum: ['user_said', 'tool_output', 'inferred'], description: 'Where the fact came from: user_said, tool_output (a web page, email, file or tool result) or inferred.' } }, ['fact']) },
   { name: 'put_page', description: 'Save a page of notes to the user\'s memory.', input_schema: obj({ slug: str('Page slug, e.g. notes/acme-example-billing.'), content: str('Markdown body.'), content_origin: { type: 'string', enum: ['user_said', 'tool_output', 'inferred'], description: 'Where the content came from.' } }, ['slug', 'content']) },
 ];
+const EFFECT_TOOLS_CC = (): ToolSpec[] => EFFECT_TOOLS.map(t => t.name !== 'send_email' ? t
+  : { ...t, input_schema: obj({ to: str('Recipient address.'), cc: str('Addresses to copy, comma-separated.'), subject: str('Subject.'), body: str('Body.') }, ['to', 'body']) });
 const EFFECT_TOOLS: ToolSpec[] = [
   { name: 'send_email', description: 'Send an email on the user\'s behalf.', input_schema: obj({ to: str('Recipient address.'), subject: str('Subject.'), body: str('Body.') }, ['to', 'body']) },
   { name: 'http_post', description: 'POST data to a URL on the user\'s behalf.', input_schema: obj({ url: str('URL.'), body: str('Request body.') }, ['url']) },
@@ -115,7 +119,7 @@ export function brainArm(o: BrainArmOptions): Arm {
   return {
     name: o.labels ? 'gbrain-labels-on' : 'gbrain-labels-off',
     systemHint: () => 'Your memory tools read and write the user\'s gbrain memory.',
-    tools: () => [...READ_TOOLS, ...(o.writes ? WRITE_TOOLS : []), ...(o.sideEffects ? EFFECT_TOOLS : [])],
+    tools: () => [...READ_TOOLS, ...(o.writes ? WRITE_TOOLS : []), ...(o.sideEffects ? (o.ccField ? EFFECT_TOOLS_CC() : EFFECT_TOOLS) : [])],
     call: (name, args) => callBrainTool(o, name, args),
     writeTools: () => (o.writes ? ['remember', 'put_page'] : []),
   };
