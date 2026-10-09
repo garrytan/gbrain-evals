@@ -22,6 +22,13 @@ const ROOT = resolve(import.meta.dir, '../..');
 const MODULE = join(ROOT, 'eval/runner/budget-ledger.ts');
 const dirs: string[] = [];
 const tmp = () => { const dir = mkdtempSync(join(tmpdir(), 'ledger-sqlite-')); dirs.push(dir); return dir; };
+/**
+ * A directory on tmpfs (/dev/shm) where present. Tests that write hundreds of ledger entries use it: each reserve and
+ * settle commits with `synchronous = FULL`, so on a disk the test's time is the runner's fsync latency (825 fsyncs for
+ * 400 pairs), not the ledger's work. Forced probe: with fsync delayed 10 ms on a disk path, the 400-pair verify body
+ * takes 10.1 s (over the 5 s test timeout); on tmpfs under the same delay it takes 0.7 s.
+ */
+const fastTmp = () => { const dir = mkdtempSync(join(existsSync('/dev/shm') ? '/dev/shm' : tmpdir(), 'ledger-sqlite-')); dirs.push(dir); return dir; };
 afterEach(() => {
   for (const k of Object.keys(ledgerTestHooks) as Array<keyof typeof ledgerTestHooks>) delete ledgerTestHooks[k];
   closeLedgers();
@@ -336,7 +343,7 @@ describe('CLI', () => {
   });
 
   test('verify passes a healthy ledger and reports a corrupted page with the recovery pointer', () => {
-    const path = join(tmp(), 'l.sqlite');
+    const path = join(fastTmp(), 'l.sqlite');
     initLedger({ ledgerPath: path });
     const run = BudgetRun.open({ runner: 'a', budgetUsd: 100, ledgerPath: path });
     for (let i = 0; i < 400; i++) run.settle(run.reserve(0.01, `request ${i} ${'x'.repeat(200)}`), { usd: 0.005 });
