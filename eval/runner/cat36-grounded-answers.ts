@@ -219,7 +219,7 @@ export async function runCat36GroundedAnswers(options: { primaryDir: string; cor
       const answer = row.answer;
       if (!answer || typeof answer.text !== 'string' || !answer.text.trim() || answer.model !== options.profile.answer_model || answer.providerId !== options.profile.answer_model.split(':')[0]
         || !['end', 'tool_calls', 'length', 'refusal', 'content_filter', 'other'].includes(answer.stopReason) || !Array.isArray(answer.blocks)
-        || !answer.usage || !['input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_creation_tokens'].every(key => Number.isInteger(answer.usage[key as keyof typeof answer.usage]) && answer.usage[key as keyof typeof answer.usage] >= 0)) {
+        || !answer.usage || !['input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_creation_tokens'].every(key => { const v = answer.usage![key as keyof typeof answer.usage]; return Number.isInteger(v) && (v as number) >= 0; })) {
         failure('sut', 'invalid answer output/model/usage contract'); continue;
       }
       row.judge_evidence = judgeEvidence(probe, answer.text, replay);

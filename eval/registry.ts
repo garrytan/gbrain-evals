@@ -213,6 +213,25 @@ const N5_CI_RULES: PromotionRules = {
 
 
 /**
+ * T0 program primary (plan 2026-10-07 section 3.1, wave 1 T0), preregistered
+ * 2026-10-08 before any paid baseline cell
+ * (docs/benchmarks/2026-10-08-program-primary-preregistration.md). The rules
+ * decide whether a run counts, not whether gbrain is good: both mutants must
+ * be detected and nearly every cell scored. The program-level factor and its
+ * decision rule live in the preregistration and never gate CI.
+ */
+const PROGRAM_PRIMARY_RULES: PromotionRules = {
+  preregistered: '2026-10-08', basis: 'T0 preregistration, frozen before the first paid baseline cell: a run counts only when the primary detects the forced-drop mutant and the stale-correction mutant (plan section 11, eng phase) and at least 90% of cells are scored rather than harness errors; failure counts, the factor and the envelope are reported, never gated',
+  safety_contracts: [],
+  quality_thresholds: [
+    { id: 'forced-drop-detected', path: 'data.metrics.forced_drop_detected', op: '==', value: true, description: 'the forced-drop mutant (session 1 rolled back, session 2 push dropped) raises failures above the paired baseline' },
+    { id: 'stale-correction-detected', path: 'data.metrics.stale_correction_detected', op: '==', value: true, description: 'the stale-correction mutant (the correction never lands) raises failures and stale_correction failures above the paired baseline' },
+    { id: 'scored-fraction-floor', path: 'data.metrics.scored_fraction', op: '>=', value: 0.9, description: 'at least 90% of cells end in a scored record, not a harness error' },
+  ],
+  exploratory: ['data.summary.rows[] (failures, failure kinds, complete runs, clustered 95% intervals, omissions, capture and push diagnostics, envelope) per arm and reader', 'data.summary.mutants[] including ablation-push-off'],
+};
+
+/**
  * Cat 41 agent operator outcomes: the gbrain release gate of the agent-first
  * operator wave (gbrain docs/designs/AGENT_OPERATOR_WAVE.md, Lane I),
  * preregistered 2026-10-03 before the first counted run
@@ -651,6 +670,16 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Each arm is a fresh PGLite brain behind gbrain serve (stdio MCP). The agent writes sessions as note pages with put_page and remembers one fact per page; every provider request goes through a metering proxy and gbrain\'s GBRAIN_AI_CALL_LOG. After in-session work settles, the background queue is drained with gbrain jobs work and what remains is reported. It does not measure retrieval quality or the HTTP transport.',
   },
   {
+    id: 'facts-absorb-gate', legacy_alias: 'R2-facts-absorb', name: 'Facts-absorb quality gate: does a cheaper facts.extraction_model keep the saved facts as good as the default?',
+    family: 'performance', tier: 'P', script: 'eval/runner/facts-absorb-gate.ts',
+    run: { kind: 'listed', reason: 'paid decision run for the 10x plan item R2 (write-path default before the Q1 freeze): the real facts-absorb job on a build passed with --gbrain, one arm per extraction model plus two mutants, metered under the eval budget ledger and preregistered', command: 'bun eval/runner/facts-absorb-gate.ts --gbrain <checkout>@<ref> --prereg <path> --budget-usd <n> --out eval/reports/facts-absorb-gate/<name>' },
+    cost_estimate: { usd: 6, basis: 'docs/benchmarks/2026-10-08-facts-extraction-model/PREREGISTRATION.md: Sonnet 4.6 baseline about $3, the gpt-6.1-sol coverage judge about $2, cheap arms and mutants under $1' },
+    receipt_path: 'eval/reports/facts-absorb-gate/<name>/receipt.json',
+    headline: { metric: 'per arm: recall, precision, attribution and correction handling of the stored facts against the facts-absorb world\'s answer key; parse failures (unhandled must be 0); facts readable after a restart; resolved model at the facts invocation; natural-prose covered items (Cat 35 coverage judge); paired candidate-minus-baseline intervals and the preregistered verdict, with both mutants failing', denominator: 'facts-absorb-gen@1 seeds 60 and 61: 170 pages, 529 planted claims, 96 correction cases, 64 rejected suggestions; transcript-distill-v1: 20 transcripts, 173 planted items' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    contract: 'Each arm is a fresh PGLite brain behind gbrain serve (stdio MCP). The agent writes every page with put_page, which queues the real facts-absorb job; gbrain jobs work drains it after the session closes, then a fresh process reads every stored fact, job and ingest_log row. Facts are matched to planted claims without a model; the natural-prose stratum uses the Cat 35 coverage judge. A disabled-extractor mutant and a drop-all-output mutant must fail. It does not measure retrieval or answers, and its templated world is easier than real chat.',
+  },
+  {
     id: 'entity-resolution', legacy_alias: 'N4', name: 'Entity resolution: variants, namesakes and cross-source identity',
     family: 'relationships', tier: 'H', script: 'eval/runner/n4-entity-resolution.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n4-entity-resolution'),
@@ -995,6 +1024,26 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Runs one agent loop per arm (files, memory tool, plain Postgres, gbrain MCP, and handed-over evidence) on a fictional company corpus generated from a ledger, scores answers deterministically and counts finance-only leaks. Capability is the oracle arm; the 4k-document world is development data, the seed-20261003 world is held out.',
   },
   {
+    id: 'program-primary', legacy_alias: 'T0', name: 'Program primary: end-to-end failures on cross-session meeting and reply prep after a correction, with gbrain\'s pushed context',
+    family: 'agent', tier: 'P', script: 'eval/runner/t0-program-primary.ts',
+    run: { kind: 'listed', reason: 'paid two-session agent runs per task, reader and arm against a gbrain checkout pinned explicitly with --gbrain; the hermetic scripted slice (no --paid) takes minutes, above the 60-second CI budget', command: 'bun eval/runner/t0-program-primary.ts --gbrain <checkout>@<ref> --output <dir> [--readers claude-opus-5-5,claude-sonnet-5-5,gpt-6.1-sol] [--arms baseline,mutant-forced-drop,mutant-stale-correction,ablation-push-off] [--repeat N] [--paid --budget-run-id <id>]' },
+    cost_estimate: { usd: 80, basis: 'the T0 development baseline cap in plan 2026-10-07 wave 1 (budget ledger); measured per-cell cost is in the baseline report' },
+    receipt_path: 'eval/reports/t0-program-primary/<output>/receipt.json',
+    headline: { metric: 'end-to-end failures (missed commitment, stale date, stale correction, unsupported value, execution error) per reader with persona-clustered 95% intervals; mutant detection; latency, token and dollar envelope', denominator: '8 development personas x 4 tasks (16 prep, 16 reply) per reader and repeat' },
+    gate: 'gate', promotion: PROGRAM_PRIMARY_RULES, evidence_maturity: 'synthetic-production-path',
+    contract: 'Builds one PGLite brain per seeded persona (an engineer-founder\'s people, companies, deals, meetings and notes) with the gbrain build under test, then runs two agent sessions per task through gbrain serve --surface starter over stdio: session 1 tells the agent a commitment, a moved meeting and a correction and asks it to update the brain; session 2, in a new serve process, asks for a meeting-prep brief or a reply draft without naming the facts. The build\'s own SessionStart and UserPromptSubmit hook commands run at the points Claude Code would and their context is injected (t0/delivery.ts), so this is an injected-context component test unless a native parity slice agrees. Deliverables are scored deterministically against gold drawn by the generator; stale values excused only in a change context; execution errors count as failures. Two mutants (forced drop, stale correction) and a push-off ablation run as arms. It does not exercise Stop or SessionEnd hooks, the dream cycle between sessions, or a real Claude Code process.',
+  },
+  {
+    id: 'program-primary-hard', legacy_alias: 'T0b', name: 'Program primary, harder workload: reply and meeting prep across two people and a company with no cue to look, in 900-page brains where corrections land on other pages',
+    family: 'agent', tier: 'P', script: 'eval/runner/t0b-program-primary.ts',
+    run: { kind: 'listed', reason: 'paid two-session agent runs per task, reader and arm against a gbrain checkout pinned with --gbrain, on three brains per persona (base and two mutant brains); the hermetic scripted slice takes minutes, above the 60-second CI budget', command: 'bun eval/runner/t0b-program-primary.ts --gbrain <checkout>@<ref> --output <dir> [--readers ...] [--arms baseline,mutant-forced-drop,mutant-stale-correction,ablation-push-off] [--repeat N] [--paid --budget-run-id <id>]' },
+    cost_estimate: { usd: 110, basis: 'the T0b ledger cap (calibration plus development baseline), plan 2026-10-07 wave 1; measured per-cell cost is in the T0b baseline report' },
+    receipt_path: 'eval/reports/t0b-program-primary/<output>/receipt.json',
+    headline: { metric: 'end-to-end failures (a missed commitment of two, a stale meeting date, stale terms, a superseded contact addressed, an unsupported namesake value, an execution error) per reader with persona-clustered 95% intervals; mutant detection; the envelope', denominator: '8 development personas x 3 tasks per reader and repeat (seeds 20261101 to 20261108; 20261109 to 20261114 were calibration seeds)' },
+    gate: 'gate', promotion: PROGRAM_PRIMARY_RULES, evidence_maturity: 'synthetic-production-path',
+    contract: 'Builds three PGLite brains per seeded founder persona (about 900 pages of people, companies, deals, meeting notes, mail threads and daily notes; base, without the correction docs, without every item doc) with the gbrain build under test and runs the T0 carrier (t0/delivery.ts hooks, stdio MCP): session 1 is an unrelated request plus an explicit request to note a promise; session 2 asks for a reply to the company\'s champion and an unnamed procurement lead, or a prep brief, without naming any fact or the brain. The current meeting date sits in a later mail thread, the corrected figure in a later call note, the procurement handoff in a dated mail, a second promise in a technical review the champion did not attend; person, deal and meeting pages keep the stale values; namesake people and companies and short codes are traps. Scored by t0b-score-v1. It does not exercise Stop or SessionEnd hooks, the dream cycle between sessions, or a real Claude Code process.',
+  },
+  {
     id: 'agent-operator', legacy_alias: '41', name: 'Agent operator outcomes: real Claude Code and Codex sessions operating gbrain through errors, consent gates and setup',
     family: 'agent', tier: 'P', script: 'eval/runner/cat41-agent-operator.ts',
     run: { kind: 'listed', reason: 'paid sessions of two pinned agent CLIs in Docker, a gbrain checkout and a before/after pair of passes', command: 'eval/runner/cat41/after-pass.sh <gbrain checkout> <commit> (or: bun eval/runner/cat41-agent-operator.ts run --gbrain <checkout>@<ref> --label <label> --repeat 3 --paid --budget-run-id <id>; then overhead and gate --before <dir> --after <dir> --out <file>)' },
@@ -1242,4 +1291,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'lifecycle', 'lifecycle-lite', 'memory-qa', 'p4-stream', 'queries', 'stats', 'system-one', 'systems', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'facts-absorb', 'lifecycle', 'lifecycle-lite', 'memory-qa', 'outcomes', 'p4-stream', 'pilot', 'power', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];

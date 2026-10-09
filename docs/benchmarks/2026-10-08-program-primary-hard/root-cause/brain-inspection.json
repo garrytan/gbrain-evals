@@ -1,0 +1,341 @@
+{
+ "gbrain": "7aa2caa0 (v0.60.106.0)",
+ "what": "post-build snapshot of each base brain: facts rows, queued jobs, and every link touching a handoff mail, a reschedule mail or the task call notes",
+ "personas": {
+  "h20261101": {
+   "facts": [
+    {
+     "n": 0
+    }
+   ],
+   "jobs": [],
+   "corr_links": [
+    {
+     "from_slug": "inbox/2026-09-21-abara-procurement-handoff",
+     "to_slug": "people/elodie-abara",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-23-udeh-procurement-handoff",
+     "to_slug": "people/elodie-udeh",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-26-castellan-procurement-handoff",
+     "to_slug": "people/bram-castellan",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-11-castellan-reschedule",
+     "to_slug": "people/bram-castellan",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-11-udeh-reschedule",
+     "to_slug": "people/elodie-udeh",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-12-abara-reschedule",
+     "to_slug": "people/elodie-abara",
+     "link_type": "mentions"
+    }
+   ]
+  },
+  "h20261102": {
+   "facts": [
+    {
+     "n": 0
+    }
+   ],
+   "jobs": [],
+   "corr_links": [
+    {
+     "from_slug": "inbox/2026-09-21-mehta-procurement-handoff",
+     "to_slug": "people/felix-mehta",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-21-sato-procurement-handoff",
+     "to_slug": "people/ruben-sato",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-24-haddad-procurement-handoff",
+     "to_slug": "people/vikram-haddad",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-11-sato-reschedule",
+     "to_slug": "people/ruben-sato",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-12-haddad-reschedule",
+     "to_slug": "people/vikram-haddad",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-12-mehta-reschedule",
+     "to_slug": "people/felix-mehta",
+     "link_type": "mentions"
+    }
+   ]
+  },
+  "h20261103": {
+   "facts": [
+    {
+     "n": 0
+    }
+   ],
+   "jobs": [],
+   "corr_links": [
+    {
+     "from_slug": "inbox/2026-09-20-thorne-procurement-handoff",
+     "to_slug": "people/arjun-thorne",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-22-castellan-procurement-handoff",
+     "to_slug": "people/talia-castellan",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-24-morales-procurement-handoff",
+     "to_slug": "people/mira-morales",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-09-thorne-reschedule",
+     "to_slug": "people/arjun-thorne",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-10-castellan-reschedule",
+     "to_slug": "people/talia-castellan",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-12-morales-reschedule",
+     "to_slug": "people/mira-morales",
+     "link_type": "mentions"
+    }
+   ]
+  },
+  "h20261104": {
+   "facts": [
+    {
+     "n": 0
+    }
+   ],
+   "jobs": [],
+   "corr_links": [
+    {
+     "from_slug": "inbox/2026-09-26-aziz-procurement-handoff",
+     "to_slug": "people/kofi-aziz",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-26-castellan-procurement-handoff",
+     "to_slug": "people/calla-castellan",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-26-marchetti-procurement-handoff",
+     "to_slug": "people/vikram-marchetti",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-09-aziz-reschedule",
+     "to_slug": "people/kofi-aziz",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-10-castellan-reschedule",
+     "to_slug": "people/calla-castellan",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-11-marchetti-reschedule",
+     "to_slug": "people/vikram-marchetti",
+     "link_type": "mentions"
+    }
+   ]
+  },
+  "h20261105": {
+   "facts": [
+    {
+     "n": 0
+    }
+   ],
+   "jobs": [],
+   "corr_links": [
+    {
+     "from_slug": "inbox/2026-09-20-sato-procurement-handoff",
+     "to_slug": "people/mira-sato",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-20-wexler-procurement-handoff",
+     "to_slug": "people/vikram-wexler",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-26-varga-procurement-handoff",
+     "to_slug": "people/noor-varga",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-09-wexler-reschedule",
+     "to_slug": "people/vikram-wexler",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-10-varga-reschedule",
+     "to_slug": "people/noor-varga",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-11-sato-reschedule",
+     "to_slug": "people/mira-sato",
+     "link_type": "mentions"
+    }
+   ]
+  },
+  "h20261106": {
+   "facts": [
+    {
+     "n": 0
+    }
+   ],
+   "jobs": [],
+   "corr_links": [
+    {
+     "from_slug": "inbox/2026-09-25-eskildsen-procurement-handoff",
+     "to_slug": "people/ayla-eskildsen",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-25-udeh-procurement-handoff",
+     "to_slug": "people/ruben-udeh",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-26-varga-procurement-handoff",
+     "to_slug": "people/petra-varga",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-10-varga-reschedule",
+     "to_slug": "people/petra-varga",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-11-eskildsen-reschedule",
+     "to_slug": "people/ayla-eskildsen",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-11-udeh-reschedule",
+     "to_slug": "people/ruben-udeh",
+     "link_type": "mentions"
+    }
+   ]
+  },
+  "h20261107": {
+   "facts": [
+    {
+     "n": 0
+    }
+   ],
+   "jobs": [],
+   "corr_links": [
+    {
+     "from_slug": "inbox/2026-09-21-valdez-procurement-handoff",
+     "to_slug": "people/yusuf-valdez",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-24-quist-procurement-handoff",
+     "to_slug": "people/omari-quist",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-24-sato-procurement-handoff",
+     "to_slug": "people/maren-sato",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-09-sato-reschedule",
+     "to_slug": "people/maren-sato",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-12-quist-reschedule",
+     "to_slug": "people/omari-quist",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-12-valdez-reschedule",
+     "to_slug": "people/yusuf-valdez",
+     "link_type": "mentions"
+    }
+   ]
+  },
+  "h20261108": {
+   "facts": [
+    {
+     "n": 0
+    }
+   ],
+   "jobs": [],
+   "corr_links": [
+    {
+     "from_slug": "inbox/2026-09-23-fairbourne-procurement-handoff",
+     "to_slug": "people/kenji-fairbourne",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-25-galloway-procurement-handoff",
+     "to_slug": "people/zara-galloway",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-09-26-haddad-procurement-handoff",
+     "to_slug": "people/dario-haddad",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-09-galloway-reschedule",
+     "to_slug": "people/zara-galloway",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-11-fairbourne-reschedule",
+     "to_slug": "people/kenji-fairbourne",
+     "link_type": "mentions"
+    },
+    {
+     "from_slug": "inbox/2026-10-12-haddad-reschedule",
+     "to_slug": "people/dario-haddad",
+     "link_type": "mentions"
+    }
+   ]
+  }
+ },
+ "master_fc548317_h20261101": {
+  "facts": [
+   {
+    "n": 0
+   }
+  ],
+  "jobs": [],
+  "handoff_and_call_note_links": [
+   {
+    "f": "inbox/2026-09-23-udeh-procurement-handoff",
+    "t": "people/elodie-udeh",
+    "link_type": "mentions"
+   }
+  ]
+ }
+}

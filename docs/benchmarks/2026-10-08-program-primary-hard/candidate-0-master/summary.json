@@ -1,0 +1,875 @@
+{
+ "failure_kinds": [
+  "missed_commitment",
+  "stale_date",
+  "stale_correction",
+  "unsupported",
+  "execution_error"
+ ],
+ "rows": [
+  {
+   "arm": "baseline",
+   "reader": "claude-opus-5-5",
+   "runs": 48,
+   "failures": 36,
+   "failure_rate": 0.75,
+   "complete": 12,
+   "by_kind": {
+    "missed_commitment": 0,
+    "stale_date": 17,
+    "stale_correction": 35,
+    "unsupported": 2,
+    "execution_error": 0
+   },
+   "clustered": {
+    "rate": 0.75,
+    "lower": 0.5675652782888194,
+    "upper": 0.9324347217111806,
+    "clusters": 8
+   },
+   "other_scorers": {
+    "v1_failures": 0,
+    "v3_posthoc_failures": 36
+   },
+   "by_task_kind": {
+    "prep": {
+     "runs": 16,
+     "failures": 11
+    },
+    "reply": {
+     "runs": 32,
+     "failures": 25
+    }
+   },
+   "by_correction_kind": {
+    "role": {
+     "runs": 0,
+     "failures": 0
+    },
+    "seats": {
+     "runs": 20,
+     "failures": 17
+    },
+    "price": {
+     "runs": 28,
+     "failures": 19
+    }
+   },
+   "omissions": {
+    "date": 0,
+    "correction": 1
+   },
+   "capture": {
+    "any_write": 48,
+    "commitment": 48,
+    "new_date": 0,
+    "corrected": 0
+   },
+   "push": {
+    "s2_user_prompt_ok": 48,
+    "s2_session_start_ok": 48
+   },
+   "envelope": {
+    "cell_wall_ms": {
+     "p50": 60989,
+     "p95": 74407
+    },
+    "session2_wall_ms": {
+     "p50": 30041,
+     "p95": 41434
+    },
+    "tokens_per_cell": {
+     "input_mean": 176073.125,
+     "output_mean": 3242.4375
+    },
+    "usd_per_cell": {
+     "reader_mean": 0.2726829333333333,
+     "gbrain_internal_mean": 0.0007680237500000001,
+     "total_mean": 0.2734509570833333,
+     "total_sum": 13.125645939999997
+    }
+   }
+  },
+  {
+   "arm": "baseline",
+   "reader": "claude-sonnet-5-5",
+   "runs": 48,
+   "failures": 29,
+   "failure_rate": 0.6041666666666666,
+   "complete": 19,
+   "by_kind": {
+    "missed_commitment": 8,
+    "stale_date": 5,
+    "stale_correction": 23,
+    "unsupported": 2,
+    "execution_error": 0
+   },
+   "clustered": {
+    "rate": 0.6041666666666666,
+    "lower": 0.3815078479019632,
+    "upper": 0.8268254854313701,
+    "clusters": 8
+   },
+   "other_scorers": {
+    "v1_failures": 0,
+    "v3_posthoc_failures": 29
+   },
+   "by_task_kind": {
+    "prep": {
+     "runs": 16,
+     "failures": 7
+    },
+    "reply": {
+     "runs": 32,
+     "failures": 22
+    }
+   },
+   "by_correction_kind": {
+    "role": {
+     "runs": 0,
+     "failures": 0
+    },
+    "seats": {
+     "runs": 20,
+     "failures": 13
+    },
+    "price": {
+     "runs": 28,
+     "failures": 16
+    }
+   },
+   "omissions": {
+    "date": 0,
+    "correction": 0
+   },
+   "capture": {
+    "any_write": 48,
+    "commitment": 48,
+    "new_date": 0,
+    "corrected": 0
+   },
+   "push": {
+    "s2_user_prompt_ok": 48,
+    "s2_session_start_ok": 48
+   },
+   "envelope": {
+    "cell_wall_ms": {
+     "p50": 44753,
+     "p95": 50947
+    },
+    "session2_wall_ms": {
+     "p50": 20805,
+     "p95": 24004
+    },
+    "tokens_per_cell": {
+     "input_mean": 153493.91666666666,
+     "output_mean": 3469.9375
+    },
+    "usd_per_cell": {
+     "reader_mean": 0.14099057708333337,
+     "gbrain_internal_mean": 0.0006793670833333335,
+     "total_mean": 0.14166994416666667,
+     "total_sum": 6.80015732
+    }
+   }
+  },
+  {
+   "arm": "baseline",
+   "reader": "gpt-6.1-sol",
+   "runs": 48,
+   "failures": 2,
+   "failure_rate": 0.041666666666666664,
+   "complete": 43,
+   "by_kind": {
+    "missed_commitment": 0,
+    "stale_date": 0,
+    "stale_correction": 1,
+    "unsupported": 1,
+    "execution_error": 0
+   },
+   "clustered": {
+    "rate": 0.041666666666666664,
+    "lower": 0,
+    "upper": 0.14019267714969666,
+    "clusters": 8
+   },
+   "other_scorers": {
+    "v1_failures": 0,
+    "v3_posthoc_failures": 2
+   },
+   "by_task_kind": {
+    "prep": {
+     "runs": 16,
+     "failures": 1
+    },
+    "reply": {
+     "runs": 32,
+     "failures": 1
+    }
+   },
+   "by_correction_kind": {
+    "role": {
+     "runs": 0,
+     "failures": 0
+    },
+    "seats": {
+     "runs": 20,
+     "failures": 1
+    },
+    "price": {
+     "runs": 28,
+     "failures": 1
+    }
+   },
+   "omissions": {
+    "date": 0,
+    "correction": 3
+   },
+   "capture": {
+    "any_write": 48,
+    "commitment": 48,
+    "new_date": 0,
+    "corrected": 0
+   },
+   "push": {
+    "s2_user_prompt_ok": 48,
+    "s2_session_start_ok": 48
+   },
+   "envelope": {
+    "cell_wall_ms": {
+     "p50": 59065,
+     "p95": 71372
+    },
+    "session2_wall_ms": {
+     "p50": 28591,
+     "p95": 39422
+    },
+    "tokens_per_cell": {
+     "input_mean": 97392.25,
+     "output_mean": 1396
+    },
+    "usd_per_cell": {
+     "reader_mean": 0.07449445833333335,
+     "gbrain_internal_mean": 0.0009330860416666663,
+     "total_mean": 0.075427544375,
+     "total_sum": 3.62052213
+    }
+   }
+  },
+  {
+   "arm": "mutant-forced-drop",
+   "reader": "claude-opus-5-5",
+   "runs": 24,
+   "failures": 24,
+   "failure_rate": 1,
+   "complete": 0,
+   "by_kind": {
+    "missed_commitment": 24,
+    "stale_date": 24,
+    "stale_correction": 24,
+    "unsupported": 10,
+    "execution_error": 0
+   },
+   "clustered": {
+    "rate": 1,
+    "lower": 1,
+    "upper": 1,
+    "clusters": 8
+   },
+   "other_scorers": {
+    "v1_failures": 0,
+    "v3_posthoc_failures": 24
+   },
+   "by_task_kind": {
+    "prep": {
+     "runs": 8,
+     "failures": 8
+    },
+    "reply": {
+     "runs": 16,
+     "failures": 16
+    }
+   },
+   "by_correction_kind": {
+    "role": {
+     "runs": 0,
+     "failures": 0
+    },
+    "seats": {
+     "runs": 10,
+     "failures": 10
+    },
+    "price": {
+     "runs": 14,
+     "failures": 14
+    }
+   },
+   "omissions": {
+    "date": 0,
+    "correction": 1
+   },
+   "capture": {
+    "any_write": 24,
+    "commitment": 24,
+    "new_date": 0,
+    "corrected": 0
+   },
+   "push": {
+    "s2_user_prompt_ok": 0,
+    "s2_session_start_ok": 0
+   },
+   "envelope": {
+    "cell_wall_ms": {
+     "p50": 74093,
+     "p95": 85883
+    },
+    "session2_wall_ms": {
+     "p50": 33399,
+     "p95": 48118
+    },
+    "tokens_per_cell": {
+     "input_mean": 263363.6666666667,
+     "output_mean": 3577.2083333333335
+    },
+    "usd_per_cell": {
+     "reader_mean": 0.3986911666666666,
+     "gbrain_internal_mean": 0.00137344625,
+     "total_mean": 0.4000646129166667,
+     "total_sum": 9.60155071
+    }
+   }
+  },
+  {
+   "arm": "mutant-forced-drop",
+   "reader": "claude-sonnet-5-5",
+   "runs": 24,
+   "failures": 24,
+   "failure_rate": 1,
+   "complete": 0,
+   "by_kind": {
+    "missed_commitment": 24,
+    "stale_date": 24,
+    "stale_correction": 24,
+    "unsupported": 4,
+    "execution_error": 0
+   },
+   "clustered": {
+    "rate": 1,
+    "lower": 1,
+    "upper": 1,
+    "clusters": 8
+   },
+   "other_scorers": {
+    "v1_failures": 0,
+    "v3_posthoc_failures": 24
+   },
+   "by_task_kind": {
+    "prep": {
+     "runs": 8,
+     "failures": 8
+    },
+    "reply": {
+     "runs": 16,
+     "failures": 16
+    }
+   },
+   "by_correction_kind": {
+    "role": {
+     "runs": 0,
+     "failures": 0
+    },
+    "seats": {
+     "runs": 10,
+     "failures": 10
+    },
+    "price": {
+     "runs": 14,
+     "failures": 14
+    }
+   },
+   "omissions": {
+    "date": 0,
+    "correction": 0
+   },
+   "capture": {
+    "any_write": 24,
+    "commitment": 24,
+    "new_date": 0,
+    "corrected": 0
+   },
+   "push": {
+    "s2_user_prompt_ok": 0,
+    "s2_session_start_ok": 0
+   },
+   "envelope": {
+    "cell_wall_ms": {
+     "p50": 51031,
+     "p95": 58596
+    },
+    "session2_wall_ms": {
+     "p50": 19249,
+     "p95": 24363
+    },
+    "tokens_per_cell": {
+     "input_mean": 170420.91666666666,
+     "output_mean": 3253.75
+    },
+    "usd_per_cell": {
+     "reader_mean": 0.15169176666666664,
+     "gbrain_internal_mean": 0.0007773158333333334,
+     "total_mean": 0.15246908249999996,
+     "total_sum": 3.659257979999999
+    }
+   }
+  },
+  {
+   "arm": "mutant-forced-drop",
+   "reader": "gpt-6.1-sol",
+   "runs": 24,
+   "failures": 24,
+   "failure_rate": 1,
+   "complete": 0,
+   "by_kind": {
+    "missed_commitment": 24,
+    "stale_date": 24,
+    "stale_correction": 24,
+    "unsupported": 3,
+    "execution_error": 0
+   },
+   "clustered": {
+    "rate": 1,
+    "lower": 1,
+    "upper": 1,
+    "clusters": 8
+   },
+   "other_scorers": {
+    "v1_failures": 0,
+    "v3_posthoc_failures": 24
+   },
+   "by_task_kind": {
+    "prep": {
+     "runs": 8,
+     "failures": 8
+    },
+    "reply": {
+     "runs": 16,
+     "failures": 16
+    }
+   },
+   "by_correction_kind": {
+    "role": {
+     "runs": 0,
+     "failures": 0
+    },
+    "seats": {
+     "runs": 10,
+     "failures": 10
+    },
+    "price": {
+     "runs": 14,
+     "failures": 14
+    }
+   },
+   "omissions": {
+    "date": 0,
+    "correction": 3
+   },
+   "capture": {
+    "any_write": 24,
+    "commitment": 24,
+    "new_date": 0,
+    "corrected": 0
+   },
+   "push": {
+    "s2_user_prompt_ok": 0,
+    "s2_session_start_ok": 0
+   },
+   "envelope": {
+    "cell_wall_ms": {
+     "p50": 76199,
+     "p95": 90683
+    },
+    "session2_wall_ms": {
+     "p50": 38211,
+     "p95": 56196
+    },
+    "tokens_per_cell": {
+     "input_mean": 185918.83333333334,
+     "output_mean": 1578.875
+    },
+    "usd_per_cell": {
+     "reader_mean": 0.12118514166666668,
+     "gbrain_internal_mean": 0.0020506512500000004,
+     "total_mean": 0.12323579291666664,
+     "total_sum": 2.9576590299999994
+    }
+   }
+  },
+  {
+   "arm": "mutant-stale-correction",
+   "reader": "claude-opus-5-5",
+   "runs": 24,
+   "failures": 24,
+   "failure_rate": 1,
+   "complete": 0,
+   "by_kind": {
+    "missed_commitment": 0,
+    "stale_date": 24,
+    "stale_correction": 24,
+    "unsupported": 1,
+    "execution_error": 0
+   },
+   "clustered": {
+    "rate": 1,
+    "lower": 1,
+    "upper": 1,
+    "clusters": 8
+   },
+   "other_scorers": {
+    "v1_failures": 0,
+    "v3_posthoc_failures": 24
+   },
+   "by_task_kind": {
+    "prep": {
+     "runs": 8,
+     "failures": 8
+    },
+    "reply": {
+     "runs": 16,
+     "failures": 16
+    }
+   },
+   "by_correction_kind": {
+    "role": {
+     "runs": 0,
+     "failures": 0
+    },
+    "seats": {
+     "runs": 10,
+     "failures": 10
+    },
+    "price": {
+     "runs": 14,
+     "failures": 14
+    }
+   },
+   "omissions": {
+    "date": 0,
+    "correction": 0
+   },
+   "capture": {
+    "any_write": 24,
+    "commitment": 24,
+    "new_date": 0,
+    "corrected": 0
+   },
+   "push": {
+    "s2_user_prompt_ok": 24,
+    "s2_session_start_ok": 24
+   },
+   "envelope": {
+    "cell_wall_ms": {
+     "p50": 58307,
+     "p95": 73265
+    },
+    "session2_wall_ms": {
+     "p50": 27425,
+     "p95": 40450
+    },
+    "tokens_per_cell": {
+     "input_mean": 175739.375,
+     "output_mean": 3151.125
+    },
+    "usd_per_cell": {
+     "reader_mean": 0.28325490833333333,
+     "gbrain_internal_mean": 0.0008267191666666668,
+     "total_mean": 0.2840816275,
+     "total_sum": 6.81795906
+    }
+   }
+  },
+  {
+   "arm": "mutant-stale-correction",
+   "reader": "claude-sonnet-5-5",
+   "runs": 24,
+   "failures": 24,
+   "failure_rate": 1,
+   "complete": 0,
+   "by_kind": {
+    "missed_commitment": 5,
+    "stale_date": 24,
+    "stale_correction": 24,
+    "unsupported": 3,
+    "execution_error": 0
+   },
+   "clustered": {
+    "rate": 1,
+    "lower": 1,
+    "upper": 1,
+    "clusters": 8
+   },
+   "other_scorers": {
+    "v1_failures": 0,
+    "v3_posthoc_failures": 24
+   },
+   "by_task_kind": {
+    "prep": {
+     "runs": 8,
+     "failures": 8
+    },
+    "reply": {
+     "runs": 16,
+     "failures": 16
+    }
+   },
+   "by_correction_kind": {
+    "role": {
+     "runs": 0,
+     "failures": 0
+    },
+    "seats": {
+     "runs": 10,
+     "failures": 10
+    },
+    "price": {
+     "runs": 14,
+     "failures": 14
+    }
+   },
+   "omissions": {
+    "date": 0,
+    "correction": 0
+   },
+   "capture": {
+    "any_write": 24,
+    "commitment": 24,
+    "new_date": 0,
+    "corrected": 0
+   },
+   "push": {
+    "s2_user_prompt_ok": 24,
+    "s2_session_start_ok": 24
+   },
+   "envelope": {
+    "cell_wall_ms": {
+     "p50": 43680,
+     "p95": 47394
+    },
+    "session2_wall_ms": {
+     "p50": 17460,
+     "p95": 20962
+    },
+    "tokens_per_cell": {
+     "input_mean": 142593.75,
+     "output_mean": 3191.2916666666665
+    },
+    "usd_per_cell": {
+     "reader_mean": 0.12637320416666664,
+     "gbrain_internal_mean": 0.0005880645833333336,
+     "total_mean": 0.12696126875,
+     "total_sum": 3.0470704499999997
+    }
+   }
+  },
+  {
+   "arm": "mutant-stale-correction",
+   "reader": "gpt-6.1-sol",
+   "runs": 24,
+   "failures": 24,
+   "failure_rate": 1,
+   "complete": 0,
+   "by_kind": {
+    "missed_commitment": 0,
+    "stale_date": 24,
+    "stale_correction": 24,
+    "unsupported": 1,
+    "execution_error": 0
+   },
+   "clustered": {
+    "rate": 1,
+    "lower": 1,
+    "upper": 1,
+    "clusters": 8
+   },
+   "other_scorers": {
+    "v1_failures": 0,
+    "v3_posthoc_failures": 24
+   },
+   "by_task_kind": {
+    "prep": {
+     "runs": 8,
+     "failures": 8
+    },
+    "reply": {
+     "runs": 16,
+     "failures": 16
+    }
+   },
+   "by_correction_kind": {
+    "role": {
+     "runs": 0,
+     "failures": 0
+    },
+    "seats": {
+     "runs": 10,
+     "failures": 10
+    },
+    "price": {
+     "runs": 14,
+     "failures": 14
+    }
+   },
+   "omissions": {
+    "date": 0,
+    "correction": 4
+   },
+   "capture": {
+    "any_write": 24,
+    "commitment": 24,
+    "new_date": 0,
+    "corrected": 0
+   },
+   "push": {
+    "s2_user_prompt_ok": 24,
+    "s2_session_start_ok": 24
+   },
+   "envelope": {
+    "cell_wall_ms": {
+     "p50": 58199,
+     "p95": 70385
+    },
+    "session2_wall_ms": {
+     "p50": 26347,
+     "p95": 37972
+    },
+    "tokens_per_cell": {
+     "input_mean": 90765.04166666667,
+     "output_mean": 1243.875
+    },
+    "usd_per_cell": {
+     "reader_mean": 0.07126089583333335,
+     "gbrain_internal_mean": 0.0007853062500000002,
+     "total_mean": 0.07204620208333333,
+     "total_sum": 1.7291088499999998
+    }
+   }
+  }
+ ],
+ "mutants": [
+  {
+   "arm": "mutant-forced-drop",
+   "reader": "gpt-6.1-sol",
+   "pairs": 24,
+   "personas": 8,
+   "mutant_failures": 24,
+   "baseline_failures": 2,
+   "risk_difference": {
+    "diff": 0.9166666666666666,
+    "lower": 0.7196146457006066,
+    "upper": 1.1137186876327267
+   },
+   "stale_correction": {
+    "mutant": 24,
+    "baseline": 1
+   },
+   "rule": "clustered risk difference lower bound > 0",
+   "detected": true
+  },
+  {
+   "arm": "mutant-forced-drop",
+   "reader": "claude-sonnet-5-5",
+   "pairs": 24,
+   "personas": 8,
+   "mutant_failures": 24,
+   "baseline_failures": 14,
+   "risk_difference": {
+    "diff": 0.4166666666666667,
+    "lower": 0.21961464570060668,
+    "upper": 0.6137186876327267
+   },
+   "stale_correction": {
+    "mutant": 24,
+    "baseline": 12
+   },
+   "rule": "clustered risk difference lower bound > 0",
+   "detected": true
+  },
+  {
+   "arm": "mutant-forced-drop",
+   "reader": "claude-opus-5-5",
+   "pairs": 24,
+   "personas": 8,
+   "mutant_failures": 24,
+   "baseline_failures": 18,
+   "risk_difference": {
+    "diff": 0.25,
+    "lower": 0.052947979033939996,
+    "upper": 0.44705202096606
+   },
+   "stale_correction": {
+    "mutant": 24,
+    "baseline": 17
+   },
+   "rule": "clustered risk difference lower bound > 0",
+   "detected": true
+  },
+  {
+   "arm": "mutant-stale-correction",
+   "reader": "claude-opus-5-5",
+   "pairs": 24,
+   "personas": 8,
+   "mutant_failures": 24,
+   "baseline_failures": 18,
+   "risk_difference": {
+    "diff": 0.25,
+    "lower": 0.052947979033939996,
+    "upper": 0.44705202096606
+   },
+   "stale_correction": {
+    "mutant": 24,
+    "baseline": 17
+   },
+   "rule": "clustered risk difference lower bound > 0",
+   "detected": true
+  },
+  {
+   "arm": "mutant-stale-correction",
+   "reader": "claude-sonnet-5-5",
+   "pairs": 24,
+   "personas": 8,
+   "mutant_failures": 24,
+   "baseline_failures": 14,
+   "risk_difference": {
+    "diff": 0.4166666666666667,
+    "lower": 0.21961464570060668,
+    "upper": 0.6137186876327267
+   },
+   "stale_correction": {
+    "mutant": 24,
+    "baseline": 12
+   },
+   "rule": "clustered risk difference lower bound > 0",
+   "detected": true
+  },
+  {
+   "arm": "mutant-stale-correction",
+   "reader": "gpt-6.1-sol",
+   "pairs": 24,
+   "personas": 8,
+   "mutant_failures": 24,
+   "baseline_failures": 2,
+   "risk_difference": {
+    "diff": 0.9166666666666666,
+    "lower": 0.7196146457006066,
+    "upper": 1.1137186876327267
+   },
+   "stale_correction": {
+    "mutant": 24,
+    "baseline": 1
+   },
+   "rule": "clustered risk difference lower bound > 0",
+   "detected": true
+  }
+ ],
+ "cells": 288
+}

@@ -1,0 +1,544 @@
+{
+ "primary": {
+  "family_id": "a6-primary",
+  "verdict": "inconclusive",
+  "reasons": [
+   "brief2000-sonnet: inconclusive"
+  ],
+  "alpha": 0.025,
+  "holm_family": [
+   "brief2000-sonnet"
+  ],
+  "comparisons": [
+   {
+    "id": "brief2000-sonnet",
+    "metric": "brief2000-sonnet",
+    "gate": "noninferiority",
+    "status": "inconclusive",
+    "reasons": [
+     "non-inferiority within 0.03 not shown (Holm p = 0.5424 > 0.025); this is not evidence of a regression or of equivalence"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.9375,
+     "mean_b": 0.9075,
+     "delta": -0.03,
+     "se_cluster": 0.011093134999190981,
+     "se_iid": 0.011093134999190981,
+     "design_effect": 1,
+     "effective_n": 400,
+     "ci95": [
+      -0.0525,
+      -0.0075
+     ],
+     "p_two_sided": 0.0110988901109889,
+     "p_greater": 0.9983001699830018,
+     "p_less": 0.0064993500649935,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 16,
+     "wins": 4,
+     "both_pass": 359,
+     "both_fail": 21,
+     "discordant": 20,
+     "p_two_sided": 0.01181793212890625
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.03420040098505607,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0342; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 0.5424457554244576,
+    "tolerance": 0.03,
+    "p_noninferiority": 0.5424457554244576
+   }
+  ]
+ },
+ "secondary": {
+  "family_id": "a6-secondary",
+  "verdict": "fail",
+  "reasons": [
+   "brief2000-opus: inconclusive",
+   "brief2000-sol: inconclusive",
+   "brief1000-sonnet: inconclusive",
+   "brief4000-sonnet: inconclusive",
+   "brief7000-sonnet: inconclusive",
+   "trunc2000-sonnet: fail",
+   "trunc7000-sonnet: fail",
+   "direct-haiku: inconclusive",
+   "fallback-haiku-sonnet: inconclusive"
+  ],
+  "alpha": 0.025,
+  "holm_family": [
+   "brief2000-opus",
+   "brief2000-sol",
+   "brief1000-sonnet",
+   "brief4000-sonnet",
+   "brief7000-sonnet",
+   "trunc2000-sonnet",
+   "trunc7000-sonnet",
+   "direct-haiku",
+   "fallback-haiku-sonnet"
+  ],
+  "comparisons": [
+   {
+    "id": "brief2000-opus",
+    "metric": "brief2000-opus",
+    "gate": "noninferiority",
+    "status": "inconclusive",
+    "reasons": [
+     "non-inferiority within 0.03 not shown (Holm p = 1.0000 > 0.025); this is not evidence of a regression or of equivalence"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.9375,
+     "mean_b": 0.92,
+     "delta": -0.0175,
+     "se_cluster": 0.011972582504605058,
+     "se_iid": 0.011972582504605058,
+     "design_effect": 1,
+     "effective_n": 400,
+     "ci95": [
+      -0.04,
+      0.005
+     ],
+     "p_two_sided": 0.2101789821017898,
+     "p_greater": 0.9531046895310469,
+     "p_less": 0.10578942105789421,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 15,
+     "wins": 8,
+     "both_pass": 360,
+     "both_fail": 17,
+     "discordant": 23,
+     "p_two_sided": 0.21003961563110352
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.036911758715099226,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0369; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 1,
+    "tolerance": 0.03,
+    "p_noninferiority": 0.17398260173982602
+   },
+   {
+    "id": "brief2000-sol",
+    "metric": "brief2000-sol",
+    "gate": "noninferiority",
+    "status": "inconclusive",
+    "reasons": [
+     "non-inferiority within 0.03 not shown (Holm p = 1.0000 > 0.025); this is not evidence of a regression or of equivalence"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.925,
+     "mean_b": 0.8925,
+     "delta": -0.0325,
+     "se_cluster": 0.01290448329934443,
+     "se_iid": 0.01290448329934443,
+     "design_effect": 1,
+     "effective_n": 400,
+     "ci95": [
+      -0.0575,
+      -0.0075
+     ],
+     "p_two_sided": 0.0187981201879812,
+     "p_greater": 0.9966003399660034,
+     "p_less": 0.010298970102989701,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 20,
+     "wins": 7,
+     "both_pass": 350,
+     "both_fail": 23,
+     "discordant": 27,
+     "p_two_sided": 0.0191572904586792
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.03978483119287069,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0398; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 1,
+    "tolerance": 0.03,
+    "p_noninferiority": 0.6146385361463854
+   },
+   {
+    "id": "brief1000-sonnet",
+    "metric": "brief1000-sonnet",
+    "gate": "noninferiority",
+    "status": "inconclusive",
+    "reasons": [
+     "non-inferiority within 0.03 not shown (Holm p = 1.0000 > 0.025); this is not evidence of a regression or of equivalence"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.9375,
+     "mean_b": 0.905,
+     "delta": -0.0325,
+     "se_cluster": 0.011354809741279316,
+     "se_iid": 0.011354809741279318,
+     "design_effect": 0.9999999999999998,
+     "effective_n": 400.0000000000001,
+     "ci95": [
+      -0.055,
+      -0.01
+     ],
+     "p_two_sided": 0.0064993500649935,
+     "p_greater": 0.9997000299970003,
+     "p_less": 0.0031996800319968005,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 17,
+     "wins": 4,
+     "both_pass": 358,
+     "both_fail": 21,
+     "discordant": 21,
+     "p_two_sided": 0.007197380065917969
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.03500715048442977,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0350; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 1,
+    "tolerance": 0.03,
+    "p_noninferiority": 0.6287371262873712
+   },
+   {
+    "id": "brief4000-sonnet",
+    "metric": "brief4000-sonnet",
+    "gate": "noninferiority",
+    "status": "inconclusive",
+    "reasons": [
+     "non-inferiority within 0.03 not shown (Holm p = 1.0000 > 0.025); this is not evidence of a regression or of equivalence"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.9375,
+     "mean_b": 0.915,
+     "delta": -0.0225,
+     "se_cluster": 0.009628923377695713,
+     "se_iid": 0.009628923377695713,
+     "design_effect": 1,
+     "effective_n": 400,
+     "ci95": [
+      -0.0425,
+      -0.005
+     ],
+     "p_two_sided": 0.0337966203379662,
+     "p_greater": 0.996000399960004,
+     "p_less": 0.0174982501749825,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 12,
+     "wins": 3,
+     "both_pass": 363,
+     "both_fail": 22,
+     "discordant": 15,
+     "p_two_sided": 0.03515625
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.02968620147465893,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0297; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 1,
+    "tolerance": 0.03,
+    "p_noninferiority": 0.2552744725527447
+   },
+   {
+    "id": "brief7000-sonnet",
+    "metric": "brief7000-sonnet",
+    "gate": "noninferiority",
+    "status": "inconclusive",
+    "reasons": [
+     "non-inferiority within 0.03 not shown (Holm p = 1.0000 > 0.025); this is not evidence of a regression or of equivalence"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.9375,
+     "mean_b": 0.915,
+     "delta": -0.0225,
+     "se_cluster": 0.010259020115699992,
+     "se_iid": 0.010259020115699994,
+     "design_effect": 0.9999999999999996,
+     "effective_n": 400.00000000000017,
+     "ci95": [
+      -0.0425,
+      -0.0025
+     ],
+     "p_two_sided": 0.04889511048895111,
+     "p_greater": 0.9937006299370063,
+     "p_less": 0.024197580241975804,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 13,
+     "wins": 4,
+     "both_pass": 362,
+     "both_fail": 21,
+     "discordant": 17,
+     "p_two_sided": 0.049041748046875
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.03162880481453479,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0316; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 1,
+    "tolerance": 0.03,
+    "p_noninferiority": 0.2652734726527347
+   },
+   {
+    "id": "trunc2000-sonnet",
+    "metric": "trunc2000-sonnet",
+    "gate": "noninferiority",
+    "status": "fail",
+    "reasons": [
+     "the whole 95% interval is worse than the tolerance of 0.03"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.9375,
+     "mean_b": 0.5075,
+     "delta": -0.43,
+     "se_cluster": 0.026018115917370396,
+     "se_iid": 0.026018115917370393,
+     "design_effect": 1.0000000000000004,
+     "effective_n": 399.99999999999983,
+     "ci95": [
+      -0.48,
+      -0.38
+     ],
+     "p_two_sided": 0.00009999000099990002,
+     "p_greater": 1,
+     "p_less": 0.00009999000099990002,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 177,
+     "wins": 5,
+     "both_pass": 198,
+     "both_fail": 20,
+     "discordant": 182,
+     "p_two_sided": 5.284278197915279e-46
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.08021447474628521,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0802; the observed delta is at least that size; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 1,
+    "tolerance": 0.03,
+    "p_noninferiority": 1
+   },
+   {
+    "id": "trunc7000-sonnet",
+    "metric": "trunc7000-sonnet",
+    "gate": "noninferiority",
+    "status": "fail",
+    "reasons": [
+     "the whole 95% interval is worse than the tolerance of 0.03"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.9375,
+     "mean_b": 0.7325,
+     "delta": -0.205,
+     "se_cluster": 0.021119958133929792,
+     "se_iid": 0.02111995813392979,
+     "design_effect": 1.0000000000000004,
+     "effective_n": 399.99999999999983,
+     "ci95": [
+      -0.2475,
+      -0.165
+     ],
+     "p_two_sided": 0.00009999000099990002,
+     "p_greater": 1,
+     "p_less": 0.00009999000099990002,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 85,
+     "wins": 3,
+     "both_pass": 290,
+     "both_fail": 22,
+     "discordant": 88,
+     "p_two_sided": 7.344652981131973e-22
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.06511333694403551,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0651; the observed delta is at least that size; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 1,
+    "tolerance": 0.03,
+    "p_noninferiority": 1
+   },
+   {
+    "id": "direct-haiku",
+    "metric": "direct-haiku",
+    "gate": "noninferiority",
+    "status": "inconclusive",
+    "reasons": [
+     "non-inferiority within 0.03 not shown (Holm p = 1.0000 > 0.025); this is not evidence of a regression or of equivalence"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.9375,
+     "mean_b": 0.9075,
+     "delta": -0.03,
+     "se_cluster": 0.01217046838670889,
+     "se_iid": 0.01217046838670889,
+     "design_effect": 1,
+     "effective_n": 400,
+     "ci95": [
+      -0.055,
+      -0.0075
+     ],
+     "p_two_sided": 0.021997800219978002,
+     "p_greater": 0.9967003299670033,
+     "p_less": 0.011898810118988102,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 18,
+     "wins": 6,
+     "both_pass": 357,
+     "both_fail": 19,
+     "discordant": 24,
+     "p_two_sided": 0.022655844688415527
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.037521845630811165,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0375; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 1,
+    "tolerance": 0.03,
+    "p_noninferiority": 0.5252474752524747
+   },
+   {
+    "id": "fallback-haiku-sonnet",
+    "metric": "fallback-haiku-sonnet",
+    "gate": "noninferiority",
+    "status": "inconclusive",
+    "reasons": [
+     "non-inferiority within 0.03 not shown (Holm p = 0.1008 > 0.025); this is not evidence of a regression or of equivalence"
+    ],
+    "n_pairs": 400,
+    "n_clusters": 400,
+    "n_excluded": 0,
+    "stats": {
+     "n_pairs": 400,
+     "n_clusters": 400,
+     "mean_a": 0.9375,
+     "mean_b": 0.925,
+     "delta": -0.0125,
+     "se_cluster": 0.006593030040336675,
+     "se_iid": 0.0065930300403366756,
+     "design_effect": 0.9999999999999998,
+     "effective_n": 400.0000000000001,
+     "ci95": [
+      -0.025,
+      0
+     ],
+     "p_two_sided": 0.12888711128887112,
+     "p_greater": 0.9919008099190081,
+     "p_less": 0.064993500649935,
+     "p_method": "monte-carlo-sign-flip"
+    },
+    "mcnemar": {
+     "losses": 6,
+     "wins": 1,
+     "both_pass": 369,
+     "both_fail": 24,
+     "discordant": 7,
+     "p_two_sided": 0.125
+    },
+    "power": {
+     "alpha": 0.025,
+     "power": 0.8,
+     "mde": 0.020326469578029943,
+     "min_one_sided_discordant": 7,
+     "note": "with 400 pairs in 400 clusters, a two-sided 0.025 test has 80% power for an absolute change of about 0.0203; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 7 wins with zero losses to reach 0.025"
+    },
+    "direction": "higher",
+    "p_holm": 0.10078992100789921,
+    "tolerance": 0.03,
+    "p_noninferiority": 0.011198880111988802
+   }
+  ]
+ }
+}

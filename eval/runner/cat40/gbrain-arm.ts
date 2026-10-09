@@ -156,16 +156,57 @@ export function coverageProblem(c: SlotCoverage): string | null {
   return `mention coverage ${c.state ?? 'unknown'} with ${c.pending ?? 'unknown'} pending pages`;
 }
 
+/**
+ * Points a restored slot's Voyage base URL at this process's metering proxy. The build writes the proxy's port into
+ * the snapshot's config.json, and each process's proxy listens on a new port, so without this a slot restored by a
+ * later process reranked against a dead port (`degraded_recall rerank_failed`; T0b root cause 2026-10-08).
+ */
+export function refreshProviderBaseUrls(home: string, voyageBase: string): boolean {
+  const cfgPath = join(home, '.gbrain', 'config.json');
+  if (!existsSync(cfgPath)) return false;
+  const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
+  if (!cfg.provider_base_urls?.voyage || cfg.provider_base_urls.voyage === voyageBase) return false;
+  cfg.provider_base_urls = { ...cfg.provider_base_urls, voyage: voyageBase };
+  writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+  return true;
+}
+
+type ProbeSlot = { id: string; client: { call(name: string, args: Record<string, unknown>): Promise<string> } | null; restore(): Promise<void> };
+type ProbeProxy = { bind(slot: string, key: string): void; unbind(slot: string, key?: string): void; finalize(key: string, timeoutMs?: number): Promise<{ byModel: Record<string, { requests: number }> }> };
+
+/**
+ * One search per started slot must reach a reranker through this process's proxy; otherwise fail closed before any
+ * cell runs (from GBRA-39's #76, Cat 40 Hard R0). Each slot is restored after its probe.
+ */
+export async function rerankProbe(slots: ProbeSlot[], proxy: ProbeProxy, query: string): Promise<void> {
+  for (const s of slots) {
+    const key = `rerank-probe:${s.id}`;
+    proxy.bind(s.id, key);
+    try { await s.client!.call('search', { query }); }
+    finally { proxy.unbind(s.id, key); }
+    const m = await proxy.finalize(key, 30_000);
+    const reranks = Object.entries(m.byModel).filter(([k]) => /rerank/i.test(k)).reduce((n, [, v]) => n + v.requests, 0);
+    if (!reranks) {
+      const e = new Error(`gbrain ${s.id}: a probe search made no rerank request (provider calls: ${JSON.stringify(m.byModel)}); the reranker is unreachable or off, so the arm would run degraded. Fix the provider endpoint, or turn reranking off on purpose (search.reranker.enabled=false) and say so in the preregistration.`);
+      e.name = 'HarnessError';
+      throw e;
+    }
+    await s.restore();
+  }
+}
+
 export class GbrainSlot {
   client: McpClient | null = null;
   readonly dir: string;
   readonly run: RunEnv;
+  readonly voyageBase: string;
   /** `gbrain config set` pairs applied after every restore (the snapshot does not carry them). */
   config: Array<[string, string]> = [];
   /** `advertised`: the brain's mcp.advertised_surface (tools listed; the callable set stays `surface`). Null leaves it unset. */
   constructor(readonly id: string, root: string, readonly buildDir: string, proxyPort: number, readonly surface: string, readonly advertised: string | null = null) {
     this.dir = join(root, id);
     const base = `http://127.0.0.1:${proxyPort}/${id}`;
+    this.voyageBase = `${base}/voyage/v1`;
     this.run = {
       buildDir,
       env: {
@@ -181,17 +222,22 @@ export class GbrainSlot {
   }
   get snapshot() { return `${this.dir}.tar`; }
 
-  async build(world: LadderWorld, proxy: MeteringProxy, analyze: boolean): Promise<SlotBuild> {
+  /**
+   * `render` turns a document into its Markdown file (default: the Cat 40 renderer). `embed: false` skips the
+   * embedding step for a keyless (hermetic) brain, which then searches by keyword only.
+   */
+  async build<D extends { id: string; type: string }>(world: { docs: D[] }, proxy: MeteringProxy, analyze: boolean, opts: { render?: (d: D) => string; embed?: boolean } = {}): Promise<SlotBuild> {
+    const render = opts.render ?? ((d: D) => renderDoc(d as unknown as LadderWorld['docs'][number]));
     const t0 = Date.now();
     const meterKey = `build:${this.id}`;
     proxy.bind(this.id, meterKey);
     rmSync(this.dir, { recursive: true, force: true });
     const vault = join(this.dir, 'vault');
     for (const d of ['home', 'uh', 'vault']) mkdirSync(join(this.dir, d), { recursive: true });
-    const writeDocs = (docs: LadderWorld['docs']) => { for (const doc of docs) {
+    const writeDocs = (docs: D[]) => { for (const doc of docs) {
       const p = join(vault, `${doc.id}.md`);
       mkdirSync(dirname(p), { recursive: true });
-      writeFileSync(p, renderDoc(doc));
+      writeFileSync(p, render(doc));
     } };
     const git = (args: string[]) => execFileSync('git', ['-C', vault, '-c', 'user.name=cat40', '-c', 'user.email=cat40@example.invalid', ...args], { stdio: 'pipe' });
     // `gbrain sources add` hashes every file into a manifest and refuses one over 1 MiB (source-lifecycle.ts),
@@ -209,7 +255,7 @@ export class GbrainSlot {
     await op('init', ['init', '--pglite', '--path', join(this.dir, 'home', 'brain.pglite'), '--embedding-model', GBRAIN_EMBED_MODEL, '--non-interactive']);
     const cfgPath = join(this.dir, 'home', '.gbrain', 'config.json');
     const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
-    cfg.provider_base_urls = { ...(cfg.provider_base_urls ?? {}), voyage: `http://127.0.0.1:${proxy.port}/${this.id}/voyage/v1` };
+    cfg.provider_base_urls = { ...(cfg.provider_base_urls ?? {}), voyage: this.voyageBase };
     writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
     const operatorAnalyze = (step: string) => {
       // gbrain does not ANALYZE after a bulk import on PGLite (no autovacuum), so the planner sees empty
@@ -244,8 +290,9 @@ export class GbrainSlot {
     // Builds that gate paid backfills (agent-first operator wave) refuse with exit 3 until `--yes`; older builds
     // reject that flag, so it is passed only after a confirmation_required refusal.
     const embedArgs = ['embed', '--stale', ...(staged ? ['--catch-up'] : [])];
-    const first = await runCli(this.run, embedArgs, 3_600_000);
-    if (first.code === 3 && /confirmation_required|needs the user's approval/.test(first.stdout + first.stderr)) {
+    const first = opts.embed === false ? null : await runCli(this.run, embedArgs, 3_600_000);
+    if (!first) steps.push({ step: 'embed-skipped', code: 0, ms: 0, tail: 'keyless brain: no embedding step (keyword search only)' });
+    else if (first.code === 3 && /confirmation_required|needs the user's approval/.test(first.stdout + first.stderr)) {
       steps.push({ step: 'embed-consent-refused', code: 3, ms: first.ms, tail: 'confirmation_required; rerun with --yes (evaluator-authorized build spend)' });
       await op('embed', [...embedArgs, '--yes']);
     } else {
@@ -303,6 +350,7 @@ export class GbrainSlot {
     const home = join(this.dir, 'home');
     for (const entry of readdirSync(home).sort()) rmSync(join(home, entry), { recursive: true, force: true });
     execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home']);
+    refreshProviderBaseUrls(home, this.voyageBase);
     for (const [key, value] of this.config) {
       const r = await runCli(this.run, ['config', 'set', key, value], 120_000);
       if (r.code !== 0) throw new Error(`gbrain ${this.id}: config set ${key} failed (exit ${r.code}): ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ')}`);

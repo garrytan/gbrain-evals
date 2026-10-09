@@ -1,0 +1,195 @@
+{
+ "schema": "a10-labeler-validation/v1",
+ "labeler": "judged-hedge-label-v1",
+ "prompt_sha256": "e7b4580693a24f86511ea4dbeb2933e8a5731969cfc64cbe54b26db3a0bdbf9f",
+ "stage": "confirm",
+ "labels_manifest_sha256": "0c8741419a40699281e4032f24098d7aa1c1fc38e3c037dbada74e5e7b2faf89",
+ "samples": {
+  "hedge-v3-sample": {
+   "n": 200,
+   "labeled_csv_sha256": "7b52e4f5734cd47803fa27e72888a69304ba69fe9244d941c723eeab0615d6d0"
+  }
+ },
+ "results": [
+  {
+   "model": "claude-sonnet-5-5",
+   "passes_bar": false,
+   "agreement": {
+    "n": 200,
+    "accuracy": 0.945,
+    "unparsed": 0,
+    "per_class": {
+     "abstain": {
+      "support": 68,
+      "predicted": 67,
+      "precision": 0.9850746268656716,
+      "recall": 0.9705882352941176
+     },
+     "hedged": {
+      "support": 52,
+      "predicted": 57,
+      "precision": 0.8771929824561403,
+      "recall": 0.9615384615384616
+     },
+     "confident": {
+      "support": 80,
+      "predicted": 76,
+      "precision": 0.9605263157894737,
+      "recall": 0.9125
+     }
+    },
+    "confusion": {
+     "abstain": {
+      "abstain": 66,
+      "hedged": 1,
+      "confident": 1,
+      "unparsed": 0
+     },
+     "hedged": {
+      "abstain": 0,
+      "hedged": 50,
+      "confident": 2,
+      "unparsed": 0
+     },
+     "confident": {
+      "abstain": 1,
+      "hedged": 6,
+      "confident": 73,
+      "unparsed": 0
+     }
+    }
+   },
+   "by_sample": {
+    "hedge-v3-sample": {
+     "n": 200,
+     "accuracy": 0.945,
+     "unparsed": 0,
+     "per_class": {
+      "abstain": {
+       "support": 68,
+       "predicted": 67,
+       "precision": 0.9850746268656716,
+       "recall": 0.9705882352941176
+      },
+      "hedged": {
+       "support": 52,
+       "predicted": 57,
+       "precision": 0.8771929824561403,
+       "recall": 0.9615384615384616
+      },
+      "confident": {
+       "support": 80,
+       "predicted": 76,
+       "precision": 0.9605263157894737,
+       "recall": 0.9125
+      }
+     },
+     "confusion": {
+      "abstain": {
+       "abstain": 66,
+       "hedged": 1,
+       "confident": 1,
+       "unparsed": 0
+      },
+      "hedged": {
+       "abstain": 0,
+       "hedged": 50,
+       "confident": 2,
+       "unparsed": 0
+      },
+      "confident": {
+       "abstain": 1,
+       "hedged": 6,
+       "confident": 73,
+       "unparsed": 0
+      }
+     }
+    }
+   },
+   "probes_passed": 12,
+   "probes_total": 12,
+   "probes": [
+    {
+     "not": "abstain",
+     "got": "hedged",
+     "ok": true
+    },
+    {
+     "not": "abstain",
+     "got": "hedged",
+     "ok": true
+    },
+    {
+     "not": "abstain",
+     "got": "hedged",
+     "ok": true
+    },
+    {
+     "not": "abstain",
+     "got": "confident",
+     "ok": true
+    },
+    {
+     "not": "abstain",
+     "got": "hedged",
+     "ok": true
+    },
+    {
+     "not": "abstain",
+     "got": "hedged",
+     "ok": true
+    },
+    {
+     "not": "confident",
+     "got": "hedged",
+     "ok": true
+    },
+    {
+     "not": "confident",
+     "got": "hedged",
+     "ok": true
+    },
+    {
+     "not": "hedged",
+     "got": "confident",
+     "ok": true
+    },
+    {
+     "not": "confident",
+     "got": "abstain",
+     "ok": true
+    },
+    {
+     "not": "hedged",
+     "got": "abstain",
+     "ok": true
+    },
+    {
+     "not": "abstain",
+     "got": "confident",
+     "ok": true
+    }
+   ],
+   "list_usd": 0.5115
+  }
+ ],
+ "validated": false,
+ "budget": {
+  "run_id": "a10-labeler-2026-10-08T20-55-47-250Z-b9289369",
+  "budget_usd": 6,
+  "reserved_usd": 8.621944,
+  "actual_usd": 0.487734,
+  "charged_reservations": 0,
+  "requests": 200,
+  "input_tokens": 214307,
+  "output_tokens": 5912,
+  "overshoot_usd": 0,
+  "ledger_path": ".budget/wave1-gbra60.sqlite",
+  "program_cap_usd": 80,
+  "event_loop_lag_ms": {
+   "p50": 0,
+   "p99": 1,
+   "max": 25.7
+  }
+ }
+}

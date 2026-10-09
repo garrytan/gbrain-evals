@@ -6,7 +6,7 @@ quality and must not be quoted as scores. Counted cells come from the preregiste
 
 ## What ran
 
-`graphiti-core` 0.30.2 on Neo4j 5.26 ran behind this directory's shim through the memory-qa runner:
+The pinned temporal-graph library on Neo4j 5.26 ran behind this directory's shim through the memory-qa runner:
 
 ```bash
 bun eval/runner/memory-qa/run.ts --system http://127.0.0.1:8701 --qa reader --context native --policy vendor-default \
@@ -18,7 +18,7 @@ bun eval/runner/memory-qa/run.ts --system http://127.0.0.1:8701 --qa reader --co
   (one haystack, 41 sessions, one question). BEAM-100K dev used `--shard 0/6` (one conversation, 78 sessions,
   20 questions).
 - **Configurations.** LoCoMo ran three ways: common with one episode per session (the shim default), common with one
-  episode per message (Zep's harness granularity, `SHIM_GRANULARITY=message`), and recipe (`gpt-5.5` main model) with
+  episode per message (the vendor harness's granularity, `SHIM_GRANULARITY=message`), and recipe (`gpt-5.5` main model) with
   one episode per session. LongMemEval-S and BEAM ran common, one episode per session.
 - **Policy and context.** `vendor-default`: `search_()` with its default `COMBINED_HYBRID_SEARCH_CROSS_ENCODER` recipe
   at limit 10 per result class, entity provenance through `MENTIONS`; native item text, no evidence budget.
@@ -47,7 +47,7 @@ around `search_` plus the provenance lookups.
 
 - **Outcomes.** No dropped ids, no degraded ingest, no finish timeouts. The one retrieval error (LoCoMo common,
   session) came from the cross-encoder: OpenAI answered five reranker calls with 503 and one with a 200 whose body
-  neither the proxy nor the SDK could parse; graphiti-core's reranker does not retry, so `search_` failed and the
+  neither the proxy nor the SDK could parse; the library's reranker does not retry, so `search_` failed and the
   harness counted a product failure.
 - **Provenance.** About two thirds of items were `exact` (facts and episodes) and one third `partial` (entity nodes
   through `MENTIONS`), none unavailable. Mean fan-out was 1.8 to 2.0 sources per item on LoCoMo and LongMemEval-S and
@@ -61,7 +61,7 @@ around `search_` plus the provenance lookups.
   time of session episodes on `conv-44`, gave higher strict recall (0.618 against 0.569) and lower QA (0.627 against
   0.726): the reader gets short single-turn episodes instead of whole sessions.
 - **Recipe.** The `gpt-5.5` recipe costs 8.9 times the common config's ingest on the same conversation ($4.10 against
-  $0.46; 82 `gpt-5.5` calls cost $4.06). Its largest single reservation was $0.75, because graphiti-core asks for
+  $0.46; 82 `gpt-5.5` calls cost $4.06). Its largest single reservation was $0.75, because the library asks for
   16,384 output tokens.
 
 ## Per-item costs for Phase 4

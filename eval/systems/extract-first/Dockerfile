@@ -32,7 +32,7 @@ COPY extract-first/shim.py extract-first/capability.json ./
 
 ENV SHIM_PORT=8700 SHIM_CONFIG=recipe SHIM_DATA_DIR=/data MEM0_DIR=/data/extract-first \
     MEM0_TELEMETRY=false HF_HUB_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1 \
-    QDRANT_HOST=qdrant QDRANT_PORT=6333 MEM0_CHUNK_TURNS=2
+    QDRANT_HOST=qdrant QDRANT_PORT=6333 EXTRACT_FIRST_CHUNK_TURNS=2
 VOLUME /data
 EXPOSE 8700
 CMD ["python", "shim.py"]

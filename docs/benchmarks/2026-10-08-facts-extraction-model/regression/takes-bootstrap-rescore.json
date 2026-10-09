@@ -1,0 +1,190 @@
+[
+  {
+    "model": "anthropic:claude-sonnet-5-5",
+    "cases": 123,
+    "malformed": 0,
+    "forbid_violations": 0,
+    "pass": true,
+    "variants_passed": 72,
+    "by_kind": [
+      {
+        "kind": "fact",
+        "predicted": 91,
+        "precise": 56,
+        "expected": 42,
+        "matched": 35,
+        "precision": 0.615,
+        "recall": 0.833
+      },
+      {
+        "kind": "take",
+        "predicted": 55,
+        "precise": 45,
+        "expected": 33,
+        "matched": 33,
+        "precision": 0.818,
+        "recall": 1
+      },
+      {
+        "kind": "bet",
+        "predicted": 33,
+        "precise": 19,
+        "expected": 24,
+        "matched": 19,
+        "precision": 0.576,
+        "recall": 0.792
+      },
+      {
+        "kind": "hunch",
+        "predicted": 20,
+        "precise": 17,
+        "expected": 18,
+        "matched": 17,
+        "precision": 0.85,
+        "recall": 0.944
+      }
+    ],
+    "graduated_provisional": false
+  },
+  {
+    "model": "openai:gpt-6.1-sol",
+    "cases": 123,
+    "malformed": 0,
+    "forbid_violations": 0,
+    "pass": true,
+    "variants_passed": 82,
+    "by_kind": [
+      {
+        "kind": "fact",
+        "predicted": 77,
+        "precise": 55,
+        "expected": 42,
+        "matched": 36,
+        "precision": 0.714,
+        "recall": 0.857
+      },
+      {
+        "kind": "take",
+        "predicted": 46,
+        "precise": 42,
+        "expected": 33,
+        "matched": 30,
+        "precision": 0.913,
+        "recall": 0.909
+      },
+      {
+        "kind": "bet",
+        "predicted": 30,
+        "precise": 20,
+        "expected": 24,
+        "matched": 20,
+        "precision": 0.667,
+        "recall": 0.833
+      },
+      {
+        "kind": "hunch",
+        "predicted": 21,
+        "precise": 13,
+        "expected": 18,
+        "matched": 13,
+        "precision": 0.619,
+        "recall": 0.722
+      }
+    ],
+    "graduated_provisional": false
+  },
+  {
+    "model": "anthropic:claude-opus-5-5",
+    "cases": 123,
+    "malformed": 0,
+    "forbid_violations": 0,
+    "pass": true,
+    "variants_passed": 69,
+    "by_kind": [
+      {
+        "kind": "fact",
+        "predicted": 86,
+        "precise": 53,
+        "expected": 42,
+        "matched": 36,
+        "precision": 0.616,
+        "recall": 0.857
+      },
+      {
+        "kind": "take",
+        "predicted": 59,
+        "precise": 44,
+        "expected": 33,
+        "matched": 32,
+        "precision": 0.746,
+        "recall": 0.97
+      },
+      {
+        "kind": "bet",
+        "predicted": 35,
+        "precise": 18,
+        "expected": 24,
+        "matched": 18,
+        "precision": 0.514,
+        "recall": 0.75
+      },
+      {
+        "kind": "hunch",
+        "predicted": 18,
+        "precise": 11,
+        "expected": 18,
+        "matched": 11,
+        "precision": 0.611,
+        "recall": 0.611
+      }
+    ],
+    "graduated_provisional": false
+  },
+  {
+    "model": "anthropic:claude-fable-5-1",
+    "cases": 123,
+    "malformed": 0,
+    "forbid_violations": 0,
+    "pass": true,
+    "variants_passed": 68,
+    "by_kind": [
+      {
+        "kind": "fact",
+        "predicted": 83,
+        "precise": 51,
+        "expected": 42,
+        "matched": 36,
+        "precision": 0.614,
+        "recall": 0.857
+      },
+      {
+        "kind": "take",
+        "predicted": 49,
+        "precise": 41,
+        "expected": 33,
+        "matched": 31,
+        "precision": 0.837,
+        "recall": 0.939
+      },
+      {
+        "kind": "bet",
+        "predicted": 33,
+        "precise": 17,
+        "expected": 24,
+        "matched": 17,
+        "precision": 0.515,
+        "recall": 0.708
+      },
+      {
+        "kind": "hunch",
+        "predicted": 19,
+        "precise": 6,
+        "expected": 18,
+        "matched": 6,
+        "precision": 0.316,
+        "recall": 0.333
+      }
+    ],
+    "graduated_provisional": false
+  }
+]

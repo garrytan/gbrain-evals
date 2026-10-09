@@ -2,6 +2,122 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.57] - 2026-10-09
+
+### Evidence brief confirmation (wave 1 A6): on 400 fresh questions the brief is not shown to match whole sessions
+
+Wave 1 item A6 of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) (GBRA-60), run on the maintainer's 2026-10-08 decision to continue and confirm after the pilot. Paid spend $94.91 of a $150 ledger cap.
+
+- **Report** ([doc](docs/benchmarks/2026-10-08-evidence-brief-confirmation.md), [preregistration](docs/benchmarks/2026-10-08-evidence-brief-confirmation-preregistration.md), commit `943385f` before any cell, no amendments). Primary: the 2,000-token Haiku 5.5 brief read by Sonnet 5.5 scores 363 of 400 against 375 for whole sessions, -3.0 points (95% interval -5.25 to -0.75): inconclusive at T0's 3.0-point tolerance, so the brief does not join the sealed v2 opening. Secondaries (Holm): the brief on Opus 5.5 and `gpt-6.1-sol` and at 1k/4k/7k tokens, DIRECT and FALLBACK are inconclusive (FALLBACK -1.25, Holm p 0.10); TRUNC at 2k and 7k fail. Builder and reader tokens, dollars and p95 on every row, from a timing cohort over all thirteen cells.
+- **Finding.** The brief validator's number check drops a correct claim that cites its session's date, which lives in the `<chat_session>` header rather than the text (3 of the 16 questions the brief lost had a number-check drop).
+- **Driver.** `eval/runner/pilot/run.ts --split confirm`, `eval/runner/pilot/confirm.ts` (the A6 cells and comparison families), a cohort over any cell set, and per-question correctness in the report.
+
+## [0.10.56] - 2026-10-09
+
+### Cat 40 corrections: published runs where gbrain ran without reranking
+
+Docs-only follow-up to the restore audit in #109 (GBRA-39). Restored Cat 40 slots kept the slot build's metering-proxy port in their Voyage URL, so in later processes every rerank request failed and gbrain returned unreranked results; #76 (`7709a70`) and #109 fixed the harness. No receipt or number is rewritten.
+
+- **Dated corrections (2026-10-09)** near the top of each affected report, with per-run counts of cells whose metered gbrain calls include a rerank request ([audit](docs/benchmarks/2026-10-08-program-primary-hard/root-cause/restore-audit.json)), and a changelog line at the bottom: the [Cat 40 report](docs/benchmarks/2026-10-02-model-ladder.md) (the finding's held-out wave 0 of 500, the cost wave 0 of 1,709, entity recall 0 of 1,850, development and fix-wave ladders, scale tier 0 of 200, release ladder 362 of 1,456 and capped pilot 185 of 300; held-out check 1,691 of 1,800, unaffected) and its scale-tier, follow-ups, release-ladder, a714410a5-headline and P8 hidden-tool pages; [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) (instruction A/B 0 of 900; the `b3f4e8b` same-window pair is 0 of 300 against 300 of 300 and confounded); [registration surface](docs/benchmarks/2026-10-05-registration-surface.md) (0 of 120); [P8](docs/benchmarks/2026-10-05-heldout-program/p8.md) (0 of 402 development cells); fix wave [11](docs/benchmarks/2026-10-07-wave11-agent-smoke.md) (0 of 316) and [12](docs/benchmarks/2026-10-07-wave12-agent-smoke.md) (0 of 280) agent smokes.
+- **What holds.** Comparisons between gbrain builds or surfaces that shared the condition stay internally valid for gbrain without its reranker. Comparisons of gbrain with files, Postgres or the memory tool measure that configuration. The F1/F10 same-window pair for `b3f4e8b`, and the 59-to-46 baseline drift it was set up to control, mix a reranked and an unreranked run. The only measurement of the effect is on the Cat 40 Hard development world (Sonnet 5.5, `8e11aa1f3`, 50 tasks: 21 with reranking, 19 without; 7 won, 5 lost; #76), a different world and tier, not a correction factor.
+- **README and docs index.** The Cat 40 results row, the agent-tasks comparison, a new Corrections bullet, and the wave 11 and wave 12 index rows link the corrections.
+
+## [0.10.55] - 2026-10-08
+
+### T0b root cause: the correcting page almost never reaches the reader; current master is not measurably better; restored slots searched without the reranker
+
+Wave 1 follow-up of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) (GBRA-60). Development seeds only. Ledger spend $53.19 of a $60 cap.
+
+- **Root cause** ([report](docs/benchmarks/2026-10-08-program-primary-hard-root-cause.md)). Every recorded T0b baseline tool call was replayed on rebuilt v0.60.106.0 brains. In 111 of 112 failed contact, terms and date items, no tool result held the correcting page or its decisive sentence; no push carried a stale value; facts extraction never ran on imported pages. The mails link only to the champion's person page, the call note links nowhere and the company's short code is not one of its names, while `context_pack` cards omit `referenced_by`. Readers that called `entity` on the champion (78 runs) never failed on the contact or the date; gpt-6.1-sol makes that call in 46 of 48 runs, Opus 5.5 in 3. Ranked candidate fixes, no build.
+- **Candidate 0** (preregistration amendment 1, `46d9ca77`, before any cell): gbrain master `fc548317` (v0.60.122.0) on the frozen protocol fails 67 of 144 runs against 74, factor 1.10 (ratio interval 0.64 to 1.28), `inconclusive` for every reader; both mutants detected; inside the resource envelope. `eval/runner/t0/paired.ts` computes the paired PW comparison.
+- **Harness: restored slots searched without the reranker.** `GbrainSlot` kept the build process's proxy port in each snapshot's Voyage URL, so every later process reranked against a dead port. `restore()` now rewrites it, and two fixes come from GBRA-39's #76: a fail-closed rerank probe before any Cat 40 or T0b paid cell, and a keyed proxy unbind. An audit of committed results (`root-cause/restore-audit.json`) lists the runs whose cells never reached the reranker; no receipt is rewritten.
+- **Fixture** for the short-code alias case in gbrain #6271: four unchanged pages from T0b dev seed 20261104.
+
+## [0.10.54] - 2026-10-08
+
+### The harder program primary (T0b): calibration, preregistration and the v0.60.106.0 development baseline
+
+Follow-up to the T0 baseline's ceiling (wave 1 of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97), GBRA-60). Ledger spend $78.19 of a $110 cap.
+
+- **Workload.** `eval/generators/program-primary-hard-gen.ts` (`program-primary-hard-v1`): 919-page founder brains; session 2 replies to a champion and an unnamed procurement lead with no cue to look; the meeting move sits in a mail thread, the corrected figure in a call note, a dated mail hands procurement to a new person, and one promise comes from a review the champion did not attend. Runner `eval/runner/t0b-program-primary.ts` on the T0 carrier, scorer `t0b-score-v1`, registry entry `program-primary-hard` (T0b).
+- **Preregistration** ([doc](docs/benchmarks/2026-10-08-program-primary-hard-preregistration.md), commit `b355a8df`): three calibration rounds on separate development seeds (18/18, 8/18, 6/18 failures); knobs frozen at 14/36.
+- **Baseline** ([report](docs/benchmarks/2026-10-08-program-primary-hard-baseline.md)): 74 of 144 runs fail (51.4%; Opus 5.5 38/48, Sonnet 5.5 35/48, gpt-6.1-sol 1/48), mostly by greeting the procurement contact who handed off. Both mutants fail 24 of 24 for every reader. The push-off ablation is inconclusive. PW's sample-size rule gives 32 personas.
+
+## [0.10.53] - 2026-10-08
+
+### The evidence architecture pilot (wave 1 A4, A5, A10): a 2,000-token brief keeps Sonnet 5.5 within 1 point of whole sessions at a sixth of the cost, but the preregistered off-ramp fires
+
+Wave 1 items A4, A5 and A10 of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) (GBRA-60); A3, the brief builder, ships in gbrain v0.60.122.0, which this release pins. Paid spend $60.48 of an $80 ledger cap.
+
+- **Pilot** ([report](docs/benchmarks/2026-10-08-evidence-architecture-pilot.md), [preregistration](docs/benchmarks/2026-10-08-evidence-architecture-pilot-preregistration.md), commits `6d19207` and amendment 1 `1fd8a2d`, both before the cells they govern). Seven arms (whole sessions, a cheap reader, cheap with frontier fallback, a model-written brief, write-time digests, prompt caching, truncation) at 1k to 7k tokens on a 100-question LongMemEval-S development split, replayed over the frozen W10a captures so every arm reads identical evidence, plus a 480-unit synchronous timing cohort. On Sonnet 5.5: whole sessions 93 at $0.0473 and p95 2.5 s; the Haiku-built brief 92 at $0.0079 and p95 8.6 s; Haiku reading the whole sessions itself 89 at $0.0025 and p95 4.0 s, which matches the brief within the 3-point tolerance at lower cost and latency, so the off-ramp fires: no A6 grid, no product op. Truncation and small digests lose 20 to 50 points; no arm reduced committed-wrong answers.
+- **Driver** (`eval/runner/pilot/`): evidence substitution with a byte-identical A0 replay test against the W10a and W10c manifests, the seven arms, a keyless 2-question smoke of all 50 cells, the frozen FALLBACK rule, the timing cohort, the report and the decision rule; every call writes usage-receipt/v1 records through the budget ledger's guard. Reader settings for `gpt-6-luna` and `claude-haiku-5-5` join `MODEL_SETTINGS`.
+- **Outcome instrument v3** (`eval/runner/outcomes/v3.ts`): commitment, correctness, abstention, hedge and execution error as separate axes with derived categories; mutation tests (a hedge cannot improve a wrong committed answer, a wrong value appended to an abstention commits it, an execution error can only raise the failure rate); `scoreAnswerV2` and earlier scorers stay byte-identical and both committed A4 receipts rescore identically. The judged hedge labeler passed the 0.90 abstain-precision bar on GBRA-49's held-back sample (0.985) but not the hedged bar (0.877), so the hedge axis reports nothing.
+
+## [0.10.52] - 2026-10-08
+
+### The program primary (T0): preregistration, delivery contract, power (PW) and the v0.60.106.0 development baseline
+
+Wave 1 items T0 and PW of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) (GBRA-60). Paid spend $61.02 (budget ledger), PW $0.
+
+- **Workload and carrier.** `eval/generators/program-primary-gen.ts` (seeded founder brains, two-session meeting and reply prep after a correction) and `eval/runner/t0-program-primary.ts`, which runs the release's own SessionStart and UserPromptSubmit hook commands at Claude Code's points under a frozen delivery contract (`eval/runner/t0/delivery.ts`); a forced-drop and a stale-correction mutant, a push-off ablation, and a native Claude Code parity slice (`eval/runner/t0/parity.ts`). Registry entry `program-primary` (T0).
+- **Preregistration** ([doc](docs/benchmarks/2026-10-08-program-primary-preregistration.md)): commits `1e5caf3`, amendment 1 (scorer `t0-score-v2`) `76910b7` and amendment 2 (parity slice) `0dcf723`, all before the cells they govern. Loss tolerance 3.0 points.
+- **Power (PW).** `eval/runner/power/`: a clustered paired failure-risk ratio whose interval (conditional binomial) was chosen by simulation because the delta method and the persona bootstrap undercover, and a within-persona size contrast for the wave 3 manifest ([power.json](docs/benchmarks/2026-10-08-program-primary/power.json)).
+- **Baseline** ([report](docs/benchmarks/2026-10-08-program-primary-baseline.md)): on gbrain v0.60.106.0 the workload is at its ceiling. Sonnet 5.5 and gpt-6.1-sol fail 0 of 64 runs and Opus 5.5's 11 scored failures are all namesake warnings, so a human reading finds no failure; both mutants fail 32 of 32 and the parity slice agrees 8 of 8.
+- **Budget ledger.** Streamed (SSE) responses settle from their usage events instead of their reservation; one `sseUsage` lives in `budget-ledger.ts`.
+
+## [0.10.51] - 2026-10-08
+
+### Q2 parser gaps: guards for typed list lines, a held-out frame for grammar precision and recall, relationship-phrasing units, and the custodian harness
+
+Paired with gbrain #6343 (branch `capy/q2-parser-gaps`, frozen build `4ec7fbbe4`, baseline master `5b5891069`), merged, v0.60.120.0 (`61624308b`). Held-out spend $306.56 for the campaign, $333.97 with minting.
+
+- **Verdicts.** [Record](docs/benchmarks/2026-10-05-heldout-program/q2.md) and [verdict file](docs/benchmarks/2026-10-05-heldout-verdicts/q2-heldout-2026-10-08.json). `line_grammar.enabled` stays opt-in: G1 fails (459 of 583 minted lines wrong on 664,930 held-out list lines, Wilson upper bound 75.6 per 100,000 against 2; all but one wrong line comes from the stress stratum of changelog, glossary and template notes; 14 template-slot lines against 0) and G3's decoys fail (17 of 52 template-slot decoys minted), while G3's relation recall (511/511), G4 guard loss (0.994), G2 agent-written relation lines (299/300, lower bound 0.981) and G5 carry-over pass. G6 did not run, as the order of runs requires after a G1–G5 failure. The C-gates select U34, U1 and U25 (U6 fails safety); fixed-sequence confirmation passes P1 (U34, false starts −0.41) and P2 (+U1, advisor traps +0.43) and fails P3 (+U25, no change), so U3, U4 and U1 ship and U2, U5 and U6 are reverted. Future-cycle candidates (closed category vocabulary, multi-word slot refusal, changelog-tag refusal) are recorded as candidates only.
+- **Preregistration and freeze record.** [Preregistration](docs/benchmarks/2026-10-06-q2-parser-gaps-preregistration.md) with amendments 1–4 before the freeze and every deviation in its freeze record, including the run deviations found after the last cell (export outside the campaign guard, the stress-floor counting error, nine reconstructed access-log lines).
+- **Harness.** `eval/runner/q2/` (grammar gates G1–G4 and G2 with two-judge labels and no adjudication, the runner's own zero-tolerance classes, the K conformance scorer, transition-identity C-gates with Holm selection and a fixed-sequence evaluator, the crossed bootstrap for G6, the power simulation, the campaign guard, preflight and allowlisted export); custody roots outside every git worktree with symlinks resolved; receipts that keep gate outcomes apart from execution status; resumable answer and judge checkpoints; the career-chronicle corpus and its development generator. The [custodian runbook](docs/benchmarks/2026-10-06-q2-parser-gaps-runbook.md) and [campaign manifest](docs/benchmarks/2026-10-06-q2-parser-gaps-campaign.json) fix the order of runs.
+- **Defects found in the sealed run, fixed after the decision.** `junk-audit.ts g2-sample` and `label` now write receipts with `run_status` (the custodian had recorded wrapper receipts); W manifests may key their list `pages` and the career manifest `documents`; `campaign.ts not-run` records a step a failed upstream gate stops, so the export runs inside the guard when G6 does not.
+- **CI flake fix.** `budget-ledger-sqlite.test.ts` "verify passes a healthy ledger" timed out on a CI runner (`tests (3)` on `35027cff`): its 400 reserve and settle pairs make 825 `synchronous = FULL` fsyncs, so on a busy runner disk it outlasts the 5 s test timeout. Its ledger now lives on tmpfs, as the scale test's does; the assertions are unchanged. Forced probe: with fsync delayed 10 ms on a disk path the test body takes 10.1 s, on tmpfs 0.7 s.
+- **Pin.** The `gbrain` dependency moves from `a865f8f` (v0.60.104.0) to `61624308b` (v0.60.120.0), the merge of gbrain #6343; `bun.lock` follows. README, docs/README, the settings page (`src/core/search/mode.ts` is identical at both commits) and the comparison page name the new pin; `cat36-grounded-answers.ts` narrows a usage value the new pin's types mark optional (same check). Committed results keep the commits they were measured at.
+- **Version.** Main is at 0.10.50, so this release is 0.10.51.
+
+## [0.10.50] - 2026-10-08
+
+### Open-source memory comparison: the remaining project names move to the one systems table (amendment A6b)
+
+[Systems table](docs/comparison-systems.md#systems-in-the-open-source-comparison), [amendment A6b](docs/benchmarks/2026-10-06-oss-memory-shootout-preregistration.md#amendments), [hash manifest](docs/benchmarks/2026-10-06-oss-memory-shootout/rename-a6b.json). Finishes the naming pass that 0.10.46 started: other memory systems are described by kind everywhere in the comparison, and names, versions, licenses and links appear only in the systems table. No number changed.
+
+- **Receipts and capability records.** Upstream identities (package pins, vendor images, vendor benchmark code, vendor MCP servers) read `see comparison-systems table: <label>` and keep their commits and digests; the table holds the full identities. Prose describes vendor code by kind. 454 receipt and row files in both campaigns changed only in those strings.
+- **Harness names.** The shims' own environment variables (`EXTRACT_FIRST_CHUNK_TURNS`, `MEMORY_BANK_LLM_PROVIDER`, `MEMORY_BANK_URL`, `AGENT_RUNTIME_APP_SERVER_PORT`, `AGENT_RUNTIME_WS_TOKEN_FILE`), the memory-bank Postgres credentials and the shim classes use the labels. Vendor imports, vendor-read environment variables, Dockerfiles, lock files and compose image references keep the upstream identifiers that pinning needs.
+- **Plan, reviews, preregistrations, shim READMEs and pilot notes** describe the systems by kind and link the table instead of the projects. The docs index gains the comparison report.
+- **Evidence that only labels changed.** `scripts/verify-a6b-rename.py` checks the before and after sha256 of every changed file and that every JSON, NDJSON and gzipped NDJSON file in both campaigns, the sealed aggregates included, keeps the same shape, numbers, booleans and nulls. Both campaign hashes move because the extract-first cell commands name the renamed variable (`36ba918f` to `f7a22503`, `ae18af15` to `90c4956c`); the PrecisionMemBench system test pins the new hash.
+- **Version.** Main is at 0.10.48, so this release is 0.10.49.
+
+## [0.10.49] - 2026-10-08
+
+### gbrain managed catch-up follow-up: first page at 15.5 s, page saves within a second of idle
+
+Paired with gbrain #6344 (branch `capy/next-wave-g3-g6-g7`, measured at `d6d9d5956` against master `b5f12b12e`, v0.60.117.0; merged as `7c4c36e31`, v0.60.119.0). Mirror, $0 here.
+
+- **Catch-up and page saves, three runs per head.** [Report](docs/benchmarks/2026-10-08-managed-sync-followup-wave.md), [`results.json`](docs/benchmarks/2026-10-08-managed-sync-followup-wave/results.json) and the raw bench JSON for every run. First commit 15.5 to 15.6 s (master 19.0 to 19.6 s; target 15 s, missed by 0.5 s); slowest page saves during a catch-up +0.52 to +0.77 s over idle with none failed (master +0.52 to +2.28 s, one failed); catch-up while saving every 5 s 55 to 64% of idle (target 50%).
+- **Correction.** The October 7 report's catch-up-while-saving row (45%, one run) was low; three more runs of that code measured 60.6 to 63.2%. The October 7 report carries the correction in its changelog.
+
+## [0.10.48] - 2026-10-08
+
+### The R2 facts-extraction report describes its write-cost comparators by kind
+
+- [docs/benchmarks/2026-10-08-facts-extraction-model.md](docs/benchmarks/2026-10-08-facts-extraction-model.md): the write-cost context sentence now uses the comparison table's kind labels (`memory-bank`, `extract-first`, `graph-pipeline`, `temporal-graph`, `markdown-notes`) and links to [the table](docs/comparison-systems.md#systems-in-the-open-source-comparison), the one place that names the systems. The figures are unchanged.
+- **Version.** Main is at 0.10.47, so this release is 0.10.48.
+
+## [0.10.47] - 2026-10-08
+
+### Facts-absorb quality gate: Claude Haiku 5.5 passes as gbrain's background fact-extraction model, GPT-6 Luna does not; write cost of three extraction models
+
+[Report](docs/benchmarks/2026-10-08-facts-extraction-model.md), [preregistration](docs/benchmarks/2026-10-08-facts-extraction-model/PREREGISTRATION.md) (SHA-256 `8f9be0d9…` frozen before any counted cell; post-run scorer amendments disclosed), gate and write-cost receipts. Item R2 of the 10x plan, wave 0; paired with gbrain #6338. $23.30 of the $40 cap.
+
+- **Gate (gbrain master `1935c74a`, v0.60.110.0).** The real `facts-absorb` job behind `gbrain serve`, on 170 pages of a seeded chat world (529 planted claims) and the 20 Cat 35 transcripts. Under the preregistered rule Claude Haiku 5.5 passes every check against Sonnet 4.6 and GPT-6 Luna fails attribution (−6.6 points); the extractor-disabled and drop-all-output mutants both fail. After the disclosed scorer fixes, the templated world is at a ceiling for all three models; on natural transcripts Haiku 5.5 covers 4.6 points fewer planted items (95% interval −9.0 to −0.6), inside the 10-point harm margin.
+- **Write cost (P8 protocol, 1,000 LongMemEval-S sessions).** Extraction off $0.32, today's Sonnet 4.6 default $15.94 (P8 measured $9.94 at v0.60.48), Haiku 5.5 $1.38 per 1,000 pages; GPT-6 Luna's arm hit the 3-hour drain limit (about $1.23, an estimate).
+- **Harness.** `eval/runner/facts-absorb-gate.ts` with its scorer and generator, `--rescore` / `--reread` modes, a write-cost arm for an explicit extraction model, and a response-transform hook on the shared metering proxy for the drop mutant. The lifecycle `freePort` test now holds an OS-assigned port instead of fixed port 47998, which sits in the ephemeral range.
+- **Version.** Main is at 0.10.46, so this release is 0.10.47.
+
 ## [0.10.46] - 2026-10-08
 
 ### Open-source memory comparison: gbrain and five open-source memory systems through one harness

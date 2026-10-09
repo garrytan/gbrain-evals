@@ -37,15 +37,15 @@ would tell the system which fact changed (plan decision 9). Deletes go through t
 Every system runs behind the shim protocol v1 ([eval/systems/PROTOCOL.md](../../eval/systems/PROTOCOL.md)) at its
 **common** configuration (extraction `gpt-4.1-mini`, embedder `text-embedding-3-large` at 1,536 dimensions wherever
 settable), pinned exactly as in the memory-QA preregistration's systems table, plus gbrain-shootout in process at two
-builds. agent-runtime has no passive memory API at 0.34.4 and is out of scope, as in P1.
+builds. agent-runtime has no passive memory API at its pin and is out of scope, as in P1.
 
 | System | Pin | Delete capability (capability record) | Time | Provenance |
 |---|---|---|---|---|
-| markdown-notes | `basic-memory==0.23.2` | native | in text | exact |
-| extract-first (OSS) | `mem0ai[nlp]==2.2.1` | public-api-composition (list the source's memories, delete each) | in text | partial |
-| temporal-graph (OSS) | `graphiti-core==0.30.2` | native (`remove_episode`; the pilot found residue, see below) | native | partial |
-| memory-bank | server and client 0.10.2 | native | native | exact |
-| graph-pipeline | `cognee==1.6.2` | native | in text | partial |
+| markdown-notes | see [table](../comparison-systems.md#systems-in-the-open-source-comparison) | native | in text | exact |
+| extract-first (OSS) | see [table](../comparison-systems.md#systems-in-the-open-source-comparison) | public-api-composition (list the source's memories, delete each) | in text | partial |
+| temporal-graph (OSS) | see [table](../comparison-systems.md#systems-in-the-open-source-comparison) | native (`remove_episode`; the pilot found residue, see below) | native | partial |
+| memory-bank | see [table](../comparison-systems.md#systems-in-the-open-source-comparison) | native | native | exact |
+| graph-pipeline | see [table](../comparison-systems.md#systems-in-the-open-source-comparison) | native | in text | partial |
 | gbrain-shootout, repository pin | `739e5cc` (v0.60.46.0) | native (`deletePage`) | native | exact |
 | gbrain-shootout, frozen master | `c5fb0201d1960a0a5a81c35d77718311b03154b7` (v0.60.95.0), `--gbrain` overlay | native (`deletePage`) | native | exact |
 
@@ -302,7 +302,7 @@ forget numbers say nothing about the products and are not reported here.
 | markdown-notes | shared fake provider (`eval/systems/_shim/fake_provider.py`) | 19 | 19 | 19 | 0 | 19.2 s |
 | extract-first | extract-first's own `eval/systems/extract-first/fake_provider.py` | 19 | 19 | 19 | 0 | 12.9 s |
 | temporal-graph | shared fake provider | 19 | 19 | 19 | 0 | 16.9 s |
-| memory-bank | memory-bank's built-in mock LLM (`HINDSIGHT_LLM_PROVIDER=mock`), shared fake provider for embeddings | 19 | 19 | 19 | 0 | 14.9 s |
+| memory-bank | memory-bank's built-in mock LLM (`MEMORY_BANK_LLM_PROVIDER=mock`), shared fake provider for embeddings | 19 | 19 | 19 | 0 | 14.9 s |
 | graph-pipeline | shared fake provider | 19 | 19 | 19 | 0 | 17.2 s |
 
 No shim lost state on a restart, and no deleted claim came back. Every run completed with all 133 rows `scored`.
@@ -312,7 +312,7 @@ the restart, so the "nothing lost" result had no signal. The cause is the stand-
 extraction call per session (67) and stored nothing from the shared provider's canned answer, and memory-bank's
 `retain` extracted zero facts from it (its recall logged "0 facts, 0 chunks"; the `fixed-evidence` settings exclude
 chunks). With each vendor's own keyless stand-in, as their conformance runs use, both witnessed all 19 survivors and
-kept them. extract-first's run used the shim's default `MEM0_CHUNK_TURNS` (2); its counted cell sets 1.
+kept them. extract-first's run used the shim's default `EXTRACT_FIRST_CHUNK_TURNS` (2); its counted cell sets 1.
 
 
 ## What the report may say
@@ -364,10 +364,10 @@ $24.37, parameter `gbrain_master_sha` = `c5fb0201d1960a0a5a81c35d77718311b03154b
 on a standard-8 Ubicloud VM behind its own metering proxy lease (`bun eval/runner/shootout-cell.ts reserve` and
 `launch`). Campaign hash (`bun eval/runner/shootout-cell.ts hash --campaign <campaign.json>`): **`c6be1367cb1a6708f6dd109b76869d1776ee3e659408eb702a6224aca474c70f`**.
 
-A vendor cell (extract-first shown; the others drop `MEM0_CHUNK_TURNS=1` and `--finish-timeout-s 14400`):
+A vendor cell (extract-first shown; the others drop `EXTRACT_FIRST_CHUNK_TURNS=1` and `--finish-timeout-s 14400`):
 
 ```
-MEM0_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system extract-first --config common --timeout 1800 && \
+EXTRACT_FIRST_CHUNK_TURNS=1 bash eval/systems/bootstrap.sh up --system extract-first --config common --timeout 1800 && \
 { bun eval/runner/lifecycle-lite.ts --system http://127.0.0.1:8700 --seeds 1,2,3,4,5 --policy fixed-evidence --qa reader \
     --restart --restart-cmd "bash eval/systems/bootstrap.sh restart --system extract-first --timeout 1800" \
     --finish-timeout-s 14400 --output "$SHOOTOUT_OUT/lifecycle-lite"; }; \
@@ -486,7 +486,51 @@ The hash of each campaign is recomputed after this amendment because cell files,
 name changed; each earlier hash stays recorded above as history. Applied after every counted cell had settled, so no
 lease was reserved under one name and settled under the other.
 
+**A6b (2026-10-08), the remaining names.** Only labels, prose and paths changed. No measurement, row, score, lease
+amount, cell, question or seed changed. A6 kept package names, vendor images, upstream links, vendor file paths, the
+harness's own environment variables and the memory-bank Postgres credentials as dependency facts. Garry's rule of
+2026-10-08 is narrower: names, versions, licenses and links appear only in the
+[systems table](../comparison-systems.md#systems-in-the-open-source-comparison), which now holds every upstream
+identity the records carried.
+
+- **Capability records and receipts.** A field that recorded an upstream identity (`versions.package`,
+  `versions.image`, `versions.vendor_benchmark_code`, `agent_surface.version`) reads
+  `see comparison-systems table: <label>` and keeps any commit or digest it had. Prose fields describe vendor code by
+  kind, the temporal-graph search-recipe key is `recipe`, and a temporal-graph deletion row's `method` reads
+  `remove_episode per episode`. The same strings changed in every receipt that embeds the record.
+- **The harness's own names.** `EXTRACT_FIRST_CHUNK_TURNS`, `MEMORY_BANK_LLM_PROVIDER`, `MEMORY_BANK_URL`,
+  `AGENT_RUNTIME_APP_SERVER_PORT` and `AGENT_RUNTIME_WS_TOKEN_FILE`, the memory-bank stack's Postgres user and database
+  `memory_bank`, and shim classes named by label. Values and behavior are unchanged; the table's former-names column
+  maps each one, and logs written before A6b use the former names.
+- **Kept, because pinning or the vendor software needs them.** Dockerfiles, `pyproject.toml`, `uv.lock`, Python import
+  statements, environment variables the vendor software reads, vendor image references in compose files, the
+  agent-runtime CLI executable and its home directory, and the vendor host the agent-runtime keyless check proves
+  unreachable. Benchmark inputs are unchanged.
+- **Hashes.** [rename-a6b.json](2026-10-06-oss-memory-shootout/rename-a6b.json) records the sha256 of every
+  file A6b changed, before and after. `python3 scripts/verify-a6b-rename.py` checks those hashes and that every JSON,
+  NDJSON and gzipped NDJSON file in both campaigns, the sealed aggregates included, has the same shape and the same
+  numbers, booleans and nulls before and after.
+- **Campaign hashes.** The extract-first cell commands name the renamed chunk variable, so both campaign hashes move;
+  cells and lease totals are unchanged. Memory QA and PrecisionMemBench: `36ba918f59963a0cc1a6af1cb12ab3a5aa0a48af585e6e5e0b07d41e90db0894`
+  to `f7a2250390128d870602d629a06055baf4456fe776bd84e2d7a25a29f1f1dbda` (86 cells, $1,467.50). Update and forget:
+  `ae18af154d2cd2e8e11994618f408fe0d46d6ceb6570acead55ff4ec18488fc1` to
+  `90c4956cc7f033739a071a66c02b472f6bb4b630bc34543c609a3b5a95a8f4bc` (7 cells, $24.37).
+- **Capability records after A6b** (the A6 table above has the frozen and after-A6 values): `markdown-notes`
+  `4eb880c8aeb236786cd2bb1830ee0f5ffab9e9dbd9db7e583dc7c4ec0277f574`, `extract-first`
+  `2e8736dc6313fae0570761bac3caa14b44cbc20a56cc5f4a00b474ad1a3fb9ec`, `temporal-graph`
+  `a5fc713787b03af4cb577677503491804b68e26b6b7e8374ac597af5f5a75f29`, `memory-bank`
+  `e0687e98989940f70d19fe31d2158d299128ad2be648e65264f1c7e25cc059ae`, `graph-pipeline`
+  `5e47f901be9496faa01a7690aac7bdb9dfe53254e767db9fe92740af1e6f2647`, `agent-runtime`
+  `d87468e7b979e866c64c30211e352bfeb1b7094111519ab242f7f5c3fc4bcf1b`. Lock files are unchanged.
+
 ## Changelog
+
+### 2026-10-08: amendment A6b, the remaining names
+
+Added A6b: upstream identities, licenses and links moved from the capability records, receipts, plan, reviews and this
+preregistration into the comparison table; the harness's own environment variables and Postgres credentials are named
+by kind; a hash manifest and a numeric check record that only labels changed. Campaign hashes `36ba918f` to `f7a22503`
+and `ae18af15` to `90c4956c`.
 
 ### 2026-10-08: amendment A6, systems named by kind
 

@@ -1,4 +1,4 @@
-# agent-runtime 0.34.4 (local backend) on a sealed network: the shim serves the capability record, and the App Server
+# agent-runtime (local backend) on a sealed network: the shim serves the capability record, and the App Server
 # (WebSockets, capability-token auth) is what a native-agent Cat 40 driver connects to. The container's only route
 # out is `egress`, a TCP relay to the metering proxy; `gateway` publishes the shim and App Server ports to the host.
 # The App Server token is written to ./run/token on first start.

@@ -1,7 +1,8 @@
 # extract-first shim
 
-This directory runs [extract-first](https://github.com/mem0ai/mem0) open source, `mem0ai` `2.2.1`, behind the shootout's
-[shim protocol v1](../PROTOCOL.md). extract-first asks an LLM to extract short facts ("memories") from each batch of
+This directory runs extract-first open source at its pinned release (the
+[comparison table](../../../docs/comparison-systems.md#systems-in-the-open-source-comparison) names the project and its
+pin) behind the shootout's [shim protocol v1](../PROTOCOL.md). extract-first asks an LLM to extract short facts ("memories") from each batch of
 messages, embeds them and stores them in Qdrant; search combines vector similarity, BM25 keyword scores and an entity
 boost. This is the open-source SDK, not the extract-first platform, so platform-only features (timestamps, reference dates)
 are absent.
@@ -10,34 +11,34 @@ are absent.
 
 | Piece | Value |
 |---|---|
-| Package | `mem0ai[nlp]==2.2.1`, `fastembed` (BM25 sparse vectors for Qdrant) and `en_core_web_sm` 3.8.0, the documented hybrid-search install. `uv.lock` resolved on 2026-10-05 with `exclude-newer` and no prereleases (qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1) |
+| Package | the pinned extract-first package with its `nlp` extra, `fastembed` (BM25 sparse vectors for Qdrant) and `en_core_web_sm` 3.8.0, the documented hybrid-search install. `uv.lock` resolved on 2026-10-05 with `exclude-newer` and no prereleases (qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1) |
 | Backend | Qdrant server `v1.19.2` by digest, on the same internal network |
 | Base image | `python:3.12-slim-bookworm@sha256:54c85f3c…`, uv `0.12.3` by digest |
 | Recipe models | extraction `gpt-5-mini`, embedder `text-embedding-3-small` (1,536 dimensions): the SDK defaults, read back from the running `Memory` and reported by `/health`. The LLM config sets `is_reasoning_model=True` (see deviation 8) |
 | Common models | extraction `gpt-4.1-mini`, embedder `text-embedding-3-large` at 1,536 dimensions (extract-first sends `dimensions` when `embedding_dims` is set) |
 | Reranker | none configured; `search(rerank=False)` is the default |
-| Agent surface | a harness MCP wrapper over this SDK, not built yet. OpenMemory, extract-first's own MCP server, is being sunset |
+| Agent surface | a harness MCP wrapper over this SDK, not built yet. extract-first's own MCP server is being sunset |
 
 `capability.json` is the full capability record. The shim adds the `uv.lock` hash, the image digest from
 `SHIM_IMAGE` and the resolved models at run time.
 
 ## How the shim maps the protocol
 
-The flow starts from `mem0ai/memory-benchmarks` at commit `4b61c5d3`: `session_to_chunks` turns each turn into one
+The flow starts from the vendor's benchmark code at commit `4b61c5d3`: `session_to_chunks` turns each turn into one
 message `{"role", "content": "Speaker: text"}`, groups `CHUNK_SIZE` messages per `add` call (1 for LoCoMo, 2 for
 LongMemEval and BEAM) and scopes everything by `user_id`.
 
 | Endpoint | What happens |
 |---|---|
 | `/reset` | cancels queued sessions, `delete_all(user_id)`, then the namespace moves to a fresh `user_id` (`<ns>.g<n>`), because `delete_all` leaves the scope's 10 most recent raw messages in the history store, where the next extraction call would read them |
-| `/ingest` | queues the session on the namespace's single worker and returns `completeness: unknown` at once. The worker makes one `Memory.add(messages, user_id, metadata={source_id, session_date})` per chunk of `MEM0_CHUNK_TURNS` turns, each chunk headed by a system line `This conversation took place at 1:56 pm on 8 May, 2023.` A failed chunk is recorded and marks the namespace `degraded`; a metering-proxy refusal stops the namespace's remaining chunks: HTTP 402 becomes `budget`, 403 (route not allowlisted or leak tripwire) becomes `invalid_request` |
+| `/ingest` | queues the session on the namespace's single worker and returns `completeness: unknown` at once. The worker makes one `Memory.add(messages, user_id, metadata={source_id, session_date})` per chunk of `EXTRACT_FIRST_CHUNK_TURNS` turns, each chunk headed by a system line `This conversation took place at 1:56 pm on 8 May, 2023.` A failed chunk is recorded and marks the namespace `degraded`; a metering-proxy refusal stops the namespace's remaining chunks: HTTP 402 becomes `budget`, 403 (route not allowlisted or leak tripwire) becomes `invalid_request` |
 | `/finish` | waits for the queue to drain (up to `timeout_s`, else `ready: false`) and reports `known` or `degraded` with session, memory and error counts. Queuing exists because one session can outlast the harness's 600-second request deadline: `gpt-5-mini` takes about 16 seconds per `add`, so a 30-turn LoCoMo session at one turn per call takes about 8 minutes |
 | `/retrieve` | `Memory.search(question, top_k=k, filters={"user_id"})`, k is 20 for `vendor-default` (the SDK default) and 200 for `fixed-evidence` (the vendor benchmark's largest cutoff). Each memory carries the `source_id` of the session whose add created it (`provenance_status: partial`) and its session date as `valid_from` |
 | `/delete_source` | `get_all(filters={user_id, source_id})`, then `delete(memory_id)` for each, then a re-check that none is left |
 
 ### Time
 
-OSS 2.2.1 rejects a non-null `timestamp` on `add` (`main.py:818`) and a non-null `reference_date` on `search`
+The pinned open-source release rejects a non-null `timestamp` on `add` (`main.py:818`) and a non-null `reference_date` on `search`
 (`main.py:1447`), so the date travels as text and `query_time` is not sent. One limit remains: the extraction
 prompt's `## Observation Date`, which the prompt calls the only temporal anchor, is always today's wall-clock date in
 OSS (`configs/prompts.py`, `_resolve_dates`). Relative phrases such as "yesterday" may therefore resolve against
@@ -46,19 +47,19 @@ not work around it (for example through the `prompt` argument); the report shoul
 
 ## Deviations from the vendor benchmark
 
-1. memory-benchmarks drives its own FastAPI server built from extract-first's `feat/v3-pipeline` branch; the shim calls the
-   pinned 2.2.1 SDK in process against the same Qdrant backend. That server passes `user_id` to `search()` as a
-   keyword, which 2.2.1 rejects, so the shim uses `filters={"user_id"}`.
+1. The vendor's benchmark code drives its own FastAPI server built from extract-first's `feat/v3-pipeline` branch; the shim calls the
+   pinned SDK in process against the same Qdrant backend. That server passes `user_id` to `search()` as a
+   keyword, which the pinned release rejects, so the shim uses `filters={"user_id"}`.
 2. The session date goes into the messages as a system line. The vendor sends `timestamp=<epoch>` to its OSS server,
    whose request model has no `timestamp` field, so in the vendor's own OSS runs the date never reaches extract-first.
 3. Roles come from the harness; when a role is neither `user` nor `assistant`, the first speaker becomes `user` and
    the others `assistant`, the vendor's mapping. Image captions are not sent; the sanitized sessions carry text only.
 4. Every `add` carries `metadata={"source_id", "session_date"}` for provenance and deletion; the vendor sends none.
 5. `user_id` is the opaque namespace plus a reset generation, not `locomo_<conv>_<run_id>`.
-6. The recipe extraction model is the SDK default `gpt-5-mini`; memory-benchmarks' server defaults to `gpt-4o-mini`.
+6. The recipe extraction model is the SDK default `gpt-5-mini`; the benchmark code's server defaults to `gpt-4o-mini`.
 7. Search runs once per question at the policy's `top_k`; the vendor searches once at `top_k=200` and slices.
 8. The recipe sets `is_reasoning_model=True`, extract-first's documented override for reasoning-model detection. extract-first
-   2.2.1 recognizes only the exact name `gpt-5` (`llms/base.py`, `_is_reasoning_model`), so with its own default
+   at the pinned release recognizes only the exact name `gpt-5` (`llms/base.py`, `_is_reasoning_model`), so with its own default
    `gpt-5-mini` it sends `temperature=0.1` and OpenAI rejects every extraction call with HTTP 400. Out of the box, the
    OSS default configuration stores no memories at all against the current OpenAI API.
 
@@ -77,7 +78,7 @@ python3 eval/systems/markdown-notes/protocol_check.py --url http://127.0.0.1:870
 Compose puts the shim and Qdrant on an internal network. The only exits are `proxy`, a TCP relay to the metering proxy
 (`PROXY_UPSTREAM`, default `host.docker.internal:8787`, with `OPENAI_BASE_URL=${PROXY_URL}/${PROXY_SLOT:-extract-first}/openai/v1`), and `ingress`,
 which publishes the shim on `127.0.0.1:${SHIM_HOST_PORT:-8702}`. The container holds a dummy `OPENAI_API_KEY`. Set
-`SHIM_CONFIG=common` for the common models and `MEM0_CHUNK_TURNS=1` for LoCoMo cells.
+`SHIM_CONFIG=common` for the common models and `EXTRACT_FIRST_CHUNK_TURNS=1` for LoCoMo cells.
 
 ### Keyless plumbing test
 
@@ -95,7 +96,7 @@ python3 eval/systems/markdown-notes/protocol_check.py --url http://127.0.0.1:870
 ## Metered smoke, 2026-10-05
 
 One run per configuration through the metering proxy (branch `capy/shootout-harness`, lease mode, $0.50 lease each,
-`MEM0_CHUNK_TURNS=2`), driven by `protocol_check.py`: two dated sessions (3 and 2 turns) plus a canary session in a
+`EXTRACT_FIRST_CHUNK_TURNS=2`), driven by `protocol_check.py`: two dated sessions (3 and 2 turns) plus a canary session in a
 second namespace, then six retrievals (two dated probes, the canary in the wrong and the right namespace, the
 camping probe after deleting its session, and a pottery check). Dollars and tokens are the proxy's usage log.
 
