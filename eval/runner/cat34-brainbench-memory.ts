@@ -65,8 +65,26 @@ import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 
 export const CAT34_CATEGORY = 'cat34-brainbench-memory';
 
-/** The published matrix: all four suites must appear or the gate narrowed. */
-const EXPECTED_SUITES = ['know-to-ask', 'push', 'write-back', 'continuity'] as const;
+/** The published matrix: these four suites must appear or the gate narrowed. */
+export const BASE_SUITES = ['know-to-ask', 'push', 'write-back', 'continuity'] as const;
+/** Suites gbrain #5575 (memory trust, BrainBench lane I1) adds to the closed suite enum. */
+export const MEMORY_TRUST_SUITES = ['trust', 'state-resolution', 'poisoning', 'deletion'] as const;
+
+/**
+ * Suites the checkout's own fixture schema declares
+ * (evals/brainbench/schema/fixture.schema.json, `suites.items.enum`): once a
+ * gbrain declares a suite, `--suite all` must return it, so a build that adds
+ * the memory trust suites cannot quietly drop one. An unreadable schema, or
+ * one missing a base suite, falls back to the four base suites.
+ */
+export function expectedSuites(repo: string): { suites: string[]; source: 'fixture-schema' | 'default' } {
+  try {
+    const schema = JSON.parse(readFileSync(join(repo, 'evals/brainbench/schema/fixture.schema.json'), 'utf-8')) as { properties?: { suites?: { items?: { enum?: unknown } } } };
+    const declared = schema.properties?.suites?.items?.enum;
+    if (Array.isArray(declared) && declared.every(x => typeof x === 'string') && BASE_SUITES.every(b => declared.includes(b))) return { suites: declared as string[], source: 'fixture-schema' };
+  } catch { /* fall back */ }
+  return { suites: [...BASE_SUITES], source: 'default' };
+}
 
 interface ResultCell {
   harness: string;
@@ -328,7 +346,8 @@ export async function runCat34(options: Cat34Options = {}): Promise<Cat34RunResu
 
   // ── Grade (the failable gate lives HERE — the subprocess exits 0 on
   // gold failures when no --compare is given) ───────────────────────────
-  const missingSuites = EXPECTED_SUITES.filter((s) => !result.cells.some((c) => c.suite === s));
+  const expected = expectedSuites(repo);
+  const missingSuites = expected.suites.filter((s) => !result.cells.some((c) => c.suite === s));
   const subprocessProbe = subExit !== 0 && result.seed_failures.length === 0;
   const nExpected =
     result.cells.length + missingSuites.length + result.seed_failures.length + (subprocessProbe ? 1 : 0);
@@ -408,6 +427,7 @@ export async function runCat34(options: Cat34Options = {}): Promise<Cat34RunResu
       subprocess_exit: subExit,
       cells: cellRows,
       seed_failures: result.seed_failures,
+      expected_suites: expected,
       missing_suites: missingSuites,
       gate: 'production-seam cells gate the verdict; contract-seam cells are informational',
       informational_failures: informationalFailures,
@@ -422,6 +442,10 @@ export async function runCat34(options: Cat34Options = {}): Promise<Cat34RunResu
     push: 'push_recall',
     'write-back': 'write_back_fidelity',
     continuity: 'continuity_rate',
+    trust: 'label_accuracy',
+    'state-resolution': 'current_fact_accuracy',
+    poisoning: 'poison_persist_rate',
+    deletion: 'residual_after_purge',
   };
   const lines: string[] = [
     '# Cat 34 — BrainBench memory conformance',
