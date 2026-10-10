@@ -111,6 +111,35 @@ LongMemEval-S combined ran as four cells of 100 histories each, split by history
 
 Receipts are in [`2026-10-09-memory-proof-wave-matched/`](2026-10-09-memory-proof-wave-matched/): each cell's JSON files, ledger status and a tarball of stage records and the request log, the two re-judges, the VM record and one path redaction.
 
+## Equivalence of the shipped build
+
+Retrieval is equivalent; end-to-end is within noise except fact re-extraction. The check compares the freeze build `d7467d1cf` with gbrain#6066 at `d7d7686de`, pinned for the check. The [addenda](2026-10-05-memory-proof-wave-preregistration-addenda.md) planned it on the sealed cells. Those cells and stores were lost ([receipts lost](#receipts-lost)), so it ran on the public BEAM dev conversations instead: 4 conversations at 100k (80 questions) and 7 each at 500k and 1M (140 questions each). Both lanes ran at the sealed configuration, and it decides nothing.
+
+A question counts as changed when its delivered context differs from the baseline cell's recorded context. The noise floor is four retrieval-only replays on the freeze build against the baseline's own store. The new head was replayed the same way, twice, against the baseline store: once as it was and once after the new head's `extract --stale`. The store uses PGLite, and no step ran the deferred ANN build or `reindex-vectors`. The new head then re-ingested each lane (end to end).
+
+| Size, lane | Changed, noise floor (4 same-build replays) | Changed, new head on the baseline store | Changed, new head end to end | Correct, baseline vs new head end to end |
+|---|---|---|---|---|
+| 100k combined (80) | 5, 5, 9, 7 | 7, 6 | 80 | 56 vs 57 (mean 0.644 vs 0.665) |
+| 100k raw (80) | 3, 2, 3, 2 | 2, 2 | 2 | 0 vs 0 of the 2 changed |
+| 500k combined (140) | 10, 12, 10, 14 | 14, 11 | 140 | 100 vs 100 (0.664 vs 0.666) |
+| 500k raw (140) | 1, 1, 1, 0 | 1, 1 | 0 | none changed |
+| 1M combined (140) | 5, 10, 13, 10 | 7, 11 | 140 | 99 vs 97 (0.676 vs 0.652) |
+| 1M raw (127 with a baseline) | 1, 1, 2, 1 | 1, 1 | 3 | 1 vs 1 of the 3 changed |
+
+On the baseline store, the new head stays inside the same-build range at every size. Its keyword arm returns identical candidates on every question. Its vector arm changes the candidate set on 0 to 6 questions per replay, against 0 to 5 between two same-build replays, and no vector pool is underfilled. The questions whose context changed in the first of these replays were answered again and judged jointly with the baseline answers. They get the same number correct on both builds at every size and lane, except one 100k raw question (1 of 2 vs 0 of 2).
+
+**Caveat: fact re-extraction.** End to end, every combined question changes, because re-ingesting calls the extraction model again and it writes a different fact set. The 1M combined store has 27,250 facts against 26,889, and 500k has 11,580 against 11,625. Page and chunk counts are equal on both builds at every size. The combined end-to-end rows therefore measure a new extraction as well as the new build. The check did not re-extract on the freeze build, so extraction variance and the build change cannot be separated. The raw lane has no extraction, and its end-to-end changes stay at or within one question of the same-build range.
+
+Other checks on the new head:
+- No search sets `min_trust`.
+- No page or fact is quarantined or hidden by eligibility.
+- The new head's ingest gate flags 3, 19 and 23 rows in the combined stores at the three sizes. They are still delivered, marked unconfirmed, with their text unchanged.
+- Ingest cost stays within 2% of the baseline at every size ($5.16 against $5.11 at 1M), under the stop at 1.25 times the baseline.
+
+Of the 1M raw baseline, 13 questions from one conversation were refused by the run's budget and have no baseline, so they are excluded.
+
+The check cost $73.84 of its $90 cap. Receipts, per size and build, are in [`2026-10-10-memory-proof-wave-equivalence/`](2026-10-10-memory-proof-wave-equivalence/), with `report.json` from `python3 eval/harness-provider/mpw_tools/equivalence_report.py docs/benchmarks/2026-10-10-memory-proof-wave-equivalence`.
+
 ## What ran
 
 - **Data.** BEAM 100k, 500k and 1M sealed conversations: 12 + 21 + 21 = 54 conversations, 20 questions each. These are the clusters left after the dev and validation splits ([preregistration](2026-10-05-memory-proof-wave-preregistration.md)). The sealed split was opened once, on October 6, 2026 at 21:18 UTC, against preregistration SHA-256 `6544b2014fbc63331641b5794c106a231d242e4fc8291051f12bdb46f33e5e17`, under decision `mpw-beam-ni-2026-10-06`.
@@ -179,6 +208,10 @@ python -m mpw_tools.sealed_cost --pair <gbrain cell>:<comparator cell>:<gbrain r
 The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memory-proof-wave-sealed-analysis.ts) and the cost computation is [`mpw_tools/sealed_cost.py`](../../eval/harness-provider/mpw_tools/sealed_cost.py). Both read the cells from custody, which no longer exists, so the numbers on this page cannot be recomputed.
 
 ## Changelog
+
+### 2026-10-10: Equivalence of the shipped build
+
+Added the gbrain#6066 equivalence check (`d7467d1cf` against `d7d7686de`) on the public BEAM dev conversations: the same-build noise floor, per-size changed-context and end-to-end counts, and the fact re-extraction caveat.
 
 ### 2026-10-10: Descriptive rows
 
