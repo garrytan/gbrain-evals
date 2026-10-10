@@ -508,7 +508,7 @@ export async function rejudgeCells(ctx: Ctx, ids: string[], budgetUsd: number, o
  * retrievals, through the metering proxy (mpw/reanswer.py). Variance checks
  * re-judge it jointly with the original cell.
  */
-export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetUsd: number, out: string): Promise<number> {
+export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetUsd: number, out: string, only?: { retrievals?: string; questions?: string }): Promise<number> {
   const cell = JSON.parse(readFileSync(join(ctx.cellsDir, id, 'cell.json'), 'utf8')) as CellFile;
   const { startMeteringProxy } = await import('./harness-metering-proxy.ts');
   const run = BudgetRun.open({ runner: `harness-reanswer:${id}-s${sample}`, budgetUsd, ledgerPath: budgetOptionsFrom(ctx.argv).ledgerPath, log: ctx.log });
@@ -519,7 +519,8 @@ export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetU
   const j = cell.spec.models.judge ? splitModel(cell.spec.models.judge) : a;
   const env = { ...pick(proxy.envFor('harness'), [...new Set([LLM_PROVIDER[a.llm], LLM_PROVIDER[j.llm]])]), OMB_ANSWER_LLM: a.llm, OMB_ANSWER_MODEL: a.model,
     OMB_JUDGE_LLM: j.llm, OMB_JUDGE_MODEL: j.model, MPW_PROXY_LOG: join(proxyDir, 'requests.jsonl'), MPW_PROXY_BODIES: join(proxyDir, 'bodies') };
-  const child = Bun.spawn([ctx.install.python, '-m', 'mpw.reanswer', '--cell', join(ctx.cellsDir, id), '--out', out, '--sample', String(sample)], {
+  const extra = [...(only?.retrievals ? ['--retrievals', only.retrievals] : []), ...(only?.questions ? ['--questions', only.questions] : [])];
+  const child = Bun.spawn([ctx.install.python, '-m', 'mpw.reanswer', '--cell', join(ctx.cellsDir, id), '--out', out, '--sample', String(sample), ...extra], {
     cwd: PROVIDER_DIR, env: harnessProcessEnv(ctx.install, env), stdout: 'inherit', stderr: 'inherit',
   });
   let code: number;
@@ -539,7 +540,18 @@ export async function reanswerCell(ctx: Ctx, id: string, sample: number, budgetU
  * through the metering proxy (eval/harness-provider/mpw_tools/replay.py). Used to
  * check a later build against a run's delivered contexts; nothing is answered.
  */
-export async function replayCell(ctx: Ctx, id: string, storeDir: string, out: string, budgetUsd: number): Promise<number> {
+/**
+ * A bun launcher for the replay's gbrain children that preloads mpw_tools/probe-preload.ts: every query and the
+ * engine searches it makes are appended to <out>/probe.jsonl. What gbrain returns is unchanged.
+ */
+function probeBun(out: string, gbrainRoot: string): string {
+  const path = join(out, 'bun-probe.sh');
+  const q = (v: string) => `'${v.replace(/'/g, `'\\''`)}'`;
+  writeFileSync(path, `#!/bin/sh\nMPW_PROBE_ROOT=${q(gbrainRoot)} MPW_PROBE_LOG=${q(join(out, 'probe.jsonl'))} exec ${q(process.execPath)} --preload ${q(join(PROVIDER_DIR, 'mpw_tools/probe-preload.ts'))} "$@"\n`, { mode: 0o755 });
+  return path;
+}
+
+export async function replayCell(ctx: Ctx, id: string, storeDir: string, out: string, budgetUsd: number, probe = false): Promise<number> {
   const dir = join(ctx.cellsDir, id);
   const cell = JSON.parse(readFileSync(join(dir, 'cell.json'), 'utf8')) as CellFile;
   if (!existsSync(join(storeDir, 'store.json'))) throw new Error(`${storeDir} is not a cell store (no store.json)`);
@@ -555,7 +567,7 @@ export async function replayCell(ctx: Ctx, id: string, storeDir: string, out: st
     ...pick(proxy.envFor('harness'), harnessCredentials(cell.spec, cell.resolved)),
     MPW_PROXY_LOG: join(proxyDir, 'requests.jsonl'), MPW_PROXY_BODIES: join(proxyDir, 'bodies'),
     MPW_PROVIDER_CONFIG: JSON.stringify(cell.spec.provider_config ?? {}),
-    MPW_GBRAIN_CLI: join(ctx.gut.root, 'src/cli.ts'), MPW_BUN: process.execPath,
+    MPW_GBRAIN_CLI: join(ctx.gut.root, 'src/cli.ts'), MPW_BUN: probe ? probeBun(out, ctx.gut.root) : process.execPath,
     MPW_CHILD_ENV_GBRAIN: JSON.stringify(pick({ ...proxy.envFor('gbrain'), VOYAGE_BASE_URL: proxy.baseUrls.voyage, GOOGLE_GENERATIVE_AI_BASE_URL: proxy.baseUrls.gemini }, cell.spec.gbrain_credentials ?? ['voyage'])),
     MPW_CHILD_ENV_COMPARATOR: JSON.stringify(proxy.envFor('comparator')),
     MPW_REPO_ROOT: REPO_ROOT, MPW_STORE_DIR: store, MPW_STORE_ID: `replay-${id}`,
@@ -588,8 +600,8 @@ export function makeCtx(argv: string[], log: (l: string) => void = l => process.
 
 export const USAGE = `usage: bun run harness:cell <plan|run|resume> <spec.json | cell-id> [--stub-upstream] [--budget-ledger <path>] [--gbrain <checkout>[@ref]] [--cells-dir <dir>]
        bun run harness:cell rejudge <cell-id> <cell-id> [--out <dir>] [--seed N] [--budget-usd N]   joint blinded re-judge with the dataset's judge
-       bun run harness:cell reanswer <cell-id> [--sample N] [--out <dir>] [--budget-usd N]   another answer sample from the recorded retrievals
-       bun run harness:cell replay <cell-id> --store <store dir> --out <dir> --gbrain <checkout>@<ref> [--budget-usd N]   retrieval-only replay on another build
+       bun run harness:cell reanswer <cell-id> [--sample N] [--out <dir>] [--budget-usd N] [--retrievals <replay dir> --questions <json list>]   another answer sample from the recorded (or replayed) retrievals
+       bun run harness:cell replay <cell-id> --store <store dir> --out <dir> --gbrain <checkout>@<ref> [--budget-usd N] [--probe]   retrieval-only replay on another build (--probe logs queries and engine searches)
        bun run harness:cell ingest <spec.json | cell-id>   ingest every unit into the shared store, no questions
        bun run harness:cell tune <cell-id> --auto '{"targets": [4000, 8000, 16000, 32000], "base": {"token_budget": 8100}, "sample": 60}'
        bun run harness:cell tune <cell-id> --grid '{"token_budget": [6000, 7000, 8000]}'   retrieval-only knob sweep on an ingested cell
@@ -625,11 +637,13 @@ if (import.meta.main) {
     if (action === 'replay') {
       const store = flag(argv, '--store'), out = flag(argv, '--out');
       if (!store || !out) throw new Error('replay needs --store <the cell\'s store dir> and --out <dir>');
-      process.exit(await replayCell(ctx, target, resolve(store), resolve(out), Number(flag(argv, '--budget-usd') ?? 5)));
+      process.exit(await replayCell(ctx, target, resolve(store), resolve(out), Number(flag(argv, '--budget-usd') ?? 5), argv.includes('--probe')));
     }
     if (action === 'reanswer') {
       const out = resolve(flag(argv, '--out') ?? ctx.cellsDir);
-      process.exit(await reanswerCell(ctx, target, Number(flag(argv, '--sample') ?? 2), Number(flag(argv, '--budget-usd') ?? 5), out));
+      const retrievals = flag(argv, '--retrievals');
+      process.exit(await reanswerCell(ctx, target, Number(flag(argv, '--sample') ?? 2), Number(flag(argv, '--budget-usd') ?? 5), out,
+        { retrievals: retrievals ? resolve(retrievals) : undefined, questions: flag(argv, '--questions') }));
     }
     if (action === 'tune') {
       const grid = flag(argv, '--grid');
