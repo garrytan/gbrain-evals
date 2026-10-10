@@ -1,0 +1,1321 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s4-slice.baseline-hybrid.baseline.component-b8000",
+  "run_cell": "s4-slice.baseline-hybrid.baseline",
+  "config_sha256": "dc8e9de3787775eefcb1f864bc7891a394ff74d61ad13cd9d6ab84b04ea4182f",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S4-slice",
+  "benchmark": "lme-s",
+  "split": "dev",
+  "block": "T2-S4-S5",
+  "system": {
+    "kind": "baseline-hybrid",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "capability_system": "plain-hybrid",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "system": "plain-hybrid",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large@1536",
+            "dims": 1536
+          },
+          "notes": "Postgres full-text plus pgvector cosine, reciprocal-rank fusion; whole sessions; embedding input cut at 24,000 characters"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: a session is searchable once its row is written",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 10
+          }
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 30
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "lme-s",
+    "sha256": "fd43b41a0a454bf7095c3753365ab438334dbb8f20957f1cd878fb1212a6c95d",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6.1-sol"
+    ],
+    "readers": null,
+    "sample": 17,
+    "instrument_ids": [
+      "lme-s@anthropic:claude-opus-5-5",
+      "lme-s@openai:gpt-6.1-sol"
+    ]
+  },
+  "selection": {
+    "questions": 100,
+    "conversations": 100,
+    "scheduled_sha256": "494db589170ba9594c01caa8a1f652249571d9d5062c950141b97c96ca189672"
+  },
+  "counts": {
+    "rows": 100,
+    "answers": 300,
+    "answers_promised": 300,
+    "judgments": 351,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 297,
+      "ingest_degraded": 3
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": 0.79,
+    "openai:gpt-6.1-sol": 0.77,
+    "anthropic:claude-sonnet-5-5": 0.79
+  },
+  "realizations": [
+    {
+      "conversation": "06878be2",
+      "realization_id": "74eeb03740d1c9e42b934c9bf2cabc541af65ed66794416b18fae4fbe075a0eb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "07b6f563",
+      "realization_id": "972557dc98a5a5695f664319ed57cc94d934079bf36a1d2c0f9350593740c182",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "09d032c9",
+      "realization_id": "49b70c1780aca2042d10386d09e3e07025b342051ffa8fe69364810b8e787234",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0a34ad58",
+      "realization_id": "8858977124d65da0dfc1d6dd629e6f2f03c1f517f916ad7a333f152a674a9d2e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0bb5a684",
+      "realization_id": "c0de9db1650b7c09f108676b553dcf3f850137e234a9f3e72615099e22bf3346",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0ddfec37",
+      "realization_id": "5c5d67b4fc3f56131691d22b9f97894160b3d5c72c60cbb04a200d065c437086",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0e5e2d1a",
+      "realization_id": "8c1cdb29f7919b1d12cb3bf49f99167044684ca02d296e671bf80318b7a9cfa0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "0edc2aef",
+      "realization_id": "b189b74578ae23d0a7dcea177820f6bfa81911b9011bc9440f04a0611de3ac3e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "10e09553",
+      "realization_id": "b5ff17718897a41a7de962dec52780cfbce77553781b9643adcb1f294c7c8e22",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "157a136e",
+      "realization_id": "8d71f706577bf9bef24758d74d9d6cfc68f11565b26b79896796b335343c69dc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "18bc8abd",
+      "realization_id": "187521f7440f39e7f6a2e9dfba622697b127742375c9d79b0220d7074e0cb223",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "195a1a1b",
+      "realization_id": "03f53bc5bc402cd241783783086135730579b86e0f47927eaf15f0f492ee5a36",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1a8a66a6",
+      "realization_id": "c7b4e12c164cf80524279b55eb2dc31662c45e698198e0b832444e93df51a09f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1cea1afa",
+      "realization_id": "31b04437602225a94926b378e454ac57edf90d04ba8626623150f0f18482efb4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1d4da289",
+      "realization_id": "42db2d920a238d7b06103a256d8a45580c078b74fecbb30f04473f6bdba71b35",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1d4e3b97",
+      "realization_id": "4ab30808224f7b53a8b1321fcbd21ad855a2272e39e9d264c8d08ff4e1de4d99",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "1f2b8d4f",
+      "realization_id": "2cab0dc1ed731c117d32699d5bf557b29424a2ed589ab8544415bf5ae718aaf4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2133c1b5_abs",
+      "realization_id": "94b1def65ef6a2955a1e57286c34b98e44a106584d7106bc912519d634a3b9c8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2318644b",
+      "realization_id": "dd544de0cd0f60f1384acb79edc491c61ab38fa255c923ffd5eec41b68f1b9ae",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "28bcfaac",
+      "realization_id": "ea807525872a29d827e20e45209397033094dad558b90b132793e69c5fe23f59",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "2ce6a0f2",
+      "realization_id": "8315c314e2d66fcdaa387493472f40356b44f2cd49302a5981bb7b8d01dd8d93",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "32260d93",
+      "realization_id": "cf180194ebbeadffd13f991a0491f01453e076ef4956dc969e8befde8a6f3590",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "3249768e",
+      "realization_id": "d2bc279edd295fa3e3884cd9e072fb6366d8fbd5d8d765d42846ac50ebcd923e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "352ab8bd",
+      "realization_id": "bbcaed7128bbb10e25594567dec1fbb189dc72e0e1a06aff832b60f0f315ec8c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "36580ce8",
+      "realization_id": "7d06cc031908215f82ef5beb5a2cd7c7e7e939e1bd254d43b96b479bbf0e46ea",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": true,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "38146c39",
+      "realization_id": "a32fa99a2806aa2dee80f9d714cf586ae6d77578a07e6052d09afedd05e2f78e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "3b6f954b",
+      "realization_id": "dd1e7942780d1eef0c3b7eff3b5e09cfe989b20c09d725c160de694813e40aa7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "45dc21b6",
+      "realization_id": "0aa9b0ffbb0e6692a5e46762e456d95a19617970e6f8cd73ef5d538d425bc445",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "488d3006",
+      "realization_id": "17a3fd82aa866e3eb7d7681de9db7a2578f87d3af800bcbbd4e3734b2a9cb643",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4b24c848",
+      "realization_id": "e1f497f5bd435e1e1fa21eaa56ae49e7a19b414304dfc430362f943ca1df2d82",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4baee567",
+      "realization_id": "9cefb3709760da59ca4f14e8a2412e2b47f9ed6d0a072844244740e605e86bf4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4c36ccef",
+      "realization_id": "9f4b5e4967750efe8f0e9356317d4c4e390001e58e6ee4cb9ace5da5f9369771",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4d6b87c8",
+      "realization_id": "617acdfdbdf48eeb26c783c806862d0837f7cfa4eca99586e7eef1982f7c8ab9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "4fd1909e",
+      "realization_id": "d33676968f69936eeadd7cceceacae6fbc7c661e40beaea7f3b8db38ae829ca4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51a45a95",
+      "realization_id": "ac8e8c207e3448482582e165ee6c833e3fb7da86d5a57d91d0fa3fa2b2fbe245",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51b23612",
+      "realization_id": "8e4fc034f4592432ef764820cd404759842e1a798b79b64237c545f101fd7799",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "51c32626",
+      "realization_id": "235e5f4ebcae50d86475dc85e2f5e925c330153d4056bfe9577c157a9993ab8b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "58bf7951",
+      "realization_id": "412ef9c66a31e934856d3110197019c20c31d8e5b17f533fffd18c10d6a9d29f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "5d3d2817",
+      "realization_id": "ca431f8a549a39b52d45461cfbe6e8a82a0f3a4256d220bab3408b7652e76d8a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "60472f9c",
+      "realization_id": "895525416e6fadbfd474de610b1ae6cd1f45c49ce110661bd4fff3c9dc06be6a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "65240037",
+      "realization_id": "747f6dfd0d7ea20621206dce2eadb6855dd0f84db029c8603dd45a88c62d631a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "69fee5aa",
+      "realization_id": "2f00e8cc6a1f12998a7d3874c4a8c871be4eeb29015457294633334c51f92673",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "6b7dfb22",
+      "realization_id": "81f13efa309ff65e2f6ead05352b7be87f325089d99dd3448da747455158d3b1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "71017276",
+      "realization_id": "b2df412a3e0c0c243b8289e06126526ea8aa6275ceeee4653be96188aadefe90",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "7405e8b1",
+      "realization_id": "ef9a858138dc6ded287c60edf309622fa4832a5acf300e4683e0be2b5d221290",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75499fd8",
+      "realization_id": "7aaed85f6008a3061b4ea76b50f3182f80dcae32da147975badc6a4ab5e3ce80",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75832dbd",
+      "realization_id": "5d83823dfd297e6a3b58276f56481fa39b1ecd7a6a8d8cd80c92bfc787f2db4b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "75f70248",
+      "realization_id": "21476c77a6cea559c7a250b67a59f0c2fca80ef311a2103ca1a87171c8613ade",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "76d63226",
+      "realization_id": "34f86f8cab4e78da65da73fca82a22cf910342f1acda464606227bcc20496da6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "7a8d0b71",
+      "realization_id": "4382c2d05043599cb74fc4fdf566f33a33bc9aca1cacb5e4590250e140143acb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "852ce960",
+      "realization_id": "d808f4c080a8b1605ac8a1f531b9af15a6b46cc8fb7b43b024a0126d3da4d98f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "86b68151",
+      "realization_id": "8926092d2ffa855167700682c9a6ba455e326ec91fb05cc33186e18958bef614",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "86f00804",
+      "realization_id": "7c62cc0ce6ca57e3873182f4b50ed4a748b287e3766421a8cc9db78c9a72debc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8a137a7f",
+      "realization_id": "0f6b5ab9bbce65bcf98c6cc7aa2f475f528d26dd28e4008866b16dfbe2f008ab",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8b9d4367",
+      "realization_id": "f8ba4c2b18bb8b5270c5bff542a403d590cd145b6227dd5eff71e67f76309f05",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "8fb83627",
+      "realization_id": "bee7847b6e7d256842cfeaa02d1f336808b40125fd94d89b0d851bbefa4996ec",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "982b5123_abs",
+      "realization_id": "1600469141a65cf4be0ece31708e851bad1bd4b19dd43d8dc1059f5b25b63f40",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "9bbe84a2",
+      "realization_id": "fd9a8402bb108658119938c59735d65f2b2b8141ede88499e5ffa792e2057574",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a2f3aa27",
+      "realization_id": "9a4e5597732bac094b8afe9bb04d1a6f626c25792bb1c81a59bc5821dd09a614",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a89d7624",
+      "realization_id": "b5b47315c1feb70d987c115003aa7d9afdf79aa9d997491f0f509b8593979d38",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "a96c20ee",
+      "realization_id": "b235e3fcf0bb72b6bb423c9f3e9d089f5b7d48a050b834b0ffdbd6a323673967",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "afdc33df",
+      "realization_id": "5f366322c537e245ffd09576e0f3f9332cf8bfa4b41cb51ab9fdf8fbc69e8e12",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b01defab",
+      "realization_id": "7ad3683d227c2d1621dff8390d93d29e0be8aa5e46ac630709636d34a83566de",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b0479f84",
+      "realization_id": "8b4688ff69812d2035dbdc8bd4ba52dba7de4a2cc0441c8672f319f615d5d95f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b3c15d39",
+      "realization_id": "0285a86ce8eed1af6fd39c5200e47e167fde063fd041340346c819063a6ec2d4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b46e15ed",
+      "realization_id": "f86de0d97de4381acbf18815e9e57d76b2c63db5ef4d92daea3eefb891016fd7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "b5ef892d",
+      "realization_id": "0be28db21861041e57a7ed4a9fa8ca9ed4a9a6735a1cb9f783e1f6ecc1e1acd8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bc8a6e93",
+      "realization_id": "b1748034e538ccc0d30728802bc50bacf05c027ad0dfd58ead1c2693080816b8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bc8a6e93_abs",
+      "realization_id": "b64fd11e29294f318e758669328965c9d7d11c540ab7afac0f5b5d3e88bb92b2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "bcbe585f",
+      "realization_id": "ebd0b36172ddc99bb25517eef2c85a6f4902df2a0eed3aa979353a4b6bad4ffe",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c2ac3c61",
+      "realization_id": "558d74292ed87653311fab2fbecb9b3988f88e837e88e716dd1f017203fdf020",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c5e8278d",
+      "realization_id": "2e317933f6a6a91ff5d9cd2107c567ed07506abfb66a6b9e6af2777bd68d1013",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "c7dc5443",
+      "realization_id": "d5e697b059c46b334eb7852f6a979e73927f6a3111ef65f17806f8288aef3b8f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "cf22b7bf",
+      "realization_id": "35f6f9e4c2ddc835afb15a856feef3aa7e22a3a5954876966f7e7f0cf24588c8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d24813b1",
+      "realization_id": "4eb97ceb4fcaabf088d1001cc3654565686b9307a3130399b0014f3ae1036e2a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d3ab962e",
+      "realization_id": "dce8eaab69d69444cf7c127821f2dcaeabde9bed1ebc428758e8295306b8b75c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d52b4f67",
+      "realization_id": "e17813ca49adc0b7178c2b788c3b1a7ea8f43de220f27848c131a923de7b17cc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d596882b",
+      "realization_id": "e426bcf5f1d4f5afda6726814ddf82bb3b0a6a1c7b09c8722e13b5ec1cc73514",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "d851d5ba",
+      "realization_id": "b96b33121e152d82a6e045390838a87cbb3c483bc27f36db8a45b412bd80521f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "dc439ea3",
+      "realization_id": "0d66cdee5b0ed87815222d4a1cdc1c6b11312e72d8019aa4c2f30a3d00e75fac",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "e5ba910e_abs",
+      "realization_id": "929903b08796c4c8afd6c44742016c29827473f417c9c34fad0c680ea396514c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "e982271f",
+      "realization_id": "104b4784205aa214c730118b40568596821ff04ce3260f8ad7addbc1ee58dfd5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "ed4ddc30",
+      "realization_id": "0c88803c1f562517aac5d89c414e694496e73b1198c5d97d98dbe59f346224e4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "efc3f7c2",
+      "realization_id": "ee15cb02ad3b8178c71ff4f816791eee9227f2c18b83bb1f72134555a996e779",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "faba32e5",
+      "realization_id": "1e5131fa2d1e5b04595ad98dd52f2dc12f864e1ff2a00a88659a84b1fb7af17c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "fca70973",
+      "realization_id": "f7cf21bc39cbf26d15f5562c88ca081869ff4f0f7505a89c19d956bb8ccd2e75",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "fca762bc",
+      "realization_id": "41d75f4c34d26263eea090877f686e93f6986847ee89decc9910d153a4bcaac2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "fea54f57",
+      "realization_id": "407814c3c66ac0dc618414a72b410b0f39a679e44b5a6ffa473371188e421671",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_468eb063",
+      "realization_id": "a8d2357cfbef38bcd38ba8dd718d10dc5b04233dbcfc7a9a44b92b490cbef8ca",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_76048e76",
+      "realization_id": "5271e80b9a95cad4309815d97d5aac3316b2440de01343b7c6e2b2340dfb6a06",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7a0daae1",
+      "realization_id": "a3b6e1b1d56ba39c754360fe9c8ca911d0affaad1ab12490e08dbbfa56925d09",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_7ca326fa",
+      "realization_id": "9492663166a71d3064c5a10cf932bcb11fe9fe09473ec19e35b5061c3b5e21a7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_8c8961ae",
+      "realization_id": "5265e0cdf8ec126736cf2ba8b0a73ba00a720e341b589f007b7383d5d1bb8e27",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_8e165409",
+      "realization_id": "d6b2936fbabd24558ded580a782a34732cb3ada63045ca60b5d2c757cce21fc6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_93159ced",
+      "realization_id": "db91ff06c09a999f618ce5505187921fb290b8614ceadfa7683346a57ff3755d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_a2d1d1f6",
+      "realization_id": "e16dbf4b52d58afbb61d53df702f9941300e03b4fea783bada335fcbdf0e491d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_ab202e7f",
+      "realization_id": "89659c74d47a5406311749fff9ef2805c94ccc3ea33f5d0bf78980fb8cffe6c2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_b5700ca0",
+      "realization_id": "2b91f03a1f0c214b911a7cbd9f992a6f65548ad7518800dc1899424071813beb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_e414231e",
+      "realization_id": "bdb193b6f0c24db5aa8037f768d04328b3cb97db2d0e349abb0f5c20cb347237",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    },
+    {
+      "conversation": "gpt4_fe651585",
+      "realization_id": "1439b2454dd55a4d48908c7eaeeee93ffcc6292161fc68df96030edb5dc90a7e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 100,
+    "messages": 49672,
+    "ingested_tokens": 10394693,
+    "wall_ms": {
+      "total": 1929058,
+      "p50": 19102.5,
+      "p95": 23038.5
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 1,
+    "readiness_samples_ms": [
+      626.3,
+      749.4,
+      822.4,
+      634.6,
+      902.3,
+      794.9,
+      582.7,
+      722.3,
+      658.5,
+      801.2,
+      861.3,
+      757,
+      382.7,
+      639.2,
+      833.4,
+      758.7,
+      818.7,
+      798.5,
+      795,
+      787,
+      1048.6,
+      726.3,
+      706.4,
+      739.7,
+      674.9,
+      721.9,
+      718.3,
+      669.1,
+      705.7,
+      793.3,
+      714.6,
+      623.1,
+      819.8,
+      804.3,
+      798.2,
+      1059.3,
+      686.3,
+      852.1,
+      842.4,
+      809.9,
+      715.4,
+      779.5,
+      745.8,
+      810.9,
+      689.7,
+      814,
+      825.8,
+      778.1,
+      637.7,
+      836.6,
+      1013.7,
+      1186.1,
+      695.7,
+      884.8,
+      734.7,
+      668.1,
+      961.3,
+      769.2,
+      737.2,
+      796.6,
+      803.7,
+      746.1,
+      730.7,
+      664.1,
+      862.8,
+      635.9,
+      787.1,
+      811.4,
+      894.6,
+      700.5,
+      2410.8,
+      736.5,
+      821.5,
+      846.4,
+      812.5,
+      718.9,
+      697.4,
+      704.5,
+      799,
+      978,
+      983,
+      710.8,
+      756.7,
+      754.4,
+      536.1,
+      724.1,
+      944.2,
+      885.1,
+      742.7,
+      752.4,
+      808.7,
+      844.8,
+      906.5,
+      681.1,
+      639.8,
+      811.9,
+      835.2,
+      818.7,
+      833.5,
+      729.3,
+      660.4,
+      771,
+      802,
+      792.6,
+      739.9,
+      594.5,
+      729.5,
+      373.8,
+      695.6,
+      755.1,
+      796.6,
+      800.6,
+      812.8,
+      838.8,
+      630.1,
+      743.5,
+      674.4,
+      806.5,
+      733.9,
+      491.3,
+      24.6,
+      702.4,
+      682.3,
+      745,
+      684.2,
+      790.3,
+      649.9,
+      793.1,
+      957.5,
+      719.4,
+      357,
+      618.1,
+      710.7,
+      741.7,
+      882.2,
+      639.5,
+      896.9,
+      649.9,
+      860.2,
+      782.2,
+      307.1,
+      778.1,
+      609,
+      2097.6,
+      783.3,
+      793.9,
+      902.4,
+      751.6,
+      695.2,
+      741.9,
+      744.4,
+      806,
+      742.1,
+      844.6,
+      775.7,
+      642.5,
+      662.3,
+      661.3,
+      790.2,
+      672.7,
+      720,
+      754.9,
+      950.9,
+      835.3,
+      751.9,
+      678.8,
+      707.1,
+      688.4,
+      655,
+      713.1,
+      649,
+      815.4,
+      671,
+      380.5,
+      766.5,
+      561.7,
+      907.5,
+      906.4,
+      824.6,
+      744.1,
+      888.1,
+      679.3,
+      762.4,
+      836.5,
+      556.4,
+      645.2,
+      760.2,
+      777.8,
+      744.3,
+      608.4,
+      559.9,
+      825.4,
+      708,
+      734.7,
+      756.8,
+      914.8,
+      929,
+      758.5,
+      744.3,
+      714.8,
+      721.7,
+      797.5,
+      844.9,
+      829.3,
+      371.2,
+      312.1,
+      646.3,
+      611.2,
+      708.9,
+      806.2,
+      758.6,
+      666.8,
+      652.9,
+      651.7,
+      760.8,
+      683.3,
+      728.6,
+      593.3,
+      643.9,
+      701.4,
+      755.4,
+      709.3,
+      728.8,
+      365.3,
+      599.3,
+      776.7,
+      700.5,
+      816.1,
+      842.8,
+      803.6,
+      780.6,
+      852.5,
+      878,
+      845.7,
+      753.7,
+      740.3,
+      809,
+      735.4,
+      700.7,
+      845.9,
+      692.1,
+      1026.5,
+      719.5,
+      862.1,
+      708.6,
+      752.9,
+      701,
+      699.6,
+      890.6,
+      741.2,
+      377.6,
+      664.1,
+      693.8,
+      765.8,
+      861.6,
+      652.7,
+      625.8,
+      573.7,
+      800.2,
+      771,
+      765.8,
+      645.8,
+      715,
+      460.9,
+      1032.3,
+      723,
+      372.1,
+      822.6,
+      800.9,
+      634.8,
+      855.5,
+      768.6,
+      759.9,
+      823.6,
+      668.9,
+      12.2,
+      852.4,
+      401.5,
+      703.9,
+      653.5,
+      675.3,
+      775.9,
+      839.1,
+      655.8,
+      765.9,
+      774.1,
+      375.9,
+      790.3,
+      860.8,
+      781.7,
+      731,
+      818.6,
+      646.4,
+      351.8,
+      666.2,
+      707.2,
+      717.4,
+      621.1,
+      717.1,
+      765.9,
+      816.5,
+      735.6,
+      509.3,
+      754.1,
+      882.5,
+      680.9,
+      420,
+      871.4,
+      700.7,
+      792.5,
+      625,
+      730,
+      683.3,
+      616.3,
+      700.3,
+      712.1,
+      790.4,
+      309.5,
+      811.8,
+      840.8,
+      797.2,
+      820.7,
+      810.4,
+      406.4,
+      758.7,
+      732.6,
+      814.8,
+      850.2,
+      670.3,
+      890.1,
+      388.5,
+      830,
+      739.3,
+      903.1,
+      642,
+      716.9
+    ],
+    "write_start_to_queryable_ms": {
+      "p50": 744.3,
+      "p95": 906.8,
+      "probes": 336,
+      "found": 336,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 356,
+      "p95": 405.7
+    },
+    "answer_ms": {
+      "p50": 3372.5,
+      "p95": 11553.7
+    }
+  },
+  "usage": {
+    "input": 2214845,
+    "output": 107402,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 1.285053,
+      "retrieval": 0.00024,
+      "reader": 7.999761,
+      "judge": 0.45469,
+      "background_tail": 0
+    },
+    "total_usd": 9.739744,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s4-slice.baseline-hybrid.baseline/contexts.ndjson"
+  }
+}

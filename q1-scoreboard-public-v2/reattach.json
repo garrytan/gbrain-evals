@@ -1,10 +1,7 @@
 {
-  "at": "2026-10-10T00:00:45.686Z",
-  "s4.gbrain-defaults.shipped-defaults.c0": "running",
-  "s4.gbrain-defaults.shipped-defaults.c1": "running",
-  "s5.gbrain-defaults.shipped-defaults.c1": "running",
-  "s5.gbrain-defaults.shipped-defaults.c2": "running",
-  "s4-slice.baseline-hybrid.baseline": "running",
-  "s5.baseline-hybrid.baseline.c4": "running",
-  "s5.baseline-hybrid.baseline.c5": "running"
+  "at": "2026-10-10T10:18:30.574Z",
+  "s4.gbrain-defaults.shipped-defaults.c0": "settled",
+  "s4.gbrain-defaults.shipped-defaults.c1": "settled",
+  "s5.gbrain-defaults.shipped-defaults.c1": "settled",
+  "s5.gbrain-defaults.shipped-defaults.c2": "settled"
 }

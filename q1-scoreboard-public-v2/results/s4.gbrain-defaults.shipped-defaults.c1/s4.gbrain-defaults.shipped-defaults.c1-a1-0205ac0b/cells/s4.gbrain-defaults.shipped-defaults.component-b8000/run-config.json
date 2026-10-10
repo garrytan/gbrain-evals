@@ -1,0 +1,90 @@
+{
+  "schema": "gbrain-evals/q1-run-config/v1",
+  "cell_id": "s4.gbrain-defaults.shipped-defaults.component-b8000",
+  "run_cell": "s4.gbrain-defaults.shipped-defaults",
+  "cell": {
+    "schema": "gbrain-evals/q1-cell/v1",
+    "id": "s4.gbrain-defaults.shipped-defaults",
+    "set": "S4",
+    "block": "T2-S4-S5",
+    "benchmark": "lme-s",
+    "split": "dev",
+    "selection": {
+      "kind": "all"
+    },
+    "exclusions": [],
+    "system": "gbrain-defaults",
+    "configuration": "shipped-defaults",
+    "runner": "shim",
+    "ingest_replicate": 1,
+    "effort": "medium",
+    "canonical_instrument": "lme-s",
+    "probes": {
+      "sample": 20,
+      "seed": "q1-probes-s4",
+      "conversations": 50
+    },
+    "shards": 1,
+    "expected_hours": 48,
+    "launch": {
+      "env": {},
+      "config": "recipe"
+    },
+    "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+    "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+  },
+  "arm": {
+    "id": "component-b8000",
+    "cell_id": "s4.gbrain-defaults.shipped-defaults.component-b8000",
+    "set": "S4",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "questions": null,
+    "readers": [
+      "anthropic:claude-sonnet-5-5"
+    ],
+    "reader_replicates": {},
+    "frontier": null,
+    "judge_repeats": null,
+    "label": "component, 8,000 tokens, 500-question regression (claude-sonnet-5-5 only)",
+    "anchor": true
+  },
+  "instrument": {
+    "id": "lme-s",
+    "sha256": "fd43b41a0a454bf7095c3753365ab438334dbb8f20957f1cd878fb1212a6c95d",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "reader": {
+    "effort": "medium",
+    "max_tokens": 2048,
+    "prompt_sha256": "215660c5a2fb85c3068e09b2b02f047c9557393b505ef22c59c08918addfd3be"
+  },
+  "renderer": "memory-render-v2",
+  "counter": {
+    "counter": "reader-max-v1",
+    "tokenizer": "@dqbd/tiktoken@1.0.22",
+    "readers": [
+      {
+        "reader": "anthropic:claude-sonnet-5-5",
+        "encoding": "cl100k_base",
+        "calibration": 1.4524,
+        "calibrated": true
+      }
+    ]
+  },
+  "dataset": {
+    "name": "LongMemEval-S cleaned",
+    "files": [
+      {
+        "path": "longmemeval/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+      }
+    ],
+    "revision": "98d7416c",
+    "license": "MIT"
+  },
+  "scheduled_sha256": "702287feda46afbb122e7d61f8fb1530e6b571b8172e248376c4f887d0527f42",
+  "limit": null
+}
