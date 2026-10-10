@@ -1,0 +1,105 @@
+{
+  "seed": 20261005,
+  "schedule_sha256": "4f2306301d2382d87686f3f47471a4c279cbd8ea24c072321b8345589d8d6d36",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "order": [
+    {
+      "position": 0,
+      "blind_id": "b-6857c78b188f",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd",
+      "query_id": "15_instruction_following_0",
+      "redactions": 0
+    },
+    {
+      "position": 1,
+      "blind_id": "b-6d8577f5baec",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd-s21",
+      "query_id": "15_instruction_following_0",
+      "redactions": 0
+    },
+    {
+      "position": 2,
+      "blind_id": "b-3514bde009e4",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd",
+      "query_id": "12_event_ordering_1",
+      "redactions": 0
+    },
+    {
+      "position": 3,
+      "blind_id": "b-51ee5bb46931",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd-s21",
+      "query_id": "12_multi_session_reasoning_0",
+      "redactions": 0
+    },
+    {
+      "position": 4,
+      "blind_id": "b-ff17b78397c4",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd-s21",
+      "query_id": "11_preference_following_0",
+      "redactions": 0
+    },
+    {
+      "position": 5,
+      "blind_id": "b-3a583c0e204d",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd-s21",
+      "query_id": "12_event_ordering_1",
+      "redactions": 0
+    },
+    {
+      "position": 6,
+      "blind_id": "b-07e2005dd797",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd-s21",
+      "query_id": "11_event_ordering_0",
+      "redactions": 0
+    },
+    {
+      "position": 7,
+      "blind_id": "b-b2e4830d818e",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd",
+      "query_id": "11_event_ordering_0",
+      "redactions": 0
+    },
+    {
+      "position": 8,
+      "blind_id": "b-799a4b62bfba",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd",
+      "query_id": "11_event_ordering_1",
+      "redactions": 0
+    },
+    {
+      "position": 9,
+      "blind_id": "b-2d9f04e6a52f",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd",
+      "query_id": "11_preference_following_0",
+      "redactions": 0
+    },
+    {
+      "position": 10,
+      "blind_id": "b-c805a6726226",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd",
+      "query_id": "15_preference_following_0",
+      "redactions": 0
+    },
+    {
+      "position": 11,
+      "blind_id": "b-b971b7f63fc2",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd-s21",
+      "query_id": "15_preference_following_0",
+      "redactions": 0
+    },
+    {
+      "position": 12,
+      "blind_id": "b-81a3feaada8f",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd-s21",
+      "query_id": "11_event_ordering_1",
+      "redactions": 0
+    },
+    {
+      "position": 13,
+      "blind_id": "b-c320a096c729",
+      "cell_id": "beam-100k-gbrain-rag-3c5df7cf3fdd",
+      "query_id": "12_multi_session_reasoning_0",
+      "redactions": 0
+    }
+  ]
+}

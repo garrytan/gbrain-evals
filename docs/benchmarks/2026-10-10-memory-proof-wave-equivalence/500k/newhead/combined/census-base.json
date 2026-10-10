@@ -1,0 +1,60 @@
+{
+ "gbrain": "~/work/gbrain-evals/.gbrain-overlays/d7467d1cf",
+ "store": "~/eq/cells/_stores/gbrain-beam-500k-8ac554048969",
+ "units": {
+  "u-032b9181eab3": {
+   "pages": 501,
+   "chunks": 970,
+   "facts": 1665,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  },
+  "u-3f9dfd23a7fa": {
+   "pages": 604,
+   "chunks": 1191,
+   "facts": 2155,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  },
+  "u-a17d42ab2a6b": {
+   "pages": 517,
+   "chunks": 833,
+   "facts": 977,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  },
+  "u-a1eda83e9404": {
+   "pages": 473,
+   "chunks": 1048,
+   "facts": 1502,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  },
+  "u-a4c9c68c365a": {
+   "pages": 561,
+   "chunks": 1076,
+   "facts": 1789,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  },
+  "u-b84862ab0a45": {
+   "pages": 538,
+   "chunks": 1115,
+   "facts": 1887,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  },
+  "u-b9e2cddee3c4": {
+   "pages": 623,
+   "chunks": 1185,
+   "facts": 1650,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  }
+ },
+ "queries": {
+  "n": 140,
+  "relational": 0,
+  "dash_negation_runs_32": 0
+ }
+}
