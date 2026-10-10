@@ -1,0 +1,100 @@
+{
+  "kind": "budgeted-delivery-h1-decision-outcome",
+  "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only",
+  "decision_sha256": "3c2e8c20cd1cee737bd700cfb60eadda78d41cd659bb149e6f342e472cb79ba6",
+  "decided_at": "2026-10-10T22:10:21.497Z",
+  "verdict": "fail",
+  "superiority_shown": false,
+  "primary": {
+    "delta": -0.115,
+    "ci95": [
+      -0.18,
+      -0.045
+    ],
+    "mcnemar": {
+      "losses": 37,
+      "wins": 14,
+      "both_pass": 108,
+      "both_fail": 41,
+      "discordant": 51,
+      "p_two_sided": 0.0017691971837869858
+    },
+    "sign_flip_p_two_sided": 0.00359982000899955,
+    "n_pairs": 200,
+    "n_clusters": 40,
+    "control": 0.725,
+    "candidate": 0.61
+  },
+  "guard7": {
+    "test": "mcnemar_one_sided_loss",
+    "alpha": 0.05,
+    "kinds": {
+      "multi-session": {
+        "n": 80,
+        "base": 40,
+        "cand": 15,
+        "delta_questions": -25,
+        "threshold": 1.6,
+        "pass": false,
+        "wins": 5,
+        "losses": 30,
+        "p_loss_one_sided": 0.000011180760338014295
+      },
+      "temporal-reasoning": {
+        "n": 40,
+        "base": 26,
+        "cand": 32,
+        "delta_questions": 6,
+        "threshold": 1,
+        "pass": true,
+        "wins": 8,
+        "losses": 2,
+        "p_loss_one_sided": 0.9892578125
+      },
+      "knowledge-update": {
+        "n": 40,
+        "base": 39,
+        "cand": 35,
+        "delta_questions": -4,
+        "threshold": 1,
+        "pass": true,
+        "wins": 1,
+        "losses": 5,
+        "p_loss_one_sided": 0.10937500000000033
+      },
+      "abstention": {
+        "n": 40,
+        "base": 40,
+        "cand": 40,
+        "delta_questions": 0,
+        "threshold": 1,
+        "pass": true,
+        "wins": 0,
+        "losses": 0,
+        "p_loss_one_sided": 1
+      }
+    },
+    "pass": false
+  },
+  "guard8": {
+    "n": 40,
+    "control": 40,
+    "candidate": 40,
+    "pass": true
+  },
+  "reasons": [
+    "guard 7: a clear loss in multi-session (5 wins, 30 losses, one-sided McNemar p 0.0000112)",
+    "the whole 95% interval for depth_first minus cap_only is below zero",
+    "primary: delta -0.1150, 95% interval [-0.1800, -0.0450], McNemar p 0.00177 (wins 14, losses 37)"
+  ],
+  "reader_errors": {
+    "sonnet-5-5.cap_only": 0,
+    "sonnet-5-5.depth_first": 0
+  },
+  "label_reads": {
+    "this_decision": 8,
+    "expected": 8,
+    "all_after_final_gate": true
+  },
+  "recommendation": "cap_only stays the default for explicit budgets. The set is not reopened for depth_first, and nothing is tuned on it."
+}

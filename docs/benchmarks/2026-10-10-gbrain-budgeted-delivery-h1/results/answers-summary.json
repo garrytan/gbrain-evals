@@ -1,0 +1,42 @@
+{
+  "sonnet-5-5.depth_first": {
+    "rows": 200,
+    "reader_errors": 0,
+    "empty": 1
+  },
+  "sonnet-5-5.cap_only": {
+    "rows": 200,
+    "reader_errors": 0,
+    "empty": 2
+  },
+  "sonnet-5-5.off": {
+    "rows": 200,
+    "reader_errors": 0,
+    "empty": 1
+  },
+  "sonnet-5-5.off-l5": {
+    "rows": 200,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "opus-5-5.depth_first": {
+    "rows": 200,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "opus-5-5.cap_only": {
+    "rows": 200,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "gpt-6-1-sol.depth_first": {
+    "rows": 200,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "gpt-6-1-sol.cap_only": {
+    "rows": 200,
+    "reader_errors": 0,
+    "empty": 0
+  }
+}
