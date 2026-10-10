@@ -1,0 +1,35 @@
+{
+  "seed": 20261005,
+  "schedule_sha256": "c34650fe6ceb0931257b765388e7d9aa071acd92c31544916422ed0cea8dde9e",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "order": [
+    {
+      "position": 0,
+      "blind_id": "b-6857c78b188f",
+      "cell_id": "beam-100k-gbrain-rag-4acfe92b2749",
+      "query_id": "11_event_ordering_1",
+      "redactions": 0
+    },
+    {
+      "position": 1,
+      "blind_id": "b-6d8577f5baec",
+      "cell_id": "beam-100k-gbrain-rag-4acfe92b2749",
+      "query_id": "12_information_extraction_0",
+      "redactions": 0
+    },
+    {
+      "position": 2,
+      "blind_id": "b-3514bde009e4",
+      "cell_id": "beam-100k-gbrain-rag-4acfe92b2749-s23",
+      "query_id": "12_information_extraction_0",
+      "redactions": 0
+    },
+    {
+      "position": 3,
+      "blind_id": "b-51ee5bb46931",
+      "cell_id": "beam-100k-gbrain-rag-4acfe92b2749-s23",
+      "query_id": "11_event_ordering_1",
+      "redactions": 0
+    }
+  ]
+}
