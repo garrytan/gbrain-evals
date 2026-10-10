@@ -82,6 +82,35 @@ gbrain's ingest is cheaper because its fact extraction reads whole-turn windows 
 
 **CPU assumptions.** Ingest CPU is ingest wall-clock hours × the host's vCPUs × $0.05. gbrain ran on a 4-vCPU machine. The comparator ran on Ubicloud VMs whose size the receipts do not record, so they are charged at the runner's default, 16 vCPUs. CPU is 7% of gbrain combined's total and 3% of the comparator's, so the ratios barely depend on this assumption. gbrain's 1M combined ingest includes some work repeated after machine restarts. Its cell resumed under the same identity and every repeated request is counted, which slightly overstates gbrain's ingest cost.
 
+## Descriptive rows: LongMemEval-S and LoCoMo10
+
+These rows decide nothing. They show how the same configurations do on two public benchmarks, on questions that were not used for tuning: the 400 LongMemEval-S questions outside the dev subset, and the 8 LoCoMo10 conversations outside the dev subset (1,218 questions). Each system ran at its dev-frozen configuration, with the same reader (`gemini-3.8-flash`), judge (`gemini-3.5-flash`) and 8,000-token context target as the sealed run. Accuracy is from one joint blinded re-judge per dataset (seed `20261005`) over a fixed denominator, so an incomplete row counts as incorrect. No margin or bound is computed. The cells were first run on October 9 and their receipts were lost with the run machine ([receipts lost](#receipts-lost)), so these are reruns from the same pushed specs, and nothing from the first runs is reported.
+
+| Dataset (questions) | gbrain combined | gbrain raw | Comparator |
+|---|---:|---:|---:|
+| LongMemEval-S (400) | 69.8% (279) | 80.3% (321) | 84.5% (338) |
+| LoCoMo10 (1,218) | 93.3% (1,136) | 85.0% (1,035) | 83.3% (1,014) |
+
+The comparator misses the delivered-context gate on both datasets. Its 95th-percentile context is 9,373 tokens on LongMemEval-S and 8,855 on LoCoMo10, above the 8,800 ceiling (8,000 tokens ± 10%). gbrain's cells pass, at p95 8,090 to 8,378 tokens. On LongMemEval-S, one comparator history did not finish ingesting, and its question is scored incorrect.
+
+On LongMemEval-S, the combined lane trails gbrain's own pages-only lane by 10.5 points and abstains more often (77 abstentions against 54). The combined lane gives 1,800 of its 8,000 tokens to extracted facts and 6,300 to pages, while the raw lane gives all 8,100 to pages. On LoCoMo10, the combined lane is 8.3 points ahead of the raw lane.
+
+LongMemEval-S combined ran as four cells of 100 histories each, split by history; each history is its own brain, so the split does not change what any question sees. Each shard was re-judged jointly with the raw and comparator answers to the same 100 questions.
+
+| Cell | Spend | Cap |
+|---|---:|---:|
+| LongMemEval-S gbrain combined (4 shards) | $38.09 | $60 |
+| LongMemEval-S gbrain raw | $7.83 | $20 |
+| LongMemEval-S comparator | $61.20 | $110 |
+| LongMemEval-S re-judge | $4.49 | $10 |
+| LoCoMo10 gbrain combined | $15.91 | $35 |
+| LoCoMo10 gbrain raw | $13.80 | $25 |
+| LoCoMo10 comparator | $15.83 | $30 |
+| LoCoMo10 re-judge (includes $1.77 still reserved by runs a machine restart interrupted) | $12.11 | $15 |
+| **Total** | **$169.26** | **$305** |
+
+Receipts are in [`2026-10-09-memory-proof-wave-matched/`](2026-10-09-memory-proof-wave-matched/): each cell's JSON files, ledger status and a tarball of stage records and the request log, the two re-judges, the VM record and one path redaction.
+
 ## What ran
 
 - **Data.** BEAM 100k, 500k and 1M sealed conversations: 12 + 21 + 21 = 54 conversations, 20 questions each. These are the clusters left after the dev and validation splits ([preregistration](2026-10-05-memory-proof-wave-preregistration.md)). The sealed split was opened once, on October 6, 2026 at 21:18 UTC, against preregistration SHA-256 `6544b2014fbc63331641b5794c106a231d242e4fc8291051f12bdb46f33e5e17`, under decision `mpw-beam-ni-2026-10-06`.
@@ -150,6 +179,10 @@ python -m mpw_tools.sealed_cost --pair <gbrain cell>:<comparator cell>:<gbrain r
 The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memory-proof-wave-sealed-analysis.ts) and the cost computation is [`mpw_tools/sealed_cost.py`](../../eval/harness-provider/mpw_tools/sealed_cost.py). Both read the cells from custody, which no longer exists, so the numbers on this page cannot be recomputed.
 
 ## Changelog
+
+### 2026-10-10: Descriptive rows
+
+Added LongMemEval-S and LoCoMo10 as descriptive rows, from reruns of the matched cells after the machine loss, each scored by one joint blinded re-judge.
 
 ### 2026-10-09: Custody final as unrecoverable
 
