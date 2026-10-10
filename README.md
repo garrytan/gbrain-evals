@@ -262,7 +262,7 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 ### 2026-10-09: Repository row names v0.10.67
 
 gbrain-evals v0.10.67 adds the memory trust categories (Cats 37 to 39), their preregistration and the paid run for
-gbrain #6396 (v0.60.139.0, the #5575 memory trust feature): the [paid report](docs/benchmarks/2026-10-08-memory-trust-results-paid.md).
+gbrain #6396 (merged as `d4dc2d4d8`, v0.60.139.0, the #5575 memory trust feature): the [paid report](docs/benchmarks/2026-10-08-memory-trust-results-paid.md).
 No result row on this page changes, because the pin is still `8a3eedeac`, which predates the feature. The repository
 row names v0.10.67 (was v0.10.66).
 

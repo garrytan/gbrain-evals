@@ -41,7 +41,7 @@ function factSessions(u: UserFile): Map<number, string> {
     const s = [f.source_markdown_slug, f.context].map(v => String(v ?? '')).find(v => slugs.has(v.split(/[#\s]/)[0]!));
     if (s) m.set(Number(f.id), s.split(/[#\s]/)[0]!);
   }
-  for (const l of u.log) for (const r of l.remember) for (const id of String(r.result).match(/"(?:fact_id|id)"\s*:\s*(\d+)/g) ?? []) {
+  for (const l of u.log) for (const r of l.remember) for (const id of String(r.result).match(/"(?:fact_id|id)"\s*:\s*"?(\d+)/g) ?? []) {
     const n = Number(id.replace(/\D/g, ''));
     if (!m.has(n)) m.set(n, l.slug);
   }

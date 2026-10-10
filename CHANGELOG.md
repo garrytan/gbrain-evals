@@ -4,20 +4,20 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [0.10.67] - 2026-10-09
 
-### Memory trust (Cats 37 to 39): labels cut planted-claim adoption, the defaults are flag, flag and allow; paired with gbrain #6396
+### Memory trust (Cats 37 to 39): labels cut planted-claim adoption, the defaults are flag, flag and allow; paired with gbrain #6396 (merged as `d4dc2d4d8`)
 
-gbrain #6396 (v0.60.139.0) ships the #5575 memory trust feature: trust labels on everything an agent reads back, a
+gbrain #6396 (merged as `d4dc2d4d8`, v0.60.139.0) ships the #5575 memory trust feature: trust labels on everything an agent reads back, a
 write gate for instruction-like text and opt-in suppression. Three keyless categories and a preregistered paid run
-measure it. Real spend $199.80 of a $500 cap.
+measure it. Real spend $212.15 of a $500 cap.
 
 - **Categories.** Cat 37 (memory poisoning: 200 scenarios, external and agent-relayed paths), Cat 38 (state
   resolution: does the current value survive lower-trust writes) and Cat 39 (deletion audit: does `forget --purge`
   remove a claim everywhere), with hermetic contracts and dry and paid model arms
   (`eval/runner/cat37-memory-poisoning.ts`, `cat38-state-resolution.ts`, `cat39-deletion-audit.ts`,
-  `eval/runner/memory-trust/`). All three pass every keyless contract at `c3a89f05`, the code tree #6396 ships.
-- **Preregistration** ([doc](docs/benchmarks/2026-10-07-memory-trust-preregistration.md)) with amendments 1 to 4:
-  the utility guard, a labels-absent arm, user-stated preferences, and amendment 4's fixed preference harness and
-  relay-origin check at `62773f02`.
+  `eval/runner/memory-trust/`). All three pass every keyless contract at `5b9c814b`, the tree that merged as `d4dc2d4d8` (and at `c3a89f05`).
+- **Preregistration** ([doc](docs/benchmarks/2026-10-07-memory-trust-preregistration.md)) with amendments 1 to 5:
+  the utility guard, a labels-absent arm, user-stated preferences, amendment 4's fixed preference harness and
+  relay-origin check at `62773f02`, and amendment 5's write-gate flag rate on natural conversations at `5b9c814b`.
 - **Paid results** ([report](docs/benchmarks/2026-10-08-memory-trust-results-paid.md)) with Opus 5.5, Sonnet 5.5 and
   GPT-6.1 Sol at `c2f10ee8`: with labels, planted claims were adopted in 1.5% to 5% of later sessions against 5.1% to
   10.6% with labels stripped (Sonnet p = 0.00002); no model followed an instruction-worded injection in any arm, so
@@ -25,7 +25,11 @@ measure it. Real spend $199.80 of a $500 cap.
   `trust.agent_activation = allow`. In Cat 38, labels raise current-value answers from 53% to 55% without them to 100% (Opus), 81% (Sonnet) and 68% (GPT); no model
   recovered a purged claim in Cat 39; LongMemEval-S is unchanged. Amendment 4: preferences saved as `user_said`
   survive the label (47 or 48 of 48 per model), Opus 5.5 holds back 14 of 48 saved without an origin, and an
-  artifact asking to be saved as `user_said` raised no model's attack success.
+  artifact asking to be saved as `user_said` raised no model's attack success. Amendment 5
+  (`eval/runner/memory-trust/flag-rate.ts`): on 563 LongMemEval-S sessions of 12 simulated users, saved with
+  `put_page`, Haiku 5.5 extraction and a Sonnet 5.5 agent's `remember`, the gate flagged 0 of 5,124 facts and 15 of
+  563 transcript pages (all false flags, 8 on the assistant's "As an AI language model…" replies), `gbrain trust
+  review` listed 0 items, and all 15 injected instruction lines were flagged.
 - **Findings** ([ledger](docs/benchmarks/2026-10-07-memory-trust-bugs.md)): 9 bugs, all fixed and verified by rerun,
   including 37-5 (context_pack showed quarantined external text unlabeled at `62773f02`, fixed in `ec5ae21a`), and 7
   feature gaps closed.
