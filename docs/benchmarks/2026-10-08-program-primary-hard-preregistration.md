@@ -285,3 +285,113 @@ before any invocation the ledger or the runner's preflight would take past $60:
    persona-clustered risk difference, 95% lower bound above 0; the stale-correction mutant must also raise
    `stale_correction` above the baseline's).
 The rerank probe runs on every slot of every invocation. The report names any step not run or run partially.
+
+### Amendment 5 (2026-10-10, Pacific): generator version 2 and the custodian-sealed confirmation, shipped stack vs the frozen release
+
+This amendment is written before any version 2 world is run by a reader, before any sealed seed exists and before the
+stack build exists. It fixes the held-out comparison this preregistration promised ("A held-out seed is minted later
+by the custodian"). The executor appends values that do not exist yet (stack SHA, commitment, world digest, VM name,
+ledger run ids, the run-day model check) under "Recorded before sealed cells" and changes nothing else. Any other
+change before the verdict gets a dated note with its reason.
+
+**Generator version 2.** Version 1 builds each company's short code from its name alone and never checks codes against
+each other, so across the 16 development and fresh-seed brains 20 codes are declared by two or three companies
+(alias-stack report, 2026-10-09). A note about either company then names neither, for a person reading it as much as for gbrain: the
+workload, not memory, made those notes ambiguous. Version 2 (`program-primary-hard-v2`, `V2_KNOBS` =
+`DEFAULT_KNOBS` plus `unique_codes: true`) draws company names so that every code is unique within a brain and never
+one of 32 reachable codes that are English words, common names or business abbreviations (`CODE_STOPWORDS`, for
+example `THE`, `CAR`, `CAC`). It keys the reschedule and handoff mail ids by company as well as last name, because two
+champions can share a last name under the new draw. It also matches each namesake promise on its distinctive phrase only (`NAMESAKE_STRICT`:
+"updated order form", "customer reference list", "sandbox account" instead of version 1's "order form", "reference
+list", "sandbox"), because the short patterns matched generic offers, filler mail and a relayed maintenance notice.
+Nothing else changes: task kinds, facts, traps and knobs are version 1's. Version 1 worlds are byte-identical (the baseline digest `dccafc6f…` is
+pinned in a test). Version 2 is chosen for the sealed set because the comparison is meant to measure memory; a brain
+where one code means two customers is tested separately later, in its own item with a known right answer.
+
+**Scorer: `t0b-score-v2`.** The namesake diagnostic (gbrain-evals#124, 2026-10-10, $0) read all 25 alias-stack runs
+that named a namesake value. None claimed it for the contact, and gbrain never resolved the wrong entity. The 11 runs
+`t0b-score-v1` flagged were 7 disambiguations its cue list missed ("That's Elodie Petrov at Yarithe Foods, a different
+account, so I left it out") and 4 generic phrases. Those false flags fell mostly on the stack's arm, so they bias this
+comparison against the stack. `t0b-score-v2` is `t0b-score-v1` with one rule changed: a line (paragraph or list item)
+carrying a namesake value is the namesake's, and excused, when it names the namesake (last name, company name or
+code) and not the contact (last name, company name or code), or when it carries a disambiguation cue; the cue list
+adds "different account / prospect / deal / customer / client / company", "neither", "not for", "left (it) out" and
+"not yours / not something you owe". A line that names both sides without a cue, or names neither, claims the value
+for the contact and fails, as in version 1. First names never count, because the contact and the namesake share one
+by design. Validated before freezing (`test/eval/t0b-program-primary.test.ts`): the 25 audited lines all score as the
+diagnostic read them under `t0b-score-v2` with the strict patterns (`t0b-score-v1` flags 11 of them), and 576
+mutation lines on the 48 version 2 development tasks, each restating a namesake value as the contact's (naming neither
+side, naming both, or naming the contact's company), all fail; a forced probe that drops the "and not the contact"
+clause fails that test. `t0b-score-v2` is the primary scorer for this comparison and applies to both arms; the runner
+picks it for every version 2 world. `t0b-score-v1` on the same cells is reported beside it, never instead of it.
+
+**Arms.**
+- `frozen`: gbrain v0.60.106.0, `7aa2caa0`, the program's scope pin.
+- `stack`: gbrain master at the merge commit of garrytan/gbrain#6271, which carries Candidate 1
+  (`mentions.newer_on_cards`, #6362, default on) and #6271's short-code alias rule. If #6271 merges without the
+  short-code rule, or with it off by default, no sealed cell runs and this amendment gets a note first.
+
+**Protocol.** Unchanged from this preregistration except the scorer above (`t0b-score-v2`): the T0 delivery contract, `--surface starter`,
+20 turns, `baseline` arm, readers Opus 5.5, Sonnet 5.5 and gpt-6.1-sol. On run day the newest frontier model of each
+family is checked; a newer one replaces its predecessor and is recorded below before any cell. Fable never runs.
+
+**Size.** This preregistration's rule recomputes the persona count at the measured baseline rate (74 of 144,
+51.4%) for a candidate whose true factor is 20, with 3 tasks per persona, 3 readers and 2 repeats. PW's simulation
+(`risk-ratio.ts` `simulate`, conditional-binomial, scenario `null-central` at that rate, 600 simulations, seed
+20261010) gives P(`10x`) = 0.45 at 16 personas, 0.67 at 24 and 0.82 at 32, so the sealed set has **32 personas**
+(96 tasks, 576 pairs). For a true factor of 15 the same design gives 0.38, and for 12 it gives 0.09; P(`improvement`
+or better) is 1.00 at every size and factor in that table. A `10x` verdict therefore needs both a large true effect
+and this sample. The factor is published whatever it is.
+
+**Statistics and claims.** Each `stack` cell is paired with the `frozen` cell of the same task, reader and repeat
+(`eval/runner/t0/paired.ts`): R = stack failures over frozen failures, PW's conditional-binomial 95% interval, persona
+clusters, loss tolerance 3.0 points, decision rule `ceiling`, `10x`, `improvement`, `worse`, `inconclusive`, per reader
+first and then pooled. The pooled verdict is the program primary's held-out verdict. The resource envelope is checked
+per reader (stack over frozen: p95 session-2 latency at most 1.2x, mean tokens and mean dollars at most 1.5x). Claims,
+frozen here:
+- "10x fewer end-to-end memory failures than v0.60.106.0" only if the pooled verdict is `10x`, the envelope holds for
+  every reader and the run is valid (below).
+- Otherwise the factor and its interval are published as measured ("N-fold, 95% interval L to U"), with the verdict.
+- `worse`, or a pooled point estimate of R at 1 or more, is published as a reversal of the development results.
+- gpt-6.1-sol failed 1 of 48 frozen development runs, so it is expected near `ceiling`; it is reported, not dropped.
+
+**Validity.** The two frozen mutants run on the `stack` arm for personas `sealed-01` to `sealed-08`, repeat 1, all
+three readers. Detection uses the frozen rule against the `stack` arm's own repeat-1 cells of those personas. The run
+is valid when both mutants are detected for every reader and at least 90% of counted cells are scored; an invalid run
+supports no claim and is reported as invalid.
+
+**Gates before sealed cells.**
+1. `$0` scripted smoke of both builds on a version 2 development world (`--knobs '{"unique_codes":true}'`): every arm
+   scored, no harness error, the scripted oracle passing.
+2. Paid development smoke on the `stack` build only: version 2 development seeds 20261101 to 20261108, repeat 1, the
+   three readers (72 cells, own ledger run, cap $15). It checks the paid path end to end on the exact build (rerank
+   probe on every slot, at least 90% of cells scored, no harness error). Its failure counts are descriptive and stop
+   nothing.
+3. The world regenerated on the custody VM from the copied file has the digest recorded below, and its commitment
+   matches the one recorded at minting.
+4. The runner's fail-closed rerank probe passes on every slot of every invocation.
+
+**Custody.** The custodian is Garry. On his Mac (`machine_01M2K118ET0PN09PQ9R8CNJ5Z3`), at this repository's commit
+recorded below: `bun eval/generators/program-primary-hard-gen.ts --mint-sealed --personas 32 --custodian-out
+<custody dir outside the repository>` writes 32 random seeds to a 0600 file and prints only their commitment, then
+`--custodian-seeds <that file> --out <dir outside the repository>` renders the world (personas `sealed-01` to
+`sealed-32`, no seed in it) and prints its digest. Both values are recorded below before the world leaves the Mac. The
+world file goes to one Ubicloud VM owned by `gbra60` (the custody VM, named below), crossing one Capy cloud machine in
+transit, and is deleted there once the VM holds it. It never touches Capy Drive or git. Every sealed cell runs on the
+custody VM; the runner reads the world with `--world <file> --expect-digest <digest>` and refuses a world inside the
+repository. The seed file never leaves the Mac. After the verdict, the outputs (results, receipts, experiment records,
+paired statistics and transcripts) are copied to the report and the VM is destroyed; the 32 seeds are then spent and
+support no later held-out claim. No gbrain change is tuned on sealed tasks.
+
+**Budget and order.** Inside the approved $420 round, $125.55 is spent (alias stack $111.46, Cat 41 re-baseline
+$14.09). The development smoke takes its own ledger run (cap $15). The sealed run takes a new ledger,
+`.budget/t0b-sealed-confirm.sqlite`, cap $265: the $180 sealed slot plus $85 of candidate 3's unused slot. From the
+alias-stack cells (Opus 5.5 $0.29, Sonnet 5.5 $0.17, gpt-6.1-sol $0.09 per counted cell; mutant cells slightly more),
+576 cells per arm cost about $200 and the mutants about $28, so about $230 expected. Order, stopping before any
+invocation the ledger or the runner's preflight would take past the cap:
+1. personas `sealed-01` to `sealed-08`: both arms concurrently, repeats 1 and 2, then the two mutants;
+2. personas `sealed-09` to `sealed-32` in batches of eight, both arms concurrently, repeats 1 and 2.
+A stop leaves complete personas in both arms; the verdict is then computed on the complete personas and the report
+says how many ran.
+
+**Recorded before sealed cells.** (Appended by the executor.)

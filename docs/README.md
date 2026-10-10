@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.68, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
+gbrain-evals v0.10.69, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -193,6 +193,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-10: T0b generator v2 and the sealed confirmation preregistration
+
+gbrain-evals v0.10.69 (the opening names it; was v0.10.68). The T0b preregistration gains amendment 5, the
+custodian-sealed confirmation of the shipped stack, with generator v2 (unique short codes) and scorer `t0b-score-v2`.
 
 ### 2026-10-10: Namesake diagnostic row
 

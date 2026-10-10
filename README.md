@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain master [`8a3eedeac`](https://github.com/garrytan/gbrain/tree/8a3eedeacb6e52da5b413502019692db80c5cc5d) (v0.60.126.0), declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.68 (`VERSION`) |
+| This repository | gbrain-evals v0.10.69 (`VERSION`) |
 
 This repository installs gbrain master `8a3eedeac`. Some results below were measured at earlier commits; each names
 its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
@@ -258,6 +258,12 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-10: Repository row names v0.10.69
+
+gbrain-evals v0.10.69 adds T0b generator v2 (unique short codes), scorer `t0b-score-v2`, custodian-sealed seed and world
+tooling, and preregistration amendment 5 for the sealed confirmation of the shipped stack. No paid cells. The
+repository row names v0.10.69 (was v0.10.68).
 
 ### 2026-10-10: Repository row names v0.10.68
 
