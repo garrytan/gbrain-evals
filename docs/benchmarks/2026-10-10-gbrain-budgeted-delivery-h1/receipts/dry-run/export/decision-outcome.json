@@ -1,8 +1,8 @@
 {
   "kind": "budgeted-delivery-h1-decision-outcome",
   "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only",
-  "decision_sha256": "a50fe4f1d8b8ae00ef049a4ba982d9e0b0bcbf2edcb576ea0133332217906da6",
-  "decided_at": "2026-10-10T17:00:34.362Z",
+  "decision_sha256": "478b9100f9a2394bb87dac9255fb5e51faad5c071818c56c01c539f2b07dbe2f",
+  "decided_at": "2026-10-10T20:39:23.590Z",
   "verdict": "fail",
   "superiority_shown": false,
   "primary": {
@@ -26,6 +26,8 @@
     "candidate": 0.4666666666666667
   },
   "guard7": {
+    "test": "mcnemar_one_sided_loss",
+    "alpha": 0.05,
     "kinds": {
       "multi-session": {
         "n": 24,
@@ -33,7 +35,10 @@
         "cand": 11,
         "delta_questions": -4,
         "threshold": 1,
-        "pass": false
+        "pass": true,
+        "wins": 6,
+        "losses": 10,
+        "p_loss_one_sided": 0.22724914550781206
       },
       "temporal-reasoning": {
         "n": 12,
@@ -41,7 +46,10 @@
         "cand": 6,
         "delta_questions": 0,
         "threshold": 1,
-        "pass": true
+        "pass": true,
+        "wins": 3,
+        "losses": 3,
+        "p_loss_one_sided": 0.6562500000000001
       },
       "knowledge-update": {
         "n": 12,
@@ -49,7 +57,10 @@
         "cand": 6,
         "delta_questions": -2,
         "threshold": 1,
-        "pass": false
+        "pass": true,
+        "wins": 4,
+        "losses": 6,
+        "p_loss_one_sided": 0.3769531249999999
       },
       "abstention": {
         "n": 12,
@@ -57,10 +68,13 @@
         "cand": 5,
         "delta_questions": -2,
         "threshold": 1,
-        "pass": false
+        "pass": true,
+        "wins": 2,
+        "losses": 4,
+        "p_loss_one_sided": 0.3437500000000002
       }
     },
-    "pass": false
+    "pass": true
   },
   "guard8": {
     "n": 12,
@@ -69,7 +83,6 @@
     "pass": false
   },
   "reasons": [
-    "guard 7: multi-session -4 questions (limit -1), knowledge-update -2 questions (limit -1), abstention -2 questions (limit -1)",
     "guard 8: abstention 5 against 7",
     "primary: delta -0.1333, 95% interval [-0.2833, 0.0333], McNemar p 0.256 (wins 15, losses 23)"
   ],

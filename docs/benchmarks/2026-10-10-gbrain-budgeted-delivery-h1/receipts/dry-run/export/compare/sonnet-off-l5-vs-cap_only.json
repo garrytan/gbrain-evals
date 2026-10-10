@@ -3,14 +3,14 @@
     {
       "side": "A",
       "path": "sonnet-5-5.cap_only.json",
-      "sha256": "ec10b46ca91d5e481a18240a27e2f0dffcfe9d18ce37144caa6e81ffcede73c0",
+      "sha256": "ce112f465e72b483c9cbac8a4f436d14cc0563d43c483b88e045b52758c1751e",
       "rows": 60,
       "skipped_summary_rows": 0
     },
     {
       "side": "B",
       "path": "sonnet-5-5.off-l5.json",
-      "sha256": "da77ff4d820ed64dba4c8fb7e8ed791bd7a5959ea84466d7f76b443fdeeab0e1",
+      "sha256": "d1e9a2db155a255b6f87af4c50ad9e5d385de00c236050e686c5980f5581ef3b",
       "rows": 60,
       "skipped_summary_rows": 0
     }

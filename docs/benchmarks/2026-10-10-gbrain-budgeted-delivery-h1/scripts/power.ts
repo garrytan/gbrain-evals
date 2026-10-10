@@ -16,6 +16,8 @@
  *   ms_breadth_wins    multi-session pairs are E2's (breadth_capped, depth_first) pairs: what happens if cap_only's
  *                      breadth helps sealed multi-session questions (three or four gold chats) the way breadth_capped
  *                      helped LongMemEval-S's
+ *   ms_loses_5_points  multi-session truly loses about 5 points: E2's multi-session pairs doubled, with the discordant
+ *                      pairs re-signed to 29 wins and 41 losses (E2's discordance, −4.96 points)
  *   null               every kind symmetrized (no true effect anywhere): the rule's false-pass rate
  *
  *   bun docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1/scripts/power.ts > docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1/power.json
@@ -32,9 +34,9 @@ const family = JSON.parse(readFileSync(join(dir, 'family.json'), 'utf8')) as Com
 const decision = JSON.parse(readFileSync(join(dir, 'decision.json'), 'utf8')) as H1Decision;
 const sim: ComparisonFamily = { ...family, draws: 2000, comparisons: family.comparisons.filter(c => c.metric === 'answer_correct') };
 const E2 = join(dir, '..', '2026-10-09-gbrain-budgeted-delivery-e2', 'results', 'lme-s', 'deliver');
-const SIMS = 1000;
+export const SIMS = 1000;
 
-type Pair = [number, number];
+export type Pair = [number, number];
 function armScores(arm: string): Map<string, { score: number; category: string; abstention: boolean }> {
   const out = new Map<string, { score: number; category: string; abstention: boolean }>();
   for (const shard of readdirSync(E2).sort()) {
@@ -52,7 +54,7 @@ const depthFirst = armScores('fixed-evidence.pseudo-depth_first.b8000.sonnet-5-5
 const breadth = armScores('fixed-evidence.pseudo-breadth_capped.b8000.sonnet-5-5');
 if (capOnly.size !== 500 || depthFirst.size !== 500 || breadth.size !== 500) throw new Error('E2 receipts: expected 500 rows per arm');
 
-const KINDS = ['multi-session', 'temporal-reasoning', 'knowledge-update', 'abstention'] as const;
+export const KINDS = ['multi-session', 'temporal-reasoning', 'knowledge-update', 'abstention'] as const;
 const kindOf = (r: { category: string; abstention: boolean }) => r.abstention ? 'abstention' : r.category;
 function pools(control: Map<string, { score: number; category: string; abstention: boolean }>) {
   const p: Record<string, Pair[]> = Object.fromEntries(KINDS.map(k => [k, []]));
@@ -61,13 +63,20 @@ function pools(control: Map<string, { score: number; category: string; abstentio
 }
 const base = pools(capOnly);
 const symmetrize = (ps: Pair[]): Pair[] => ps.flatMap(([a, b]) => a === b ? [[a, b] as Pair] : [[a, b] as Pair, [b, a] as Pair]);
-const scenarios: Record<string, Record<string, Pair[]>> = {
+/** E2's multi-session pairs, doubled, with the discordant pairs' directions set to `wins` wins and the rest losses. */
+function msWithDiscordant(wins: number): Pair[] {
+  const ps = [...base['multi-session'], ...base['multi-session']];
+  const concordant = ps.filter(([a, b]) => a === b);
+  return [...concordant, ...Array.from({ length: ps.length - concordant.length }, (_, i) => (i < wins ? [0, 1] : [1, 0]) as Pair)];
+}
+export const scenarios: Record<string, Record<string, Pair[]>> = {
   e2_transfer: base,
   ms_no_gain: { ...base, 'multi-session': symmetrize(base['multi-session']) },
   ms_breadth_wins: { ...base, 'multi-session': pools(breadth)['multi-session'] },
+  ms_loses_5_points: { ...base, 'multi-session': msWithDiscordant(29) },
   null: Object.fromEntries(KINDS.map(k => [k, symmetrize(base[k])])),
 };
-const SHAPE: Array<[typeof KINDS[number], number]> = [['multi-session', 2], ['temporal-reasoning', 1], ['knowledge-update', 1], ['abstention', 1]];
+export const SHAPE: Array<[typeof KINDS[number], number]> = [['multi-session', 2], ['temporal-reasoning', 1], ['knowledge-update', 1], ['abstention', 1]];
 const SEALED = decision.sealed.kinds;
 
 function describePool(ps: Record<string, Pair[]>) {
@@ -79,39 +88,52 @@ function describePool(ps: Record<string, Pair[]>) {
   }));
 }
 
-const rng = seededRandom(20261010);
-const out: Record<string, unknown> = {};
-for (const [name, ps] of Object.entries(scenarios)) {
-  const c = { pass: 0, fail: 0, inconclusive: 0, superiority: 0, guard7_fail: 0, guard8_fail: 0, guard7_fail_by_kind: Object.fromEntries(KINDS.map(k => [k, 0])) as Record<string, number> };
-  let deltaSum = 0;
-  for (let s = 0; s < SIMS; s++) {
-    const a: Array<Record<string, unknown>> = [], b: Array<Record<string, unknown>> = [];
-    for (let j = 0; j < 40; j++) for (const [kind, n] of SHAPE) for (let k = 0; k < n; k++) {
-      const pool = ps[kind];
-      const [x, y] = pool[Math.floor(rng() * pool.length)];
-      const row = { question_id: `q${j}-${kind}-${k}`, haystack_id: `h${j}`, question_type: kind };
-      a.push({ ...row, answer_correct: x === 1 });
-      b.push({ ...row, answer_correct: y === 1 });
-    }
-    const fam = evaluateFamily(a, b, { ...sim, seed: 20261010 + s });
-    const r = decideH1(decision.rule, { gatePass: true, primary: fam.comparisons.find(x => x.id === decision.rule.primary_comparison) as any, control: a, candidate: b, readerErrors: {} });
-    c[r.verdict]++;
-    if (r.superiority_shown) c.superiority++;
-    if (!r.guard7.pass) c.guard7_fail++;
-    if (!r.guard8.pass) c.guard8_fail++;
-    for (const [k, v] of Object.entries(r.guard7.kinds)) if (!v.pass) c.guard7_fail_by_kind[k]++;
-    deltaSum += r.primary?.delta ?? 0;
+/** One sealed-shaped set drawn from a scenario's pools, as (control, candidate) score rows. */
+export function drawSet(rng: () => number, ps: Record<string, Pair[]>) {
+  const a: Array<Record<string, unknown>> = [], b: Array<Record<string, unknown>> = [];
+  for (let j = 0; j < 40; j++) for (const [kind, n] of SHAPE) for (let k = 0; k < n; k++) {
+    const pool = ps[kind];
+    const [x, y] = pool[Math.floor(rng() * pool.length)];
+    const row = { question_id: `q${j}-${kind}-${k}`, haystack_id: `h${j}`, question_type: kind };
+    a.push({ ...row, answer_correct: x === 1 });
+    b.push({ ...row, answer_correct: y === 1 });
   }
-  out[name] = {
-    pools: describePool(ps),
-    projected_delta_questions: KINDS.reduce((s, k) => s + describePool(ps)[k].projected_questions, 0),
-    sims: SIMS, mean_delta: deltaSum / SIMS,
-    p_pass: c.pass / SIMS, p_fail: c.fail / SIMS, p_inconclusive: c.inconclusive / SIMS, p_superiority_shown: c.superiority / SIMS,
-    p_guard7_fail: c.guard7_fail / SIMS, p_guard8_fail: c.guard8_fail / SIMS, p_guard7_fail_by_kind: Object.fromEntries(Object.entries(c.guard7_fail_by_kind).map(([k, v]) => [k, v / SIMS])),
-  };
+  return { a, b };
 }
-console.log(JSON.stringify({
-  schema: 'gbrain-evals/budgeted-delivery-h1-power/v1', simulated_at: '2026-10-10', decision_id: decision.decision_id,
-  note: 'Simulated before custody from E2\'s committed Sonnet 5.5 rows (cap_only, depth_first, breadth_capped) on the LongMemEval-S 500, with the committed family and rule; bootstrap and sign-flip draws lowered to 2,000. No sealed data.',
-  sealed_shape: { personas: 40, per_persona: Object.fromEntries(SHAPE), kinds: SEALED }, model: 'see the header of scripts/power.ts', scenarios: out,
-}, null, 2));
+
+/** The committed comparison and rule on one simulated set (the gate passes, no reader errors). */
+export function decideSet(a: Array<Record<string, unknown>>, b: Array<Record<string, unknown>>, s: number) {
+  const fam = evaluateFamily(a, b, { ...sim, seed: 20261010 + s });
+  return decideH1(decision.rule, { gatePass: true, primary: fam.comparisons.find(x => x.id === decision.rule.primary_comparison) as any, control: a, candidate: b, readerErrors: {} });
+}
+
+if (import.meta.main) {
+  const rng = seededRandom(20261010);
+  const out: Record<string, unknown> = {};
+  for (const [name, ps] of Object.entries(scenarios)) {
+    const c = { pass: 0, fail: 0, inconclusive: 0, superiority: 0, guard7_fail: 0, guard8_fail: 0, guard7_fail_by_kind: Object.fromEntries(KINDS.map(k => [k, 0])) as Record<string, number> };
+    let deltaSum = 0;
+    for (let s = 0; s < SIMS; s++) {
+      const { a, b } = drawSet(rng, ps);
+      const r = decideSet(a, b, s);
+      c[r.verdict]++;
+      if (r.superiority_shown) c.superiority++;
+      if (!r.guard7.pass) c.guard7_fail++;
+      if (!r.guard8.pass) c.guard8_fail++;
+      for (const [k, v] of Object.entries(r.guard7.kinds)) if (!v.pass) c.guard7_fail_by_kind[k]++;
+      deltaSum += r.primary?.delta ?? 0;
+    }
+    out[name] = {
+      pools: describePool(ps),
+      projected_delta_questions: KINDS.reduce((s, k) => s + describePool(ps)[k].projected_questions, 0),
+      sims: SIMS, mean_delta: deltaSum / SIMS,
+      p_pass: c.pass / SIMS, p_fail: c.fail / SIMS, p_inconclusive: c.inconclusive / SIMS, p_superiority_shown: c.superiority / SIMS,
+      p_guard7_fail: c.guard7_fail / SIMS, p_guard8_fail: c.guard8_fail / SIMS, p_guard7_fail_by_kind: Object.fromEntries(Object.entries(c.guard7_fail_by_kind).map(([k, v]) => [k, v / SIMS])),
+    };
+  }
+  console.log(JSON.stringify({
+    schema: 'gbrain-evals/budgeted-delivery-h1-power/v1', simulated_at: '2026-10-10', decision_id: decision.decision_id,
+    note: 'Simulated before custody from E2\'s committed Sonnet 5.5 rows (cap_only, depth_first, breadth_capped) on the LongMemEval-S 500, with the committed family and rule; bootstrap and sign-flip draws lowered to 2,000. No sealed data.',
+    sealed_shape: { personas: 40, per_persona: Object.fromEntries(SHAPE), kinds: SEALED }, guard7: decision.rule.guard7, model: 'see the header of scripts/power.ts', scenarios: out,
+  }, null, 2));
+}

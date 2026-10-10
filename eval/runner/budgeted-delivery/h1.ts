@@ -33,6 +33,7 @@ import { opaqueSourceId } from '../systems/sanitize.ts';
 import { sourceOfSlug } from '../systems/gbrain.ts';
 import { blocksToItems, packRecipe } from '../systems/render.ts';
 import { recipeHash, type ArmsSpec } from '../memory-qa/arms.ts';
+import { binomialCdf } from '../stats/exact.ts';
 import { armRows, capGuard, contextGuard, deliveryStats, guard1, kindGuard, retrievalRows } from './e2-readings.ts';
 
 type Row = Record<string, any>;
@@ -47,7 +48,8 @@ export interface H1Rule {
   candidate_arm: string;
   alpha: number;
   max_reader_errors: number;
-  guard7: { min_questions: number; share_of_kind: number };
+  /** Guard 7: a kind fails only on a clear loss, an exact one-sided McNemar on its discordant pairs (losses > wins) with p < alpha. */
+  guard7: { test: 'mcnemar_one_sided_loss'; alpha: number };
   expected_label_reads: number;
 }
 export interface H1Decision {
@@ -275,12 +277,16 @@ export function writeAnswers(o: { custodyRoot: string; decision: H1Decision; dec
 // ─── decide ───────────────────────────────────────────────────────
 
 export type H1Verdict = 'pass' | 'fail' | 'inconclusive';
+
+/** Exact one-sided McNemar p for a loss: P(at least `losses` of the discordant pairs go against the candidate | no difference). */
+export const oneSidedLossP = (wins: number, losses: number) => losses === 0 ? 1 : 1 - binomialCdf(losses - 1, wins + losses, 0.5);
 interface ComparisonOut { id: string; status: string; reasons?: string[]; stats?: { delta: number; ci95: [number, number] | null; p_two_sided: number; n_pairs: number; n_clusters: number; mean_a: number; mean_b: number }; mcnemar?: { wins: number; losses: number; p_two_sided: number } }
 
 /**
  * The preregistered H1 rule. `pass` needs the gate (guards 1, 3, 4, 5 and 6), superiority on the primary comparison
  * (delta > 0, the persona-clustered 95% interval above zero and the exact two-sided McNemar p below alpha), guard 7
- * (no kind down by more than max(1 question, 2% of the kind)) and guard 8 (abstention not worse). `fail` when a guard
+ * (no kind with a clear loss: exact one-sided McNemar on that kind's discordant pairs, p < alpha) and guard 8
+ * (abstention not worse). `fail` when a guard
  * fails or the whole interval is below zero. Everything else, a blocked comparison and more than max_reader_errors
  * reader errors in a primary arm included, is `inconclusive`.
  */
@@ -288,11 +294,18 @@ export function decideH1(rule: H1Rule, o: { gatePass: boolean; gateReasons?: str
   const reasons: string[] = [];
   const kindRows = (rows: Row[]) => rows.map(r => ({ id: r.question_id, category: r.question_type, qa_score: r.answer_correct ? 1 : 0 }));
   const g7raw = kindGuard(kindRows(o.control), kindRows(o.candidate));
+  const controlById = new Map(o.control.map(r => [r.question_id, r]));
   const kinds = Object.fromEntries(Object.entries(g7raw.kinds).map(([k, v]) => {
-    const threshold = Math.max(rule.guard7.min_questions, rule.guard7.share_of_kind * v.n);
-    return [k, { ...v, threshold, pass: v.delta_questions >= -threshold - 1e-9 }];
+    let wins = 0, losses = 0;
+    for (const r of o.candidate) {
+      const c = controlById.get(r.question_id);
+      if (r.question_type !== k || !c || !!r.answer_correct === !!c.answer_correct) continue;
+      if (r.answer_correct) wins++; else losses++;
+    }
+    const p_loss_one_sided = oneSidedLossP(wins, losses);
+    return [k, { ...v, wins, losses, p_loss_one_sided, pass: !(p_loss_one_sided < rule.guard7.alpha) }];
   }));
-  const guard7 = { kinds, pass: Object.values(kinds).every(k => k.pass) };
+  const guard7 = { test: rule.guard7.test, alpha: rule.guard7.alpha, kinds, pass: Object.values(kinds).every(k => k.pass) };
   const abst = kinds['abstention'];
   const guard8 = abst ? { n: abst.n, control: abst.base, candidate: abst.cand, pass: abst.cand >= abst.base } : { n: 0, control: 0, candidate: 0, pass: true };
   const p = o.primary;
@@ -306,7 +319,7 @@ export function decideH1(rule: H1Rule, o: { gatePass: boolean; gateReasons?: str
   else if (!p || !s || p.status === 'blocked' || p.status === 'skipped') { verdict = 'inconclusive'; reasons.push(`the primary comparison is ${p?.status ?? 'missing'}${p?.reasons?.length ? `: ${p.reasons.join('; ')}` : ''}`); }
   else if (!guard7.pass || !guard8.pass || shownWorse) {
     verdict = 'fail';
-    if (!guard7.pass) reasons.push(`guard 7: ${Object.entries(kinds).filter(([, k]) => !k.pass).map(([k, v]) => `${k} ${v.delta_questions} questions (limit -${v.threshold})`).join(', ')}`);
+    if (!guard7.pass) reasons.push(`guard 7: a clear loss in ${Object.entries(kinds).filter(([, k]) => !k.pass).map(([k, v]) => `${k} (${v.wins} wins, ${v.losses} losses, one-sided McNemar p ${v.p_loss_one_sided.toPrecision(3)})`).join(', ')}`);
     if (!guard8.pass) reasons.push(`guard 8: abstention ${guard8.candidate} against ${guard8.control}`);
     if (shownWorse) reasons.push('the whole 95% interval for depth_first minus cap_only is below zero');
   } else if (superiority) verdict = 'pass';

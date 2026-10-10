@@ -1,9 +1,9 @@
 {
   "kind": "budgeted-delivery-h1-gate",
   "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only",
-  "decision_sha256": "a50fe4f1d8b8ae00ef049a4ba982d9e0b0bcbf2edcb576ea0133332217906da6",
+  "decision_sha256": "478b9100f9a2394bb87dac9255fb5e51faad5c071818c56c01c539f2b07dbe2f",
   "phase": "deliver",
-  "created_at": "2026-10-10T17:00:23.982Z",
+  "created_at": "2026-10-10T20:39:13.652Z",
   "access_log_lines_at_gate": 11,
   "labels_read_under_this_decision": 0,
   "inputs": {

@@ -17,9 +17,15 @@ McNemar p < 0.05 and guards 1, 3, 4, 6, 7 and 8. No paid call and no sealed file
 - **Why the pin and not E2's `ca2c447bd`.** Only `src/core/chunkers/token-estimate.ts` changed among the files that
   feed retrieval, packing or token counting; a counting change is disclosed and measured at the pin. The keyless dry
   run froze the same lists and delivered byte-identical evidence at both commits on the invented fixture.
-- **Power.** Simulated from E2's paired Sonnet rows with the committed rule: P(pass) 65% if E2's per-kind effects carry
-  over, 36% if multi-session gains nothing, 1% if multi-session rewards breadth as in E2's `breadth_capped` rows, and
-  1.9% with no effect; guard 7 on multi-session is the main risk.
+- **Guard 7, changed before custody (Garry, 2026-10-10).** A kind fails only on a clear loss: an exact one-sided
+  McNemar test on that kind's discordant pairs, p < 0.05. It replaced the plan's point rule (no kind down by more
+  than max(1 question, 2% of the kind)) after a pre-custody sensitivity analysis of five kind guards
+  (`scripts/guard7-sensitivity.ts`, `guard7-sensitivity.json`): P(pass) is bounded by superiority under all of them,
+  and the point rule mainly turned noise into `fail`.
+- **Power.** Simulated from E2's paired Sonnet rows with the committed rule: P(pass) 69% if E2's per-kind effects carry
+  over, 39% if multi-session gains nothing, 26% if multi-session truly loses 5 points, 5.5% if it behaves like E2's
+  `breadth_capped` pairs, and 1.3% with no effect. The limit is superiority, and no kind guard reliably catches a true
+  5-point multi-session loss at 80 questions.
 - **Budget.** Estimate $47, cap $145 (about 3x), five local lease cells in one campaign ledger.
 - **Custody chain** (`eval/runner/budgeted-delivery/h1-run.sh`, `h1.ts`): custody check of the files and the access
   log, a label-free corpus, the gates on frozen evidence before any label read, answers files, scoring through the

@@ -108,15 +108,46 @@ decision is in the access log.
 4. **Verdict.**
    - **`pass`** needs all of: both gates pass; the difference is above zero, with the persona-clustered 95% interval
      above zero and the exact two-sided McNemar p below 0.05; guard 6 (exact by guard 1); guard 7: no question kind
-     down by more than max(1 question, 2% of the kind), counted as the paired sum of score changes, so multi-session
-     may lose at most 1.6 questions and every other kind at most 1; guard 8: the abstention score not below
-     `cap_only`'s.
+     with a clear loss, meaning an exact one-sided McNemar test on that kind's discordant pairs (questions
+     `depth_first` gets wrong and `cap_only` right, against the reverse) gives p < 0.05; guard 8: the abstention score
+     not below `cap_only`'s. Under guard 7, a kind with no win fails at five or more losses; four losses pass.
    - **`fail`** when a gate fails (a guard 4 overflow is terminal), when guard 7 or guard 8 fails, or when the whole
      95% interval is below zero.
    - **`inconclusive`** otherwise: superiority not shown, a blocked comparison (a missing or duplicated row), or more
      than 3 reader errors in either primary arm after the resume passes.
 5. **Guard 9 (latency)** is carried from E2's dev reading: 1,200 live `query` calls on the LongMemEval-S slice put the
    `depth_first` handler's p95 at 1.04 times `off`'s, within the +20% limit. H1 makes no live sealed calls.
+
+### Guard 7 was changed before custody
+
+The plan's guard 7 was a point rule: no question kind down by more than max(1 question, 2% of the kind), so at most
+1.6 lost multi-session questions and 1 in every other kind. On 2026-10-10, before any sealed file was copied, Garry
+replaced it with the clear-loss test above. The reason is a pre-custody sensitivity analysis
+([`scripts/guard7-sensitivity.ts`](2026-10-10-gbrain-budgeted-delivery-h1/scripts/guard7-sensitivity.ts),
+[`guard7-sensitivity.json`](2026-10-10-gbrain-budgeted-delivery-h1/guard7-sensitivity.json)). It scores the same
+1,000 simulated sets per scenario as the power estimate below under five kind guards, with superiority and every
+other guard unchanged:
+
+- **A**, the plan's rule: no kind down by more than max(1 question, 2% of the kind).
+- **B**: max(1 question, 5% of the kind).
+- **C**: a kind fails when its persona-clustered bootstrap 90% upper bound is below zero.
+- **C2**, now committed: exact one-sided McNemar on the kind's discordant pairs, p < 0.05.
+- **D**: no per-kind limit; answerable questions overall may fall by at most 3.2, plus guard 8.
+
+P(pass), with P(fail) in parentheses:
+
+| Scenario | P(superiority) | A | B | C | C2 | D |
+|---|---:|---:|---:|---:|---:|---:|
+| E2's effects carry over | 68.7% | 64.6% (16.6%) | 68.2% (5.4%) | 68.6% (0.7%) | 68.7% (0.4%) | 68.7% (0.1%) |
+| Multi-session gains nothing | 39.1% | 35.9% (41.4%) | 38.4% (24.5%) | 39.1% (5.5%) | 39.1% (4.6%) | 39.1% (0.9%) |
+| Multi-session behaves as E2's `breadth_capped` pairs (−11.6 points) | 5.9% | 1.0% (97.2%) | 3.7% (86.4%) | 5.5% (67.6%) | 5.5% (60.8%) | 5.9% (8.8%) |
+| Multi-session truly loses 5 points | 26.3% | 19.5% (69.0%) | 24.5% (44.6%) | 26.1% (19.0%) | 26.3% (15.5%) | 26.3% (1.8%) |
+| No effect in any kind (false pass) | 1.3% | 1.0% | 1.1% | 1.3% | 1.3% | 1.3% |
+
+Under every kind guard, P(pass) is bounded by superiority, so the point rule bought little protection. What it
+mostly did was turn noise into `fail`: with E2's effects, 16.6% of sets failed guard 7 under A, and in three
+quarters of them superiority was not shown either. The clear-loss test calls a kind `fail` only when its loss is
+statistically clear, and leaves the rest `inconclusive`, which changes nothing for the default.
 
 ## Power, computed before custody
 
@@ -135,20 +166,26 @@ E2's pairs per kind (LongMemEval-S, Sonnet 5.5):
 | Knowledge update | 72 | 69.4% | 88.9% | +19.4 | 25% |
 | Abstention | 30 | 93.3% | 93.3% | 0 | 0% |
 
-If those effects carry over, the sealed mix gains about 17 questions (8.5 points). Results:
+If those effects carry over, the sealed mix gains about 17 questions (8.5 points). Results with the committed rule:
 
-| Scenario | P(pass) | P(fail) | P(inconclusive) | Most common cause of failure |
-|---|---:|---:|---:|---|
-| E2's effects carry over | 65% | 17% | 19% | guard 7 on multi-session (16%) |
-| Multi-session has E2's discordance but no gain | 36% | 41% | 23% | guard 7 on multi-session (41%) |
-| Multi-session behaves as `cap_only`'s breadth helped it in E2 (E2's `breadth_capped` pairs) | 1% | 97% | 2% | guard 7 on multi-session (97%) |
-| No effect in any kind | 1.9% | 74% | 24% | guard 7 (false-pass rate of the whole rule) |
+| Scenario | Multi-session in the pool | P(superiority) | P(pass) | P(fail) | P(inconclusive) |
+|---|---:|---:|---:|---:|---:|
+| E2's effects carry over | +4.1 points | 68.7% | 68.7% | 0.4% | 30.9% |
+| Multi-session has E2's discordance but no gain | 0 | 39.1% | 39.1% | 4.6% | 56.3% |
+| Multi-session behaves as E2's `breadth_capped` pairs | −11.6 points | 5.9% | 5.5% | 60.8% | 33.7% |
+| Multi-session truly loses about 5 points (E2's pairs re-signed to 29 wins and 41 losses) | −5.0 points | 26.3% | 26.3% | 15.5% | 58.2% |
+| No effect in any kind | 0 | 1.3% | 1.3% | 10.8% | 87.9% |
 
-The honest reading: even if E2 transfers, the chance of a `pass` is about two in three, and most of the risk is guard
-7 on multi-session, where 80 questions with E2's discordance can easily lose two questions by chance. If sealed v2's
-multi-session questions reward breadth (they need two to four chats months apart), `depth_first` is very unlikely to
-pass, which is the caveat E2 named. With no true effect the rule passes 1.9% of the time. Pairs are drawn
-independently within a persona; a persona effect would widen the interval somewhat.
+Two limits, stated plainly. First, the chance of a `pass` is set by superiority: about 69% if E2's effects carry over,
+and lower if sealed v2's multi-session questions, which need two to four chats months apart, reward breadth the way
+E2's `breadth_capped` arm did. Second, no kind guard reliably catches a true 5-point loss on 80 multi-session
+questions: in that scenario the rule still passes 26% of the time, because `depth_first`'s gains in the other kinds
+carry the overall difference and a loss of about four questions in 80 is within noise. The committed guard catches
+15.5% of those sets, and the plan's point rule would have caught 69% but at the cost of failing 17% of the sets in
+which E2's effects carry over. With no true effect the rule passes 1.3% of the time. Guard 8 never failed in the
+simulation because E2's 30 abstention questions had no discordant pairs, so the simulation says nothing about guard
+8 on sealed v2's 40. Pairs are drawn independently within a persona; a persona effect would widen the interval
+somewhat.
 
 ## What each outcome means for the default
 
@@ -280,6 +317,14 @@ bun docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1/scripts/power.ts > do
 ```
 
 ## Changelog
+
+### 2026-10-10: guard 7 is the clear-loss test, before custody
+
+Garry replaced the plan's point rule for guard 7 (no kind down by more than max(1 question, 2% of the kind)) with an
+exact one-sided McNemar test for a clear loss in each kind, before any sealed file was copied. The guard 7
+sensitivity analysis and its script were added, `power.json` was recomputed with the new rule and a scenario in which
+multi-session truly loses 5 points, and the power reading now names superiority as the limit (it had said guard 7
+was the main risk). The dry-run receipts were regenerated against the changed decision file.
 
 ### 2026-10-10: registered
 

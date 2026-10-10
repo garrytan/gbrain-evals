@@ -3,14 +3,14 @@
     {
       "side": "A",
       "path": "gpt-6-1-sol.cap_only.json",
-      "sha256": "ea7cc19304d31103a65133fcb7ee9c63e0c4b2cfdff7665930b26e618b521cd3",
+      "sha256": "c5f3bf6d93808b2670ba0da5f29a8610ee6198086be1412cd8b51b6df39ae2b1",
       "rows": 60,
       "skipped_summary_rows": 0
     },
     {
       "side": "B",
       "path": "gpt-6-1-sol.depth_first.json",
-      "sha256": "17724a7750e8bc9255d504b991875cf7f68970329d857297e7e193c8db770d26",
+      "sha256": "0e0fa430f9df3097e4db1804e74995b22cd1fe289e371a9dfd9945caddeb5cef",
       "rows": 60,
       "skipped_summary_rows": 0
     }

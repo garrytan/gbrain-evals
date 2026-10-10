@@ -18,6 +18,10 @@
       "abstention": 40
     }
   },
+  "guard7": {
+    "test": "mcnemar_one_sided_loss",
+    "alpha": 0.05
+  },
   "model": "see the header of scripts/power.ts",
   "scenarios": {
     "e2_transfer": {
@@ -66,15 +70,15 @@
       "projected_delta_questions": 17.067814870248657,
       "sims": 1000,
       "mean_delta": 0.08494,
-      "p_pass": 0.646,
-      "p_fail": 0.166,
-      "p_inconclusive": 0.188,
+      "p_pass": 0.687,
+      "p_fail": 0.004,
+      "p_inconclusive": 0.309,
       "p_superiority_shown": 0.687,
-      "p_guard7_fail": 0.166,
+      "p_guard7_fail": 0.004,
       "p_guard8_fail": 0,
       "p_guard7_fail_by_kind": {
-        "multi-session": 0.159,
-        "temporal-reasoning": 0.007,
+        "multi-session": 0.004,
+        "temporal-reasoning": 0,
         "knowledge-update": 0,
         "abstention": 0
       }
@@ -125,15 +129,15 @@
       "projected_delta_questions": 13.762029746281716,
       "sims": 1000,
       "mean_delta": 0.06939000000000002,
-      "p_pass": 0.359,
-      "p_fail": 0.414,
-      "p_inconclusive": 0.227,
+      "p_pass": 0.391,
+      "p_fail": 0.046,
+      "p_inconclusive": 0.563,
       "p_superiority_shown": 0.391,
-      "p_guard7_fail": 0.414,
+      "p_guard7_fail": 0.046,
       "p_guard8_fail": 0,
       "p_guard7_fail_by_kind": {
-        "multi-session": 0.411,
-        "temporal-reasoning": 0.004,
+        "multi-session": 0.046,
+        "temporal-reasoning": 0,
         "knowledge-update": 0,
         "abstention": 0
       }
@@ -184,15 +188,74 @@
       "projected_delta_questions": 4.5058313991742756,
       "sims": 1000,
       "mean_delta": 0.021740000000000016,
-      "p_pass": 0.01,
-      "p_fail": 0.972,
-      "p_inconclusive": 0.018,
+      "p_pass": 0.055,
+      "p_fail": 0.608,
+      "p_inconclusive": 0.337,
       "p_superiority_shown": 0.059,
-      "p_guard7_fail": 0.972,
+      "p_guard7_fail": 0.608,
       "p_guard8_fail": 0,
       "p_guard7_fail_by_kind": {
-        "multi-session": 0.971,
-        "temporal-reasoning": 0.003,
+        "multi-session": 0.608,
+        "temporal-reasoning": 0,
+        "knowledge-update": 0,
+        "abstention": 0
+      }
+    },
+    "ms_loses_5_points": {
+      "pools": {
+        "multi-session": {
+          "pool": 242,
+          "control": 0.5661157024793388,
+          "candidate": 0.5165289256198347,
+          "delta": -0.049586776859504134,
+          "discordant": 0.2892561983471074,
+          "wins": 29,
+          "losses": 41,
+          "projected_questions": -3.9669421487603307
+        },
+        "temporal-reasoning": {
+          "pool": 127,
+          "control": 0.5511811023622047,
+          "candidate": 0.7007874015748031,
+          "delta": 0.14960629921259844,
+          "discordant": 0.2440944881889764,
+          "wins": 25,
+          "losses": 6,
+          "projected_questions": 5.984251968503937
+        },
+        "knowledge-update": {
+          "pool": 72,
+          "control": 0.6944444444444444,
+          "candidate": 0.8888888888888888,
+          "delta": 0.19444444444444445,
+          "discordant": 0.25,
+          "wins": 16,
+          "losses": 2,
+          "projected_questions": 7.777777777777778
+        },
+        "abstention": {
+          "pool": 30,
+          "control": 0.9333333333333333,
+          "candidate": 0.9333333333333333,
+          "delta": 0,
+          "discordant": 0,
+          "wins": 0,
+          "losses": 0,
+          "projected_questions": 0
+        }
+      },
+      "projected_delta_questions": 9.795087597521384,
+      "sims": 1000,
+      "mean_delta": 0.050069999999999934,
+      "p_pass": 0.263,
+      "p_fail": 0.155,
+      "p_inconclusive": 0.582,
+      "p_superiority_shown": 0.263,
+      "p_guard7_fail": 0.155,
+      "p_guard8_fail": 0,
+      "p_guard7_fail_by_kind": {
+        "multi-session": 0.155,
+        "temporal-reasoning": 0,
         "knowledge-update": 0,
         "abstention": 0
       }
@@ -242,17 +305,17 @@
       },
       "projected_delta_questions": 0,
       "sims": 1000,
-      "mean_delta": 0.0007850000000000008,
-      "p_pass": 0.019,
-      "p_fail": 0.738,
-      "p_inconclusive": 0.243,
-      "p_superiority_shown": 0.019,
-      "p_guard7_fail": 0.738,
+      "mean_delta": -0.0024199999999999985,
+      "p_pass": 0.013,
+      "p_fail": 0.108,
+      "p_inconclusive": 0.879,
+      "p_superiority_shown": 0.013,
+      "p_guard7_fail": 0.098,
       "p_guard8_fail": 0,
       "p_guard7_fail_by_kind": {
-        "multi-session": 0.411,
-        "temporal-reasoning": 0.332,
-        "knowledge-update": 0.334,
+        "multi-session": 0.038,
+        "temporal-reasoning": 0.038,
+        "knowledge-update": 0.025,
         "abstention": 0
       }
     }

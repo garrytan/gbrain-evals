@@ -14,7 +14,7 @@
   "ingest.upstream_trouble": 0,
   "ingest.errors_truncated": false,
   "run_status": "complete",
-  "run_config_hash": "81771a85837171302c47cb3509bebdeac3711985cd4f94268cf7116178622463",
+  "run_config_hash": "79afca40fbc430f644e9427b9f6e03524eea881c52768092db19b92f3880487f",
   "selection.conversations": 6,
   "selection.questions_expected": 30,
   "counts.rows": 30,

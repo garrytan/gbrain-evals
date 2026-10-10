@@ -35,7 +35,7 @@
       "cap_usd": 57,
       "leases": 1,
       "reserved_usd": 57,
-      "spent_usd": 3.3416619999999986,
+      "spent_usd": 3.3416619999999972,
       "open_leases": 0,
       "alert_over_twice_estimate": false
     },
@@ -45,7 +45,7 @@
       "cap_usd": 74.5,
       "leases": 1,
       "reserved_usd": 74.5,
-      "spent_usd": 4.782492000000002,
+      "spent_usd": 4.782492000000003,
       "open_leases": 0,
       "alert_over_twice_estimate": false
     },
@@ -55,7 +55,7 @@
       "cap_usd": 8,
       "leases": 1,
       "reserved_usd": 8,
-      "spent_usd": 0.09653999999999993,
+      "spent_usd": 0.09653999999999992,
       "open_leases": 0,
       "alert_over_twice_estimate": false
     }

@@ -10,7 +10,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { buildFixture } from '../../eval/runner/budgeted-delivery/h1-fixture.ts';
-import { answerRows, budgetSummary, buildCorpus, checkAccessLog, custodyCheck, decideH1, leakScan, loadDecision, returnLog, toCustodyCorpus, type H1Decision } from '../../eval/runner/budgeted-delivery/h1.ts';
+import { answerRows, budgetSummary, buildCorpus, checkAccessLog, custodyCheck, decideH1, leakScan, loadDecision, oneSidedLossP, returnLog, toCustodyCorpus, type H1Decision } from '../../eval/runner/budgeted-delivery/h1.ts';
 import { expandArms, loadArms, recipeHash } from '../../eval/runner/memory-qa/arms.ts';
 import type { Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 import { READER_TEMPLATE } from '../../eval/runner/memory-qa/qa.ts';
@@ -76,6 +76,15 @@ describe('the committed decision directory', () => {
     expect(manifest.cells.every(c => c.local && c.command.startsWith('bash eval/runner/budgeted-delivery/h1-run.sh cell '))).toBe(true);
     expect(budget.steps.reduce((n, s) => n + s.estimate_usd, 0)).toBeCloseTo(budget.estimate_usd, 6);
   });
+  test('power.json was computed with the committed guard 7, and the sensitivity table\'s C2 column is power.json', () => {
+    const power = JSON.parse(readFileSync(join(DIR, 'power.json'), 'utf8'));
+    const sens = JSON.parse(readFileSync(join(DIR, 'guard7-sensitivity.json'), 'utf8'));
+    expect(power.guard7).toEqual(D.rule.guard7);
+    expect(Object.keys(sens.scenarios)).toEqual(Object.keys(power.scenarios));
+    for (const [name, sc] of Object.entries(power.scenarios as Record<string, { p_pass: number; p_fail: number; p_inconclusive: number }>)) {
+      expect(sens.scenarios[name].variants.C2).toMatchObject({ p_pass: sc.p_pass, p_fail: sc.p_fail, p_inconclusive: sc.p_inconclusive });
+    }
+  });
 });
 
 describe('the access log', () => {
@@ -110,19 +119,31 @@ describe('the preregistered rule', () => {
     return decideH1(D.rule, { gatePass: true, primary: primary(0.08, 0.03, 0.13, 0.001), readerErrors: {}, control: a, candidate: b, ...o });
   };
   test('pass needs superiority and guards 7 and 8', () => {
+    expect(D.rule.guard7).toEqual({ test: 'mcnemar_one_sided_loss', alpha: 0.05 });
     const r = run({ wins: { 'multi-session': 6, 'temporal-reasoning': 5, 'knowledge-update': 5 } });
     expect(r.verdict).toBe('pass');
     expect(r.guard7.pass && r.guard8.pass && r.superiority_shown).toBe(true);
   });
-  test('guard 7 allows max(1 question, 2% of the kind): 80 multi-session questions may lose 1.6, not 2', () => {
-    expect(run({ wins: { 'temporal-reasoning': 9 }, losses: { 'multi-session': 1 } }).verdict).toBe('pass');
-    const r = run({ wins: { 'temporal-reasoning': 9 }, losses: { 'multi-session': 2 } });
-    expect(r.verdict).toBe('fail');
-    expect(r.guard7.kinds['multi-session']).toMatchObject({ delta_questions: -2, threshold: 1.6, pass: false });
+  test('guard 7 fails a kind only on a clear loss: exact one-sided McNemar on its discordant pairs, p < 0.05', () => {
+    expect(oneSidedLossP(0, 5)).toBeCloseTo(1 / 32, 12);
+    expect(oneSidedLossP(0, 4)).toBeCloseTo(1 / 16, 12);
+    expect(oneSidedLossP(3, 9)).toBeCloseTo(299 / 4096, 12);
+    expect(oneSidedLossP(5, 0)).toBe(1);
+    const small = run({ wins: { 'temporal-reasoning': 9 }, losses: { 'multi-session': 4 } });
+    expect(small.guard7.kinds['multi-session']).toMatchObject({ delta_questions: -4, wins: 0, losses: 4, pass: true });
+    expect(small.verdict).toBe('pass');
+    const mixed = run({ wins: { 'multi-session': 3, 'temporal-reasoning': 9 }, losses: { 'multi-session': 9 } });
+    expect(mixed.guard7.kinds['multi-session']).toMatchObject({ wins: 3, losses: 9, pass: true });
+    expect(mixed.verdict).toBe('pass');
+    const clear = run({ wins: { 'temporal-reasoning': 9 }, losses: { 'multi-session': 5 } });
+    expect(clear.guard7.kinds['multi-session']).toMatchObject({ wins: 0, losses: 5, pass: false });
+    expect(clear.guard7.kinds['multi-session'].p_loss_one_sided).toBeCloseTo(1 / 32, 12);
+    expect(clear.verdict).toBe('fail');
+    expect(clear.reasons[0]).toMatch(/guard 7: a clear loss in multi-session \(0 wins, 5 losses/);
   });
   test('guard 8: abstention may not fall at all', () => {
     const r = run({ wins: { 'temporal-reasoning': 9 }, losses: { abstention: 1 } });
-    expect(r.guard7.kinds.abstention.pass).toBe(true);
+    expect(r.guard7.kinds.abstention).toMatchObject({ losses: 1, pass: true });
     expect(r.guard8.pass).toBe(false);
     expect(r.verdict).toBe('fail');
   });
