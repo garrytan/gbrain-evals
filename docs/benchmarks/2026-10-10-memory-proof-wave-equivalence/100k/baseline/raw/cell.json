@@ -1,6 +1,6 @@
 {
   "schema": "mpw-cell-v1",
-  "cell_id": "beam-100k-gbrain-rag-d960ac1c46f1",
+  "cell_id": "beam-100k-gbrain-rag-4acfe92b2749",
   "identity": {
     "schema": "mpw-cell-v1",
     "dataset": "beam",
@@ -40,7 +40,7 @@
     "prompt_revision": "9c547715f4a3d5bd3c41cb8888939c61c83fc70085856d4479d6cfc47b73f4f4",
     "scorer_revision": "a424debbf1ac5f36ab733cde8a3beac01858579b4986460b2a0b00a8e3d7d48a",
     "wrapper_revision": "4c093d3c06fe8b1c45d0debdb4374fe4c0ba445747f1966424b162a5e5904085",
-    "budget_usd": 2
+    "budget_usd": 5
   },
   "spec": {
     "dataset": "beam",
@@ -63,7 +63,7 @@
     },
     "provider": "gbrain",
     "lane": "raw",
-    "budget_usd": 2,
+    "budget_usd": 5,
     "provider_config": {
       "embedding_model": "voyage:voyage-4",
       "embedding_dimensions": 1024,
@@ -194,7 +194,7 @@
     "scorer_revision": "a424debbf1ac5f36ab733cde8a3beac01858579b4986460b2a0b00a8e3d7d48a",
     "wrapper_revision": "4c093d3c06fe8b1c45d0debdb4374fe4c0ba445747f1966424b162a5e5904085"
   },
-  "planned_at": "2026-10-10T02:40:55.239Z",
+  "planned_at": "2026-10-10T03:18:24.200Z",
   "estimate": {
     "usd": 2.0906,
     "lines": [

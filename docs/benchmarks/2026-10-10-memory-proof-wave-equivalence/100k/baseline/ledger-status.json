@@ -2,26 +2,26 @@
   "ledger": "~/eq/ledger.sqlite",
   "state": "sqlite",
   "totals": {
-    "program_cap_usd": 7,
-    "committed_usd": 2.576000975,
-    "reconciled_usd": 2.576000975,
+    "program_cap_usd": 11,
+    "committed_usd": 6.745695755,
+    "reconciled_usd": 6.745695755,
     "open_reservations_usd": 0,
-    "remaining_usd": 4.4239990250000005,
-    "requests": 4309,
+    "remaining_usd": 4.254304245,
+    "requests": 6048,
     "overshoot_usd": 3.600000000000008e-7
   },
   "run": null,
-  "runs": 6,
+  "runs": 12,
   "open_runs": 0,
   "last_cap_change": {
-    "program_cap_usd": 7,
-    "kind": "open",
-    "reason": "mpw #6066 equivalence, beam 100k",
+    "program_cap_usd": 11,
+    "kind": "set_cap",
+    "reason": "mpw #6066 equivalence, beam 100k: baseline at 523e8ece (within the approved 0 check)",
     "by": "ubi@vmdaqw39",
-    "at": "2026-10-10T02:40:15.918Z"
+    "at": "2026-10-10T03:17:59.435Z"
   },
-  "size_bytes": 1941504,
-  "read_ms": 4.39,
+  "size_bytes": 2785280,
+  "read_ms": 5.55,
   "hints": [
     "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
     "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
