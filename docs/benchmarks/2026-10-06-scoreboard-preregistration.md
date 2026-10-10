@@ -367,8 +367,9 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
     `7aa2caa0`); it renders from that tree (A14). It replaces the public campaign and r2 to r5, which are retired with
     nothing counted. Its gbrain-defaults rows move to the found-and-fixed appendix (A15).
   - `q1-scoreboard-public-v3-m`: the four LongMemEval-M gbrain-defaults shards at gbrain `f05943e6` (A15); cap $38.
-    Hash `1d119581f9ab9c4cf863cbd9ebff0909a49aa8ddb109420b967e2a0615e20248`. The two LongMemEval-S shards run in their
-    own campaign once its cap is set (A15).
+    Hash `1d119581f9ab9c4cf863cbd9ebff0909a49aa8ddb109420b967e2a0615e20248`.
+  - `q1-scoreboard-public-v3-s`: the two LongMemEval-S gbrain-defaults shards at gbrain `f05943e6` (A15); cap $39.
+    Hash `ca729154f25b4d11429a93e810961a8239c928e51e4c11f62fa1209d22a5c612`.
   The sealed cap ($7,200), the public spend (about $150 lost under A13 plus the v2 cap of $441) and the $60 of dev work
   stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
@@ -644,6 +645,10 @@ names one version.
   $7.42 per shard at `7aa2caa0`), cap $38. The two LongMemEval-S shards (projected about $13 each from the smoke and
   v2's partial ingest) run in a second campaign whose cap the owner sets; it is recorded here before it launches.
   The owner's stop for this rerun is $60 including the smokes, unless the owner raises it.
+- **Cap raised (2026-10-10, before the LongMemEval-S launch).** The program lead raised the rerun's stop to $80
+  including the smokes, under Q1's $8,500 program cap, because the projection (about $57) left the $60 stop no lease
+  headroom. `q1-scoreboard-public-v3-s` runs the two LongMemEval-S shards with $17.50 leases, cap $39 ($80 less the
+  $38 LongMemEval-M cap and about $2.25 of smokes, rounded down).
 - **Appendix.** The public-v2 gbrain-defaults rows stay on `evals/q1-scoreboard-results` and are reported only in a
   found-and-fixed appendix: LongMemEval-M `c1` and `c2` "stalled at pin `7aa2caa0`, fixed in #6389 (0.60.133.0)";
   LongMemEval-S `c0` and `c1` "stalled ingest, likely #6389"; LongMemEval-M `c0` and `c3` scored at `7aa2caa0` and
@@ -658,7 +663,8 @@ names one version.
 
 The six public gbrain-defaults shards rerun at A14's pin `f05943e6`, so the public and sealed gbrain rows name one
 version; the `7aa2caa0` rows move to a found-and-fixed appendix. LongMemEval-M runs as `q1-scoreboard-public-v3-m`
-(hash `1d119581`); the sealed hash `a7328eed` is unchanged.
+(hash `1d119581`) and LongMemEval-S as `q1-scoreboard-public-v3-s` (hash `ca729154`, after the stop was raised to
+$80); the sealed hash `a7328eed` is unchanged.
 
 ### 2026-10-09: amendment A14
 
