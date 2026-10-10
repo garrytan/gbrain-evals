@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "family_id": "budgeted-delivery-h1",
+  "registered_at": "2026-10-10",
+  "description": "Budgeted delivery H1 (sealed confirmation v2, release decision 2): depth_first (B) against cap_only (A), both with an explicit 5,500-token gbrain budget on one frozen 25-hit list, pseudo-session rendering packed to 8,000 harness tokens, read by claude-sonnet-5-5 and judged by gpt-4o-2024-08-06. Judged answer correctness over all 200 questions, paired by question and clustered by persona (haystack). The verdict is the rule in decision.json (decideH1 in eval/runner/budgeted-delivery/h1.ts), not compare.ts's report-only verdict.",
+  "alpha": 0.05,
+  "seed": 20261010,
+  "draws": 20000,
+  "min_clusters": 10,
+  "id_field": "question_id",
+  "comparisons": [
+    { "id": "answer_accuracy_depth_first_vs_cap_only", "metric": "answer_correct", "gate": "exploratory", "direction": "higher", "cluster_by": "haystack_id", "description": "Primary. Read by the preregistered H1 rule: delta > 0, persona-clustered 95% bootstrap interval above zero and exact two-sided McNemar p < 0.05, with guards 1, 3, 4, 7 and 8. compare.ts reports it without a verdict." },
+    { "id": "packed_recall_all", "metric": "recall_all", "gate": "exploratory", "direction": "higher", "cluster_by": "haystack_id", "description": "Every gold chat among the chats the reader saw (the answers file's retrieved list is the packed chats), over the 160 answerable questions; abstention rows have no recall and are ineligible on both sides. Descriptive: a correct cap can deliver fewer chats." }
+  ]
+}

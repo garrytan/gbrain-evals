@@ -546,7 +546,7 @@ export class LlmClient {
   /** OpenAI Responses API call. `body` is sent as-is; the cache key is its canonical hash. */
   async openai(label: string, body: Record<string, any>, estInputTokens: number): Promise<LlmResult> {
     return this.cachedCall('openai', label, body, estInputTokens, body.max_output_tokens, async () => {
-      const res = await (this.o.fetchImpl ?? fetch)('https://api.openai.com/v1/responses', {
+      const res = await (this.o.fetchImpl ?? fetch)(`${(process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, '')}/responses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
         body: JSON.stringify(body),

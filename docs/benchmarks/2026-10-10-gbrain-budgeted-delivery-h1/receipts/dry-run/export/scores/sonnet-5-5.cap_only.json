@@ -1,0 +1,60 @@
+{
+  "set": "h1-dry-run-fixture",
+  "labels_sha256": "046f941b7e7c99337898abc1e2bcee047689c02a7ca665ef39da6580be655924",
+  "run_sha256": "2b6a0828dfba6e3e168693dd0e83187859eaa685815a8ca8331f159579256384",
+  "packed_recall": {
+    "top_k": 1000,
+    "answerable": {
+      "n": 48,
+      "recall_all_hits": 48,
+      "recall_any_hits": 48,
+      "errors": 0
+    },
+    "by_type": {
+      "multi-session": {
+        "n": 24,
+        "recall_all_hits": 24,
+        "recall_any_hits": 24,
+        "errors": 0
+      },
+      "temporal-reasoning": {
+        "n": 12,
+        "recall_all_hits": 12,
+        "recall_any_hits": 12,
+        "errors": 0
+      },
+      "knowledge-update": {
+        "n": 12,
+        "recall_all_hits": 12,
+        "recall_any_hits": 12,
+        "errors": 0
+      }
+    },
+    "abstention_excluded": 12,
+    "missing_rows": 0,
+    "unknown_rows": 0
+  },
+  "answers": {
+    "judge": "gpt-4o-2024-08-06 with the official LongMemEval evaluate_qa.py prompts",
+    "n": 60,
+    "correct": 36,
+    "by_type": {
+      "multi-session": {
+        "n": 24,
+        "correct": 15
+      },
+      "temporal-reasoning": {
+        "n": 12,
+        "correct": 6
+      },
+      "knowledge-update": {
+        "n": 12,
+        "correct": 8
+      },
+      "abstention": {
+        "n": 12,
+        "correct": 7
+      }
+    }
+  }
+}

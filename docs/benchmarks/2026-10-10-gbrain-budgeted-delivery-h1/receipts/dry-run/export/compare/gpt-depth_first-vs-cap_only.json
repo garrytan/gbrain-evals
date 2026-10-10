@@ -1,0 +1,152 @@
+{
+  "inputs": [
+    {
+      "side": "A",
+      "path": "gpt-6-1-sol.cap_only.json",
+      "sha256": "c5f3bf6d93808b2670ba0da5f29a8610ee6198086be1412cd8b51b6df39ae2b1",
+      "rows": 60,
+      "skipped_summary_rows": 0
+    },
+    {
+      "side": "B",
+      "path": "gpt-6-1-sol.depth_first.json",
+      "sha256": "0e0fa430f9df3097e4db1804e74995b22cd1fe289e371a9dfd9945caddeb5cef",
+      "rows": 60,
+      "skipped_summary_rows": 0
+    }
+  ],
+  "family": {
+    "schema_version": 1,
+    "family_id": "budgeted-delivery-h1-descriptive",
+    "registered_at": "2026-10-10",
+    "description": "Budgeted delivery H1 descriptive references, all report-only: depth_first against off (today's uncapped auto), off on the first five hits against cap_only and depth_first, and depth_first against cap_only under claude-opus-5-5 and gpt-6.1-sol on the same frozen contexts. They decide nothing, so no multiplicity correction applies.",
+    "alpha": 0.05,
+    "seed": 20261010,
+    "draws": 20000,
+    "min_clusters": 10,
+    "id_field": "question_id",
+    "comparisons": [
+      {
+        "id": "answer_accuracy",
+        "metric": "answer_correct",
+        "gate": "exploratory",
+        "direction": "higher",
+        "cluster_by": "haystack_id",
+        "description": "Descriptive. Judged answer correctness over all 200 questions, B minus A."
+      },
+      {
+        "id": "packed_recall_all",
+        "metric": "recall_all",
+        "gate": "exploratory",
+        "direction": "higher",
+        "cluster_by": "haystack_id",
+        "description": "Descriptive. Every gold chat among the chats the reader saw, over the 160 answerable questions."
+      }
+    ],
+    "exclude_when": []
+  },
+  "preregistered": true,
+  "decision": {
+    "family_id": "budgeted-delivery-h1-descriptive",
+    "verdict": "report_only",
+    "reasons": [],
+    "alpha": 0.05,
+    "holm_family": [],
+    "comparisons": [
+      {
+        "id": "answer_accuracy",
+        "metric": "answer_correct",
+        "gate": "exploratory",
+        "status": "report_only",
+        "reasons": [
+          "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        ],
+        "n_pairs": 60,
+        "n_clusters": 12,
+        "n_excluded": 0,
+        "stats": {
+          "n_pairs": 60,
+          "n_clusters": 12,
+          "mean_a": 0.6,
+          "mean_b": 0.4666666666666667,
+          "delta": -0.13333333333333333,
+          "se_cluster": 0.0828775414010748,
+          "se_iid": 0.10214276777832187,
+          "design_effect": 0.6583524778470629,
+          "effective_n": 91.13659022931203,
+          "ci95": [
+            -0.2833333333333333,
+            0.03333333333333333
+          ],
+          "p_two_sided": 0.1923828125,
+          "p_greater": 0.95654296875,
+          "p_less": 0.09619140625,
+          "p_method": "exact-sign-flip"
+        },
+        "mcnemar": {
+          "losses": 23,
+          "wins": 15,
+          "both_pass": 13,
+          "both_fail": 9,
+          "discordant": 38,
+          "p_two_sided": 0.2558750795433298
+        },
+        "power": {
+          "alpha": 0.05,
+          "power": 0.8,
+          "mde": 0.23218849496361602,
+          "min_one_sided_discordant": 6,
+          "note": "with 60 pairs in 12 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.2322; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+        },
+        "direction": "higher"
+      },
+      {
+        "id": "packed_recall_all",
+        "metric": "recall_all",
+        "gate": "exploratory",
+        "status": "report_only",
+        "reasons": [
+          "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        ],
+        "n_pairs": 48,
+        "n_clusters": 12,
+        "n_excluded": 12,
+        "stats": {
+          "n_pairs": 48,
+          "n_clusters": 12,
+          "mean_a": 1,
+          "mean_b": 0.25,
+          "delta": -0.75,
+          "se_cluster": 0,
+          "se_iid": 0.06316139407998891,
+          "design_effect": 0,
+          "effective_n": null,
+          "ci95": [
+            -0.75,
+            -0.75
+          ],
+          "p_two_sided": 0.00048828125,
+          "p_greater": 1,
+          "p_less": 0.000244140625,
+          "p_method": "exact-sign-flip"
+        },
+        "mcnemar": {
+          "losses": 36,
+          "wins": 0,
+          "both_pass": 12,
+          "both_fail": 0,
+          "discordant": 36,
+          "p_two_sided": 2.9103830456733704e-11
+        },
+        "power": {
+          "alpha": 0.05,
+          "power": 0.8,
+          "mde": null,
+          "min_one_sided_discordant": 6,
+          "note": "no paired variation was observed, so the detectable effect cannot be estimated from this data; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+        },
+        "direction": "higher"
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only",
+  "checked_at": "2026-10-10T20:38:46.986Z",
+  "questions_sha256": "0500b05e98b4c5e0393304c3be3163b078e9f62551663c82ddc9285fb4902539",
+  "labels_sha256": "046f941b7e7c99337898abc1e2bcee047689c02a7ca665ef39da6580be655924",
+  "labels_parsed": false,
+  "access_log": {
+    "lines": 6,
+    "before": 6,
+    "this_decision": 0
+  }
+}

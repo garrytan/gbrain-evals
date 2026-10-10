@@ -81,13 +81,16 @@ import { requirePaidArm } from '../paid-arm.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
-import { loadCorpus, occurrenceId, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
+import { loadCorpus, occurrenceId, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
 import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { appendAttempt, canonicalize, DEFAULT_MAX_ATTEMPTS, freezeManifest, HARNESS_FAILURES, PRODUCT_FAILURES, readAttempts, writeCanonical, type Canonical, type Outcome } from './outcomes.ts';
 import { armHash, armsDir, ContextStore, contextKey, expandArms, loadArms, recipeHash, retrievalKey, retrievalsDir, type ArmsSpec } from './arms.ts';
+
+/** An arms file's `judge: "none"`: the readers answer and nothing judges in this process. */
+export const READER_ONLY = 'none';
 
 /** A recipe context packed for one question: the prompt and its frozen meta. */
 interface RecipeBuild { prompt: string; meta: Record<string, unknown> }
@@ -433,7 +436,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   if (a.benchmark === 'custody' && a.split !== 'sealed') throw new Error('benchmark custody is a custodian sealed corpus: run it with --split sealed');
   if (a.split === 'sealed') {
     if (!a.custody) throw new Error('sealed memory-qa runs need custody (decision id, purpose, access log)');
-    appendAccessLog(a.custody.log, { action: 'open', purpose: `memory-qa ${a.benchmark} sealed: ${a.custody.purpose}`, decision_id: a.custody.decisionId, labels_sha256: 'public-split-file', run_sha256: null });
+    appendAccessLog(a.custody.log, { action: 'open', purpose: `memory-qa ${a.benchmark} sealed: ${a.custody.purpose}`, decision_id: a.custody.decisionId, labels_sha256: a.benchmark === 'custody' && a.corpusFile ? sha256(readFileSync(a.corpusFile)) : 'public-split-file', run_sha256: null });
   }
   const corpus = loadCorpus(a.benchmark, a.corpusFile);
   const allowed = a.benchmark === 'custody' ? null : a.split === 'sealed' ? new Set(loadSplit(a.benchmark).sealed) : devConversations(a.benchmark);
@@ -750,11 +753,15 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             try { res = await chat!.chat(reader, prompt, { maxTokens: 1024, replicate: r }); }
             catch (e) { throw new Error(`reader: ${(e as Error).message}`); }
             answer = res.text; tin += res.input_tokens; tout += res.output_tokens;
+            if (judge === READER_ONLY) continue;
             scores.push(await judgeResponse(chat!, a.benchmark, judge, question, answer, r).catch(e => { throw new Error(`judge: ${(e as Error).message}`); }));
             if (question.abstention && repeatsTrap(answer, question.trap)) trap++;
           }
-          out = { ...out, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length, ...(question.trap ? { qa_trap: trap / scores.length } : {}),
-            qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer.slice(0, 2000) };
+          // Reader-only arms (judge "none") keep the whole answer for a scorer outside this process, such as the sealed runner.
+          out = judge === READER_ONLY
+            ? { ...out, qa_runs: a.qa.runs, qa_input_tokens: Math.round(tin / a.qa.runs), qa_output_tokens: Math.round(tout / a.qa.runs), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer }
+            : { ...out, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length, ...(question.trap ? { qa_trap: trap / scores.length } : {}),
+              qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer.slice(0, 2000) };
         } catch (e) {
           const msg = (e as Error).message.slice(0, 300);
           out = { ...out, qa_error: msg, outcome: msg.startsWith('judge:') ? 'judge_error' : 'reader_error' };
@@ -937,7 +944,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     ingest: legacy ? null : { ...ingestStats, errors: allIngestErrors, errors_truncated: allIngestErrors.length >= 500 }, sanitizer: { forbidden_markers: sanitizer.markers.length }, sealed_profile: sealed ? { checked: 'output and caches inside the custody root, outside the repository and the shared cache' } : null,
   };
   const readerPromptName = (context: ContextMode) => a.qa.mode === 'think' ? 'gbrain think' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions' : !legacy && context === 'native' ? `native memory-item reading prompt (${RENDERER_VERSION}, ${TOKENIZER.id})` : 'LongMemEval step-by-step reading prompt, sessions in date order';
-  const judgePrompts = a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts';
+  const judgePrompts = a.arms && judgeModel === READER_ONLY ? 'none: reader-only arms, judged outside this process' : a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts';
 
   if (arms.length) {
     const rCanon = canonicalize(rManifest!, readAttempts(rDir), a.maxAttempts);

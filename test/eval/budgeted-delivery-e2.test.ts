@@ -21,7 +21,7 @@ import { renderSessionPage, type MemoryQuestion, type Session } from '../../eval
 import { hashEmbed } from '../../eval/runner/memory-qa/run.ts';
 import { Campaign, localPort, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
 import { assembleRequest, AUTO_PACKINGS, GbrainQueryConnector, loadConnectorModules, QUERY_PATH_PINS, type ConnectorModules } from '../../eval/runner/systems/gbrain-query/connector.ts';
-import { E2_DELIVERY_VARIANTS, E2_SIZING, GbrainQuerySystem } from '../../eval/runner/systems/gbrain-query/system.ts';
+import { E2_DELIVERY_VARIANTS, E2_SIZING, GbrainQuerySystem, H1_DELIVERY_VARIANTS } from '../../eval/runner/systems/gbrain-query/system.ts';
 import type { GbrainModules } from '../../eval/runner/systems/gbrain.ts';
 import { packRecipe } from '../../eval/runner/systems/render.ts';
 import type { Item } from '../../eval/runner/systems/types.ts';
@@ -293,6 +293,11 @@ describe.skipIf(!supported)('E2 stages on real PGLite (gbrain with search.auto_p
     for (const p of ['cap_only', 'breadth_capped', 'depth_first']) expect(acc.deliveries[`${p}-b_pseudo`].record.budget_used).toBeLessThanOrEqual(3000);
     const prim = await sys.retrieve('ns-a', question, policy({ stage: 'deliver', deliver_set: 'primary', b_pseudo: '3000' }));
     expect(Object.keys((prim.accounting as any).deliveries).sort()).toEqual(AUTO_PACKINGS.map(p => `${p}-b_pseudo`).sort());
+    const h1 = await sys.retrieve('ns-a', question, policy({ stage: 'deliver', deliver_set: 'h1', b_pseudo: '3000' }));
+    expect(Object.keys((h1.accounting as any).deliveries).sort()).toEqual([...H1_DELIVERY_VARIANTS].sort());
+    expect((h1.applied_settings as any).deliver_set).toBe('h1');
+    for (const v of H1_DELIVERY_VARIANTS) expect((h1.accounting as any).deliveries[v].record.evidence_sha256).toBe(acc.deliveries[v].record.evidence_sha256);
+    await expect(sys.retrieve('ns-a', question, policy({ stage: 'deliver', deliver_set: 'h2', b_pseudo: '3000' }))).rejects.toThrow(/all, primary or h1/);
     const live = await sys.retrieve('ns-a', question, policy({ stage: 'live', b_pseudo: '3000', live_reps: '2' }));
     const calls = (live.accounting as any).live_checks as any[];
     expect(calls).toHaveLength(8);

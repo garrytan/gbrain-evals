@@ -32,11 +32,16 @@ export function sealedPaths(custodyRoot: string, output: string): SealedPaths {
 
 /** Throws unless every destination sits inside the custody root, outside the repository and outside the shared caches. */
 export function checkSealedDestinations(p: SealedPaths): void {
+  checkCustodyPaths(p.custodyRoot, [['output', p.output], ['QA cache', p.qaCache], ['embedding cache', p.embedCache]]);
+}
+
+/** The same refusal for any named destinations of a sealed step (the sealed runner's report, spend ledger and response cache). */
+export function checkCustodyPaths(custodyRoot: string, named: ReadonlyArray<readonly [string, string]>): void {
   const problems: string[] = [];
-  if (inside(p.custodyRoot, REPO_ROOT) || inside(REPO_ROOT, p.custodyRoot)) problems.push('the custody root overlaps the repository');
-  if (inside(p.custodyRoot, SHARED_CACHE_ROOT) || inside(SHARED_CACHE_ROOT, p.custodyRoot)) problems.push('the custody root overlaps the shared gbrain-evals cache');
-  for (const [name, path] of [['output', p.output], ['QA cache', p.qaCache], ['embedding cache', p.embedCache]] as const) {
-    if (!inside(path, p.custodyRoot)) problems.push(`the ${name} is outside the custody root`);
+  if (inside(custodyRoot, REPO_ROOT) || inside(REPO_ROOT, custodyRoot)) problems.push('the custody root overlaps the repository');
+  if (inside(custodyRoot, SHARED_CACHE_ROOT) || inside(SHARED_CACHE_ROOT, custodyRoot)) problems.push('the custody root overlaps the shared gbrain-evals cache');
+  for (const [name, path] of named) {
+    if (!inside(path, custodyRoot)) problems.push(`the ${name} is outside the custody root`);
     if (inside(path, REPO_ROOT)) problems.push(`the ${name} is inside the repository`);
     if (inside(path, SHARED_CACHE_ROOT)) problems.push(`the ${name} is inside the shared cache`);
   }

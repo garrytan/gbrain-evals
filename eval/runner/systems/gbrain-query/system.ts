@@ -32,7 +32,9 @@
  *                  `b_pseudo`). Like deliver, it may import with hash vectors;
  *   stage=deliver  every E2 variant through assembleEvidenceForHits with the
  *                  per-call `auto_packing` (`deliver_set=primary`: only the
- *                  four packings at `b_pseudo`), plus the guard 1 record (no
+ *                  four packings at `b_pseudo`; `deliver_set=h1`: the H1 arms,
+ *                  `off`, `cap_only` and `depth_first` at `b_pseudo` and `off`
+ *                  on the first five hits), plus the guard 1 record (no
  *                  budget, every packing, evidence bytes compared); no live
  *                  call, so it may import with hash vectors (delivery reads
  *                  no vector) once every frozen chunk's text is checked;
@@ -82,6 +84,12 @@ export const E2_DELIVERY_VARIANTS: Readonly<Record<string, E2Variant>> = Object.
   ...capped('b_native'),
   ...capped('b16_pseudo'),
 });
+/**
+ * The H1 delivery variants (docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md): the candidate
+ * `depth_first` and the control `cap_only` at `b_pseudo`, and the descriptive references `off` and `off` on the first
+ * five hits, each exactly as E2 delivered it.
+ */
+export const H1_DELIVERY_VARIANTS = ['off-b_pseudo', 'cap_only-b_pseudo', 'depth_first-b_pseudo', 'off-l5-b_pseudo'] as const;
 /** Sizing deliveries per E2 grid: the 8,000-token grid sizes `b_pseudo` and `b_native`, the 16,000-token grid `b16_pseudo`. */
 export const E2_SIZING = {
   b8: { ...Object.fromEntries(AUTO_PACKINGS.map(p => [p, { unit: 'auto', prefix: null, packing: p }])), 'off-l5': { unit: 'auto', prefix: PREFIX_HITS, packing: 'off' }, window: { unit: 'window', prefix: null, packing: null } },
@@ -305,15 +313,16 @@ export class GbrainQuerySystem extends GbrainBrain {
 
   /** E2 deliver stage: every E2 variant on the frozen list, and the guard 1 record (no budget, each packing, bytes compared). */
   private async deliverE2(question: PublicQuestion, s: Record<string, unknown>, limit: number, base: { kind: string; version: number } & Record<string, unknown>): Promise<RetrieveResult> {
-    const primary = s.deliver_set === 'primary';
-    if (s.deliver_set !== undefined && !primary && s.deliver_set !== 'all') throw new SystemError('invalid_request', `deliver_set must be all or primary (got ${s.deliver_set})`);
-    const budgets: Partial<Record<E2Variant['budget'], number>> = primary ? { b_pseudo: budgetSetting(s, 'b_pseudo') }
+    const set = s.deliver_set === undefined ? 'all' : String(s.deliver_set);
+    if (set !== 'all' && set !== 'primary' && set !== 'h1') throw new SystemError('invalid_request', `deliver_set must be all, primary or h1 (got ${s.deliver_set})`);
+    const budgets: Partial<Record<E2Variant['budget'], number>> = set !== 'all' ? { b_pseudo: budgetSetting(s, 'b_pseudo') }
       : { b_pseudo: budgetSetting(s, 'b_pseudo'), b_native: budgetSetting(s, 'b_native'), b16_pseudo: budgetSetting(s, 'b16_pseudo') };
     const { frozen, rows, remapped, redacted } = await this.frozenFor(question);
     const t0 = performance.now();
     const deliveries: Record<string, { variant: Record<string, unknown>; record: Delivery['record']; blocks: Delivery['blocks'] }> = {};
     for (const [name, v] of Object.entries(E2_DELIVERY_VARIANTS)) {
-      if (primary && !(v.budget === 'b_pseudo' && v.prefix === null && v.packing !== null)) continue;
+      if (set === 'primary' && !(v.budget === 'b_pseudo' && v.prefix === null && v.packing !== null)) continue;
+      if (set === 'h1' && !(H1_DELIVERY_VARIANTS as readonly string[]).includes(name)) continue;
       const b = budgets[v.budget]!;
       const d = await this.connector!.deliver(v.prefix === null ? rows : rows.slice(0, v.prefix), v.unit, b, v.packing);
       deliveries[name] = { variant: { ...v, budget_value: b }, record: d.record, blocks: d.blocks };
@@ -324,7 +333,7 @@ export class GbrainQuerySystem extends GbrainBrain {
       unbudgeted[p] = { evidence_sha256: d.record.evidence_sha256, fingerprint: d.record.fingerprint, budget_tokens: d.record.budget_tokens, budget_used: d.record.budget_used, blocks: d.record.blocks, auto_packing: d.record.auto_packing };
     }
     const guard1 = { packings: unbudgeted, equal: AUTO_PACKINGS.every(p => unbudgeted[p].evidence_sha256 === unbudgeted.off.evidence_sha256 && unbudgeted[p].fingerprint === unbudgeted.off.fingerprint) };
-    return { items: this.items(frozen.rows), applied_settings: { stage: 'deliver', variants: 'e2', deliver_set: primary ? 'primary' : 'all', budgets, limit }, truncated: false, service_ms: performance.now() - t0,
+    return { items: this.items(frozen.rows), applied_settings: { stage: 'deliver', variants: 'e2', deliver_set: set, budgets, limit }, truncated: false, service_ms: performance.now() - t0,
       accounting: { ...base, frozen, remapped_chunk_ids: remapped, redacted_chunks: redacted, budgets, deliveries, guard1 } };
   }
 
