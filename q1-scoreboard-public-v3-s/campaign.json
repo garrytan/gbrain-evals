@@ -1,0 +1,8 @@
+{
+  "campaign_id": "q1-scoreboard-public-v3-s",
+  "run_id": "q1-scoreboard:q1-scoreboard-public-v3-s-2026-10-10T23-40-01-205Z-bd534d1c",
+  "ledger": "/home/user/.capy/work/q1-repin/eval/reports/scoreboard/q1-scoreboard-public-v3-s/campaign.sqlite",
+  "manifest_sha256": "ca729154f25b4d11429a93e810961a8239c928e51e4c11f62fa1209d22a5c612",
+  "created_at": "2026-10-10T23:40:01.207Z",
+  "kind": "q1-scoreboard-campaign"
+}

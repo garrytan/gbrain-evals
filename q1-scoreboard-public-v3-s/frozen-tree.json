@@ -1,0 +1,679 @@
+{
+  "campaign_id": "q1-scoreboard-public-v3-s",
+  "sha256": "ca729154f25b4d11429a93e810961a8239c928e51e4c11f62fa1209d22a5c612",
+  "commit": "0518e2fdbb65d09d53530acd4555a4d5d99007e2",
+  "dirty": [],
+  "images": {
+    "_fake/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "_fake/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-agent-runtime/base:0.34.4": "sha256:8ee7fb697e7f08b121a487b48315d45c64b195c12418264b091371c9e8ab3a5c",
+    "ext-agent-runtime/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-agent-runtime/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-extract-first/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-extract-first/base:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "ext-extract-first/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-extract-first/service:v1.19.2": "sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad",
+    "ext-graph-pipeline/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-graph-pipeline/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-graph-pipeline/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-graph-pipeline/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-markdown-kb/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-markdown-kb/base:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "ext-markdown-kb/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-memory-bank/base:0.9.5": "sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7",
+    "ext-memory-bank/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-memory-bank/service:0.10.2": "sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
+    "ext-memory-bank/service:0.8.1-pg18": "sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c",
+    "ext-memory-bank/service:latest": "sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50",
+    "ext-temporal-graph/base:0.9.5": "sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7",
+    "ext-temporal-graph/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-temporal-graph/service:5.26.2": "sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365",
+    "ext-temporal-graph/service:latest": "sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50",
+    "ext-verbatim-session/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-verbatim-session/base:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "ext-verbatim-session/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-verbatim-session/service:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "gbrain-defaults/base:1.4.2-slim": "sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61",
+    "gbrain-defaults/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "gbrain-defaults/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "gbrain-defaults/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d"
+  },
+  "tree": [
+    {
+      "path": "bun.lock",
+      "blob": "095bacc2513f8e2b75b1edfd216bded12ba10784"
+    },
+    {
+      "path": "docs/comparison-systems/ext-agent-runtime/.gitignore",
+      "blob": "3432b82755cb3792357ed58134f8d2c9707423cc"
+    },
+    {
+      "path": "docs/comparison-systems/ext-agent-runtime/Dockerfile",
+      "blob": "45b4acc94279f891bf5a1913119a9c0f1028df9d"
+    },
+    {
+      "path": "docs/comparison-systems/ext-agent-runtime/README.md",
+      "blob": "4984871836c3f35d876b3e6476e0a90aa0e9cf6f"
+    },
+    {
+      "path": "docs/comparison-systems/ext-agent-runtime/answer-cell.json",
+      "blob": "432d83d5b87d73ed460078f9c378b2ae6b153f1a"
+    },
+    {
+      "path": "docs/comparison-systems/ext-agent-runtime/capability.json",
+      "blob": "8b98fa3fddc384369866c8c961a093d7a4b041df"
+    },
+    {
+      "path": "docs/comparison-systems/ext-agent-runtime/docker-compose.yml",
+      "blob": "e8c6ae46947f7dde84884851d09d0f7844412d50"
+    },
+    {
+      "path": "docs/comparison-systems/ext-agent-runtime/shim.py",
+      "blob": "1ccf9863f7979b9e641ea47e10121ca6fc166ce0"
+    },
+    {
+      "path": "docs/comparison-systems/ext-agent-runtime/tests/run_keyless.sh",
+      "blob": "2b15b14048c9e3886686ed64d1191623326dc2b2"
+    },
+    {
+      "path": "docs/comparison-systems/ext-extract-first/Dockerfile",
+      "blob": "4b0615a4ab634399e56f4c579f355abb20cdd186"
+    },
+    {
+      "path": "docs/comparison-systems/ext-extract-first/README.md",
+      "blob": "c5f7454414cb4aa94ed4a8715a5a5ad1a7c265e5"
+    },
+    {
+      "path": "docs/comparison-systems/ext-extract-first/capability.json",
+      "blob": "5179d333ccad4e9ee3831f8650857cdad7684eca"
+    },
+    {
+      "path": "docs/comparison-systems/ext-extract-first/docker-compose.yml",
+      "blob": "4434e7c62a7a07e1fe538a3b58d8710a4d862271"
+    },
+    {
+      "path": "docs/comparison-systems/ext-extract-first/fake_provider.py",
+      "blob": "be2aa3e46381d917868e62450f0a8b212ac33f5e"
+    },
+    {
+      "path": "docs/comparison-systems/ext-extract-first/pyproject.toml",
+      "blob": "afaa6df9424e01bf7b2ee0fd0dd2517e2f252af1"
+    },
+    {
+      "path": "docs/comparison-systems/ext-extract-first/shim.py",
+      "blob": "c911e1c311eab944521b5652c516990831931579"
+    },
+    {
+      "path": "docs/comparison-systems/ext-extract-first/uv.lock",
+      "blob": "1c8c03e6e7a3bba2b43d5da4ab84f9b1f6417b14"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/.gitignore",
+      "blob": "53466145be6870f30b2cb1bce0df36e1a2f374ac"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/Dockerfile",
+      "blob": "6f9c1493d834076d739c1e750ecae4d6f8503491"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/README.md",
+      "blob": "5823878a072e62ad86236e55aa7350bf62609a76"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/capability.json",
+      "blob": "ccbf1f18a336e372eebf107cea414278a38b6c16"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/docker-compose.yml",
+      "blob": "63bcf52cb681c06d3a671a505055f1807ed10468"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/pyproject.toml",
+      "blob": "f66fa76dd1792bb4323ffc9520c3d7adf086d9e1"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/shim.py",
+      "blob": "6d712ae7ca664d149d178b5feb1e1399335267e2"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/tests/fake_provider.py",
+      "blob": "a97529c421fa188b5d1e317399bc03c8e9ec39d4"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/tests/protocol_check.py",
+      "blob": "3fbac83cd7a52a4b5f270ca4d8a14238118b9670"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/tests/run_keyless.sh",
+      "blob": "ae37a3a2491c6b8c88f9570b6c281889ce8a0ed2"
+    },
+    {
+      "path": "docs/comparison-systems/ext-graph-pipeline/uv.lock",
+      "blob": "6a946e08ae183ef3edb6524c73ab7fa3304205bc"
+    },
+    {
+      "path": "docs/comparison-systems/ext-markdown-kb/Dockerfile",
+      "blob": "c813f9e5d0a2d3e5932a993c2eca94fd48cebca6"
+    },
+    {
+      "path": "docs/comparison-systems/ext-markdown-kb/README.md",
+      "blob": "a85d9c23d3f04783902dde5fecb8d42134e77331"
+    },
+    {
+      "path": "docs/comparison-systems/ext-markdown-kb/capability.json",
+      "blob": "4d270ba539d65e5cbc8fc4c52d759b112ccf97e3"
+    },
+    {
+      "path": "docs/comparison-systems/ext-markdown-kb/docker-compose.yml",
+      "blob": "4285f7f3be1e28d5a31e96b0a3648bed552302fe"
+    },
+    {
+      "path": "docs/comparison-systems/ext-markdown-kb/protocol_check.py",
+      "blob": "e013034adaa9514d1fff05cfdb1006176968ef56"
+    },
+    {
+      "path": "docs/comparison-systems/ext-markdown-kb/pyproject.toml",
+      "blob": "8af45931ce19e3bacd245eae62488300160eef66"
+    },
+    {
+      "path": "docs/comparison-systems/ext-markdown-kb/shim.py",
+      "blob": "2f8ce16772e22cf91d15bcfeb1a19bd9f55fb594"
+    },
+    {
+      "path": "docs/comparison-systems/ext-markdown-kb/uv.lock",
+      "blob": "9a0801a120ee1edd30d7284eb666e7bb21b0d091"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/Dockerfile",
+      "blob": "6d2805558e9f28b1db7f7c1942e39ef6cb9ed8fd"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/README.md",
+      "blob": "4f79d4b06b4e758882f0a971ec930317277a45e8"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/capability.json",
+      "blob": "3a1eeb7f166169e3e5c0ef0673a98fa2d1c686cf"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/docker-compose.yml",
+      "blob": "034051d6e6877d20e88b25d69bc3a449ae6eb8df"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/hindsight.common.env",
+      "blob": "9e4f8f0e6ce670d1f251c9cd53c311a54ac5ff48"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/hindsight.recipe.env",
+      "blob": "bbf784f439907242a7c8424b5fb16413136a89df"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/pyproject.toml",
+      "blob": "a1023139f907de48c39524fe1300c6e666cd46ab"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/shim.py",
+      "blob": "ed6198ee2a557f22378bc57eeab714e717d36b6d"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/test_shim.py",
+      "blob": "0531806c3fecd4741ca90a50b49a913da2d468a4"
+    },
+    {
+      "path": "docs/comparison-systems/ext-memory-bank/uv.lock",
+      "blob": "3c13ddcc7849ec78eb75443a0645014848790346"
+    },
+    {
+      "path": "docs/comparison-systems/ext-temporal-graph/Dockerfile",
+      "blob": "9dd3d97132225a9ea20cfada9401b5f9c71ee207"
+    },
+    {
+      "path": "docs/comparison-systems/ext-temporal-graph/README.md",
+      "blob": "2de25dfe9a70932e79ff3e6284b51419bcb9a490"
+    },
+    {
+      "path": "docs/comparison-systems/ext-temporal-graph/capability.json",
+      "blob": "6ccfb479381cbd2d006d396ebac83986df374a7b"
+    },
+    {
+      "path": "docs/comparison-systems/ext-temporal-graph/docker-compose.yml",
+      "blob": "2821fa4fea2c9a84f9a1ee9762f6b9382c40d44a"
+    },
+    {
+      "path": "docs/comparison-systems/ext-temporal-graph/fake_provider.py",
+      "blob": "05068a5e752b8f7ab0d4315dc6f5b2995f79d87a"
+    },
+    {
+      "path": "docs/comparison-systems/ext-temporal-graph/pyproject.toml",
+      "blob": "f0103b3382cb729e5a3086fc2d84cc4f0b600a91"
+    },
+    {
+      "path": "docs/comparison-systems/ext-temporal-graph/shim.py",
+      "blob": "576fffd945effa5275b6a7a0c517f347c969bae4"
+    },
+    {
+      "path": "docs/comparison-systems/ext-temporal-graph/test_shim.py",
+      "blob": "d9a4186c49281509a57b5427a2883c1dcaefb889"
+    },
+    {
+      "path": "docs/comparison-systems/ext-temporal-graph/uv.lock",
+      "blob": "642b80dd742831dfd707ea950a0c80da1f6b6e7f"
+    },
+    {
+      "path": "docs/comparison-systems/ext-verbatim-session/.gitignore",
+      "blob": "53466145be6870f30b2cb1bce0df36e1a2f374ac"
+    },
+    {
+      "path": "docs/comparison-systems/ext-verbatim-session/Dockerfile",
+      "blob": "a01741d2f743b3121f79166a218fc8d9508aac4c"
+    },
+    {
+      "path": "docs/comparison-systems/ext-verbatim-session/README.md",
+      "blob": "66371d479e09da3dd8b15d9a76e145ffbf0f3600"
+    },
+    {
+      "path": "docs/comparison-systems/ext-verbatim-session/capability.json",
+      "blob": "5f4de3cbffb632edc57b35618fcb32343d31cd2c"
+    },
+    {
+      "path": "docs/comparison-systems/ext-verbatim-session/docker-compose.yml",
+      "blob": "dc37896ad6fa232d3ed3280bf5deea70e6640b25"
+    },
+    {
+      "path": "docs/comparison-systems/ext-verbatim-session/pyproject.toml",
+      "blob": "3b0ae26f4f53d70a3d5d51252141ebf5b5637d7a"
+    },
+    {
+      "path": "docs/comparison-systems/ext-verbatim-session/shim.py",
+      "blob": "29e68c4a3fbb9fd01004532d1200f249ce5ee68e"
+    },
+    {
+      "path": "docs/comparison-systems/ext-verbatim-session/tests/run_keyless.sh",
+      "blob": "d6ebf93a9e486cc5137f7c511936e8191a141a9d"
+    },
+    {
+      "path": "docs/comparison-systems/ext-verbatim-session/uv.lock",
+      "blob": "e5d9f503f42bc81dad0f8cfda589d809fe7b8ebf"
+    },
+    {
+      "path": "eval/decisions/datasets/beam-10m-9b20961.json",
+      "blob": "d6042fb2ba67312314179aad1d5816f73c91caf8"
+    },
+    {
+      "path": "eval/decisions/datasets/beam-b2da22e.json",
+      "blob": "f94cbc92791e6d53774c249dcf2ec12802d63ab3"
+    },
+    {
+      "path": "eval/decisions/datasets/blue-book-e494de6.json",
+      "blob": "f4bb4b85d75d3a01aab999cbfca595e61be76f4b"
+    },
+    {
+      "path": "eval/decisions/datasets/lme-m-q1-selection.json",
+      "blob": "45df3559b75d1c173cdebd59b14ecb014806b8d8"
+    },
+    {
+      "path": "eval/decisions/splits/beam-100k.json",
+      "blob": "52311c7c309844099bcddd576b9e54823ffef3eb"
+    },
+    {
+      "path": "eval/decisions/splits/beam-10m.json",
+      "blob": "d4469c3568b4f8bb3e3c8bddf3f3e602137223ef"
+    },
+    {
+      "path": "eval/decisions/splits/beam-1m.json",
+      "blob": "4ff3f219588ceb18a5f95187f062402ac0243fe3"
+    },
+    {
+      "path": "eval/decisions/splits/beam-500k.json",
+      "blob": "8c03773e7c4a6fe7d9ee39415a77f2db92054406"
+    },
+    {
+      "path": "eval/decisions/splits/hub-world.json",
+      "blob": "0adf0b449b3ac94a7fc3ca3324acdb36e25e26ad"
+    },
+    {
+      "path": "eval/decisions/splits/lme-s.json",
+      "blob": "78f3eb0bbe7f775679ea8351b43467ce48c2f8fc"
+    },
+    {
+      "path": "eval/decisions/splits/locomo.json",
+      "blob": "26e554cb47538c8f6f1c90ee8b9c9bfb79736fb9"
+    },
+    {
+      "path": "eval/decisions/splits/world-v1-relational.json",
+      "blob": "6fd2e981e55185995caf25170d24bcecd7174628"
+    },
+    {
+      "path": "eval/generators/model-ladder-gen.ts",
+      "blob": "ee67683875ed2e01d965d7c63a3ec635997c2802"
+    },
+    {
+      "path": "eval/runner/budget-ledger.ts",
+      "blob": "da3b7167cc10bf28b155262030ae8030d1dab42c"
+    },
+    {
+      "path": "eval/runner/cat40/analyze.ts",
+      "blob": "06fe56d56d0e77015765addc8d95f8b3d346670b"
+    },
+    {
+      "path": "eval/runner/cat40/arms.ts",
+      "blob": "b02a227eb6b7b59df25911336ca4c029868f0e7d"
+    },
+    {
+      "path": "eval/runner/cat40/gbrain-arm.ts",
+      "blob": "d7eeedf067619c32d798c90101258da109b548b8"
+    },
+    {
+      "path": "eval/runner/cat40/latency-replay.ts",
+      "blob": "9f498ff79e4281f8d2dcaa5b500e690bed4305e0"
+    },
+    {
+      "path": "eval/runner/cat40/loop.ts",
+      "blob": "b795cddc639caaa3f89354426e78877a7d13609c"
+    },
+    {
+      "path": "eval/runner/cat40/pg-arm.ts",
+      "blob": "2d9e7f0911804f3130a86546926810de48252136"
+    },
+    {
+      "path": "eval/runner/cat40/rescore.ts",
+      "blob": "9265584e8ef573ccf6a36397208ed1a5378aeca5"
+    },
+    {
+      "path": "eval/runner/cat40/score.ts",
+      "blob": "2d1a29922493b71f1ed803124d2da65e49dd3ced"
+    },
+    {
+      "path": "eval/runner/cat40/types-filter.ts",
+      "blob": "ea1aa0d22b3942db03a0d02bbd938969565a45d5"
+    },
+    {
+      "path": "eval/runner/decisions/anchors.ts",
+      "blob": "390876bb280d0331ace57f9123752d5825447f07"
+    },
+    {
+      "path": "eval/runner/decisions/errors.ts",
+      "blob": "4f8c348de128e3611f12d3402393b7e610dabc9c"
+    },
+    {
+      "path": "eval/runner/decisions/spec.ts",
+      "blob": "531ea702f0d75bda7154b4b03608ba76506684ad"
+    },
+    {
+      "path": "eval/runner/decisions/splits.ts",
+      "blob": "e16fd8b77c362a963930861e5989b75abee799f6"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/arms.ts",
+      "blob": "7ae72dc615b626bd5f5c09c217d971dd97e4f0bf"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/calls.ts",
+      "blob": "0691fecd3f8cbef6622520da253f8e68a54c2014"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/data.ts",
+      "blob": "c5b302f0ae57c5815e3dc526170c4478cc8f4e18"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/decision-v2.ts",
+      "blob": "f6450cda4da24b1f38524911233b77f384daaee8"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/decision.ts",
+      "blob": "1637b5c8c33d2ec60d768e0f64245e7ed44a7b37"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/e1.ts",
+      "blob": "cebf73f3be3863d1be4cd452d41d8b6fcfb61219"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/e2-bridge.ts",
+      "blob": "87f4af7b62a3c5e2d772df8efbd7e760a89ef344"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/e3.ts",
+      "blob": "2b349193a3de37a2375413afd11b40f6c6569bee"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/freeze.ts",
+      "blob": "a940778c00aed136c75418db5d9c0d6b9e76befe"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/gbrain.ts",
+      "blob": "2643d69f4a6f208801a9649b9f5367128a137ffd"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/ledger-preload.ts",
+      "blob": "a3d9067b03b8c87d485c63cbcc84391f22799321"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/parity.ts",
+      "blob": "8df8253413f4365d9283a3b96219af8feeb0fcc1"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/power.ts",
+      "blob": "fa435a5e8417067330eb8b8abe623d82bc6602ce"
+    },
+    {
+      "path": "eval/runner/evidence-delivery/store.ts",
+      "blob": "2ad38d970a33cf6fa60c129fbf7b5aca88f04fb0"
+    },
+    {
+      "path": "eval/runner/gbrain-under-test.ts",
+      "blob": "f70c28b04f0034fe8395811a08e3fb7bbade2da8"
+    },
+    {
+      "path": "eval/runner/lifecycle/builds.ts",
+      "blob": "e1482c7bc8db10dc575d7fa11ec5c11a73f322b5"
+    },
+    {
+      "path": "eval/runner/longmemeval-cache.ts",
+      "blob": "370195e068be652450cd39a18e1b25a7e4e54975"
+    },
+    {
+      "path": "eval/runner/memory-qa/arms.ts",
+      "blob": "67b2c8d8c3aed6c88fdded9d4591ed93fca7beb9"
+    },
+    {
+      "path": "eval/runner/memory-qa/beam10m-corpus.ts",
+      "blob": "b3b09b0d841608d5162814ec9e5bc75879678524"
+    },
+    {
+      "path": "eval/runner/memory-qa/beam10m-questions.ts",
+      "blob": "ba6cc4f14083e137b7c1b197bfdefed07b0ae2a9"
+    },
+    {
+      "path": "eval/runner/memory-qa/corpus.ts",
+      "blob": "bfa602bc40e536f4e4779afd1c54b922af74107f"
+    },
+    {
+      "path": "eval/runner/memory-qa/instruments.ts",
+      "blob": "7687a1e779517e00c7cf6d6b1c82dde064c1885b"
+    },
+    {
+      "path": "eval/runner/memory-qa/outcomes.ts",
+      "blob": "019df0b2ef56d9878b39ec2d1d7758fdb8a56329"
+    },
+    {
+      "path": "eval/runner/memory-qa/qa.ts",
+      "blob": "2739277ca13b506681c1b91a1ee17cdd236dad85"
+    },
+    {
+      "path": "eval/runner/memory-qa/records.ts",
+      "blob": "de46f9f7a8914f84d21f6468390d0425d6f76374"
+    },
+    {
+      "path": "eval/runner/memory-qa/run-systems.ts",
+      "blob": "dbb6c950c2b65f0355017d8a58ab182d62dd15a5"
+    },
+    {
+      "path": "eval/runner/memory-qa/run.ts",
+      "blob": "6536ac7d6f892705622266eebeee997ccb754e2b"
+    },
+    {
+      "path": "eval/runner/memory-qa/sealed-profile.ts",
+      "blob": "4dd4bb4eaceed5511474a1afceb060208632ffa2"
+    },
+    {
+      "path": "eval/runner/metering-proxy.ts",
+      "blob": "e25bf7c09fb7a35e419e5ab9113e67a8fed30ca2"
+    },
+    {
+      "path": "eval/runner/metrics.ts",
+      "blob": "099a098c975e7a87a08cda1a50014f19ffb449d0"
+    },
+    {
+      "path": "eval/runner/openai-judge-shim.ts",
+      "blob": "6eef91cfd5b475f1330611bff6eaed6daf18d048"
+    },
+    {
+      "path": "eval/runner/paid-arm.ts",
+      "blob": "73f5ad8b7a9f3d6d6a8329a22a6388600c134312"
+    },
+    {
+      "path": "eval/runner/q1/cell.ts",
+      "blob": "0271ee68fbe066da61e20432b7fca30d0b31e878"
+    },
+    {
+      "path": "eval/runner/q1/cells/definitions.ts",
+      "blob": "a6bfb306897fe20c74e2afc60f82f42631b13b02"
+    },
+    {
+      "path": "eval/runner/q1/cells/q1-cells.json",
+      "blob": "5341f5291bccdc48e300f86770ab45e9f6fbc949"
+    },
+    {
+      "path": "eval/runner/q1/cells/schema.json",
+      "blob": "a9dee6f40b6bb0a20b166d24fc950263b9c27672"
+    },
+    {
+      "path": "eval/runner/q1/scoreboard-errors.ts",
+      "blob": "2208a59c8e70e7240a9776c98cf0c085f718ea90"
+    },
+    {
+      "path": "eval/runner/q1/usage.ts",
+      "blob": "734f0d18cd9885a2ad6cea9f6cc7a63e18163892"
+    },
+    {
+      "path": "eval/runner/receipt.ts",
+      "blob": "82b0bed01cc4d4c76e061d618b62007449a450b0"
+    },
+    {
+      "path": "eval/runner/sealed-confirmation-lib.ts",
+      "blob": "ccf05e8ee296496e5e70f17e2cda9808be7e9e31"
+    },
+    {
+      "path": "eval/runner/shootout-cell.ts",
+      "blob": "ddb76ce812397e82ff554dab8f1e38bd205cbad9"
+    },
+    {
+      "path": "eval/runner/situation-recall-provenance.ts",
+      "blob": "e34e806a1cc090250a5218c6dadcd0a13462faf8"
+    },
+    {
+      "path": "eval/runner/systems/agent-runtime.ts",
+      "blob": "ca3e2325c88de7f58c90df4f224ca911380a2dd5"
+    },
+    {
+      "path": "eval/runner/systems/baselines.ts",
+      "blob": "022c9a596257b222b6020be808e96e1aee7054c9"
+    },
+    {
+      "path": "eval/runner/systems/fake.ts",
+      "blob": "25415571a0b11b45c9f029f30105fe2e8432b77d"
+    },
+    {
+      "path": "eval/runner/systems/file-agent.ts",
+      "blob": "a907aa09e1360c0d478174fa5ace78a7c126522e"
+    },
+    {
+      "path": "eval/runner/systems/gbrain.ts",
+      "blob": "1503c7b52247fa458fe587ff2720a5669da5213f"
+    },
+    {
+      "path": "eval/runner/systems/http.ts",
+      "blob": "35834358e3222760d31ad6e6d3643911dda99bd1"
+    },
+    {
+      "path": "eval/runner/systems/render.ts",
+      "blob": "5f7083a441a2c910b97e346c08ce54b7715d919c"
+    },
+    {
+      "path": "eval/runner/systems/sanitize.ts",
+      "blob": "a069e50aba90e49ae8eeb59e73176aa07d953e3f"
+    },
+    {
+      "path": "eval/runner/systems/types.ts",
+      "blob": "d336353670fce2adef037e3aae98b296b1c43348"
+    },
+    {
+      "path": "eval/runner/usage-receipt.ts",
+      "blob": "cea845ba364b9a4800eadba7baae0161809778ec"
+    },
+    {
+      "path": "eval/systems/PROTOCOL.md",
+      "blob": "13914bdcd12cb81a2ba39accd6de31d0df450410"
+    },
+    {
+      "path": "eval/systems/_fake/docker-compose.yml",
+      "blob": "efabedc05bc56f595b7b00a59c801b28fafa276c"
+    },
+    {
+      "path": "eval/systems/_fake/fake.py",
+      "blob": "5c6a338d5940a0a8f94a5b0f2e8dac8eac95f96e"
+    },
+    {
+      "path": "eval/systems/_shim/fake_provider.py",
+      "blob": "78fbb7164fee7adc428666068a331e355a046bca"
+    },
+    {
+      "path": "eval/systems/_shim/protocol_check.py",
+      "blob": "2672f49a0cfdce2ad32a8ac138289026d31541c8"
+    },
+    {
+      "path": "eval/systems/_shim/shim.py",
+      "blob": "425aa155ec81b78c51030bf17757ea3cc3585cbd"
+    },
+    {
+      "path": "eval/systems/bootstrap.sh",
+      "blob": "2901b72b9a7800a7526b4684804d2bb4a1dfd043"
+    },
+    {
+      "path": "eval/systems/gbrain-defaults/Dockerfile",
+      "blob": "84f13f4b50b80ad122ba56a2529e0b2a0acf944b"
+    },
+    {
+      "path": "eval/systems/gbrain-defaults/README.md",
+      "blob": "23021bbc4327953ab1aed4f856f82879d33bef3c"
+    },
+    {
+      "path": "eval/systems/gbrain-defaults/capability.json",
+      "blob": "cbca4f7cf13c0def9818cac579e8fb636ef14bec"
+    },
+    {
+      "path": "eval/systems/gbrain-defaults/docker-compose.yml",
+      "blob": "f325a4cf16b89fa1302fc11727caba8616d23c0d"
+    },
+    {
+      "path": "eval/systems/gbrain-defaults/fake_upstream.py",
+      "blob": "0ab15e6e01570e117b258d65c104c552ed4f1582"
+    },
+    {
+      "path": "eval/systems/gbrain-defaults/shim.py",
+      "blob": "e74caa16791de0b6535e12933fd74d5d8c0948f3"
+    },
+    {
+      "path": "eval/systems/kinds.json",
+      "blob": "5aba822fd5e295684da2840f2aeed5933df1bd3a"
+    },
+    {
+      "path": "eval/systems/name-guard-baseline.json",
+      "blob": "aa3797e70b5e292c54d4c8cf5f60db6c932a17be"
+    },
+    {
+      "path": "package.json",
+      "blob": "66f2e33bba06db062df324299ef5784b8cd480da"
+    }
+  ]
+}
