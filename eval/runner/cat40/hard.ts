@@ -21,6 +21,7 @@ import { renderDoc } from '../../generators/model-ladder-gen.ts';
 import { RECORDED, HARD_SEEDS, isHardWorld, type HardTask, type HardWorld, type HardStopKind } from '../../generators/hard/schema.ts';
 import { hardWorldProblems } from '../../generators/hard/validate.ts';
 import { generateHardWorld, hardWorldDigest } from '../../generators/model-ladder-hard.ts';
+import { generateSealedWorld } from '../../generators/hard-sealed/generate.ts';
 
 // ─── Stop codes ─────────────────────────────────────────────────────
 
@@ -103,6 +104,8 @@ export function hardRefusals(o: { models: string[]; judge: string | undefined; a
 export const HARD_WORLD_GENERATORS: Record<string, (seed: number, knobs: HardWorld['knobs'], scale: 'v1' | 'large') => HardWorld> = {
   'model-ladder-hard-v1': (seed, knobs, scale) => generateHardWorld(seed, knobs, { scale }),
   'model-ladder-hard-v2': (seed, knobs, scale) => generateHardWorld(seed, knobs, { scale }),
+  'hard-sealed': (seed, knobs, scale) => generateSealedWorld(seed, knobs, scale),
+  'hard-sealed-v2': (seed, knobs, scale) => generateSealedWorld(seed, knobs, scale),
 };
 
 /** Validate a Hard world and check it against its generator. */
