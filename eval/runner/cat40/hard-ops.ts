@@ -72,7 +72,8 @@ export const CONFIRM_STEPS: StepPlan[] = [
 /** The confirmation's worlds and their ledgers, one per world because the worlds run on separate machines (PREREG.md, Budget). */
 export const CONFIRM_LEDGERS = { main: '.budget/cat40-hard-confirm-main.sqlite', sealed: '.budget/cat40-hard-confirm-sealed.sqlite' } as const;
 export type ConfirmWorld = keyof typeof CONFIRM_LEDGERS;
-export const CONFIRM_CAP_USD = 650;
+/** Garry Tan 2026-10-10 raised both confirmation caps from the preregistered $650 to $900 (PREREG.md, Recorded before cells). */
+export const CONFIRM_CAP_USD = 900;
 /** The oracle gate before counted confirmation cells: pooled oracle success over the three models (PREREG.md, gate 2). */
 export const CONFIRM_ORACLE_MIN = 0.95;
 

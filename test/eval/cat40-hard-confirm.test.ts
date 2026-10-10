@@ -62,15 +62,16 @@ describe('confirmation seed and program steps', () => {
 });
 
 describe('confirmation ledgers', () => {
-  test('each world spends only from its own ledger with the preregistered $650 cap', () => {
+  test('each world spends only from its own ledger with the confirmation cap ($900 since Garry raised it on 2026-10-10)', () => {
     const d = tmp();
     expect(() => checkConfirmLedger(CONFIRM_LEDGERS.main, d)).toThrow('does not exist on this machine');
     expect(() => checkConfirmLedger('.budget/cat40-hard.sqlite', d)).toThrow('HARD_LEDGER_ROSTER');
     expect(() => checkConfirmLedger(undefined, d)).toThrow('no --budget-ledger');
     initLedger({ ledgerPath: join(d, CONFIRM_LEDGERS.main), programCapUsd: CONFIRM_CAP_USD, reason: 'test' });
-    expect(checkConfirmLedger(CONFIRM_LEDGERS.main, d)).toMatchObject({ capUsd: 650, committedUsd: 0, remainingUsd: 650 });
-    initLedger({ ledgerPath: join(d, CONFIRM_LEDGERS.sealed), programCapUsd: 700, reason: 'test' });
-    expect(() => checkConfirmLedger(CONFIRM_LEDGERS.sealed, d)).toThrow('records a cap of $700.00');
+    expect(CONFIRM_CAP_USD).toBe(900);
+    expect(checkConfirmLedger(CONFIRM_LEDGERS.main, d)).toMatchObject({ capUsd: 900, committedUsd: 0, remainingUsd: 900 });
+    initLedger({ ledgerPath: join(d, CONFIRM_LEDGERS.sealed), programCapUsd: 650, reason: 'test' });
+    expect(() => checkConfirmLedger(CONFIRM_LEDGERS.sealed, d)).toThrow('records a cap of $650.00');
   });
 });
 
