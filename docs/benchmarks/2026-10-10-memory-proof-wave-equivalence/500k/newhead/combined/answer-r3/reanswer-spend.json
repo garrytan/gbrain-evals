@@ -1,36 +1,36 @@
 {
-  "run_id": "harness-reanswer:beam-500k-gbrain-rag-031d6b63d1d5-s23-2026-10-10T11-59-56-409Z-b3b5f930",
-  "usd": 1.7659545,
-  "requests": 126,
+  "run_id": "harness-reanswer:beam-500k-gbrain-rag-031d6b63d1d5-s23-2026-10-10T12-53-39-163Z-240a5731",
+  "usd": 1.92864,
+  "requests": 141,
   "metered": {
     "total": {
-      "requests": 140,
-      "refused": 14,
-      "reserved_usd": 32.08071300000001,
-      "actual_usd": 1.7659544999999999,
-      "input_tokens": 1122266,
-      "output_tokens": 246468
+      "requests": 141,
+      "refused": 0,
+      "reserved_usd": 35.911170750000004,
+      "actual_usd": 1.928640000000001,
+      "input_tokens": 1252420,
+      "output_tokens": 263820
     },
     "byLabel": {
       "harness": {
-        "requests": 140,
-        "refused": 14,
-        "reserved_usd": 32.08071300000001,
-        "actual_usd": 1.7659544999999999,
-        "input_tokens": 1122266,
-        "output_tokens": 246468
+        "requests": 141,
+        "refused": 0,
+        "reserved_usd": 35.911170750000004,
+        "actual_usd": 1.928640000000001,
+        "input_tokens": 1252420,
+        "output_tokens": 263820
       }
     },
     "byProvider": {
       "gemini": {
-        "requests": 140,
-        "refused": 14,
-        "reserved_usd": 32.08071300000001,
-        "actual_usd": 1.7659544999999999,
-        "input_tokens": 1122266,
-        "output_tokens": 246468
+        "requests": 141,
+        "refused": 0,
+        "reserved_usd": 35.911170750000004,
+        "actual_usd": 1.928640000000001,
+        "input_tokens": 1252420,
+        "output_tokens": 263820
       }
     },
-    "exhausted": true
+    "exhausted": false
   }
 }
