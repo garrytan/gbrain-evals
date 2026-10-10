@@ -1,0 +1,64 @@
+# Cat 40 Hard fix wave: confirmation preregistration
+
+Written 2026-10-10, before any confirmation world is generated and before any confirmation cell runs. This document is final once committed. The executor appends values that do not exist yet (world digests, VM names, ledger run ids) under "Recorded before cells" and changes nothing else. Any other change after the first cell gets a dated amendment section with its reason.
+
+## Authorization
+
+- Garry Tan, 2026-10-10, on the development record ([DEV-RECORD.md](DEV-RECORD.md)): "1 approved, 2 yeah that works 3 b".
+- (1) Confirmation spend of about $1,300 is approved.
+- (2) What a loss means, in Garry's words as accepted: **"we publish it and stop claiming gbrain beats files on hard company questions."**
+- (3) Sealed logistics, option (b): the sealed world is generated on Garry's Mac, where its seed stays, then moved straight to one Ubicloud VM named below as the owner-custody machine. All sealed slots and cells run there. Sealed documents and outputs never go to Capy Drive.
+
+## What runs
+
+| | Value |
+|---|---|
+| gbrain build | `3e4ff61ce1ac553581fb5c1eb905cf48541fe344` (branch `capy/cat40-hard-fix`, gbrain #6271; contains master `d4dc2d4d8`, v0.60.139.0). Full ci:ubicloud gate and GitHub CI green on this exact SHA. Starter surface, no instruction or tool-description overrides. This is the build of development round 5. |
+| Harness | gbrain-evals `feat/cat40-hard` with the sealed generator branch (`feat/cat40-hard-sealed`, `36b19ba`) merged in, plus three confirmation commits: register the confirmation seed, register the program steps, and the warm-boot fix below. The SHA is recorded below before cells. |
+| Worlds | **M**: main Hard generator (`model-ladder-hard-v2`), seed **20261021** (never generated before), 50k (`--scale large`), frozen knobs `docs/benchmarks/cat40-hard/knobs.frozen.json`. **S**: sealed generator (`hard-sealed-v2`), private seed on Garry's Mac, 50k, the same frozen knobs. |
+| Arms | `gbrain` and `fs` (counted); `oracle` (world check only). |
+| Models | `claude-opus-5-5`, `claude-sonnet-5-5`, `gpt-6.1-sol`. Fable is excluded (smoke only, amendment A6). |
+| Judge | `gpt-6.1-sol` |
+| Tasks | Every task in each world (100: H1–H5, 20 per family), repeat 1. |
+| Fixed settings | 16-turn cap, Hard tool limits, 5 gbrain slots per world, concurrency 10. Every setting not named here is identical for both arms and equal to the held-out run (`cells-50k`). |
+
+**Warm-boot fix (harness, gbrain arm only).** The slot build already makes one clean server start before the snapshot, "the way an installed brain has already been opened once" (`gbrain-arm.ts`). Since gbrain #6390 (`c33963d0`), the server answers `initialize` before its startup work finishes, so that start now ends early and the snapshot keeps about 47k queued no-op persistence effects. Every restore then stalls its first tool call for 230–290 s (development round 5, diagnosed 2026-10-10). The fix makes the warm start issue one read-only tool call and wait for its reply before stopping. That restores the documented intent: a brain that has been opened once. The slot receipt records the queued-effect count at snapshot time. This changes no answer and no arm setting; development round 5 scored normally with the stall. The product bug ships separately as a master fix (GBRA-40's call). The report states both.
+
+## Gates before counted cells (per world)
+
+1. The world validates against its generator. **S** only: the regenerated world's digest equals the committed `61870796c34d922daeb2909a5c30e44e1121504054f83319ef8a6307ca570a00`. If code that shapes the world (`schema.ts`, `semantics.ts`, the sealed generator) changed since the digest was recorded, `--digest-only` is run on the Mac first and a new digest is recorded below, with the reason, before generating.
+2. Oracle on all 100 tasks with the three models: pooled success ≥ 95%. Below that, stop, report and run no counted cells on that world.
+3. Every gbrain slot passes the write probe and the fail-closed rerank probe. Each slot's queued-effect count at snapshot is 0.
+4. Projection plus 15% fits the world's ledger.
+
+## Endpoints and decision rule
+
+For each world W in {M, S}, Δ_W is the pooled gbrain − fs success rate over the three models: the mean over models of each model's gbrain rate minus its fs rate, on the same 100 tasks. Its 95% interval comes from a task-clustered bootstrap (10,000 resamples of tasks, seed 1, all three models resampled together).
+
+**Co-primary (UC2):** gbrain has reached parity with or beaten plain files only if **both** Δ_M ≥ 0 **and** Δ_S ≥ 0 (point estimates).
+
+- If either point estimate is below 0, the **kill criterion** fires. We publish the result as it is, stop this wave's tuning on these tasks, and follow Garry's statement above: stop claiming gbrain beats files on hard company questions.
+- **Wording:** "parity" only when an interval's lower bound is above −3 points; otherwise "not distinguishable", with the point estimate. "Ahead" only when the lower bound is above 0. A general reliability claim needs both worlds to pass. If M passes and S does not, the result is reported as "parity on the main generator's wording only", and it still counts as a kill.
+- No result is dropped, and no cell is rerun except a harness or provider error that the runner's existing retry rules cover.
+
+**Secondary, reported for both worlds:** per-model and per-family rates; the wrong-answer rate; turn-cap stops; cost per successful task; median seconds per cell; the rerank check (cells with a hybrid search show `voyage:rerank-2.5` in metering, and degraded notices are counted); the DX measures from the plan (nickname seen and queried, tool calls to the first alias query). Development results are never pooled with confirmation results.
+
+## Budget
+
+Two ledgers, one per world, because the worlds run on separate machines:
+
+- `.budget/cat40-hard-confirm-main.sqlite`, cap $650;
+- `.budget/cat40-hard-confirm-sealed.sqlite`, cap $650.
+
+Estimate per world, from development per-cell costs: about $450 in cells, $25 for the oracle and $15 for slots, so about $490, or $565 with a 15% margin. The two worlds total about $980. A world that would exceed its cap stops and reports; raising a cap needs Garry.
+
+## Hygiene
+
+- No development agent has read the sealed generator's code or any sealed output. The alias grammar spec (`835024150`) predates every calibration document.
+- After the confirmation, no gbrain change is tuned on M or S tasks.
+- The sealed seed never leaves Garry's Mac. The sealed world crosses one Capy cloud machine in transit, is deleted there once the custody VM holds it, and never touches Capy Drive.
+- The custody VM is destroyed after its outputs (results, transcripts, receipts; no world documents) are copied to the report.
+
+## Recorded before cells
+
+(Appended by the executor; no edits above this line.)
