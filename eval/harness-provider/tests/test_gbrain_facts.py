@@ -90,6 +90,147 @@ def test_query_fact_rows_render_without_date_header_and_are_not_repeated(tmp_pat
     assert fmeta["facts"]["page_fact_rows"] == 0 and fmeta["facts"]["kept"] == 3
 
 
+
+def _stub_unit(tmp_path, recall: dict, rows: list | None = None, calls: list | None = None, delay_s: float = 0.0):
+    from mpw.gbrain_provider import _Unit
+
+    class Child:
+        def call(self, name, args):
+            if calls is not None:
+                calls.append((name, dict(args)))
+            if delay_s:
+                import time
+                time.sleep(delay_s)
+            if name == "query":
+                return list(rows or []), {"retrieval": {"vector_enabled": True, "delivery": {"tokens_delivered": 40, "tokenizer": "cl100k"},
+                                                        "saved_facts": [{"id": 8, "fact": "A saved fact the v2 lane never packs."}]}}
+            if name == "recall":
+                return recall, {}
+            raise AssertionError(name)
+
+    unit = _Unit("u-1", tmp_path)
+    unit.child = Child()
+    unit.timestamps = {f"d-{i}": f"2024-03-{i + 1:02d}T10:00:00" for i in range(30)}
+    return unit
+
+
+def _v2(unit, **cfg):
+    from mpw.gbrain_provider import GbrainMemoryProvider
+
+    p = GbrainMemoryProvider({"gbrain_cli": "unused", "child_env": {}, "lane": "combined-v2", "extraction_source": "measured_default",
+                              "facts_tokens": 300, "delivered_tokens": 8100, **cfg})
+    p._ensure_unit = lambda unit_id, create=False: unit
+    return p
+
+
+RANKED = {"facts_order": "relevance", "facts": [{"id": i, "fact": f"Fact number {i} about the user's trip to Kyoto with Anna.", "relevance": 2 - i / 50,
+                                                 "source_session": f"d-{i % 30}", "valid_from": "2024-03-05T00:00:00Z"} for i in range(60)]}
+
+
+def test_combined_v2_packs_the_ranked_block_first_and_gives_pages_the_rest(tmp_path):
+    from mpw.context import count_tokens, render_rag_context
+
+    calls: list = []
+    rows = [{"slug": "conversations/d-1", "chunk_text": "user: Kyoto in May."},
+            {"result_type": "fact", "fact_id": "0", "slug": "facts/0", "page_slug": "conversations/d-0", "chunk_text": "Saved fact (fact): Fact number 0."},
+            {"result_type": "fact", "fact_id": "59", "slug": "facts/59", "page_slug": "conversations/d-29", "chunk_text": "Saved fact (fact): Fact number 59."}]
+    p = _v2(_stub_unit(tmp_path, RANKED, rows, calls))
+    docs, _, meta = p.retrieve_with_meta("Who went to Kyoto?", 10, "u-1")
+    assert [c[0] for c in calls] == ["recall", "query"]
+    assert calls[0][1] == {"question": "Who went to Kyoto?", "limit": 100}
+    block = [d for d in docs if "\nSaved facts:\n" in d.content]
+    assert docs[:len(block)] == block and len(block) > 1
+    assert meta["facts"]["tokens"] == count_tokens(render_rag_context(block)) <= 300
+    assert meta["facts"]["ids"][:3] == ["0", "1", "2"] and "59" not in meta["facts"]["ids"]
+    assert calls[1][1]["token_budget"] == 8100 - meta["facts"]["tokens"] == meta["page_budget"]
+    assert meta["pages"]["repeated_fact_rows_dropped"] == ["0"] and meta["pages"]["fact_rows"] == ["59"]
+    assert "A saved fact the v2 lane never packs." not in "".join(d.content for d in docs)
+    assert meta["rendered_tokens"] == count_tokens(render_rag_context(docs))
+    assert meta["facts"]["facts_order"] == "relevance" and meta["timing"]["service_ms"] is not None
+
+
+def test_combined_v2_refuses_an_unranked_degraded_or_unavailable_recall(tmp_path):
+    from mpw.gbrain_provider import GbrainRetrieveError
+
+    for recall, needle in (({"facts": RANKED["facts"]}, "no recall(question)"),
+                           ({**RANKED, "facts_order": "newest"}, "no recall(question)"),
+                           ({**RANKED, "facts_degraded": {"unembedded": 3}}, "gbrain embed --stale --facts"),
+                           ({"facts": [], "status": "unavailable", "why": "db"}, "unavailable")):
+        with pytest.raises(GbrainRetrieveError, match=re.escape(needle)):
+            _v2(_stub_unit(tmp_path, recall)).retrieve_with_meta("q", 10, "u-1")
+
+
+def test_v1_facts_block_is_priced_as_rendered_across_many_groups(tmp_path):
+    from mpw.context import count_tokens, render_rag_context
+    from mpw.gbrain_provider import GbrainMemoryProvider
+
+    unit = _stub_unit(tmp_path, {"facts": RANKED["facts"]})
+    p = GbrainMemoryProvider({"gbrain_cli": "unused", "child_env": {}, "lane": "combined", "facts_tokens": 400})
+    p._ensure_unit = lambda unit_id, create=False: unit
+    docs, _, meta = p.retrieve_with_meta("q", 10, "u-1")
+    block = [d for d in docs if "\nSaved facts:\n" in d.content]
+    assert len(block) > 5 and meta["facts"]["counting"] == "rendered"
+    assert meta["facts"]["tokens"] == count_tokens(render_rag_context(block)) <= 400
+    assert sum(count_tokens(line + "\n") for d in block for line in d.content.splitlines() if line.startswith("- ")) < meta["facts"]["tokens"]
+
+
+def test_filler_removed_reads_the_page_query_alone(tmp_path):
+    calls: list = []
+    p = _v2(_stub_unit(tmp_path, RANKED, [{"slug": "conversations/d-1", "chunk_text": "user: hi"}], calls), lane="filler-removed", token_budget=8100)
+    docs, _, meta = p.retrieve_with_meta("q", 10, "u-1")
+    assert [c[0] for c in calls] == ["query"] and calls[0][1]["expand"] is False and calls[0][1]["token_budget"] == 8100
+    assert meta["lane"] == "filler-removed" and len(docs) == 1
+
+
+def test_lane_and_extractor_config_is_validated():
+    from mpw.gbrain_provider import GbrainMemoryProvider
+
+    base = {"gbrain_cli": "unused", "child_env": {}}
+    for cfg, needle in (({"extraction_source": "measured_default", "extraction_model": "openai:gpt-6-luna"}, "one or the other"),
+                        ({"extraction_source": "default"}, "unknown extraction_source"),
+                        ({"lane": "combined-v3"}, "unknown lane"),
+                        ({"lane": "combined-v2", "extraction_source": "measured_default"}, "delivered_tokens"),
+                        ({"lane": "filler-removed"}, "reads a facts store")):
+        with pytest.raises(ValueError, match=needle):
+            GbrainMemoryProvider({**base, **cfg})
+
+
+def test_measured_default_sentinel_asserts_the_resolution_before_ingest(tmp_path):
+    from mpw.gbrain_provider import GbrainIngestError, GbrainMemoryProvider
+
+    def report(source, resolved):
+        return "notice line\n" + json.dumps({"per_task": [{"key": "facts.extraction_model", "source": source, "resolved": resolved}]})
+
+    p = GbrainMemoryProvider({"gbrain_cli": "unused", "child_env": {}, "extraction_source": "measured_default"})
+    p._cli = lambda home, *args, **kw: report("measured default", "anthropic:claude-haiku-5-5")
+    assert p._extractor(tmp_path) == {"source": "measured default", "resolved": "anthropic:claude-haiku-5-5", "extraction_source": "measured_default"}
+    for source, resolved in (("tier.reasoning", "openai:gpt-6"), ("config: facts.extraction_model", "anthropic:claude-haiku-5-5")):
+        p._cli = lambda home, *args, s=source, r=resolved, **kw: report(s, r)
+        with pytest.raises(GbrainIngestError, match="measured default"):
+            p._extractor(tmp_path)
+
+
+def test_ingest_keys_separate_sentinel_explicit_and_raw_stores():
+    from mpw.gbrain_provider import INGEST_KEYS, INGEST_REVISION
+
+    assert "extraction_source" in INGEST_KEYS and "extraction_model" in INGEST_KEYS and INGEST_REVISION == "gbrain-ingest-2"
+
+
+def test_service_time_excludes_the_wait_for_the_provider_lock(tmp_path):
+    p = _v2(_stub_unit(tmp_path, RANKED, [{"slug": "conversations/d-1", "chunk_text": "user: hi"}], delay_s=0.01), lane="filler-removed")
+    started = threading.Event()
+
+    def hold():
+        with p._lock:
+            started.set()
+            import time
+            time.sleep(0.3)
+
+    threading.Thread(target=hold).start()
+    started.wait()
+    _, _, meta = p.retrieve_with_meta("q", 10, "u-1")
+    assert meta["timing"]["lock_wait_ms"] >= 200 and meta["timing"]["service_ms"] < 150
+
 if not _bun_ok():
     if os.environ.get("MPW_REQUIRE_HARNESS") == "1":
         raise RuntimeError("gbrain facts tests need bun >= 1.4 and node_modules/gbrain (bun install)")
@@ -231,7 +372,7 @@ def test_raw_lane_makes_no_chat_request_and_keeps_its_shape(tmp_path, upstream):
         docs, raw, meta = p.retrieve_with_meta("What is the cat called?", 10, "u-2")
         assert raw is None and docs
         assert set(meta) == {"requested", "tokens_delivered", "tokenizer", "applied_unit", "blocks", "dropped", "fallbacks",
-                             "budget_clamped", "vector_enabled", "expansion_applied", "degraded", "entity_anchored"}
+                             "budget_clamped", "vector_enabled", "expansion_applied", "degraded", "entity_anchored", "timing"}
         assert "expand" not in meta["requested"]
         assert not _model_hits(hits, before)
         template = json.loads((tmp_path / "store/gbrain/_template/mpw-template.json").read_text())

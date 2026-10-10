@@ -43,7 +43,7 @@ export interface CellSpec {
   split: string;
   provider: (typeof PROVIDERS)[number];
   mode: (typeof MODES)[number];
-  lane: 'raw' | 'facts' | 'combined';
+  lane: (typeof LANES)[number];
   seal: (typeof SEALS)[number];
   /** Delivered-context target in cl100k tokens, or null for the system's own default (reported, not gated). */
   target_tokens: number | null;
@@ -82,6 +82,9 @@ export interface CellFile {
 
 // ─── spec ────────────────────────────────────────────────────────────
 
+/** The gbrain provider's lanes (eval/harness-provider/mpw/gbrain_provider.py LANES). */
+export const LANES = ['raw', 'facts', 'combined', 'combined-v2', 'filler-removed'] as const;
+
 export function validateSpec(raw: unknown): CellSpec {
   const s = raw as CellSpec;
   const problems: string[] = [];
@@ -89,7 +92,7 @@ export function validateSpec(raw: unknown): CellSpec {
   if (!s.dataset || !s.split) problems.push('dataset and split are required');
   if (!PROVIDERS.includes(s.provider)) problems.push(`provider must be one of ${PROVIDERS.join(', ')}`);
   if (!MODES.includes(s.mode)) problems.push(`mode must be one of ${MODES.join(', ')}`);
-  if (!['raw', 'facts', 'combined'].includes(s.lane)) problems.push('lane must be raw, facts or combined');
+  if (!LANES.includes(s.lane)) problems.push(`lane must be one of ${LANES.join(', ')}`);
   if (!SEALS.includes(s.seal)) problems.push(`seal must be one of ${SEALS.join(', ')}`);
   if (s.target_tokens !== null && !(Number.isInteger(s.target_tokens) && s.target_tokens > 0)) problems.push('target_tokens must be a positive integer or null');
   if (!s.models || !/^[a-z-]+:.+/.test(s.models.answer ?? '') && s.mode !== 'retrieval') problems.push('models.answer must be "<llm>:<model>"');
