@@ -2,6 +2,27 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.69] - 2026-10-10
+
+### T0b generator v2, scorer t0b-score-v2 and the custodian-sealed confirmation preregistration (no paid cells)
+
+Prepares the program primary's held-out test: the shipped stack (Candidate 1 plus garrytan/gbrain#6271's short-code
+alias rule) against frozen gbrain v0.60.106.0, on 32 personas minted on the maintainer's Mac.
+
+- **Generator v2** (`V2_KNOBS`): every company's short code is unique within a brain and never a word-like code
+  (`CODE_STOPWORDS`); namesake promises match only their distinctive phrase (`NAMESAKE_STRICT`); mail ids are keyed by
+  company. Version 1 worlds are byte-identical (baseline digest pinned in a test).
+- **Custodian mode**: `--mint-sealed --personas N --custodian-out <dir>` writes seeds to a 0600 file outside the
+  repository and prints only their commitment; `--custodian-seeds` renders a seedless world (`sealed-01`...) and its
+  digest; the T0b runner reads it with `--world --expect-digest` and refuses a world inside the repository.
+- **Scorer t0b-score-v2**: a line carrying a namesake value is the namesake's when it names the namesake (last name,
+  company or code) and not the contact, or carries a disambiguation cue; the cue list adds the phrases the namesake
+  diagnostic found missing. The 25 audited lines score as the diagnostic read them (v1 flags 11), and 576 mutation
+  lines restating a namesake value as the contact's all fail.
+- **Preregistration amendment 5** ([doc](docs/benchmarks/2026-10-08-program-primary-hard-preregistration.md)): arms,
+  size (32 personas: P(`10x`) 0.82 at a true factor of 20), claims, validity mutants, gates, custody chain and a $265
+  ledger cap. It runs once #6271 merges.
+
 ## [0.10.68] - 2026-10-10
 
 ### T0b namesake diagnostic: all 11 namesake flags left after the alias fix are scorer false positives
