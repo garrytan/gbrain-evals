@@ -37,7 +37,7 @@ describe('CATEGORIES catalog', () => {
   test('lists every category in the repository (drift tripwire, audit tests-audit-01 and C-09)', () => {
     expect(CATEGORIES.map(c => c.id)).toEqual([
       '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '13b', '13b-sit', '14', '15', '18', '18b',
-      '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live', 'N3', 'temporal-edges', 'P1-E2', 'P1-E3', 'P5-H1', 'P5-H2', 'P5-H4', 'P5-H5a', 'P5-H3', 'P5-H5b', 'P5-H6', 'P8-quotes', 'P8-write-cost', 'R2-facts-absorb', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'N2', 'A4', 'SO', 'SO-live',
+      '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live', '37', '37-paid', '38', '38-paid', '39', '39-paid', 'N3', 'temporal-edges', 'P1-E2', 'P1-E3', 'P5-H1', 'P5-H2', 'P5-H4', 'P5-H5a', 'P5-H3', 'P5-H5b', 'P5-H6', 'P8-quotes', 'P8-write-cost', 'R2-facts-absorb', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'N2', 'A4', 'SO', 'SO-live',
       'multi-adapter', 'relational-ab', 'constrained-relational', 'N9', 'N9-paid', 'precisionmembench', 'longmemeval', 'longmemeval-answers',
       'longmemeval-m-pilot', 'reading-notes', 'lifecycle', '40', 'T0', 'T0b', '41', 'N1', 'N5', 'N1-ci', 'N5-ci', 'evidence-delivery', 'sealed-confirmation', 'situation-recall', 'shootout', 'shootout-P2', 'qrels',
     ]);
@@ -117,7 +117,7 @@ describe('tiers', () => {
     }
     expect(offline.notRun.find(n => n.id === '13')?.reason).toBe('tier P not selected');
     expect(paid.notRun.find(n => n.id === '2')?.reason).toBe('tier H not selected');
-    expect(offline.dispatch.map(c => c.id)).toEqual(['1', '2', '3', '4', '6', '7', '10', '11', '12', '19', '22', '23', '24', '27', '28', '34', '36', 'N3', 'temporal-edges', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'N2', 'A4', 'SO', 'N9', 'N1-ci', 'N5-ci']);
+    expect(offline.dispatch.map(c => c.id)).toEqual(['1', '2', '3', '4', '6', '7', '10', '11', '12', '19', '22', '23', '24', '27', '28', '34', '36', '37', '38', '39', 'N3', 'temporal-edges', 'N4', 'N6', 'N12', 'N13', 'N7', 'N8', 'N2', 'A4', 'SO', 'N9', 'N1-ci', 'N5-ci']);
   });
 
   test('the not-run list is printed with every category and its reason', () => {

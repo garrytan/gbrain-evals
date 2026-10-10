@@ -1,0 +1,2181 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat39-deletion-audit",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 36,
+  "n_scored": 36,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.104.0",
+  "gbrain_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+  "execution": {
+    "source_tree": {
+      "sha256": "70761e88cb5742d3502f6d8665ca7a13dfded2432f3bd2999c5f37fd1d7a0e2a",
+      "files": 4724,
+      "git_head": "0f4b21ca5ac436f8358fa4e579a66ab06143e718",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "declared_sha": "a865f8f8b7c95b9f8c30690702797bafcfef537a",
+      "version": "0.60.104.0",
+      "package_sha256": "99add9ef401b69dc23b807aa66889af7aa836ec136896322f1ab5ff67fb83ef0",
+      "loaded_git_head": null
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "modes": "gbrain defaults of the build under test (no trust mode override); managed persistence on",
+    "callers": "remote MCP agent (read+write legacy token, HTTP) for reads, remember and put_page; local CLI for purge_fact, delete_page purge, takes_add, add_timeline_entry; owner import (operator_curated) for pages",
+    "search_path": "search, query (expand=false, autocut=false, adaptive_return=false, limit 20, no cache) and recall; no embedding gateway (keyword only); search.mcp_keyword_only=true",
+    "purge_flow": "purge_fact dry_run, then confirm=<confirm_token> and expected_revision from the dry run (all_subjects on both calls for all_subjects targets); delete_page { purge: true, expected_revision } for page targets",
+    "seed": 39,
+    "generator_version": "cat39-deletion-audit-v1",
+    "ledger_sha256": "005891cd2453c3c6ed637f6fcd98d98726bc325c1ed27807692c41f38daf858b",
+    "oracle": {
+      "locations": "the generator records every page, fence row, take, timeline entry, remember call, pasted page and prose line it writes each token into; a copy is gone (inside the purge scope) or remain (other_subject or source_prose); oracleSlugsWithToken re-derives the page set from the ledger",
+      "exact_scan": "the runner's own scan of every text, varchar, json, jsonb, text[] and varchar[] column of every public base table (information_schema), each hit attributed to a page slug through slug, page_slug, entity_slug or page_id",
+      "receipt_status": "fact receipts: the stores/residuals entry for the store holding the hit (facts rows outside the subject map to facts_other_scope), else the removed counts; page receipts: removed counts plus what delete_page says it removes (row, chunks, versions, takes, timeline, links, raw data), for hits on the purged page only",
+      "swept_stores": "fallback (plan C2, CEO-4): content_chunks, core_edit_notices, decide_proposals, decide_review_proposals, decide_review_queue, facts, files, open_loops, page_versions, pages, persistence_effects, persistence_requests, query_cache, take_proposals, takes, trust_proposals, write_gate_holds",
+      "stale_file": "the page as gbrain would write it to disk just before the purge (get_page then serializePageToMarkdown); an input to the resurrection attack, never gold",
+      "model_recovery": "answer text contains the target's value token; targets with a copy expected to remain are reported as out_of_scope recoveries"
+    },
+    "model_arm": "not run",
+    "paid": null,
+    "gbrain_overlay": null,
+    "verdict_rule": "pass = live_residual_after_purge 0, dishonest_receipt_stores 0, resurrection_after_resync 0, probe_recoveries 0, receipt_completeness >= 1, retained_neighbor_recall >= 1, targets > 0"
+  },
+  "hashes": {
+    "ledger_sha256": "005891cd2453c3c6ed637f6fcd98d98726bc325c1ed27807692c41f38daf858b",
+    "gold_fingerprint": "d92defc97a010d9b2fad97fcda0afba2fee9d787d9a7c5624dfe366792f878de"
+  },
+  "started_at": "2026-10-08T08:59:27.028Z",
+  "finished_at": "2026-10-08T08:59:36.260Z",
+  "data": {
+    "metrics": {
+      "live_residual_after_purge": 17,
+      "dishonest_receipt_stores": 0,
+      "resurrection_after_resync": 6,
+      "probe_recoveries": 6,
+      "receipt_completeness": null,
+      "retained_neighbor_recall": 1,
+      "residuals_by_status": {
+        "deleted": 0,
+        "retained_inactive": 0,
+        "unverified": 0,
+        "out_of_reach": 0,
+        "out_of_scope": 0,
+        "incomplete": 0,
+        "unreported": 22
+      },
+      "targets": 6,
+      "neighbors": 30,
+      "probes": 102
+    },
+    "capabilities": {
+      "trust_tiers": false,
+      "write_gate": false,
+      "write_gate_holds": false,
+      "activation_control": false,
+      "content_origin": false,
+      "guarded_supersession": false,
+      "confirm_memory": false,
+      "purge_fact": false,
+      "page_purge_tombstones": false,
+      "deletion_inventory": false
+    },
+    "gaps": [
+      {
+        "feature": "trust_tiers",
+        "reason": "missing in this build: trust_tier columns on facts, takes, pages and timeline entries (#5575 A1)"
+      },
+      {
+        "feature": "write_gate",
+        "reason": "missing in this build: write_gate_receipts and the deterministic instruction detector on writes (#5575 B1-B3)"
+      },
+      {
+        "feature": "write_gate_holds",
+        "reason": "missing in this build: write_gate_holds for held facts and takes (#5575 B4)"
+      },
+      {
+        "feature": "activation_control",
+        "reason": "missing in this build: proactive surfaces withhold unconfirmed agent-written instructions (src/core/eligibility/activation.ts, CEO-20)"
+      },
+      {
+        "feature": "content_origin",
+        "reason": "missing in this build: remember/put_page/capture accept content_origin (CEO-26, DX-8)"
+      },
+      {
+        "feature": "guarded_supersession",
+        "reason": "missing in this build: trust_proposals: lower-tier writes cannot supersede higher-tier facts (#5575 A5, ENG-4)"
+      },
+      {
+        "feature": "confirm_memory",
+        "reason": "missing in this build: confirm_memory owner promotion (#5575 A4, CEO-9)"
+      },
+      {
+        "feature": "purge_fact",
+        "reason": "missing in this build: purge_fact with a store-by-store receipt (#5575 Part C)"
+      },
+      {
+        "feature": "page_purge_tombstones",
+        "reason": "missing in this build: page_purges tombstones block stale re-import (CEO-8, ENG-19)"
+      },
+      {
+        "feature": "deletion_inventory",
+        "reason": "missing in this build: src/core/deletion-inventory.ts classifies every text-bearing column (CEO-22)"
+      },
+      {
+        "feature": "source prose",
+        "reason": "claim text outside a facts fence (meeting transcripts, timeline entries, pasted pages) is out of a fact purge's scope by design (plan C3, ENG-12 out_of_scope: source_prose); those copies are expected to remain and must be reported, so they count against the receipt's honesty, never against the purge."
+      },
+      {
+        "feature": "reworded mentions",
+        "reason": "purge matches the claim text and its fingerprint (accepted CEO finding: no-resurrection is exact-content only); a mention of the value in other words is not a target of this category, so the world writes none."
+      },
+      {
+        "feature": "out-of-reach residuals",
+        "reason": "git history, other clones, backups, provider copies and deleted rows in database pages and WAL are named by the receipt and never probed (deletion-inventory.ts OUT_OF_REACH_RESIDUALS)."
+      },
+      {
+        "feature": "canonical Markdown and git",
+        "reason": "the hermetic brain has no managed repository (write_through skipped: no_repo_configured), so the post-commit mirror and git effects stay queued and the on-disk stores are not exercised; the receipt's completion stays \"committed\"."
+      },
+      {
+        "feature": "timeline entries under a fact purge",
+        "reason": "timeline_entries is probed_reported (out of scope) in the deletion inventory; a fact purge reports a timeline copy and does not remove it. The world puts such copies only on meeting pages, where they are expected to remain."
+      },
+      {
+        "feature": "page tombstones match exact content",
+        "reason": "page_purges keys on the stored content hash (ENG-19); an older version of a purged page imports again. Measured as exploratory older_version_resurrections, outside the safety metric."
+      },
+      {
+        "feature": "targets not measured",
+        "reason": "14 fact-purge targets need purge_fact, which this build lacks"
+      }
+    ],
+    "findings": [
+      {
+        "id": "live-residual",
+        "classification": "feature-gap",
+        "contract": "C2 / CEO-4: the claim leaves every swept live store (feature absent in this build)",
+        "surface": "purge_fact / delete_page purge",
+        "expected": "0 token hits in swept stores outside the copies expected to remain",
+        "actual": "17 hits: facts.fact (page:1, page:2, page:3, page:4, page:5, page:6); persistence_requests.intent (page:1, page:2, page:3, page:4, page:5); persistence_requests.outcome (page:1, page:2, page:4, page:5)",
+        "repro": "bun eval/runner/cat39-deletion-audit.ts --seed 39"
+      },
+      {
+        "id": "resurrection",
+        "classification": "feature-gap",
+        "contract": "C3, CEO-8, ENG-19: no resurrection after re-import, re-put or re-extraction (feature absent in this build)",
+        "surface": "importFromContent / put_page / runExtractFacts",
+        "expected": "0 targets active again",
+        "actual": "6 targets (page:1, page:2, page:3, page:4, page:5, page:6); accepted writes: owner_import_stale=ok:imported",
+        "repro": "bun eval/runner/cat39-deletion-audit.ts --seed 39"
+      },
+      {
+        "id": "probe-recovery",
+        "classification": "feature-gap",
+        "contract": "C2: purged claims are not readable through any read op (feature absent in this build)",
+        "surface": "search / query / recall / get_page / SQL",
+        "expected": "0 targets recovered",
+        "actual": "6 targets: page:1 via remote:recall+local:recall+remote:recall_entity+local:recall_entity+sql:quote; page:2 via remote:recall+local:recall+remote:recall_entity+local:recall_entity+sql:quote; page:3 via remote:recall+local:recall+remote:recall_entity+local:recall_entity+sql:quote; page:4 via remote:recall+local:recall+remote:recall_entity+local:recall_entity+sql:quote; page:5 via remote:recall+local:recall+remote:recall_entity+local:recall_entity+sql:quote; page:6 via remote:recall+local:recall+remote:recall_entity+local:recall_entity+sql:quote",
+        "repro": "bun eval/runner/cat39-deletion-audit.ts --seed 39"
+      },
+      {
+        "id": "unreported-residuals",
+        "classification": "feature-gap",
+        "contract": "C3, ENG-12: the receipt lists source pages that still contain the claim (out_of_scope: source_prose) (feature absent in this build)",
+        "surface": "purge receipt (mostly delete_page purge, which has no verification pass)",
+        "expected": "every surviving copy named by a receipt status",
+        "actual": "22 token hits in stores the receipt does not mention",
+        "repro": "bun eval/runner/cat39-deletion-audit.ts --seed 39"
+      },
+      {
+        "id": "older-version-reimport",
+        "classification": "feature-gap",
+        "contract": "CEO-8 / ENG-19: page tombstones match exact content; documented limit (feature absent in this build)",
+        "surface": "importFromContent after delete_page purge",
+        "expected": "documented: an older version of a purged page imports again",
+        "actual": "6 targets active again after importing their v1: page:1, page:2, page:3, page:4, page:5, page:6",
+        "repro": "bun eval/runner/cat39-deletion-audit.ts --seed 39"
+      }
+    ],
+    "embedding_probe": {
+      "status": "skipped",
+      "reason": "hermetic arm: keyword-only brain with no embedding model or provider key, so no same-model neighbours exist to probe (ENG-12: skipped with a stated reason). The paid arm embeds the claim and every live chunk and fact with OpenAI text-embedding-3-large."
+    },
+    "receipt_completeness_detail": null,
+    "exploratory": {
+      "out_of_scope_recoveries": 21,
+      "resurrection_text_residuals": 0,
+      "unreported_residual_hits": 22,
+      "expected_remain_hits": 5,
+      "targets_with_expected_copies": 11,
+      "older_version_resurrections": 6,
+      "older_version_attempted": 6,
+      "probe_solvability_pre_purge": {
+        "targets": 20,
+        "recovered_pre_purge": 20
+      }
+    },
+    "model_arm": null,
+    "ledger_counts": {
+      "pages": 40,
+      "targets_planned": 20,
+      "neighbors": 30,
+      "writes": 90,
+      "by_purge": {
+        "fact": 10,
+        "all_subjects": 4,
+        "page": 6
+      }
+    },
+    "presence": [
+      {
+        "name": "every recorded copy of every target token is in the database before purge",
+        "ok": true,
+        "expected": "all copies",
+        "actual": "all copies"
+      },
+      {
+        "name": "every fact-purge target has an active fact row on its subject page",
+        "ok": true,
+        "expected": "0 missing",
+        "actual": "0 missing"
+      },
+      {
+        "name": "every target token is readable through get_page before purge",
+        "ok": true,
+        "expected": "0 unreadable",
+        "actual": "0 unreadable"
+      },
+      {
+        "name": "every neighbor is readable before purge",
+        "ok": true,
+        "expected": "0 unreadable",
+        "actual": "0 unreadable"
+      }
+    ],
+    "seed_report": {
+      "writes": 90,
+      "write_errors": [],
+      "ms": 1726
+    },
+    "timings_ms": {
+      "seed": 1726,
+      "purge": 118,
+      "probes": 1199,
+      "resurrection": 463,
+      "hermetic_total": 8077,
+      "total": 8147
+    },
+    "rows": [
+      {
+        "target_id": "fact:1",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "fact:2",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "fact:3",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "fact:4",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "fact:5",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "fact:6",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "fact:7",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "fact:8",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "fact:9",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "fact:10",
+        "purge": "fact",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "all:1",
+        "purge": "all_subjects",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "all:2",
+        "purge": "all_subjects",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "all:3",
+        "purge": "all_subjects",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "all:4",
+        "purge": "all_subjects",
+        "status": "gap",
+        "pass": false,
+        "live_residual": 0,
+        "dishonest": 0,
+        "resurrected": false,
+        "recovered": false,
+        "out_of_scope_recoveries": 0,
+        "residuals": [],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0,
+        "detail": "purge_fact is missing in this build (#5575 Part C); the target is a gap"
+      },
+      {
+        "target_id": "page:1",
+        "purge": "page",
+        "status": "scored",
+        "pass": false,
+        "live_residual": 4,
+        "dishonest": 0,
+        "resurrected": true,
+        "recovered": true,
+        "out_of_scope_recoveries": 0,
+        "residuals": [
+          {
+            "table": "facts",
+            "column": "fact",
+            "slug": "notes/grace-example-private-1",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "intent",
+            "slug": "notes/grace-example-private-1",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "outcome",
+            "slug": "notes/grace-example-private-1",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "intent",
+            "slug": "notes/grace-example-private-1",
+            "expected": false,
+            "status": "unreported"
+          }
+        ],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0
+      },
+      {
+        "target_id": "page:2",
+        "purge": "page",
+        "status": "scored",
+        "pass": false,
+        "live_residual": 3,
+        "dishonest": 0,
+        "resurrected": true,
+        "recovered": true,
+        "out_of_scope_recoveries": 10,
+        "residuals": [
+          {
+            "table": "content_chunks",
+            "column": "chunk_text",
+            "slug": "meetings/2026-03-12-initech-sync",
+            "expected": true,
+            "status": "unreported"
+          },
+          {
+            "table": "facts",
+            "column": "fact",
+            "slug": "notes/noah-example-private-2",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "pages",
+            "column": "compiled_truth",
+            "slug": "meetings/2026-03-12-initech-sync",
+            "expected": true,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "intent",
+            "slug": "notes/noah-example-private-2",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "outcome",
+            "slug": "notes/noah-example-private-2",
+            "expected": false,
+            "status": "unreported"
+          }
+        ],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0
+      },
+      {
+        "target_id": "page:3",
+        "purge": "page",
+        "status": "scored",
+        "pass": false,
+        "live_residual": 2,
+        "dishonest": 0,
+        "resurrected": true,
+        "recovered": true,
+        "out_of_scope_recoveries": 0,
+        "residuals": [
+          {
+            "table": "facts",
+            "column": "fact",
+            "slug": "notes/maya-example-private-3",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "intent",
+            "slug": "notes/maya-example-private-3",
+            "expected": false,
+            "status": "unreported"
+          }
+        ],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0
+      },
+      {
+        "target_id": "page:4",
+        "purge": "page",
+        "status": "scored",
+        "pass": false,
+        "live_residual": 3,
+        "dishonest": 0,
+        "resurrected": true,
+        "recovered": true,
+        "out_of_scope_recoveries": 0,
+        "residuals": [
+          {
+            "table": "facts",
+            "column": "fact",
+            "slug": "notes/bob-example-private-4",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "intent",
+            "slug": "notes/bob-example-private-4",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "outcome",
+            "slug": "notes/bob-example-private-4",
+            "expected": false,
+            "status": "unreported"
+          }
+        ],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0
+      },
+      {
+        "target_id": "page:5",
+        "purge": "page",
+        "status": "scored",
+        "pass": false,
+        "live_residual": 4,
+        "dishonest": 0,
+        "resurrected": true,
+        "recovered": true,
+        "out_of_scope_recoveries": 11,
+        "residuals": [
+          {
+            "table": "content_chunks",
+            "column": "chunk_text",
+            "slug": "meetings/2026-03-15-soylent-sync",
+            "expected": true,
+            "status": "unreported"
+          },
+          {
+            "table": "facts",
+            "column": "fact",
+            "slug": "notes/dana-example-private-5",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "page_versions",
+            "column": "compiled_truth",
+            "slug": "meetings/2026-03-15-soylent-sync",
+            "expected": true,
+            "status": "unreported"
+          },
+          {
+            "table": "pages",
+            "column": "compiled_truth",
+            "slug": "meetings/2026-03-15-soylent-sync",
+            "expected": true,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "intent",
+            "slug": "notes/dana-example-private-5",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "intent",
+            "slug": "notes/dana-example-private-5",
+            "expected": false,
+            "status": "unreported"
+          },
+          {
+            "table": "persistence_requests",
+            "column": "outcome",
+            "slug": "notes/dana-example-private-5",
+            "expected": false,
+            "status": "unreported"
+          }
+        ],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0
+      },
+      {
+        "target_id": "page:6",
+        "purge": "page",
+        "status": "scored",
+        "pass": false,
+        "live_residual": 1,
+        "dishonest": 0,
+        "resurrected": true,
+        "recovered": true,
+        "out_of_scope_recoveries": 0,
+        "residuals": [
+          {
+            "table": "facts",
+            "column": "fact",
+            "slug": "notes/olive-example-private-6",
+            "expected": false,
+            "status": "unreported"
+          }
+        ],
+        "receipt_missing_stores": [],
+        "resurrection_new_text_residuals": 0
+      }
+    ],
+    "neighbor_rows": [
+      {
+        "neighbor_id": "n:1",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:2",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:3",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:4",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:5",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:6",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:7",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:8",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:9",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:10",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:11",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:12",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:13",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:14",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:15",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:16",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:17",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:18",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:19",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:20",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:21",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:22",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:23",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:24",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:25",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:26",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:27",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:28",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:29",
+        "readable": true
+      },
+      {
+        "neighbor_id": "n:30",
+        "readable": true
+      }
+    ],
+    "purge_receipts": [
+      {
+        "target_id": "fact:1",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "fact:2",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "fact:3",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "fact:4",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "fact:5",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "fact:6",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "fact:7",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "fact:8",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "fact:9",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "fact:10",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "all:1",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "all:2",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "all:3",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "all:4",
+        "ok": false,
+        "unsupported": "purge_fact is missing in this build (#5575 Part C); the target is a gap",
+        "error": null,
+        "receipt": null
+      },
+      {
+        "target_id": "page:1",
+        "ok": true,
+        "unsupported": null,
+        "error": null,
+        "receipt": {
+          "kind": "page",
+          "subject": null,
+          "page_slug": "notes/grace-example-private-1",
+          "stores": [],
+          "residuals": [],
+          "removed": {},
+          "completion": null,
+          "status": "purged"
+        }
+      },
+      {
+        "target_id": "page:2",
+        "ok": true,
+        "unsupported": null,
+        "error": null,
+        "receipt": {
+          "kind": "page",
+          "subject": null,
+          "page_slug": "notes/noah-example-private-2",
+          "stores": [],
+          "residuals": [],
+          "removed": {},
+          "completion": null,
+          "status": "purged"
+        }
+      },
+      {
+        "target_id": "page:3",
+        "ok": true,
+        "unsupported": null,
+        "error": null,
+        "receipt": {
+          "kind": "page",
+          "subject": null,
+          "page_slug": "notes/maya-example-private-3",
+          "stores": [],
+          "residuals": [],
+          "removed": {},
+          "completion": null,
+          "status": "purged"
+        }
+      },
+      {
+        "target_id": "page:4",
+        "ok": true,
+        "unsupported": null,
+        "error": null,
+        "receipt": {
+          "kind": "page",
+          "subject": null,
+          "page_slug": "notes/bob-example-private-4",
+          "stores": [],
+          "residuals": [],
+          "removed": {},
+          "completion": null,
+          "status": "purged"
+        }
+      },
+      {
+        "target_id": "page:5",
+        "ok": true,
+        "unsupported": null,
+        "error": null,
+        "receipt": {
+          "kind": "page",
+          "subject": null,
+          "page_slug": "notes/dana-example-private-5",
+          "stores": [],
+          "residuals": [],
+          "removed": {},
+          "completion": null,
+          "status": "purged"
+        }
+      },
+      {
+        "target_id": "page:6",
+        "ok": true,
+        "unsupported": null,
+        "error": null,
+        "receipt": {
+          "kind": "page",
+          "subject": null,
+          "page_slug": "notes/olive-example-private-6",
+          "stores": [],
+          "residuals": [],
+          "removed": {},
+          "completion": null,
+          "status": "purged"
+        }
+      }
+    ],
+    "probes": [
+      {
+        "target_id": "fact:1",
+        "calls": []
+      },
+      {
+        "target_id": "fact:2",
+        "calls": []
+      },
+      {
+        "target_id": "fact:3",
+        "calls": []
+      },
+      {
+        "target_id": "fact:4",
+        "calls": []
+      },
+      {
+        "target_id": "fact:5",
+        "calls": []
+      },
+      {
+        "target_id": "fact:6",
+        "calls": []
+      },
+      {
+        "target_id": "fact:7",
+        "calls": []
+      },
+      {
+        "target_id": "fact:8",
+        "calls": []
+      },
+      {
+        "target_id": "fact:9",
+        "calls": []
+      },
+      {
+        "target_id": "fact:10",
+        "calls": []
+      },
+      {
+        "target_id": "all:1",
+        "calls": []
+      },
+      {
+        "target_id": "all:2",
+        "calls": []
+      },
+      {
+        "target_id": "all:3",
+        "calls": []
+      },
+      {
+        "target_id": "all:4",
+        "calls": []
+      },
+      {
+        "target_id": "page:1",
+        "calls": [
+          {
+            "family": "partial",
+            "surface": "remote:search",
+            "items": 2,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:query",
+            "items": 2,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall",
+            "items": 52,
+            "carries_token": [
+              "notes/grace-example-private-1"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:search",
+            "items": 2,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:query",
+            "items": 2,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall",
+            "items": 52,
+            "carries_token": [
+              "notes/grace-example-private-1"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:query",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/grace-example-private-1"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:query",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/grace-example-private-1"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/grace-example-private-1"
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/grace-example-private-1"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/grace-example-private-1"
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/grace-example-private-1"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "sql:quote",
+            "items": 14,
+            "carries_token": [
+              "notes/grace-example-private-1",
+              "notes/grace-example-private-1",
+              "notes/grace-example-private-1"
+            ],
+            "error": null
+          }
+        ]
+      },
+      {
+        "target_id": "page:2",
+        "calls": [
+          {
+            "family": "partial",
+            "surface": "remote:search",
+            "items": 8,
+            "carries_token": [
+              "meetings/2026-03-12-initech-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:query",
+            "items": 8,
+            "carries_token": [
+              "meetings/2026-03-12-initech-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall",
+            "items": 58,
+            "carries_token": [
+              "notes/noah-example-private-2",
+              "meetings/2026-03-12-initech-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:search",
+            "items": 8,
+            "carries_token": [
+              "meetings/2026-03-12-initech-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:query",
+            "items": 9,
+            "carries_token": [
+              "meetings/2026-03-12-initech-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall",
+            "items": 58,
+            "carries_token": [
+              "notes/noah-example-private-2",
+              "meetings/2026-03-12-initech-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:query",
+            "items": 8,
+            "carries_token": [
+              "meetings/2026-03-12-initech-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/noah-example-private-2"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:query",
+            "items": 8,
+            "carries_token": [
+              "meetings/2026-03-12-initech-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/noah-example-private-2"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/noah-example-private-2"
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/noah-example-private-2"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/noah-example-private-2"
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/noah-example-private-2"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "sql:quote",
+            "items": 31,
+            "carries_token": [
+              "meetings/2026-03-12-initech-sync",
+              "notes/noah-example-private-2",
+              "meetings/2026-03-12-initech-sync",
+              "notes/noah-example-private-2"
+            ],
+            "error": null
+          }
+        ]
+      },
+      {
+        "target_id": "page:3",
+        "calls": [
+          {
+            "family": "partial",
+            "surface": "remote:search",
+            "items": 10,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:query",
+            "items": 10,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall",
+            "items": 60,
+            "carries_token": [
+              "notes/maya-example-private-3"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:search",
+            "items": 10,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:query",
+            "items": 10,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall",
+            "items": 60,
+            "carries_token": [
+              "notes/maya-example-private-3"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:query",
+            "items": 10,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/maya-example-private-3"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:query",
+            "items": 10,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/maya-example-private-3"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/maya-example-private-3"
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/maya-example-private-3"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/maya-example-private-3"
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/maya-example-private-3"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "sql:quote",
+            "items": 45,
+            "carries_token": [
+              "notes/maya-example-private-3",
+              "notes/maya-example-private-3"
+            ],
+            "error": null
+          }
+        ]
+      },
+      {
+        "target_id": "page:4",
+        "calls": [
+          {
+            "family": "partial",
+            "surface": "remote:search",
+            "items": 8,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:query",
+            "items": 8,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall",
+            "items": 58,
+            "carries_token": [
+              "notes/bob-example-private-4"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:search",
+            "items": 8,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:query",
+            "items": 8,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall",
+            "items": 58,
+            "carries_token": [
+              "notes/bob-example-private-4"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:query",
+            "items": 13,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/bob-example-private-4"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:query",
+            "items": 13,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/bob-example-private-4"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/bob-example-private-4"
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/bob-example-private-4"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/bob-example-private-4"
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/bob-example-private-4"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "sql:quote",
+            "items": 36,
+            "carries_token": [
+              "notes/bob-example-private-4",
+              "notes/bob-example-private-4"
+            ],
+            "error": null
+          }
+        ]
+      },
+      {
+        "target_id": "page:5",
+        "calls": [
+          {
+            "family": "partial",
+            "surface": "remote:search",
+            "items": 5,
+            "carries_token": [
+              "meetings/2026-03-15-soylent-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:query",
+            "items": 5,
+            "carries_token": [
+              "meetings/2026-03-15-soylent-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall",
+            "items": 55,
+            "carries_token": [
+              "notes/dana-example-private-5",
+              "meetings/2026-03-15-soylent-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:search",
+            "items": 5,
+            "carries_token": [
+              "meetings/2026-03-15-soylent-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:query",
+            "items": 5,
+            "carries_token": [
+              "meetings/2026-03-15-soylent-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall",
+            "items": 55,
+            "carries_token": [
+              "notes/dana-example-private-5",
+              "meetings/2026-03-15-soylent-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:query",
+            "items": 5,
+            "carries_token": [
+              "meetings/2026-03-15-soylent-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/dana-example-private-5"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:query",
+            "items": 5,
+            "carries_token": [
+              "meetings/2026-03-15-soylent-sync"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/dana-example-private-5"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/dana-example-private-5"
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/dana-example-private-5"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/dana-example-private-5"
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/dana-example-private-5"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "sql:quote",
+            "items": 31,
+            "carries_token": [
+              "meetings/2026-03-15-soylent-sync",
+              "notes/dana-example-private-5",
+              "meetings/2026-03-15-soylent-sync",
+              "meetings/2026-03-15-soylent-sync",
+              "notes/dana-example-private-5",
+              "notes/dana-example-private-5"
+            ],
+            "error": null
+          }
+        ]
+      },
+      {
+        "target_id": "page:6",
+        "calls": [
+          {
+            "family": "partial",
+            "surface": "remote:search",
+            "items": 5,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:query",
+            "items": 5,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall",
+            "items": 55,
+            "carries_token": [
+              "notes/olive-example-private-6"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:search",
+            "items": 5,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:query",
+            "items": 6,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall",
+            "items": 55,
+            "carries_token": [
+              "notes/olive-example-private-6"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:query",
+            "items": 15,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "remote:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/olive-example-private-6"
+            ],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:search",
+            "items": 0,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:query",
+            "items": 15,
+            "carries_token": [],
+            "error": null
+          },
+          {
+            "family": "paraphrase",
+            "surface": "local:recall",
+            "items": 50,
+            "carries_token": [
+              "notes/olive-example-private-6"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "remote:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/olive-example-private-6"
+          },
+          {
+            "family": "partial",
+            "surface": "remote:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/olive-example-private-6"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "local:get_page",
+            "items": 0,
+            "carries_token": [],
+            "error": "page_not_found: Page not found: notes/olive-example-private-6"
+          },
+          {
+            "family": "partial",
+            "surface": "local:recall_entity",
+            "items": 2,
+            "carries_token": [
+              "notes/olive-example-private-6"
+            ],
+            "error": null
+          },
+          {
+            "family": "partial",
+            "surface": "sql:quote",
+            "items": 25,
+            "carries_token": [
+              "notes/olive-example-private-6"
+            ],
+            "error": null
+          }
+        ]
+      }
+    ],
+    "resurrection_steps": [
+      {
+        "target_id": "page:1",
+        "slug": "notes/grace-example-private-1",
+        "step": "owner_import_stale",
+        "outcome": "ok:imported"
+      },
+      {
+        "target_id": "page:1",
+        "slug": "notes/grace-example-private-1",
+        "step": "extract_facts",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:1",
+        "slug": "notes/grace-example-private-1",
+        "step": "remote_put_page_stale",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:1",
+        "slug": "notes/grace-example-private-1",
+        "step": "remote_put_page_again",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:1",
+        "slug": "notes/grace-example-private-1",
+        "step": "extract_facts_again",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:2",
+        "slug": "notes/noah-example-private-2",
+        "step": "owner_import_stale",
+        "outcome": "ok:imported"
+      },
+      {
+        "target_id": "page:2",
+        "slug": "notes/noah-example-private-2",
+        "step": "extract_facts",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:2",
+        "slug": "notes/noah-example-private-2",
+        "step": "remote_put_page_stale",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:2",
+        "slug": "notes/noah-example-private-2",
+        "step": "remote_put_page_again",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:2",
+        "slug": "notes/noah-example-private-2",
+        "step": "extract_facts_again",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:3",
+        "slug": "notes/maya-example-private-3",
+        "step": "owner_import_stale",
+        "outcome": "ok:imported"
+      },
+      {
+        "target_id": "page:3",
+        "slug": "notes/maya-example-private-3",
+        "step": "extract_facts",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:3",
+        "slug": "notes/maya-example-private-3",
+        "step": "remote_put_page_stale",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:3",
+        "slug": "notes/maya-example-private-3",
+        "step": "remote_put_page_again",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:3",
+        "slug": "notes/maya-example-private-3",
+        "step": "extract_facts_again",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:4",
+        "slug": "notes/bob-example-private-4",
+        "step": "owner_import_stale",
+        "outcome": "ok:imported"
+      },
+      {
+        "target_id": "page:4",
+        "slug": "notes/bob-example-private-4",
+        "step": "extract_facts",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:4",
+        "slug": "notes/bob-example-private-4",
+        "step": "remote_put_page_stale",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:4",
+        "slug": "notes/bob-example-private-4",
+        "step": "remote_put_page_again",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:4",
+        "slug": "notes/bob-example-private-4",
+        "step": "extract_facts_again",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:5",
+        "slug": "notes/dana-example-private-5",
+        "step": "owner_import_stale",
+        "outcome": "ok:imported"
+      },
+      {
+        "target_id": "page:5",
+        "slug": "notes/dana-example-private-5",
+        "step": "extract_facts",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:5",
+        "slug": "notes/dana-example-private-5",
+        "step": "remote_put_page_stale",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:5",
+        "slug": "notes/dana-example-private-5",
+        "step": "remote_put_page_again",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:5",
+        "slug": "notes/dana-example-private-5",
+        "step": "extract_facts_again",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:6",
+        "slug": "notes/olive-example-private-6",
+        "step": "owner_import_stale",
+        "outcome": "ok:imported"
+      },
+      {
+        "target_id": "page:6",
+        "slug": "notes/olive-example-private-6",
+        "step": "extract_facts",
+        "outcome": "ok"
+      },
+      {
+        "target_id": "page:6",
+        "slug": "notes/olive-example-private-6",
+        "step": "remote_put_page_stale",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:6",
+        "slug": "notes/olive-example-private-6",
+        "step": "remote_put_page_again",
+        "outcome": "ok:skipped"
+      },
+      {
+        "target_id": "page:6",
+        "slug": "notes/olive-example-private-6",
+        "step": "extract_facts_again",
+        "outcome": "ok"
+      }
+    ],
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 36,
+    "attempted": 36,
+    "scored": 36,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}
