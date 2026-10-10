@@ -1,0 +1,63 @@
+{
+  "cell_id": "longmemeval-s-gbrain-rag-82dfb3955f41",
+  "scheduled": 100,
+  "answered_receipts": 100,
+  "judged_receipts": 100,
+  "score": {
+    "scheduled": 100,
+    "counts": {
+      "answered": 78,
+      "abstention": 22,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 0,
+      "incomplete_ingest": 0,
+      "missing": 0
+    },
+    "judged": 100,
+    "correct": 64,
+    "accuracy": 0.64,
+    "mean_score": 0.64,
+    "complete": true,
+    "missing_ids": [],
+    "judge_failure_ids": [],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 100,
+    "mean": 8305.2,
+    "p95": 8378.0,
+    "tolerance": 0.1,
+    "ok": true,
+    "reason": "within \u00b110% of target",
+    "inserted_kinds": {
+      "rendered": 100
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 100,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "haystack_dates[i]: the session date in the dataset"
+    },
+    "counts": {
+      "observed_session_time": 4773
+    }
+  },
+  "gates": {
+    "complete": true,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": true,
+    "no_remote_clamp": true
+  },
+  "ok": true
+}

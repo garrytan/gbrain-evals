@@ -182,6 +182,10 @@ The run writes a scorecard and individual rankings to `eval/reports/multi-adapte
 corpus already in the repository. Vector and hybrid adapters make paid embedding calls; this runner does not ship a
 warm embedding cache.
 
+To run gbrain on the public agent-memory benchmark harness (LongMemEval-S, LoCoMo10, PersonaMem, LifeBench, BEAM and
+PrecisionMemBench) under an audited protocol, follow the [harness quickstart](docs/benchmarks/harness-quickstart.md). Its
+first step is a keyless plumbing check through the real gbrain adapter.
+
 The agent benchmarks run like this:
 
 ```sh

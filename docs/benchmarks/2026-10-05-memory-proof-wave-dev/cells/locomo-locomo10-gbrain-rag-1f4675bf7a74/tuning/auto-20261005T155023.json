@@ -1,0 +1,122 @@
+{
+  "cell_id": "locomo-locomo10-gbrain-rag-1f4675bf7a74",
+  "mode": "auto",
+  "base": {
+    "facts_tokens": 600,
+    "token_budget": 7500
+  },
+  "sample": 60,
+  "targets": {
+    "8000": {
+      "chosen": null,
+      "rows": [
+        {
+          "setting": {
+            "facts_tokens": 600,
+            "token_budget": 7500
+          },
+          "target": 8000,
+          "n": 58,
+          "mean": 8201.8,
+          "p95": 8259.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]"
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 585,
+            "token_budget": 7316
+          },
+          "target": 8000,
+          "n": 58,
+          "mean": 8007.2,
+          "p95": 8059.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]"
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 585,
+            "token_budget": 7309
+          },
+          "target": 8000,
+          "n": 58,
+          "mean": 8006.0,
+          "p95": 8059.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 584,
+            "token_budget": 7303
+          },
+          "target": 8000,
+          "n": 57,
+          "mean": 7995.8,
+          "p95": 8042.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q187: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 585,
+            "token_budget": 7307
+          },
+          "target": 8000,
+          "n": 57,
+          "mean": 8001.5,
+          "p95": 8059.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q187: AssertionError: ",
+            "conv-42_q198: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 584,
+            "token_budget": 7306
+          },
+          "target": 8000,
+          "n": 57,
+          "mean": 7998.7,
+          "p95": 8042.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q187: AssertionError: "
+          ]
+        }
+      ]
+    }
+  },
+  "note": "retrieval-only tuning on an ingested store; no answer or judge calls; knobs scaled together"
+}

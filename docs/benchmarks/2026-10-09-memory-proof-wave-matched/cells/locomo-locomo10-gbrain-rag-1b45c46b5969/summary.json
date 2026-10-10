@@ -1,0 +1,63 @@
+{
+  "cell_id": "locomo-locomo10-gbrain-rag-1b45c46b5969",
+  "scheduled": 1218,
+  "answered_receipts": 1218,
+  "judged_receipts": 1218,
+  "score": {
+    "scheduled": 1218,
+    "counts": {
+      "answered": 1109,
+      "abstention": 109,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 0,
+      "incomplete_ingest": 0,
+      "missing": 0
+    },
+    "judged": 1218,
+    "correct": 1042,
+    "accuracy": 0.8555008210180624,
+    "mean_score": 0.8555008210180624,
+    "complete": true,
+    "missing_ids": [],
+    "judge_failure_ids": [],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 1218,
+    "mean": 7689.4,
+    "p95": 8103.0,
+    "tolerance": 0.1,
+    "ok": true,
+    "reason": "within \u00b110% of target",
+    "inserted_kinds": {
+      "rendered": 1218
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 1218,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "conversation['<session>_date_time']"
+    },
+    "counts": {
+      "observed_session_time": 215
+    }
+  },
+  "gates": {
+    "complete": true,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": true,
+    "no_remote_clamp": true
+  },
+  "ok": true
+}

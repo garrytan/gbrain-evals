@@ -1,0 +1,66 @@
+{
+  "cell_id": "longmemeval-s-comparator-rag-d200ed504486",
+  "scheduled": 100,
+  "answered_receipts": 100,
+  "judged_receipts": 100,
+  "score": {
+    "scheduled": 100,
+    "counts": {
+      "answered": 84,
+      "abstention": 15,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 0,
+      "incomplete_ingest": 1,
+      "missing": 0
+    },
+    "judged": 99,
+    "correct": 85,
+    "accuracy": 0.85,
+    "mean_score": 0.85,
+    "complete": false,
+    "missing_ids": [],
+    "judge_failure_ids": [],
+    "incomplete_ingest_ids": [
+      "gpt4_76048e76"
+    ]
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 99,
+    "mean": 8027.5,
+    "p95": 8337,
+    "tolerance": 0.1,
+    "ok": true,
+    "reason": "within ±10% of target",
+    "inserted_kinds": {
+      "raw_json": 99,
+      "rendered": 1
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 99,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "haystack_dates[i]: the session date in the dataset"
+    },
+    "counts": {
+      "observed_session_time": 4753
+    }
+  },
+  "gates": {
+    "complete": false,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": true,
+    "no_remote_clamp": true
+  },
+  "ok": false
+}

@@ -1362,6 +1362,8 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'longmemeval-m-pilot-replay.ts': { role: 'LongMemEval-M pilot replay', part_of: 'longmemeval-m-pilot' },
   'longmemeval-session-ids.ts': { role: 'opaque LongMemEval session ids', part_of: 'longmemeval-retrieval' },
   'longmemeval-validate-ndjson.ts': { role: 'LongMemEval NDJSON validator', part_of: 'longmemeval-retrieval' },
+  'memory-proof-wave-grouping.ts': { role: 'memory proof wave A2: builds, checks and opens the sealed grouping manifest (docs/benchmarks/2026-10-05-memory-proof-wave-preregistration.md); free, not dispatched' },
+  'memory-proof-wave-power.ts': { role: 'memory proof wave A0.1: free power and coverage simulation for the primary non-inferiority test (docs/benchmarks/2026-10-05-memory-proof-wave-power.md); not dispatched' },
   'metrics.ts': { role: 'shared retrieval metrics' },
   'mutation-kit.ts': { role: 'scorer mutation kit: fake systems every category scorer must fail' },
   'attendance-world-score.ts': { role: 'keyless W3 attendance scorer over N9 receipts, against the list on each meeting page', part_of: 'multi-hop-paraphrase' },
@@ -1400,9 +1402,23 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'situation-recall-programmatic.ts': { role: 'programmatic driver for Cats 5, 8 and 9', part_of: 'situation-recall' },
   'situation-recall-provenance.ts': { role: 'situation-recall provenance hashing', part_of: 'situation-recall' },
   'situation-recall-regression.ts': { role: 'situation-recall regression comparator', part_of: 'situation-recall' },
+  'harness-cell.ts': { role: 'public agent-memory benchmark harness: cell launcher (plan, run, resume) behind the metering proxy' },
+  'harness-comparator.ts': { role: 'public agent-memory benchmark harness: installs and inspects the pinned comparator server' },
+  'memory-proof-wave-dev-power.ts': { role: 'memory proof wave: power simulation rerun with paired variance and conversation effect measured on dev' },
+  'memory-proof-wave-dev-table.ts': { role: 'memory proof wave: collects dev cell summaries into dev-cells.json and copies scrubbed receipts (docs/benchmarks/2026-10-05-memory-proof-wave-dev/); not dispatched' },
+  'memory-proof-wave-sealed-analysis.ts': { role: 'memory proof wave: preregistered non-inferiority analysis of the sealed BEAM cells (restricted wild cluster bootstrap-t, conversations as clusters); not dispatched' },
+  'harness-dev.ts': { role: 'public agent-memory benchmark harness: dev-phase driver (ingest once, tune knobs per target, one cell per target)' },
+  'harness-ledger.ts': { role: 'public agent-memory benchmark harness: rebuilds the cell ledger from measured acceptance-cell usage' },
+  'harness-smoke.ts': { role: 'public agent-memory benchmark harness: free protocol smoke for every dataset x mode x provider on the stub upstream' },
+  'harness-env.ts': { role: 'public agent-memory benchmark harness: pinned harness venv install (CPU wheels)' },
+  'harness-test.ts': { role: 'public agent-memory benchmark harness: Python test runner for eval/harness-provider' },
+  'coding-spike.ts': { role: 'public agent-memory benchmark harness: coding-agent memory spike (sdebench coding mode) behind the metering proxy' },
+  'metering-proxy-testkit.ts': { role: 'metering proxy test kit: throwaway metered cell and the zero-balance check' },
+  'harness-metering-proxy.ts': { role: 'local metering proxy for every paid model request in a harness cell' },
   'shootout-report.ts': { role: 'open-source memory shootout Phase 4 analysis: primary family, pin link, S1, S2 and descriptive tables with the preregistered sentences, from the committed cell results (latest settled attempt per cell)' },
   'shootout-cell.ts': { role: 'open-source memory shootout cells (PLAN.md 2026-10-05): campaign manifest, durable host-ledger leases, Ubicloud launch, settlement; not the embedder-shootout entry shootout-cell' },
   'smoke.ts': { role: 'embedder-shootout pre-flight smoke', part_of: 'shootout-cell' },
+  'stub-upstream.ts': { role: 'deterministic stand-in for paid model providers in keyless tests' },
   'synthetic-corpus-loader.ts': { role: 'synthetic-v1 corpus loader' },
   'tool-bridge.ts': { role: 'agent tool bridge' },
   'types.ts': { role: 'shared types' },
@@ -1411,4 +1427,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'facts-absorb', 'lifecycle', 'lifecycle-lite', 'memory-qa', 'memory-trust', 'outcomes', 'p4-stream', 'pilot', 'power', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'facts-absorb', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'outcomes', 'p4-stream', 'pilot', 'power', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];

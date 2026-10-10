@@ -72,9 +72,12 @@ gap does not isolate the effect of a graph alone.
 |---|---|
 | Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 8 paid run with Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, for gbrain #6396 (merged as `d4dc2d4d8`, v0.60.139.0)](benchmarks/2026-10-08-memory-trust-results-paid.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [keyless rerun](benchmarks/2026-10-08-memory-trust-results-rerun.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md)): trust labels cut planted-claim adoption (Sonnet 10.6% without labels to 2.0% with them) and raise current-value answers (Opus 55% to 100%); no model followed an instruction-worded injection in any arm, so the write gate and suppression show no measurable benefit on top of labels and the preregistered rules set `external_mode = flag`, `agent_mode = flag`, `agent_activation = allow`; at the later head `62773f02` (amendment 4), saved preferences survive the label when saved as `user_said` (47 or 48 of 48 per model); without an origin, Opus 5.5 held back 14 of 48. An artifact asking to be saved as `user_said` did not raise attack success for any model. Cats 37 to 39 pass every keyless contract at the shipped tree, after a context_pack leak at `62773f02` (finding 37-5, fixed); on 563 LongMemEval-S sessions the gate flagged 0 of 5,124 agent-written facts and 15 of 563 transcript pages (all false flags), and `gbrain trust review` stayed empty |
 | Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
+| Which question sets test recall of passing details, corrections, as-of relationships and beliefs from chat, for gbrain and an extract-first memory server on the same records? | [October 5 workload suites (B1 to B4): results for both systems](benchmarks/2026-10-05-workload-suites.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
 | Where does a small decision model (TypeSafe Jev) help gbrain triage, rerank, prune, abstain or spot contradicting facts, and where does it hurt? | [September 30 System One v1 slots](benchmarks/2026-09-30-system-one-jev.md) |
+| Does gbrain answer questions about long conversations as well as a memory-bank server with background extraction and reflection, at lower cost per correct answer? | [Sealed BEAM results, October 9: gbrain combined is ahead by 2.6 points (lower bound +0.9); cheaper at 20 reads per stored conversation, not at 200](benchmarks/2026-10-09-memory-proof-wave-sealed-results.md) |
+| Which memory proof wave ideas did gbrain ship, keep off or make opt-in: interleaved supersession candidates, per-model supersession thresholds, pinned questions, entity-anchored query retrieval and the facts arm in query? | [October 5 gbrain decision records, mirrored from gbrain #6066](benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md) |
 | Which embedder and reranker should a gbrain brain use, and what does each cost and send off the machine? | [October 6 embedding-provider matrix](benchmarks/2026-10-06-embedding-matrix.md) ([preregistration](benchmarks/2026-10-06-embedding-matrix-preregistration.md)) |
 | Does code search find a function from a description that never names it, and does a code embedder help? | [October 6 Cat 21 paraphrase questions](benchmarks/2026-10-06-cat21-paraphrase.md) ([preregistration](benchmarks/2026-10-06-cat21-paraphrase-preregistration.md)) |
 | On today's frontier models, does the takes-bootstrap classifier avoid attributing someone else's claims to the page holder? | [October 6 frontier rerun](benchmarks/2026-10-06-takes-bootstrap-frontier.md) ([preregistration](benchmarks/2026-10-06-takes-bootstrap-frontier-preregistration.md)) |
@@ -198,6 +201,10 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 gbrain-evals v0.10.68 (the opening names it; was v0.10.67). The agent-task row gained the namesake diagnostic: the namesake flags left after the alias fix are scorer false
 positives, not product failures.
+
+### 2026-10-09: Sealed BEAM results row
+
+The memory proof wave rows gained the sealed BEAM 100k + 500k + 1M results: gbrain's combined lane is `ahead` of the comparator (+2.64 points, one-sided 95% bounds +0.90 and +4.41), with lower cost per correct answer at 20 reads per stored conversation and none at 200.
 
 ### 2026-10-09: Memory trust row
 
@@ -330,6 +337,14 @@ gbrain-evals v0.10.36. The memory table gained a row for the October 6 Tier 3 fe
 ### 2026-10-05: Fix wave 9 mirror row
 
 gbrain-evals v0.10.29. The memory table gained a row for the October 5 mirror of gbrain fix wave 9 (#6111, pending merge): pinning `search_path` makes bulk fact inserts about 10-13% slower on a local timing, with fact fingerprints byte-identical, and takes-quality receipts move to protocol 2, so protocol 1 and 2 receipts are compared as dissimilar inputs. The opening line names v0.10.29.
+
+### 2026-10-05: Workload-suite results
+
+The workload-suite row links the B1 to B4 results for gbrain and the comparator instead of the design-only page.
+
+### 2026-10-05: Memory proof wave gbrain decision records row
+
+The memory table gained a row for the four gbrain decision records mirrored from gbrain #6066: interleaved supersession candidates (no benefit), per-model supersession thresholds (applied), pinned questions (opt-in; anchored retrieval is the win) and entity-anchored query retrieval (gates 1 and 2 pass, key off pending gate 3).
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

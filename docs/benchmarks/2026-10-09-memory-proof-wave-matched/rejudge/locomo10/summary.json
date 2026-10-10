@@ -1,0 +1,70 @@
+{
+  "dataset": "locomo",
+  "split": "locomo10",
+  "seed": 20261005,
+  "schedule_size": 1218,
+  "schedule_sha256": "15083ac180ffa5926714335d2b447b3d5f6223de6da0c8471c1b8c1dcdb7f6c9",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "cells": {
+    "locomo-locomo10-comparator-rag-205e2d80e388": {
+      "scheduled": 1218,
+      "counts": {
+        "answered": 1076,
+        "abstention": 142,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 1218,
+      "correct": 1014,
+      "accuracy": 0.8325123152709359,
+      "mean_score": 0.8325123152709359,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "locomo-locomo10-gbrain-rag-1b45c46b5969": {
+      "scheduled": 1218,
+      "counts": {
+        "answered": 1109,
+        "abstention": 109,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 1218,
+      "correct": 1035,
+      "accuracy": 0.8497536945812808,
+      "mean_score": 0.8497536945812808,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "locomo-locomo10-gbrain-rag-9af924a3f7ce": {
+      "scheduled": 1218,
+      "counts": {
+        "answered": 1159,
+        "abstention": 59,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 1218,
+      "correct": 1136,
+      "accuracy": 0.9326765188834154,
+      "mean_score": 0.9326765188834154,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    }
+  }
+}

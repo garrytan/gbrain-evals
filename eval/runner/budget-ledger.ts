@@ -1060,12 +1060,14 @@ const allowanceScope = new AsyncLocalStorage<BudgetAllowance>();
 // ─── Request pricing ────────────────────────────────────────────────
 
 /** Hosts whose requests cost money. */
-const PAID_HOSTS: Record<string, 'openai' | 'anthropic' | 'voyage' | 'openrouter' | 'typesafe'> = {
+const PAID_HOSTS: Record<string, 'openai' | 'anthropic' | 'voyage' | 'openrouter' | 'typesafe' | 'gemini' | 'groq'> = {
   'api.openai.com': 'openai',
   'api.anthropic.com': 'anthropic',
   'api.voyageai.com': 'voyage',
   'openrouter.ai': 'openrouter',
   'api.typesafe.ai': 'typesafe',
+  'generativelanguage.googleapis.com': 'gemini',
+  'api.groq.com': 'groq',
 };
 
 /** Output-token allowance for a chat request that names no limit. */
@@ -1082,6 +1084,9 @@ export const UNKNOWN_CHAIN_CONTEXT_TOKENS = 1_050_000;
 const RERANK_PRICES: Record<string, number> = {
   'voyage:rerank-2.5': 0.05,
   'voyage:rerank-2.5-lite': 0.02,
+  // voyageai.com/pricing, checked 2026-10-05.
+  'voyage:rerank-3': 0.05,
+  'voyage:rerank-3-lite': 0.02,
 };
 
 interface TokenPrices { input: number; output: number; cache_read?: number; cache_write?: number }
@@ -1131,10 +1136,38 @@ export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
   'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5, long: { above_input_tokens: 272_000, input: 20, output: 75, cache_read: 2, cache_write: 25 } },
 };
 
+/**
+ * Chat list prices for the providers the harness lane adds (Gemini, Groq) and
+ * newer models missing above, USD per 1M tokens, checked on 2026-10-05 against
+ * ai.google.dev/gemini-api/docs/pricing (Standard tier),
+ * console.groq.com/docs/model/openai/gpt-oss-120b and
+ * developers.openai.com/api/docs/pricing. `max_output` is the model's output
+ * ceiling, reserved when a request names no limit (Gemini bills thinking
+ * tokens as output). `long` applies above `above_input_tokens` prompt tokens.
+ * Gemini 3.6, 3.7 and 3.8 Flash list $0.75/$3.75 through 2026-12-31 and
+ * $1.50/$7.50 from 2027-01-01: update those rows then.
+ */
+export const HARNESS_CHAT_PRICES: Record<string, { input: number; output: number; cache_read?: number; cache_write?: number; max_output?: number;
+  long?: ChatPrice['long'] }> = {
+  'gemini:gemini-3.8-flash': { input: 0.75, output: 3.75, cache_read: 0.075, max_output: 65_536 },
+  'gemini:gemini-3.7-flash': { input: 0.75, output: 3.75, cache_read: 0.075, max_output: 65_536 },
+  'gemini:gemini-3.6-flash': { input: 0.75, output: 3.75, cache_read: 0.075, max_output: 65_536 },
+  'gemini:gemini-3.5-flash': { input: 1.5, output: 9, cache_read: 0.15, max_output: 65_536 },
+  'gemini:gemini-3.5-flash-lite': { input: 0.3, output: 2.5, cache_read: 0.03, max_output: 65_536 },
+  'gemini:gemini-3.1-flash-lite': { input: 0.25, output: 1.5, cache_read: 0.025, max_output: 65_536 },
+  'gemini:gemini-3.1-pro-preview': { input: 2, output: 12, cache_read: 0.2, max_output: 65_536, long: { above_input_tokens: 200_000, input: 4, output: 18, cache_read: 0.4 } },
+  'gemini:gemini-3.1-pro-preview-customtools': { input: 2, output: 12, cache_read: 0.2, max_output: 65_536, long: { above_input_tokens: 200_000, input: 4, output: 18, cache_read: 0.4 } },
+  'gemini:gemini-2.5-pro': { input: 1.25, output: 10, cache_read: 0.125, max_output: 65_536, long: { above_input_tokens: 200_000, input: 2.5, output: 15, cache_read: 0.25 } },
+  'gemini:gemini-2.5-flash': { input: 0.3, output: 2.5, cache_read: 0.03, max_output: 65_536 },
+  'gemini:gemini-2.5-flash-lite': { input: 0.1, output: 0.4, cache_read: 0.01, max_output: 65_536 },
+  'groq:openai/gpt-oss-120b': { input: 0.15, output: 0.6, cache_read: 0.075, max_output: 65_536 },
+};
+
 /** A dated API snapshot (`gpt-4o-2024-08-06`) is billed at its family's list price. */
 export const chatPrice = (id: string) => {
   const undated = id.replace(/-\d{4}-?\d{2}-?\d{2}$/, '');
-  return CHAT_PRICE_OVERRIDES[id] ?? CHAT_PRICE_OVERRIDES[undated] ?? canonicalLookup(id) ?? canonicalLookup(undated);
+  return CHAT_PRICE_OVERRIDES[id] ?? CHAT_PRICE_OVERRIDES[undated] ?? HARNESS_CHAT_PRICES[id] ?? HARNESS_CHAT_PRICES[undated]
+    ?? canonicalLookup(id) ?? canonicalLookup(undated);
 };
 
 export interface RequestPrice {
@@ -1172,6 +1205,7 @@ export interface PriceOptions {
 export function priceRequest(url: string, body: unknown, options: PriceOptions = {}): RequestPrice | null {
   const provider = PAID_HOSTS[new URL(url).hostname];
   if (!provider) return null;
+  if (provider === 'gemini') return priceGemini(url, body);
   // Model listings are free metadata reads (providers' key probes use them).
   if (/\/models(\/[^/]+)?\/?$/.test(new URL(url).pathname) && (body === undefined || body === null)) return null;
   const b = (body ?? {}) as Record<string, unknown>;
@@ -1203,7 +1237,9 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
   const chained = typeof b.previous_response_id === 'string'
     ? options.chainContextTokens?.(b.previous_response_id) ?? UNKNOWN_CHAIN_CONTEXT_TOKENS : 0;
   const inputTokens = Math.ceil((textBytes([b.system, b.instructions, b.messages, b.prompt, b.input]) + toolBytes) / 3) + 16 + chained;
-  const maxOutputTokens = [b.max_tokens, b.max_completion_tokens, b.max_output_tokens].find(v => typeof v === 'number') as number | undefined ?? DEFAULT_MAX_OUTPUT_TOKENS;
+  const harnessRow = HARNESS_CHAT_PRICES[`${provider}:${model}`];
+  const maxOutputTokens = [b.max_tokens, b.max_completion_tokens, b.max_output_tokens].find(v => typeof v === 'number') as number | undefined
+    ?? harnessRow?.max_output ?? DEFAULT_MAX_OUTPUT_TOKENS;
   if (provider === 'openrouter') {
     const maxPrice = (b.provider as { max_price?: { prompt?: number; completion?: number } } | undefined)?.max_price;
     if (typeof maxPrice?.prompt !== 'number' || typeof maxPrice.completion !== 'number') {
@@ -1219,6 +1255,48 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
   return { provider, model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, cache_write: price.cache_write, cacheWritePremium, inputTokens, maxOutputTokens, ...(price.long ? { long: price.long } : {}) };
 }
 
+const GEMINI_METHOD = /\/models\/([^/:]+):([A-Za-z]+)$/;
+
+/**
+ * Price a Gemini request. The model and method come from the URL path
+ * (`/v1beta/models/<model>:<method>`); countTokens and model listings are free.
+ * A generateContent request with no `generationConfig.maxOutputTokens`
+ * reserves the model's full output ceiling, because thinking tokens bill as
+ * output; an explicit thinking budget is added on top of an explicit limit.
+ */
+function priceGemini(url: string, body: unknown): RequestPrice | null {
+  const path = new URL(url).pathname;
+  const match = path.match(GEMINI_METHOD);
+  if (!match) {
+    if (/\/models(\/[^/:]+)?\/?$/.test(path) && (body === undefined || body === null)) return null;
+    throw new BudgetExceededError(`cannot price the Gemini request ${path}: expected /v1beta/models/<model>:<method>`);
+  }
+  const [, model, method] = match;
+  if (method === 'countTokens') return null;
+  const b = (body ?? {}) as Record<string, unknown>;
+  if (method === 'embedContent' || method === 'batchEmbedContents') {
+    const price = lookupEmbeddingPrice(`google:${model}`);
+    if (price.kind !== 'known') throw new BudgetExceededError(`no embedding price for gemini:${model}; cannot reserve its cost`);
+    const content = method === 'embedContent' ? b.content : (Array.isArray(b.requests) ? b.requests.map(r => (r as { content?: unknown } | null)?.content) : []);
+    return { provider: 'gemini', model, kind: 'embedding', input: price.pricePerMTok, output: 0, inputTokens: Math.ceil(textBytes(content) / 3) + 16, maxOutputTokens: 0 };
+  }
+  if (method !== 'generateContent' && method !== 'streamGenerateContent') throw new BudgetExceededError(`cannot price the Gemini method ${method} for ${model}`);
+  const row = HARNESS_CHAT_PRICES[`gemini:${model}`];
+  const price = row ?? chatPrice(`gemini:${model}`) ?? canonicalLookup(`google:${model}`);
+  if (!price) throw new BudgetExceededError(`no chat price for gemini:${model}; cannot reserve its cost`);
+  const gen = (b.generationConfig ?? b.generation_config ?? {}) as Record<string, unknown>;
+  const schema = gen.responseSchema ?? gen.response_schema ?? gen.responseJsonSchema ?? gen.response_json_schema;
+  const structuredBytes = [b.tools, b.toolConfig ?? b.tool_config, schema].reduce<number>((n, v) => n + (v === undefined ? 0 : Buffer.byteLength(JSON.stringify(v))), 0);
+  const inputTokens = Math.ceil((textBytes([b.contents, b.systemInstruction ?? b.system_instruction]) + structuredBytes) / 3) + 16;
+  const limit = gen.maxOutputTokens ?? gen.max_output_tokens;
+  const thinking = ((gen.thinkingConfig ?? gen.thinking_config) as Record<string, unknown> | undefined);
+  const thinkingBudget = thinking?.thinkingBudget ?? thinking?.thinking_budget;
+  const maxOutputTokens = typeof limit === 'number'
+    ? limit + (typeof thinkingBudget === 'number' && thinkingBudget > 0 ? thinkingBudget : 0)
+    : row?.max_output ?? 65_536;
+  return { provider: 'gemini', model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, inputTokens, maxOutputTokens, ...(price.long ? { long: price.long } : {}) };
+}
+
 /** Worst-case reservation: input estimate (at the cache-write price when it applies) plus the full output allowance, at long-prompt rates when the estimate crosses the model's threshold. */
 export function reservationUsd(price: RequestPrice): number {
   const rates = price.long && price.inputTokens > price.long.above_input_tokens ? price.long : price;
@@ -1228,6 +1306,7 @@ export function reservationUsd(price: RequestPrice): number {
 
 /** Cost from provider-reported usage, or null when the response carries none. */
 export function usageCost(price: RequestPrice, responseBody: unknown): { usd: number; input_tokens: number; output_tokens: number } | null {
+  if (price.provider === 'gemini') return geminiUsageCost(price, responseBody);
   const usage = (responseBody as { usage?: Record<string, unknown> } | null)?.usage;
   if (!usage || typeof usage !== 'object') return null;
   const n = (key: string) => (typeof usage[key] === 'number' ? usage[key] as number : 0);
@@ -1246,6 +1325,56 @@ export function usageCost(price: RequestPrice, responseBody: unknown): { usd: nu
   const usd = ((inputTokens - cacheRead - cacheWrite) * rates.input + cacheRead * (rates.cache_read ?? rates.input)
     + cacheWrite * (rates.cache_write ?? rates.input) + outputTokens * rates.output) / 1e6;
   return { usd, input_tokens: inputTokens, output_tokens: outputTokens };
+}
+
+/**
+ * Cost from Gemini `usageMetadata`. Prompt tokens include cached-content
+ * tokens (billed at the cache price); tool-use prompt tokens bill as input;
+ * thinking tokens bill as output. A streamed JSON array is read from its
+ * last chunk that carries usage.
+ */
+function geminiUsageCost(request: RequestPrice, responseBody: unknown): { usd: number; input_tokens: number; output_tokens: number } | null {
+  const chunks = Array.isArray(responseBody) ? responseBody : [responseBody];
+  const usage = chunks.map(c => (c as { usageMetadata?: Record<string, unknown> } | null)?.usageMetadata).filter(u => u && typeof u === 'object').at(-1);
+  if (!usage) return null;
+  const n = (key: string) => (typeof usage[key] === 'number' ? usage[key] as number : 0);
+  const prompt = n('promptTokenCount');
+  const inputTokens = prompt + n('toolUsePromptTokenCount');
+  const cached = Math.min(n('cachedContentTokenCount'), inputTokens);
+  const outputTokens = n('candidatesTokenCount') + n('thoughtsTokenCount');
+  if (inputTokens === 0 && outputTokens === 0) return null;
+  const rates = request.long && prompt > request.long.above_input_tokens ? request.long : request;
+  const usd = ((inputTokens - cached) * rates.input + cached * (rates.cache_read ?? rates.input) + outputTokens * rates.output) / 1e6;
+  return { usd, input_tokens: inputTokens, output_tokens: outputTokens };
+}
+
+/**
+ * Cost from a server-sent-events response body, or null when no usage can be
+ * decoded (the caller then charges the reservation). OpenAI chat streams carry
+ * usage in a final chunk (with `stream_options.include_usage`), Groq in
+ * `x_groq.usage`, the responses API in `response.completed`; Anthropic splits
+ * it between `message_start` and the cumulative `message_delta`; every Gemini
+ * chunk carries `usageMetadata` and the last one is final.
+ */
+export function streamUsageCost(price: RequestPrice, sse: string): { usd: number; input_tokens: number; output_tokens: number } | null {
+  let usage: Record<string, unknown> | null = null;
+  let gemini: unknown = null;
+  for (const line of sse.split(/\r?\n/)) {
+    if (!line.startsWith('data:')) continue;
+    const data = line.slice(5).trim();
+    if (!data || data === '[DONE]') continue;
+    let event: Record<string, any>;
+    try { event = JSON.parse(data); } catch { continue; }
+    if (!event || typeof event !== 'object') continue;
+    if (price.provider === 'gemini') { if (event.usageMetadata) gemini = event; continue; }
+    if (event.type === 'message_start' && event.message?.usage) usage = { ...event.message.usage };
+    else if (event.type === 'message_delta' && event.usage) usage = { ...(usage ?? {}), ...event.usage };
+    else if (typeof event.type === 'string' && event.type.startsWith('response.') && event.response?.usage) usage = event.response.usage;
+    else if (event.x_groq?.usage) usage = event.x_groq.usage;
+    else if (event.usage && typeof event.usage === 'object') usage = event.usage;
+  }
+  if (price.provider === 'gemini') return gemini ? usageCost(price, gemini) : null;
+  return usage ? usageCost(price, { usage }) : null;
 }
 
 /**
@@ -1313,6 +1442,9 @@ const delegatingFetch = Object.assign(
   { preconnect: baseFetch.preconnect?.bind(baseFetch) },
 ) as typeof fetch;
 globalThis.fetch = delegatingFetch;
+
+/** The fetch this module found at load, which no guard wraps (the metering proxy reserves on its own). */
+export const unguardedFetch: typeof fetch = baseFetch;
 
 /** Most recent OpenAI responses remembered for continuation pricing. */
 const CHAIN_MEMORY = 100_000;

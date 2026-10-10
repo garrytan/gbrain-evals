@@ -1,0 +1,120 @@
+{
+  "task_id": "boltons-discount-001",
+  "arm": "gbrain",
+  "history": "provided",
+  "source": "conversation",
+  "tier": "planted",
+  "category": "ordering",
+  "model": "google/gemini-3.8-flash",
+  "started_at": "2026-10-05T15:07:56.989Z",
+  "retrieval": {
+    "unit": "u-860b7469c970",
+    "documents": 241,
+    "document_tokens_cl100k": 110872,
+    "ingest_s": 56.34,
+    "ingest": {
+      "template_copy_s": 0.244,
+      "child_start_s": 0.867,
+      "write_path": "put_pages",
+      "pages": 241,
+      "write_s": 7.115,
+      "barrier_ms": 48114.3,
+      "barrier": {
+        "polls": 20,
+        "pages": 241,
+        "missing_embeddings": 0,
+        "stale_pages": 221,
+        "embed_coverage": 1
+      },
+      "server": {
+        "name": "gbrain",
+        "version": "0.60.64.0"
+      },
+      "gbrain": {
+        "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+        "version": "gbrain 0.60.64.0",
+        "template_build_s": 8.32,
+        "config": {
+          "search.return_budget_max_remote": "200000"
+        }
+      }
+    },
+    "retrieve_ms": 355.1,
+    "delivery": {
+      "requested": {
+        "query": "Stacked discounts compute the wrong total. Two 50% discounts on $100 give $0 instead of $25 - they're applied to the original amount in parallel instead of compounding. Fix apply_discounts so stacked discounts combine correctly. A failing repro is at tests/test_regression.py.",
+        "token_budget": 8000,
+        "return_unit": "page",
+        "limit": 50
+      },
+      "tokens_delivered": 6136,
+      "tokenizer": "cl100k",
+      "applied_unit": "page",
+      "blocks": 11,
+      "dropped": 0,
+      "fallbacks": [],
+      "budget_clamped": false,
+      "vector_enabled": true,
+      "expansion_applied": false
+    },
+    "context_tokens_cl100k": 6164,
+    "retrieved": [
+      "boltons-discount-001:chat0",
+      "boltons-discount-001:git-c463d16",
+      "boltons-discount-001:decoy-test_urlutils-7-b",
+      "boltons-discount-001:decoy-test_dictutils-5",
+      "boltons-discount-001:decoy-test_listutils-59-b",
+      "boltons-discount-001:decoy-mathutils_test-72-b",
+      "boltons-discount-001:decoy-test_iterutils-3-b",
+      "boltons-discount-001:decoy-bench_omd-45",
+      "boltons-discount-001:decoy-test_queueutils-60",
+      "boltons-discount-001:git-f9c4f30",
+      "boltons-discount-001:git-766b554"
+    ],
+    "decision_documents": [
+      "boltons-discount-001:chat0"
+    ],
+    "decision_retrieved": [
+      "boltons-discount-001:chat0"
+    ],
+    "decision_ranks": [
+      1
+    ]
+  },
+  "wall_s": 39.0,
+  "exit_code": 0,
+  "solved": true,
+  "interventions": 0,
+  "capped": false,
+  "final_pytest": "4 passed in 0.01s",
+  "turns": 15,
+  "tokens": {
+    "input": 106553,
+    "output": 579,
+    "reasoning": 2396,
+    "cache_read": 162372,
+    "cache_write": 0
+  },
+  "patch_bytes": 569,
+  "harness_cost_usd": 0.0,
+  "ended_at": "2026-10-05T15:09:32.974Z",
+  "metered": {
+    "requests": 259,
+    "refused": 0,
+    "usd": 0.121909,
+    "by_label": {
+      "gbrain": {
+        "requests": 242,
+        "usd": 0.007127220000000008,
+        "input_tokens": 118787,
+        "output_tokens": 0
+      },
+      "agent": {
+        "requests": 17,
+        "usd": 0.11478195000000001,
+        "input_tokens": 296616,
+        "output_tokens": 3429
+      }
+    }
+  }
+}

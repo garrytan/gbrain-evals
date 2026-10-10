@@ -1,0 +1,61 @@
+{
+  "cell_id": "locomo-locomo10-comparator-rag-205e2d80e388",
+  "runs": [
+    {
+      "run_id": "harness-cell:locomo-locomo10-comparator-rag-205e2d80e388-2026-10-09T19-00-06-564Z-fc070e62",
+      "ledger": "~/cells/ledger.sqlite",
+      "usd": 15.833812,
+      "requests": 2890,
+      "started_at": "2026-10-09T20:05:48.482Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 2890,
+      "refused": 0,
+      "reserved_usd": 1031.0148800999982,
+      "actual_usd": 15.833811899999993,
+      "input_tokens": 14914290,
+      "output_tokens": 1220305
+    },
+    "byLabel": {
+      "comparator": {
+        "requests": 454,
+        "refused": 0,
+        "reserved_usd": 4.865366850000005,
+        "actual_usd": 0.2831878499999998,
+        "input_tokens": 1601947,
+        "output_tokens": 227749
+      },
+      "harness": {
+        "requests": 2436,
+        "refused": 0,
+        "reserved_usd": 1026.14951325,
+        "actual_usd": 15.550624049999984,
+        "input_tokens": 13312343,
+        "output_tokens": 992556
+      }
+    },
+    "byProvider": {
+      "openai": {
+        "requests": 454,
+        "refused": 0,
+        "reserved_usd": 4.865366850000005,
+        "actual_usd": 0.2831878499999998,
+        "input_tokens": 1601947,
+        "output_tokens": 227749
+      },
+      "gemini": {
+        "requests": 2436,
+        "refused": 0,
+        "reserved_usd": 1026.14951325,
+        "actual_usd": 15.550624049999984,
+        "input_tokens": 13312343,
+        "output_tokens": 992556
+      }
+    },
+    "exhausted": false
+  },
+  "unmetered": []
+}

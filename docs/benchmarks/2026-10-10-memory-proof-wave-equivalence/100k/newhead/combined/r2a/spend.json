@@ -1,0 +1,44 @@
+{
+  "run_id": "harness-replay:beam-100k-gbrain-rag-3c5df7cf3fdd-2026-10-10T09-47-11-109Z-e94fe1f9",
+  "usd": 0.10041393000000001,
+  "requests": 160,
+  "metered": {
+    "total": {
+      "requests": 164,
+      "refused": 0,
+      "reserved_usd": 0.15697390000000006,
+      "actual_usd": 0.10041393,
+      "input_tokens": 2007957,
+      "output_tokens": 0
+    },
+    "byLabel": {
+      "gbrain": {
+        "requests": 164,
+        "refused": 0,
+        "reserved_usd": 0.15697390000000006,
+        "actual_usd": 0.10041393,
+        "input_tokens": 2007957,
+        "output_tokens": 0
+      }
+    },
+    "byProvider": {
+      "openai": {
+        "requests": 4,
+        "refused": 0,
+        "reserved_usd": 0,
+        "actual_usd": 0,
+        "input_tokens": 0,
+        "output_tokens": 0
+      },
+      "voyage": {
+        "requests": 160,
+        "refused": 0,
+        "reserved_usd": 0.15697390000000006,
+        "actual_usd": 0.10041393,
+        "input_tokens": 2007957,
+        "output_tokens": 0
+      }
+    },
+    "exhausted": false
+  }
+}

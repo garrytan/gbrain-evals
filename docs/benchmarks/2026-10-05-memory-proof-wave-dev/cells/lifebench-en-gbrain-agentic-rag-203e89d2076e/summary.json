@@ -1,0 +1,63 @@
+{
+  "cell_id": "lifebench-en-gbrain-agentic-rag-203e89d2076e",
+  "scheduled": 50,
+  "answered_receipts": 50,
+  "judged_receipts": 50,
+  "score": {
+    "scheduled": 50,
+    "counts": {
+      "answered": 48,
+      "abstention": 2,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 0,
+      "incomplete_ingest": 0,
+      "missing": 0
+    },
+    "judged": 50,
+    "correct": 43,
+    "accuracy": 0.86,
+    "mean_score": 0.86,
+    "complete": true,
+    "missing_ids": [],
+    "judge_failure_ids": [],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 50,
+    "mean": 42136.4,
+    "p95": 80576,
+    "tolerance": 0.1,
+    "ok": false,
+    "reason": "mean 42136 outside [7200, 8800]; p95 80576 outside [7200, 8800]",
+    "inserted_kinds": {
+      "rendered": 50
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 50,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "conversation['<session>_date_time']"
+    },
+    "counts": {
+      "observed_session_time": 737
+    }
+  },
+  "gates": {
+    "complete": true,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": false,
+    "no_remote_clamp": true
+  },
+  "ok": false
+}

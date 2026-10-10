@@ -1,0 +1,121 @@
+{
+  "cell_id": "locomo-locomo10-gbrain-rag-15d26ac1971a",
+  "mode": "auto",
+  "base": {
+    "facts_tokens": 1800,
+    "token_budget": 6300
+  },
+  "sample": 60,
+  "targets": {
+    "8000": {
+      "chosen": null,
+      "rows": [
+        {
+          "setting": {
+            "facts_tokens": 1800,
+            "token_budget": 6300
+          },
+          "target": 8000,
+          "n": 58,
+          "mean": 8031.6,
+          "p95": 8144.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]"
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1793,
+            "token_budget": 6275
+          },
+          "target": 8000,
+          "n": 58,
+          "mean": 8009.0,
+          "p95": 8104.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]"
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1791,
+            "token_budget": 6268
+          },
+          "target": 8000,
+          "n": 57,
+          "mean": 7999.0,
+          "p95": 8099.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q187: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1791,
+            "token_budget": 6269
+          },
+          "target": 8000,
+          "n": 57,
+          "mean": 7999.2,
+          "p95": 8099.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q177: AssertionError: "
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1791,
+            "token_budget": 6270
+          },
+          "target": 8000,
+          "n": 58,
+          "mean": 7999.2,
+          "p95": 8099.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]"
+          ]
+        },
+        {
+          "setting": {
+            "facts_tokens": 1791,
+            "token_budget": 6270
+          },
+          "target": 8000,
+          "n": 58,
+          "mean": 7999.2,
+          "p95": 8099.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [
+            "conv-42_q198: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]",
+            "conv-42_q193: GbrainRetrieveError: gbrain reported degraded retrieval: [{'stage': 'vector_arm_failed', 'reason': 'provider_error'}]"
+          ]
+        }
+      ]
+    }
+  },
+  "note": "retrieval-only tuning on an ingested store; no answer or judge calls; knobs scaled together"
+}

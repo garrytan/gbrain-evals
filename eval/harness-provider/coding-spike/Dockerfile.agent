@@ -1,0 +1,20 @@
+# The harness's opencode agent image with every Gemini call routed to the metering proxy.
+# The base image (sdebench-agent, built from the harness's sdebench/Dockerfile.agent) loads an
+# in-agent memory plugin from a mounted directory; this image drops it, so the coding agent runs
+# plain and memory reaches it only through the task prompt. The container receives a proxy token,
+# never a real key, so a request that skipped the proxy would fail upstream and cost nothing.
+FROM sdebench-agent
+# The agent runs pytest in the mounted checkout too; keep it from leaving root-owned files there.
+ENV PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS="-p no:cacheprovider"
+ARG GEMINI_BASE_URL
+ARG MODEL_ID
+# The base image has no Python, so the agent cannot run the failing test it is asked to fix.
+# AGENT_PYTHON=1 adds python3 and pytest (the harness's claude-code and codex images ship python3).
+ARG AGENT_PYTHON=0
+RUN if [ "$AGENT_PYTHON" = "1" ]; then apt-get update \
+      && apt-get install -y --no-install-recommends python3 python3-pytest \
+      && rm -rf /var/lib/apt/lists/*; fi
+RUN test -n "$GEMINI_BASE_URL" && test -n "$MODEL_ID" \
+    && printf '{"$schema":"https://opencode.ai/config.json","plugin":[],"autoupdate":false,"share":"disabled","small_model":"google/%s","permission":{"bash":"allow","edit":"allow","webfetch":"allow"},"provider":{"google":{"options":{"baseURL":"%s"},"models":{"%s":{}}}}}' \
+       "$MODEL_ID" "$GEMINI_BASE_URL" "$MODEL_ID" > /root/.config/opencode/opencode.json
+WORKDIR /work

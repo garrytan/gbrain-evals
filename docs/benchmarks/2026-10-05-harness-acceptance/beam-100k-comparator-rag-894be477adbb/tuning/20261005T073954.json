@@ -1,0 +1,180 @@
+{
+  "cell_id": "beam-100k-comparator-rag-894be477adbb",
+  "target": 8000,
+  "questions": 10,
+  "rows": [
+    {
+      "setting": {
+        "max_chunk_tokens": 2000,
+        "max_tokens": 2000
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 5543.1,
+      "p95": 5857.0,
+      "tolerance": 0.1,
+      "ok": false,
+      "reason": "mean 5543 outside [7200, 8800]; p95 5857 outside [7200, 8800]",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 2000,
+        "max_tokens": 2500
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 6452.5,
+      "p95": 6797.0,
+      "tolerance": 0.1,
+      "ok": false,
+      "reason": "mean 6452 outside [7200, 8800]; p95 6797 outside [7200, 8800]",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 2000,
+        "max_tokens": 3000
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 7225.7,
+      "p95": 7833.0,
+      "tolerance": 0.1,
+      "ok": true,
+      "reason": "within \u00b110% of target",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 2000,
+        "max_tokens": 3500
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 7982.1,
+      "p95": 8349.0,
+      "tolerance": 0.1,
+      "ok": true,
+      "reason": "within \u00b110% of target",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 2500,
+        "max_tokens": 2000
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 6039.9,
+      "p95": 6338.0,
+      "tolerance": 0.1,
+      "ok": false,
+      "reason": "mean 6040 outside [7200, 8800]; p95 6338 outside [7200, 8800]",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 2500,
+        "max_tokens": 2500
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 6949.3,
+      "p95": 7278.0,
+      "tolerance": 0.1,
+      "ok": false,
+      "reason": "mean 6949 outside [7200, 8800]",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 2500,
+        "max_tokens": 3000
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 7722.5,
+      "p95": 8337.0,
+      "tolerance": 0.1,
+      "ok": true,
+      "reason": "within \u00b110% of target",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 2500,
+        "max_tokens": 3500
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 8478.9,
+      "p95": 8853.0,
+      "tolerance": 0.1,
+      "ok": false,
+      "reason": "p95 8853 outside [7200, 8800]",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 3000,
+        "max_tokens": 2000
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 6538.8,
+      "p95": 6831.0,
+      "tolerance": 0.1,
+      "ok": false,
+      "reason": "mean 6539 outside [7200, 8800]; p95 6831 outside [7200, 8800]",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 3000,
+        "max_tokens": 2500
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 7448.2,
+      "p95": 7771.0,
+      "tolerance": 0.1,
+      "ok": true,
+      "reason": "within \u00b110% of target",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 3000,
+        "max_tokens": 3000
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 8221.4,
+      "p95": 8831.0,
+      "tolerance": 0.1,
+      "ok": false,
+      "reason": "p95 8831 outside [7200, 8800]",
+      "errors": []
+    },
+    {
+      "setting": {
+        "max_chunk_tokens": 3000,
+        "max_tokens": 3500
+      },
+      "target": 8000,
+      "n": 10,
+      "mean": 8977.8,
+      "p95": 9347.0,
+      "tolerance": 0.1,
+      "ok": false,
+      "reason": "mean 8978 outside [7200, 8800]; p95 9347 outside [7200, 8800]",
+      "errors": []
+    }
+  ],
+  "chosen": {
+    "max_chunk_tokens": 2000,
+    "max_tokens": 3500
+  },
+  "note": "retrieval-only tuning on an ingested cell; no answer or judge calls"
+}

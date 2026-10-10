@@ -1,0 +1,36 @@
+{
+  "run_id": "harness-reanswer:beam-500k-gbrain-rag-031d6b63d1d5-s21-2026-10-10T11-51-04-924Z-3393b627",
+  "usd": 0.24296625,
+  "requests": 14,
+  "metered": {
+    "total": {
+      "requests": 14,
+      "refused": 0,
+      "reserved_usd": 3.5611522499999997,
+      "actual_usd": 0.24296625,
+      "input_tokens": 124790,
+      "output_tokens": 39833
+    },
+    "byLabel": {
+      "harness": {
+        "requests": 14,
+        "refused": 0,
+        "reserved_usd": 3.5611522499999997,
+        "actual_usd": 0.24296625,
+        "input_tokens": 124790,
+        "output_tokens": 39833
+      }
+    },
+    "byProvider": {
+      "gemini": {
+        "requests": 14,
+        "refused": 0,
+        "reserved_usd": 3.5611522499999997,
+        "actual_usd": 0.24296625,
+        "input_tokens": 124790,
+        "output_tokens": 39833
+      }
+    },
+    "exhausted": false
+  }
+}

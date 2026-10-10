@@ -1,0 +1,120 @@
+{
+  "task_id": "boltons-hostallow-history-001",
+  "arm": "gbrain",
+  "history": "provided",
+  "source": "history",
+  "tier": "planted",
+  "category": "set-membership",
+  "model": "google/gemini-3.8-flash",
+  "started_at": "2026-10-05T14:53:51.428Z",
+  "retrieval": {
+    "unit": "u-8e314e4728bd",
+    "documents": 241,
+    "document_tokens_cl100k": 110866,
+    "ingest_s": 56.89,
+    "ingest": {
+      "template_copy_s": 0.239,
+      "child_start_s": 0.961,
+      "write_path": "put_pages",
+      "pages": 241,
+      "write_s": 7.639,
+      "barrier_ms": 48049.0,
+      "barrier": {
+        "polls": 20,
+        "pages": 241,
+        "missing_embeddings": 0,
+        "stale_pages": 221,
+        "embed_coverage": 1
+      },
+      "server": {
+        "name": "gbrain",
+        "version": "0.60.64.0"
+      },
+      "gbrain": {
+        "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+        "version": "gbrain 0.60.64.0",
+        "template_build_s": 9.0,
+        "config": {
+          "search.return_budget_max_remote": "200000"
+        }
+      }
+    },
+    "retrieve_ms": 360.3,
+    "delivery": {
+      "requested": {
+        "query": "The quarterly security review found egress going to hosts nobody remembers approving, and the media service broke after its upstream hostname was 'corrected' from a value that had been working; on top of that, the same reporting host is reachable from one service and denied from its twin. A failing repro is at tests/test_regression.py. Fix is_allowed so egress decisions follow the allowlist policy, without breaking existing behaviour.",
+        "token_budget": 8000,
+        "return_unit": "page",
+        "limit": 50
+      },
+      "tokens_delivered": 5061,
+      "tokenizer": "cl100k",
+      "applied_unit": "page",
+      "blocks": 11,
+      "dropped": 0,
+      "fallbacks": [],
+      "budget_clamped": false,
+      "vector_enabled": true,
+      "expansion_applied": false
+    },
+    "context_tokens_cl100k": 5088,
+    "retrieved": [
+      "boltons-hostallow-history-001:decision-commit",
+      "boltons-hostallow-history-001:decoy-socketutils-29-b",
+      "boltons-hostallow-history-001:decoy-urlutils2-37",
+      "boltons-hostallow-history-001:decoy-socketutils-24",
+      "boltons-hostallow-history-001:decoy-test_socketutils-29",
+      "boltons-hostallow-history-001:decoy-test_socketutils-38-b",
+      "boltons-hostallow-history-001:git-65e0354",
+      "boltons-hostallow-history-001:decoy-__init__-48",
+      "boltons-hostallow-history-001:git-207651e",
+      "boltons-hostallow-history-001:git-1408e27",
+      "boltons-hostallow-history-001:git-c0d580d"
+    ],
+    "decision_documents": [
+      "boltons-hostallow-history-001:decision-commit"
+    ],
+    "decision_retrieved": [
+      "boltons-hostallow-history-001:decision-commit"
+    ],
+    "decision_ranks": [
+      1
+    ]
+  },
+  "wall_s": 140.4,
+  "exit_code": 0,
+  "solved": true,
+  "interventions": 1,
+  "capped": false,
+  "final_pytest": "14 passed in 0.02s",
+  "turns": 20,
+  "tokens": {
+    "input": 200715,
+    "output": 991,
+    "reasoning": 24125,
+    "cache_read": 244783,
+    "cache_write": 0
+  },
+  "patch_bytes": 1437,
+  "harness_cost_usd": 0.0,
+  "ended_at": "2026-10-05T14:57:09.206Z",
+  "metered": {
+    "requests": 265,
+    "refused": 0,
+    "usd": 0.283167,
+    "by_label": {
+      "gbrain": {
+        "requests": 242,
+        "usd": 0.007127160000000007,
+        "input_tokens": 118786,
+        "output_tokens": 0
+      },
+      "agent": {
+        "requests": 23,
+        "usd": 0.276039825,
+        "input_tokens": 512565,
+        "output_tokens": 25681
+      }
+    }
+  }
+}
