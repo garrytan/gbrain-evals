@@ -1,0 +1,33 @@
+{
+  "dataset": "beam",
+  "split": "100k",
+  "mode": "rag",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "k": 10,
+  "questions": {
+    "units": [
+      "3",
+      "11",
+      "12",
+      "15"
+    ]
+  },
+  "provider": "gbrain",
+  "lane": "raw",
+  "budget_usd": 2,
+  "provider_config": {
+    "embedding_model": "voyage:voyage-4",
+    "embedding_dimensions": 1024,
+    "page_split": "exchanges",
+    "token_budget": 8700
+  },
+  "gbrain_credentials": [
+    "voyage"
+  ],
+  "note": "memory proof wave #6066 equivalence check, public dev conversations, beam 100k, gbrain raw lane at the sealed configuration"
+}

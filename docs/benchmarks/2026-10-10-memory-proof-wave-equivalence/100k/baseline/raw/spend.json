@@ -1,0 +1,61 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-d960ac1c46f1",
+  "runs": [
+    {
+      "run_id": "harness-cell:beam-100k-gbrain-rag-d960ac1c46f1-2026-10-10T02-41-21-348Z-ee663e46",
+      "ledger": "~/eq/ledger.sqlite",
+      "usd": 0.234151,
+      "requests": 236,
+      "started_at": "2026-10-10T02:44:57.964Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 250,
+      "refused": 14,
+      "reserved_usd": 16.50470952,
+      "actual_usd": 0.23415129,
+      "input_tokens": 284081,
+      "output_tokens": 30104
+    },
+    "byLabel": {
+      "gbrain": {
+        "requests": 203,
+        "refused": 0,
+        "reserved_usd": 0.019541519999999996,
+        "actual_usd": 0.011897039999999992,
+        "input_tokens": 198284,
+        "output_tokens": 0
+      },
+      "harness": {
+        "requests": 47,
+        "refused": 14,
+        "reserved_usd": 16.485167999999998,
+        "actual_usd": 0.22225425000000001,
+        "input_tokens": 85797,
+        "output_tokens": 30104
+      }
+    },
+    "byProvider": {
+      "voyage": {
+        "requests": 203,
+        "refused": 0,
+        "reserved_usd": 0.019541519999999996,
+        "actual_usd": 0.011897039999999992,
+        "input_tokens": 198284,
+        "output_tokens": 0
+      },
+      "gemini": {
+        "requests": 47,
+        "refused": 14,
+        "reserved_usd": 16.485167999999998,
+        "actual_usd": 0.22225425000000001,
+        "input_tokens": 85797,
+        "output_tokens": 30104
+      }
+    },
+    "exhausted": true
+  },
+  "unmetered": []
+}

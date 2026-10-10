@@ -1,0 +1,138 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-d960ac1c46f1",
+  "scheduled": 80,
+  "answered_receipts": 9,
+  "judged_receipts": 9,
+  "score": {
+    "scheduled": 80,
+    "counts": {
+      "answered": 4,
+      "abstention": 3,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 2,
+      "incomplete_ingest": 0,
+      "missing": 71
+    },
+    "judged": 7,
+    "correct": 3,
+    "accuracy": 0.0375,
+    "mean_score": 0.04458333333333333,
+    "complete": false,
+    "missing_ids": [
+      "3_abstention_0",
+      "3_abstention_1",
+      "3_contradiction_resolution_0",
+      "3_contradiction_resolution_1",
+      "3_event_ordering_0",
+      "3_event_ordering_1",
+      "3_information_extraction_0",
+      "3_information_extraction_1",
+      "3_instruction_following_0",
+      "3_instruction_following_1",
+      "3_knowledge_update_0",
+      "3_knowledge_update_1",
+      "3_multi_session_reasoning_0",
+      "3_multi_session_reasoning_1",
+      "3_preference_following_0",
+      "3_preference_following_1",
+      "3_summarization_0",
+      "3_summarization_1",
+      "3_temporal_reasoning_0",
+      "3_temporal_reasoning_1",
+      "11_instruction_following_1",
+      "11_knowledge_update_0",
+      "11_knowledge_update_1",
+      "11_multi_session_reasoning_0",
+      "11_multi_session_reasoning_1",
+      "11_preference_following_0",
+      "11_preference_following_1",
+      "11_summarization_0",
+      "11_summarization_1",
+      "11_temporal_reasoning_0",
+      "11_temporal_reasoning_1",
+      "12_abstention_0",
+      "12_abstention_1",
+      "12_contradiction_resolution_0",
+      "12_contradiction_resolution_1",
+      "12_event_ordering_0",
+      "12_event_ordering_1",
+      "12_information_extraction_0",
+      "12_information_extraction_1",
+      "12_instruction_following_0",
+      "12_instruction_following_1",
+      "12_knowledge_update_0",
+      "12_knowledge_update_1",
+      "12_multi_session_reasoning_0",
+      "12_multi_session_reasoning_1",
+      "12_preference_following_0",
+      "12_preference_following_1",
+      "12_summarization_0",
+      "12_summarization_1",
+      "12_temporal_reasoning_0",
+      "12_temporal_reasoning_1",
+      "15_abstention_0",
+      "15_abstention_1",
+      "15_contradiction_resolution_0",
+      "15_contradiction_resolution_1",
+      "15_event_ordering_0",
+      "15_event_ordering_1",
+      "15_information_extraction_0",
+      "15_information_extraction_1",
+      "15_instruction_following_0",
+      "15_instruction_following_1",
+      "15_knowledge_update_0",
+      "15_knowledge_update_1",
+      "15_multi_session_reasoning_0",
+      "15_multi_session_reasoning_1",
+      "15_preference_following_0",
+      "15_preference_following_1",
+      "15_summarization_0",
+      "15_summarization_1",
+      "15_temporal_reasoning_0",
+      "15_temporal_reasoning_1"
+    ],
+    "judge_failure_ids": [
+      "11_abstention_0",
+      "11_event_ordering_0"
+    ],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 9,
+    "mean": 7107.3,
+    "p95": 8582.0,
+    "tolerance": 0.1,
+    "ok": false,
+    "reason": "mean 7107 outside [7200, 8800]",
+    "inserted_kinds": {
+      "rendered": 9
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 9,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+    },
+    "counts": {
+      "observed_session_time": 34
+    }
+  },
+  "gates": {
+    "complete": false,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": false,
+    "no_remote_clamp": true
+  },
+  "ok": false
+}

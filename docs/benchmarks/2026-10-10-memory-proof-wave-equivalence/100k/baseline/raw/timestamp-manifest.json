@@ -1,0 +1,43 @@
+{
+ "dataset": "beam",
+ "documents": {
+  "d-13d82ec5bca8": "observed_session_time",
+  "d-28e6d301c1e8": "observed_session_time",
+  "d-2a150d4a3e5b": "observed_session_time",
+  "d-2a2413b89147": "observed_session_time",
+  "d-2f2dac99b185": "observed_session_time",
+  "d-342b0ec0597c": "observed_session_time",
+  "d-39014ea794df": "observed_session_time",
+  "d-41412cdc4840": "observed_session_time",
+  "d-461a2bae1d0d": "observed_session_time",
+  "d-4dc2491a4247": "observed_session_time",
+  "d-528c3458b848": "observed_session_time",
+  "d-58cfc7b25988": "observed_session_time",
+  "d-61442af21ac8": "observed_session_time",
+  "d-7b1bdca24659": "observed_session_time",
+  "d-7b3f648d6f9f": "observed_session_time",
+  "d-81fae3cfc186": "observed_session_time",
+  "d-90667a4a73cf": "observed_session_time",
+  "d-906bed1e20c7": "observed_session_time",
+  "d-9212a61c2d96": "observed_session_time",
+  "d-a65be6b6954c": "observed_session_time",
+  "d-a6d464205337": "observed_session_time",
+  "d-b2d596fabb24": "observed_session_time",
+  "d-b419287b3f20": "observed_session_time",
+  "d-b82c894e6da5": "observed_session_time",
+  "d-bcd1dd64b42c": "observed_session_time",
+  "d-bf03269598b6": "observed_session_time",
+  "d-c0aa198023e1": "observed_session_time",
+  "d-c51e640eb22e": "observed_session_time",
+  "d-d9ced035853b": "observed_session_time",
+  "d-e2ed3a657958": "observed_session_time",
+  "d-e6f85c47f177": "observed_session_time",
+  "d-eebaecc5ab3f": "observed_session_time",
+  "d-f1cb133a901c": "observed_session_time",
+  "d-fac415a871f6": "observed_session_time"
+ },
+ "rule": {
+  "provenance": "observed_session_time",
+  "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+ }
+}
