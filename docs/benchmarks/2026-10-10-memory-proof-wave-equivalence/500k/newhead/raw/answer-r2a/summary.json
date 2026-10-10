@@ -1,0 +1,50 @@
+{
+  "dataset": "beam",
+  "split": "500k",
+  "seed": 20261005,
+  "schedule_size": 1,
+  "schedule_sha256": "a6b1b535bc100bf4eeb5bc372a255eb6d829320972821692d126f4fcd912360d",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "cells": {
+    "beam-500k-gbrain-rag-4dd411676d72": {
+      "scheduled": 1,
+      "counts": {
+        "answered": 1,
+        "abstention": 0,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 1,
+      "correct": 1,
+      "accuracy": 1.0,
+      "mean_score": 1.0,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "beam-500k-gbrain-rag-4dd411676d72-s21": {
+      "scheduled": 1,
+      "counts": {
+        "answered": 1,
+        "abstention": 0,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 1,
+      "correct": 1,
+      "accuracy": 1.0,
+      "mean_score": 1.0,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    }
+  }
+}

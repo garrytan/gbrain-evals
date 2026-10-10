@@ -1,0 +1,21 @@
+{
+  "seed": 20261005,
+  "schedule_sha256": "a6b1b535bc100bf4eeb5bc372a255eb6d829320972821692d126f4fcd912360d",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "order": [
+    {
+      "position": 0,
+      "blind_id": "b-6857c78b188f",
+      "cell_id": "beam-500k-gbrain-rag-4dd411676d72",
+      "query_id": "9_temporal_reasoning_0",
+      "redactions": 0
+    },
+    {
+      "position": 1,
+      "blind_id": "b-6d8577f5baec",
+      "cell_id": "beam-500k-gbrain-rag-4dd411676d72-s21",
+      "query_id": "9_temporal_reasoning_0",
+      "redactions": 0
+    }
+  ]
+}
