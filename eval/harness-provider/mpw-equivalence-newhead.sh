@@ -64,6 +64,7 @@ lane raw > ~/eq/nh-raw.log 2>&1 & b=$!
 wait $a; ra=$?; wait $b; rb=$?
 [ $ra = 0 ] && [ $rb = 0 ] || { echo "$ra $rb replay" > ~/eq/nh.exit; exit 1; }
 
+if [ -s ~/eq/nh/combined/new.store ] && [ -s ~/eq/nh/raw/new.store ]; then echo "new-head stores exist; ingest skipped"; else
 # Ingest guard: the baseline ingest spend is both lanes' store-writing gbrain traffic (extraction chat and document
 # embeddings) outside replays. A watchdog stops both new-head ingests if their spend passes 1.25x of it.
 spent_since() { python3 -c "
@@ -95,6 +96,7 @@ echo "{\"baseline_ingest_usd\": $base_ingest, \"limit_usd\": $limit, \"new_head_
 bun eval/runner/budget-ledger.ts status $L > ~/eq/nh/ledger-after-ingest.json
 $stopped && { echo "ingest-guard" > ~/eq/nh.exit; exit 1; }
 [ $ia = 0 ] && [ $ib = 0 ] || { echo "$ia $ib ingest" > ~/eq/nh.exit; exit 1; }
+fi
 bun eval/runner/budget-ledger.ts set-cap $L --program-cap-usd $(python3 -c "print(round($(ledger committed_usd) + ${ANSWER_ALLOWANCE_USD:-12}, 2))") \
   --reason "mpw #6066 equivalence beam $split: end-to-end replays and changed-question answers (reservation headroom)" >/dev/null
 
@@ -106,11 +108,17 @@ finish() {
   bun eval/harness-provider/mpw_tools/store-census.ts --gbrain $OV/${NEW:0:9} --store $N/r2b/store --out $N/census-r2b.json
   bun eval/harness-provider/mpw_tools/store-census.ts --gbrain $OV/${NEW:0:9} --store ~/eq/cells/_stores/$(cat $N/new.store) --out $N/census-new.json
   for r in r2a r3; do
-    [ -f $N/answer-$r/summary.json ] && continue
+    [ -f $N/answer-$r/summary.json ] && python3 -c "
+import json, sys; c = json.load(open('$N/answer-$r/summary.json'))['cells'].values()
+sys.exit(0 if all(v['counts']['answer_failure'] == 0 and v['counts']['judge_failure'] == 0 for v in c) else 1)" && continue
+    rm -rf $N/answer-$r $N/reanswer-$r
     changed $N/$r $N/changed-$r.json
     [ "$(cat $N/changed-$r.json)" = "[]" ] && { echo '{"changed": 0}' > $N/answer-$r.skipped; continue; }
     s=$([ $r = r2a ] && echo 21 || echo 23)
-    bun run harness:cell reanswer $cid --sample $s --out $N/reanswer-$r --retrievals $N/$r/$cid --questions $N/changed-$r.json --budget-usd 2 --cells-dir ~/eq/cells $L || return 1
+    n=$(python3 -c "import json; print(len(json.load(open('$N/changed-$r.json'))))")
+    # Worst-case reservations: four answers ($0.25) and four judge calls ($0.59) in flight, on top of about 3 and 2 cents a question.
+    ra=$(python3 -c "print(round(0.03 * $n + 1.5, 2))"); rj=$(python3 -c "print(round(0.02 * 2 * $n + 2.5, 2))")
+    bun run harness:cell reanswer $cid --sample $s --out $N/reanswer-$r --retrievals $N/$r/$cid --questions $N/changed-$r.json --budget-usd $ra --cells-dir ~/eq/cells $L || return 1
     J=$N/judge-$r/cells; rm -rf $J; mkdir -p $J
     cp -r ~/eq/cells/$cid $J/$cid && cp -r $N/reanswer-$r/$cid-s$s $J/$cid-s$s
     python3 - $J $cid $cid-s$s $N/changed-$r.json <<'PY'
@@ -122,7 +130,7 @@ for c in cells:
     d["resolved"]["schedule"] = [q for q in d["resolved"]["schedule"] if q in keep]
     json.dump(d, open(p, "w"), indent=2)
 PY
-    bun run harness:cell rejudge $cid $cid-s$s --cells-dir $J --out $N/answer-$r --budget-usd 3 $L || return 1
+    bun run harness:cell rejudge $cid $cid-s$s --cells-dir $J --out $N/answer-$r --budget-usd $rj $L || return 1
   done
 }
 finish combined > ~/eq/nh-finish-combined.log 2>&1 & a=$!
