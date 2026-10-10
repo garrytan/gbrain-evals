@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.68] - 2026-10-10
+
+### T0b namesake diagnostic: all 11 namesake flags left after the alias fix are scorer false positives
+
+A $0 diagnostic (keyless replays, no reader cells) of every alias-stack run whose answer names a namesake value.
+
+- **Report** ([doc](docs/benchmarks/2026-10-10-namesake-diagnostic.md)). 25 runs name a namesake value; the scorer
+  flags 11. All 11 are false positives: 7 disambiguations outside `t0b-score-v1`'s cue list ("a different account",
+  "Neither is this call") and 4 generic words that overlap a namesake-promise pattern. No run states a namesake's value
+  as the contact's, and none of the 24 `context_pack` and 16 `entity` calls returned the namesake. Rescoring the 11
+  (exploratory, post hoc) moves the alias-stack development comparison from 25 to 11 to 22 to 6 of 144. The report
+  proposes entity-anchored namesake attribution and distinctive namesake items for the next scorer and generator
+  versions, preregistered and mutation-tested before the sealed run.
+- **Records**: `audit.json`, per-call replay traces and `namesake-replay.ts` in
+  `docs/benchmarks/2026-10-08-program-primary-hard/namesake-diagnostic/`; `README.md` and `docs/README.md` name the report.
+
 ## [0.10.67] - 2026-10-09
 
 ### Memory trust (Cats 37 to 39): labels cut planted-claim adoption, the defaults are flag, flag and allow; paired with gbrain #6396 (merged as `d4dc2d4d8`)
