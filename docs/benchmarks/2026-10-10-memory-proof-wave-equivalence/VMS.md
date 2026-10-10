@@ -4,4 +4,3 @@
 | 2026-10-10T11:00:07Z | beam-100k | `ubirun-gbra52-1791599870-9671fbda` | destroyed |
 | 2026-10-10T14:04:41Z | beam-500k | `ubirun-gbra52-1791599890-b5f2524f` | destroyed |
 | 2026-10-10T16:57:39Z | beam-1m | `ubirun-gbra52-1791599911-44f4994a` | destroyed |
-| 2026-10-10T17:02:44Z | beam-1m | `ubirun-gbra52-1791599911-44f4994a` | destroyed |
