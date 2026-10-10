@@ -137,7 +137,7 @@ The sealed primary was capped at $450. It used $211.75: $87.57 for the six gbrai
 
 ### Receipts lost
 
-On October 9, 2026, between 9:33 AM and 11:39 AM Pacific, the cloud machine that held custody was replaced, and every local file was lost. That covers the private grouping file, the access log, the sealed and validation ids and specs, every cell receipt and store, the re-judge outputs, the per-question rows and the budget ledgers. Everything on this page was computed, written and pushed before the loss (commit `f8444fe3`, with the analysis code in `dee6d36c`, `f0aef0fe` and `33cba827`), so the decision and aggregates stand as recorded. The full receipts the preregistration promised for after scoring cannot be published. The custody hand-off and the Q1 frozen-context export cannot happen either. All three are unrecoverable unless the salt or the private grouping file is found in the owner's custody. The BEAM 1M hold has since been released (gbrain-evals#88), but the 1M per-question rows were among the lost files. With the ledgers gone, the wave's spend before the reruns is a reconstructed range of $1,031 to $1,156 ([addendum](2026-10-05-memory-proof-wave-preregistration-addenda.md#custody-and-receipts-lost-with-the-run-machine-october-9-2026)).
+On October 9, 2026, between 9:33 AM and 11:39 AM Pacific, the cloud machine that held custody was replaced, and every local file was lost. That covers the private grouping file, the access log, the sealed and validation ids and specs, every cell receipt and store, the re-judge outputs, the per-question rows and the budget ledgers. Everything on this page was computed, written and pushed before the loss (commit `f8444fe3`, with the analysis code in `dee6d36c`, `f0aef0fe` and `33cba827`), so the decision and aggregates stand as recorded. The full receipts the preregistration promised for after scoring cannot be published. The custody hand-off and the Q1 frozen-context export cannot happen either. On October 9 the owner chose not to search offline custody, so the sealed grouping, the sealed and validation id lists and the BEAM 1M per-question rows are unrecoverable. The BEAM 1M hold has since been released (gbrain-evals#88), but there are no 1M per-question rows left to release. The verdict stands on the aggregates on this page. With the ledgers gone, the wave's spend before the reruns is a reconstructed range of $1,031 to $1,156 ([addendum](2026-10-05-memory-proof-wave-preregistration-addenda.md#custody-and-receipts-lost-with-the-run-machine-october-9-2026)).
 
 ### Reproduce
 
@@ -147,9 +147,13 @@ bash eval/harness-provider/mpw-sealed-run.sh analyse   # primary (combined) and 
 python -m mpw_tools.sealed_cost --pair <gbrain cell>:<comparator cell>:<gbrain re-judge>:<comparator re-judge> ...  # from eval/harness-provider, in the harness venv
 ```
 
-The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memory-proof-wave-sealed-analysis.ts) and the cost computation is [`mpw_tools/sealed_cost.py`](../../eval/harness-provider/mpw_tools/sealed_cost.py). Both read the cells from custody, which no longer exists, so the numbers on this page cannot be recomputed unless a copy of custody turns up.
+The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memory-proof-wave-sealed-analysis.ts) and the cost computation is [`mpw_tools/sealed_cost.py`](../../eval/harness-provider/mpw_tools/sealed_cost.py). Both read the cells from custody, which no longer exists, so the numbers on this page cannot be recomputed.
 
 ## Changelog
+
+### 2026-10-09: Custody final as unrecoverable
+
+The owner chose not to search offline custody, so the sealed grouping, the id lists and the BEAM 1M per-question rows are recorded as unrecoverable rather than recoverable if found. The decision and aggregates are unchanged.
 
 ### 2026-10-09: Receipts lost
 

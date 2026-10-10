@@ -1,5 +1,5 @@
 {
-  "ledger": "/home/ubi/cells/ledger.sqlite",
+  "ledger": "~/cells/ledger.sqlite",
   "state": "sqlite",
   "totals": {
     "program_cap_usd": 30,

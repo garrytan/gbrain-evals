@@ -9,6 +9,7 @@
 # the recorded VM and a running cell. The VM's name and SSH key directory (path only) are recorded in
 # docs/benchmarks/2026-10-09-memory-proof-wave-matched/VMS.md and pushed when the VM is created, so a lost run machine
 # cannot strand it: `ubi-runner.sh down <name>` works from anywhere. The VM is destroyed once its cell is pulled.
+# The ledger sqlite is private: it stays in $M (mirrored off this machine by the operator), never in git or Drive.
 set -uo pipefail
 name=${1:?name}
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
@@ -93,7 +94,7 @@ until $S ssh "$vm" 'test -f ~/cells/exit' 2>/dev/null; do
 done
 log "cell exit $($S ssh "$vm" 'cat ~/cells/exit; tail -2 ~/run.log' | tr '\n' ' ' | cut -c1-300)"
 
-# Receipt: the cell's JSON files, its ledger status and a tarball of stages, scorer and the proxy request log. Request
+# Receipt: the cell's JSON files (VM home paths scrubbed to ~/), its ledger status and a tarball of stages, scorer and the proxy request log. Request
 # bodies stay out (gigabytes of extraction prompts); embedding bodies' input_type is kept for the read/ingest split.
 cid=$($S ssh "$vm" 'cat ~/cells/cell-id')
 $S ssh "$vm" "cd ~/cells/$cid && python3 - <<'PY'
@@ -111,6 +112,11 @@ $S ssh "$vm" "cd ~/cells/$cid && tar -cf - *.json" | tar -xf - -C "$dest"
 $S ssh "$vm" 'cat ~/receipt.tgz' > "$dest/receipt.tgz"
 $S ssh "$vm" 'cat ~/cells/ledger-status.json' > "$dest/ledger-status.json"
 $S ssh "$vm" 'cat ~/cells/ledger.sqlite' > "$M/ledger.sqlite"
+(cd "$REPO" && bun -e '
+  import { readFileSync, writeFileSync } from "node:fs";
+  import { scrubMachinePaths } from "./eval/runner/receipt.ts";
+  for (const f of process.argv.slice(1)) writeFileSync(f, scrubMachinePaths(readFileSync(f, "utf8"), undefined, "/home/ubi"));
+' "$dest"/*.json) || { log "path scrub failed; receipt not published"; exit 1; }
 if tar -tzf "$dest/receipt.tgz" >/dev/null && [ -s "$dest/summary.json" ]; then
   MSG="mpw matched: receipt for $cid ($name)" publish "$dest" && log "receipt pushed"
   $S down "$vm" && log "destroyed $vm"

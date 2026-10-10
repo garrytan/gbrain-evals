@@ -3,7 +3,7 @@
   "runs": [
     {
       "run_id": "harness-cell:locomo-locomo10-comparator-rag-205e2d80e388-2026-10-09T19-00-06-564Z-fc070e62",
-      "ledger": "/home/ubi/cells/ledger.sqlite",
+      "ledger": "~/cells/ledger.sqlite",
       "usd": 15.833812,
       "requests": 2890,
       "started_at": "2026-10-09T20:05:48.482Z",

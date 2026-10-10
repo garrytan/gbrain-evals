@@ -28,6 +28,7 @@ import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { BudgetRun, budgetOptionsFrom, closeLedgers, initLedger, priceRequest } from './budget-ledger.ts';
+import { scrubMachinePaths } from './receipt.ts';
 import { gbrainSpecFrom, resolveGbrainUnderTest, productIdentityFor, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { ensureHarness, harnessProcessEnv, PROVIDER_DIR, REPO_ROOT, type HarnessInstall } from './harness-env.ts';
 
@@ -464,7 +465,7 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGri
     await proxy.close();
     stub?.close();
     const summary = run.close();
-    spend.runs.push({ run_id: summary.run_id, ledger: ledgerPath.replace(REPO_ROOT + '/', ''), usd: Number(summary.actual_usd.toFixed(6)), requests: summary.requests, started_at: new Date().toISOString(), stub: ctx.stub });
+    spend.runs.push({ run_id: summary.run_id, ledger: scrubMachinePaths(ledgerPath), usd: Number(summary.actual_usd.toFixed(6)), requests: summary.requests, started_at: new Date().toISOString(), stub: ctx.stub });
     writeFileSync(spendPath, JSON.stringify({ ...spend, metered_by_label: stats, unmetered: cell.spec.unmetered ?? [] }, null, 2) + '\n');
     closeLedgers();
   }
