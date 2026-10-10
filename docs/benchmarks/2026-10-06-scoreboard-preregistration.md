@@ -53,8 +53,9 @@ component and default-amount rows (its default query expansion is one counted LL
 full-surface row runs `think` with each reader as `model` and the question date as `reference_date`, in its own cell on
 a stack started with `GBRAIN_FULL_SURFACE=1`, so every starter row reads a starter-only stack. No request carries `token_budget`. The resolved configuration (search mode,
 reranker, expansion, embedder, internal models) is published beside its hash. Frozen gbrain commit: `f05943e653fd9d938b343b1774a35325ba792271`
-(master on 2026-10-09, 0.60.138.0; A14). The public-v2 cells run at the earlier pin,
-`7aa2caa0aa2a9f031730cd351cd516cf4f9f5802` (master on 2026-10-08, 0.60.106.0), and every row they produce is labeled with it.
+(master on 2026-10-09, 0.60.138.0; A14), for the sealed and the public gbrain rows alike (A15). The public-v2 gbrain
+cells ran at the earlier pin, `7aa2caa0aa2a9f031730cd351cd516cf4f9f5802` (master on 2026-10-08, 0.60.106.0); their
+rows are reported only in the found-and-fixed appendix.
 
 **External configurations.** Each system runs its documented recipe as the headline row where the recipe's measured
 ingest fits 48 hours per conversation and its block cap. Otherwise it runs the common configuration (extraction
@@ -342,7 +343,8 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   Resolved configuration hash `3c26b4ae2fc319d385e2dbc0180ec19fd01240a4b6ae5202038a42e2b792407b` (config file
   `6349524a…0554`, starter tool list `08403fb2…483c58d`): PGLite, `voyage:voyage-4` at 1,024 dimensions, `tokenmax`
   search, `voyage:rerank-2.5`, query expansion on (`claude-haiku-4-5`), `synthesize` and `think` on `claude-opus-4-7`,
-  fact extraction on `claude-haiku-5-5`, content repair on `claude-opus-5-5`. The public-v2 cells ran at `7aa2caa0`
+  fact extraction on `claude-haiku-5-5`, content repair on `claude-opus-5-5`; the public gbrain rows rerun at this
+  pin (A15). The public-v2 gbrain cells, reported only in the found-and-fixed appendix, ran at `7aa2caa0`
   (0.60.106.0), resolved hash `415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab` (fact extraction on
   `claude-sonnet-4-6`, no content-repair model).
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
@@ -363,7 +365,10 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   - `q1-scoreboard-public-v2`: every public cell, rerun after the results were lost (A13); 41 launch units; cap $441.
     Hash `59c00444d1633f50034b35e404e73d209ede8343754db8687fc32a095f19986e` at its launch tree (`4bccbd5a`, gbrain
     `7aa2caa0`); it renders from that tree (A14). It replaces the public campaign and r2 to r5, which are retired with
-    nothing counted.
+    nothing counted. Its gbrain-defaults rows move to the found-and-fixed appendix (A15).
+  - `q1-scoreboard-public-v3-m`: the four LongMemEval-M gbrain-defaults shards at gbrain `f05943e6` (A15); cap $38.
+    Hash `1d119581f9ab9c4cf863cbd9ebff0909a49aa8ddb109420b967e2a0615e20248`. The two LongMemEval-S shards run in their
+    own campaign once its cap is set (A15).
   The sealed cap ($7,200), the public spend (about $150 lost under A13 plus the v2 cap of $441) and the $60 of dev work
   stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
@@ -618,7 +623,42 @@ gbrain master when this amendment is written, not a version chosen from results:
 - **Custody (Q2).** Q2's decision is recorded (gbrain-evals#88, v0.10.51), so the condition that kept BEAM-1M sealed
   per-question rows in custody is met: when S2b runs, its per-question rows publish under D2.
 
+**A15 (2026-10-10, before the cells it affects): the public gbrain rows rerun at the sealed pin.** A14 left the
+public-v2 gbrain cells at `7aa2caa0`, where four of six shards stalled (two confirmed as the hang #6389 fixes, two
+LongMemEval-S shards that stalled mid-ingest the same way, likely the same defect, not confirmed), so the public
+table would have named two gbrain versions. The owner chose to rerun all six public gbrain-defaults shards
+(LongMemEval-S `c0` and `c1`, LongMemEval-M `c0` to `c3`) at A14's pin, `f05943e653fd9d938b343b1774a35325ba792271`
+(0.60.138.0), including the two LongMemEval-M shards that scored at `7aa2caa0`, so every gbrain row in the report
+names one version.
+
+- **Unchanged.** The arm, its configuration and its executed tree are A14's: PGLite, gbrain's shipped defaults
+  (resolved hash `3c26b4ae…407b`), query expansion on, MCP `query` delivery, the packer, readers and judges. The cells
+  are v2's gbrain-defaults cells with the same commands, shards and timeouts; only their leases and campaign change.
+  The sealed campaign and its tree are untouched, and its hash `a7328eed…7728` recomputes at this commit.
+- **Smoke.** One LongMemEval-S run of 33 questions (the cell's `--limit 33`, seed 42, Sonnet anchor arm only),
+  chosen so the sample holds a conversation with a ```` ```lua ```` fence (question `3249768e`), ran at the pin on
+  one VM on 2026-10-10: every conversation ingested, 63 of 63 readiness probes found, 32 rows `scored` and 1
+  `ingest_degraded` (`3249768e` scored), no `deadline_exceeded` in the serve log, $1.25. It counts for nothing.
+  An earlier smoke started at a newer gbrain master was stopped before it finished (about $1); it counts for nothing.
+- **Campaigns.** `q1-scoreboard-public-v3-m` runs the four LongMemEval-M shards with $9.50 leases (measured $6.95 and
+  $7.42 per shard at `7aa2caa0`), cap $38. The two LongMemEval-S shards (projected about $13 each from the smoke and
+  v2's partial ingest) run in a second campaign whose cap the owner sets; it is recorded here before it launches.
+  The owner's stop for this rerun is $60 including the smokes, unless the owner raises it.
+- **Appendix.** The public-v2 gbrain-defaults rows stay on `evals/q1-scoreboard-results` and are reported only in a
+  found-and-fixed appendix: LongMemEval-M `c1` and `c2` "stalled at pin `7aa2caa0`, fixed in #6389 (0.60.133.0)";
+  LongMemEval-S `c0` and `c1` "stalled ingest, likely #6389"; LongMemEval-M `c0` and `c3` scored at `7aa2caa0` and
+  are shown there for comparison only. A14's note that public and sealed gbrain rows name different versions no
+  longer applies. The other public-v2 rows (external systems and baselines) are unchanged.
+- **Stalls.** A rerun shard that stalls is captured (process state and receipts) and reported to the owner before
+  any further run.
+
 ## Changelog
+
+### 2026-10-10: amendment A15
+
+The six public gbrain-defaults shards rerun at A14's pin `f05943e6`, so the public and sealed gbrain rows name one
+version; the `7aa2caa0` rows move to a found-and-fixed appendix. LongMemEval-M runs as `q1-scoreboard-public-v3-m`
+(hash `1d119581`); the sealed hash `a7328eed` is unchanged.
 
 ### 2026-10-09: amendment A14
 
