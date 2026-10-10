@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { CODE_STOPWORDS, custodianWorld, DEFAULT_KNOBS, generateHardPersona, mintSealedSeeds, sealedSeedsCommitment, shortCode, V2_KNOBS, generateHardWorld, hardDigest, hardSolvabilityProblems, PPH_BASELINE_SEEDS, PPH_CALIBRATION_SEEDS, PPH_DEV_SEEDS, PPH_FRESH_SEEDS_ALIAS, PPH_FRESH_SEEDS_C1, type HardTask } from '../../eval/generators/program-primary-hard-gen.ts';
+import { CODE_STOPWORDS, NAMESAKE_STRICT, custodianWorld, DEFAULT_KNOBS, generateHardPersona, mintSealedSeeds, sealedSeedsCommitment, shortCode, V2_KNOBS, generateHardWorld, hardDigest, hardSolvabilityProblems, PPH_BASELINE_SEEDS, PPH_CALIBRATION_SEEDS, PPH_DEV_SEEDS, PPH_FRESH_SEEDS_ALIAS, PPH_FRESH_SEEDS_C1, type HardTask } from '../../eval/generators/program-primary-hard-gen.ts';
 import { humanDate } from '../../eval/generators/program-primary-gen.ts';
-import { scoreItems } from '../../eval/runner/t0/score.ts';
+import { scoreItems, T0B_SCORER_V2 } from '../../eval/runner/t0/score.ts';
 import { main as runT0b, scriptedOracle, scriptedSaver, variantDocs } from '../../eval/runner/t0b-program-primary.ts';
 import { mkdtempSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -116,11 +116,11 @@ describe('program-primary-hard v2 (unique short codes) and custodian worlds', ()
     expect(p.docs.filter(d => d.type === 'company' && shortCode(d.title) === 'BRL').length).toBe(2);
   });
 
-  test('the scorer rejects the five fake systems on version 2 tasks', () => {
+  test('t0b-score-v2 rejects the five fake systems on version 2 tasks', () => {
     assertScorerRejectsFakeSystems<HardTask, string>({
       category: 'program-primary-hard-v2', probes: v2Tasks,
       space: { truth, empty: () => '', everything: t => [truth(t), stale(t), ...nsValues(t)].join(' '), refusal: () => 'I could not find this in your notes.', stale, wrongSource: t => nsValues(t).join('; ') },
-      score: answers => { const f = answers.filter((a, i) => scoreItems(v2Tasks[i].gold, a).failed).length; return { pass: f === 0, detail: `${f}/${answers.length} failed` }; },
+      score: answers => { const f = answers.filter((a, i) => scoreItems(v2Tasks[i].gold, a, { version: T0B_SCORER_V2 }).failed).length; return { pass: f === 0, detail: `${f}/${answers.length} failed` }; },
     });
   });
 
@@ -156,5 +156,37 @@ describe('program-primary-hard v2 (unique short codes) and custodian worlds', ()
     await expect(runT0b(['--gbrain', 'x@y', '--world', plain, '--expect-digest', 'a'])).rejects.toThrow(/custodian world/);
     await expect(runT0b(['--gbrain', 'x@y', '--world', sealed, '--expect-digest', 'a'])).rejects.toThrow(/expect-digest/);
     await expect(runT0b(['--gbrain', 'x@y', '--world', sealed, '--seeds', '20261101'])).rejects.toThrow(/drop --seeds/);
+  });
+
+  test('t0b-score-v2: all 25 audited namesake lines (none a conflation) score as the diagnostic read them', () => {
+    const audit = JSON.parse(readFileSync(join(import.meta.dir, 'fixtures/t0b-namesake-audit.json'), 'utf8')) as Array<{ key: string; class: string; lines: string[] }>;
+    expect(audit.length).toBe(25);
+    let v1Flags = 0;
+    for (const row of audit) {
+      const id = row.key.split('|')[0];
+      const p = generateHardPersona(Number(id.split('-')[0].slice(1)), DEFAULT_KNOBS, { owners: true });
+      const t = p.tasks.find(x => x.id === id)!;
+      const strict = { ...t.gold, namesake: t.gold.namesake.map(m => m.label.startsWith('namesake commitment: ') ? { ...m, patterns: NAMESAKE_STRICT[m.label.slice('namesake commitment: '.length)] } : m) };
+      const answer = row.lines.join('\n');
+      if (scoreItems(t.gold, answer).namesake_hits.length) v1Flags++;
+      expect([row.key, scoreItems(strict, answer, { version: T0B_SCORER_V2 }).namesake_hits]).toEqual([row.key, []]);
+    }
+    expect(v1Flags).toBe(11);
+  });
+
+  test('t0b-score-v2 still fails every namesake value restated as the contact\'s, with or without the namesake named', () => {
+    let lines = 0;
+    for (const t of v2Tasks) {
+      const first = t.contact_name.split(' ')[0];
+      const nsName = `${first} ${t.gold.owners!.namesake[0]}`, nsCode = t.gold.owners!.namesake[2];
+      for (const v of nsValues(t)) {
+        for (const line of [`${first}, you're at ${v}.`, `${nsName} (${nsCode}) asked about it too; for ${t.contact_name} it is ${v}.`, `Per ${t.company}: ${v}.`]) {
+          lines++;
+          expect([t.id, line, scoreItems(t.gold, `${truth(t)}\n${line}`, { version: T0B_SCORER_V2 }).namesake_hits.length > 0]).toEqual([t.id, line, true]);
+        }
+      }
+      expect(scoreItems(t.gold, truth(t), { version: T0B_SCORER_V2 }).failed).toBe(false);
+    }
+    expect(lines).toBe(v2Tasks.length * 12);
   });
 });

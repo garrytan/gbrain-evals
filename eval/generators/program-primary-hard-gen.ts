@@ -128,6 +128,11 @@ export interface HardTask {
     date: { old: Matcher; new: Matcher; old_iso: string; new_iso: string; time: string };
     corrections: Array<{ kind: 'terms' | 'superseded'; stale: Matcher; corrected: Matcher }>;
     namesake: Matcher[];
+    /**
+     * Version 2 (and `generateHardPersona(..., { owners: true })`): what names each side, for t0b-score-v2's owner
+     * check. Last names, company names and codes only: the contact and the namesake share a first name by design.
+     */
+    owners?: { contact: string[]; namesake: string[] };
     /** Docs that carry the current values (the scripted oracle reads these; mutants remove some). */
     evidence: string[];
     /** Docs removed by the stale-correction mutant (the corrections never land). */
@@ -174,12 +179,32 @@ const NOTE_LINES = [
 interface Person { first: string; last: string; name: string; slug: string; company: string; companySlug: string; alias: string; role: string; nick: string }
 interface Company { name: string; slug: string; alias: string; first: string }
 
+/**
+ * Version 2 matches a namesake promise on its distinctive phrase only. Version 1's short patterns ("order form",
+ * "sandbox", "reference list") also matched generic offers, filler mail and relayed maintenance notices, none of
+ * which is a claim about the namesake (namesake diagnostic, 2026-10-10).
+ */
+export const NAMESAKE_STRICT: Record<string, string[]> = {
+  'the SOC 2 bridge letter': ['soc ?2 bridge letter'],
+  'the revised statement of work': ['revised (?:statement of work|sow)'],
+  'the migration runbook': ['migration runbook'],
+  'our benchmark results on their monorepo': ['benchmark results'],
+  'the pricing one-pager': ['pricing one[- ]pager'],
+  'the security architecture diagram': ['architecture diagram'],
+  'the draft pilot success criteria': ['success criteria'],
+  'a sandbox account for their team': ['sandbox account'],
+  'the updated order form': ['updated order form'],
+  'the customer reference list': ['customer reference list'],
+  'the data processing addendum': ['data processing addendum', '\\bdpa\\b'],
+  'the uptime report for last quarter': ['uptime report'],
+};
+
 const nameMatcher = (p: { first: string; last: string; nick: string }): Matcher => ({
   label: `${p.first} ${p.last}`,
   patterns: [`(?<![a-z])(?:${escapeRe(p.first)}|${escapeRe(p.nick)})(?![a-z])`],
 });
 
-export function generateHardPersona(seed: number, knobs: HardKnobs = DEFAULT_KNOBS): HardPersona {
+export function generateHardPersona(seed: number, knobs: HardKnobs = DEFAULT_KNOBS, opts: { owners?: boolean } = {}): HardPersona {
   const rng = new Rng(seed);
   const personaId = `h${seed}`;
   const usedCo = new Set<string>();
@@ -349,8 +374,9 @@ export function generateHardPersona(seed: number, knobs: HardKnobs = DEFAULT_KNO
           { ...dateMatcher(nsPersonU.date), label: `namesake meeting ${nsPersonU.date}` },
           { ...seatsMatcher(nsCu.seats), label: `namesake ${nsCu.seats} seats` },
           { ...priceMatcher(nsCu.price), label: `namesake $${nsCu.price} per seat` },
-          { label: `namesake commitment: ${nsItem}`, patterns: nsPatterns },
+          { label: `namesake commitment: ${nsItem}`, patterns: knobs.unique_codes ? NAMESAKE_STRICT[nsItem] : nsPatterns },
         ],
+        ...(knobs.unique_codes || opts.owners ? { owners: { contact: [A.last, C.name, C.alias], namesake: [nsPerson.last, nsCo.name, nsCo.alias] } } : {}),
         evidence: [A.slug, C.slug, `deals/${slugify(C.name)}`, u.id, moveId, callId, hopId, handoffId],
         correction_docs: [moveId, callId, handoffId],
         item_docs: [moveId, callId, hopId, handoffId],
