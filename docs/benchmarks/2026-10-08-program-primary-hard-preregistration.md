@@ -301,10 +301,29 @@ workload, not memory, made those notes ambiguous. Version 2 (`program-primary-ha
 `DEFAULT_KNOBS` plus `unique_codes: true`) draws company names so that every code is unique within a brain and never
 one of 32 reachable codes that are English words, common names or business abbreviations (`CODE_STOPWORDS`, for
 example `THE`, `CAR`, `CAC`). It keys the reschedule and handoff mail ids by company as well as last name, because two
-champions can share a last name under the new draw. Nothing else changes: task kinds, facts, traps, knobs and the
-scorer (`t0b-score-v1`) are version 1's. Version 1 worlds are byte-identical (the baseline digest `dccafc6f…` is
+champions can share a last name under the new draw. It also matches each namesake promise on its distinctive phrase only (`NAMESAKE_STRICT`:
+"updated order form", "customer reference list", "sandbox account" instead of version 1's "order form", "reference
+list", "sandbox"), because the short patterns matched generic offers, filler mail and a relayed maintenance notice.
+Nothing else changes: task kinds, facts, traps and knobs are version 1's. Version 1 worlds are byte-identical (the baseline digest `dccafc6f…` is
 pinned in a test). Version 2 is chosen for the sealed set because the comparison is meant to measure memory; a brain
 where one code means two customers is tested separately later, in its own item with a known right answer.
+
+**Scorer: `t0b-score-v2`.** The namesake diagnostic (gbrain-evals#124, 2026-10-10, $0) read all 25 alias-stack runs
+that named a namesake value. None claimed it for the contact, and gbrain never resolved the wrong entity. The 11 runs
+`t0b-score-v1` flagged were 7 disambiguations its cue list missed ("That's Elodie Petrov at Yarithe Foods, a different
+account, so I left it out") and 4 generic phrases. Those false flags fell mostly on the stack's arm, so they bias this
+comparison against the stack. `t0b-score-v2` is `t0b-score-v1` with one rule changed: a line (paragraph or list item)
+carrying a namesake value is the namesake's, and excused, when it names the namesake (last name, company name or
+code) and not the contact (last name, company name or code), or when it carries a disambiguation cue; the cue list
+adds "different account / prospect / deal / customer / client / company", "neither", "not for", "left (it) out" and
+"not yours / not something you owe". A line that names both sides without a cue, or names neither, claims the value
+for the contact and fails, as in version 1. First names never count, because the contact and the namesake share one
+by design. Validated before freezing (`test/eval/t0b-program-primary.test.ts`): the 25 audited lines all score as the
+diagnostic read them under `t0b-score-v2` with the strict patterns (`t0b-score-v1` flags 11 of them), and 576
+mutation lines on the 48 version 2 development tasks, each restating a namesake value as the contact's (naming neither
+side, naming both, or naming the contact's company), all fail; a forced probe that drops the "and not the contact"
+clause fails that test. `t0b-score-v2` is the primary scorer for this comparison and applies to both arms; the runner
+picks it for every version 2 world. `t0b-score-v1` on the same cells is reported beside it, never instead of it.
 
 **Arms.**
 - `frozen`: gbrain v0.60.106.0, `7aa2caa0`, the program's scope pin.
@@ -312,7 +331,7 @@ where one code means two customers is tested separately later, in its own item w
   (`mentions.newer_on_cards`, #6362, default on) and #6271's short-code alias rule. If #6271 merges without the
   short-code rule, or with it off by default, no sealed cell runs and this amendment gets a note first.
 
-**Protocol.** Unchanged from this preregistration: `t0b-score-v1`, the T0 delivery contract, `--surface starter`,
+**Protocol.** Unchanged from this preregistration except the scorer above (`t0b-score-v2`): the T0 delivery contract, `--surface starter`,
 20 turns, `baseline` arm, readers Opus 5.5, Sonnet 5.5 and gpt-6.1-sol. On run day the newest frontier model of each
 family is checked; a newer one replaces its predecessor and is recorded below before any cell. Fable never runs.
 
