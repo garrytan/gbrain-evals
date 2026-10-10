@@ -1,0 +1,137 @@
+{
+ "cells": {
+  "facts0 (new store)": {
+   "cell": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+   "correct": 71,
+   "mean_score": 0.71,
+   "abstentions": 16,
+   "counts": {
+    "answered": 84,
+    "abstention": 16,
+    "answer_failure": 0,
+    "retrieval_failure": 0,
+    "judge_failure": 0,
+    "incomplete_ingest": 0,
+    "missing": 0
+   }
+  },
+  "combined wave-1 (shard 1)": {
+   "cell": "longmemeval-s-gbrain-rag-818fc7549633",
+   "correct": 71,
+   "mean_score": 0.71,
+   "abstentions": 14,
+   "counts": {
+    "answered": 86,
+    "abstention": 14,
+    "answer_failure": 0,
+    "retrieval_failure": 0,
+    "judge_failure": 0,
+    "incomplete_ingest": 0,
+    "missing": 0
+   }
+  },
+  "raw wave-1": {
+   "cell": "longmemeval-s-gbrain-rag-85a66b7bc109",
+   "correct": 80,
+   "mean_score": 0.8,
+   "abstentions": 11,
+   "counts": {
+    "answered": 89,
+    "abstention": 11,
+    "answer_failure": 0,
+    "retrieval_failure": 0,
+    "judge_failure": 0,
+    "incomplete_ingest": 0,
+    "missing": 0
+   }
+  },
+  "comparator wave-1": {
+   "cell": "longmemeval-s-comparator-rag-d7a615c1cd51",
+   "correct": 83,
+   "mean_score": 0.83,
+   "abstentions": 12,
+   "counts": {
+    "answered": 88,
+    "abstention": 12,
+    "answer_failure": 0,
+    "retrieval_failure": 0,
+    "judge_failure": 0,
+    "incomplete_ingest": 0,
+    "missing": 0
+   }
+  }
+ },
+ "by_type": {
+  "single-session-user": {
+   "facts0 (new store)": [
+    52,
+    6,
+    44
+   ],
+   "combined wave-1 (shard 1)": [
+    52,
+    5,
+    46
+   ],
+   "raw wave-1": [
+    52,
+    4,
+    49
+   ],
+   "comparator wave-1": [
+    52,
+    3,
+    50
+   ]
+  },
+  "single-session-user_abs": {
+   "facts0 (new store)": [
+    5,
+    5,
+    5
+   ],
+   "combined wave-1 (shard 1)": [
+    5,
+    5,
+    5
+   ],
+   "raw wave-1": [
+    5,
+    5,
+    5
+   ],
+   "comparator wave-1": [
+    5,
+    5,
+    5
+   ]
+  },
+  "multi-session": {
+   "facts0 (new store)": [
+    43,
+    5,
+    22
+   ],
+   "combined wave-1 (shard 1)": [
+    43,
+    4,
+    20
+   ],
+   "raw wave-1": [
+    43,
+    2,
+    26
+   ],
+   "comparator wave-1": [
+    43,
+    4,
+    28
+   ]
+  }
+ },
+ "gap_closed": {
+  "gap_points_shard1": 9,
+  "facts0_minus_orig_combined": 0,
+  "facts0_minus_samestore_1800": null
+ }
+}

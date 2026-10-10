@@ -95,6 +95,25 @@ The comparator misses the delivered-context gate on both datasets. Its 95th-perc
 
 On LongMemEval-S, the combined lane trails gbrain's own pages-only lane by 10.5 points and abstains more often (77 abstentions against 54). The combined lane gives 1,800 of its 8,000 tokens to extracted facts and 6,300 to pages, while the raw lane gives all 8,100 to pages. On LoCoMo10, the combined lane is 8.3 points ahead of the raw lane.
 
+**Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard.** This check was chosen after the result and decides nothing. It ran combined shard 1 (100 histories) again with `facts_tokens` 0 and everything else unchanged, including the page query's 6,300-token budget and `tokenmax` mode, on a fresh ingest. The answers were judged jointly with the wave-1 shard-1 answers, whose cached judgments replayed unchanged.
+
+| Shard 1 (100 questions) | Correct | Abstentions |
+|---|---:|---:|
+| gbrain combined, `facts_tokens` 0 | 71 | 16 |
+| gbrain combined (wave 1) | 71 | 14 |
+| gbrain raw (wave 1) | 80 | 11 |
+| Comparator (wave 1) | 83 | 12 |
+
+On this shard the combined lane trails the raw lane by 9 points. Dropping the facts block changes 8 answers, 4 gained and 4 lost, so 0 of the 9 points close. The shard holds three question types:
+
+| Type (questions) | `facts_tokens` 0 | Combined | Raw |
+|---|---|---|---|
+| single-session-user (52) | 44 correct, 6 abstained | 46, 5 | 49, 4 |
+| multi-session (43) | 22, 5 | 20, 4 | 26, 2 |
+| single-session-user, abstention (5) | 5, 5 | 5, 5 | 5, 5 |
+
+With no facts block, the cell delivers a mean of 6,332 tokens, against the raw lane's 8,100 of pages, so it fails the 8,000-token context gate. What remains of the gap is page space, search mode or the store. A planned second cell would have answered the same shard at 1,800 fact tokens from the new store, which would have separated the new ingest from the block. It was refused by its ledger cap (its $16 run budget exceeded the $6.77 left), and the store was destroyed with its VM, so the comparison is against the wave-1 receipts. Spend: $9.39 for the cell and $0.25 for the re-judge. Receipts are in [`2026-10-10-memory-proof-wave-lme-facts0/`](2026-10-10-memory-proof-wave-lme-facts0/).
+
 LongMemEval-S combined ran as four cells of 100 histories each, split by history; each history is its own brain, so the split does not change what any question sees. Each shard was re-judged jointly with the raw and comparator answers to the same 100 questions.
 
 | Cell | Spend | Cap |
@@ -208,6 +227,10 @@ python -m mpw_tools.sealed_cost --pair <gbrain cell>:<comparator cell>:<gbrain r
 The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memory-proof-wave-sealed-analysis.ts) and the cost computation is [`mpw_tools/sealed_cost.py`](../../eval/harness-provider/mpw_tools/sealed_cost.py). Both read the cells from custody, which no longer exists, so the numbers on this page cannot be recomputed.
 
 ## Changelog
+
+### 2026-10-10: Post hoc facts-block check
+
+Added the exploratory, post hoc LongMemEval-S shard-1 rerun with `facts_tokens` 0: it closes none of the 9-point combined-to-raw gap on that shard.
 
 ### 2026-10-10: Equivalence of the shipped build
 
