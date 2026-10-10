@@ -27,10 +27,21 @@ replay() {  # <cell> <store> <out> <gbrain flag...>
   [ -f "$3/replay-diff.json" ] && return 0
   rm -rf "$3"; bun run harness:cell replay "$1" --store "$2" --out "$3" "${@:4}" --probe --budget-usd 1 --cells-dir ~/eq/cells $L
 }
+store_for() {  # <lane> <gbrain head prefix>: the store dir whose identity is that lane on that build
+  python3 - "$1" "$2" <<'PY'
+import glob, json, os, sys
+lane, head = sys.argv[1:]
+for f in sorted(glob.glob(os.path.expanduser("~/eq/cells/_stores/*/store.json"))):
+    s = json.load(open(f))
+    if ("extraction_model" in s["ingest_config"]) == (lane == "combined") and s["pins"]["gbrain"]["loaded_git_head"].startswith(head):
+        print(os.path.dirname(f)); break
+PY
+}
 changed() { python3 -c "import json; d=json.load(open('$1/replay-diff.json'))['questions']; json.dump(sorted(q for q, v in d.items() if v == 'changed'), open('$2', 'w'))"; }
 
 lane() {
-  l=$1; cid=$(cat ~/eq/$l.cell); store=$(cat ~/eq/$l.store); N=~/eq/nh/$l; mkdir -p $N
+  l=$1; cid=$(cat ~/eq/$l.cell); store=$(store_for $l $BASE); N=~/eq/nh/$l; mkdir -p $N
+  [ -f "$store/store.json" ] || { echo "no $l store for $BASE"; return 1; }
   replay $cid $store $N/p0-1 $GB && replay $cid $store $N/p0-2 $GB && replay $cid $store $N/r2a $GN || return 1
   if [ ! -f $N/r2b/replay-diff.json ]; then
     rm -rf $N/linked-store && cp -r $store $N/linked-store
@@ -69,7 +80,7 @@ start=$(date -u +%Y-%m-%dT%H:%M:%S)
 ingest() {
   l=$1; spec=eval/harness-provider/cells/equivalence/beam-$split-gbrain-$l.json; N=~/eq/nh/$l
   bun run harness:cell ingest $spec --cells-dir ~/eq/cells $GN $L > $N/ingest.log 2>&1 || return 1
-  grep -oP '\[cell\] store \K\S+' $N/ingest.log | tail -1 > $N/new.store
+  basename $(store_for $l ${NEW:0:9}) > $N/new.store
 }
 ingest combined & a=$!; ingest raw & b=$!
 stopped=false
@@ -90,7 +101,7 @@ bun eval/runner/budget-ledger.ts set-cap $L --program-cap-usd $(python3 -c "prin
 finish() {
   l=$1; cid=$(cat ~/eq/$l.cell); N=~/eq/nh/$l
   replay $cid ~/eq/cells/_stores/$(cat $N/new.store) $N/r3 $GN || return 1
-  bun eval/harness-provider/mpw_tools/store-census.ts --gbrain $OV/$BASE --store $(cat ~/eq/$l.store) --out $N/census-base.json --probe-log $N/p0-1/probe.jsonl
+  bun eval/harness-provider/mpw_tools/store-census.ts --gbrain $OV/$BASE --store $(store_for $l $BASE) --out $N/census-base.json --probe-log $N/p0-1/probe.jsonl
   bun eval/harness-provider/mpw_tools/store-census.ts --gbrain $OV/${NEW:0:9} --store $N/r2a/store --out $N/census-r2a.json --probe-log $N/r2a/probe.jsonl
   bun eval/harness-provider/mpw_tools/store-census.ts --gbrain $OV/${NEW:0:9} --store $N/r2b/store --out $N/census-r2b.json
   bun eval/harness-provider/mpw_tools/store-census.ts --gbrain $OV/${NEW:0:9} --store ~/eq/cells/_stores/$(cat $N/new.store) --out $N/census-new.json
