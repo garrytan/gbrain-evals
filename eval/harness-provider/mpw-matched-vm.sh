@@ -6,7 +6,7 @@
 #
 # Env: UBICLOUD_API_TOKEN, GEMINI_API_KEY, OPENAI_API_KEY, VOYAGE_API_KEY; COMMIT (default HEAD, must be pushed).
 # State lives in $M (default ~/.capy/work/mpw/matched/<name>): the VM name, logs and the pulled cell. A relaunch reuses
-# the recorded VM and a running cell. The VM's name and SSH key directory (path only) are recorded in
+# the recorded VM and a running cell. The VM's name is recorded in
 # docs/benchmarks/2026-10-09-memory-proof-wave-matched/VMS.md and pushed when the VM is created, so a lost run machine
 # cannot strand it: `ubi-runner.sh down <name>` works from anywhere. The VM is destroyed once its cell is pulled.
 # The ledger sqlite is private: it stays in $M (mirrored off this machine by the operator), never in git or Drive.
@@ -35,7 +35,7 @@ if [ ! -s "$M/vm" ]; then
   vm=$($S up -s "${SIZE:-standard-16}") || { log "create failed"; exit 1; }
   echo "$vm" > "$M/vm"
   mkdir -p "$OUT"
-  echo "| $(date -u +%FT%TZ) | $name | \`$vm\` | \`~/.local/state/ubi-runner/$vm/\` on the run machine | created |" >> "$OUT/VMS.md"
+  echo "| $(date -u +%FT%TZ) | $name | \`$vm\` | created |" >> "$OUT/VMS.md"
   MSG="mpw matched: record VM $vm for $name" publish "$OUT/VMS.md" || log "VM note push failed"
 fi
 vm=$(cat "$M/vm"); log "vm $vm"
@@ -60,7 +60,7 @@ if ! $S ssh "$vm" 'test -f ~/.mpw-setup-done' 2>/dev/null; then
     cd ~/work/gbrain-evals && bun install --frozen-lockfile >/dev/null && bun run harness:setup >/dev/null
     touch ~/.mpw-setup-done" > "$M/setup.log" 2>&1 || {
       log "setup failed, destroying $vm"; tail -20 "$M/setup.log"; $S down "$vm"
-      echo "| $(date -u +%FT%TZ) | $name | \`$vm\` | | destroyed (setup failed) |" >> "$OUT/VMS.md"
+      echo "| $(date -u +%FT%TZ) | $name | \`$vm\` | destroyed (setup failed) |" >> "$OUT/VMS.md"
       MSG="mpw matched: VM $vm destroyed after failed setup" publish "$OUT/VMS.md"; rm -f "$M/vm"; exit 1; }
 fi
 
@@ -120,7 +120,7 @@ $S ssh "$vm" 'cat ~/cells/ledger.sqlite' > "$M/ledger.sqlite"
 if tar -tzf "$dest/receipt.tgz" >/dev/null && [ -s "$dest/summary.json" ]; then
   MSG="mpw matched: receipt for $cid ($name)" publish "$dest" && log "receipt pushed"
   $S down "$vm" && log "destroyed $vm"
-  echo "| $(date -u +%FT%TZ) | $name | \`$vm\` | | destroyed after the receipt was pushed |" >> "$OUT/VMS.md"
+  echo "| $(date -u +%FT%TZ) | $name | \`$vm\` | destroyed after the receipt was pushed |" >> "$OUT/VMS.md"
   MSG="mpw matched: VM $vm destroyed ($name done)" publish "$OUT/VMS.md"
 else
   log "receipt incomplete; VM $vm kept for a retry"
