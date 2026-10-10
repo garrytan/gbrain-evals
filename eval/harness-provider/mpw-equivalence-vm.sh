@@ -107,9 +107,11 @@ fi
 
 X="~/eq/$phase-$COMMIT.exit"
 if ! $S ssh "$vm" "test -f $X"; then
-  until $S ssh "$vm" "! { test -f ~/$phase.pid && kill -0 \$(cat ~/$phase.pid) 2>/dev/null; }"; do log "waiting for an earlier $phase run to exit"; sleep 120; done
-  log "starting"
-  $S ssh "$vm" "nohup setsid bash -c 'echo \$\$ > ~/$phase.pid; exec bash ~/$phase.sh' > ~/$phase.log 2>&1 < /dev/null &"
+  until $S ssh "$vm" "test -f $X || ! { test -f ~/$phase.pid && kill -0 \$(cat ~/$phase.pid) 2>/dev/null; }"; do log "a $phase run is in progress"; sleep 300; done
+  if ! $S ssh "$vm" "test -f $X"; then
+    log "starting"
+    $S ssh "$vm" "nohup setsid bash -c 'echo \$\$ > ~/$phase.pid; exec bash ~/$phase.sh' > ~/$phase.log 2>&1 < /dev/null &"
+  fi
 fi
 until $S ssh "$vm" "test -f $X" 2>/dev/null; do
   sleep 300
