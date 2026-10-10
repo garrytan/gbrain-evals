@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.67, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
+gbrain-evals v0.10.68, with gbrain master `8a3eedeac` (v0.60.126.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -196,7 +196,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-10-10: Namesake diagnostic row
 
-The agent-task row gained the namesake diagnostic: the namesake flags left after the alias fix are scorer false
+gbrain-evals v0.10.68 (the opening names it; was v0.10.67). The agent-task row gained the namesake diagnostic: the namesake flags left after the alias fix are scorer false
 positives, not product failures.
 
 ### 2026-10-09: Memory trust row
