@@ -1,0 +1,29 @@
+{
+  "ledger": "~/.capy/work/mpw/lme-rejudge/ledger.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 10,
+    "committed_usd": 4.491957,
+    "reconciled_usd": 4.491957,
+    "open_reservations_usd": 0,
+    "remaining_usd": 5.508043,
+    "requests": 1149,
+    "overshoot_usd": 0
+  },
+  "run": null,
+  "runs": 4,
+  "open_runs": 0,
+  "last_cap_change": {
+    "program_cap_usd": 10,
+    "kind": "open",
+    "reason": "memory proof wave matched LongMemEval-S joint re-judge, per combined shard",
+    "by": "user@cox.local",
+    "at": "2026-10-10T01:46:28.501Z"
+  },
+  "size_bytes": 929792,
+  "read_ms": 2.04,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}

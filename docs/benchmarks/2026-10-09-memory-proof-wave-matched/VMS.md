@@ -16,3 +16,9 @@ Every VM the matched secondary cells use, recorded when it is created and when i
 | 2026-10-09T22:22:50Z | locomo10-gbrain-raw | `ubirun-gbra52-1791572214-2a1f497b` | | destroyed after the receipt was pushed |
 | 2026-10-09T22:23:01Z | locomo10-comparator | `ubirun-gbra52-1791572254-c11b8380` | | destroyed after the receipt was pushed |
 | 2026-10-09T22:23:13Z | locomo10-gbrain-combined | `ubirun-gbra52-1791572234-7f99caf9` | | destroyed after the receipt was pushed |
+| 2026-10-10T00:45:45Z | longmemeval-s-gbrain-raw | `ubirun-gbra52-1791571596-ab0b5492` | | destroyed after the receipt was pushed |
+| 2026-10-10T00:50:14Z | longmemeval-s-gbrain-combined-shard4 | `ubirun-gbra52-1791571697-58566cc8` | | destroyed after the receipt was pushed |
+| 2026-10-10T00:55:10Z | longmemeval-s-gbrain-combined-shard1 | `ubirun-gbra52-1791571637-8d02146b` | | destroyed after the receipt was pushed |
+| 2026-10-10T00:55:16Z | longmemeval-s-gbrain-combined-shard2 | `ubirun-gbra52-1791571657-74a73242` | | destroyed after the receipt was pushed |
+| 2026-10-10T00:55:22Z | longmemeval-s-gbrain-combined-shard3 | `ubirun-gbra52-1791571677-def273c0` | | destroyed after the receipt was pushed |
+| 2026-10-10T01:45:26Z | longmemeval-s-comparator | `ubirun-gbra52-1791571616-e93c931a` | | destroyed after the receipt was pushed |
