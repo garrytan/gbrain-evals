@@ -1,0 +1,29 @@
+{
+  "ledger": "~/eq/ledger.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 35.52,
+    "committed_usd": 28.38256122,
+    "reconciled_usd": 28.38256122,
+    "open_reservations_usd": 0,
+    "remaining_usd": 7.137438780000004,
+    "requests": 101304,
+    "overshoot_usd": 0.028148819999999974
+  },
+  "run": null,
+  "runs": 32,
+  "open_runs": 0,
+  "last_cap_change": {
+    "program_cap_usd": 35.52,
+    "kind": "set_cap",
+    "reason": "mpw #6066 equivalence beam 1m: end-to-end replays and changed-question answers (reservation headroom)",
+    "by": "ubi@vm219y2s",
+    "at": "2026-10-10T14:21:13.986Z"
+  },
+  "size_bytes": 46112768,
+  "read_ms": 49.85,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}
