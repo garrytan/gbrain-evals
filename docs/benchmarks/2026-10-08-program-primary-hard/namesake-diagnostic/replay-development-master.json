@@ -1,0 +1,2234 @@
+{
+ "gbrain": {
+  "ref": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+  "commit": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+  "tree": "4d3f4292cb9dc69586c6b3ed8d31be6c78383cc2"
+ },
+ "rows": [
+  {
+   "key": "h20261101-t1|claude-opus-5-5|baseline|1",
+   "task": "h20261101-t1",
+   "reader": "claude-opus-5-5",
+   "contact": "Elodie Udeh",
+   "contact_slug": "people/elodie-udeh",
+   "namesake": {
+    "name": "Elodie Petrov",
+    "slug": "people/elodie-petrov",
+    "daily": "notes/daily/2026-10-07",
+    "line": "Elodie Petrov (YAF) asked about 50 seats; I owe Elo the updated order form.",
+    "item": "the updated order form"
+   },
+   "hits": [
+    "namesake commitment: the updated order form"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "- **Not included:** Your October 7 daily note says you owe \"Elo\" an updated order form. That's Elodie Petrov at Yarithe Foods, a different account, so I left it out."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 8,
+    "name": "search",
+    "args": {
+     "query": "Yarithe quote seats price discount revised"
+    },
+    "recorded_chars": 11564,
+    "replay_chars": 11992,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "people/elodie-udeh,companies/yarithe-retail"
+     },
+     "recorded_chars": 12145,
+     "replay_chars": 10176,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/elodie-udeh",
+      "people/wren-rahman",
+      "people/joaquin-haddad"
+     ]
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/elodie-udeh"
+     },
+     "recorded_chars": 3144,
+     "replay_chars": 983,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_backlinks",
+     "args": {
+      "slug": "companies/yarithe-retail",
+      "group": "page"
+     },
+     "recorded_chars": 2544,
+     "replay_chars": 2174,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-yarithe-pilot-kickoff"
+     },
+     "recorded_chars": 1167,
+     "replay_chars": 2061,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-udeh-reschedule"
+     },
+     "recorded_chars": 1116,
+     "replay_chars": 1116,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/yarithe-retail"
+     },
+     "recorded_chars": 1109,
+     "replay_chars": 1109,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-23-udeh-procurement-handoff"
+     },
+     "recorded_chars": 1154,
+     "replay_chars": 1154,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-05-yarithe-technical-review"
+     },
+     "recorded_chars": 1201,
+     "replay_chars": 1201,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Yarithe quote seats price discount revised"
+     },
+     "recorded_chars": 11564,
+     "replay_chars": 11992,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "YAR sandbox account sent",
+      "limit": 8
+     },
+     "recorded_chars": 3964,
+     "replay_chars": 4102,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "SOC 2 bridge letter Yarithe",
+      "limit": 8
+     },
+     "recorded_chars": 4925,
+     "replay_chars": 4405,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "security questionnaire docs link resent Elodie Udeh",
+      "limit": 8
+     },
+     "recorded_chars": 3872,
+     "replay_chars": 3803,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Tobin Morales",
+      "limit": 8
+     },
+     "recorded_chars": 4163,
+     "replay_chars": 4643,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261101-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h20261101-t1",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Elodie Udeh",
+   "contact_slug": "people/elodie-udeh",
+   "namesake": {
+    "name": "Elodie Petrov",
+    "slug": "people/elodie-petrov",
+    "daily": "notes/daily/2026-10-07",
+    "line": "Elodie Petrov (YAF) asked about 50 seats; I owe Elo the updated order form.",
+    "item": "the updated order form"
+   },
+   "hits": [
+    "namesake commitment: the updated order form"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "We'll walk through the quote and the rollout plan and timeline at kickoff. Tobin, if you want anything ahead of the call, such as an order form or vendor onboarding details, tell me and I'll send it."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 10,
+    "name": "search",
+    "args": {
+     "query": "Yarithe sandbox account sent",
+     "limit": 5
+    },
+    "recorded_chars": 2545,
+    "replay_chars": 2581,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Elodie Udeh, Yarithe Retail"
+     },
+     "recorded_chars": 12041,
+     "replay_chars": 11013,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/elodie-udeh",
+      "people/wren-rahman",
+      "people/joaquin-haddad"
+     ]
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/elodie-udeh",
+      "include_content": true
+     },
+     "recorded_chars": 3843,
+     "replay_chars": 1210,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "companies/yarithe-retail",
+      "include_content": true
+     },
+     "recorded_chars": 1664,
+     "replay_chars": 1664,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-yarithe-pilot-kickoff"
+     },
+     "recorded_chars": 1167,
+     "replay_chars": 1167,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-udeh-reschedule"
+     },
+     "recorded_chars": 1116,
+     "replay_chars": 1116,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/yarithe-retail"
+     },
+     "recorded_chars": 1109,
+     "replay_chars": 1109,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-23-udeh-procurement-handoff"
+     },
+     "recorded_chars": 1154,
+     "replay_chars": 1154,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-05-yarithe-technical-review"
+     },
+     "recorded_chars": 1201,
+     "replay_chars": 1201,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-07-udeh-82"
+     },
+     "recorded_chars": 1029,
+     "replay_chars": 1029,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Tobin Morales",
+      "limit": 5
+     },
+     "recorded_chars": 2305,
+     "replay_chars": 3128,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Yarithe sandbox account sent",
+      "limit": 5
+     },
+     "recorded_chars": 2545,
+     "replay_chars": 2581,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "SOC 2 bridge letter",
+      "limit": 5
+     },
+     "recorded_chars": 2868,
+     "replay_chars": 2326,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261101-t1|claude-opus-5-5|baseline|2",
+   "task": "h20261101-t1",
+   "reader": "claude-opus-5-5",
+   "contact": "Elodie Udeh",
+   "contact_slug": "people/elodie-udeh",
+   "namesake": {
+    "name": "Elodie Petrov",
+    "slug": "people/elodie-petrov",
+    "daily": "notes/daily/2026-10-07",
+    "line": "Elodie Petrov (YAF) asked about 50 seats; I owe Elo the updated order form.",
+    "item": "the updated order form"
+   },
+   "hits": [
+    "namesake commitment: the updated order form"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "Tobin, if procurement needs anything else before the 27th, like a corrected order form, our vendor details or security paperwork, let me know and I'll get it to you."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 9,
+    "name": "search",
+    "args": {
+     "query": "Yarithe pricing discount seats quote revised"
+    },
+    "recorded_chars": 11442,
+    "replay_chars": 11134,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "people/elodie-udeh,companies/yarithe-retail"
+     },
+     "recorded_chars": 12145,
+     "replay_chars": 10176,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/elodie-udeh",
+      "people/wren-rahman",
+      "people/joaquin-haddad"
+     ]
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/elodie-udeh"
+     },
+     "recorded_chars": 3144,
+     "replay_chars": 983,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_backlinks",
+     "args": {
+      "slug": "companies/yarithe-retail",
+      "group": "page"
+     },
+     "recorded_chars": 2544,
+     "replay_chars": 2174,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-yarithe-pilot-kickoff"
+     },
+     "recorded_chars": 1167,
+     "replay_chars": 1167,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-udeh-reschedule"
+     },
+     "recorded_chars": 1116,
+     "replay_chars": 1116,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/yarithe-retail"
+     },
+     "recorded_chars": 1109,
+     "replay_chars": 1109,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-23-udeh-procurement-handoff"
+     },
+     "recorded_chars": 1154,
+     "replay_chars": 1154,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-05-yarithe-technical-review"
+     },
+     "recorded_chars": 1201,
+     "replay_chars": 1201,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-07-udeh-82"
+     },
+     "recorded_chars": 1029,
+     "replay_chars": 1029,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Yarithe pricing discount seats quote revised"
+     },
+     "recorded_chars": 11442,
+     "replay_chars": 11134,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Tobin Morales"
+     },
+     "recorded_chars": 9673,
+     "replay_chars": 10455,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "YAR sandbox account bridge letter docs link sent"
+     },
+     "recorded_chars": 9683,
+     "replay_chars": 9921,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "YAR Elo sent SOC 2 bridge letter sandbox",
+      "types": [
+       "note"
+      ],
+      "recency": "strong"
+     },
+     "recorded_chars": 9522,
+     "replay_chars": 9658,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261102-t1|claude-opus-5-5|baseline|1",
+   "task": "h20261102-t1",
+   "reader": "claude-opus-5-5",
+   "contact": "Felix Mehta",
+   "contact_slug": "people/felix-mehta",
+   "namesake": {
+    "name": "Felix Draxler",
+    "slug": "people/felix-draxler",
+    "daily": "notes/daily/2026-10-08",
+    "line": "Felix Draxler (GRF) asked about 25 seats; I owe Fee the draft pilot success criteria.",
+    "item": "the draft pilot success criteria"
+   },
+   "hits": [
+    "namesake commitment: the draft pilot success criteria"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "- **Left out on purpose:** Your October 8 note says you owe \"Fee\" draft pilot success criteria. That's Felix Draxler at Gralonex Freight, a different prospect, not Felix Mehta."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 5,
+    "name": "search",
+    "args": {
+     "query": "Gralonex technical deep dive"
+    },
+    "recorded_chars": 11067,
+    "replay_chars": 13037,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/felix-mehta"
+     },
+     "recorded_chars": 2257,
+     "replay_chars": 987,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "companies/gralonex-robotics"
+     },
+     "recorded_chars": 2125,
+     "replay_chars": 1231,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "recall",
+     "args": {
+      "entity": "people/felix-mehta"
+     },
+     "recorded_chars": 1507,
+     "replay_chars": 43,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/gralonex-robotics"
+     },
+     "recorded_chars": 1128,
+     "replay_chars": 2022,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_backlinks",
+     "args": {
+      "slug": "companies/gralonex-robotics",
+      "group": "page"
+     },
+     "recorded_chars": 2581,
+     "replay_chars": 2215,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Gralonex technical deep dive"
+     },
+     "recorded_chars": 11067,
+     "replay_chars": 13037,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "GRR Felix Mehta pricing discount seats quote revised"
+     },
+     "recorded_chars": 11513,
+     "replay_chars": 11292,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "GRR sandbox account DPA sent"
+     },
+     "recorded_chars": 9916,
+     "replay_chars": 10083,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "list_pages",
+     "args": {
+      "updated_after": "2026-10-09T00:00:00Z",
+      "limit": 50
+     },
+     "recorded_chars": 9117,
+     "replay_chars": 9121,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "query",
+     "args": {
+      "query": "Gralonex Robotics GRR sandbox or DPA sent, follow-ups",
+      "since": "2026-10-01",
+      "expand": false
+     },
+     "recorded_chars": 26261,
+     "replay_chars": 11876,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261102-t3|claude-opus-5-5|baseline|2",
+   "task": "h20261102-t3",
+   "reader": "claude-opus-5-5",
+   "contact": "Ruben Sato",
+   "contact_slug": "people/ruben-sato",
+   "namesake": {
+    "name": "Ruben Morales",
+    "slug": "people/ruben-morales",
+    "daily": "notes/daily/2026-10-09",
+    "line": "Ruben Morales (TEL) asked about 64 seats; I owe Ruben the migration runbook.",
+    "item": "the migration runbook"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "**Don't mix this up with:** Telostra Logistics (\"TEL\"). That's a different prospect, with champion Ruben Morales and its own security review on Nov 3."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 1,
+    "name": "search",
+    "args": {
+     "query": "Telostra Health procurement call"
+    },
+    "recorded_chars": 11966,
+    "replay_chars": 12125,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Ruben Sato, Telostra Health"
+     },
+     "recorded_chars": 12214,
+     "replay_chars": 11088,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/ruben-sato",
+      "people/petra-lindqvist",
+      "people/dario-haddad"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Telostra Health procurement call"
+     },
+     "recorded_chars": 11966,
+     "replay_chars": 12125,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-sato-reschedule"
+     },
+     "recorded_chars": 1118,
+     "replay_chars": 1118,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-21-sato-procurement-handoff"
+     },
+     "recorded_chars": 1150,
+     "replay_chars": 1150,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Niko Valdez",
+      "limit": 8
+     },
+     "recorded_chars": 4004,
+     "replay_chars": 4531,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "TEH SOC 2 bridge letter statement of work sent",
+      "limit": 10
+     },
+     "recorded_chars": 4436,
+     "replay_chars": 5592,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "list_pages",
+     "args": {
+      "updated_after": "2026-10-09T13:53:41Z",
+      "limit": 30
+     },
+     "recorded_chars": 5565,
+     "replay_chars": 2,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "query",
+     "args": {
+      "query": "TEH Telostra Health security review October 23 time change or update",
+      "since": "2026-10-11",
+      "expand": false
+     },
+     "recorded_chars": 26137,
+     "replay_chars": 13470,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261103-t2|claude-opus-5-5|baseline|1",
+   "task": "h20261103-t2",
+   "reader": "claude-opus-5-5",
+   "contact": "Arjun Thorne",
+   "contact_slug": "people/arjun-thorne",
+   "namesake": {
+    "name": "Arjun Torvik",
+    "slug": "people/arjun-torvik",
+    "daily": "notes/daily/2026-10-12",
+    "line": "Arjun Torvik (BRR) asked about 80 seats; I owe Arjun the security architecture diagram.",
+    "item": "the security architecture diagram"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "- There's a different procurement review tomorrow (Fri Oct 16, 16:00). That one is Branesso **Robotics** with Arjun **Torvik** (80 seats at $19), so don't confuse the two."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 1,
+    "name": "search",
+    "args": {
+     "query": "BRL procurement call Arjun"
+    },
+    "recorded_chars": 12012,
+    "replay_chars": 13550,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Arjun Thorne, BRL"
+     },
+     "recorded_chars": 7316,
+     "replay_chars": 5597,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "BRL procurement call Arjun"
+     },
+     "recorded_chars": 12012,
+     "replay_chars": 13550,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Branesso Logistics order form runbook sent"
+     },
+     "recorded_chars": 11853,
+     "replay_chars": 11524,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "resolve_slugs",
+     "args": {
+      "partial": "niko-eskildsen"
+     },
+     "recorded_chars": 124,
+     "replay_chars": 124,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/arjun-thorne"
+     },
+     "recorded_chars": 2233,
+     "replay_chars": 1743,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Niko Eskildsen",
+      "limit": 5
+     },
+     "recorded_chars": 2466,
+     "replay_chars": 2767,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "migration runbook Arjun Thorne",
+      "limit": 5
+     },
+     "recorded_chars": 3614,
+     "replay_chars": 2612,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261103-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h20261103-t2",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Arjun Thorne",
+   "contact_slug": "people/arjun-thorne",
+   "namesake": {
+    "name": "Arjun Torvik",
+    "slug": "people/arjun-torvik",
+    "daily": "notes/daily/2026-10-12",
+    "line": "Arjun Torvik (BRR) asked about 80 seats; I owe Arjun the security architecture diagram.",
+    "item": "the security architecture diagram"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "- Don't confuse this BRL with Branura Logistics, which is also \"BRL\" in your notes. Branesso Robotics (Arjun *Torvik*) is another near-match, with its own review on Oct 16."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 2,
+    "name": "search",
+    "args": {
+     "query": "BRL call procurement lead"
+    },
+    "recorded_chars": 12097,
+    "replay_chars": 12727,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Arjun Thorne, BRL"
+     },
+     "recorded_chars": 7300,
+     "replay_chars": 5597,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Arjun Thorne"
+     },
+     "recorded_chars": 8528,
+     "replay_chars": 6404,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller",
+      "people/anou"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "BRL call procurement lead"
+     },
+     "recorded_chars": 12097,
+     "replay_chars": 12727,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-09-thorne-reschedule"
+     },
+     "recorded_chars": 1143,
+     "replay_chars": 1143,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-20-thorne-procurement-handoff"
+     },
+     "recorded_chars": 1165,
+     "replay_chars": 1165,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/branesso-logistics"
+     },
+     "recorded_chars": 1134,
+     "replay_chars": 1134,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-26-branesso-procurement-review"
+     },
+     "recorded_chars": 1203,
+     "replay_chars": 1203,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-13-branesso-call"
+     },
+     "recorded_chars": 1106,
+     "replay_chars": 1106,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Niko Eskildsen"
+     },
+     "recorded_chars": 9180,
+     "replay_chars": 10861,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Branesso order form runbook SSO exports"
+     },
+     "recorded_chars": 10697,
+     "replay_chars": 10767,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261103-t2|claude-opus-5-5|baseline|2",
+   "task": "h20261103-t2",
+   "reader": "claude-opus-5-5",
+   "contact": "Arjun Thorne",
+   "contact_slug": "people/arjun-thorne",
+   "namesake": {
+    "name": "Arjun Torvik",
+    "slug": "people/arjun-torvik",
+    "daily": "notes/daily/2026-10-12",
+    "line": "Arjun Torvik (BRR) asked about 80 seats; I owe Arjun the security architecture diagram.",
+    "item": "the security architecture diagram"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "**Don't mix these up:** Branesso *Robotics* (BRR) also has an \"Arjun\": Arjun Torvik. Their procurement review is tomorrow, Fri Oct 16 at 16:00, for 80 seats at $19. That's a different deal."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 1,
+    "name": "search",
+    "args": {
+     "query": "BRL procurement call Arjun"
+    },
+    "recorded_chars": 12012,
+    "replay_chars": 11746,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Arjun Thorne, BRL"
+     },
+     "recorded_chars": 7316,
+     "replay_chars": 5597,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "BRL procurement call Arjun"
+     },
+     "recorded_chars": 12012,
+     "replay_chars": 11746,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Branesso runbook order form sent Niko Eskildsen"
+     },
+     "recorded_chars": 11630,
+     "replay_chars": 11362,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "resolve_slugs",
+     "args": {
+      "partial": "niko-eskildsen"
+     },
+     "recorded_chars": 124,
+     "replay_chars": 124,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261103-t2|claude-sonnet-5-5|baseline|2",
+   "task": "h20261103-t2",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Arjun Thorne",
+   "contact_slug": "people/arjun-thorne",
+   "namesake": {
+    "name": "Arjun Torvik",
+    "slug": "people/arjun-torvik",
+    "daily": "notes/daily/2026-10-12",
+    "line": "Arjun Torvik (BRR) asked about 80 seats; I owe Arjun the security architecture diagram.",
+    "item": "the security architecture diagram"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "- Don't confuse it with the Branesso **Robotics** (BRR) review on Friday, Oct 16 at 16:00. That's a different company, with Arjun Torvik, 80 seats at $19."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 2,
+    "name": "search",
+    "args": {
+     "query": "BRL call Arjun procurement lead"
+    },
+    "recorded_chars": 10996,
+    "replay_chars": 12125,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Arjun Thorne, BRL"
+     },
+     "recorded_chars": 7277,
+     "replay_chars": 5597,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Arjun Thorne"
+     },
+     "recorded_chars": 8523,
+     "replay_chars": 6404,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller",
+      "people/anou"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "BRL call Arjun procurement lead"
+     },
+     "recorded_chars": 10996,
+     "replay_chars": 12125,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-26-branesso-procurement-review"
+     },
+     "recorded_chars": 1203,
+     "replay_chars": 1203,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/branesso-logistics"
+     },
+     "recorded_chars": 1134,
+     "replay_chars": 1134,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Niko Eskildsen"
+     },
+     "recorded_chars": 9180,
+     "replay_chars": 10861,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-13-branesso-call"
+     },
+     "recorded_chars": 1106,
+     "replay_chars": 1106,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-30-thorne-20"
+     },
+     "recorded_chars": 1029,
+     "replay_chars": 1029,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261105-t1|gpt-6.1-sol|baseline|1",
+   "task": "h20261105-t1",
+   "reader": "gpt-6.1-sol",
+   "contact": "Mira Sato",
+   "contact_slug": "people/mira-sato",
+   "namesake": {
+    "name": "Mira Jaramillo",
+    "slug": "people/mira-jaramillo",
+    "daily": "notes/daily/2026-10-09",
+    "line": "Mira Jaramillo (XEH) asked about 48 seats; I owe Mira the customer reference list.",
+    "item": "the customer reference list"
+   },
+   "hits": [
+    "namesake commitment: the customer reference list"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "*Brain maintenance: one page is pending entity indexing, so reference lists may be incomplete. After this session, the host can refresh them with `gbrain extract --stale --catch-up --brain host --source vault`.*"
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 4,
+    "name": "search",
+    "args": {
+     "query": "Xerellis benchmark monorepo",
+     "limit": 10
+    },
+    "recorded_chars": 5824,
+    "replay_chars": 6767,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Dario Udeh,Mira Sato,XEF,Kestoria Labs",
+      "budget_tokens": 4000
+     },
+     "recorded_chars": 6869,
+     "replay_chars": 4920,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/mira-sato",
+      "people/ilse-nakashima"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "XEF"
+     },
+     "recorded_chars": 1686,
+     "replay_chars": 472,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": []
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Mira Sato"
+     },
+     "recorded_chars": 6135,
+     "replay_chars": 5739,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/mira-sato",
+      "people/ilse-nakashima",
+      "people/ilse-na"
+     ]
+    },
+    {
+     "name": "list_skills",
+     "args": {
+      "schema_version": 2,
+      "limit": 100
+     },
+     "replayed": false
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Xerellis benchmark monorepo",
+      "limit": 10
+     },
+     "recorded_chars": 5824,
+     "replay_chars": 6767,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Xerellis Foods"
+     },
+     "recorded_chars": 4915,
+     "replay_chars": 5244,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/talia-haddad",
+      "people/ilse-nakashima",
+      "people/mira-sato",
+      "people/company"
+     ]
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-sato-reschedule"
+     },
+     "recorded_chars": 1116,
+     "replay_chars": 1116,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-20-sato-procurement-handoff"
+     },
+     "recorded_chars": 1153,
+     "replay_chars": 1153,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-26-xerellis-pilot-kickoff"
+     },
+     "recorded_chars": 1164,
+     "replay_chars": 1164,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "XEF",
+      "limit": 50,
+      "token_budget": 10000
+     },
+     "recorded_chars": 25878,
+     "replay_chars": 28318,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "benchmarks",
+      "limit": 10
+     },
+     "recorded_chars": 5601,
+     "replay_chars": 5569,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-11-xerellis-call"
+     },
+     "recorded_chars": 1127,
+     "replay_chars": 1127,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/xerellis-foods"
+     },
+     "recorded_chars": 1103,
+     "replay_chars": 1103,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-05-xerellis-technical-review"
+     },
+     "recorded_chars": 1189,
+     "replay_chars": 1189,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/mira-sato"
+     },
+     "recorded_chars": 1555,
+     "replay_chars": 961,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Calla Nakashima",
+      "limit": 10
+     },
+     "recorded_chars": 4919,
+     "replay_chars": 5765,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "query",
+     "args": {
+      "query": "Where are Xerellis Foods XEF pricing quote financial numbers spreadsheet and monorepo benchmark results stored?",
+      "limit": 15,
+      "autocut": false,
+      "token_budget": 6000
+     },
+     "recorded_chars": 8798,
+     "replay_chars": 8555,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "recall",
+     "args": {
+      "entity": "people/mira-sato",
+      "budget_tokens": 1000
+     },
+     "recorded_chars": 869,
+     "replay_chars": 98,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261108-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h20261108-t2",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Kenji Fairbourne",
+   "contact_slug": "people/kenji-fairbourne",
+   "namesake": {
+    "name": "Kenji Varga",
+    "slug": "people/kenji-varga",
+    "daily": "notes/daily/2026-10-11",
+    "line": "Kenji Varga (NAH) asked about 55 seats; I owe Kenji the migration runbook.",
+    "item": "the migration runbook"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "- Don't mix this up with Naxanta Health, which is a separate deal at 55 seats and $45."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 3,
+    "name": "search",
+    "args": {
+     "query": "Naxanta Energy call procurement lead"
+    },
+    "recorded_chars": 12081,
+    "replay_chars": 14529,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Kenji Fairbourne, Naxanta Energy"
+     },
+     "recorded_chars": 13564,
+     "replay_chars": 11488,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/kenji-fairbourne",
+      "people/elodie-jaramillo",
+      "people/wren-galloway"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Kenji Fairbourne"
+     },
+     "recorded_chars": 8743,
+     "replay_chars": 6553,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/kenji-fairbourne",
+      "people/elodie-jaramillo"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Naxanta Energy"
+     },
+     "recorded_chars": 5016,
+     "replay_chars": 4595,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/wren-galloway",
+      "people/elodie-jaramillo",
+      "people/kenji-fairbourne"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Naxanta Energy call procurement lead"
+     },
+     "recorded_chars": 12081,
+     "replay_chars": 14529,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-fairbourne-reschedule"
+     },
+     "recorded_chars": 1152,
+     "replay_chars": 1152,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-23-fairbourne-procurement-handoff"
+     },
+     "recorded_chars": 1184,
+     "replay_chars": 1184,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-naxanta-roadmap-session"
+     },
+     "recorded_chars": 1187,
+     "replay_chars": 1187,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-01-naxanta-technical-review"
+     },
+     "recorded_chars": 1191,
+     "replay_chars": 1191,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/naxanta-energy"
+     },
+     "recorded_chars": 1121,
+     "replay_chars": 1121,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Tobin Ishikawa"
+     },
+     "recorded_chars": 9640,
+     "replay_chars": 10249,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261108-t2|claude-sonnet-5-5|baseline|2",
+   "task": "h20261108-t2",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Kenji Fairbourne",
+   "contact_slug": "people/kenji-fairbourne",
+   "namesake": {
+    "name": "Kenji Varga",
+    "slug": "people/kenji-varga",
+    "daily": "notes/daily/2026-10-11",
+    "line": "Kenji Varga (NAH) asked about 55 seats; I owe Kenji the migration runbook.",
+    "item": "the migration runbook"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "- Don't confuse NAE with Naxanta Health, a separate prospect with different terms: 55 seats at $45."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 3,
+    "name": "search",
+    "args": {
+     "query": "Naxanta Energy call procurement lead"
+    },
+    "recorded_chars": 12081,
+    "replay_chars": 12803,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Kenji Fairbourne, Naxanta Energy"
+     },
+     "recorded_chars": 13564,
+     "replay_chars": 12342,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/kenji-fairbourne",
+      "people/elodie-jaramillo",
+      "people/wren-galloway"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Kenji Fairbourne"
+     },
+     "recorded_chars": 8743,
+     "replay_chars": 6553,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/kenji-fairbourne",
+      "people/elodie-jaramillo"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Naxanta Energy"
+     },
+     "recorded_chars": 5016,
+     "replay_chars": 4617,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/wren-galloway",
+      "people/elodie-jaramillo",
+      "people/kenji-fairbourne"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Naxanta Energy call procurement lead"
+     },
+     "recorded_chars": 12081,
+     "replay_chars": 12803,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-fairbourne-reschedule"
+     },
+     "recorded_chars": 1152,
+     "replay_chars": 1152,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-23-fairbourne-procurement-handoff"
+     },
+     "recorded_chars": 1184,
+     "replay_chars": 1184,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-naxanta-roadmap-session"
+     },
+     "recorded_chars": 1187,
+     "replay_chars": 1187,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/naxanta-energy"
+     },
+     "recorded_chars": 1121,
+     "replay_chars": 1121,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-01-naxanta-technical-review"
+     },
+     "recorded_chars": 1191,
+     "replay_chars": 1191,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Tobin Ishikawa"
+     },
+     "recorded_chars": 9639,
+     "replay_chars": 10249,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "pilot success criteria Naxanta"
+     },
+     "recorded_chars": 12300,
+     "replay_chars": 11647,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  }
+ ]
+}
