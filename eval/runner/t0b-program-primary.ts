@@ -22,18 +22,20 @@
  *
  *   bun eval/runner/t0b-program-primary.ts --gbrain <checkout>@<ref> --output <dir> [--seeds a,b] [--tasks id,..]
  *     [--readers ...] [--arms ...] [--repeat N] [--concurrency N] [--knobs '<json>'] [--paid --budget-run-id <id>]
+ *   A custodian-sealed set replaces --seeds and --knobs with --world <world.json outside the repository> --expect-digest <hex>.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { insideRepository } from './sealed-confirmation-lib.ts';
 import { execFileSync } from 'node:child_process';
-import { DEFAULT_KNOBS, PPH_BASELINE_SEEDS, generateHardWorld, hardDigest, hardSolvabilityProblems, PPH_DEV_SEEDS, PPH_RUNNABLE_SEEDS, PPH_SESSION2_DAY, PPH_TODAY, renderHardDoc, type HardKnobs, type HardPersona, type HardTask } from '../generators/program-primary-hard-gen.ts';
+import { DEFAULT_KNOBS, PPH_BASELINE_SEEDS, generateHardWorld, type CustodianWorld, type HardWorld, hardDigest, hardSolvabilityProblems, PPH_DEV_SEEDS, PPH_RUNNABLE_SEEDS, PPH_SESSION2_DAY, PPH_TODAY, renderHardDoc, type HardKnobs, type HardPersona, type HardTask } from '../generators/program-primary-hard-gen.ts';
 import { humanDate, type PPDoc } from '../generators/program-primary-gen.ts';
 import { GbrainSlot, MeteringProxy, rerankProbe } from './cat40/gbrain-arm.ts';
 import type { ScriptedModel } from './cat40/loop.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
 import { ARMS, cellKey, COUNTED_READERS, FROZEN_RELEASE, MAX_TURNS, revisionOf, runSessionWith, WRITE_TOOLS, type Ctx, type SessionRecord, type T0Arm } from './t0-program-primary.ts';
 import { DELIVERY_CONTRACT } from './t0/delivery.ts';
-import { matches, scoreItems, T0B_SCORER_VERSION, type ItemsScore } from './t0/score.ts';
+import { matches, scoreItems, T0B_SCORER_V2, T0B_SCORER_VERSION, type ItemsScore } from './t0/score.ts';
 import { readCells, summarize } from './t0/analyze.ts';
 import type { UsageReceipt } from './usage-receipt.ts';
 import { paidRequested, requirePaidArm } from './paid-arm.ts';
@@ -127,11 +129,14 @@ export async function runHardCell(ctx: Ctx & { slots: Map<string, GbrainSlot> },
   return {
     key, version: T0B_VERSION, persona: p.id, task: t.id, kind: t.kind, correction_kind: t.correction_kind, reader, arm, repeat, knobs: p.knobs, sessions,
     capture: { writes: writes.length, commitment: !!s1Commit && matches(s1Commit, writes.map(c => c.args_excerpt ?? '').join('\n')) },
-    score: scoreItems(t.gold, s2.answer, { executionError }),
+    score: scoreItems(t.gold, s2.answer, { executionError, version: scorerFor(p.knobs) }),
     usd: { reader: readerUsd, gbrain_internal: gbrainUsd, total: readerUsd + gbrainUsd }, tokens,
     wall_ms: Date.now() - started.getTime(), budget_run_id: ctx.budgetRunId, started_at: started.toISOString(),
   };
 }
+
+/** Generator version 2 worlds score with t0b-score-v2 (amendment 5); version 1 worlds keep t0b-score-v1. */
+export const scorerFor = (k: HardKnobs) => (k.unique_codes ? T0B_SCORER_V2 : T0B_SCORER_VERSION);
 
 function flag(argv: string[], name: string): string | undefined { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; }
 
@@ -144,10 +149,20 @@ export async function main(argv: string[]) {
   if (!spec?.includes('@')) throw new Error('--gbrain <checkout>@<ref> is required (the frozen baseline is v0.60.106.0, 7aa2caa0)');
   const [checkout, ref] = [spec.slice(0, spec.lastIndexOf('@')), spec.slice(spec.lastIndexOf('@') + 1)];
   const out = resolve(flag(argv, '--output') ?? `eval/reports/t0b-program-primary/${scripted ? 'hermetic' : 'paid'}`);
-  const knobs: HardKnobs = { ...DEFAULT_KNOBS, ...(flag(argv, '--knobs') ? JSON.parse(flag(argv, '--knobs')!) : {}) };
-  const seeds = flag(argv, '--seeds')?.split(',').map(Number) ?? (scripted ? [PPH_DEV_SEEDS[0]] : [...PPH_BASELINE_SEEDS]);
+  const worldPath = flag(argv, '--world');
+  let custodian: CustodianWorld | null = null;
+  if (worldPath) {
+    if (flag(argv, '--seeds') || flag(argv, '--knobs')) throw new Error('--world carries its own personas and knobs; drop --seeds and --knobs');
+    if (insideRepository(resolve(worldPath))) throw new Error('--world must be outside the repository: a sealed world is never committed');
+    custodian = JSON.parse(readFileSync(resolve(worldPath), 'utf8')) as CustodianWorld;
+    if (custodian.custodian !== true) throw new Error('--world takes a custodian world (generator --custodian-seeds)');
+    const expect = flag(argv, '--expect-digest');
+    if (!expect || hardDigest(custodian) !== expect) throw new Error('--expect-digest must equal the preregistered world digest');
+  }
+  const knobs: HardKnobs = custodian ? custodian.knobs : { ...DEFAULT_KNOBS, ...(flag(argv, '--knobs') ? JSON.parse(flag(argv, '--knobs')!) : {}) };
+  const seeds = custodian ? [] : flag(argv, '--seeds')?.split(',').map(Number) ?? (scripted ? [PPH_DEV_SEEDS[0]] : [...PPH_BASELINE_SEEDS]);
   const bad = seeds.filter(s => !PPH_RUNNABLE_SEEDS.includes(s));
-  if (bad.length) throw new Error(`only development seeds run here; got ${bad.join(', ')}`);
+  if (bad.length) throw new Error(`only development seeds run here (a sealed set runs with --world); got ${bad.join(', ')}`);
   const readers = scripted ? ['scripted'] : (flag(argv, '--readers')?.split(',') ?? [...COUNTED_READERS]);
   if (readers.includes('gpt-5.4-mini')) throw new Error('gpt-5.4-mini never runs (model rules)');
   const arms = (flag(argv, '--arms')?.split(',') ?? (scripted ? [...ARMS] : ['baseline'])) as T0Arm[];
@@ -156,7 +171,7 @@ export async function main(argv: string[]) {
   const concurrency = Number(flag(argv, '--concurrency') ?? 4);
   const onlyTasks = flag(argv, '--tasks')?.split(',');
 
-  const world = generateHardWorld(seeds, knobs);
+  const world: HardWorld = custodian ?? generateHardWorld(seeds, knobs);
   const problems = world.personas.flatMap(hardSolvabilityProblems);
   if (problems.length) throw new Error(`generator presence/solvability check failed (a harness error, not a result): ${problems.join('; ')}`);
   const cells: Array<{ p: HardPersona; t: HardTask; reader: string; arm: T0Arm; r: number }> = [];
@@ -220,7 +235,7 @@ export async function main(argv: string[]) {
     }
     const ctx = { build, proxy, slots: slots as unknown as Map<string, GbrainSlot>, out, scripted, budgetRunId, workspaceRoot: join(root, 'ws'), countTokens } as Ctx & { slots: Map<string, GbrainSlot> };
     writeFileSync(expPath, JSON.stringify({
-      version: T0B_VERSION, scorer: T0B_SCORER_VERSION, delivery: DELIVERY_CONTRACT, knobs, world_digest: hardDigest(world), seeds, readers, arms, repeat,
+      version: T0B_VERSION, scorer: scorerFor(knobs), delivery: DELIVERY_CONTRACT, knobs, world_digest: hardDigest(world), seeds: custodian ? { custodian: true, commitment: custodian.commitment } : seeds, readers, arms, repeat,
       gbrain: { requested: spec, commit: build.commit, tree: build.tree, version: build.version, verified: build.verified, frozen_release: build.commit === FROZEN_RELEASE.commit },
       surface: 'starter', max_turns: MAX_TURNS, resolved_config: { decide: scripted ? DECIDE_OFF : 'provider keys present (paid arm)', hermetic: scripted, stripped_keys: hermetic?.stripped ?? [] },
       bun: Bun.version, builds,

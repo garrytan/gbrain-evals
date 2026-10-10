@@ -174,16 +174,41 @@ export function aggregate(scores: readonly T0Score[]): Aggregate {
 // ─── T0b: several commitments and corrections per task ──────────────
 
 export const T0B_SCORER_VERSION = 't0b-score-v1';
+/**
+ * t0b-score-v2 (T0b preregistration amendment 5, frozen before any version 2 world or sealed cell): t0b-score-v1 with
+ * owner-anchored namesake attribution. Written from the namesake diagnostic (2026-10-10), which read all 25 runs that
+ * named a namesake value: none claimed it for the contact, and the 11 that v1 flagged were 7 disambiguations its cue
+ * list missed and 4 generic phrases.
+ */
+export const T0B_SCORER_V2 = 't0b-score-v2';
+export type T0bScorerVersion = typeof T0B_SCORER_VERSION | typeof T0B_SCORER_V2;
+/** v2 cues, added to v3's: the ways the audited deliverables set a namesake value aside. */
+const DISAMBIGUATION_T0B_V2 = new RegExp(`${DISAMBIGUATION_V3.source}|different (?:account|prospect|deal|customer|client|company)|\\bneither\\b|\\bnot for\\b|left (?:it |that |this )?out|not (?:yours|something you owe)`, 'i');
+const nameRe = (names: readonly string[]) => new RegExp(`(?<![A-Za-z])(?:${names.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')).join('|')})(?![A-Za-z])`);
+
+/**
+ * v2 namesake rule, per line (paragraph or list item) that carries a namesake value: the line is the namesake's,
+ * and excused, when it names the namesake (last name, company or code) and not the contact, or when it carries a
+ * disambiguation cue. A line that names both without a cue, or names neither and has no cue, claims the value for
+ * the contact and fails. Codes match case-sensitively as whole tokens.
+ */
+export function namesakeLineExcused(line: string, owners: { contact: readonly string[]; namesake: readonly string[] }): boolean {
+  if (DISAMBIGUATION_T0B_V2.test(line)) return true;
+  const ns = nameRe(owners.namesake).test(line);
+  const contact = nameRe(owners.contact).test(line);
+  return ns && !contact;
+}
 
 export interface ItemsGold {
   commitments: Matcher[];
   date: { old: Matcher; new: Matcher };
   corrections: Array<{ kind: string; stale: Matcher; corrected: Matcher }>;
   namesake: Matcher[];
+  owners?: { contact: string[]; namesake: string[] };
 }
 
 export interface ItemsScore extends Omit<T0Score, 'version' | 'commitment_hit' | 'corrected_hit'> {
-  version: typeof T0B_SCORER_VERSION;
+  version: T0bScorerVersion;
   commitments_hit: string[];
   commitments_missed: string[];
   corrected_hit: string[];
@@ -195,7 +220,9 @@ export interface ItemsScore extends Omit<T0Score, 'version' | 'commitment_hit' |
  * or paragraph that tells the people apart. A run fails when any commitment is missing, any stale value stands
  * without its current value, any namesake value is claimed, or the session ended in an error.
  */
-export function scoreItems(gold: ItemsGold, answer: string | null | undefined, opts: { executionError?: string | null } = {}): ItemsScore {
+export function scoreItems(gold: ItemsGold, answer: string | null | undefined, opts: { executionError?: string | null; version?: T0bScorerVersion } = {}): ItemsScore {
+  const version = opts.version ?? T0B_SCORER_VERSION;
+  if (version === T0B_SCORER_V2 && !gold.owners) throw new Error('t0b-score-v2 needs gold.owners (generator version 2)');
   const raw = answer ?? '';
   const text = proseOf(raw);
   const commitments_hit = gold.commitments.filter(m => matches(m, text)).map(m => m.label);
@@ -205,7 +232,8 @@ export function scoreItems(gold: ItemsGold, answer: string | null | undefined, o
   const staleDateFails = staleDate.asserted.length > 0 && !new_date_hit;
   const corr = gold.corrections.map(c => ({ c, hit: matches(c.corrected, text), stale: staleMentions(c.stale, text, 't0-score-v3') }));
   const staleCorr = corr.filter(x => x.stale.asserted.length > 0 && !x.hit);
-  const namesake_hits = gold.namesake.filter(m => m.label.startsWith('namesake ') && linesMatching(m, text).some(x => !DISAMBIGUATION_V3.test(x))).map(m => m.label);
+  const lineClaims = version === T0B_SCORER_V2 ? (x: string) => !namesakeLineExcused(x, gold.owners!) : (x: string) => !DISAMBIGUATION_V3.test(x);
+  const namesake_hits = gold.namesake.filter(m => m.label.startsWith('namesake ') && linesMatching(m, text).some(lineClaims)).map(m => m.label);
   const kinds: FailureKind[] = [];
   if (opts.executionError || !raw.trim()) kinds.push('execution_error');
   if (commitments_missed.length) kinds.push('missed_commitment');
@@ -215,7 +243,7 @@ export function scoreItems(gold: ItemsGold, answer: string | null | undefined, o
   const failed = kinds.length > 0;
   const corrected_hit = corr.filter(x => x.hit).map(x => x.c.corrected.label);
   return {
-    version: T0B_SCORER_VERSION, failed, kinds, commitments_hit, commitments_missed, new_date_hit, corrected_hit,
+    version, failed, kinds, commitments_hit, commitments_missed, new_date_hit, corrected_hit,
     stale_date_mentions: staleDate.asserted, stale_correction_mentions: staleCorr.flatMap(x => x.stale.asserted),
     excused_mentions: [...staleDate.excused, ...corr.flatMap(x => x.stale.excused)], namesake_hits,
     omissions: { date: !new_date_hit && !staleDateFails, correction: corr.some(x => !x.hit && !x.stale.asserted.length) },
