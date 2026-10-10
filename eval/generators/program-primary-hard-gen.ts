@@ -31,17 +31,33 @@
  * commitment (t0/score.ts `scoreItems`). Gold is drawn here; the brain is
  * rendered from it.
  *
- *   bun eval/generators/program-primary-hard-gen.ts [--seeds a,b] [--out DIR] [--check]
+ * Version 2 (`--knobs '{"unique_codes":true}'`, `V2_KNOBS`) draws company names so that every short code is unique
+ * within a brain and is never an English word or a common abbreviation. Version 1 built codes from the name alone,
+ * so two customers in one brain could share a code (`BRL`), and a note about either named neither: the workload, not
+ * the memory, made those notes ambiguous (alias-stack report, 2026-10-09). Version 1 worlds are unchanged.
+ *
+ * Seeds. Development and fresh seeds are public. A custodian-sealed set is minted on the custodian's machine:
+ * `--mint-sealed --personas N --custodian-out <dir>` writes N random seeds to a 0600 file outside the repository and
+ * prints only their SHA-256 commitment; `--custodian-seeds <file> --out <dir>` renders the version 2 world from them
+ * with persona ids `sealed-01`... and no seed in the world, and prints its digest. The world file never enters the
+ * repository; the runner reads it with `--world`.
+ *
+ *   bun eval/generators/program-primary-hard-gen.ts [--seeds a,b] [--knobs '<json>'] [--out DIR] [--check]
+ *   bun eval/generators/program-primary-hard-gen.ts --mint-sealed --personas 16 --custodian-out <dir outside the repository>
+ *   bun eval/generators/program-primary-hard-gen.ts --custodian-seeds <file> [--out <dir outside the repository>] [--digest-only]
  */
-import { createHash } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { createHash, randomBytes } from 'node:crypto';
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { insideRepository } from '../runner/sealed-confirmation-lib.ts';
 import {
   addDays, COMMITMENTS, CUSTOMER_SUFFIX, dateMatcher, DONE_ITEMS, draw, escapeRe, FILLER_LINES, FIRST, humanDate, LAST, OTHER_SUFFIX, PLAIN_ROLES,
   priceMatcher, PRINCIPAL_ROLES, PRODUCTS, renderPPDoc, Rng, seatsMatcher, slugify, SYL_A, SYL_B, TIMES, TOPICS, type Matcher, type PPDoc, type TaskKind,
 } from './program-primary-gen.ts';
 
 export const PPH_GENERATOR_VERSION = 'program-primary-hard-v1';
+export const PPH_GENERATOR_VERSION_V2 = 'program-primary-hard-v2';
+export const PPH_SEALED_COMMITMENT_PREFIX = 'program-primary-hard-sealed-seeds:v2:';
 /** Development seeds: public worlds for building, calibration and the development baseline. */
 export const PPH_DEV_SEEDS: readonly number[] = Array.from({ length: 16 }, (_, i) => 20261101 + i);
 export const PPH_TODAY = '2026-10-14';
@@ -58,6 +74,8 @@ export interface HardKnobs {
   hop: boolean;
   /** The procurement contact is superseded by date (handoff mail). */
   supersession: boolean;
+  /** Version 2: every company's short code is unique within the brain and not in CODE_STOPWORDS. Absent in version 1. */
+  unique_codes?: true;
 }
 /**
  * Frozen by the T0b preregistration after calibration (docs/benchmarks/2026-10-08-program-primary-hard-preregistration.md):
@@ -65,6 +83,19 @@ export interface HardKnobs {
  * and 3 (session1 `explicit`) failed 15 of 36.
  */
 export const DEFAULT_KNOBS: HardKnobs = { tasks_per_persona: 3, session1: 'explicit', scale: 1, hop: true, supersession: true };
+/** Version 2: the frozen knobs plus unique short codes. */
+export const V2_KNOBS: HardKnobs = { ...DEFAULT_KNOBS, unique_codes: true };
+/**
+ * Codes version 2 never draws: the reachable codes that are English words, common names or common business
+ * abbreviations. Nobody's shorthand for one customer is "THE" or "CAC", and a reader could not tell such a code from
+ * the word.
+ */
+export const CODE_STOPWORDS: ReadonlySet<string> = new Set([
+  'BRA', 'CAC', 'CAL', 'CAM', 'CAP', 'CAR', 'CAT', 'DOC', 'DOE', 'DOM', 'DOT', 'FEE', 'ISA', 'ISP', 'JOE', 'MUM', 'NAP', 'NAV',
+  'ONE', 'ORE', 'PRE', 'PRM', 'TEA', 'TEC', 'TEE', 'TEL', 'THE', 'VET', 'VOL', 'YAM', 'YAP', 'ZEE',
+]);
+/** A company's short code: the first two letters of its first word and the initial of its suffix. */
+export const shortCode = (name: string): string => { const w = name.split(' '); return (w[0].slice(0, 2) + w[1][0]).toUpperCase(); };
 /** Development seeds the calibration rounds used; the development baseline runs on the other eight. */
 export const PPH_CALIBRATION_SEEDS: readonly number[] = [20261109, 20261110, 20261111, 20261112, 20261113, 20261114];
 export const PPH_BASELINE_SEEDS: readonly number[] = PPH_DEV_SEEDS.slice(0, 8);
@@ -152,14 +183,16 @@ export function generateHardPersona(seed: number, knobs: HardKnobs = DEFAULT_KNO
   const rng = new Rng(seed);
   const personaId = `h${seed}`;
   const usedCo = new Set<string>();
+  const usedCodes = new Set<string>();
+  const codeOk = (c: string) => !knobs.unique_codes || (!usedCodes.has(shortCode(c)) && !CODE_STOPWORDS.has(shortCode(c)));
   const usedNames = new Set<string>();
   const pFirst = rng.pick(FIRST), pLast = rng.pick(LAST);
   usedNames.add(`${pFirst} ${pLast}`);
-  const coName = (suffixes: readonly string[], first?: string) => draw(() => `${first ?? rng.pick(SYL_A) + rng.pick(SYL_B)} ${rng.pick(suffixes)}`, c => !usedCo.has(c) && (first !== undefined || ![...usedCo].some(u => u.split(' ')[0] === c.split(' ')[0])), 'company names');
+  const coName = (suffixes: readonly string[], first?: string) => draw(() => `${first ?? rng.pick(SYL_A) + rng.pick(SYL_B)} ${rng.pick(suffixes)}`, c => !usedCo.has(c) && (first !== undefined || ![...usedCo].some(u => u.split(' ')[0] === c.split(' ')[0])) && codeOk(c), 'company names');
   const company = (name: string): Company => {
     usedCo.add(name);
-    const words = name.split(' ');
-    return { name, slug: `companies/${slugify(name)}`, alias: (words[0].slice(0, 2) + words[1][0]).toUpperCase(), first: words[0] };
+    usedCodes.add(shortCode(name));
+    return { name, slug: `companies/${slugify(name)}`, alias: shortCode(name), first: name.split(' ')[0] };
   };
   const startup = company(coName(['Labs']));
   const principal = { name: `${pFirst} ${pLast}`, first: pFirst, role: rng.pick(PRINCIPAL_ROLES), company: startup.name, product: rng.pick(PRODUCTS) };
@@ -266,7 +299,9 @@ export function generateHardPersona(seed: number, knobs: HardKnobs = DEFAULT_KNO
 
     // The move, in a later mail thread (pages untouched).
     const moveDay = addDays(PPH_TODAY, -rng.int(2, 5));
-    const moveId = `inbox/${moveDay}-${slugify(A.last)}-reschedule`;
+    // Version 2 keys mail ids by company too: two champions can share a last name.
+    const mailTag = knobs.unique_codes ? `${slugify(C.first)}-${slugify(A.last)}` : slugify(A.last);
+    const moveId = `inbox/${moveDay}-${mailTag}-reschedule`;
     doc({ id: moveId, title: `Re: ${u.topic} (${A.name})`, type: 'note', date: moveDay, body: `# Re: ${u.topic}\n\nFrom: ${A.name} (${C.alias})\nDate: ${moveDay}\n\n> Could we push the ${u.topic} to ${humanDate(newDate)}? Same time works on our side.\n\nMe: Works for me, see you ${humanDate(newDate)}.\n` });
     // The correction, in a later call note.
     const callDay = addDays(PPH_TODAY, -rng.int(1, 4));
@@ -282,7 +317,7 @@ export function generateHardPersona(seed: number, knobs: HardKnobs = DEFAULT_KNO
     // Procurement handoff by date.
     const handoffDay = addDays(PPH_TODAY, -rng.int(18, 24));
     const startDay = addDays(PPH_TODAY, -rng.int(5, 10));
-    const handoffId = `inbox/${handoffDay}-${slugify(A.last)}-procurement-handoff`;
+    const handoffId = `inbox/${handoffDay}-${mailTag}-procurement-handoff`;
     doc({ id: handoffId, title: `Procurement contact change (${A.name})`, type: 'note', date: handoffDay, body: `# Procurement contact change\n\nFrom: ${A.name} (${C.alias})\nDate: ${handoffDay}\n\nHeads up: starting ${humanDate(startDay)}, ${newBuyer.name} takes over vendor procurement from ${tc.buyer.nick}, who is moving to our platform team.\n` });
     // Namesake: A's namesake at the namesake company, with their own promise in a daily note.
     const lines = dailyLines.get(addDays(PPH_TODAY, -rng.int(2, 8)))!;
@@ -329,7 +364,41 @@ export function generateHardPersona(seed: number, knobs: HardKnobs = DEFAULT_KNO
 }
 
 export function generateHardWorld(seeds: readonly number[] = PPH_DEV_SEEDS, knobs: HardKnobs = DEFAULT_KNOBS): HardWorld {
-  return { version: PPH_GENERATOR_VERSION, knobs, today: PPH_TODAY, session2_day: PPH_SESSION2_DAY, personas: seeds.map(s => generateHardPersona(s, knobs)) };
+  return { version: knobs.unique_codes ? PPH_GENERATOR_VERSION_V2 : PPH_GENERATOR_VERSION, knobs, today: PPH_TODAY, session2_day: PPH_SESSION2_DAY, personas: seeds.map(s => generateHardPersona(s, knobs)) };
+}
+
+/** A world rendered from custodian seeds: persona ids `sealed-01`... and no seed anywhere in it. */
+export interface CustodianWorld extends HardWorld { custodian: true; commitment: string }
+
+export function sealedSeedsCommitment(seeds: readonly number[]): string {
+  return createHash('sha256').update(`${PPH_SEALED_COMMITMENT_PREFIX}${seeds.join(',')}`).digest('hex');
+}
+
+/** Custodian only: mint `personas` random seeds into a 0600 file in `dir` (outside this repository) and return their commitment. */
+export function mintSealedSeeds(dir: string, personas: number): { path: string; commitment: string } {
+  if (insideRepository(dir)) throw new Error('--custodian-out must be outside the repository: sealed seeds are never committed');
+  if (!Number.isInteger(personas) || personas < 1) throw new Error('--personas must be a positive integer');
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const path = join(dir, 't0b-sealed-seeds.json');
+  if (existsSync(path)) throw new Error(`${path} exists; a sealed set is minted once`);
+  const seeds = new Set<number>();
+  // About 1 seed in 300 cannot place its dates and throws; such a seed is redrawn before the commitment exists.
+  const renders = (s: number) => { try { return hardSolvabilityProblems(generateHardPersona(s, V2_KNOBS)).length === 0; } catch { return false; } };
+  while (seeds.size < personas) { const s = randomBytes(4).readUInt32BE(0); if (!PPH_RUNNABLE_SEEDS.includes(s) && renders(s)) seeds.add(s); }
+  const commitment = sealedSeedsCommitment([...seeds]);
+  writeFileSync(path, JSON.stringify({ version: PPH_GENERATOR_VERSION_V2, seeds: [...seeds], commitment, minted_at: new Date().toISOString() }) + '\n', { mode: 0o600 });
+  chmodSync(path, 0o600);
+  return { path, commitment };
+}
+
+/** Render the version 2 world from custodian seeds, with every seed removed and personas renamed in order. */
+export function custodianWorld(seeds: readonly number[]): CustodianWorld {
+  const w = generateHardWorld(seeds, V2_KNOBS);
+  const personas = w.personas.map((p, k) => {
+    const id = `sealed-${String(k + 1).padStart(2, '0')}`;
+    return { ...p, id, seed: 0, tasks: p.tasks.map(t => ({ ...t, id: t.id.replace(p.id, id), persona: id, seed: 0 })) };
+  });
+  return { ...w, personas, custodian: true, commitment: sealedSeedsCommitment(seeds) };
 }
 
 export const renderHardDoc = renderPPDoc;
@@ -358,10 +427,33 @@ export function hardSolvabilityProblems(p: HardPersona): string[] {
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const flag = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  if (argv.includes('--mint-sealed')) {
+    const dir = flag('--custodian-out');
+    if (!dir) throw new Error('--mint-sealed needs --custodian-out <dir outside the repository>');
+    const { commitment } = mintSealedSeeds(resolve(dir), Number(flag('--personas') ?? 16));
+    console.log(JSON.stringify({ commitment, note: 'record this commitment in the preregistration; the seeds stay in custody' }));
+    process.exit(0);
+  }
+  const custody = flag('--custodian-seeds');
+  if (custody) {
+    const file = JSON.parse(readFileSync(resolve(custody), 'utf8')) as { version: string; seeds: number[]; commitment: string };
+    if (file.version !== PPH_GENERATOR_VERSION_V2 || sealedSeedsCommitment(file.seeds) !== file.commitment) throw new Error('custodian seed file does not match its commitment or version');
+    const world = custodianWorld(file.seeds);
+    const problems = world.personas.flatMap(hardSolvabilityProblems);
+    if (problems.length) throw new Error(`solvability: ${problems.join('; ')}`);
+    const out = flag('--out');
+    if (out && !argv.includes('--digest-only')) {
+      if (insideRepository(resolve(out))) throw new Error('--out must be outside the repository: a sealed world is never committed');
+      mkdirSync(out, { recursive: true, mode: 0o700 });
+      writeFileSync(join(out, 'world.json'), JSON.stringify(world) + '\n', { mode: 0o600 });
+    }
+    console.log(JSON.stringify({ version: world.version, knobs: world.knobs, commitment: world.commitment, digest: hardDigest(world), personas: world.personas.length, tasks: world.personas.reduce((n, p) => n + p.tasks.length, 0) }));
+    process.exit(0);
+  }
   const seeds = flag('--seeds')?.split(',').map(Number) ?? [...PPH_DEV_SEEDS];
   const bad = seeds.filter(s => !PPH_RUNNABLE_SEEDS.includes(s));
   if (bad.length) throw new Error(`only development seeds run here; got ${bad.join(', ')}`);
-  const world = generateHardWorld(seeds);
+  const world = generateHardWorld(seeds, { ...DEFAULT_KNOBS, ...(flag('--knobs') ? JSON.parse(flag('--knobs')!) : {}) });
   const problems = world.personas.flatMap(hardSolvabilityProblems);
   if (problems.length) throw new Error(`solvability: ${problems.join('; ')}`);
   const summary = { version: world.version, knobs: world.knobs, digest: hardDigest(world), personas: world.personas.length, docs_per_persona: world.personas.map(p => p.docs.length), tasks: world.personas.reduce((n, p) => n + p.tasks.length, 0) };
