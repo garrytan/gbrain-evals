@@ -399,8 +399,9 @@ export function missingSlotSnapshots(dir: string, n: number): string[] {
 }
 
 /**
- * Slots whose recorded mention coverage is not `complete` with 0 pending pages (E-T7). A slot without a coverage
- * record (built before the record existed) or built by a gbrain without the coverage field is not checked.
+ * Slots whose recorded mention coverage is not `complete` with 0 pending pages (E-T7), or whose snapshot kept queued
+ * persistence effects. A slot without a coverage record (built before the record existed) or built by a gbrain
+ * without the coverage field is not checked for coverage.
  */
 export function incompleteSlotCoverage(dir: string, n: number): { problems: string[]; unchecked: number } {
   const problems: string[] = [];
@@ -409,9 +410,9 @@ export function incompleteSlotCoverage(dir: string, n: number): { problems: stri
     const path = join(dir, `slot${i}.coverage.json`);
     if (!existsSync(path)) { unchecked++; continue; }
     const c = JSON.parse(readFileSync(path, 'utf8')) as SlotCoverage;
-    if (!c.supported) { unchecked++; continue; }
     const problem = coverageProblem(c);
     if (problem) problems.push(`slot${i}: ${problem}`);
+    else if (!c.supported) unchecked++;
   }
   return { problems, unchecked };
 }
@@ -579,6 +580,9 @@ export async function main(argv = process.argv.slice(2)) {
     }
     if (!buildSlots) {
       const coverage = incompleteSlotCoverage(slotDir, nSlots);
+      const queued = coverage.problems.filter(p => p.includes('persistence effects'));
+      if (queued.length) throw new HardStop('HARD_SLOT_EFFECTS_QUEUED', `gbrain slots in ${slotDir}: ${queued.join('; ')}`,
+        `rebuild them: bun eval/runner/cat40-model-ladder.ts --build-slots --rebuild --gbrain-repo ${repo} --gbrain-ref ${slotCommit} --slots ${nSlots} --world ${relative(process.cwd(), worldPath)}`);
       if (coverage.problems.length) {
         throw new Error(`gbrain slots in ${slotDir} have an unfinished mention pass (${coverage.problems.join('; ')}), so entity recall would be measured on a partial index. `
           + `Rebuild them: bun eval/runner/cat40-model-ladder.ts --build-slots --rebuild --gbrain-repo ${repo} --gbrain-ref ${slotCommit} --slots ${nSlots} --world ${relative(process.cwd(), worldPath)}${analyze ? '' : ' --no-pglite-analyze'} --slot-build-allowance-usd 2 --budget-usd <dollars> --budget-ledger <ledger>`);
@@ -648,8 +652,12 @@ export async function main(argv = process.argv.slice(2)) {
           finally { ctx.proxy.allowances.delete(s.id); charged = allowance.close(); }
           builds.push({ ...b, allowance: { reserved_usd: allowance.usd, ...charged } });
           log(`built ${s.id} in ${(b.ms / 1000).toFixed(0)}s, $${b.meter.usd.toFixed(4)} (${b.meter.requests} provider requests; ledger allowance charged $${charged.usd.toFixed(4)}); `
-            + (b.coverage?.supported ? `mention coverage ${b.coverage.state}, ${b.coverage.pending} pending${coverageProblem(b.coverage) ? ' (a round will refuse this slot)' : ''}` : 'no mention coverage field in this build'));
+            + (b.coverage?.supported ? `mention coverage ${b.coverage.state}, ${b.coverage.pending} pending${coverageProblem(b.coverage) ? ' (a round will refuse this slot)' : ''}` : 'no mention coverage field in this build')
+            + `; queued persistence effects at snapshot: ${b.coverage?.queued_effects ?? 'not recorded'}`);
         }
+        const queued = builds.filter(b => (b.coverage?.queued_effects ?? 0) > 0);
+        if (hard && queued.length) throw new HardStop('HARD_SLOT_EFFECTS_QUEUED', `${queued.map(b => `${b.slot}: ${b.coverage!.queued_effects}`).join(', ')} queued persistence effects at snapshot`,
+          `read the warm-boot steps in ${relative(process.cwd(), out)}'s receipt, then rebuild those slots (--build-slots --rebuild)`, 'Garry decides whether cells may run on slots that stall their first tool call');
       }
       // A write probe after restore: the arm is only fair if the agent's writes can land.
       // The verbs surface serves no put_page (its write is remember), so it skips the page-write probe.

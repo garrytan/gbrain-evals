@@ -41,6 +41,8 @@ export const STAGED_SYNC_BATCH = 5000;
 export const SERVE_BOOT_TIMEOUT_SECONDS = 0;
 /** How long the build's one warm server start may take to answer initialize. */
 export const WARM_BOOT_TIMEOUT_MS = 1_800_000;
+/** Server starts the pre-snapshot warm boot makes at most while queued persistence effects remain. */
+export const WARM_BOOT_ATTEMPTS = 3;
 const CORPUS_TAG = 'cat40-corpus';
 const execFileAsync = promisify(execFile);
 
@@ -282,7 +284,11 @@ export interface SlotBuild { slot: string; dir: string; steps: Array<{ step: str
  * `coverage: {state, pending_pages, last_pass_at}` on `entity` cards and misses; `supported: false` records a
  * build that predates the field, whose slots are not checked.
  */
-export interface SlotCoverage { supported: boolean; state: string | null; pending: number | null; last_pass_at: string | null }
+export interface SlotCoverage {
+  supported: boolean; state: string | null; pending: number | null; last_pass_at: string | null;
+  /** Rows of gbrain's persistence_effects still queued when the snapshot was taken (null: the build has no such table; absent: built before this record). */
+  queued_effects?: number | null;
+}
 /** A name no Cat 40 world uses, so the `entity` probe is a miss, which still carries `coverage`. */
 export const COVERAGE_PROBE_NAME = 'cat40 coverage probe';
 
@@ -297,6 +303,7 @@ export function parseCoverage(text: string): SlotCoverage {
 
 /** Why a slot's recorded coverage does not allow a round to start; null when it does or when the build has no coverage. */
 export function coverageProblem(c: SlotCoverage): string | null {
+  if (typeof c.queued_effects === 'number' && c.queued_effects > 0) return `${c.queued_effects} persistence effects were still queued at snapshot, so every restore stalls its first tool call while gbrain drains them`;
   if (!c.supported) return null;
   if (c.state === 'complete' && c.pending === 0) return null;
   return `mention coverage ${c.state ?? 'unknown'} with ${c.pending ?? 'unknown'} pending pages`;
@@ -416,17 +423,42 @@ export class GbrainSlot {
     if (analyze) operatorAnalyze('operator-analyze');
     proxy.unbind(this.id);
     const meter = await proxy.finalize(meterKey);
-    // The first server start on a freshly imported large brain does one-time work before it answers (225 s at
-    // 55,000 pages; 25 s on every later start). Snapshotting after one clean start and stop keeps that work out
-    // of every restore, the way an installed brain has already been opened once.
     const warmStart = Date.now();
-    const warm = new McpClient(this.run, ['--surface', this.surface]);
-    try { await warm.start(WARM_BOOT_TIMEOUT_MS); } finally { await warm.close(); }
-    steps.push({ step: 'warm-boot', code: 0, ms: Date.now() - warmStart, tail: 'one server start and stop before the snapshot' });
+    const warm = await this.warmBoot();
+    steps.push({ step: 'warm-boot', code: 0, ms: Date.now() - warmStart, tail: `${warm.attempts} server start(s), each answering one read-only tool call before stopping; queued persistence effects at snapshot: ${warm.queued_effects ?? 'no persistence_effects table'}` });
     execFileSync('tar', ['-C', this.dir, '-cf', this.snapshot, 'home']);
-    const coverage = await this.probeCoverage();
+    const coverage = { ...await this.probeCoverage(), queued_effects: warm.queued_effects };
     writeFileSync(this.coverageFile, JSON.stringify(coverage, null, 2) + '\n');
     return { slot: this.id, dir: this.dir, steps, meter, ms: Date.now() - t0, coverage };
+  }
+
+  /**
+   * The server start before the snapshot, the way an installed brain has already been opened once. The first start
+   * on a freshly imported large brain does one-time work: gbrain's persistence consumer drains the import's queued
+   * effects (about 47,000 at 55,000 pages, 230-290 s), holding the event loop until it is done. Since gbrain #6390
+   * the server answers initialize before that work, so the start waits for the reply to one read-only tool call (an
+   * `entity` miss, no model call), which the server sends only once the work is done. The effects still queued are
+   * counted after each stop; while any remain the start repeats, at most WARM_BOOT_ATTEMPTS times.
+   */
+  async warmBoot(): Promise<{ attempts: number; queued_effects: number | null }> {
+    let attempts = 0, queued: number | null = null;
+    do {
+      attempts++;
+      const warm = new McpClient(this.run, ['--surface', this.surface]);
+      warm.callTimeoutMs = WARM_BOOT_TIMEOUT_MS;
+      try { await warm.start(WARM_BOOT_TIMEOUT_MS); await warm.call('entity', { name: COVERAGE_PROBE_NAME }); }
+      finally { await warm.close(); }
+      queued = await this.queuedEffects();
+    } while (queued && attempts < WARM_BOOT_ATTEMPTS);
+    return { attempts, queued_effects: queued };
+  }
+
+  /** Rows of gbrain's persistence_effects still queued in the stopped slot's brain; null when the build has no such table. */
+  async queuedEffects(): Promise<number | null> {
+    const pglite = join(this.buildDir, 'node_modules/@electric-sql/pglite/dist');
+    const script = `const { PGlite } = await import(${JSON.stringify(`${pglite}/index.js`)}); const { vector } = await import(${JSON.stringify(`${pglite}/vector/index.js`)}); const { pg_trgm } = await import(${JSON.stringify(`${pglite}/contrib/pg_trgm.js`)}); const db = await PGlite.create({ dataDir: ${JSON.stringify(join(this.dir, 'home', 'brain.pglite'))}, extensions: { vector, pg_trgm } }); const [{ ok }] = (await db.query("SELECT to_regclass('persistence_effects') IS NOT NULL AS ok")).rows; const n = ok ? (await db.query("SELECT count(*)::int AS n FROM persistence_effects WHERE state = 'queued'")).rows[0].n : null; await db.close(); process.stdout.write(JSON.stringify(n));`;
+    const { stdout } = await execFileAsync('bun', ['-e', script], { encoding: 'utf8' });
+    return JSON.parse(stdout.trim()) as number | null;
   }
 
   /** Written beside the snapshot by `build`; the round preflight reads it. */

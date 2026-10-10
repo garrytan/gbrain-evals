@@ -6,9 +6,9 @@
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { generateLadderWorld, type LadderDoc } from '../../eval/generators/model-ladder-gen.ts';
 import { FileStore, FsArm, GREP_LIMITS, HARD_GREP_TOOL, MemoryArm } from '../../eval/runner/cat40/arms.ts';
 import { grepTimeoutMessage, grepWorkerFor, terminateGrepWorkers } from '../../eval/runner/cat40/hard-grep.ts';
@@ -17,7 +17,7 @@ import {
   PG_CHUNK_CHARS, PG_CHUNK_OVERLAP, PG_CHUNKING_ID, PG_EMBED_DIMS, PG_EMBED_INPUT_CHARS, PG_SEARCH_LIMITS, PgArm, PgStore,
   cachedOpenAIEmbedder, chunkDocument, type Embedder,
 } from '../../eval/runner/cat40/pg-arm.ts';
-import { GbrainPool, GbrainSlot, McpClient, SlotQuarantineError, type PoolSlot } from '../../eval/runner/cat40/gbrain-arm.ts';
+import { COVERAGE_PROBE_NAME, GbrainPool, GbrainSlot, McpClient, SlotQuarantineError, WARM_BOOT_ATTEMPTS, coverageProblem, type PoolSlot } from '../../eval/runner/cat40/gbrain-arm.ts';
 
 const world = generateLadderWorld();
 const tmp = mkdtempSync(join(tmpdir(), 'cat40-hard-arms-'));
@@ -333,6 +333,8 @@ describe('gbrain slot quarantine', () => {
 const FAKE_SERVER = `
 let buf = '';
 const send = o => process.stdout.write(JSON.stringify(o) + '\\n');
+const log = line => { if (process.env.FAKE_LOG) require('fs').appendFileSync(process.env.FAKE_LOG, line + '\\n'); };
+process.stdin.on('end', () => log('stdin end'));
 process.stdout.write('fake gbrain booting (not JSON-RPC)\\n');
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', c => {
@@ -351,6 +353,7 @@ process.stdin.on('data', c => {
       else if (n === 'rpc_error') send({ jsonrpc: '2.0', id: m.id, error: { code: -32602, message: 'unknown tool' } });
       else if (n === 'malformed') send({ jsonrpc: '2.0', id: m.id });
       else if (n === 'die') { console.error('fatal: out of memory'); process.exit(3); }
+      else if (n === 'entity') { log('call entity ' + JSON.stringify(m.params.arguments)); setTimeout(() => { log('reply entity'); send({ jsonrpc: '2.0', id: m.id, result: { content: [{ type: 'text', text: '{}' }] } }); }, Number(process.env.FAKE_ENTITY_MS ?? 0)); }
     }
   }
 });
@@ -390,6 +393,55 @@ describe('MCP transport failures are HarnessErrors; tool errors stay text', () =
   test('a server that cannot start is a HarnessError', async () => {
     const c = new McpClient({ buildDir: join(tmp, 'no-such-build'), env: fakeRun().env }, []);
     await expect(c.start()).rejects.toBeInstanceOf(HarnessError);
+  });
+});
+
+describe('GbrainSlot.warmBoot: the pre-snapshot start waits for a tool reply, then counts queued persistence effects', () => {
+  class CountedSlot extends GbrainSlot {
+    counts: Array<number | null> = [];
+    async queuedEffects() { return this.counts.length ? this.counts.shift()! : 0; }
+  }
+  const slotWith = (id: string, counts: Array<number | null>, env: Record<string, string> = {}) => {
+    const s = new CountedSlot(id, join(tmp, 'warm'), buildDir, 1, 'starter');
+    mkdirSync(s.run.env.GBRAIN_HOME!, { recursive: true });
+    Object.assign(s.run.env, env);
+    s.counts = counts;
+    return s;
+  };
+  test('stops only after the read-only entity call is answered (the server answers it once its startup work is done)', async () => {
+    const log = join(tmp, 'warm-log-0');
+    const s = slotWith('w0', [0], { FAKE_LOG: log, FAKE_ENTITY_MS: '400' });
+    expect(await s.warmBoot()).toEqual({ attempts: 1, queued_effects: 0 });
+    expect(readFileSync(log, 'utf8').trim().split('\n')).toEqual([`call entity ${JSON.stringify({ name: COVERAGE_PROBE_NAME })}`, 'reply entity', 'stdin end']);
+  });
+  test('starts again while effects remain queued, at most WARM_BOOT_ATTEMPTS times; a build without the table records null', async () => {
+    expect(await slotWith('w1', [47000, 12, 0]).warmBoot()).toEqual({ attempts: 3, queued_effects: 0 });
+    expect(await slotWith('w2', [9, 9, 9, 9]).warmBoot()).toEqual({ attempts: WARM_BOOT_ATTEMPTS, queued_effects: 9 });
+    expect(await slotWith('w3', [null]).warmBoot()).toEqual({ attempts: 1, queued_effects: null });
+  });
+  test('queuedEffects counts the queued rows in the stopped brain, and null for a build without the table', async () => {
+    const build = join(tmp, 'pglite-build');
+    mkdirSync(join(build, 'node_modules/@electric-sql'), { recursive: true });
+    symlinkSync(resolve(import.meta.dir, '../../node_modules/@electric-sql/pglite'), join(build, 'node_modules/@electric-sql/pglite'));
+    const s = new GbrainSlot('q0', join(tmp, 'queued'), build, 1, 'starter');
+    const dataDir = join(s.dir, 'home', 'brain.pglite');
+    mkdirSync(join(s.dir, 'home'), { recursive: true });
+    const { PGlite } = await import('@electric-sql/pglite');
+    let db = await PGlite.create({ dataDir });
+    await db.close();
+    expect(await s.queuedEffects()).toBeNull();
+    db = await PGlite.create({ dataDir });
+    await db.exec("CREATE TABLE persistence_effects (id serial PRIMARY KEY, state text NOT NULL); INSERT INTO persistence_effects (state) VALUES ('queued'), ('queued'), ('committed'), ('running')");
+    await db.close();
+    expect(await s.queuedEffects()).toBe(2);
+  }, 120_000);
+  test('a snapshot with queued effects fails the slot check (gate 3); 0, null and older records pass', () => {
+    const complete = { supported: true, state: 'complete', pending: 0, last_pass_at: null };
+    expect(coverageProblem({ ...complete, queued_effects: 9 })).toMatch(/9 persistence effects were still queued at snapshot/);
+    expect(coverageProblem({ ...complete, supported: false, queued_effects: 9 })).toMatch(/9 persistence effects/);
+    expect(coverageProblem({ ...complete, queued_effects: 0 })).toBeNull();
+    expect(coverageProblem({ ...complete, queued_effects: null })).toBeNull();
+    expect(coverageProblem(complete)).toBeNull();
   });
 });
 

@@ -52,6 +52,7 @@ export const HARD_STOP_CODES = {
   HARD_PREREG_MISSING: 'the preregistration lacks a field this step needs',
   HARD_STEP_RETIRED: 'amendment A2 retired the 4k held-out steps; the held-out run is 50k only',
   HARD_ORACLE_GATE: 'a confirmation world\'s pooled oracle success is below 95%, or oracle cells are missing (PREREG.md, gate 2)',
+  HARD_SLOT_EFFECTS_QUEUED: 'a gbrain slot snapshot still holds queued persistence effects (PREREG.md, gate 3)',
   HARD_ARM_EXPLORATORY: 'the exploratory gbrain-fs arm runs only on the development (calibration-seed) world, outside any program step',
 } as const;
 export type HardStopCode = keyof typeof HARD_STOP_CODES;

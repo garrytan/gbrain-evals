@@ -100,6 +100,7 @@ Every refusal and stop-for-Garry condition exits 3 and prints `STOP <code>`, wha
 | `HARD_PREREG_MISSING` | the preregistration lacks a field this step needs | fill it and commit before the step |
 | `HARD_STEP_RETIRED` | a 4k held-out step (slots-4k, simple-4k, comparator, gbrain-4k), which amendment A2 retired | run the 50k path: heldout-world, slots-50k, cells-50k, oracle-50k, pg-50k, memory-50k, report |
 | `HARD_ORACLE_GATE` | a confirmation world's pooled oracle success is below 95%, or oracle cells lack a clean attempt (PREREG.md gate 2) | run no counted cells on that world; report it; Garry decides what follows |
+| `HARD_SLOT_EFFECTS_QUEUED` | a gbrain slot snapshot recorded queued persistence effects, so every restore stalls its first tool call (PREREG.md gate 3) | read the slot receipt's warm-boot step and rebuild the slots (`--build-slots --rebuild`) |
 | `HARD_ARM_EXPLORATORY` | `--arms gbrain-fs` on a world other than the calibration seed, or with `--step` | run gbrain-fs only on the calibration-seed (development) world, outside the program steps |
 
 ## Runs, records and stop kinds
