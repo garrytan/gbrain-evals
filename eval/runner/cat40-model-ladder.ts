@@ -68,7 +68,7 @@ import { HARD_MAX_RETRIES, type CellRecordV2 } from './cat40/records.ts';
 import { HARD_SCORER_VERSION } from './cat40/score-hard.ts';
 import { HARD_JUDGE_PROMPT_VERSION } from './cat40/judge-hard.ts';
 import { terminateGrepWorkers } from './cat40/hard-grep.ts';
-import { checkRoster, loadRoster, project, loadCostBasis, frozenKnobDigest, freezeDrift, REPO_ROOT, type StepPlan } from './cat40/hard-ops.ts';
+import { checkRoster, checkConfirmLedger, isConfirmStep, loadRoster, project, loadCostBasis, frozenKnobDigest, freezeDrift, REPO_ROOT, type StepPlan } from './cat40/hard-ops.ts';
 import { canonicalCells, readRecords } from './cat40/records.ts';
 import { CHAT_PRICE_OVERRIDES } from './budget-ledger.ts';
 import { prepareBuild } from './lifecycle/builds.ts';
@@ -513,6 +513,8 @@ export async function main(argv = process.argv.slice(2)) {
     if (drift.length && !flag(argv, '--accept-freeze-drift')) throw new HardStop('HARD_FREEZE_DRIFT', `frozen code changed since freeze.json: ${drift.join(', ')}`,
       'a scorer-only change: rescore offline (eval/runner/cat40/rescore.ts --hard) and continue; a behavior change: rerun the affected calibration and reference cells; then pass --accept-freeze-drift "<dated note in calibration.md>"', 'Garry decides when a generator change after step 5 is involved (CEO-F17)');
   }
+  // Confirmation steps spend only from their world's preregistered ledger (PREREG.md, Budget).
+  if (hw && !scripted && isConfirmStep(flag(argv, '--step'))) checkConfirmLedger(flag(argv, '--budget-ledger'));
   if (hw) {
     const recordedPath = join(out, 'experiment.json');
     const recorded = existsSync(recordedPath) ? JSON.parse(readFileSync(recordedPath, 'utf8')) as ExperimentManifest : null;
@@ -600,7 +602,7 @@ export async function main(argv = process.argv.slice(2)) {
   } : undefined;
   if (argv.includes('--preflight')) {
     const perFam = Math.max(0, ...families.map(f => tasks.filter(t => t.family === f).length));
-    printPreflight({ hw, world, models, arms, cells: cells.length, judge, maxTurns, toolLimits, needsGbrain, slotDir, nSlots, step: flag(argv, '--step'), scripted, families: families.filter(f => tasks.some(t => t.family === f)), tasksPerFamily: perFam, repeats, done: hardAttempts as unknown as Array<Record<string, unknown>> });
+    printPreflight({ hw, world, models, arms, cells: cells.length, judge, maxTurns, toolLimits, needsGbrain, slotDir, nSlots, step: flag(argv, '--step'), ledger: flag(argv, '--budget-ledger'), scripted, families: families.filter(f => tasks.some(t => t.family === f)), tasksPerFamily: perFam, repeats, done: hardAttempts as unknown as Array<Record<string, unknown>> });
     return;
   }
 
@@ -770,7 +772,7 @@ export async function main(argv = process.argv.slice(2)) {
 }
 
 /** --preflight: everything a paid step needs, with no paid call (DX-F13). */
-function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: string[]; arms: string[]; cells: number; judge: string | null; maxTurns?: number; toolLimits: string; needsGbrain: boolean; slotDir: string | null; nSlots: number; step?: string; scripted: boolean; families: string[]; tasksPerFamily: number; repeats: number; done: Array<Record<string, unknown>> }) {
+function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: string[]; arms: string[]; cells: number; judge: string | null; maxTurns?: number; toolLimits: string; needsGbrain: boolean; slotDir: string | null; nSlots: number; step?: string; ledger?: string; scripted: boolean; families: string[]; tasksPerFamily: number; repeats: number; done: Array<Record<string, unknown>> }) {
   const keyOf = (m: string) => { try { return provider(m) === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'; } catch { return '(unknown provider)'; } };
   const env: Record<string, string[]> = {};
   for (const a of o.arms) env[a] = [...new Set([...(o.scripted ? [] : o.models.map(keyOf)), ...(a === 'pg' || a === 'gbrain' || a === 'gbrain-fs' ? ['OPENAI_API_KEY (embeddings)'] : [])])];
@@ -785,8 +787,8 @@ function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: s
   let stop: HardStop | null = null;
   if (o.hw && !o.scripted) {
     try {
-      const r = checkRoster(loadRoster());
-      lines.push(`Hard ledger ${relative(process.cwd(), r.hardLedger)}: cap $${r.capUsd.toFixed(2)} (roster), committed $${r.committedUsd.toFixed(2)}, remaining $${r.remainingUsd.toFixed(2)}`);
+      const r = isConfirmStep(o.step) ? checkConfirmLedger(o.ledger) : checkRoster(loadRoster());
+      lines.push(`${isConfirmStep(o.step) ? 'confirmation' : 'Hard'} ledger ${relative(process.cwd(), r.hardLedger)}: cap $${r.capUsd.toFixed(2)} (${isConfirmStep(o.step) ? 'preregistration' : 'roster'}), committed $${r.committedUsd.toFixed(2)}, remaining $${r.remainingUsd.toFixed(2)}`);
       if (o.step) {
         const plan: StepPlan = { step: o.step, order: 0, models: o.models, arms: o.arms, tasksPerFamily: o.tasksPerFamily, families: o.families, repeats: o.repeats, scale: o.hw.scale ?? 'v1' };
         const measured = (process.env.HARD_MEASURED ?? '').split(',').filter(Boolean);

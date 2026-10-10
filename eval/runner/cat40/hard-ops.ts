@@ -4,6 +4,8 @@
  *
  *   bun eval/runner/cat40/hard-ops.ts project --step <step> [--measured <results.jsonl|attempts.jsonl>,...] [--done <the step's attempts.jsonl>] [--world <world.json>] [--scale v1|large]
  *   bun eval/runner/cat40/hard-ops.ts roster
+ *   bun eval/runner/cat40/hard-ops.ts confirm-ledger --world main|sealed
+ *   bun eval/runner/cat40/hard-ops.ts oracle-gate --attempts <confirm-oracle attempts.jsonl>
  *   bun eval/runner/cat40/hard-ops.ts freeze write --knobs <knobs.round-N.json> --note "<why this round froze>"
  *   bun eval/runner/cat40/hard-ops.ts freeze check
  *
@@ -56,13 +58,35 @@ export const STEPS: StepPlan[] = [
   { step: 'memory-50k', order: 10, models: MEMORY_MODELS, arms: ['memory'], tasksPerFamily: 20, repeats: 1, scale: 'large' },
 ];
 
+/**
+ * Confirmation steps (docs/plans/2026-10-07-cat40-hard-fix/PREREG.md), after the held-out run: each runs once per world, M (main
+ * generator, seed HARD_SEEDS.confirmation) and S (sealed generator), on its own machine and ledger (CONFIRM_LEDGERS).
+ */
+export const CONFIRM_STEPS: StepPlan[] = [
+  { step: 'confirm-world', order: 11, models: [], arms: [], tasksPerFamily: 0, repeats: 0, scale: 'large', free: true },
+  { step: 'confirm-slots', order: 12, models: [], arms: [], tasksPerFamily: 0, repeats: 0, scale: 'large', slotBuilds: 5 },
+  { step: 'confirm-oracle', order: 13, models: HARD_MODELS, arms: ['oracle'], tasksPerFamily: 20, repeats: 1, scale: 'large' },
+  { step: 'confirm-cells', order: 14, models: HARD_MODELS, arms: ['gbrain', 'fs'], tasksPerFamily: 20, repeats: 1, scale: 'large' },
+];
+
+/** The confirmation's worlds and their ledgers, one per world because the worlds run on separate machines (PREREG.md, Budget). */
+export const CONFIRM_LEDGERS = { main: '.budget/cat40-hard-confirm-main.sqlite', sealed: '.budget/cat40-hard-confirm-sealed.sqlite' } as const;
+export type ConfirmWorld = keyof typeof CONFIRM_LEDGERS;
+export const CONFIRM_CAP_USD = 650;
+/** The oracle gate before counted confirmation cells: pooled oracle success over the three models (PREREG.md, gate 2). */
+export const CONFIRM_ORACLE_MIN = 0.95;
+
+export function isConfirmStep(step: string | undefined): boolean {
+  return !!step && CONFIRM_STEPS.some(s => s.step === step);
+}
+
 /** The 4k held-out steps amendment A2 retired; the operator script refuses them with HARD_STEP_RETIRED. */
 export const RETIRED_STEPS = ['slots-4k', 'simple-4k', 'comparator', 'gbrain-4k'];
 
 export function stepPlan(step: string): StepPlan {
   if (RETIRED_STEPS.includes(step)) throw new HardStop('HARD_STEP_RETIRED', `${step} is a 4k held-out step, retired by amendment A2`, 'run the 50k path: heldout-world, slots-50k, cells-50k, oracle-50k, pg-50k, memory-50k, report');
-  const p = STEPS.find(s => s.step === step);
-  if (!p) throw new Error(`unknown step ${step}; steps: ${STEPS.map(s => s.step).join(', ')}`);
+  const p = [...STEPS, ...CONFIRM_STEPS].find(s => s.step === step);
+  if (!p) throw new Error(`unknown step ${step}; steps: ${[...STEPS, ...CONFIRM_STEPS].map(s => s.step).join(', ')}`);
   return p;
 }
 
@@ -173,6 +197,35 @@ export function checkRoster(roster: Roster, root = REPO_ROOT): { hardLedger: str
   return hard;
 }
 
+/**
+ * A confirmation step's ledger: one of CONFIRM_LEDGERS, present on this machine, with the preregistered cap. The
+ * campaign roster (checkRoster) lists the held-out machines' ledgers, which the confirmation machines do not hold.
+ */
+export function checkConfirmLedger(ledger: string | undefined, root = REPO_ROOT): { hardLedger: string; capUsd: number; committedUsd: number; remainingUsd: number } {
+  const known = Object.values(CONFIRM_LEDGERS) as string[];
+  if (!ledger || !known.includes(ledger)) throw new HardStop('HARD_LEDGER_ROSTER', `a confirmation step runs on ${known.join(' or ')}, not ${ledger ?? 'no --budget-ledger'}`, 'pass --budget-ledger with the world\'s confirmation ledger (scripts/cat40-hard.sh sets it from CONFIRM_WORLD)');
+  const p = resolve(root, ledger);
+  if (!existsSync(p)) throw new HardStop('HARD_LEDGER_ROSTER', `${ledger} does not exist on this machine`, `create it once with bun eval/runner/budget-ledger.ts init --budget-ledger ${ledger} --program-cap-usd ${CONFIRM_CAP_USD}; never open a replacement ledger for a world that has spent`);
+  const s = ledgerStatus({ ledgerPath: p });
+  const cap = s.totals.program_cap_usd ?? NaN;
+  if (Math.abs(cap - CONFIRM_CAP_USD) > 0.005) throw new HardStop('HARD_LEDGER_ROSTER', `${ledger} records a cap of $${cap.toFixed(2)}; the preregistration sets $${CONFIRM_CAP_USD}`, 'stop and ask Garry; only his authorization changes a cap');
+  return { hardLedger: p, capUsd: cap, committedUsd: s.totals.committed_usd ?? 0, remainingUsd: s.totals.remaining_usd ?? 0 };
+}
+
+/**
+ * Gate 2 of the confirmation: pooled oracle success over every planned oracle cell (3 models x 100 tasks). A cell
+ * with no harness-clean attempt counts as missing, and any missing cell fails the gate.
+ */
+export function confirmOracleGate(records: Array<Record<string, unknown>>, planned = HARD_MODELS.length * 100): { cells: number; planned: number; successes: number; rate: number; by_model: Record<string, { cells: number; successes: number }>; incomplete: number; pass: boolean } {
+  const { cells, incomplete } = canonicalCells(records);
+  const oracle = cells.filter(c => c.arm === 'oracle');
+  const by_model: Record<string, { cells: number; successes: number }> = {};
+  for (const c of oracle) { by_model[c.model] ??= { cells: 0, successes: 0 }; by_model[c.model].cells++; if (c.success) by_model[c.model].successes++; }
+  const successes = oracle.filter(c => c.success).length;
+  const rate = oracle.length ? successes / oracle.length : 0;
+  return { cells: oracle.length, planned, successes, rate, by_model, incomplete: incomplete.length, pass: oracle.length === planned && !incomplete.length && rate >= CONFIRM_ORACLE_MIN };
+}
+
 export function budgetCheck(remainingUsd: number, projection: Projection): void {
   if (remainingUsd < projection.with_margin_usd) {
     throw new HardStop('HARD_BUDGET_SHORT', `step ${projection.step} projects $${projection.total_usd.toFixed(2)} ($${projection.with_margin_usd.toFixed(2)} with the 15% margin); the Hard ledger has $${remainingUsd.toFixed(2)} left`,
@@ -228,6 +281,16 @@ if (import.meta.main) {
       console.log(JSON.stringify(p, null, 2));
     } else if (cmd === 'roster') {
       console.log(JSON.stringify(checkRoster(loadRoster()), null, 2));
+    } else if (cmd === 'oracle-gate') {
+      const results = flag('--attempts');
+      if (!results) { console.error('usage: hard-ops.ts oracle-gate --attempts <confirm-oracle attempts.jsonl>'); process.exit(2); }
+      const g = confirmOracleGate(readRecords([results]));
+      console.log(JSON.stringify(g, null, 2));
+      if (!g.pass) throw new HardStop('HARD_ORACLE_GATE', `pooled oracle success ${(g.rate * 100).toFixed(1)}% on ${g.cells} of ${g.planned} cells (${g.incomplete} without a clean attempt); the gate needs ${CONFIRM_ORACLE_MIN * 100}% on all ${g.planned}`, 'run no counted cells on this world; report it', 'Garry decides what follows a failed oracle gate (PREREG.md, gate 2)');
+    } else if (cmd === 'confirm-ledger') {
+      const world = flag('--world') as ConfirmWorld | undefined;
+      if (world !== 'main' && world !== 'sealed') { console.error('usage: hard-ops.ts confirm-ledger --world main|sealed'); process.exit(2); }
+      console.log(JSON.stringify(checkConfirmLedger(CONFIRM_LEDGERS[world]), null, 2));
     } else if (cmd === 'freeze' && argv[1] === 'write') {
       const knobs = flag('--knobs'), note = flag('--note');
       if (!knobs || !note) { console.error('usage: hard-ops.ts freeze write --knobs <knobs.round-N.json> --note "<round and reason>"'); process.exit(2); }
@@ -237,7 +300,7 @@ if (import.meta.main) {
       console.log(drift.length ? `frozen code changed: ${drift.join(', ')}` : existsSync(FREEZE_PATH) ? 'frozen code unchanged' : 'no freeze record yet');
       process.exit(drift.length ? 3 : 0);
     } else {
-      console.error('usage: bun eval/runner/cat40/hard-ops.ts project --step <step> [--measured <files>] [--world <world.json>] | roster | freeze write --knobs <file> --note <text> | freeze check');
+      console.error('usage: bun eval/runner/cat40/hard-ops.ts project --step <step> [--measured <files>] [--world <world.json>] | roster | confirm-ledger --world main|sealed | oracle-gate --attempts <file> | freeze write --knobs <file> --note <text> | freeze check');
       process.exit(2);
     }
   } catch (e) {

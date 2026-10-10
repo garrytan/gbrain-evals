@@ -23,6 +23,13 @@
 #   report         analysis tables, the primary endpoint (gbrain minus fs at 50k) and every comparison, from committed results free
 # Amendment A2 retired the 4k held-out steps (slots-4k, simple-4k, comparator, gbrain-4k); they stop with HARD_STEP_RETIRED.
 #
+# Confirmation (docs/plans/2026-10-07-cat40-hard-fix/PREREG.md), each step once per world, CONFIRM_WORLD=main|sealed:
+#   confirm-world  main: the 50k world from seed 20261021 and the frozen knobs (and its 4k base), validated; sealed: validates the
+#                  world the seed owner generated and moved to this machine, against its generator and SEALED_DIGEST    free
+#   confirm-slots  5 gbrain slot snapshots; each must record 0 queued persistence effects (gate 3)
+#   confirm-oracle the oracle on every model and task, then gate 2 (pooled oracle success >= 95%)
+#   confirm-cells  the counted gbrain and fs cells on every model and task (needs a passing oracle gate)
+#
 # Environment:
 #   GBRAIN_REPO   gbrain checkout (default ../gbrain);  GBRAIN_REF   the gbrain commit under test (current master; recorded resolved)
 #   ROUND         calibration round for calibrate, freeze-check and freeze
@@ -31,6 +38,12 @@
 #   BUDGET_USD    the step's --budget-usd instead of its projection plus 15% (the ledger gate still applies)
 #   FREEZE_OVERRIDE  Garry's dated decision to freeze-check and freeze a round that fails the freeze rule; becomes the freeze note
 #   PRINT_ONLY=1  print the commands instead of running them (guards are listed, not checked)
+#   CONFIRM_WORLD main|sealed for the confirm-* steps; selects the world's directory and ledger (LEDGER is ignored there)
+#   GBRAIN_ROOT   the runner's --gbrain-root for confirm-slots and confirm-cells (default: the runner's)
+#   SEALED_DIGEST the sealed world's recorded digest (default: the one in SEALED.md); a new one needs a PREREG.md record first
+#   ACCEPT_FREEZE_DRIFT  passed as --accept-freeze-drift to confirm-oracle and confirm-cells: the dated note naming the
+#                 preregistered harness SHA, when frozen code changed after freeze.json (PREREG.md fixes the harness)
+#   CONFIRM_MEASURED  comma list of attempts files for the confirmation projections (default: the 50k held-out batches)
 #
 # Every refusal and stop-for-Garry condition exits 3 with a stable code (RUNBOOK.md lists them). A step that stops
 # part way resumes by running the same step again: its --out directory is bound to the experiment, and the resume
@@ -62,6 +75,9 @@ OPS=eval/runner/cat40/hard-ops.ts
 ANALYZE=eval/runner/cat40/analyze.ts
 STATS=docs/benchmarks/2026-10-02-model-ladder/holdout/holdout_stats.py
 GBRAIN_LABEL=gbrain-hard
+CONFIRM_SEED=20261021
+CONFIRM=eval/reports/cat40/hard-confirm
+SEALED_DIGEST="${SEALED_DIGEST:-61870796c34d922daeb2909a5c30e44e1121504054f83319ef8a6307ca570a00}"
 
 print_only() { [[ "${PRINT_ONLY:-}" == 1 ]]; }
 note() { echo "[cat40-hard] $*" >&2; }
@@ -123,6 +139,20 @@ complete() { # complete <out dir>: the last receipt says complete and no planned
 }
 harness_errors() { bun -e "const fs = require('fs'); const p = '$1/attempts.jsonl'; const n = fs.existsSync(p) ? fs.readFileSync(p, 'utf8').split('\\n').filter(Boolean).map(l => JSON.parse(l)).filter(r => r.stop === 'harness_error').length : 0; console.log(n)"; }
 world_hash() { [[ -f "$1" ]] && sha256sum "$1" | cut -c1-64 || echo missing; }
+# The confirmation world's directory; sets CW and LEDGER from CONFIRM_WORLD.
+confirm_world() {
+  case "${CONFIRM_WORLD:-}" in
+    main|sealed) CW="$CONFIRM/$CONFIRM_WORLD"; LEDGER=".budget/cat40-hard-confirm-$CONFIRM_WORLD.sqlite"; COMMON=(--judge "$JUDGE" --budget-ledger "$LEDGER" --transcripts) ;;
+    *) stop HARD_PREDECESSOR_MISSING "CONFIRM_WORLD must be main or sealed (got '${CONFIRM_WORLD:-}')" "export CONFIRM_WORLD=main on the main world's machine, CONFIRM_WORLD=sealed on the custody VM" ;;
+  esac
+  print_only || bun "$OPS" confirm-ledger --world "$CONFIRM_WORLD" >/dev/null || exit 3
+}
+# Validate a Hard world against its generator; prints its digests only (never content).
+validate_world() {
+  print_only && { echo "# validates $1 against its generator"; return; }
+  bun -e "import { checkHardWorld } from './eval/runner/cat40/hard.ts'; import { hardWorldDigest } from './eval/generators/model-ladder-hard.ts'; const w = JSON.parse(require('fs').readFileSync('$1', 'utf8')); checkHardWorld(w, '$1'); console.log(JSON.stringify({ valid: true, version: w.version, scale: w.scale, docs: w.docs.length, tasks: w.tasks.length, knob_digest: w.knob_digest, world_digest: hardWorldDigest(w) }))" \
+    || stop HARD_WORLD_INVALID "$1 does not validate against its generator" "regenerate it with its generator; never edit a world"
+}
 
 COMMON=(--judge "$JUDGE" --budget-ledger "$LEDGER" --transcripts)
 
@@ -141,7 +171,7 @@ case "$CMD" in
     run bun eval/runner/budget-ledger.ts status --budget-ledger "$LEDGER" || true
     run bun "$OPS" roster || true
     run bun "$OPS" freeze check || true
-    for d in "$REPORTS"/calibration/round-*/cells "$REPORTS"/calibration/round-*/freeze-check "$REPORTS"/smoke/cells "$REPORTS"/cells-50k-smoke "$REPORTS"/cells-50k "$REPORTS"/oracle-50k "$REPORTS"/pg-50k "$REPORTS"/memory-50k; do
+    for d in "$REPORTS"/calibration/round-*/cells "$REPORTS"/calibration/round-*/freeze-check "$REPORTS"/smoke/cells "$REPORTS"/cells-50k-smoke "$REPORTS"/cells-50k "$REPORTS"/oracle-50k "$REPORTS"/pg-50k "$REPORTS"/memory-50k "$CONFIRM"/*/oracle "$CONFIRM"/*/cells; do
       [[ -d "$d" ]] || continue
       if complete "$d"; then s=complete; else s=incomplete; fi
       echo "$d: $s, $(harness_errors "$d") harness-error attempts"
@@ -286,6 +316,64 @@ case "$CMD" in
         budget_gate "$B"
         run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B" $(resume_args "$REPORTS/$STEP")
         ;;
+      confirm-world)
+        confirm_world
+        W="$CW/world/world.json"
+        if [[ "$CONFIRM_WORLD" == main ]]; then
+          [[ "$CMD" == preflight ]] && { echo "confirm-world is free; it writes $CW/world (50k, seed $CONFIRM_SEED) and its base $CW/base-4k from the frozen knobs, validates it and prints hashes only"; exit 0; }
+          run bun "$GEN" --mode hard --seed "$CONFIRM_SEED" --knobs "$DOCS/knobs.frozen.json" --out "$CW/base-4k"
+          run bun "$GEN" --mode hard --seed "$CONFIRM_SEED" --knobs "$DOCS/knobs.frozen.json" --scale large --base-world "$CW/base-4k/world.json" --out "$CW/world"
+          validate_world "$W"
+          print_only || note "record in PREREG.md under 'Recorded before cells': world M $(world_hash "$W") (file sha256), the world digest above. Do not open the world."
+        else
+          [[ "$CMD" == preflight ]] && { echo "confirm-world (sealed) is free; it validates $W, which the seed owner generated on their machine, and compares its digest with $SEALED_DIGEST"; exit 0; }
+          need "$W" "the sealed world, generated on the seed owner's machine and moved here (PREREG.md, Authorization 3)"
+          validate_world "$W"
+          if ! print_only; then
+            got="$(bun -e "import { sealedWorldDigest } from './eval/generators/hard-sealed/generate.ts'; console.log(sealedWorldDigest(JSON.parse(require('fs').readFileSync('$W', 'utf8'))))")"
+            [[ "$got" == "$SEALED_DIGEST" ]] || stop HARD_WORLD_MISMATCH "the sealed world's digest is $got, not the recorded $SEALED_DIGEST" "record the new digest and its reason in PREREG.md before any cell (gate 1), then rerun with SEALED_DIGEST=<it>"
+            note "sealed world digest $got matches; file sha256 $(world_hash "$W")"
+          fi
+        fi
+        ;;
+      confirm-slots)
+        confirm_world
+        W="$CW/world/world.json"
+        need "$W" "the confirmation world (confirm-world)"
+        REF="$(gbrain_ref)"
+        ARGS=(--build-slots --world "$W" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" ${GBRAIN_ROOT:+--gbrain-root "$GBRAIN_ROOT"} --slots 5 --slot-build-allowance-usd 4 --budget-ledger "$LEDGER" --out "$CW/slots" --step confirm-slots)
+        if [[ "$CMD" == preflight ]]; then run bun "$OPS" project --step "$STEP" --world "$W"; exit; fi
+        B="$(budget_for "$STEP" --world "$W")"
+        budget_gate "$B"
+        run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B"
+        ;;
+      confirm-oracle|confirm-cells)
+        confirm_world
+        W="$CW/world/world.json"
+        need "$W" "the confirmation world (confirm-world)"
+        CAL=(); for p in ${CONFIRM_MEASURED:+${CONFIRM_MEASURED//,/ }} "$REPORTS"/cells-50k/attempts.jsonl "$REPORTS"/oracle-50k/attempts.jsonl "$CW"/oracle/attempts.jsonl "$CW"/cells/attempts.jsonl; do [[ -f "$p" ]] && CAL+=("$p"); done
+        M="$(measured ${CAL[@]+"${CAL[@]}"})"
+        DRIFT=(${ACCEPT_FREEZE_DRIFT:+--accept-freeze-drift "$ACCEPT_FREEZE_DRIFT"})
+        if [[ "$STEP" == confirm-oracle ]]; then
+          ARGS=(--world "$W" --models "$MODELS" --arms oracle --concurrency 10 --repeat 1 "${COMMON[@]}" ${DRIFT[@]+"${DRIFT[@]}"} --out "$CW/oracle" --step confirm-oracle)
+        else
+          need "$CW/slots" "the confirmation slot build (confirm-slots)"
+          need "$CW/oracle/attempts.jsonl" "the confirmation oracle step (confirm-oracle)"
+          print_only || bun "$OPS" oracle-gate --attempts "$CW/oracle/attempts.jsonl" >/dev/null || exit 3
+          REF="$(gbrain_ref)"
+          ARGS=(--world "$W" --models "$MODELS" --arms gbrain,fs --gbrain-label "$GBRAIN_LABEL" --gbrain-repo "$GBRAIN_REPO" --gbrain-ref "$REF" ${GBRAIN_ROOT:+--gbrain-root "$GBRAIN_ROOT"} --slots 5 --concurrency 10 --repeat 1 "${COMMON[@]}" ${DRIFT[@]+"${DRIFT[@]}"} --out "$CW/cells" --step confirm-cells)
+        fi
+        if [[ "$CMD" == preflight ]]; then HARD_MEASURED="${M#--measured }" run bun "$RUNNER" "${ARGS[@]}" --preflight; exit; fi
+        OUTDIR="$CW/${STEP#confirm-}"
+        B="$(budget_for "$STEP" --world "$W" $M $(done_arg "$OUTDIR"))"
+        budget_gate "$B"
+        run bun "$RUNNER" "${ARGS[@]}" --budget-usd "$B" $(resume_args "$OUTDIR")
+        if [[ "$STEP" == confirm-oracle ]] && ! print_only; then
+          complete "$OUTDIR" || stop HARD_CELLS_INCOMPLETE "the confirmation oracle step is incomplete" "rerun $0 step confirm-oracle to resume it"
+          run bun "$OPS" oracle-gate --attempts "$OUTDIR/attempts.jsonl"
+          note "oracle gate passes on world $CONFIRM_WORLD; next: CONFIRM_WORLD=$CONFIRM_WORLD $0 step confirm-cells"
+        fi
+        ;;
       report)
         [[ "$CMD" == preflight ]] && { echo "report is free"; exit 0; }
         need "$REPORTS/cells-50k/attempts.jsonl" "the primary 50k batch (cells-50k)"
@@ -295,11 +383,11 @@ case "$CMD" in
         for b in oracle-50k memory-50k; do [[ -f "$REPORTS/$b/attempts.jsonl" ]] && FILES+=("$REPORTS/$b/attempts.jsonl"); done
         run bun "$ANALYZE" "${FILES[@]}" --subject "$GBRAIN_LABEL" --comparator fs --md "$REPORTS/analysis-50k.md" --json "$REPORTS/analysis-50k.json" --budget-ledger "$LEDGER"
         ;;
-      *) stop HARD_PREDECESSOR_MISSING "unknown step '$STEP'" "use one of: calibrate freeze-check freeze smoke heldout-world slots-50k cells-50k oracle-50k pg-50k memory-50k report" ;;
+      *) stop HARD_PREDECESSOR_MISSING "unknown step '$STEP'" "use one of: calibrate freeze-check freeze smoke heldout-world slots-50k cells-50k oracle-50k pg-50k memory-50k report confirm-world confirm-slots confirm-oracle confirm-cells" ;;
     esac
     ;;
   *)
-    sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'
+    awk 'NR > 1 && /^#/ { print; next } NR > 1 { exit }' "$0" | sed 's/^# \{0,1\}//'
     [[ -z "$CMD" || "$CMD" == help || "$CMD" == --help ]] && exit 0
     exit 2
     ;;
