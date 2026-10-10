@@ -2,6 +2,34 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.71] - 2026-10-10
+
+### Budgeted delivery H1 results: `depth_first` fails on held-out questions; `cap_only` stays the explicit-budget default
+
+Release decision 2 of sealed confirmation v2 (`sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only`), run by the
+custodian on main `9b200886` (v0.10.70) at gbrain `8a3eedeac`
+([report](docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1.md), aggregates in
+`docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1/results/`). Spend $46.89 of the $145 cap.
+
+- **Verdict `fail`.** With an explicit 5,500-token budget and Sonnet 5.5, `depth_first` answered 122 of 200 and
+  `cap_only` 145: −11.5 points (95% persona-clustered interval −18.0 to −4.5), 14 wins and 37 losses, exact McNemar
+  p = 0.0018. Guard 7 found a clear loss in multi-session (40 → 15 of 80; 5 wins, 30 losses, one-sided p = 1.1e-5).
+  Temporal rose 26 → 32, knowledge update fell 39 → 35 (p = 0.11), abstention was 40 of 40 in both. Opus 5.5
+  (138 → 122) and gpt-6.1-sol (144 → 121) agree. References: `off` 142, `off` on the first five hits 150 (+2.5 over
+  `cap_only`, not distinguishable).
+- **Why.** `depth_first` fit about 3 whole conversations and delivered every gold chat for 76 of 160 answerable
+  questions (16 of 80 multi-session); `cap_only` reached pieces of about 10 and covered 159. Sealed v2's
+  multi-session and knowledge-update questions need three or four chats months apart. The run landed beyond the
+  preregistered "multi-session rewards breadth" power scenario (P(pass) 5.5%).
+- **Every evidence guard held** before any label read: guard 1 (no-budget bytes identical) on 200 of 200, guards 3, 4
+  and 5 on 200 of 200, and all 1,600 reader contexts re-rendered to the bytes the readers got.
+- **Custody.** One freeze resume after an embedding-cache lock at startup (lease $0.64; the freeze cost $0.86 over 2
+  leases), no label read before it. The access log went from 6 to 35 lines, all 29 new lines under this decision,
+  with 8 label reads, all after the final gate.
+- **What it means.** `cap_only` stays gbrain's explicit-budget default; `depth_first` stays opt-in, is not tested on
+  sealed v2 again and is not tuned on it. Sealed v2 has one opening left. The protocol's Openings record, the H1
+  preregistration and the docs index row are updated.
+
 ## [0.10.70] - 2026-10-10
 
 ### Budgeted delivery H1: preregistered held-out test of `depth_first` against the shipped `cap_only`

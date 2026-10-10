@@ -2,7 +2,7 @@
 
 This is a preregistration, not a result. It fixes, before the sealed files are copied into the custody root, the
 question, the arms, the readers, the judge, the metric, the decision rule, the spending cap and what each outcome means
-for gbrain's default. The results will be published in a separate report, `2026-10-10-gbrain-budgeted-delivery-h1.md`.
+for gbrain's default. The results are in a separate report, [`2026-10-10-gbrain-budgeted-delivery-h1.md`](2026-10-10-gbrain-budgeted-delivery-h1.md): the verdict was `fail` (`depth_first` 122 of 200 against `cap_only`'s 145).
 
 [gbrain](https://github.com/garrytan/gbrain) is a memory system for agents. When an agent searches its memory with a
 token budget, gbrain ranks short passages (chunks) and then decides how much of each matching conversation to hand
@@ -317,6 +317,11 @@ bun docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1/scripts/power.ts > do
 ```
 
 ## Changelog
+
+### 2026-10-10: results linked
+
+The opening links the [results report](2026-10-10-gbrain-budgeted-delivery-h1.md) and names the verdict (`fail`).
+Nothing else in this preregistration changed.
 
 ### 2026-10-10: guard 7 is the clear-loss test, before custody
 
