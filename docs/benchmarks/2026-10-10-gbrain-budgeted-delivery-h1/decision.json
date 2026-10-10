@@ -1,0 +1,157 @@
+{
+  "schema": "gbrain-evals/budgeted-delivery-h1-decision/v1",
+  "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only",
+  "registered_at": "2026-10-10",
+  "preregistration": "docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md",
+  "plan": "docs/plans/2026-10-08-gbrain-budgeted-delivery/PLAN.md (branch capy/gbrain-budgeted-delivery-plan), sections 'Decision rule for turning a change on by default' and 'Held-out decision (H1)'",
+  "dev_evidence": "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2.md",
+  "question": "At gbrain 8a3eedeac (v0.60.126.0), with an explicit token budget, does packing whole conversations in rank order (search.auto_packing = depth_first) answer more held-out questions than the shipped explicit-budget default (cap_only), without losing a question kind or abstention?",
+  "approval": "Garry, 2026-10-10: approve H1; test depth_first on the sealed set; option A (cap_only stays the explicit-budget default until depth_first passes H1); sealed custody on Garry's Mac only.",
+  "sealed": {
+    "set": "sealed-confirmation-v2",
+    "manifest": "eval/data/sealed-confirmation-v2/manifest.json",
+    "questions_sha256": "8d29e92dc6792fb444e564ca556acd5cb4566ec14a6080c0e2e1ee8e8bd98a38",
+    "labels_sha256": "83bf52d11e0a26f64f1ece8ce5ac637b81844e38e67c5df1495cb7614a0357c4",
+    "questions": 200,
+    "personas": 40,
+    "kinds": { "multi-session": 80, "temporal-reasoning": 40, "knowledge-update": 40, "abstention": 40 },
+    "release_decision": "Opening 2 of the 3 the protocol allows. One candidate only (the 10x plan's evidence brief did not qualify, gbrain-evals#111), so there is no joint opening; the third opening stays in reserve.",
+    "access_log_before": {
+      "verified": "2026-10-10 by the orchestrator on the custodian machine: the sealed files at the owner's private location match the manifest, and access-log.jsonl has these 6 lines",
+      "lines": 6,
+      "entries": [
+        { "action": "solvability", "decision_id": null },
+        { "action": "score", "decision_id": "sealed-v2-decision-1-2026-10-02:auto-vs-chunk" },
+        { "action": "score", "decision_id": "sealed-v2-decision-1-2026-10-02:auto-vs-chunk" },
+        { "action": "open", "decision_id": "p8-quotes-heldout-2026-10-05" },
+        { "action": "open", "decision_id": "p8-quotes-heldout-2026-10-05" },
+        { "action": "open", "decision_id": "p8-quotes-heldout-2026-10-05" }
+      ]
+    },
+    "exposure": "2026-10-04 and 2026-10-05: the chat text (not the questions or labels.json) of 34 of 40 histories was imported into throwaway brains and sent to model providers for gbrain P8 quote grounding. No label or ledger was read. Nothing in evidence delivery, packing or this decision was tuned on that text."
+  },
+  "gbrain": {
+    "repository": "garrytan/gbrain",
+    "commit": "8a3eedeacb6e52da5b413502019692db80c5cc5d",
+    "version": "0.60.126.0",
+    "loaded_as": "a copied --gbrain overlay of a checkout at this commit (eval/runner/gbrain-under-test.ts), as in E2; equal to the package.json pin of gbrain-evals at registration",
+    "e2_commit": "ca2c447bd39b31beb142247de424c096eefc8525",
+    "why_not_e2_commit": "Between ca2c447bd and 8a3eedeac only src/core/chunkers/token-estimate.ts changed among the files that feed retrieval, packing or token counting: estimateTokens (the cl100k count gbrain uses for chunking, the reranker's document cut and evidence delivery's budget recount) now sums memoized per-pre-token counts instead of encoding the whole text. It is meant to return the same counts, but a counting change is a relevant change by this decision's rule, so H1 measures at the pin and discloses it. The keyless dry run delivered byte-identical evidence at both commits on the invented fixture.",
+    "explicit_budget_default": "search.auto_packing defaults to cap_only for explicit budgets at this commit (DEFAULT_AUTO_PACKING, gbrain#6367)"
+  },
+  "construction": {
+    "freeze": "One query call per question freezes the ranked hit list, shared by every arm: query { query, limit: 25, expand: false, return_unit: 'chunk' }, no token budget, real embeddings, gbrain's default reranker. A list without rerank scores is retried up to three times, then kept and counted (eval/runner/systems/gbrain-query/system.ts, stage=freeze).",
+    "query_limit": 25,
+    "embedding": { "model": "openai:text-embedding-3-large", "dimensions": 1536 },
+    "query_path_pins": "E2's: search.cache.enabled=false, decide.provider=none, search.crag_escalation=false, search.crag_think=false, search.track_retrieval=false (QUERY_PATH_PINS), each checked against KNOWN_CONFIG_KEYS and read back",
+    "delivery": "Every arm delivered from the same frozen list through assembleEvidenceForHits with return_unit auto, the explicit budget and a per-call auto_packing, after a hash-vector re-import with the reranker off in which every frozen chunk is re-resolved and its text checked (stage=deliver, deliver_set=h1)",
+    "b_pseudo": 5500,
+    "b_pseudo_basis": "E2's sizing on its real frozen lists gave 5,500 on LongMemEval-S (ratio max 1.409), 6,400 on LoCoMo dev (1.224) and 6,000 on BEAM-100K dev (1.302) for an 8,000-token harness budget. H1 takes the most conservative, LongMemEval-S's 5,500: it has the highest ratio of serialized harness tokens to gbrain budget_used, sealed v2 histories are LongMemEval-style user and assistant chats with LongMemEval timestamps, and the sealed text cannot be replayed for sizing. It is also the budget E2 measured depth_first at. A guard 4 overflow on the sealed set is a terminal fail, never a retune.",
+    "harness_budget_tokens": 8000,
+    "harness_tokenizer": "approx-chars-div-4 (characters divided by four)",
+    "rendering": "pseudo-session: memory-qa READER_TEMPLATE with renderHistory over sessions rebuilt from the delivered blocks, in date order, each with its chat's date, packed whole in rank order while the serialized history fits 8,000 harness tokens; cuts are counted (eval/runner/systems/render.ts packRecipe)",
+    "recipes": {
+      "pseudo-off": { "items": "off-b_pseudo", "render": "pseudo-session", "hash": "ad213143f75194cb4143a9193d2ccb9aafa25c414cb64a0591e0431d73c28df3" },
+      "pseudo-cap_only": { "items": "cap_only-b_pseudo", "render": "pseudo-session", "hash": "3edcd166ea40a2436ae65115f9c664b4d39ad853a764e20e9436f327bce0874f" },
+      "pseudo-depth_first": { "items": "depth_first-b_pseudo", "render": "pseudo-session", "hash": "b1e6c55cca4d2754dd39e28237a47cde2a8c51560405bda2a9ecadcb6fbc0267" },
+      "pseudo-off-l5": { "items": "off-l5-b_pseudo", "render": "pseudo-session", "hash": "689c5565649ee1da7cd9b1dda4273708baf863dd59c2db0f5459a834e177b720" }
+    },
+    "renderer": {
+      "note": "The recipe hashes are E2's (its preregistration's recipe table); the renderer sources are byte-identical to E2's at its A1 commit 05826da2 and its report commit 345bd2c5.",
+      "dated_renderer_version": "budgeted-delivery-render-v1",
+      "reader_template_sha256": "8951d2bf74c971c6527ba7b74fc63f5f49bddc467e11436abd0500219e6dac31",
+      "sources_sha256": {
+        "eval/runner/systems/render.ts": "a80b7aa50b79a9d343b4d3702b5d398ba926b0676307dc440272a1982d0f6867",
+        "eval/runner/memory-qa/qa.ts": "88c2c28c24a7e38b165687c01d7141b0eb4bad97f83ace011c9507986788b1f7",
+        "eval/runner/memory-qa/arms.ts": "de698694efb611a41f28e30f6fc0790a8ada96e88075c38ee9226d9245e747b1",
+        "eval/runner/systems/sanitize.ts": "e9cf9c3481edaab5bb0a1c86ae09d6e5d98e829d9a08eb990fe7a9d97ada1fee"
+      },
+      "differs_from_decision_1": "Decision 1 rendered evidence with sealed-confirmation.ts (evidenceSessions under LME_READER_TEMPLATE) and Sonnet 4.6. H1 uses memory-qa's renderer and reader template, the ones E2 measured, so the held-out arms read exactly the bytes E2's renderer produces for the same blocks."
+    }
+  },
+  "answer_arms": [
+    { "id": "sonnet-5-5.depth_first", "role": "candidate", "reader": "sonnet-5-5", "model": "anthropic:claude-sonnet-5-5", "packing": "depth_first", "variant": "depth_first-b_pseudo", "recipe": "pseudo-depth_first", "memory_qa_arm": "fixed-evidence.pseudo-depth_first.b8000.sonnet-5-5" },
+    { "id": "sonnet-5-5.cap_only", "role": "control", "reader": "sonnet-5-5", "model": "anthropic:claude-sonnet-5-5", "packing": "cap_only", "variant": "cap_only-b_pseudo", "recipe": "pseudo-cap_only", "memory_qa_arm": "fixed-evidence.pseudo-cap_only.b8000.sonnet-5-5" },
+    { "id": "sonnet-5-5.off", "role": "reference", "reader": "sonnet-5-5", "model": "anthropic:claude-sonnet-5-5", "packing": "off", "variant": "off-b_pseudo", "recipe": "pseudo-off", "memory_qa_arm": "fixed-evidence.pseudo-off.b8000.sonnet-5-5" },
+    { "id": "sonnet-5-5.off-l5", "role": "reference", "reader": "sonnet-5-5", "model": "anthropic:claude-sonnet-5-5", "packing": "off", "variant": "off-l5-b_pseudo", "recipe": "pseudo-off-l5", "memory_qa_arm": "fixed-evidence.pseudo-off-l5.b8000.sonnet-5-5" },
+    { "id": "opus-5-5.depth_first", "role": "reference", "reader": "opus-5-5", "model": "anthropic:claude-opus-5-5", "packing": "depth_first", "variant": "depth_first-b_pseudo", "recipe": "pseudo-depth_first", "memory_qa_arm": "fixed-evidence.pseudo-depth_first.b8000.opus-5-5" },
+    { "id": "opus-5-5.cap_only", "role": "reference", "reader": "opus-5-5", "model": "anthropic:claude-opus-5-5", "packing": "cap_only", "variant": "cap_only-b_pseudo", "recipe": "pseudo-cap_only", "memory_qa_arm": "fixed-evidence.pseudo-cap_only.b8000.opus-5-5" },
+    { "id": "gpt-6-1-sol.depth_first", "role": "reference", "reader": "gpt-6-1-sol", "model": "openai:gpt-6.1-sol", "packing": "depth_first", "variant": "depth_first-b_pseudo", "recipe": "pseudo-depth_first", "memory_qa_arm": "fixed-evidence.pseudo-depth_first.b8000.gpt-6-1-sol" },
+    { "id": "gpt-6-1-sol.cap_only", "role": "reference", "reader": "gpt-6-1-sol", "model": "openai:gpt-6.1-sol", "packing": "cap_only", "variant": "cap_only-b_pseudo", "recipe": "pseudo-cap_only", "memory_qa_arm": "fixed-evidence.pseudo-cap_only.b8000.gpt-6-1-sol" }
+  ],
+  "readers": {
+    "primary": { "model": "anthropic:claude-sonnet-5-5", "max_tokens": 1024, "temperature": "not sent (Claude 5-family models reject it; sendsTemperature)", "arms_file": "manifests/arms/read-sonnet.json" },
+    "descriptive": [
+      { "model": "anthropic:claude-opus-5-5", "max_tokens": 1024, "temperature": "not sent", "arms_file": "manifests/arms/read-frontier.json" },
+      { "model": "openai:gpt-6.1-sol", "max_completion_tokens": 2000, "temperature": "not sent (GPT-5 and later)", "arms_file": "manifests/arms/read-frontier.json" }
+    ],
+    "not_run": "Fable is never counted (Garry, 2026-10-07) and no smoke is needed here.",
+    "implementation": "memory-qa run-systems --replay with judge 'none': readers answer from the frozen contexts and nothing judges in that process"
+  },
+  "judge": {
+    "model": "gpt-4o-2024-08-06",
+    "temperature": 0,
+    "prompts": "LongMemEval evaluate_qa.py per-kind prompts, abstention items with the unanswerable prompt (judgePrompt in sealed-confirmation-lib.ts; the same text memory-qa's judge sends)",
+    "implementation": "sealed-confirmation.ts score --judge --decision-id, which verifies the labels commitment and appends an access-log line before parsing, as decision 1 did"
+  },
+  "metric": {
+    "primary": "answer_correct: the judge says yes. Denominator: all 200 questions (160 answerable plus 40 abstention). A reader error or an empty answer counts as incorrect.",
+    "pairing": "by question; clusters are personas (haystack_id, 40 clusters of 5)"
+  },
+  "rule": {
+    "family": "docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1/family.json",
+    "primary_comparison": "answer_accuracy_depth_first_vs_cap_only",
+    "control_arm": "sonnet-5-5.cap_only",
+    "candidate_arm": "sonnet-5-5.depth_first",
+    "alpha": 0.05,
+    "max_reader_errors": 3,
+    "guard7": { "min_questions": 1, "share_of_kind": 0.02 },
+    "expected_label_reads": 8,
+    "pass": "All of: the final evidence gate passes (guard 1: without a budget every packing's evidence bytes equal off's on every question; guard 3: every depth_first delivery's budget_used <= 5,500 and it reports its packing; guard 4: every depth_first reader context fits 8,000 harness tokens with zero cuts; guard 5: every arm reads one frozen list; the contexts carry E2's recipe hashes and re-render to the same bytes), computed before any label read; depth_first minus cap_only > 0 with the persona-clustered 95% bootstrap interval above zero and the exact two-sided McNemar p < 0.05; guard 6 (exact by guard 1); guard 7 (no question kind down by more than max(1 question, 2% of the kind), counted as the paired sum of score differences); guard 8 (abstention mean not below cap_only's).",
+    "fail": "The gate fails (terminal: a guard 4 overflow is never retuned), guard 7 or guard 8 fails, or the whole 95% interval is below zero.",
+    "inconclusive": "Otherwise: superiority not shown, a blocked comparison (missing or duplicated rows), or more than 3 reader errors in either primary arm after the resume passes.",
+    "guard_9": "Latency is carried from E2's dev reading (1,200 live query calls on the LongMemEval-S slice: depth_first handler p95 1.04x off's, within +20%). H1 makes no live sealed calls.",
+    "implementation": "eval/runner/budgeted-delivery/h1.ts decide (decideH1) over h1.ts gate, compare.ts with family.json and the two primary score reports"
+  },
+  "descriptive": {
+    "family": "docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1/family-descriptive.json",
+    "comparisons": [
+      { "id": "sonnet-depth_first-vs-off", "a": "sonnet-5-5.off", "b": "sonnet-5-5.depth_first" },
+      { "id": "sonnet-off-l5-vs-cap_only", "a": "sonnet-5-5.cap_only", "b": "sonnet-5-5.off-l5" },
+      { "id": "sonnet-depth_first-vs-off-l5", "a": "sonnet-5-5.off-l5", "b": "sonnet-5-5.depth_first" },
+      { "id": "opus-depth_first-vs-cap_only", "a": "opus-5-5.cap_only", "b": "opus-5-5.depth_first" },
+      { "id": "gpt-depth_first-vs-cap_only", "a": "gpt-6-1-sol.cap_only", "b": "gpt-6-1-sol.depth_first" }
+    ],
+    "note": "They decide nothing, so no multiplicity correction applies."
+  },
+  "outcomes": {
+    "pass": "Recommend a gbrain pull request that makes depth_first the default packing for explicit budgets. Callers that pass no budget see no change (guard 1).",
+    "fail": "cap_only stays the explicit-budget default. The set is not reopened for depth_first and nothing is tuned on it.",
+    "inconclusive": "cap_only stays the explicit-budget default. The set is not reopened for depth_first and nothing is tuned on it."
+  },
+  "missing_and_errors": {
+    "resume": "A crashed step is rerun on the same output: memory-qa keeps finished rows (attempts.ndjson), identical reader requests are served from the custody QA cache, and frozen questions are never retrieved again. At most three resume passes per step.",
+    "reader_error": "After the resume passes, a question without an answer is judged incorrect and stays in the denominator.",
+    "missing_rows": "A question missing from either primary arm blocks the comparison (inconclusive)."
+  },
+  "budget": {
+    "estimate_usd": 47,
+    "cap_usd": 145,
+    "alert_usd": 95,
+    "program": "Budgeted delivery program cap $1,500; spent before H1: E1 about $50 and E2 $178.46",
+    "rule": "Caps about 3x the estimate (Garry); a step past twice its estimate keeps running and the report names it (report-only alert). One budget ledger inside the custody root, its program cap the H1 cap; one ledger run per paid step with that step's cap; a refused 4xx answer settles at $0.",
+    "steps": [
+      { "id": "freeze", "estimate_usd": 1.5, "cap_usd": 5, "basis": "40 histories of about 143,000 tokens embedded once with text-embedding-3-large (about $0.75) plus about 240 reranked queries (about $0.15), with headroom" },
+      { "id": "deliver", "estimate_usd": 0, "cap_usd": 0.5, "basis": "no provider call expected: hash vectors and the reranker off, every frozen chunk's text checked" },
+      { "id": "read-sonnet", "estimate_usd": 19, "cap_usd": 57, "basis": "800 Sonnet 5.5 calls at E2's measured means (about 9,300 to 11,000 input and 400 to 440 output tokens): about $0.023 each, $0.026 for off" },
+      { "id": "read-frontier", "estimate_usd": 24.5, "cap_usd": 74.5, "basis": "400 Opus 5.5 calls at about $0.047 and 400 gpt-6.1-sol calls at about $0.015 (E2's phase 2 means)" },
+      { "id": "score", "estimate_usd": 2, "cap_usd": 8, "basis": "1,600 gpt-4o judge calls at about $0.0012 (decision 1 measured 400 for $0.47)" }
+    ]
+  },
+  "custody": {
+    "machine": "Garry's Mac only",
+    "root": "~/gbrain-heldout-custody/h1-sealed-v2/",
+    "rules": "The sealed files are copied from the owner's private directory into <root>/sealed/ and checked against the manifest before anything else. Questions, chats, frozen lists with text, caches, contexts, answers and per-question scores stay under the root; nothing sealed-derived goes to a Capy machine, Capy Drive or the repository. labels.json is mode 000 from the custody check until the score step. Only <root>/export/, aggregates scanned for every corpus id and the root's path, is copied out, with the access log returned to the owner's private directory."
+  },
+  "no_second_try": "Each arm is answered once. No other packing, budget, unit, reader, prompt or judge may be tried on the sealed set under this decision."
+}

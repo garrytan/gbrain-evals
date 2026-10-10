@@ -1,0 +1,116 @@
+{
+  "kind": "budgeted-delivery-h1-dry-run",
+  "note": "Keyless: an invented fixture (h1-fixture.ts), dummy keys, hash vectors and the reranker off in the freeze, every lease proxy pointed at stub-proxy.ts --vary. Answers, verdicts, the decision outcome and every dollar figure in export/ledger/summary.json are meaningless: the dollars are the stub usage (prompt characters / 4 in, 2 tokens out) priced at list prices by the lease proxies; nothing was paid.",
+  "bun": "1.4.2",
+  "gbrain_commits": {
+    "chain": "8a3eedeacb6e52da5b413502019692db80c5cc5d",
+    "parity": [
+      "8a3eedeacb6e52da5b413502019692db80c5cc5d",
+      "ca2c447bd39b31beb142247de424c096eefc8525"
+    ]
+  },
+  "fixture": {
+    "questions": 60,
+    "haystacks": 12,
+    "sessions": 144,
+    "chars_per_session": 13102,
+    "kinds": {
+      "multi-session": 24,
+      "temporal-reasoning": 12,
+      "knowledge-update": 12,
+      "abstention": 12
+    },
+    "questions_sha256": "0500b05e98b4c5e0393304c3be3163b078e9f62551663c82ddc9285fb4902539",
+    "labels_sha256": "046f941b7e7c99337898abc1e2bcee047689c02a7ca665ef39da6580be655924"
+  },
+  "chain_wall_seconds": 33,
+  "labels_mode_after_run": "0o0",
+  "probes": [
+    {
+      "probe": "score-report-outside-root",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[sealed] FATAL: sealed profile refused: the report is outside the custody root; the spend ledger is outside the custody root; the response cache is outside the custody root"
+    },
+    {
+      "probe": "score-spend-outside-root",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[sealed] FATAL: sealed profile refused: the spend ledger is outside the custody root; the response cache is outside the custody root"
+    },
+    {
+      "probe": "score-inside-repository",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[sealed] FATAL: sealed profile refused: the custody root overlaps the repository; the report is inside the repository; the spend ledger is inside the repository; the response cache is inside the repos"
+    },
+    {
+      "probe": "memory-qa-output-outside-root",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "error: sealed profile refused: the output is outside the custody root"
+    },
+    {
+      "probe": "gate-after-label-read",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[h1] gate refused: labels were already read under this decision; the gate must run before any label read"
+    },
+    {
+      "probe": "export-outside-root",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[h1] export refused: sealed profile refused: the export directory is outside the custody root"
+    },
+    {
+      "probe": "custody-check-foreign-log-line",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[h1] custody-check refused: 1 access-log lines after the recorded state belong to another decision; stop and ask the owner"
+    },
+    {
+      "probe": "corpus-tampered-questions",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[h1] corpus refused: commitment mismatch for questions.json: expected sha256 0500b05e98b4c5e0393304c3be3163b078e9f62551663c82ddc9285fb4902539 (2017136 bytes), got 19f36f7ce53014b00a3e01d37cf788d18b809"
+    },
+    {
+      "probe": "return-log-foreign-line",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[h1] return-log refused: 1 added lines belong to another decision"
+    }
+  ],
+  "all_probes_refused_without_a_label_read": true,
+  "fixture_text_outside_custody": [],
+  "parity": {
+    "a": "ca2c447bd",
+    "b": "8a3eedeac",
+    "questions": 60,
+    "frozen_lists_equal": 60,
+    "delivery": {
+      "cap_only-b_pseudo": {
+        "questions": 60,
+        "evidence_equal": 60,
+        "budget_used_equal": 60
+      },
+      "depth_first-b_pseudo": {
+        "questions": 60,
+        "evidence_equal": 60,
+        "budget_used_equal": 60
+      },
+      "off-b_pseudo": {
+        "questions": 60,
+        "evidence_equal": 60,
+        "budget_used_equal": 60
+      },
+      "off-l5-b_pseudo": {
+        "questions": 60,
+        "evidence_equal": 60,
+        "budget_used_equal": 60
+      }
+    },
+    "guard1_both": 60,
+    "identical": true
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "oss-shootout-campaign",
+  "schema_version": 1,
+  "campaign_id": "gbrain-budgeted-delivery-h1",
+  "cap_usd": 145,
+  "ledger": ".budget/gbrain-budgeted-delivery-h1.sqlite",
+  "parameters": {
+    "gbrain_sha": "8a3eedeacb6e52da5b413502019692db80c5cc5d",
+    "b_pseudo": 5500
+  },
+  "cells_from": [
+    "cells/h1.json"
+  ],
+  "cells": []
+}

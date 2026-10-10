@@ -1,0 +1,86 @@
+{
+  "kind": "budgeted-delivery-h1-decision-outcome",
+  "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only",
+  "decision_sha256": "a50fe4f1d8b8ae00ef049a4ba982d9e0b0bcbf2edcb576ea0133332217906da6",
+  "decided_at": "2026-10-10T17:00:34.362Z",
+  "verdict": "fail",
+  "superiority_shown": false,
+  "primary": {
+    "delta": -0.13333333333333333,
+    "ci95": [
+      -0.2833333333333333,
+      0.03333333333333333
+    ],
+    "mcnemar": {
+      "losses": 23,
+      "wins": 15,
+      "both_pass": 13,
+      "both_fail": 9,
+      "discordant": 38,
+      "p_two_sided": 0.2558750795433298
+    },
+    "sign_flip_p_two_sided": 0.1923828125,
+    "n_pairs": 60,
+    "n_clusters": 12,
+    "control": 0.6,
+    "candidate": 0.4666666666666667
+  },
+  "guard7": {
+    "kinds": {
+      "multi-session": {
+        "n": 24,
+        "base": 15,
+        "cand": 11,
+        "delta_questions": -4,
+        "threshold": 1,
+        "pass": false
+      },
+      "temporal-reasoning": {
+        "n": 12,
+        "base": 6,
+        "cand": 6,
+        "delta_questions": 0,
+        "threshold": 1,
+        "pass": true
+      },
+      "knowledge-update": {
+        "n": 12,
+        "base": 8,
+        "cand": 6,
+        "delta_questions": -2,
+        "threshold": 1,
+        "pass": false
+      },
+      "abstention": {
+        "n": 12,
+        "base": 7,
+        "cand": 5,
+        "delta_questions": -2,
+        "threshold": 1,
+        "pass": false
+      }
+    },
+    "pass": false
+  },
+  "guard8": {
+    "n": 12,
+    "control": 7,
+    "candidate": 5,
+    "pass": false
+  },
+  "reasons": [
+    "guard 7: multi-session -4 questions (limit -1), knowledge-update -2 questions (limit -1), abstention -2 questions (limit -1)",
+    "guard 8: abstention 5 against 7",
+    "primary: delta -0.1333, 95% interval [-0.2833, 0.0333], McNemar p 0.256 (wins 15, losses 23)"
+  ],
+  "reader_errors": {
+    "sonnet-5-5.cap_only": 0,
+    "sonnet-5-5.depth_first": 0
+  },
+  "label_reads": {
+    "this_decision": 8,
+    "expected": 8,
+    "all_after_final_gate": true
+  },
+  "recommendation": "cap_only stays the default for explicit budgets. The set is not reopened for depth_first, and nothing is tuned on it."
+}

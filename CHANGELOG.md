@@ -2,6 +2,36 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.68] - 2026-10-10
+
+### Budgeted delivery H1: preregistered held-out test of `depth_first` against the shipped `cap_only`
+
+A preregistration, not a result ([doc](docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md),
+[decision directory](docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1/)). Decision
+`sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only`, the second of sealed confirmation v2's three openings, at
+gbrain `8a3eedeac` (v0.60.126.0, the pin): `depth_first` against `cap_only` at a 5,500-token gbrain budget for an
+8,000-token reader budget, one frozen 25-hit list per question, E2's pseudo-session renderer, read by Sonnet 5.5 and
+judged by gpt-4o-2024-08-06 over all 200 questions. Pass needs a persona-clustered 95% interval above zero, exact
+McNemar p < 0.05 and guards 1, 3, 4, 6, 7 and 8. No paid call and no sealed file were used.
+
+- **Why the pin and not E2's `ca2c447bd`.** Only `src/core/chunkers/token-estimate.ts` changed among the files that
+  feed retrieval, packing or token counting; a counting change is disclosed and measured at the pin. The keyless dry
+  run froze the same lists and delivered byte-identical evidence at both commits on the invented fixture.
+- **Power.** Simulated from E2's paired Sonnet rows with the committed rule: P(pass) 65% if E2's per-kind effects carry
+  over, 36% if multi-session gains nothing, 1% if multi-session rewards breadth as in E2's `breadth_capped` rows, and
+  1.9% with no effect; guard 7 on multi-session is the main risk.
+- **Budget.** Estimate $47, cap $145 (about 3x), five local lease cells in one campaign ledger.
+- **Custody chain** (`eval/runner/budgeted-delivery/h1-run.sh`, `h1.ts`): custody check of the files and the access
+  log, a label-free corpus, the gates on frozen evidence before any label read, answers files, scoring through the
+  sealed runner, the rule, an export scanned for every corpus id, and the access log returned. The keyless dry run
+  (`h1-dry-run.sh`, `h1-fixture.ts`; receipts committed) passed every gate, read the labels once per arm after the
+  final gate, refused all nine refusal probes without a label read, and left no fixture text outside the custody root.
+- **Harness.** `deliver_set=h1` in the gbrain-query system; reader-only arms (`judge: "none"`) in memory-qa; the
+  custody corpus hash on memory-qa's custody open line; `sealed-confirmation.ts score --custody-root` and
+  `GBRAIN_EVALS_CUSTODY_LOG` for its access log; `OPENAI_BASE_URL` in the sealed runner's judge client;
+  `SHOOTOUT_KEYLESS_UPSTREAM` for local lease cells; the stub proxy's `/responses` route and `--vary`. Tests in
+  `test/eval/budgeted-delivery-h1.test.ts` and the E2 real-PGLite test.
+
 ## [0.10.67] - 2026-10-09
 
 ### Memory trust (Cats 37 to 39): labels cut planted-claim adoption, the defaults are flag, flag and allow; paired with gbrain #6396 (merged as `d4dc2d4d8`)

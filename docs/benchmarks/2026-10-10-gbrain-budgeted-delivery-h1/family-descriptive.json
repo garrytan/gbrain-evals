@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "family_id": "budgeted-delivery-h1-descriptive",
+  "registered_at": "2026-10-10",
+  "description": "Budgeted delivery H1 descriptive references, all report-only: depth_first against off (today's uncapped auto), off on the first five hits against cap_only and depth_first, and depth_first against cap_only under claude-opus-5-5 and gpt-6.1-sol on the same frozen contexts. They decide nothing, so no multiplicity correction applies.",
+  "alpha": 0.05,
+  "seed": 20261010,
+  "draws": 20000,
+  "min_clusters": 10,
+  "id_field": "question_id",
+  "comparisons": [
+    { "id": "answer_accuracy", "metric": "answer_correct", "gate": "exploratory", "direction": "higher", "cluster_by": "haystack_id", "description": "Descriptive. Judged answer correctness over all 200 questions, B minus A." },
+    { "id": "packed_recall_all", "metric": "recall_all", "gate": "exploratory", "direction": "higher", "cluster_by": "haystack_id", "description": "Descriptive. Every gold chat among the chats the reader saw, over the 160 answerable questions." }
+  ]
+}

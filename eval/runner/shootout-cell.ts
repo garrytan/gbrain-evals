@@ -29,6 +29,8 @@
  *     budget move up to it; never down)
  *   bun eval/runner/shootout-cell.ts hash    --campaign <manifest.json>   (the hash a preregistration records)
  *   bun eval/runner/shootout-cell.ts remote  --cell-b64 <base64 json>        (on the VM: proxy + cell command + lease summary)
+ *     (SHOOTOUT_KEYLESS_UPSTREAM=http://host:port points the lease proxy's providers at a keyless stand-in such as
+ *     budgeted-delivery/stub-proxy.ts, for dry runs; the lease summary records it)
  */
 import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -381,7 +383,7 @@ export async function runRemote(payload: { lease_id: string; lease_usd: number; 
     await proxy.exited;
     const s = ledgerStatus({ ledgerPath: ledger, runId: payload.lease_id });
     writeFileSync(join(out, 'lease-summary.json'), JSON.stringify({ run_id: payload.lease_id, lease_usd: payload.lease_usd, committed_usd: s.run?.committed_usd ?? payload.lease_usd,
-      requests: s.run ? BudgetRun.runRequests(ledger, payload.lease_id) : null, max_output_tokens: s.run ? BudgetRun.leaseMaxOutputTokens(ledger, payload.lease_id) ?? DEFAULT_MAX_OUTPUT_TOKENS : null, cell_exit_code: code }, null, 2) + '\n');
+      requests: s.run ? BudgetRun.runRequests(ledger, payload.lease_id) : null, max_output_tokens: s.run ? BudgetRun.leaseMaxOutputTokens(ledger, payload.lease_id) ?? DEFAULT_MAX_OUTPUT_TOKENS : null, cell_exit_code: code, ...(opts.upstream ? { keyless_upstream: true } : {}) }, null, 2) + '\n');
   }
   return code ?? 1;
 }
@@ -401,7 +403,9 @@ if (import.meta.main) {
   try {
     const cmd = argv[0];
     if (cmd === 'remote') {
-      process.exit(await runRemote(JSON.parse(Buffer.from(one('--cell-b64') ?? '', 'base64').toString('utf8')), { port: one('--port') ? Number(one('--port')) : undefined }));
+      const keyless = process.env.SHOOTOUT_KEYLESS_UPSTREAM;
+      const upstream = keyless ? Object.fromEntries(['openai', 'anthropic', 'voyage'].map(p => [p, keyless])) : undefined;
+      process.exit(await runRemote(JSON.parse(Buffer.from(one('--cell-b64') ?? '', 'base64').toString('utf8')), { port: one('--port') ? Number(one('--port')) : undefined, upstream }));
     }
     if (cmd === 'hash') {
       const loaded = loadCampaign(one('--campaign') ?? '');

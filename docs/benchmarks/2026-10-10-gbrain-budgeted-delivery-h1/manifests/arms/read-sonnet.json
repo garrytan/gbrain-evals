@@ -1,0 +1,44 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "pseudo-off",
+    "pseudo-cap_only",
+    "pseudo-depth_first",
+    "pseudo-off-l5"
+  ],
+  "recipes": {
+    "pseudo-off": {
+      "items": "off-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-cap_only": {
+      "items": "cap_only-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-depth_first": {
+      "items": "depth_first-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-off-l5": {
+      "items": "off-l5-b_pseudo",
+      "render": "pseudo-session"
+    }
+  },
+  "readers": [
+    {
+      "id": "sonnet-5-5",
+      "model": "anthropic:claude-sonnet-5-5",
+      "contexts": [
+        "pseudo-off",
+        "pseudo-cap_only",
+        "pseudo-depth_first",
+        "pseudo-off-l5"
+      ]
+    }
+  ],
+  "judge": "none"
+}
