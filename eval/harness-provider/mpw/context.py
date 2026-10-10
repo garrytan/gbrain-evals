@@ -46,6 +46,11 @@ class Inserted:
     tokens: int
 
 
+def render_rag_context(docs) -> str:
+    """Exactly RAGMode.async_answer's rendering at the pin: each document under a `## Memory N` header."""
+    return "\n\n".join(f"## Memory {i + 1}\n{doc.content}" for i, doc in enumerate(docs))
+
+
 def inserted_context(build, query: str, context: str, meta: dict, raw_response, prompt: str) -> Inserted:
     """Recover the context text `build(query, context, meta=...)` inserted into `prompt`."""
     template = build(query, SENTINEL, meta={**meta, "_raw_response": None})

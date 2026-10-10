@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { cellId, cellIdentity, chatPrice, estimateCell, harnessCredentials, identityDiff, validateSpec, type CellSpec, type ResolvedCell } from '../../eval/runner/harness-cell.ts';
+import { cellId, cellIdentity, chatPrice, estimateCell, harnessCredentials, identityDiff, storeIdentity, validateSpec, type CellSpec, type ResolvedCell } from '../../eval/runner/harness-cell.ts';
 import { cpuRequirements } from '../../eval/runner/harness-env.ts';
 import { findNeedles, scan } from '../../scripts/check-comparator-name.ts';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -49,6 +49,23 @@ describe('cell identity', () => {
     const a = cellIdentity(spec, resolved, pins);
     const b = cellIdentity({ ...spec, budget_usd: 9 }, resolved, { ...pins, gbrain: { version: 'x' } });
     expect(identityDiff(a, b).sort()).toEqual(['budget_usd', 'pins.gbrain.version']);
+  });
+});
+
+describe('store identity', () => {
+  const store = (config: Record<string, unknown>, credentials?: string[]) =>
+    storeIdentity({ ...spec, provider_config: config, ...(credentials ? { gbrain_credentials: credentials } : {}) }, pins)!.id;
+
+  test('raw, explicit-extractor and measured-default stores never share an identity', () => {
+    const ids = [store({}), store({ extraction_model: 'openai:gpt-6-luna' }, ['voyage', 'openai']),
+      store({ extraction_source: 'measured_default' }, ['voyage', 'anthropic']), store({ extraction_source: 'measured_default' }, ['voyage'])];
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test('read-time lanes and budgets share one store', () => {
+    const base = { extraction_source: 'measured_default' };
+    expect(new Set([store(base), store({ ...base, lane: 'combined-v2', delivered_tokens: 8100, facts_tokens: 1800 }),
+      store({ ...base, lane: 'filler-removed', token_budget: 8100, search_config: { 'search.mode': 'conservative' } })]).size).toBe(1);
   });
 });
 

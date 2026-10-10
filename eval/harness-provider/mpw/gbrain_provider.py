@@ -27,7 +27,9 @@ terminal, the page count is the expected one and no chunk lacks an embedding.
 `return_unit: "page"`; each block starts with a one-line date header from the
 timestamp manifest (`Date: unknown` when the dataset has no observed date).
 
-Facts lanes (opt-in, `extraction_model` set). gbrain's automatic extraction
+Facts lanes (opt-in: `extraction_model` set, or `extraction_source: "measured_default"`, which leaves the model unset so
+gbrain's own resolver picks it; the template must then report `source: "measured default"` and
+`anthropic:claude-haiku-5-5` in `gbrain models --json` before anything is ingested). gbrain's automatic extraction
 never runs on these pages: the put_page backstop and its drain skip
 `type: conversation` (not an eligible page type), and the conversation
 extractor (`extract-conversation-facts`, the opt-in cycle phase) finds no
@@ -48,7 +50,18 @@ are retried once and counted in the receipt.
 the page query with `token_budget`). `fact_dates` prefixes each fact line with
 its own `valid_from` date, counted inside `facts_tokens`. `recall` ranks facts newest first and does
 not rank them by the question; only `saved_facts` (at most five keyword
-matches) depends on it.
+matches) depends on it. The facts block is priced as the answer prompt renders it (date and `Saved facts:` headers and
+each group's `## Memory N` wrapper).
+
+Two lanes read a facts store differently. `combined-v2` calls `recall(question)` first (it needs gbrain's
+question-ranked recall: `facts_order: "relevance"`, else the row fails, as does any `facts_degraded` or `unavailable`
+answer), packs its facts in recall's order under `facts_tokens`, then calls `query` with `token_budget` =
+`delivered_tokens` minus the block; facts-arm rows that repeat a block fact are dropped and not refilled, and
+`saved_facts` are not used. `filler-removed` is the combined lane's page query alone, on the facts store, with no
+facts block. `search_config` sets read-time keys such as `search.mode` on each unit before its server starts.
+
+Every read reports `timing`: the wait for the provider lock, the unit's server start and `service_ms`, the time inside
+gbrain's calls alone. The record's `retrieve_ms` is wall time and includes the first two.
 """
 from __future__ import annotations
 
@@ -70,9 +83,15 @@ from .mcp_stdio import McpChild, McpToolError, stderr_tail
 
 # Bump when anything that changes what ingest writes changes (page rendering, slugs, template config, barrier).
 # Cells with equal ingest inputs share one store keyed on this (eval/runner/harness-cell.ts storeIdentity).
-INGEST_REVISION = "gbrain-ingest-1"
-INGEST_KEYS = ("embedding_model", "embedding_dimensions", "gbrain_config", "remote_budget_max", "extraction_model", "extraction_window_chars",
-               "page_split")
+INGEST_REVISION = "gbrain-ingest-2"
+INGEST_KEYS = ("embedding_model", "embedding_dimensions", "gbrain_config", "remote_budget_max", "extraction_model", "extraction_source",
+               "extraction_window_chars", "page_split")
+
+# `extraction_source: "measured_default"` turns extraction on with `extraction_model` unset, so gbrain's own resolver
+# picks the extractor. Before any ingest the template must report this resolution in `gbrain models --json`.
+MEASURED_DEFAULT_SOURCE = "measured default"
+MEASURED_DEFAULT_EXTRACTOR = "anthropic:claude-haiku-5-5"
+LANES = ("raw", "facts", "combined", "combined-v2", "filler-removed")
 
 DEFAULTS = {
     "lane": "raw",
@@ -92,10 +111,13 @@ DEFAULTS = {
     # The provider's own one-line date header from the timestamp manifest; off when gbrain renders its own (C1).
     "date_header": True,
     "extraction_model": None,
+    "extraction_source": None,
     "extraction_window_chars": 8000,
     "extraction_in_flight": 8,
     "facts_tokens": 2000,
     "facts_limit": 100,
+    # combined-v2: the delivered total the facts block and the page query share.
+    "delivered_tokens": None,
     # Prefix each fact line with the fact's own valid_from date (read time only).
     "fact_dates": False,
 }
@@ -224,6 +246,12 @@ def _iso(timestamp: str | None) -> str | None:
     return f"{m.group(1)}T{m.group(2) or '00:00'}:00Z"
 
 
+def _timing(page: dict, wait_ms: float, recall_ms: float) -> dict:
+    """A two-call read's timing: the outer lock wait, the unit open, and service_ms, the time inside gbrain's calls alone."""
+    return {"lock_wait_ms": round(wait_ms + page.get("lock_wait_ms", 0), 1), "unit_open_ms": page.get("unit_open_ms", 0),
+            "query_ms": page.get("query_ms"), "recall_ms": round(recall_ms, 1), "service_ms": round(page.get("query_ms", 0) + recall_ms, 1)}
+
+
 class _Unit:
     def __init__(self, unit: str, home: Path):
         self.unit = unit
@@ -250,6 +278,17 @@ class GbrainMemoryProvider(MemoryProvider):
         cfg = dict(DEFAULTS)
         cfg.update(config if config is not None else json.loads(os.environ.get("MPW_PROVIDER_CONFIG") or "{}"))
         self.cfg = cfg
+        if cfg.get("extraction_source") not in (None, "measured_default"):
+            raise ValueError(f"unknown extraction_source {cfg['extraction_source']!r}: use measured_default or leave it unset")
+        if cfg.get("extraction_source") and cfg.get("extraction_model"):
+            raise ValueError("extraction_source measured_default leaves extraction_model unset; set one or the other")
+        lane = cfg.get("lane") or "raw"
+        if lane not in LANES:
+            raise ValueError(f"unknown lane {lane!r}: use one of {', '.join(LANES)}")
+        if lane in ("combined-v2", "filler-removed") and not self.facts_on:
+            raise ValueError(f"lane {lane} reads a facts store: set extraction_model or extraction_source")
+        if lane == "combined-v2" and not cfg.get("delivered_tokens"):
+            raise ValueError("lane combined-v2 needs delivered_tokens, the total the facts block and the pages share")
         self.cli = cfg.get("gbrain_cli") or os.environ.get("MPW_GBRAIN_CLI")
         if not self.cli:
             raise RuntimeError("no gbrain CLI: set provider_config.gbrain_cli or MPW_GBRAIN_CLI (the launcher resolves GBRAIN_UNDER_TEST)")
@@ -261,6 +300,10 @@ class GbrainMemoryProvider(MemoryProvider):
         self._lock = threading.RLock()
         self.version: dict = {}
         atexit.register(self.cleanup)
+
+    @property
+    def facts_on(self) -> bool:
+        return bool(self.cfg.get("extraction_model") or self.cfg.get("extraction_source") == "measured_default")
 
     # ── process contract ──────────────────────────────────────────────
 
@@ -319,7 +362,23 @@ class GbrainMemoryProvider(MemoryProvider):
         version = self._cli(template, "--version").strip()
         self.version = {"cli": self.cli, "version": version, "template_build_s": round(time.perf_counter() - t0, 2),
                         "config": settings}
+        if self.facts_on:
+            self.version["extractor"] = self._extractor(template)
         (template / "mpw-template.json").write_text(json.dumps({"gbrain": self.version}, indent=2))
+
+    def _extractor(self, template: Path) -> dict:
+        """The facts extractor the template resolves, from `gbrain models --json`; the sentinel must get the measured default."""
+        out = self._cli(template, "models", "--json")
+        report = json.loads(out[out.index("{"):])
+        row = next((r for r in report.get("per_task") or [] if r.get("key") == "facts.extraction_model"), None)
+        if row is None:
+            raise GbrainIngestError("gbrain models --json has no facts.extraction_model row")
+        got = {"source": row.get("source"), "resolved": row.get("resolved"), "extraction_source": self.cfg.get("extraction_source")}
+        if self.cfg.get("extraction_source") == "measured_default" and (got["source"], got["resolved"]) != (MEASURED_DEFAULT_SOURCE, MEASURED_DEFAULT_EXTRACTOR):
+            raise GbrainIngestError(f"extraction_source measured_default needs gbrain to resolve {MEASURED_DEFAULT_EXTRACTOR} as the "
+                                    f"{MEASURED_DEFAULT_SOURCE!r}; it resolved {got['resolved']!r} from {got['source']!r}. Give the cell an "
+                                    "Anthropic key and no OpenAI key (gbrain_credentials), and no models.* config")
+        return got
 
     # ── harness hooks ─────────────────────────────────────────────────
 
@@ -461,13 +520,15 @@ class GbrainMemoryProvider(MemoryProvider):
         u.receipt.update({"write_path": "put_pages" if batched else "put_page", "pages": len(pages), "write_s": round(write_s, 3),
                           "barrier_ms": round((time.perf_counter() - b0) * 1000, 1), "barrier": barrier,
                           "server": child.server_info})
-        if self.cfg.get("extraction_model"):
+        if self.facts_on:
             if sources is not None:
                 written = [(SLUG_PREFIX + d.id.lower(), d) for d in sources]
                 for d in sources:
                     u.timestamps.setdefault(d.id.lower(), d.timestamp)
                 u.save()
-            u.receipt["facts"] = self._extract_facts(child, written)
+            u.receipt["facts"] = facts = self._extract_facts(child, written)
+            if self.cfg.get("extraction_source") and facts["windows"] and not (facts["inserted"] + facts["duplicate"] + facts["superseded"]):
+                raise GbrainIngestError(f"unit {unit}: the measured-default extractor wrote no facts from {facts['windows']} windows")
 
     def _extract_facts(self, child: McpChild, written: list[tuple[str, Document]]) -> dict:
         """gbrain's `extract_facts` over every window of every written page; returns when every call has returned."""
@@ -493,7 +554,7 @@ class GbrainMemoryProvider(MemoryProvider):
                     continue
                 body = r[0] if isinstance(r[0], dict) else {}
                 if body.get("skipped") == "extraction_unavailable":
-                    raise GbrainIngestError(f"gbrain extract_facts has no servable extraction model ({self.cfg['extraction_model']}): {json.dumps(body)[:500]}")
+                    raise GbrainIngestError(f"gbrain extract_facts has no servable extraction model ({self._extractor_label()}): {json.dumps(body)[:500]}")
                 if body.get("skipped"):
                     failed.append((i, str(body.get("reason") or body.get("skipped"))))
                     continue
@@ -509,10 +570,13 @@ class GbrainMemoryProvider(MemoryProvider):
                 continue
             for _, reason in failed:
                 failures[reason] = failures.get(reason, 0) + 1
-        return {"extraction_model": self.cfg["extraction_model"], "op": "extract_facts", "windows": len(calls),
+        return {"extraction_model": self._extractor_label(), "extraction_source": self.cfg.get("extraction_source"), "op": "extract_facts", "windows": len(calls),
                 "window_chars": int(self.cfg["extraction_window_chars"]), "window_text_chars": sum(len(c["turn_text"]) for c in calls),
                 **totals, "retried_windows": retried, "failed_windows": sum(failures.values()), "failures": failures,
                 "extract_s": round(time.perf_counter() - t0, 2)}
+
+    def _extractor_label(self) -> str | None:
+        return self.cfg.get("extraction_model") or (self.version.get("extractor") or {}).get("resolved")
 
     def _put_pages(self, child: McpChild, pages: list[dict]) -> None:
         size = int(self.cfg["batch_size"])
@@ -568,15 +632,25 @@ class GbrainMemoryProvider(MemoryProvider):
         if lane == "raw":
             _u, docs, meta_out, _saved = self._query_pages(query, user_id)
             return docs, None, meta_out
+        if lane == "filler-removed":
+            # The facts store and the combined lane's page query, without the facts block.
+            _u, docs, meta_out, _saved = self._query_pages(query, user_id, expand_default=False)
+            return docs, None, {**meta_out, "lane": lane}
+        if lane == "combined-v2":
+            return self._combined_v2(query, user_id)
         if lane not in ("facts", "combined"):
-            raise GbrainRetrieveError(f"unknown lane {lane!r}: use raw, facts or combined")
+            raise GbrainRetrieveError(f"unknown lane {lane!r}: use one of {', '.join(LANES)}")
         # One lock hold across both calls: another unit opening in between could close this unit's child.
+        t0 = time.perf_counter()
         with self._lock:
+            wait_ms = (time.perf_counter() - t0) * 1000
             u, pages, page_meta, saved = self._query_pages(query, user_id, expand_default=False)
+            t1 = time.perf_counter()
             try:
                 recalled, _ = u.child.call("recall", {"limit": int(self.cfg["facts_limit"])})
             except McpToolError as e:
                 raise GbrainRetrieveError(str(e)) from e
+            recall_ms = (time.perf_counter() - t1) * 1000
         if not isinstance(recalled, dict) or not isinstance(recalled.get("facts"), list):
             raise GbrainRetrieveError(f"recall returned {type(recalled).__name__} without a facts list")
         # In combined, a fact the page arm already delivered as a fact row is not repeated in the facts block.
@@ -584,27 +658,79 @@ class GbrainMemoryProvider(MemoryProvider):
         fact_docs, fact_meta = self._pack_facts(u, [f for f in saved if str(f.get("id")) not in skip],
                                                 [f for f in recalled["facts"] if str(f.get("id")) not in skip], int(self.cfg["facts_tokens"]), user_id)
         fact_meta["page_fact_rows"] = len(skip)
+        timing = _timing(page_meta["timing"], wait_ms, recall_ms)
         if lane == "facts":
             return fact_docs, None, {"lane": lane, "facts": fact_meta, "tokens_delivered": fact_meta["tokens"], "tokenizer": "cl100k",
                                      "budget_clamped": False, "entity_anchored": page_meta.get("entity_anchored", 0),
-                                     "pages": {"requested": page_meta["requested"], "used": "saved_facts only"}}
+                                     "pages": {"requested": page_meta["requested"], "used": "saved_facts only"}, "timing": timing}
         return fact_docs + pages, None, {"lane": lane, "facts": fact_meta, "pages": page_meta, "tokenizer": "cl100k",
                                          "tokens_delivered": fact_meta["tokens"] + int(page_meta.get("tokens_delivered") or 0),
                                          "budget_clamped": bool(page_meta.get("budget_clamped")),
-                                         "entity_anchored": page_meta.get("entity_anchored", 0)}
+                                         "entity_anchored": page_meta.get("entity_anchored", 0), "timing": timing}
+
+    def _combined_v2(self, query: str, user_id: str | None):
+        """`recall(question)` packed first, capped at `facts_tokens`, then `query` with what is left of `delivered_tokens`.
+
+        The block is priced as the answer prompt renders it. Facts-arm rows in `query` that repeat a block fact are
+        dropped from the page side and not refilled, so the delivered total stays bounded. `saved_facts` are not used:
+        question-ranked recall subsumes them.
+        """
+        from .context import count_tokens, render_rag_context
+
+        t0 = time.perf_counter()
+        with self._lock:
+            wait_ms = (time.perf_counter() - t0) * 1000
+            u = self._ensure_unit(user_id or "_all", create=False)
+            t1 = time.perf_counter()
+            try:
+                recalled, _ = u.child.call("recall", {"question": query, "limit": int(self.cfg["facts_limit"])})
+            except McpToolError as e:
+                raise GbrainRetrieveError(str(e)) from e
+            recall_ms = (time.perf_counter() - t1) * 1000
+            open_ms = (t1 - t0) * 1000 - wait_ms
+            if not isinstance(recalled, dict) or not isinstance(recalled.get("facts"), list):
+                raise GbrainRetrieveError(f"recall returned {type(recalled).__name__} without a facts list")
+            if recalled.get("status") == "unavailable" or recalled.get("unavailable"):
+                raise GbrainRetrieveError(f"recall is unavailable: {json.dumps(recalled)[:400]}")
+            if recalled.get("facts_order") != "relevance":
+                raise GbrainRetrieveError(f"recall did not rank facts by the question (facts_order {recalled.get('facts_order')!r}): "
+                                          "this gbrain has no recall(question)")
+            degraded = recalled.get("facts_degraded")
+            if degraded:
+                fix = (" Fix: `gbrain embed --stale --facts --source <id> --dry-run`, then `--yes --max-cost-usd N`."
+                       if isinstance(degraded, dict) and degraded.get("unembedded") else "")
+                raise GbrainRetrieveError(f"recall reported facts_degraded {json.dumps(degraded)[:300]}; a degraded block is not packed.{fix}")
+            block, fact_meta = self._pack_facts(u, [], recalled["facts"], int(self.cfg["facts_tokens"]), user_id)
+            page_budget = int(self.cfg["delivered_tokens"]) - fact_meta["tokens"]
+            _, pages, page_meta, _saved = self._query_pages(query, user_id, expand_default=False, token_budget=page_budget,
+                                                            drop_fact_ids=set(fact_meta["ids"]))
+        docs = block + pages
+        fact_meta.update({"facts_order": recalled["facts_order"], "facts_degraded": degraded or None})
+        return docs, None, {"lane": "combined-v2", "facts": fact_meta, "pages": page_meta, "tokenizer": "cl100k",
+                            "delivered_target": int(self.cfg["delivered_tokens"]), "page_budget": page_budget,
+                            "tokens_delivered": fact_meta["tokens"] + int(page_meta.get("tokens_delivered") or 0),
+                            "rendered_tokens": count_tokens(render_rag_context(docs)),
+                            "budget_clamped": bool(page_meta.get("budget_clamped")),
+                            "entity_anchored": page_meta.get("entity_anchored", 0),
+                            "timing": _timing({**page_meta["timing"], "unit_open_ms": round(open_ms, 1)}, wait_ms, recall_ms)}
 
     def _pack_facts(self, u: _Unit, saved: list, recalled: list, budget: int, user_id: str | None) -> tuple[list[Document], dict]:
-        """Question-matched saved_facts first, then recall's newest facts, one line each, grouped under their source page."""
-        from .context import count_tokens
+        """saved_facts first, then recall's facts in recall's order, one line each, grouped under their source page.
+
+        `budget` covers the block as the answer prompt renders it: each group's date and `Saved facts:` headers and its
+        `## Memory N` wrapper. The block comes first in the delivered context, so it is numbered from 1.
+        """
+        from .context import count_tokens, render_rag_context
 
         sessions = {str(f.get("id")): str(f.get("source_session") or "") for f in recalled if f.get("id") is not None}
         seen: set[str] = set()
         groups: dict[str, list[str]] = {}
+        ids: list[str] = []
         used, kept, dropped = 0, 0, 0
         for rows in (saved, recalled):
             for f in rows:
                 text = str(f.get("fact") or "").strip()
-                key = str(f.get("id") or text)
+                key = str(f["id"]) if f.get("id") is not None else text
                 if not text or key in seen:
                     continue
                 seen.add(key)
@@ -612,21 +738,25 @@ class GbrainMemoryProvider(MemoryProvider):
                 doc_id = session if session in u.timestamps else ""
                 day = str(f.get("valid_from") or "")[:10] if self.cfg.get("fact_dates") else ""
                 line = f"- ({day}) {text}" if re.match(r"\d{4}-\d{2}-\d{2}$", day) else f"- {text}"
-                cost = count_tokens(line + "\n")
-                if used + cost > budget:
+                trial = {g: list(lines) for g, lines in groups.items()}
+                trial.setdefault(doc_id, []).append(line)
+                cost = count_tokens(render_rag_context(self._block_docs(u, trial, user_id)))
+                if cost > budget:
                     dropped += 1
                     continue
-                used += cost
+                groups, used = trial, cost
                 kept += 1
-                groups.setdefault(doc_id, []).append(line)
-        docs = []
-        for doc_id, lines in groups.items():
-            header = date_header(u.timestamps.get(doc_id)) if doc_id else "Date: unknown"
-            docs.append(Document(id=doc_id or "facts", content=f"{header}\nSaved facts:\n" + "\n".join(lines), user_id=user_id))
-        return docs, {"budget": budget, "tokens": used, "kept": kept, "dropped": dropped, "saved_facts": len(saved),
-                      "recalled": len(recalled), "documents": len(docs)}
+                ids.append(key)
+        docs = self._block_docs(u, groups, user_id)
+        return docs, {"budget": budget, "tokens": used, "counting": "rendered", "kept": kept, "dropped": dropped, "ids": ids,
+                      "saved_facts": len(saved), "recalled": len(recalled), "documents": len(docs)}
 
-    def _query_pages(self, query: str, user_id: str | None, expand_default: bool | None = None):
+    def _block_docs(self, u: _Unit, groups: dict[str, list[str]], user_id: str | None) -> list[Document]:
+        return [Document(id=doc_id or "facts", content=f"{date_header(u.timestamps.get(doc_id)) if doc_id else 'Date: unknown'}\nSaved facts:\n"
+                         + "\n".join(lines), user_id=user_id) for doc_id, lines in groups.items()]
+
+    def _query_pages(self, query: str, user_id: str | None, expand_default: bool | None = None, token_budget: int | None = None,
+                     drop_fact_ids: set[str] | None = None):
         # token_budget / return_unit / limit set to null in the cell config mean "gbrain's own default": the argument is omitted.
         args = {"query": query}
         for key in ("detail", "return_window", "autocut"):
@@ -635,18 +765,26 @@ class GbrainMemoryProvider(MemoryProvider):
         for key in ("token_budget", "return_unit", "limit"):
             if self.cfg.get(key) is not None:
                 args[key] = int(self.cfg[key]) if key != "return_unit" else self.cfg[key]
+        if token_budget is not None:
+            args["token_budget"] = int(token_budget)
         # The facts lanes give gbrain a chat key, which turns on query expansion; the raw lane has none, so it never expands.
         expand = self.cfg.get("expand") if self.cfg.get("expand") is not None else expand_default
         if expand is not None:
             args["expand"] = bool(expand)
         # Open the unit and call it under one lock hold: another unit opening in between can close this unit's
         # child once `max_open_units` children are live.
+        t0 = time.perf_counter()
         with self._lock:
+            t1 = time.perf_counter()
             u = self._ensure_unit(user_id or "_all", create=False)
+            t2 = time.perf_counter()
             try:
                 rows, meta = u.child.call("query", args)
             except McpToolError as e:
                 raise GbrainRetrieveError(str(e)) from e
+            t3 = time.perf_counter()
+        timing = {"lock_wait_ms": round((t1 - t0) * 1000, 1), "unit_open_ms": round((t2 - t1) * 1000, 1), "query_ms": round((t3 - t2) * 1000, 1)}
+        timing["service_ms"] = timing["query_ms"]
         retrieval = (meta or {}).get("retrieval", {})
         delivery = retrieval.get("delivery", {})
         degraded = retrieval.get("degraded") or []
@@ -660,10 +798,14 @@ class GbrainMemoryProvider(MemoryProvider):
             raise GbrainRetrieveError(f"query returned {type(rows).__name__}, not a list of blocks")
         from .context import count_tokens
 
-        docs, fact_rows, fact_row_tokens = [], [], 0
+        docs, fact_rows, fact_row_tokens, repeated, repeated_tokens = [], [], 0, [], 0
         for row in rows:
             slug = str(row.get("slug", ""))
             text = row.get("chunk_text") or row.get("text") or ""
+            if row.get("result_type") == "fact" and drop_fact_ids and str(row.get("fact_id") or slug.rsplit("/", 1)[-1]) in drop_fact_ids:
+                repeated.append(str(row.get("fact_id") or slug.rsplit("/", 1)[-1]))
+                repeated_tokens += count_tokens(text)
+                continue
             if row.get("result_type") == "fact":
                 # gbrain's query facts arm: the row text carries its own `valid from`, so no session date header.
                 fact_rows.append(str(row.get("fact_id") or slug.rsplit("/", 1)[-1]))
@@ -690,6 +832,8 @@ class GbrainMemoryProvider(MemoryProvider):
             "degraded": degraded,
             "entity_anchored": sum(1 for row in rows if isinstance(row, dict) and row.get("entity_anchored")),
             **({"fact_rows": fact_rows, "fact_row_tokens": fact_row_tokens} if fact_rows else {}),
+            **({"repeated_fact_rows_dropped": repeated, "repeated_fact_row_tokens": repeated_tokens} if repeated else {}),
+            "timing": timing,
         }
         if delivery.get("tokenizer") not in (None, "cl100k"):
             raise GbrainRetrieveError(f"gbrain packed evidence with tokenizer {delivery.get('tokenizer')!r}, not cl100k")
