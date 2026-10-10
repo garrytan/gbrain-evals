@@ -910,7 +910,7 @@
       "remember": [
         {
           "input": {
-            "fact": "User is working on the paas-vm-k8s git repo (local path /home/pantunez/git/paas-vm-k8s), using Ansible playbooks (role rke/install-rke) to deploy an RKE Kubernetes cluster with Cisco ACI settings. In May 2023 they were debugging a Jinja2 template error in the \"Render RKE cluster configuration\" task.",
+            "fact": "User is working on the paas-vm-k8s git repo (local path <home>/git/paas-vm-k8s), using Ansible playbooks (role rke/install-rke) to deploy an RKE Kubernetes cluster with Cisco ACI settings. In May 2023 they were debugging a Jinja2 template error in the \"Render RKE cluster configuration\" task.",
             "entity": "paas-vm-k8s",
             "content_origin": "inferred",
             "provenance": "Inferred from the Ansible error log the user pasted in conversation on 2023-05-27 (credentials in the log deliberately not saved).",
@@ -8722,7 +8722,7 @@
       },
       {
         "id": 317,
-        "fact": "User is working on the paas-vm-k8s git repo (local path /home/pantunez/git/paas-vm-k8s), using Ansible playbooks (role rke/install-rke) to deploy an RKE Kubernetes cluster with Cisco ACI settings. In May 2023 they were debugging a Jinja2 template error in the \"Render RKE cluster configuration\" task.",
+        "fact": "User is working on the paas-vm-k8s git repo (local path <home>/git/paas-vm-k8s), using Ansible playbooks (role rke/install-rke) to deploy an RKE Kubernetes cluster with Cisco ACI settings. In May 2023 they were debugging a Jinja2 template error in the \"Render RKE cluster configuration\" task.",
         "kind": "fact",
         "entity_slug": "paas-vm-k8s",
         "source": "Inferred from the Ansible error log the user pasted in conversation on 2023-05-27 (credentials in the log deliberately not saved).",
