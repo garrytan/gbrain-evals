@@ -22,7 +22,7 @@
   },
   "provider": "gbrain",
   "lane": "raw",
-  "budget_usd": 3,
+  "budget_usd": 6,
   "provider_config": {
     "embedding_model": "voyage:voyage-4",
     "embedding_dimensions": 1024,

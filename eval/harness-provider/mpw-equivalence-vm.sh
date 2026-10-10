@@ -78,6 +78,7 @@ cd ~/work/gbrain-evals
 L="--budget-ledger \$HOME/eq/ledger.sqlite"; G="--gbrain \$HOME/work/gbrain@${BASE:0:9}"
 mkdir -p ~/eq
 test -f ~/eq/ledger.sqlite || bun eval/runner/budget-ledger.ts init \$L --program-cap-usd ${CAP_USD:?CAP_USD} --reason "mpw #6066 equivalence, beam $split" >/dev/null
+python3 -c "import json,sys; sys.exit(json.load(sys.stdin)['totals']['program_cap_usd'] == ${CAP_USD})" < <(bun eval/runner/budget-ledger.ts status \$L) && bun eval/runner/budget-ledger.ts set-cap \$L --program-cap-usd ${CAP_USD} --reason "mpw #6066 equivalence, beam $split: $phase at $COMMIT (within the approved \$90 check)" >/dev/null
 lane() {
   spec=eval/harness-provider/cells/equivalence/beam-$split-gbrain-\$1.json
   cid=\$(bun run harness:cell plan \$spec --cells-dir ~/eq/cells \$G \$L 2>/dev/null | python3 -c "import json,sys; t=sys.stdin.read(); print(json.loads(t[t.index('{'):])['cell_id'])")
@@ -92,35 +93,37 @@ lane() {
   store=\$HOME/eq/cells/_stores/\$(grep -oP '\[cell\] store \K\S+' ~/eq/\$1.log | tail -1)
   echo \$store > ~/eq/\$1.store
   for n in 1 2; do
-    [ -f ~/eq/replay-base-\$n-\$1/replay-diff.json ] && continue
-    bun run harness:cell replay \$cid --store \$(cat ~/eq/\$1.store) --out ~/eq/replay-base-\$n-\$1 \$G --budget-usd 1 --cells-dir ~/eq/cells \$L
+    [ -f ~/eq/replay-base-\$n-\$cid/replay-diff.json ] && continue
+    bun run harness:cell replay \$cid --store \$(cat ~/eq/\$1.store) --out ~/eq/replay-base-\$n-\$cid \$G --budget-usd 1 --cells-dir ~/eq/cells \$L
   done
 }
 lane combined > ~/eq/combined.log 2>&1 & a=\$!
 lane raw > ~/eq/raw.log 2>&1 & b=\$!
 wait \$a; ra=\$?; wait \$b; rb=\$?
 bun eval/runner/budget-ledger.ts status \$L > ~/eq/ledger-status.json 2>/dev/null
-echo "\$ra \$rb" > ~/eq/$phase.exit
+echo "\$ra \$rb" > ~/eq/$phase-$COMMIT.exit
 EOS
 fi
 
-if ! $S ssh "$vm" "test -f ~/eq/$phase.exit || { test -f ~/$phase.pid && kill -0 \$(cat ~/$phase.pid) 2>/dev/null; }"; then
+X=~/eq/$phase-$COMMIT.exit
+if ! $S ssh "$vm" "test -f $X"; then
+  until $S ssh "$vm" "! { test -f ~/$phase.pid && kill -0 \$(cat ~/$phase.pid) 2>/dev/null; }"; do log "waiting for an earlier $phase run to exit"; sleep 120; done
   log "starting"
   $S ssh "$vm" "nohup setsid bash -c 'echo \$\$ > ~/$phase.pid; exec bash ~/$phase.sh' > ~/$phase.log 2>&1 < /dev/null &"
 fi
-until $S ssh "$vm" "test -f ~/eq/$phase.exit" 2>/dev/null; do
+until $S ssh "$vm" "test -f $X" 2>/dev/null; do
   sleep 300
   $S ssh "$vm" 'for l in combined raw; do c=$(cat ~/eq/$l.cell 2>/dev/null); echo "$(date -u +%T) $l ingest=$(ls ~/eq/cells/$c/stages/ingest 2>/dev/null | wc -l) answer=$(ls ~/eq/cells/$c/stages/answer 2>/dev/null | wc -l) judge=$(ls ~/eq/cells/$c/stages/judge 2>/dev/null | wc -l)"; done' >> "$M/progress.log" 2>/dev/null
 done
-log "exit $($S ssh "$vm" "cat ~/eq/$phase.exit")"
+log "exit $($S ssh "$vm" "cat $X")"
 
 # Public receipt: per lane, the cell's JSON files and a tarball of its stages, scorer and request log (bodies out), plus
 # each replay's diff and records. Paths are scrubbed; the ledger stays private.
-dest=$OUT/$split/$phase; mkdir -p "$dest"
-$S ssh "$vm" "cd ~/eq && for l in combined raw; do c=\$(cat \$l.cell); mkdir -p pub/\$l && cp cells/\$c/*.json pub/\$l/ \
+dest=$OUT/$split/$phase; rm -rf "$dest"; mkdir -p "$dest"
+$S ssh "$vm" "cd ~/eq && rm -rf pub && for l in combined raw; do c=\$(cat \$l.cell); mkdir -p pub/\$l && cp cells/\$c/*.json pub/\$l/ \
   && (cd cells/\$c && tar -czf ~/eq/pub/\$l/receipt.tgz --exclude=proxy/bodies stages scorer proxy) \
-  && for r in replay-base-*-\$l; do [ -d \$r ] && mkdir -p pub/\$l/\$r && cp \$r/replay-diff.json \$r/spend.json pub/\$l/\$r/ 2>/dev/null \
-     && (cd \$r && tar -czf ~/eq/pub/\$l/\$r/records.tgz --exclude=store --exclude=proxy/bodies .); done; done; cp ledger-status.json pub/ 2>/dev/null; \
+  && for r in replay-base-*-\$c; do [ -d \$r ] && mkdir -p pub/\$l/\${r%-\$c} && cp \$r/replay-diff.json \$r/spend.json pub/\$l/\${r%-\$c}/ 2>/dev/null \
+     && (cd \$r && tar -czf ~/eq/pub/\$l/\${r%-\$c}/records.tgz --exclude=store --exclude=proxy/bodies .); done; done; cp ledger-status.json pub/ 2>/dev/null; \
   tar -cf - -C pub ." | tar -xf - -C "$dest"
 $S ssh "$vm" 'cat ~/eq/ledger.sqlite' > "$M/ledger.sqlite"
 (cd "$REPO" && find "$dest" -name '*.json' -print0 | xargs -0 bun -e '
