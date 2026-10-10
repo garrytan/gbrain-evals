@@ -27,7 +27,7 @@ export type HardFamily = 'H1' | 'H2' | 'H3' | 'H4' | 'H5';
 export const HARD_FAMILIES: readonly HardFamily[] = ['H1', 'H2', 'H3', 'H4', 'H5'];
 
 /** Seeds fixed by the plan (CEO-F9). */
-export const HARD_SEEDS = { calibration: 20261005, smoke: 20261099, heldout: 20261006 } as const;
+export const HARD_SEEDS = { calibration: 20261005, smoke: 20261099, heldout: 20261006, confirmation: 20261021 } as const;
 
 /** Sessions in an H5 task: four recording sessions, then the scored question. */
 export const H5_SESSIONS = 5;

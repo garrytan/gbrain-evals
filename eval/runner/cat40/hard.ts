@@ -136,9 +136,9 @@ export function identityRefusal(recorded: Record<string, unknown> | undefined, n
   }
 }
 
-/** Seeds that must use the frozen generator: the smoke and held-out seeds. */
+/** Worlds that must use the frozen generator: the smoke, held-out and confirmation seeds, and every sealed world (the confirmation's world S). */
 export function requiresFreeze(world: HardWorld): boolean {
-  return world.seed === HARD_SEEDS.smoke || world.seed === HARD_SEEDS.heldout;
+  return world.seed === HARD_SEEDS.smoke || world.seed === HARD_SEEDS.heldout || world.seed === HARD_SEEDS.confirmation || world.version.startsWith('hard-sealed');
 }
 
 // ─── Prompts and sessions ───────────────────────────────────────────
