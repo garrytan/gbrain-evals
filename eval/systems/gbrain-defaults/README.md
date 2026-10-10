@@ -9,7 +9,7 @@ It is the Q1 scoreboard's headline gbrain row, kind `gbrain-defaults` in [kinds.
 
 | Piece | Value |
 |---|---|
-| gbrain | `bun install -g github:garrytan/gbrain#<GBRAIN_SHA>` at image build; default `7aa2caa0aa2a9f031730cd351cd516cf4f9f5802` (0.60.106.0, the freeze commit) |
+| gbrain | `bun install -g github:garrytan/gbrain#<GBRAIN_SHA>` at image build; default `f05943e653fd9d938b343b1774a35325ba792271` (0.60.138.0, the A14 freeze commit) |
 | Runtime | Bun 1.4.2 (`oven/bun:1.4.2-slim` by digest) inside the image only; the harness host keeps its own Bun |
 | Install | `config.json` with `provider_base_urls.{voyage,openai,anthropic}` pointed at the proxy, then `gbrain init --pglite --json`, `gbrain apply-migrations --yes --non-interactive --no-autopilot-install`, and the scripted "defaults" reply (each first-run decision's default argv, as init prints it) |
 | Resolved defaults | PGLite, `voyage:voyage-4` at 1,024 dimensions, search mode `tokenmax` (reranker `voyage:rerank-2.5`, LLM expansion with `claude-haiku-4-5`, search limit 50), synthesis `claude-opus-4-7`; read live from `gbrain search modes --json` and `gbrain models --json` and published under `/capabilities` → `resolved` with a sha256 |

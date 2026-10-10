@@ -1,7 +1,7 @@
 {
   "system": "gbrain-defaults",
   "versions": {
-    "package": "gbrain (github:garrytan/gbrain#7aa2caa0aa2a9f031730cd351cd516cf4f9f5802, 0.60.106.0), installed with bun install -g",
+    "package": "gbrain (github:garrytan/gbrain#f05943e653fd9d938b343b1774a35325ba792271, 0.60.138.0), installed with bun install -g",
     "runtime": "Bun 1.4.2 (oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61)",
     "image": "shim built from eval/systems/gbrain-defaults/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
     "lock_sha256": null,
@@ -15,7 +15,7 @@
         "reranker": "voyage:rerank-2.5",
         "expansion": "anthropic:claude-haiku-4-5-20251001",
         "synthesis": "anthropic:claude-opus-4-7",
-        "extraction": "anthropic:claude-sonnet-4-6"
+        "extraction": "anthropic:claude-haiku-5-5"
       },
       "notes": "gbrain's shipped defaults as init resolves them with Voyage, OpenAI and Anthropic keys present: PGLite engine, voyage:voyage-4 at 1024 dimensions, search mode tokenmax (init's auto pick: reranker voyage:rerank-2.5 on, LLM expansion on, search limit 50, contextual retrieval per-chunk synopsis, semantic cache as gbrain's availability gate sets it), internal models from gbrain's tier defaults. These are the expected values; /capabilities adds `resolved`, read from the stack's reference install (gbrain search modes --json, gbrain models --json, config.json) with its sha256, and every later install and every serve start must resolve to the same hash."
     }

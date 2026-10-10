@@ -52,8 +52,9 @@ component and default-amount rows (its default query expansion is one counted LL
 `synthesize` for gbrain's own answer, recorded under the reader `own:<gbrain's resolved model>`. A labeled
 full-surface row runs `think` with each reader as `model` and the question date as `reference_date`, in its own cell on
 a stack started with `GBRAIN_FULL_SURFACE=1`, so every starter row reads a starter-only stack. No request carries `token_budget`. The resolved configuration (search mode,
-reranker, expansion, embedder, internal models) is published beside its hash. Frozen gbrain commit: `7aa2caa0aa2a9f031730cd351cd516cf4f9f5802`
-(master on 2026-10-08, 0.60.106.0).
+reranker, expansion, embedder, internal models) is published beside its hash. Frozen gbrain commit: `f05943e653fd9d938b343b1774a35325ba792271`
+(master on 2026-10-09, 0.60.138.0; A14). The public-v2 cells run at the earlier pin,
+`7aa2caa0aa2a9f031730cd351cd516cf4f9f5802` (master on 2026-10-08, 0.60.106.0), and every row they produce is labeled with it.
 
 **External configurations.** Each system runs its documented recipe as the headline row where the recipe's measured
 ingest fits 48 hours per conversation and its block cap. Otherwise it runs the common configuration (extraction
@@ -309,6 +310,12 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   Rechecked at the freeze commit (gbrain `7aa2caa0`, 0.60.106.0; receipt in `dev-stress-pilot/freeze-commit/`): query p95
   5.7 seconds (p50 4.1), no rerank or counted delivery fallbacks, 37 shipped-behavior fallbacks on 220 queries, peak
   serve memory 0.80 GB, brain 1.10 GB, restart 3.7 seconds. PGLite stands. Measured spend $1.22.
+
+  Rechecked at the A14 pin (gbrain `f05943e6`, 0.60.138.0; receipt in `dev-stress-pilot/a14-pin/`), from an empty
+  brain: ingest 24 minutes with 0 failures, the embedding barrier 94 minutes after the last write, query p95 4.6
+  seconds (p50 3.2), no rerank or counted delivery fallbacks, 26 queries carrying shipped-behavior fallbacks (20
+  `no_text_chunks`, 13 `redaction_unmapped`) on 220 queries, peak serve memory 0.65 GB, brain 1.05 GB, restart 2.1
+  seconds. PGLite stands. Measured spend $1.24.
   Two earlier query phases ran without expansion because of the proxy bug amendment A3 fixes; they are kept as
   `receipt-run1-expansion-refused.json` and do not count. Measured spend: $1.79 (embeddings, rerank and expansion).
 
@@ -331,14 +338,17 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
 
 ## Freeze checklist (filled by the freezing commit)
 
-- **gbrain:** `7aa2caa0aa2a9f031730cd351cd516cf4f9f5802` (0.60.106.0), installed in the `gbrain-defaults` image.
-  Resolved configuration hash `415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab` (config file
+- **gbrain:** `f05943e653fd9d938b343b1774a35325ba792271` (0.60.138.0, A14), installed in the `gbrain-defaults` image.
+  Resolved configuration hash `3c26b4ae2fc319d385e2dbc0180ec19fd01240a4b6ae5202038a42e2b792407b` (config file
   `6349524a…0554`, starter tool list `08403fb2…483c58d`): PGLite, `voyage:voyage-4` at 1,024 dimensions, `tokenmax`
-  search, `voyage:rerank-2.5`, query expansion on (`claude-haiku-4-5`), `synthesize` and `think` on `claude-opus-4-7`.
+  search, `voyage:rerank-2.5`, query expansion on (`claude-haiku-4-5`), `synthesize` and `think` on `claude-opus-4-7`,
+  fact extraction on `claude-haiku-5-5`, content repair on `claude-opus-5-5`. The public-v2 cells ran at `7aa2caa0`
+  (0.60.106.0), resolved hash `415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab` (fact extraction on
+  `claude-sonnet-4-6`, no content-repair model).
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
-  cell executes (159 files at the A9 tree) and the pinned images:
+  cell executes (159 files at the A9 and A14 trees) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
-    from the custodian's host. Hash `99069170cc35abf41c1d7b0edb70341f689d2c1b14d2bc7d1e09f4c91a2e8adf`.
+    from the custodian's host. Hash `a7328eed8f77e30523e32a1c4a9756711fabdcfce3118c893dedd006b3877728` (A14).
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
     `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` at its launch tree (`a22e3d81`, 156 files); it
     renders from that tree (A8).
@@ -351,8 +361,9 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   - `q1-scoreboard-public-r5`: the S5 reruns after A11; 6 launch units; cap $170. Hash
     `83d357e982d3a313be21b7ad18a07393b9107d06011540df1a12b1fa4f9163b3`.
   - `q1-scoreboard-public-v2`: every public cell, rerun after the results were lost (A13); 41 launch units; cap $441.
-    Hash `59c00444d1633f50034b35e404e73d209ede8343754db8687fc32a095f19986e`. It replaces the public campaign and r2 to
-    r5, which are retired with nothing counted.
+    Hash `59c00444d1633f50034b35e404e73d209ede8343754db8687fc32a095f19986e` at its launch tree (`4bccbd5a`, gbrain
+    `7aa2caa0`); it renders from that tree (A14). It replaces the public campaign and r2 to r5, which are retired with
+    nothing counted.
   The sealed cap ($7,200), the public spend (about $150 lost under A13 plus the v2 cap of $441) and the $60 of dev work
   stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
@@ -576,7 +587,44 @@ loses only the cells still in flight. `q1-scoreboard-public` and its reruns r2 t
 $500 line is exceeded: about $150 lost plus up to $441 for v2 (about $250 expected at measured rates), caused by the
 lost machine, not by scope. The program owner approved v2 on 2026-10-09; the program total stays under $8,500.
 
+**A14 (2026-10-09, before any sealed cell): gbrain moves to the newest master.** Two gbrain faults found during Q1 are
+fixed on gbrain master. Every version before 0.60.133.0 spins `serve` at one full core on a ```` ```lua ```` fence
+around non-Lua text (its bundled Lua grammar fails to parse and the chunker loops), and a restarted serve resumes
+the stuck job, so every later write in that brain times out; gbrain #6389 (`d79bd1318`, 0.60.133.0) fixes it. The
+last-session verbatim misses that A11's readiness probe found had three causes (a dash-rule line overflowing the
+keyword query parser, text-only image routing, and a missing rerank score on one confidence grade); gbrain #6391
+(`f05943e65`, 0.60.138.0) fixes them, and its paired verdict (gbrain-evals#120) reports the probe's clean rate going
+from 429 to 500 of 500 with recall@10 unchanged. The owner approved the change on 2026-10-09. The rule is the newest
+gbrain master when this amendment is written, not a version chosen from results: master's head was `f05943e65`
+(0.60.138.0), merged 2026-10-09 22:24 UTC.
+
+- **Sealed.** `gbrain-defaults` installs `f05943e653fd9d938b343b1774a35325ba792271`. The reference install resolves
+  to hash `3c26b4ae…407b`; the config file and starter tool list hashes are unchanged. Two of gbrain's shipped
+  model defaults changed: fact extraction moves from `claude-sonnet-4-6` to `claude-haiku-5-5`, and a content-repair
+  model (`claude-opus-5-5`) is now named. They are gbrain's defaults at the pin and are published as such;
+  `claude-haiku-5-5` is added to the sealed campaign's priced models. The stress pilot reran at the new pin and
+  PGLite stands (engine rule above). A12's shim check stays: it tests for a rerank score only on grades that pass
+  through the rerank branch, so #6391's score change does not alter which reads it marks. The sealed campaign is
+  re-frozen; no sealed cell ran at an earlier freeze.
+- **Public.** `q1-scoreboard-public-v2` keeps the pin it launched with, `7aa2caa0` (0.60.106.0): its results are
+  published as they stand and every gbrain row is labeled with that pin. Its gbrain cells are not rerun at the new
+  pin. A cell that hits the serve hang is reported as a failure of the pinned version under the outcome rules. On
+  2026-10-09 the hang recurred on two LongMemEval-M gbrain shards (`c1` and `c2`); the `c2` capture is on
+  `evals/q1-scoreboard-results` under `hangs/v2-s5-gbrain-c2/`, and gbrain's owner confirmed it is the defect #6389
+  fixes. The pin sits in v2's executed tree, so v2's hash recomputes at its launch tree `4bccbd5a` and v2 renders from
+  that tree, as the first public campaign renders from `a22e3d81` (A8).
+- **Report.** The headline (sealed) and public gbrain rows name different gbrain versions; every table states the
+  pin beside the row, and no row compares gbrain across the two pins.
+- **Custody (Q2).** Q2's decision is recorded (gbrain-evals#88, v0.10.51), so the condition that kept BEAM-1M sealed
+  per-question rows in custody is met: when S2b runs, its per-question rows publish under D2.
+
 ## Changelog
+
+### 2026-10-09: amendment A14
+
+gbrain moves to master `f05943e6` (0.60.138.0), which fixes the serve hang and the verbatim misses; the stress pilot
+rechecked (PGLite stands); sealed re-frozen (hash `a7328eed`). Public-v2 stays at `7aa2caa0` and renders from its launch
+tree `4bccbd5a`. BEAM-1M sealed per-question rows publish under D2 now that Q2's decision is recorded.
 
 ### 2026-10-09: amendments A12 and A13
 
