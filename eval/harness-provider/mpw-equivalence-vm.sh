@@ -105,7 +105,7 @@ echo "\$ra \$rb" > ~/eq/$phase-$COMMIT.exit
 EOS
 fi
 
-X=~/eq/$phase-$COMMIT.exit
+X="~/eq/$phase-$COMMIT.exit"
 if ! $S ssh "$vm" "test -f $X"; then
   until $S ssh "$vm" "! { test -f ~/$phase.pid && kill -0 \$(cat ~/$phase.pid) 2>/dev/null; }"; do log "waiting for an earlier $phase run to exit"; sleep 120; done
   log "starting"
