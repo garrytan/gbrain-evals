@@ -1,0 +1,29 @@
+{
+  "ledger": "/home/ubi/c/gbrain-evals/.budget/t0b-sealed-confirm.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 265,
+    "committed_usd": 232.00653922,
+    "reconciled_usd": 232.00653922,
+    "open_reservations_usd": 0,
+    "remaining_usd": 32.99346077999999,
+    "requests": 137830,
+    "overshoot_usd": 0.000051849999999999864
+  },
+  "run": null,
+  "runs": 1,
+  "open_runs": 1,
+  "last_cap_change": {
+    "program_cap_usd": 265,
+    "kind": "open",
+    "reason": "T0b amendment 5 sealed confirmation (GBRA-60, approved within the $420 round)",
+    "by": "ubi@vmxywegc",
+    "at": "2026-10-11T17:26:01.698Z"
+  },
+  "size_bytes": 56553472,
+  "read_ms": 58.39,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}
