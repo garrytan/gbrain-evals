@@ -67,7 +67,7 @@ function pullProgress(l: LeaseState, vm: string, resultsDir: string) {
   ubi('ssh', vm, [
     `mkdir -p ~/${dir}`,
     `curl -s --max-time 10 http://127.0.0.1:8787/__proxy/status > ~/${dir}/proxy-status.json || true`,
-    `n=0; for f in /var/lib/docker/volumes/*/_data/logs/receipts.ndjson; do [ -e "$f" ] && n=$((n + $(sudo wc -l < "$f"))); done; echo $n > ~/${dir}/receipts.txt`,
+    `sudo sh -c 'cat /var/lib/docker/volumes/*/_data/logs/receipts.ndjson 2>/dev/null' | wc -l > ~/${dir}/receipts.txt`,
     `d=${db}; rm -f ~/${dir}/lease.sqlite; [ -n "$d" ] && bun -e "const { Database } = require('bun:sqlite'); new Database(process.argv[1], { readonly: true }).exec(\"VACUUM INTO '\" + process.argv[2] + \"'\")" "$d" ~/${dir}/lease.sqlite || true`,
   ].join('; '));
   const out = join(resultsDir, 'progress');
