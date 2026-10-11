@@ -1,0 +1,6725 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s4.gbrain-defaults.shipped-defaults.component-b8000",
+  "run_cell": "s4.gbrain-defaults.shipped-defaults",
+  "config_sha256": "3fa0c86b6f6f7f804f9b6855518ab9ea73b9e3702e37d58fa096fddbe3c12eea",
+  "run_status": "partial",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S4",
+  "benchmark": "lme-s",
+  "split": "dev",
+  "block": "T2-S4-S5",
+  "system": {
+    "kind": "gbrain-defaults",
+    "configuration": "shipped-defaults",
+    "runner": "shim",
+    "capability_system": "gbrain-defaults",
+    "versions": {
+      "package": "gbrain (github:garrytan/gbrain#f05943e653fd9d938b343b1774a35325ba792271, 0.60.138.0), installed with bun install -g",
+      "runtime": "Bun 1.4.2 (oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61)",
+      "image": "shim built from eval/systems/gbrain-defaults/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+      "lock_sha256": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "protocol": 1,
+      "system": "gbrain-defaults",
+      "versions": {
+        "package": "gbrain (github:garrytan/gbrain#f05943e653fd9d938b343b1774a35325ba792271, 0.60.138.0), installed with bun install -g",
+        "runtime": "Bun 1.4.2 (oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61)",
+        "image": "shim built from eval/systems/gbrain-defaults/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "embedder": "voyage:voyage-4",
+            "dims": 1024,
+            "reranker": "voyage:rerank-2.5",
+            "expansion": "anthropic:claude-haiku-4-5-20251001",
+            "synthesis": "anthropic:claude-opus-4-7",
+            "extraction": "anthropic:claude-haiku-5-5"
+          },
+          "notes": "gbrain's shipped defaults as init resolves them with Voyage, OpenAI and Anthropic keys present: PGLite engine, voyage:voyage-4 at 1024 dimensions, search mode tokenmax (init's auto pick: reranker voyage:rerank-2.5 on, LLM expansion on, search limit 50, contextual retrieval per-chunk synopsis, semantic cache as gbrain's availability gate sets it), internal models from gbrain's tier defaults. These are the expected values; /capabilities adds `resolved`, read from the stack's reference install (gbrain search modes --json, gbrain models --json, config.json) with its sha256, and every later install and every serve start must resolve to the same hash."
+        }
+      },
+      "install": {
+        "recipe": [
+          "bun install -g github:garrytan/gbrain#<GBRAIN_SHA> (image build)",
+          "config.json provider_base_urls.{voyage,openai,anthropic} -> the egress relay to the metering proxy, written before init",
+          "gbrain init --pglite --json (dummy VOYAGE_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY in the environment)",
+          "gbrain apply-migrations --yes --non-interactive --no-autopilot-install (the setup step gbrain's postinstall runs; bun install -g blocks postinstall scripts)",
+          "the scripted 'defaults' reply: every first_run_decisions default option's argv, as init printed it",
+          "gbrain serve --surface starter over MCP stdio (the registration gbrain's harness_wiring option names)"
+        ],
+        "first_run_defaults": {
+          "search_mode": "tokenmax (gbrain config set search.mode tokenmax)",
+          "writeback": "salient (gbrain config set memory.auto_writeback salient)",
+          "harness_wiring": "skip in init's terms (no argv); the shim is the agent host and registers gbrain serve --surface starter"
+        }
+      },
+      "time": "in-text",
+      "time_notes": "Each session is a type: conversation page whose frontmatter carries the session date and whose turns carry the session time in gbrain's conversation-parser anchor shape (**Speaker** (YYYY-MM-DD h:mm AM): text). query takes no as-of date, so query_time is not sent; synthesize takes none either (relative-time questions resolve against the run date, the shipped behavior). think receives the question date as reference_date.",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "One page per session at conversations/<date>/<source id>; every returned row names its page slug, which maps to exactly one ingested source id. Rows from pages gbrain created itself (none under the defaults on conversation pages) report unavailable."
+      },
+      "delete": "unsupported",
+      "delete_notes": "The starter surface has no page delete; delete_page is a full-surface op and the scoreboard calls only starter ops.",
+      "readiness": "put_page returns when the write commits (pending receipts are polled with get_write_request until terminal; a failed or conflicting receipt is a product error, and a replay with the same request id returns gbrain's stored receipt); embeddings are a later persistence effect. /finish stops serve, runs gbrain doctor --json with the brain to itself (a doctor under a live serve reports details.reason live_serve and fails the barrier), requires every expected page and 0 chunks missing embeddings, restarts serve while coverage is short (its persistence consumer drains the effects) until timeout_s, then reads gbrain's job queue (gbrain jobs list --json) and the outbox effects still pending (list_write_requests) and keeps serve up for drain rounds while any can still run, up to the same timeout_s, recording what is left as background_liabilities, and confirms every page through list_pages.",
+      "namespace": "one brain per namespace: a clean scripted install per namespace at one fixed GBRAIN_HOME, verified against the stack's reference install (resolved configuration, config hash without its install timestamp, starter tools/list). Brains move between /data/ns/<ns> and GBRAIN_HOME by rename and are never copied: gbrain binds a brain's content checkout to its inode and birth time, so a copied brain refuses writes with recovery_required.",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {},
+          "notes": "Bare query: no limit (tokenmax resolves 50), no token_budget, expansion on by default, auto delivery (whole conversation pages up to 24,000 tokens). token_budget is refused: without return_unit it switches query to chunk delivery (src/core/ops/search.ts:131, src/core/search/evidence-delivery.ts:200)."
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 50,
+            "autocut": false
+          },
+          "notes": "query with limit 50 and autocut off, still no token_budget, so delivery stays auto; the harness packs 2k/8k/16k from the delivered pages."
+        },
+        "allowed_settings_overrides": [
+          "limit",
+          "autocut",
+          "expand",
+          "on_degraded (error | report)"
+        ],
+        "on_degraded": "error",
+        "degraded_reads": "Every query response's _meta.retrieval (vector_enabled, expansion_applied, cache, degraded, projection_readiness, vector_pool_underfilled, crag, delivery fallbacks and dropped_reasons) and its gbrain notices are returned under raw. A harness failure is: any degraded stage (the reranker reports failure as reranker_skipped, rerank_passthrough or rerank_failed; expansion as expansion_failed), rows without the confidence block's top_rerank_score in a reranked mode (meta.rerank is System One's field and stays absent under the defaults), expansion_applied false in an expansion mode (gbrain's expansion falls back to the bare query silently, for example on a proxy 402), a disabled vector arm, a projection that is not ready, a delivery fallback that is not shipped behavior (fetch_timeout, fetch_failed, row_limit, unsealed_page, anchor_not_located, page_missing or any unknown reason), or a delivery unit other than auto. With on_degraded error (the default) /retrieve answers HTTP 503 with error kind invalid_request, which memory-qa records as harness_invalid and retries; with on_degraded report it returns the items with raw.classification.outcome harness_invalid. A semantic cache hit, an underfilled vector pool, dropped delivery blocks and the preregistered shipped-behavior delivery fallbacks (redaction_unmapped: gbrain's secret redactor changed a block's text; no_text_chunks: a page with no text chunks delivers its hit as a chunk; the set is GBRAIN_SHIPPED_FALLBACKS and /capabilities shows it under shipped_behavior) are recorded under raw.classification.recorded as delivery_fallback:<reason>, counted in GET /health shipped_fallbacks, never classified as degraded and never answered with the 503.",
+        "item_mapping": "One item per query row in gbrain's rank order. Rows are gbrain's lean remote rows (the shape an agent reads); chunk_text is the delivered text (a whole conversation page under auto delivery). A type: conversation row -> type episode (chunk when gbrain marks it truncated), anything else chunk; source_ids is the page's source id, provenance exact."
+      },
+      "own_answer": {
+        "route": "POST /answer {ns, question, query_time, mode: synthesize | think, model}",
+        "synthesize": "the starter synthesize verb with gbrain's configured default model; synthesis_status ok -> outcome scored; extractive_fallback -> scored with degraded extractive_fallback (its own column); an unavailable error (dummy-key or compose failure path) -> harness_invalid.",
+        "think": "full surface only (GBRAIN_FULL_SURFACE=1 serves --surface full; every other call still uses starter ops, checked against the starter tools/list captured at template build): think with model = the reader and reference_date = the question date."
+      },
+      "streaming": "disabled",
+      "provider_routes": [
+        "POST /voyage/v1/embeddings (voyage-4, output_dimension 1024)",
+        "POST /voyage/v1/rerank (rerank-2.5)",
+        "POST /anthropic/v1/messages (expansion, synthesis, background extraction)",
+        "POST /openai/v1/* and GET /openai/v1/models (latest-model discovery on connect)"
+      ],
+      "telemetry_off": [],
+      "telemetry_notes": "gbrain sends no product telemetry. Its update check (GitHub) cannot leave the sandbox network and fails closed; the failure is recorded, not hidden.",
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "stdio",
+        "version": "gbrain serve --surface starter (gbrain 0.60.95.0)"
+      },
+      "deviations_from_vendor_code": [
+        "Sessions arrive through the shim as one put_page per session (the capture-hook path), not through gbrain's transcript import adapters; the page shape follows gbrain's transcript renderer (type: conversation, date, imessage-slack anchor lines) without its 4,000-character per-message cap or part splitting, so no turn text is cut.",
+        "The update check and autopilot install are not reachable from the sandbox; apply-migrations runs with --no-autopilot-install."
+      ],
+      "extensions": {
+        "POST /answer": "gbrain's own answer (see own_answer)",
+        "GET /stats": "serve resident memory (VmRSS, VmHWM from /proc) and the active brain's size on disk, for the stress pilot",
+        "POST /restart {ns}": "stop and start serve on the namespace's brain; restart_ms",
+        "GET /health": "adds called_ops (every MCP tool called since start), checked against resolved.starter_tools, and shipped_fallbacks (shipped-behavior delivery fallbacks counted per reason)",
+        "POST /finish": "adds doctor (the last doctor gate), doctor_rounds (their count), rounds (every doctor gate of the barrier), absent_pages, expected_pages and background_liabilities (pending_jobs by kind, oldest_pending_age_s, pending_effects by kind, drained, drain_rounds, the doctor's facts and queue backlog)"
+      },
+      "answer": {
+        "modes": [
+          "synthesize"
+        ],
+        "models": {
+          "synthesize": "anthropic:claude-opus-4-7"
+        }
+      },
+      "shipped_behavior": {
+        "delivery_fallbacks": [
+          "no_text_chunks",
+          "redaction_unmapped"
+        ],
+        "preregistered": [
+          "no_text_chunks",
+          "redaction_unmapped"
+        ],
+        "configured_by": "GBRAIN_SHIPPED_FALLBACKS",
+        "matches_preregistration": true
+      },
+      "resolved": {
+        "gbrain_version": "gbrain 0.60.138.0",
+        "resolved_sha256": "3c26b4ae2fc319d385e2dbc0180ec19fd01240a4b6ae5202038a42e2b792407b",
+        "config_sha256": "6349524a02b73bdd16204585d37fb8a03c8495794f9a535fe94756437b7a0554",
+        "starter_tools_sha256": "08403fb2315d2e2ffa12e451950aaee6f704daa9c7a4d466d18c4a454483c58d",
+        "starter_tools": [
+          "add_timeline_entry",
+          "cancel_job",
+          "cancel_write_request",
+          "capture",
+          "context_pack",
+          "delta",
+          "edit_page",
+          "entity",
+          "find_anomalies",
+          "forget",
+          "get_agent_job",
+          "get_backlinks",
+          "get_ingest_log",
+          "get_page",
+          "get_recent_salience",
+          "get_skill",
+          "get_skill_asset",
+          "get_write_request",
+          "list_brain_skillpack",
+          "list_link_sources",
+          "list_pages",
+          "list_skills",
+          "list_write_requests",
+          "mute_notice",
+          "put_page",
+          "query",
+          "recall",
+          "remember",
+          "request_tools",
+          "resolve_slugs",
+          "search",
+          "submit_agent",
+          "synthesize",
+          "traverse_graph",
+          "whoami"
+        ],
+        "first_run_decisions": [
+          {
+            "id": "search_mode",
+            "default": "tokenmax",
+            "applied_argv": [
+              "gbrain",
+              "config",
+              "set",
+              "search.mode",
+              "tokenmax"
+            ]
+          },
+          {
+            "id": "writeback",
+            "default": "salient",
+            "applied_argv": [
+              "gbrain",
+              "config",
+              "set",
+              "memory.auto_writeback",
+              "salient"
+            ]
+          },
+          {
+            "id": "harness_wiring",
+            "default": "skip",
+            "applied_argv": null
+          }
+        ],
+        "engine": "pglite",
+        "embedding_model": "voyage:voyage-4",
+        "embedding_dimensions": 1024,
+        "search_mode": "tokenmax",
+        "search": {
+          "autocut": false,
+          "autocut_jump": 0.2,
+          "autocut_min_keep": 1,
+          "autocut_min_top": 0.35,
+          "cache_enabled": false,
+          "cache_similarity_threshold": 0.92,
+          "cache_ttl_seconds": 3600,
+          "contextual_retrieval": "per_chunk_synopsis",
+          "contextual_retrieval_disabled": false,
+          "cross_modal_both_image_weight": 0.4,
+          "cross_modal_both_text_weight": 0.6,
+          "cross_modal_llm_intent": false,
+          "evidence_cosine_floor": 0.8,
+          "expansion": true,
+          "expansion_variant_budget": null,
+          "floor_ratio": null,
+          "graph_signals": true,
+          "image_query_image_refinement_weight": 0.6,
+          "image_query_text_refinement_weight": 0.4,
+          "intentWeighting": true,
+          "keywordOrFallback": true,
+          "keyword_arm_confidence_floor": null,
+          "metadata_boost_gate": "lexical",
+          "relationalRetrieval": true,
+          "relational_chain_slots": 10,
+          "relational_orient_onehop": false,
+          "relational_planner": true,
+          "relational_rerank_pin": 3,
+          "relational_retrieval_depth": 2,
+          "reranker_enabled": true,
+          "reranker_model": "voyage:rerank-2.5",
+          "reranker_timeout_ms": 5000,
+          "reranker_top_n_in": 50,
+          "reranker_top_n_out": null,
+          "searchLimit": 50,
+          "title_boost": 1.25,
+          "tokenBudget": null,
+          "unified_multimodal": false,
+          "unified_multimodal_only": false
+        },
+        "model_tiers": {
+          "deep": "anthropic:claude-opus-4-7",
+          "reasoning": "anthropic:claude-sonnet-4-6",
+          "subagent": "anthropic:claude-sonnet-4-6",
+          "utility": "anthropic:claude-haiku-4-5-20251001"
+        },
+        "model_tasks": {
+          "models.dream.synthesize": "anthropic:claude-sonnet-4-6",
+          "models.dream.synthesize_verdict": "anthropic:claude-haiku-4-5-20251001",
+          "models.dream.patterns": "anthropic:claude-sonnet-4-6",
+          "models.dream.extract_atoms": "anthropic:claude-haiku-4-5-20251001",
+          "models.drift": "anthropic:claude-sonnet-4-6",
+          "models.auto_think": "anthropic:claude-opus-4-7",
+          "models.think": "anthropic:claude-opus-4-7",
+          "models.fence_repair": "openai:gpt-6.1-sol",
+          "models.content_repair": "anthropic:claude-opus-5-5",
+          "models.subagent": "anthropic:claude-sonnet-4-6",
+          "facts.extraction_model": "anthropic:claude-haiku-5-5",
+          "models.eval.longmemeval": "anthropic:claude-sonnet-4-6",
+          "models.eval.contradictions_judge": "anthropic:claude-haiku-4-5-20251001",
+          "models.expansion": "anthropic:claude-haiku-4-5-20251001",
+          "models.contextual_synopsis": "anthropic:claude-haiku-4-5-20251001",
+          "models.chat": "anthropic:claude-sonnet-4-6"
+        }
+      }
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens, 500-question regression (claude-sonnet-5-5 only)"
+  },
+  "readers": [
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "lme-s",
+    "sha256": "fd43b41a0a454bf7095c3753365ab438334dbb8f20957f1cd878fb1212a6c95d",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": null,
+  "selection": {
+    "questions": 500,
+    "conversations": 17,
+    "scheduled_sha256": "702287feda46afbb122e7d61f8fb1530e6b571b8172e248376c4f887d0527f42"
+  },
+  "counts": {
+    "rows": 17,
+    "answers": 17,
+    "answers_promised": 500,
+    "judgments": 17,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 16,
+      "ingest_degraded": 1
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-sonnet-5-5": 0.647059
+  },
+  "realizations": [
+    {
+      "conversation": "00ca467f",
+      "realization_id": "e1a148c7651ffa2dc34b92165e11a0f56c4a692f548e799ea7c741dbb30e2c9c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "01493427",
+      "realization_id": "3d763cffa8184d5f84de8459b556c213a3aa0674b5c4a04a0d5919951042fa6e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "031748ae_abs",
+      "realization_id": "1f52e0e7a342bf87b18a2a02f85e4b77cc7a2436e70212e7931b32f4fbdc6eb2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "06db6396",
+      "realization_id": "386d0dc1d9ec85ad2a10752ba16a9caf015e2352b0e2898832d10c5129952e55",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "07741c44",
+      "realization_id": "1e6c08c72f964fa5738ab9e941c90509749273c7b8d425af414a9035df344f8d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "078150f1",
+      "realization_id": "2932e61c68cbfe290a269eace71fdcd59c116d474ba1986f99634c0120c10967",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": true,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "0862e8bf",
+      "realization_id": "a33b52f868db0dd7af6ea518f5f21bff11c97823846434f5c40b6b23dcdca80a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "08e075c7",
+      "realization_id": "7596b11d90d7a1aa72c18f7365d340b18c868a637ad0415cc3bec8cd79b461d7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "0977f2af",
+      "realization_id": "3f0041ae9d5ae9db7bf10b463a47caeccba65f7d2d60ef12eed766ff6440e91f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "09ba9854",
+      "realization_id": "97938607fc9ec54d4080b6b012ecab4cf592c98543acfe15a1795536d5f7ffb3",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "09d032c9",
+      "realization_id": "05eb025b9f7ecc9b5056302c31d9fab35a13369fe7a07f589c91270819656cc5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "0a995998",
+      "realization_id": "d215ef8290c3ad81495775b82706f4a24dd852c239ee1f6dfec5a7a735e367c8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "0bc8ad92",
+      "realization_id": "a5c6126349d5748e54dd697127faff98f1fbeb527015f868322063629b512cb9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "0db4c65d",
+      "realization_id": "5a96e23f3a0282b2b829ad355597eaeb10011b78cd45f476e2926cb82193113a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "0ddfec37_abs",
+      "realization_id": "fe863875f50200fd9a4a005f4a11761fac1df53045729487521ba605ba9bee98",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "0e5e2d1a",
+      "realization_id": "3299e800411790faa17c0ff49b0ed23fb8480b833c32b8cb32c1c3178a982ec0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "0edc2aef",
+      "realization_id": "6009958c5ae83a44bae5fb28aae18885657f48e738786689cb4788699bdeb18b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "10d9b85a",
+      "realization_id": "d4ec81224a4f2cd127c5f524c7385b3480e8a1dcd073a7fc0de05398c858be92",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "118b2229",
+      "realization_id": "d45a52ab13962c18db31ca3bbf9d124e17dc1e5ed7fddb362cca4cf415106888",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "129d1232",
+      "realization_id": "a8299d5f35dd4b77e62479ff7f36b4b57d1328660e69c516a51320faff76738e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "15745da0",
+      "realization_id": "67a789df556858f1a84e190acdffb5c3ebe6ae4dd935a241a7cee634159e9e5a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "157a136e",
+      "realization_id": "c17cebf53c6f82bd2a8e98ce10ae99accc2f1f00336fef2e95e7e3fddd6c5781",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "184da446",
+      "realization_id": "8c36b3f6e82e0c3273d47fedad1f55f28e330879308eec32fc0dc370645d0089",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "18dcd5a5",
+      "realization_id": "5d08aec7ccbbb88fff2331f6a26f02fdc0066a99a0936a27641c1d1918891394",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "195a1a1b",
+      "realization_id": "f33d30eab450892b7c518207e1e9845faf50c2d3b511884aeca00bedfb988018",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "19b5f2b3_abs",
+      "realization_id": "45ab885c189510661b1b2bf4d42a79b730592b0bcbfa12507ef96586f84df80f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "1a8a66a6",
+      "realization_id": "34376a6cb41d249a6cd9a8a42394d939c5c2147e21319d064264bb26bfbf91de",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "1c0ddc50",
+      "realization_id": "f754a46de32c400543ac7445cff61895e0fd0aa955e025b8d03251bcee1eb705",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "1cea1afa",
+      "realization_id": "ab7a9c6188225af0e485bf34efc313db752e3da613f09a00fc98d7df93a2aabc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "1d4e3b97",
+      "realization_id": "a6fc2cfde09e2195ec4572cb5e1841abe4404ffd65a9da758f1ff4473b2e5a10",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "1de5cff2",
+      "realization_id": "e641f99ef6c914b742aa49ed5f38596c4cd7341db509d1e4416e339e30f86df7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "1f2b8d4f",
+      "realization_id": "902ed2acffab7f78c3574a364a08ab8ee46de94d331ef826d0d4652ab9e76ee7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "2133c1b5",
+      "realization_id": "9c83ebe86a42469ce94e3a36ccb372342cc1bceb2c7e8d5ad299292e4f5847f3",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "21436231",
+      "realization_id": "ae3af022847b562d0f1916be4697f1b9451bed3c137c58bdc71c10e40a423d80",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "22d2cb42",
+      "realization_id": "680d9791cdc02303797969f27ef9eb222f333e5c889cb00a9198785d5a7a07dd",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "2311e44b_abs",
+      "realization_id": "02f3a47ae652ef57224b057e110decde9eca96cebc797ff20aaa4fdafb250751",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "25e5aa4f",
+      "realization_id": "460dccd31b9c24bcafcdaaabac4b80acdae2984c6f72cf0432d3f7ede04add5d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "2698e78f_abs",
+      "realization_id": "f92403f391e2ecb193117607f2345d0d965220891880b5d61cf359f4fccf4b72",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "27016adc",
+      "realization_id": "688b815ec21afa62cadeb3f50fb54caf6f249c48804580f9291abe7379a00ef1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "28bcfaac",
+      "realization_id": "a273e7659dab7cb3e7585bf6d4e9c74e8413ea515357b457426200260a9aa570",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "29f2956b",
+      "realization_id": "e083a7c4fbe47ad44cca33560e7bf61f6e030cf34f5100f6729221bdcac2ff7c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "2a1811e2",
+      "realization_id": "94c802c664d5f8c84596134cf3b1f6b2f1c744682cdf7a38a6b5454154dced42",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "2bf43736",
+      "realization_id": "74774cad57b4978ba51e797d00ac5c04360b09ca8aeebb6017675160610ce0e7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "2ce6a0f2",
+      "realization_id": "5517190734fe722cc0c13e88d4573474de744e77b4d3e78723f740b0ac8b5228",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "2ebe6c90",
+      "realization_id": "3e75c26e89a3adf26d0474ab683e2f0204fc657b397da702acd0542c6e018479",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "311778f1",
+      "realization_id": "05d7f2d68fb96f7b7dca33e11fd4d3447c0c25e2688c7656b1717695d9909e2a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "3249768e",
+      "realization_id": "e0eb2ecf9a5ffbd0dad0f00d0fadd1151d44c929d2ed92368e116d8a57f5457d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "35a27287",
+      "realization_id": "df454968a6602abc81c4793d1249e03d323e80b5bf494ebf954d2ef9aeb366fd",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "36b9f61e",
+      "realization_id": "93d541565e92ad54d857bb9132f3ea36774f804f3b9d2df37f60e00fe27a09b7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "37d43f65",
+      "realization_id": "66930b22a0a023f802760ada4f9a2f60d2e10dba680279ba9ef58abc915f69f1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "38146c39",
+      "realization_id": "39b4d3afe48fa2328dc227a7fc92cbfa960757b316d7a1574b6aa9403839020e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "3b6f954b",
+      "realization_id": "1c077a7462139d8d953e6a95c49e78850bff7ba909e15f4e6378ad70aa34433e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "3c1045c8",
+      "realization_id": "124600904d723409f441f724a39f3d2a586aa585b8084a89e443ee4b9964ae4d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "3e321797",
+      "realization_id": "e4a612b2ee0cf33247d04e5620e41a39498eb0aa1ebdfc35032c4d633e1599ae",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "3fdac837",
+      "realization_id": "06a55e1f90285d61df8ab52b222a3d76907a63ae4360adaa8960a7f553fd7b73",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "4100d0a0",
+      "realization_id": "e60642d99e94aaba4b143e1ccc7cde1223bb4e7673398c932f93a26884f3368b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "41698283",
+      "realization_id": "1c392c00dfd768e16f3f4abaef9cb6a23eeae193637c3cd46fbaedbde70dd5ce",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "4388e9dd",
+      "realization_id": "1c1b7e999d7f94aa48e0e5bfc4c9c5140f0891154152f634bb3724088d1bfbb5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "46a3abf7",
+      "realization_id": "af98db29b1901bd7eb0c7194b3efe7028da6976ef2aafe09c29597b795095e2c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "4adc0475",
+      "realization_id": "44582f9efe2aaf55e83404d32f5ee8a6feaae19d4004ab7fb12c87d6541cfe4a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "4baee567",
+      "realization_id": "feb4b47bd62be35e6c77732d7500f5775e1d4c4301063c03760b7cfa565c815b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "4c36ccef",
+      "realization_id": "ced9f9818f2c426f62c759ec2ba8c7ebac6be0af9369c30a00168cb11a5b91d6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "4dfccbf7",
+      "realization_id": "921605dd96fc6482cce680e6985a53fd1d508598f35ac09dd0028f4e61b5e768",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "4f54b7c9",
+      "realization_id": "728b440ce57ecbdc139b316eba48a88658e51f1ec8ab21168f559d093f192a74",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "5025383b",
+      "realization_id": "aa75fe847f1d0f10264ffc6d85be2a15a7a9ab42c236c9ac51198b7205d8eda9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "50635ada",
+      "realization_id": "94801621e2218877bd88e92baef65bba2bd0bd20cd7e57e972f4d3cf2a7d7f3b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "51b23612",
+      "realization_id": "6f0996325205e20fb3f44ecebc00efbdf6cfca34dee66c0732bc1f820c072143",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "54026fce",
+      "realization_id": "40cb788c8928266b3e9ebe141c6d51bf26acf3b93ae63e38335ff43598d56990",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "55241a1f",
+      "realization_id": "edaa78b34f1c52dbd016e9c024895eaff6bd559839ca679ba4ba0c83c4aece4f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "577d4d32",
+      "realization_id": "799262e02f6c25d2ae3221f8e98ab192e85d59f3dc7851b7020f9ec65a96fea4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "5809eb10",
+      "realization_id": "dcd760a2a7eac4b004b82afe0768987ac137b44cc7849063e2a1e62ac6b10303",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "58470ed2",
+      "realization_id": "470b89fc29ef4f4ab6a69eb0537b0dcfcc490a4b9dd4c05a6253dd32727fab57",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "58ef2f1c",
+      "realization_id": "6f44a279ff335b8e06370a55ce4fec1bd0c625dfd21f42a7dc485f453cc59738",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "5a4f22c0",
+      "realization_id": "942d7b3669756613b5fd4c60c117680c49e79618e7284c74971ebf1b0695c3a8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "5c40ec5b",
+      "realization_id": "a3f4e38c6f6f0a53d6c2372077ef6615979bc7dd88d9c0f26225a9424d07a752",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "5e1b23de",
+      "realization_id": "b0d0df3f089e7cbbf6490feb942be96535f0a6dc21270346f980cd709fdc0f2a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "60159905",
+      "realization_id": "af3f2876b8ca6332319ab600833348767cb38936439344b149c837eac366608e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "60472f9c",
+      "realization_id": "ff071c6add38e33125811a5f8c711a956520e4a3000558ba0556130edf15059f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "60bf93ed",
+      "realization_id": "f2c9371391e62bac07b29c28b791f3c1ad8dc03f6af388fb90ff9383f2e18e2b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "60d45044",
+      "realization_id": "f1e2661efa1ca8c7ec8f52067fbc952926659dea70a2b0ae17f74d302b0d3be6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "61f8c8f8",
+      "realization_id": "c08c9d0efa648e4e9482945b41e6c5c8fed8525e9aa62c3650b7ba67f04fdd4f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "6456829e",
+      "realization_id": "7276c91e0c8a4bb72683a65c1fffe5b8d1a784d0b734b35d20ffa2e6addfb0ff",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "65240037",
+      "realization_id": "02b879088916ec8483c5421bc83ce4947882485b834c4f559fa6d90b5ca3b2f2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "66f24dbb",
+      "realization_id": "d1743ab25d87ef9964e839d614517396ed42d1eb9579de8a97c215f6c1300d4a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "681a1674",
+      "realization_id": "764fd3d75176303331366920627486fa6c0941acd752caa06a8719e207a7aec4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "6a1eabeb",
+      "realization_id": "76d840f6b3b09e6a06853cc051ed547de915a632e8d1634d886f8650adec5308",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "6ade9755",
+      "realization_id": "17a4feb8ae58e03f49e512b4f6cb8fdf6cba15fcd95234a4722b1f5f4cdd1580",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "6aeb4375",
+      "realization_id": "2b6e40808c466093d40abc17d22d4096907ebbff66ccdd5101d889e4549b6d3a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "6b168ec8",
+      "realization_id": "b3b475d69581e90d145e675a4c1ea3db4d06300b56c77f33348c38cbbce9ea4c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "6c49646a",
+      "realization_id": "fd77ef95fd703b9db35448b09dc564de29d0374b8c1b19a18a7895e9736dd513",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "6d550036",
+      "realization_id": "2fe23eab53d39c50b44b5f18527f7a1c3c4c70ffc354dabea0c72404fca05b0e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "6e984302",
+      "realization_id": "02e7687ebc65372fa7590da4bb85c2eb429172f6938a5f579461182d210ae3cf",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "7024f17c",
+      "realization_id": "54e72b12369bd48401b064d3dbf71830b397d2608807b0f6ce48488030d48916",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "71017276",
+      "realization_id": "53321c41d521855e9f6c9bc6d3b01cc42213976656c42a0f094852a9ab5a9661",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "71315a70",
+      "realization_id": "515c08ea3e80a810271e6ea06508fafed8127eb43a6353115a764868f380da93",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "71a3fd6b",
+      "realization_id": "eb15e21ae271fba17875739caee874594d0bca1b3fd2dfe8a32a24972585faa0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "726462e0",
+      "realization_id": "9bc2a4c142e9fb29cc4d6571f1de424938f109ae08c3f853d183c2e28c1044cb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "73d42213",
+      "realization_id": "7eb2c5e17f2e53a17fb4c25ca37a2c07841684ffa2bc7dad440997d945be99c6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "7405e8b1",
+      "realization_id": "359cd9f04cc7dab4f8180e0374d9c1d198131bcf281ff7ac15a66e5a6a3c3f59",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "75499fd8",
+      "realization_id": "d9a17dfc773f7d8ac24146ce1e38e06a8c17f74a82220fd69268611819c2ae89",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "75f70248",
+      "realization_id": "99975696a5502d83cb41a52600ff22f967b3b4802f4479afa42fd9fb973b9d29",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "778164c6",
+      "realization_id": "4d648818180564380e13525fb921112acb364430491265a5ba74c36de44db249",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "7a87bd0c",
+      "realization_id": "f3264d6eacda7702e4e9281d14c7be3f55b9144ea8792cb8d19ef2d13164efc0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "7e00a6cb",
+      "realization_id": "98ba71a00ae25a6a1578948d26b8837e56295e7a997fb85a6ffecd3ba5f036da",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "8077ef71",
+      "realization_id": "8540f15d75707c27a90e98944a8a1e5fdb49ff19b03986e86e81d6adc36c1de7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "80ec1f4f_abs",
+      "realization_id": "18544b2395bfcbcd20fdc98d3102924e61a1278c62d2c9d3a8a95a97a9ec99b2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "830ce83f",
+      "realization_id": "f3661759afb37cbd5acb73cf621986dc16eda5529a28c796a5b3fc4c6e07a2f4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "852ce960",
+      "realization_id": "eaff02129e13979117eda7ecb03ec752b22c371f4e5705d7cc306334c92b623d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "8550ddae",
+      "realization_id": "82532c8352cfe19cdb05cb507a6fecde4c64a39c0c64d84c5643663b72b48e14",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "86b68151",
+      "realization_id": "00edbafd121438e090ff22a675cd24cfcf62103cd730a757d887225f758dda05",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "8752c811",
+      "realization_id": "7e7998f7a5b673a096489b73493bf8c2aeb197fd4965d32990cafbbec1b09d01",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "88432d0a",
+      "realization_id": "214af5c9730eca54255e6ec7a4559c74c3e1fcb976b4b1666a8fd8f38aaec7be",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "89527b6b",
+      "realization_id": "c051ccd2439c78c058b0713a08d45e006fe9c7f59b79e1c992eb53ad6e75c680",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "89941a93",
+      "realization_id": "307be01e8f22daf3c58a7af8a5c1c9960e0a7029d8099a9a0416cb14209cdfc4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "8a137a7f",
+      "realization_id": "e29685ac4c7872312c7d8099fb941f856b75475ea2c237b5b1e8738fe8298e38",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "8aef76bc",
+      "realization_id": "2bfee7d1e348edbbee77666ace0dd35ca1d06ef6e2655af39121b47715a9506f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "8c18457d",
+      "realization_id": "c31280558065c89360497774733247faf978eb6eacccb83debdd892827a10b52",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "8cf51dda",
+      "realization_id": "c75ba73b303c965a760c92fe04b50e6a0ca39a0b160d400ce19d46896eda8589",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "8e9d538c",
+      "realization_id": "0422680e971d0cea363692103128d65e07e0197c750c88d6cf7c67bbe464c38e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "8fb83627",
+      "realization_id": "22a1c5425ba0c18dfc7b88cf842fdd75690a12a884a61e6448d5693743801777",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "92a0aa75",
+      "realization_id": "cf9513049075306f7cd7f5d75a1bd2c9886d84ba5ee5d0bc917a57aefd2a4f7c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "94f70d80",
+      "realization_id": "6847f2c386d81077892e19f35b02493a16f3ec899651333667b023511e23c67f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "95bcc1c8",
+      "realization_id": "d0d75552014ba6052e2a4e1e448d6219504e70a8cd78faba00931efb7fa91908",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "982b5123_abs",
+      "realization_id": "ba137fae51381bd82cd61f4a2de8f77b0df26e06ff67273dd483ccb0b6053f0f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "9a707b81",
+      "realization_id": "c7e5e2938cef55fbc49e1c97599efd01235cc1842e3170ac9e203e9f2593e810",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "9aaed6a3",
+      "realization_id": "036046bf13f4353c984a2c5b385f45e12cb4be408e1f958f5d03d9e08cd12632",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "9d25d4e0",
+      "realization_id": "ae6ea73c21fabe6c01887b3188334cf3defed61b9ace0e56b375a42720ce47bd",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "9ee3ecd6",
+      "realization_id": "6bcab28a87a2234d91cc8bd9daad1c96a6a112a585fb912675f8a3eaf2080b69",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "a08a253f",
+      "realization_id": "84e66e25cad12925c6f162fc5ad2a77e94c5436bc76b903df2f666889fbd8134",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "a1cc6108",
+      "realization_id": "d84e341bd193b7c7e1f63ba921578f07c4d76018af2db23203eaff38620b1cf3",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "a2f3aa27",
+      "realization_id": "cc766f1e255291bf97d4f6b8fa2bc3e01b0a5f13d0a31ee5ae3f814277c83859",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "a3332713",
+      "realization_id": "d822ba67e75a858c2de3f39566e8257ce4e4c8beae4507d70390726748c0b9d9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "a3838d2b",
+      "realization_id": "0eeba1cab43a72f9dedf66b0876c5486467b1f271fdf400231033f1c412c4d58",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "a4996e51",
+      "realization_id": "4224eaff697d97097a034c33c0c0b8e26b9d2af73fcd7bc9cf2eccc3813642d1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "a89d7624",
+      "realization_id": "937488cf232ec2c2af8f2c0a74ddc94d0ff5e47461740264b1b1a1b8684ad022",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "a96c20ee_abs",
+      "realization_id": "83e17c28b4e30ab641f4bc26d42cfca5c14564a0092606353e49ff5b7748f9c9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "aae3761f",
+      "realization_id": "e1bd7cf12c03d3f9f4940979fd39a338869e8a7ae863cbce111b4adab8b82d86",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "ad7109d1",
+      "realization_id": "94e6ee90ead08b0f343594825977f6367f8b203097f348be847e7ef223e4eb9c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "af8d2e46",
+      "realization_id": "41f98d6c752ad453b3de721a2f05ad54c6bd3b8d074e29967bb85d58b39f6fea",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "affe2881",
+      "realization_id": "5e2bcaa968d96bf09f5b5cfd0732059c6ad529db2bcee83d7d552d0a52d2e2a4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "b0479f84",
+      "realization_id": "24382776fa04dbe1a76cf438f4709d7ba4c3df55d43c045d14ee23e794ec6775",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "b320f3f8",
+      "realization_id": "7846ce33d691593d3a94cfacfe9e03fa3caeea5292ec555c6572df55c561bc7f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "b46e15ed",
+      "realization_id": "13ff7f72921921cccb176b71f5e9a54b679687cd4871738dd65e1fa22c2a1242",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "b5ef892d",
+      "realization_id": "ccf9dbba771cdfc6e0269adb199641f2d45fe4de7457da5f6db6fc5349b9cd3e",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "b6025781",
+      "realization_id": "f1d6918776b363656f419261310aed99544af5ce43443b09ef4d7fa13bf36647",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "b86304ba",
+      "realization_id": "dfebe7498feddf6eaf86c7cda442a01118f2bce17f4d02c1132b7b2ad37f0198",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "ba358f49",
+      "realization_id": "937aba0e31d09a261111858c3d973245c7acc5ae11c8f0b825f79207698fe1a1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "ba61f0b9",
+      "realization_id": "a6d9c1b3c8d7f53712c86421b3b90b5c304c981eb82436feb177d5bbcf65d991",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "bbf86515",
+      "realization_id": "bbd4ba60cdea3f5041f67742c5357a49f6aa5dd3675e891f1c6112011bbc51c9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "bc8a6e93",
+      "realization_id": "5c6b03f590848d5da122853d9874b9633ce92746e29bdb0d0dce9d148d62747d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "bcbe585f",
+      "realization_id": "7bb88b8562ef0169a408013a6b41f51a2e9e92f8c3430e23f60a4fabe0714610",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "c14c00dd",
+      "realization_id": "64ca0c382bb0acc2da7916dee36cd270d566dd5711a1e9e086882c818fcd4bff",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "c19f7a0b",
+      "realization_id": "9224a20a0ceb6c92fa4c14c19c8ff6a268018835e5bbf6fecda2b7dd32439438",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "c4a1ceb8",
+      "realization_id": "c53e4cefa6cc37f2a91d5eb39b55a4dfaea56a078fa44e17edff2d6a5bad0556",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "c4f10528",
+      "realization_id": "35ef3cbde82c052e4fdab14ae597c4add992e69b30f650632a268dcdda684edb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "c6853660",
+      "realization_id": "1ff47e204d0dc08db148864b79af5f13c4f99310becf0c6bffa8554e48f006db",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "c7dc5443",
+      "realization_id": "5045af7d77b9794e451067ccb32860cf4861ec7ef2ad1ecbdff4051cf6f02130",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": true,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "c8090214_abs",
+      "realization_id": "4e5357e9f0a6fa278d0d6d3bbbe3844a366492214f063d11d8c87ab77d530f5b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "c8f1aeed",
+      "realization_id": "e13d8979be4c6d7e5feb995d2ffd534e1a46fbad0f3bfa0004595cdf774b07dd",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "c9f37c46",
+      "realization_id": "cd70ab1a540b95de8353837a810cdfbae247615d20e24d9719cb0193f1cba19d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "caf9ead2",
+      "realization_id": "216e0839f454b836f92a79b140cfd7f4d3064e6f697d823e6d78460ce7fd635c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "cc539528",
+      "realization_id": "299cea8440bc667ac595c81cca7cbc7485382d5c5a086d1089b9c04900ca02e0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "cc6d1ec1",
+      "realization_id": "1abe64c376497fa9953b148710501e7e711e778258dfeedc8175bcd6bcbb47ad",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "ce6d2d27",
+      "realization_id": "92418eb61ce17eded8559d240c2961aadeb31f125e7eef16a42c21ba57654fd0",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "cf22b7bf",
+      "realization_id": "94a02aefc1c077c8e27d4a07a9acb2d23663aac58243d82e6b4ac03e6fb63354",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "d23cf73b",
+      "realization_id": "15d568abc350a11bcef52b7c7c619ef868909fb4262fef361d98b2b13b582074",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": true,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "d3ab962e",
+      "realization_id": "a391298f1e2ea4b58bc28873202c72cbdc7f7d0c5a25585f4cdc749a20064c5a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "d596882b",
+      "realization_id": "ff19039d3567d3ee16830d330286f685cdca5b23bad0fe09c924081cb8962120",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "d6233ab6",
+      "realization_id": "592c2fe520f791fefa3ef7d49c455c9d6f45142efd2727d751f1bdb7b283a532",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "d7c942c3",
+      "realization_id": "289501b81e67e8bb96c14e10d168da6befefc922addbef858c4b19a9c35a0d34",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "d905b33f",
+      "realization_id": "f673a0422a23f3afcf4ccf7a0f11c3835e34b1d52172dee78d371f22866d63d1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "db467c8c",
+      "realization_id": "72335f16b31122b76e435f58f6b2209e3fd18b1183feafd4c76c176dd9e9b9a4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "dccbc061",
+      "realization_id": "51afc1d74c090806d68c894bfa41cbd7ff125886b60638d31970cdd89cb670c4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "dd2973ad",
+      "realization_id": "ae164335fe3dc3442b0954f486c3235a1d7061def601b337eb254370466139ad",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "e01b8e2f",
+      "realization_id": "161862e3da531898c8690ab9af2f0c8e87f10ecfef29d174481c332f65007436",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "e3038f8c",
+      "realization_id": "62fbb7963eaa9761f803adf52ee3233a8ac0892ae4bcb8526c1396869ea2fcbb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "e47becba",
+      "realization_id": "2934078a1a3eca6928045d17d9ce6835d7ca3fdf517cd2d314b3f8e51e8fa8a6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "e493bb7c",
+      "realization_id": "46a62f69659b8c654c7dd92064bba436740f6c28b4193898e6603479c3252a33",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "e56a43b9",
+      "realization_id": "479d020a0287da11b266a380c685c304395e564e88ecab2ad50c4dacf25c6bfd",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "e6041065",
+      "realization_id": "6a66f355a1747ecf2cc3387692639453389388d8f2f026e45482d8a7378e94c2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "e66b632c",
+      "realization_id": "5fa68806e261950e62a63b1e1bf6df01c313f60a14147e480963fd44a34415e7",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "e8a79c70",
+      "realization_id": "c756a460eb117c880b2fb4a04f3ccc2242444247f2ad4f1cae7e36038bd33ceb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "e982271f",
+      "realization_id": "9f6ed8231ea4b646418520199f7d20af811ff65b95b88fa17c8d90dd071d28a3",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "eac54add",
+      "realization_id": "f5eccdf781ee4a8e1599eaea948e5304f066d85597fa56b72377cb3f0155c81a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "eace081b",
+      "realization_id": "bcae0034346811deea75de6bb98c07e0ea8adb939f6fc8eefcf032233eb6fd8b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "ed4ddc30",
+      "realization_id": "eaf4626cf90ca6ef0eb9361ac6dd6c97797c0cb67fda06cf8b85533fcd4ffe75",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "edced276_abs",
+      "realization_id": "58fb89a5c7132b70e4a02ff384b550454a667c39f1afdd802de319fd8ae01c8d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "eeda8a6d_abs",
+      "realization_id": "0bfa2d56754e7cc699500796574bc16dee2ec1aa6c2bbd3b689241fe76ab00c4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "ef9cf60a",
+      "realization_id": "26735351113e46ae124174121dbde1e0adea0e58956c36eb8ead9f7918ccc9ff",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "f0853d11",
+      "realization_id": "6ddfad384407362152c74c3dcd1dcfc2c8d1ce35a95604a017ffeac3ee3db5e5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "f35224e0",
+      "realization_id": "0b6c1857b8000a757d095449f1da733b5bc053601e7babf73fb79b80ad73be06",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "f4f1d8a4_abs",
+      "realization_id": "e17db4fe658b7a5d8e2b668f1009c5fbd1103842b81d9cd1b166a30ac1374966",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "f685340e",
+      "realization_id": "65c9d895b5a206b16518656d760bc21fa55993182db151c3d2060a6fae41b738",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "f8c5f88b",
+      "realization_id": "dea71e324bfbbd45f019aef0b89173a050ee93009fc2470b8fa4936dc75ae43b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "faba32e5",
+      "realization_id": "6b345e02235eac17cdd9c2f8829dc37da6e06412a1c06abd75717b2c7034bf00",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "fca762bc",
+      "realization_id": "f4d902bcd191d5b7660561deafdc582e8051706d660167e23850a8c901d8f7ba",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_0a05b494",
+      "realization_id": "17738fa180095a50c1e7c28a564c67421395b196af03ddcd32493bbcee7b1444",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_15e38248",
+      "realization_id": "7a6b912f3d3eadcd1194f941124e1510884c0ee83c043ace428b7bb6e70d67f2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_1916e0ea",
+      "realization_id": "158a6efc701a307a8215d081b83a4f49eae464d4fc91e934da5b5e7fc1e1dc53",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_1a1dc16d",
+      "realization_id": "19a2710c15984eede3c683032bff75f1ad58a4708661c99625874b1d90e0947c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_1d80365e",
+      "realization_id": "951fe32bc980072f42e6ddac009153ce8661e0d88accdc4c6417c220010b2e51",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_1e4a8aec",
+      "realization_id": "b555745a90f64ee7f1c03ea7cc5d9558c299f3f855e1038b5bbbccb1fddb0db1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_21adecb5",
+      "realization_id": "426f6e0202faaebf119b560f803a383c5e753111fc39caa97e0fa72c4b15962b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_2487a7cb",
+      "realization_id": "41ee868e13c0a9aece9f2897e01832d796f10fe4cbd832042573c57b0e6cf5eb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_2ba83207",
+      "realization_id": "e906e5f8e03820d19a20fb579bf8134644cbda06b8ef3c07537936a253c71194",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_2d58bcd6",
+      "realization_id": "577ca8834f666875e5b20b883d34df008f05ea54b3659faa3c640ada167551ac",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_2f584639",
+      "realization_id": "aa4b14eb06236541b83df184f02e63dbe2bb1cb2fc3074b56131cb7f586ff72a",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_2f91af09",
+      "realization_id": "208afd30e68a2218f76779d803bdc251ea33ac7bdc9f3360cfb715177d18273f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_372c3eed",
+      "realization_id": "733233915dd0b3b5a478c9a616e88369f978b421adeb20c79d7232f6903667d6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_385a5000",
+      "realization_id": "361329da54726f67ae63df1aac359c6f6e94770b381fba688cfc2c796339b9f6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_468eb063",
+      "realization_id": "7cbc48dc779a04ad1bd4929d431a6bf5ef81716efdbbc17f44a5209e47ff7fb8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_483dd43c",
+      "realization_id": "b7fa5a6657022f62c1c635afa916f0bc6e38ee4a783703700e80c89f82c112f2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_4929293b",
+      "realization_id": "a0c3eb2c2697782786416c725a0d50dc2f555c9e870eb06ec27a9dc30af54301",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": true,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_4edbafa2",
+      "realization_id": "0c38870819e05c2ab79fc1506a0fed706eaf7b959abfde2b8a710f09065ce19d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_4fc4f797",
+      "realization_id": "2539d3bc9b0bf68e00a4f1b8e9231e224a6abdf79c574148b0a11165d4a01149",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_5501fe77",
+      "realization_id": "5af27cc3ea8953561706eac669e070a3919c7ca652286a0a32f0e65b38c284fd",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_59149c78",
+      "realization_id": "f3e95ce3e465dd705a35398886589940cb6ed7be7b3012b13a715d84865b4434",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_5dcc0aab",
+      "realization_id": "f4bf2d1d610a6ad28169456662204705241aa3fd92bbd42bde68d4f0ad37fd40",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_65aabe59",
+      "realization_id": "a5a85dca2c7a28448f8c191f54aa86c83d2843379920fadbc7d057db87e12f2d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_68e94288",
+      "realization_id": "4135c48c3840fef28fa20d36e845a88efcfbb718198a022ff882702cccb0041c",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_6ed717ea",
+      "realization_id": "9d283f564986b1395842e681e559750ff4976b0dc39d40918ae5ce5e44b2e4a9",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_70e84552_abs",
+      "realization_id": "fa540ba51f0c1975317cfe08bfa8ecf9cb3ccfe5512d2f443fc248998fce6856",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_74aed68e",
+      "realization_id": "dd0f78629cb2cd66b9d5da72a88e01a447c18539124d046c102e103570632e9b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_78cf46a3",
+      "realization_id": "fcffae7e7a4d5577840494b191418400b4b3e55e6f45e79b904621c5f26411fe",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_7abb270c",
+      "realization_id": "bbec74fc9b8fc50968e6b6ce1042fbd59be212379a165203cdb8f5af897cc62b",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_7ca326fa",
+      "realization_id": "5ba683961ed2b5241eecc3256494434a37401c64f5a4d46934cf1f06b3173bd5",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_7de946e7",
+      "realization_id": "6e6a8d6576513d52eda327773015f83344663af0658923e79b042e16ff5ae1df",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_7fce9456",
+      "realization_id": "6a4453d21dc47391f3ad3b5214eebf4e68db9fc05c56757b56472cfac0efc437",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_8279ba03",
+      "realization_id": "ebee73181f29858ab59ab1eaeb88c5780e1a24a9e1e96189ea4e94dcfe9cb853",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_88806d6e",
+      "realization_id": "d16eb711ad7156168a2f96f2f1090df160322701a6b84c02fa3f6055168deec8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_8e165409",
+      "realization_id": "d2d5433092f685efffad7110238fedc1e58387b04af077805de1b1a8892859cc",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_93159ced_abs",
+      "realization_id": "9ec903b55b1ad45887ab6f1b79037e91e35175bed7d4fdba9b0671bc76bb6bb4",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_98f46fc6",
+      "realization_id": "2cd537f8633eba3abd93d30d481d51801b55f90f480258e508ab41551fc1a067",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_a1b77f9c",
+      "realization_id": "0d17a8ae7536224bb68a36a3500a3b997454be143e208f9a2191d96fdcc6f2b3",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_a56e767c",
+      "realization_id": "66eaa5e08f08f136def5ef3229ffd56f4432fb7bba43a1236393839ae26a052d",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_af6db32f",
+      "realization_id": "392f21b1a77fa951969ca3412e777ad7cb80804b8ad0958924e2902facb95036",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_b4a80587",
+      "realization_id": "410631273e5d38e3e761c5e960303aba02c12ba50a6a8744da8cce06126ab125",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_b5700ca9",
+      "realization_id": "e249d8242a1af0c4f01fd4a7dc55e06d5ed0dffa631e536f7cb6ccf615809e08",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_c27434e8_abs",
+      "realization_id": "7574ed5e117052d99008685135bc356c8ee596405d7e9f8b13e4c502d5fdc3df",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": true,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_d12ceb0e",
+      "realization_id": "babdd865f6972f17c7d0f247b300e197766c2590b3cf6881817a79ecf6bd9a0f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_d6585ce8",
+      "realization_id": "511db36625aff039cb6fc855594e761483b393cd4e1f21adec047a4ad0208853",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_d84a3211",
+      "realization_id": "58a3eb0ab46aa23457f662e6c1ef4c07b96dd461f6998997b91e4ca3851931ac",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_e05b82a6",
+      "realization_id": "33c1ae82c0b90d6ec538b0b6a9d93574fce64a40beea4bf5c0e8cdc2c5299d32",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_e061b84g",
+      "realization_id": "e1cbf627614c23cee3499153eab83cf325b720d27d6d58da43444381cb9d50f6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_e414231e",
+      "realization_id": "e2333a1322383726ffd5fdd3d4be0f66ef3f56411187931a420e55670e005fab",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 0,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_ec93e27f",
+      "realization_id": "e7ef51fa783e174e0824706fa09ddc91635a242788ca7a4624daf1513a227ff6",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_f420262c",
+      "realization_id": "238d0a052cc706a15c7526761dd2ed338049b1ad46fd41bcda664cee77e79719",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_f49edff3",
+      "realization_id": "f9196e5b4acbd928132bc5d5ae775632707f2ab76fc9a0dea0d7e7891bd7bc9f",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_fa19884d",
+      "realization_id": "3a370349878e1895b32fe7f0e1607cb95c68d4f798f9f45ed741f41454c21e35",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    },
+    {
+      "conversation": "gpt4_fe651585_abs",
+      "realization_id": "208ed686a16ea49761f1224615f1a91ff4bec601dadac3d357bba7bcb80c5bd1",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 0,
+          "queue_waiting": 0
+        }
+      }
+    }
+  ],
+  "ingest": {
+    "conversations": 250,
+    "messages": 123383,
+    "ingested_tokens": 26012068,
+    "wall_ms": {
+      "total": 21598435,
+      "p50": 81165.5,
+      "p95": 127804.8
+    },
+    "failed_sessions": 5,
+    "degraded_conversations": 5,
+    "readiness_samples_ms": [
+      2532.6,
+      5366,
+      5314.3,
+      4651.9,
+      2413.2,
+      4879,
+      7555.3,
+      2596.8,
+      9218.8,
+      12788.7,
+      7522.2,
+      2679.1,
+      5090.3,
+      6627.8,
+      16242.2,
+      4641.1,
+      2488,
+      7635.3,
+      51970.6,
+      41590.7,
+      46782.9,
+      9754.4,
+      4389,
+      6632.5,
+      6561.7,
+      3910,
+      4037.3,
+      2492.2,
+      4792.5,
+      4694.1,
+      2738.3,
+      15385.3,
+      17432.7,
+      17349.3,
+      10754.4,
+      2809.8,
+      8216,
+      8796.1,
+      11278.2,
+      8610.5,
+      10813.3,
+      7621.7,
+      2350.2,
+      4576.7,
+      2842.7,
+      2547.2,
+      4965.1,
+      5078,
+      2596.3,
+      2277.6,
+      4604.2,
+      2123.6,
+      4595.4,
+      2487.5,
+      2567.9,
+      5289,
+      2517.7,
+      4734.6,
+      2263,
+      2507.5,
+      2437.1,
+      4534.9,
+      3026,
+      2678.7,
+      1950.9,
+      4475.7,
+      2566.7,
+      2547,
+      9902.9,
+      5004.6,
+      7053.7,
+      2776.9,
+      2249.4,
+      2506.3,
+      4638.5,
+      2722.6,
+      2745.5,
+      2984.1,
+      5907.1,
+      5371.2,
+      2679.3,
+      2605.2,
+      2916.9,
+      5586.8,
+      4888.3,
+      5116.6,
+      4906.6,
+      4709.7,
+      2588,
+      5119.3,
+      4945.5,
+      2655.9,
+      2476.1,
+      2462.1,
+      2795.8,
+      2093.4,
+      2710.9,
+      5335.6,
+      2644,
+      4777.3,
+      2586.6,
+      5066.7,
+      8272.9,
+      2796.1,
+      10691.4,
+      3098.3,
+      5794.9,
+      2825.4,
+      3117.4,
+      5877.7,
+      2444.9,
+      2384.8,
+      2717.3,
+      5118.7,
+      2589,
+      2776.2,
+      5181.6,
+      4625.2,
+      4995.7,
+      8704.2,
+      8443.1,
+      2550.1,
+      2700.5,
+      5573.3,
+      5202,
+      35519.2,
+      2517.9,
+      4255.3,
+      4428.9,
+      2191.3,
+      4514.3,
+      4810,
+      12891.6,
+      5215.9,
+      7493.8,
+      14675.8,
+      17025.9,
+      15141.6,
+      7098,
+      2770,
+      5204.1,
+      2123,
+      100678.8,
+      5164.9,
+      2747.7,
+      83985.7,
+      89266,
+      4822.6,
+      2065,
+      2673.5,
+      2413.4,
+      3220.4,
+      5687.7,
+      2481.7,
+      4623.1,
+      1884.3,
+      4462.2,
+      7551.9,
+      5145.8,
+      2550.6,
+      2567.9,
+      2534.5,
+      4902.7,
+      7526.5,
+      10320.6,
+      3310.1,
+      5679.5,
+      2316.8,
+      9191.5,
+      1977.3,
+      13390.2,
+      2134.5,
+      2021,
+      2590.3,
+      4943.5,
+      2461.8,
+      18059.2,
+      4947.5,
+      20500.4,
+      7894.8,
+      10777,
+      13870.2,
+      5419.7,
+      5408.5,
+      5658,
+      5460.4,
+      2676.6,
+      5103.6,
+      5177.3,
+      8576,
+      5573.5,
+      2972.2,
+      7392.8,
+      9769.6,
+      12090.7,
+      2350.6,
+      4932,
+      2767.7,
+      2484.6,
+      4957,
+      7780,
+      5199.8,
+      3003.2,
+      7995.9,
+      5239.1,
+      8071.5,
+      8283.9,
+      8106.8,
+      40447.7,
+      43273.8,
+      4821.8,
+      4908,
+      2588.6,
+      2350.9,
+      2377.8,
+      4776.3,
+      2495.3,
+      2476.2,
+      4397.5,
+      2565.7,
+      4777,
+      2848.2,
+      5293,
+      5219.7,
+      3110.7,
+      2578.3,
+      5291.8,
+      8097,
+      2619.6,
+      18182.5,
+      13479.6,
+      4819.1,
+      2603.6,
+      5034.1,
+      5063.9,
+      4341.3,
+      4585.5,
+      2405.6,
+      2312.3,
+      7706,
+      2947.7,
+      2679.8,
+      5090.8,
+      4493.4,
+      4666.9,
+      5481.3,
+      2890.3,
+      5532.3,
+      5363,
+      2803.5,
+      2631,
+      2930.2,
+      4764.5,
+      5027.5,
+      2434.8,
+      4477.5,
+      2090.3,
+      5007.8,
+      3126.1,
+      2150,
+      2915.3,
+      2348.7,
+      2564,
+      2729.3,
+      5646.5,
+      2569.4,
+      4563.7,
+      2595.6,
+      2682,
+      5333.6,
+      7979.6,
+      5159.2,
+      36944.6,
+      2602.2,
+      2444.4,
+      1863.5,
+      4301.9,
+      2446.6,
+      4471.9,
+      2206.1,
+      2694.7,
+      4512.9,
+      3914.7,
+      4392.2,
+      2681.1,
+      2149.3,
+      2491.5,
+      2136.5,
+      9615,
+      2408.1,
+      7779.4,
+      2597.1,
+      5059,
+      2632.4,
+      2833.1,
+      2911.7,
+      10103.3,
+      4839.6,
+      4444.3,
+      7330.7,
+      9804.8,
+      7114.5,
+      7073.2,
+      9004.5,
+      6491.2,
+      4977.1,
+      4664.5,
+      2087.5,
+      2656.6,
+      5148.6,
+      5115,
+      5188.6,
+      2776.7,
+      5536.3,
+      35389.1,
+      4985.7,
+      2762.8,
+      1789.8,
+      3728.5,
+      2378.9,
+      7422.8,
+      2077,
+      2179,
+      4635.2,
+      7713.7,
+      2761.9,
+      5263.5,
+      4830.2,
+      2728.8,
+      5476.6,
+      4992,
+      4265.7,
+      8696.5,
+      11071.4,
+      8257.6,
+      10609.8,
+      2562.4,
+      2471.1,
+      1860.9,
+      2560.7,
+      8581.5,
+      6324.7,
+      4849.4,
+      4737,
+      2427.5,
+      2674,
+      5356,
+      5458.8,
+      2747,
+      5473.2,
+      5325.4,
+      4946.8,
+      3030.7,
+      8811.3,
+      5714.2,
+      5705.5,
+      5332.7,
+      4359.1,
+      2373.7,
+      4696.7,
+      2705.2,
+      4528.7,
+      4560.3,
+      4951.7,
+      2578.6,
+      4910.1,
+      5058.7,
+      2319.8,
+      2293.6,
+      2121.5,
+      2897.7,
+      5963,
+      5980.6,
+      3136.5,
+      2749.4,
+      5536.7,
+      2605.7,
+      2570.1,
+      2705.9,
+      2605.7,
+      5370.2,
+      5219.6,
+      5203.6,
+      2362.3,
+      4979.4,
+      5091.3,
+      2549.8,
+      4386.4,
+      2702.2,
+      2447.9,
+      2748.9,
+      5163,
+      3028.9,
+      2455.3,
+      4796.5,
+      2710.5,
+      7662.5,
+      10255.9,
+      7936.6,
+      2505.7,
+      2894.4,
+      2472.1,
+      4991.2,
+      2458.1,
+      2629.8,
+      7278.5,
+      2705.8,
+      4738.7,
+      2868.3,
+      5734,
+      5414.8,
+      3399.8,
+      2693,
+      5197.7,
+      2302.6,
+      2208.3,
+      2871.1,
+      2673.1,
+      6114.5,
+      7352.6,
+      2969.6,
+      7372.9,
+      2383.1,
+      2481.8,
+      5083.7,
+      2405.5,
+      4963.2,
+      5221.6,
+      2537.1,
+      5083,
+      8330.7,
+      2640.1,
+      7648.1,
+      2899.5,
+      2688.4,
+      5283.6,
+      5255.9,
+      5272.8,
+      2572.3,
+      2739.2,
+      2824.6,
+      2543.9,
+      3072.1,
+      5764,
+      2647.2,
+      2690.8,
+      2454.6,
+      3073.9,
+      5338.7,
+      4968.4,
+      5157.6,
+      4759.7,
+      2458.6,
+      5129.2,
+      2941.6,
+      5627.8,
+      2743.7,
+      5400.7,
+      5686.3,
+      5853.4,
+      5024,
+      2591.7,
+      2916.8,
+      5087.3,
+      2533.6,
+      5146.4,
+      4949.1,
+      4273.8,
+      2834.7,
+      2741.5,
+      5168,
+      2637.6,
+      5155.8,
+      3297.4,
+      6071.5,
+      2322.8,
+      4672.6,
+      4804.6,
+      2997.1,
+      5325.4,
+      4974.6,
+      2731.7,
+      2621.6,
+      4988.7,
+      5090.9,
+      2876.2,
+      7243.9,
+      9094,
+      6902.5,
+      2987.5,
+      5359,
+      4638.6,
+      2668.2,
+      5455.1,
+      5230.2,
+      2322.9,
+      4321.8,
+      5038.2,
+      2853.8,
+      2822.5,
+      5272.3,
+      3119.1,
+      5810.3,
+      1981,
+      4833.5,
+      2710.1,
+      2818.7,
+      5177.4,
+      2316.4,
+      4731.3,
+      4699.7,
+      4672.4,
+      4779.1,
+      2652.1,
+      2640.5,
+      5148,
+      5126.8,
+      4988,
+      4802.4,
+      4761.1,
+      8365.4,
+      5411.6,
+      8167,
+      3024,
+      3084.6,
+      5383.2,
+      2488.6,
+      2854.2,
+      5241.5,
+      2597.8,
+      8456.2,
+      2693.9,
+      8364.1,
+      3151.3,
+      5885.4,
+      5553.1,
+      2659.7,
+      5285,
+      8183.9,
+      8021.7,
+      7018.2,
+      6878.5,
+      2965.8,
+      5681.2,
+      2612.4,
+      2940.5,
+      5771.4,
+      4891.8,
+      2600.4,
+      8411.3,
+      3030.4,
+      5401.4,
+      5489.8,
+      2982.2,
+      3143.9,
+      5551.5,
+      2613.3,
+      5155.2,
+      2717.7,
+      8162.3,
+      5400,
+      5563.3,
+      7922.7,
+      5397.1,
+      5289.3,
+      3367.4,
+      4741.2,
+      2878.5,
+      5197.9,
+      4686.6,
+      2364,
+      2403.1,
+      2435.4,
+      2484.6,
+      4730.7,
+      4870.5,
+      2416.4,
+      2836.9,
+      8364.3,
+      5615,
+      5485.6,
+      5575.9,
+      2938,
+      5905,
+      2902.6,
+      2266.1,
+      2935.2
+    ],
+    "write_start_to_queryable_ms": {
+      "p50": 4672.6,
+      "p95": 10802.4,
+      "probes": 588,
+      "found": 587,
+      "missed": 1,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 5016.1,
+      "p95": 5476.4
+    },
+    "answer_ms": {
+      "p50": 2728,
+      "p95": 6529.2
+    }
+  },
+  "usage": {
+    "input": 143599,
+    "output": 6610,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 3.812213,
+      "retrieval": 0.034619,
+      "reader": 0.611803,
+      "judge": 0.038886,
+      "background_tail": 0
+    },
+    "total_usd": 4.497521,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s4.gbrain-defaults.shipped-defaults/contexts.ndjson"
+  }
+}
