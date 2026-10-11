@@ -308,22 +308,22 @@
   "frontier": null,
   "selection": {
     "questions": 500,
-    "conversations": 130,
+    "conversations": 179,
     "scheduled_sha256": "702287feda46afbb122e7d61f8fb1530e6b571b8172e248376c4f887d0527f42"
   },
   "counts": {
-    "rows": 130,
-    "answers": 130,
+    "rows": 179,
+    "answers": 179,
     "answers_promised": 500,
-    "judgments": 130,
+    "judgments": 179,
     "unjudged": 0,
     "outcomes": {
-      "ingest_degraded": 6,
-      "scored": 124
+      "ingest_degraded": 7,
+      "scored": 172
     }
   },
   "per_reader_mean": {
-    "anthropic:claude-sonnet-5-5": 0.723077
+    "anthropic:claude-sonnet-5-5": 0.698324
   },
   "realizations": [
     {
@@ -6563,17 +6563,17 @@
   },
   "timings": {
     "retrieval_ms": {
-      "p50": 4936.2,
-      "p95": 5345.5
+      "p50": 4964.9,
+      "p95": 5400.7
     },
     "answer_ms": {
-      "p50": 2777,
-      "p95": 7599.6
+      "p50": 2833,
+      "p95": 7207.6
     }
   },
   "usage": {
-    "input": 1106200,
-    "output": 46065,
+    "input": 1519369,
+    "output": 63257,
     "cache_read": 0,
     "cache_write": 0
   },
@@ -6581,12 +6581,12 @@
     "source": "metering proxy (whole cell, every arm)",
     "usd": {
       "ingest": 3.526347,
-      "retrieval": 0.264519,
-      "reader": 5.040823,
-      "judge": 0.244938,
+      "retrieval": 0.365255,
+      "reader": 6.896992,
+      "judge": 0.32597,
       "background_tail": 0
     },
-    "total_usd": 9.076627,
+    "total_usd": 11.114564,
     "background_tail_usd_by_realization": {}
   },
   "files": {
