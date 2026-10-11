@@ -373,6 +373,10 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   - `q1-scoreboard-public-v3-s`: the two LongMemEval-S gbrain-defaults shards at gbrain `f05943e6` (A15); cap $39.
     Hash `ca729154f25b4d11429a93e810961a8239c928e51e4c11f62fa1209d22a5c612` at its launch tree (`0518e2fd`); it renders
     from that tree (A17).
+    Its two VMs were lost at 05:40 UTC on 2026-10-11 and its leases count at their full $35, with nothing reported
+    (A18).
+  - `q1-scoreboard-public-v3-s2`: the same two LongMemEval-S shards, rerun after v3-s's VMs were lost (A18); cap
+    $39. Hash `f34169372ea1818a94882331c3cf720fa5308184842feb1de1908857ee5de64a`.
   The sealed cap ($7,200), the public spend (about $150 lost under A13 plus the v2 cap of $441) and the $60 of dev work
   stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
@@ -734,7 +738,37 @@ that delivers data and carries custody to the VM. No bar, cell, reader, model, l
   total, is in the custodian's ledger. The custodian's manual stop check counts $2.50 spent plus $6,469.26 in leases
   against the $7,200 cap.
 
+**A18 (2026-10-11, before the cells it affects): the LongMemEval-S rerun's VMs were lost; it reruns as v3-s2.**
+The two `q1-scoreboard-public-v3-s` shards were healthy at 04:08 UTC: both were still writing gbrain receipts
+(9,059 and 9,126), with no deadline errors. At 05:40 UTC the launching host's 6-hour job limit killed both
+launchers, and the VM runner's exit handler destroyed both VMs mid-run. This was not a gbrain stall: both cells
+were inside their 14-hour limit (7 expected). No rows had been pulled; the 10-minute pulls copy only checkpoints
+and snapshots, and neither shard had written one yet. The metering proxy's ledger was lost with the VMs.
+
+- **Spend.** The two leases are abandoned and counted at their full reservation, $35, as spend. The cause is
+  recorded on each lease. Nothing from v3-s is reported.
+- **Rerun.** The owner approved raising LongMemEval-S's cap from $39 to $74. The two shards rerun unchanged as
+  `q1-scoreboard-public-v3-s2`: the same cells and $17.50 leases, a fresh ledger and cap $39. With the lost $35,
+  the public rerun stop is about $101 ($2.25 of smokes, $29.07 for v3-m, $35 lost and $35 of v3-s2 leases), up from
+  $80, still under the $8,500 program cap. v3-s2 launches from the A17 tree. A17's changes alter only sealed cells:
+  a public cell's payload, output path and pulls are unchanged.
+- **Launch.** Each launcher now runs as a long-lived detached process, outside any job limit. The reattach watcher
+  and the results persist loop run as watched jobs, renewed before each limit, so they keep the host awake.
+- **Measured spend on a lost VM.** Every 10 minutes, even while a launcher holds the VM session, the watcher
+  (`eval/runner/q1/reattach.ts`, outside the hashed tree) pulls three things into the lease's
+  `results/.../progress/`: the metering proxy's live status (committed dollars, forwarded and refused calls), a
+  consistent copy of its lease ledger, and the system's receipt count. Each pull also appends a line to
+  `progress.ndjson`. The persist loop pushes these files with the rest of the state. A lost VM then still leaves
+  spend measured to within one interval. The sealed hash `eefd1799…` is unchanged.
+
 ## Changelog
+
+### 2026-10-11: amendment A18
+
+The LongMemEval-S v3 shards were destroyed at 05:40 UTC when the launching host's 6-hour job limit killed their
+launchers (not a gbrain stall). The two leases are counted at their full $35. The shards rerun as
+`q1-scoreboard-public-v3-s2` (hash `f3416937`, cap $39; LongMemEval-S $74 in all), with detached launchers and
+10-minute pulls of the proxy's status, ledger and receipt counts. The sealed hash `eefd1799` is unchanged.
 
 ### 2026-10-11: amendment A17
 

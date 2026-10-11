@@ -12,6 +12,9 @@
  *   setup still running         wait
  *   setup ended, cell never ran start `setup && cell` detached on the VM (setsid, so it survives the next drop)
  *   cell running                pull checkpoint/ and realization/ every interval and record the realization
+ *   any running cell            every interval, even while its launcher holds the session: the metering proxy's
+ *                               status, a snapshot of its lease ledger and the system's receipt count go to
+ *                               <results>/progress/, so a lost VM still leaves measured spend (A18)
  *   cell ended with a summary   pull its output, record the realization, settle the lease, destroy the VM
  *   cell ended with no summary  pull what is there and report `crashed`; the VM stays for inspection
  *   VM unreachable              report `lost` (resume or abandon is the operator's call)
@@ -21,7 +24,7 @@
  *
  *   bun eval/runner/q1/reattach.ts --campaign <manifest.json> --state <dir> [--once] [--interval-min 10] [--hours 5.8]
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { Campaign, resolveRunner, type LeaseState } from '../shootout-cell.ts';
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -53,6 +56,29 @@ const probe = (vm: string, out: string) => ubi('ssh', vm, [
 ].join('; '));
 
 const lastPull = new Map<string, number>();
+const lastProgress = new Map<string, number>();
+
+/** The proxy's live status, a consistent copy of its lease ledger (VACUUM INTO) and the system's receipt count, pulled into <results>/progress. */
+function pullProgress(l: LeaseState, vm: string, resultsDir: string) {
+  if (Date.now() - (lastProgress.get(l.lease_id) ?? 0) < intervalMs) return;
+  lastProgress.set(l.lease_id, Date.now());
+  const dir = `q1-progress/${l.lease_id}`;
+  const db = `$(ls -d ~/custody/${l.lease_id}/proxy/lease.sqlite ~/work/*/eval/reports/shootout/*/${l.lease_id}/lease.sqlite ~/custody/out/*/${l.lease_id}/lease.sqlite 2>/dev/null | head -1)`;
+  ubi('ssh', vm, [
+    `mkdir -p ~/${dir}`,
+    `curl -s --max-time 10 http://127.0.0.1:8787/__proxy/status > ~/${dir}/proxy-status.json || true`,
+    `n=0; for f in /var/lib/docker/volumes/*/_data/logs/receipts.ndjson; do [ -e "$f" ] && n=$((n + $(sudo wc -l < "$f"))); done; echo $n > ~/${dir}/receipts.txt`,
+    `d=${db}; rm -f ~/${dir}/lease.sqlite; [ -n "$d" ] && bun -e "const { Database } = require('bun:sqlite'); new Database(process.argv[1], { readonly: true }).exec(\"VACUUM INTO '\" + process.argv[2] + \"'\")" "$d" ~/${dir}/lease.sqlite || true`,
+  ].join('; '));
+  const out = join(resultsDir, 'progress');
+  mkdirSync(out, { recursive: true });
+  if (ubi('pull', vm, dir, out).code !== 0) return;
+  const here = join(out, l.lease_id);
+  let status: Record<string, unknown> = {};
+  try { status = JSON.parse(readFileSync(join(here, 'proxy-status.json'), 'utf8')); } catch { /* proxy not up yet */ }
+  const receipts = existsSync(join(here, 'receipts.txt')) ? Number(readFileSync(join(here, 'receipts.txt'), 'utf8').trim()) : null;
+  appendFileSync(join(out, 'progress.ndjson'), JSON.stringify({ at: new Date().toISOString(), lease_id: l.lease_id, committed_usd: status.committed_usd ?? null, forwarded: status.forwarded ?? null, refused: status.refused ?? null, receipts }) + '\n');
+}
 const misses = new Map<string, number>();
 const final = new Map<string, Phase>();
 
@@ -68,7 +94,7 @@ const launcherAlive = (vm: string) => Bun.spawnSync(['pgrep', '-f', `ubi-runner.
 function step(c: Campaign, l: LeaseState): Phase {
   const vm = l.vm;
   if (!vm) return 'lost';
-  if (launcherAlive(vm)) return 'running';
+  if (launcherAlive(vm)) { pullProgress(l, vm, c.resultsDir(l)); return 'running'; }
   const out = c.remotePath(l);
   const p = probe(vm, out);
   const m = p.out.match(/state (\d) (\d) (\d) (\d) (\d)/);
@@ -81,6 +107,7 @@ function step(c: Campaign, l: LeaseState): Phase {
   const [setup, running, summary, outDir, started] = m.slice(1).map(x => x === '1');
   if (setup) return 'setup';
   if (running) {
+    pullProgress(l, vm, c.resultsDir(l));
     if (Date.now() - (lastPull.get(l.lease_id) ?? 0) >= intervalMs) pullParts(c, l, vm);
     return 'running';
   }
