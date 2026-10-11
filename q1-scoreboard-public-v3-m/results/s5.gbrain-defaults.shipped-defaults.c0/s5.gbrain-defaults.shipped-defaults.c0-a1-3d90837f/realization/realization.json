@@ -1,0 +1,11 @@
+{
+  "realization_id": "real-s5.gbrain-defaults.shipped-defaults.c0-9ae0402c0707a039",
+  "cell": "s5.gbrain-defaults.shipped-defaults.c0",
+  "lease_id": "s5.gbrain-defaults.shipped-defaults.c0-a1-3d90837f",
+  "campaign_sha256": "1d119581f9ab9c4cf863cbd9ebff0909a49aa8ddb109420b967e2a0615e20248",
+  "created_at": "2026-10-11T00:30:05.762Z",
+  "trigger": "ingest-complete",
+  "files": [],
+  "status": "failed",
+  "error": "snapshot command exited 141"
+}
