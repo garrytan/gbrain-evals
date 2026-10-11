@@ -389,10 +389,36 @@ cmd_sync() {
 
 # pull NAME REMOTE_GLOB LOCAL_DIR: copy matching remote entries into LOCAL_DIR.
 # Relative remote paths start at /home/ubi.
+# pull_lock DIR: take the VM's pull lock, waiting out another pull of the same
+# VM and breaking a lock whose holder died. Returns 1, holding nothing, when the
+# run's final pull has begun and this is not it (a periodic pull is then moot).
+pull_lock() {
+  local dir=$1 holder
+  while :; do
+    [ -n "${UBI_FINAL_PULL:-}" ] || [ ! -e "$dir/final-pull" ] || return 1
+    if mkdir "$dir/pull.lock" 2>/dev/null; then
+      echo $$ >"$dir/pull.lock/pid"
+      [ -n "${UBI_FINAL_PULL:-}" ] || [ ! -e "$dir/final-pull" ] || { rm -rf "$dir/pull.lock"; return 1; }
+      return 0
+    fi
+    holder=$(cat "$dir/pull.lock/pid" 2>/dev/null || true)
+    if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then rm -rf "$dir/pull.lock"; continue; fi
+    sleep 1
+  done
+}
+
+# Pulls of one VM never overlap: a periodic pull and the run's final pull take
+# the VM's pull lock in turn, and a periodic pull that comes after the final
+# pull has begun is skipped instead of racing it into the same directory.
 cmd_pull() {
-  local name=$1 from=$2 to=$3
+  local name=$1 from=$2 to=$3 dir rc=0
+  dir=$(state_dir "$name")
+  [ -f "$dir/env" ] || die "no local state for VM '$name' (created on another machine?)"
+  pull_lock "$dir" || { log "pull of $from skipped: the run's final pull of $name has begun"; return 0; }
   mkdir -p "$to"
-  remote "$name" "cd $(printf %q "$(dirname "$from")") && tar -czf - $(basename "$from")" | tar -xzf - -C "$to"
+  remote "$name" "cd $(printf %q "$(dirname "$from")") && tar -czf - $(basename "$from")" | tar -xzf - -C "$to" || rc=$?
+  rm -rf "$dir/pull.lock"
+  return "$rc"
 }
 
 cmd_run() {
@@ -456,9 +482,11 @@ cmd_run() {
   remote "$name" "cd $qdest && . ~/.ubirun-env && bash -lc $(printf %q "$*")" || rc=$?
   log "command exited $rc after $(( $(date +%s) - start ))s"
 
+  [ ${#pulls[@]} -eq 0 ] || touch "$(state_dir "$name")/final-pull"
   for p in ${pulls[@]+"${pulls[@]}"}; do
-    cmd_pull "$name" "${p%%:*}" "${p#*:}" || log "pull failed: $p"
+    UBI_FINAL_PULL=1 cmd_pull "$name" "${p%%:*}" "${p#*:}" || log "pull failed: $p"
   done
+  [ "$keep" = 0 ] || rm -f "$(state_dir "$name")/final-pull"
   return "$rc"
 }
 
@@ -479,7 +507,8 @@ usage: ubi-runner.sh <command> [args]
   push NAME LOCAL_DIR REMOTE_DIR [LIST_FILE]
                          replace REMOTE_DIR with LOCAL_DIR (or the listed relative paths), mode 0700
   pull NAME REMOTE_GLOB LOCAL_DIR
-                         copy matching remote entries into LOCAL_DIR
+                         copy matching remote entries into LOCAL_DIR; waits for another
+                         pull of NAME, and is skipped once a run's final pull has begun
   down NAME [-l LOC]     destroy the VM; returns once it is confirmed gone or never existed
   list [--mine]          list all VMs in the project, or only this owner's
   usage                  VMs and vCPUs per owner across the project
