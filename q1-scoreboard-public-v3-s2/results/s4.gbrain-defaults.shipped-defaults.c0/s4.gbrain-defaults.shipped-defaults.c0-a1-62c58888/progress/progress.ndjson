@@ -5,3 +5,4 @@
 {"at":"2026-10-11T12:10:03.177Z","lease_id":"s4.gbrain-defaults.shipped-defaults.c0-a1-62c58888","committed_usd":0.3087702099999992,"forwarded":1486,"refused":0,"receipts":1154}
 {"at":"2026-10-11T12:20:08.073Z","lease_id":"s4.gbrain-defaults.shipped-defaults.c0-a1-62c58888","committed_usd":0.39159087999999875,"forwarded":1944,"refused":0,"receipts":1559}
 {"at":"2026-10-11T12:30:13.196Z","lease_id":"s4.gbrain-defaults.shipped-defaults.c0-a1-62c58888","committed_usd":0.4949224699999986,"forwarded":2385,"refused":0,"receipts":1841}
+{"at":"2026-10-11T12:40:18.175Z","lease_id":"s4.gbrain-defaults.shipped-defaults.c0-a1-62c58888","committed_usd":0.6258279099999983,"forwarded":2979,"refused":0,"receipts":2315}
