@@ -321,23 +321,24 @@
   },
   "selection": {
     "questions": 100,
-    "conversations": 33,
+    "conversations": 47,
     "scheduled_sha256": "494db589170ba9594c01caa8a1f652249571d9d5062c950141b97c96ca189672"
   },
   "counts": {
-    "rows": 33,
-    "answers": 99,
+    "rows": 47,
+    "answers": 141,
     "answers_promised": 300,
-    "judgments": 126,
+    "judgments": 168,
     "unjudged": 0,
     "outcomes": {
-      "scored": 99
+      "scored": 138,
+      "ingest_degraded": 3
     }
   },
   "per_reader_mean": {
-    "anthropic:claude-opus-5-5": 0.818182,
-    "openai:gpt-6.1-sol": 0.848485,
-    "anthropic:claude-sonnet-5-5": 0.818182
+    "anthropic:claude-opus-5-5": 0.808511,
+    "openai:gpt-6.1-sol": 0.808511,
+    "anthropic:claude-sonnet-5-5": 0.787234
   },
   "realizations": [
     {
@@ -6702,17 +6703,17 @@
   },
   "timings": {
     "retrieval_ms": {
-      "p50": 5033.8,
-      "p95": 5350.1
+      "p50": 5007.9,
+      "p95": 5343.8
     },
     "answer_ms": {
-      "p50": 4106,
-      "p95": 10710.6
+      "p50": 3614,
+      "p95": 10116
     }
   },
   "usage": {
-    "input": 735710,
-    "output": 38910,
+    "input": 1047017,
+    "output": 49171,
     "cache_read": 0,
     "cache_write": 0
   },
@@ -6720,12 +6721,12 @@
     "source": "metering proxy (whole cell, every arm)",
     "usd": {
       "ingest": 3.812213,
-      "retrieval": 0.303497,
-      "reader": 5.657357,
-      "judge": 0.33367,
+      "retrieval": 0.508689,
+      "reader": 8.71418,
+      "judge": 0.4653,
       "background_tail": 0
     },
-    "total_usd": 10.106737,
+    "total_usd": 13.500382,
     "background_tail_usd_by_realization": {}
   },
   "files": {
