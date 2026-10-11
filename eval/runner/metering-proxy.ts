@@ -425,7 +425,7 @@ export class MeteringProxy {
     const p = this.options.policy;
     const run = p ? ledgerStatus({ ledgerPath: p.lease.ledgerPath, runId: p.lease.runId }).run : null;
     const unattributed = Object.fromEntries(this.unattributed);
-    return { mode: p ? 'lease' : 'in-process', run_id: p?.lease.runId ?? null, lease_usd: p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
+    return { mode: p ? 'lease' : 'in-process', run_id: p?.lease.runId ?? null, lease_usd: run?.budget_usd ?? p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
       max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts,
       ...(p ? { billed_usd: this.totals.billed_usd, reserved_unsettled_usd: this.totals.reserved_unsettled_usd, unattributed_background: unattributed,
         route_caps: p.routeCaps ?? null, admission: p.admission ? { limits: p.admission.limits, ...p.admission.stats } : null, cell_token: !!this.options.cellToken, trust_local: !!this.options.trustLocal } : {}) };

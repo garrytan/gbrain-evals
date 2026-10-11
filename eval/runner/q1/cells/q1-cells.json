@@ -91,7 +91,7 @@
       "ext-graph-pipeline:recipe:beam": 3.5,
       "ext-graph-pipeline:common": 1.4,
       "ext-graph-pipeline:common:beam": 3.98,
-      "ext-temporal-graph:common": 17.5,
+      "ext-temporal-graph:common": 26.97,
       "ext-temporal-graph:recipe": 90,
       "ext-markdown-kb:recipe": 0,
       "ext-markdown-kb:common": 0.1,
@@ -426,29 +426,29 @@
       "id": "T1",
       "label": "T1 S1 headline (complete)",
       "plan_usd": 3995,
-      "estimate_usd": 4068.78,
-      "cap_usd": 6103.17
+      "estimate_usd": 5110.48,
+      "cap_usd": 7665.72
     },
     {
       "id": "T2-S2a",
       "label": "T2 S2a BEAM-100K",
       "plan_usd": 585,
-      "estimate_usd": 456.27,
-      "cap_usd": 684.41
+      "estimate_usd": 475.21,
+      "cap_usd": 712.82
     },
     {
       "id": "T2-S2b",
       "label": "T2 S2b BEAM-1M",
       "plan_usd": 1720,
-      "estimate_usd": 1424.89,
-      "cap_usd": 2137.34
+      "estimate_usd": 1652.17,
+      "cap_usd": 2478.26
     },
     {
       "id": "T2-S3",
       "label": "T2 S3 LoCoMo",
       "plan_usd": 730,
-      "estimate_usd": 519,
-      "cap_usd": 778.5
+      "estimate_usd": 521.46,
+      "cap_usd": 782.19
     },
     {
       "id": "T2-S4-S5",
@@ -657,6 +657,10 @@
           "readers": 96.83,
           "system_queries": 0.7
         }
+      },
+      "lease": {
+        "usd": 27,
+        "basis": "A20: every wave-1 shard used up its $18.17 lease while reading"
       }
     },
     {
@@ -1438,15 +1442,19 @@
         }
       ],
       "estimate": {
-        "usd": 2007.93,
+        "usd": 3049.63,
         "lines": {
           "frontier_judges": 12.96,
-          "ingest": 1925,
+          "ingest": 2966.7,
           "ingest_probes": 1.3,
           "judge_repeats": 2.74,
           "judges": 3.01,
           "readers": 62.92
         }
+      },
+      "lease": {
+        "usd": 350,
+        "basis": "A20: wave 1 projects $305 a shard; the lease holds 15% over it, since a stop mid-ingest wastes the shard"
       }
     },
     {
@@ -3103,10 +3111,10 @@
         }
       ],
       "estimate": {
-        "usd": 458.55,
+        "usd": 685.83,
         "lines": {
           "frontier_judges": 0.65,
-          "ingest": 420,
+          "ingest": 647.28,
           "ingest_probes": 3.12,
           "judge_repeats": 3.28,
           "judges": 1.64,
@@ -4383,10 +4391,10 @@
         }
       ],
       "estimate": {
-        "usd": 50.94,
+        "usd": 69.88,
         "lines": {
           "frontier_judges": 0.45,
-          "ingest": 35,
+          "ingest": 53.94,
           "ingest_probes": 1.82,
           "judge_repeats": 1.92,
           "judges": 0.57,
@@ -6313,10 +6321,10 @@
         }
       ],
       "estimate": {
-        "usd": 21.59,
+        "usd": 24.05,
         "lines": {
           "frontier_judges": 0.07,
-          "ingest": 4.55,
+          "ingest": 7.01,
           "ingest_probes": 0.44,
           "judges": 0.57,
           "readers": 15.96
@@ -9477,16 +9485,16 @@
         }
       ],
       "estimate": {
-        "usd": 16.35,
+        "usd": 25.13,
         "lines": {
-          "ingest": 16.22,
+          "ingest": 25,
           "ingest_probes": 0.13
         }
       },
       "ingest_sessions": 93
     }
   ],
-  "total_usd": 6732.14,
+  "total_usd": 8022.52,
   "plan_total_usd": 7710,
   "cap_usd": 8500
 }

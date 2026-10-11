@@ -113,6 +113,8 @@ export interface CellDefinition {
   restore_command?: string;
   arms: ArmDefinition[];
   estimate: CellEstimate;
+  /** Each launch unit's lease when it is set apart from the estimate per shard (LEASE_OVERRIDES, A20), and why. */
+  lease?: { usd: number; basis: string };
 }
 
 export interface SetFacts {
@@ -194,11 +196,13 @@ export const ASSUMPTIONS = {
   /**
    * Ingest dollars per million ingested tokens, without probe polling, by `system:configuration[:family]`: the BEAM-1M
    * dev probes for the BEAM configurations (whole conversation, or its first 93 sessions), the LoCoMo dev smokes for the
-   * LoCoMo recipes; a configuration nothing measured keeps the shootout's pilot rate (PLAN §7).
+   * LoCoMo recipes; a configuration nothing measured keeps the shootout's pilot rate (PLAN §7). The temporal graph's
+   * common configuration was the pilot's $17.50 until wave 1 measured it on S1 (A20): $305 a shard projected, of
+   * which $8.30 is reading, judging and probes, puts ingest at $296.70 a shard, 1.541 times the pilot rate.
    */
   ingest_usd_per_mtok: {
     'ext-extract-first:common': 2.8, 'ext-extract-first:recipe': 95, 'ext-memory-bank:recipe': 1.72, 'ext-memory-bank:common': 1.4,
-    'ext-graph-pipeline:recipe': 18.4, 'ext-graph-pipeline:recipe:beam': 3.5, 'ext-graph-pipeline:common': 1.4, 'ext-graph-pipeline:common:beam': 3.98, 'ext-temporal-graph:common': 17.5, 'ext-temporal-graph:recipe': 90,
+    'ext-graph-pipeline:recipe': 18.4, 'ext-graph-pipeline:recipe:beam': 3.5, 'ext-graph-pipeline:common': 1.4, 'ext-graph-pipeline:common:beam': 3.98, 'ext-temporal-graph:common': 26.97, 'ext-temporal-graph:recipe': 90,
     'ext-markdown-kb:recipe': 0, 'ext-markdown-kb:common': 0.1, 'ext-verbatim-session:recipe': 0, 'ext-verbatim-session:common': 0.1,
     'gbrain-defaults:shipped-defaults': 0.12, 'gbrain-defaults:full-surface': 0.12, 'gbrain-defaults:common-embedder': 0.13, 'baseline-hybrid:baseline': 0.14,
   } as Record<string, number>,
@@ -335,6 +339,12 @@ const familyOf = (b: string): 'beam' | 'locomo' | 'lme' => b.startsWith('beam') 
 
 interface ArmSpec extends Partial<ArmDefinition> { id: string; mode: ArmMode }
 
+/** Leases set apart from the estimate per shard, for cells wave 1 measured running past their leases (A20). */
+export const LEASE_OVERRIDES: Record<string, { usd: number; basis: string }> = {
+  's1.ext-temporal-graph.common': { usd: 350, basis: 'A20: wave 1 projects $305 a shard; the lease holds 15% over it, since a stop mid-ingest wastes the shard' },
+  's1.gbrain-defaults.shipped-defaults': { usd: 27, basis: 'A20: every wave-1 shard used up its $18.17 lease while reading' },
+};
+
 function makeCell(set: SetId, system: string, configuration: string, armSpecs: ArmSpec[], extra: { ingest_replicate?: number } = {}): CellDefinition {
   const s = SETS[set];
   const id = `${set.toLowerCase()}.${system}.${configuration}${extra.ingest_replicate && extra.ingest_replicate > 1 ? `.r${extra.ingest_replicate}` : ''}`;
@@ -358,7 +368,7 @@ function makeCell(set: SetId, system: string, configuration: string, armSpecs: A
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
     ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}`, conversations: set === 'S4' || set === 'S4-slice' || set === 'S5' ? 50 : null },
     ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), shards, expected_hours: Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
-  return { ...base, estimate: estimateCell(base) };
+  return { ...base, estimate: estimateCell(base), ...(LEASE_OVERRIDES[id] ? { lease: LEASE_OVERRIDES[id] } : {}) };
 }
 
 /** How a shim cell's stack starts: bootstrap.sh --config and any environment the configuration needs. */

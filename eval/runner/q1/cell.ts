@@ -1150,8 +1150,8 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
     const providers: Array<keyof typeof PROVIDER_KEYS> = c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'];
     const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
     const command = stack ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}; exit $rc` : run;
-    /** A smoke measures what the estimate assumes, so its lease holds twice the estimate. */
-    const lease = Math.max(0.01, Math.ceil((smoke ? 2 : 1) * c.estimate.usd / c.shards * 100) / 100);
+    /** A smoke measures what the estimate assumes, so its lease holds twice the estimate; a counted unit takes its cell's lease override (A20), else the estimate per shard. */
+    const lease = !smoke && c.lease ? c.lease.usd : Math.max(0.01, Math.ceil((smoke ? 2 : 1) * c.estimate.usd / c.shards * 100) / 100);
     return {
       id, system: c.system, benchmark: c.benchmark, config: c.configuration, lease_usd: lease, command,
       setup_command: `bash eval/systems/bootstrap.sh setup${stack ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,

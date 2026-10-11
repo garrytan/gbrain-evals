@@ -348,10 +348,11 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   (0.60.106.0), resolved hash `415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab` (fact extraction on
   `claude-sonnet-4-6`, no content-repair model).
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
-  cell executes (159 files at the A9, A14, A17 and A19 trees) and the pinned images:
-  - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
-    from the custodian's host. Hash `a1ff43c577543e5d08382e9e6d719006ca226d0ac95000147399a928c354ed0c` (A19) for
-    waves 2 to 5 and the four file-agent units. Wave 1's other 49 units run at
+  cell executes (159 files at the A9, A14, A17, A19 and A20 trees) and the pinned images:
+  - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,800 (A20);
+    launched from the custodian's host. Hash `43749abd1ebecd8b8e16b3d9f91401647f27e95f247d65339e7819eaedb1cfb6` (A20)
+    for waves 2 to 5 and the four file-agent units, replacing `a1ff43c5` (A19, never relayed). Wave 1's other 49 units
+    run at
     `eefd1799842105260104532b78283f9d9b5379ddfae6d44bb8f75317bc56424c` (A17), which replaced
     `a7328eed8f77e30523e32a1c4a9756711fabdcfce3118c893dedd006b3877728` (A14), under which nothing was counted.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
@@ -379,15 +380,14 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
     (A18).
   - `q1-scoreboard-public-v3-s2`: the same two LongMemEval-S shards, rerun after v3-s's VMs were lost (A18); cap
     $39. Hash `f34169372ea1818a94882331c3cf720fa5308184842feb1de1908857ee5de64a`.
-  The sealed cap ($7,200), the public spend (about $150 lost under A13 plus the v2 cap of $441) and the $60 of dev work
-  stay under the $8,500 program cap.
+  The sealed cap ($7,800, A20) and about $418 of spend outside it (A20) stay under the $8,500 program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
   digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
   bundles build are covered by their Dockerfiles and lockfiles in the hashed tree.
 - **Engine:** PGLite (rule result, rechecked at the freeze commit).
 - **Token calibration:** Opus 5.5 1.4708 and Sonnet 5.5 1.4524 times `cl100k_base`; GPT-6.1 Sol 1.0009 times
   `o200k_base` (A4).
-- **Cell manifest:** `eval/runner/q1/cells/q1-cells.json`, $6,732 in cells (A5 lines).
+- **Cell manifest:** `eval/runner/q1/cells/q1-cells.json`, $8,023 in cells (A5 lines, re-priced by A20).
 - **S1 sweep subset:** 100 questions stratified by conversation and category, seed `q1-sweep`, drawn by the
   custodian when questions open; question `1_abstention_0` is excluded everywhere.
 - **Family 1:** descriptive; shrink comparators `ext-extract-first`, `ext-markdown-kb`, `ext-temporal-graph`,
@@ -881,7 +881,76 @@ the four file-agent units and the frontier backfill run at this freeze.
   shared, so this tree hashes v3-s2 to `82adb645` and v3-m to `19f54054`. Each public campaign renders from its launch
   tree: v3-s2 (`f3416937`) from `3532b1aa`, and v3-m (`1d119581`) from `0518e2fd`.
 
+**A20 (2026-10-11, before the cells it affects): temporal-graph and gbrain leases re-priced from wave 1, the
+sealed cap at $7,800, and leases raised in place.** Wave 1 showed two cells running past their leases. The owner
+raised the sealed cap from $7,200 to $7,800; the $8,500 program cap is unchanged. This freeze replaces A19's
+(`a1ff43c5`, never relayed to the custodian) for waves 2 to 5 and the four file-agent units, and carries A19's fixes
+A to D unchanged. Wave 1 keeps running at A17 (`eefd1799`).
+
+- **The temporal graph's ingest.** Its common configuration was priced at the shootout's pilot rate, $17.50 per
+  million ingested tokens, which nothing had measured. Wave 1 projects $305 a S1 shard against the $200.80 estimate.
+  Of that, $8.30 is reading, judging and probes, so ingest costs 1.541 times the pilot rate: $26.97 per million
+  tokens (`ingest_usd_per_mtok`, `ext-temporal-graph:common`). Every common cell is re-priced at that rate. The
+  recipe configuration keeps its $90 rate, measured on the LoCoMo dev smokes.
+  - S1 (10 shards, wave 1): estimate $305 a shard. The lease is $350 a shard, 15% over the projection, because a
+    stop mid-ingest wastes the whole shard.
+  - S2b (wave 3): $458.55 to $685.83. S2a (wave 5): $50.94 to $69.88. LoCoMo (wave 4): $21.59 to $24.05.
+- **gbrain-defaults' S1 lease.** All six wave-1 shards of `s1.gbrain-defaults.shipped-defaults` used up their
+  $18.17 leases while reading. All ten shards now lease $27, including the four in wave 2. Under A17, wave 1's
+  shards either have their leases raised in place to $27 or resume under A9 on one further $18.17 lease each
+  (+$109.02). The report states each cell's actual spend beside its lease. The custodian's dollars-by-slot split
+  will say why the estimate was short. Until it does, gbrain's other leases stay at their estimates: S1 full-surface
+  $11.38 a shard; S2b $117, $127.67 and $55.27; S2a $55.06 and $57.75; LoCoMo $20.56, $50.37 and $2.07.
+- **How the leases are set.** A cell's lease is its estimate per shard. The exception is a cell in
+  `LEASE_OVERRIDES` (`eval/runner/q1/cells/definitions.ts`), whose units take the override's amount and recorded
+  reason. Only the two S1 cells above have overrides. Waves follow the estimate as before, so no unit moves to a
+  different wave.
+- **Raising a running lease.** `eval/runner/q1/raise-lease.ts` lives outside the hashed tree and uses only A17's
+  code, so wave 1 keeps `eefd1799`. One command raises both ledgers:
+  - It grows the lease's reservation in the campaign ledger, refused past the campaign budget, the ledger cap or
+    the lease's block cap.
+  - Over `ubi-runner ssh`, it raises the VM lease ledger's run budget and cap in one transaction, then reads them
+    back.
+  - If the VM step fails, the host reservation is given back. Each raise is appended to `<state>/raises.ndjson`.
+
+  The metering proxy reads its run budget and cap from that ledger before every reservation, so a raise binds from
+  its next call without a restart. On the A17 proxy, a $0.05 lease refused its fifth call. After a raise to $0.10,
+  the same process admitted the next call and refused again at $0.10. A17's `settle` closes a raised sealed lease at
+  its measured spend, because the pulled lease summary carries the launch amount it compares with. A17's proxy
+  status page still shows the launch amount, so read headroom with `raise-lease.ts show`. This freeze's proxy shows
+  the raised lease.
+- **Pulls.** `ubi-runner.sh pull` (outside the hashed tree) takes a lock for each VM, and `run` marks the start of
+  its final pull. A periodic pull waits out another pull of the same VM, and one that comes after the final pull
+  has begun is skipped.
+- **Leases and the cap.** The 144 launch units lease $8,298.24 (A19: $6,469.26): wave 1 $5,271.33 at the raised
+  leases and waves 2 to 5 $3,026.91. Block estimates and their 1.5x caps: T1 $5,110.48 and $7,665.72; S2b $1,652.17
+  and $2,478.26; S2a $475.21 and $712.82; LoCoMo $521.46 and $782.19. Leases pass the $7,800 cap by $498.24, before
+  the backfill run (capped at $150) and any A9 resumes. So the campaign finishes only if settled spend comes in that
+  far under the leases; the temporal graph's S1 leases alone hold $450 over its projection. If the ledger reaches
+  the cap, the preregistered order of cuts applies.
+- **Ledgers.** Wave 1 settles in A17's ledger, whose $7,200 limit A17's code enforces. The units at this freeze run
+  in a ledger of their own, opened before `init` at $7,800 minus wave 1's committed spend and the backfill
+  (`budget-ledger.ts init --program-cap-usd`). Its cap rises with `set-cap` as wave 1 settles under its leases, so
+  one hard cap holds the combined spend. A ledger that A17's campaign still settles in is never set above $7,200;
+  A17 refuses such a ledger.
+- **Freeze.** The sealed campaign is re-frozen at hash `43749abd1ebecd8b8e16b3d9f91401647f27e95f247d65339e7819eaedb1cfb6`
+  (159 tree files, 144 units, $8,298.24 in leases, cap $7,800). Only lease amounts, block estimates and caps, and
+  the cap change in the manifest. This tree hashes v3-s2 to `ec59937b` and v3-m to `41df787d`. Each public campaign
+  still renders from its launch tree.
+- **Spend outside the sealed campaign.** About $418: dev smokes $53.75, the stress pilot about
+  $6, about $150 of public spend lost under A13, public v2 $107.95, v3 smokes $2.25, v3-m $29.07, v3-s $35 (lost),
+  v3-s2 $27.31, and dry runs $7.16. With the $7,800 sealed cap, that is about $8,218 against $8,500.
+
 ## Changelog
+
+### 2026-10-11: amendment A20
+
+The owner raised the sealed cap to $7,800. Wave 1 showed the temporal graph's ingest at 1.541 times its pilot rate,
+and gbrain's S1 shards used up their $18.17 leases while reading. The temporal graph's common cells are re-priced at
+the measured rate; its S1 shards lease $350 and gbrain's S1 shards $27. A running lease can now be raised in place
+on both ledgers without a proxy restart (`raise-lease.ts`, outside the hashed tree), and pulls of one VM no longer
+overlap. Re-frozen at `43749abd` for waves 2 to 5 and the four file-agent units, replacing A19's `a1ff43c5`, which
+was never relayed. Wave 1 stays at `eefd1799`.
 
 ### 2026-10-11: amendment A19
 

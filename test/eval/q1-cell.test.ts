@@ -744,6 +744,21 @@ describe('the generated cell manifest', () => {
     expect([fileAgent.setup_command, fileAgent.command]).toEqual(['bash eval/systems/bootstrap.sh setup --datasets locomo', 'bun eval/runner/q1/cell.ts run --cell s3.baseline-file-agent.baseline --out "$SHOOTOUT_OUT"']);
   });
 
+  test('A20: a lease override sets every counted unit of its cell; other units lease the estimate per shard, and wave order still follows the estimate', () => {
+    const units = campaignCells(m);
+    const of = (prefix: string) => units.filter(u => u.id.startsWith(`${prefix}.c`));
+    expect(of('s1.ext-temporal-graph.common').map(u => u.lease_usd)).toEqual(Array(10).fill(350));
+    expect(of('s1.gbrain-defaults.shipped-defaults').map(u => u.lease_usd)).toEqual(Array(10).fill(27));
+    const tg = m.cells.find(c => c.id === 's1.ext-temporal-graph.common')!;
+    expect(tg.estimate.usd / tg.shards).toBeCloseTo(305, 0);
+    expect(m.cells.filter(c => c.lease).map(c => c.id).sort()).toEqual(['s1.ext-temporal-graph.common', 's1.gbrain-defaults.shipped-defaults']);
+    for (const u of units.filter(u => !m.cells.find(c => c.lease && u.id.startsWith(`${c.id}.c`)))) {
+      const c = m.cells.find(x => u.id === x.id || u.id.startsWith(`${x.id}.c`))!;
+      expect(u.lease_usd).toBeCloseTo(Math.max(0.01, Math.ceil(c.estimate.usd / c.shards * 100) / 100), 2);
+    }
+    expect(of('s1.gbrain-defaults.shipped-defaults').map(u => u.wave)).toEqual([1, 1, 1, 1, 1, 1, 2, 2, 2, 2]);
+  });
+
   test('estimates come from ledger prices and stay under the cap; blocks carry 1.5x hard caps', () => {
     expect(m.total_usd).toBeLessThan(m.cap_usd);
     for (const b of m.blocks) expect(b.cap_usd).toBeCloseTo(b.estimate_usd * 1.5, 1);
