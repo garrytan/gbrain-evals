@@ -131,7 +131,7 @@ Starting line (same build, old loader), `2026-10-05-heldout-program/starting-lin
 
 Sealed (held-out) BEAM, `2026-10-05-heldout-verdicts/README.md:21-22`: P4 pre-compaction notice passed on **BEAM-500K sealed** (+11.35 points [+8.3, +14.4]). P4 core tier **failed** on BEAM-100K sealed (gpt-6.1-sol −2.4, claude-fable-5-1 −2.4). The GBRA-52 thread reports a 100k/500k/1M confirmation (1M: 0.708 fix-off vs 0.677 fix-on). That is a **thread message, not a committed file**, on a different protocol, so treat it as unverified here.
 
-Competitor BEAM figures (self-reported, mixed scales), `docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md:238-248`: Mem0 1M 64.1 / 10M 48.6; Hindsight 1M 73.9% / 10M 64.1%; Honcho 1M 0.631 / 10M 0.406 (0-1 rubric); Exabase 1M 75.0 / 10M 68.0. These do not compare directly with gbrain's 53.5% (different reader and protocol).
+Competitor BEAM figures (self-reported, mixed scales), `docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md:238-248`: Mem0 1M 64.1 / 10M 48.6; the comparator 1M 73.9% / 10M 64.1%; Honcho 1M 0.631 / 10M 0.406 (0-1 rubric); Exabase 1M 75.0 / 10M 68.0. These do not compare directly with gbrain's 53.5% (different reader and protocol).
 
 ### 2.4 New per-question analysis of committed BEAM-1M rows (free, this audit)
 

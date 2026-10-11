@@ -126,7 +126,7 @@ Test immediately before/at/after creation and two edits, a stalled transaction s
 Severity: High.
 Plan text at issue: W3, “evidence filtered to what was recorded by T,” names think/gather/temporal-context and estimates seven agent-hours.
 Evidence: `G/src/core/think/gather.ts:144-150,160-198` searches current pages and current takes. `G/src/core/think/index.ts:526-542` then hydrates current page evidence. None of these paths retrieves old content that no longer matches the current index.
-Filtering current candidates by recorded time loses deleted/replaced terms. Hydrating an old hit with current text leaks hindsight. Current graph expansion, entity aliases, summaries, trajectory facts, and calibration context also require an explicit temporal policy; filtering only page timestamps is insufficient.
+Filtering current candidates by recorded time loses deleted/replaced terms. Hydrating an old hit with current text leaks later knowledge. Current graph expansion, entity aliases, summaries, trajectory facts, and calibration context also require an explicit temporal policy; filtering only page timestamps is insufficient.
 Amendment: “Either keep V1 to addressed page-at-time and cited deltas, or add a historical retrieval design and estimate before W3. Every evidence-producing branch must read a T-bounded view or be disabled for known_as_of.”
 Require an invariance test: after fixing history through T, arbitrarily change later text, aliases, graph edges, takes, and summaries; the T-bounded evidence must not change. Include a question answerable only by a phrase removed after T. A generic 200-question accuracy set will not establish that property.
 
