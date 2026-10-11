@@ -400,7 +400,7 @@ cell, which this campaign does not define.
 **A2 (2026-10-07): a fresh held-out reserve is being minted.** Under owner custody, the custodian mints a reserve of
 10 BEAM-style conversations of about 1M tokens each with BEAM's public generator at `b2da22e`, before BEAM-10M opens,
 so later decisions have material no one has used. Q1's cells do not use it. It is referenced here only by the SHA-256
-of its hash list: OPEN (relayed by the program owner when minting finishes).
+of its hash list: OPEN at A2 (relayed by the program owner when minting finishes); recorded in A16.
 
 **A3 (2026-10-07, before freeze): output caps bind only the harness's own calls.** The dev stress pilot showed the
 metering proxy refusing gbrain's query-expansion call, which states a 64,000-token output allowance, because the
@@ -657,7 +657,28 @@ names one version.
 - **Stalls.** A rerun shard that stalls is captured (process state and receipts) and reported to the owner before
   any further run.
 
+**A16 (2026-10-11): a sealed launch interrupted before any cell started; the D8 hash list.** On 2026-10-10 at 23:56
+UTC the custodian launched wave 1's 32 longest sealed cells from the owner's host at freeze `a7328eed`. About 30
+minutes in, while every VM was still receiving the checkout upload, a restart of the launcher sent SIGHUP to the
+cell processes, and the VM runner tore down all 32 VMs. Every launch log shows only VM created, ready, upload,
+hangup and destroyed: no cell command or metering proxy started, no sealed file was opened and no result was pulled.
+API spend was $0. The 32 leases (reserving $2,866.02) are settled at their measured VM cost, each line recorded in the
+custodian's ledger, and none is a counted attempt. The custodian's launcher wrapper, outside the hashed tree, now
+ignores SIGHUP and derives its vCPU count from running cell processes; uploads use a shallow clone of the identical
+tree and are staggered. The relaunch runs on the same freeze; the executed tree is unchanged, and the sealed hash
+`a7328eed…7728` recomputes at this commit.
+
+The D8 reserve's hash list (A2) is relayed: SHA-256
+`a14e55ced31008846778603eee656696f8a35c123758c814f36653d970a7a19a`, 153 files, held in owner custody on the owner's
+host. Q1's cells do not use the reserve.
+
 ## Changelog
+
+### 2026-10-11: amendment A16
+
+Wave 1's first sealed launch was interrupted during the checkout upload (SIGHUP from a launcher restart): no cell
+started, no sealed file opened, $0 API spend, 32 leases settled at VM cost; relaunch on the same freeze. The D8
+reserve's hash-list SHA (`a14e55ce`) is recorded.
 
 ### 2026-10-10: amendment A15
 
