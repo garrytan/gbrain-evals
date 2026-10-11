@@ -737,6 +737,11 @@ describe('the generated cell manifest', () => {
     }
     const full = specs.find(x => x.id === 's2b.gbrain-defaults.full-surface')!;
     expect(full.command).toStartWith('GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && ');
+    const runtime = specs.find(x => x.id === 's3.ext-agent-runtime.recipe')!;
+    expect(runtime.setup_command).toBe('bash eval/systems/bootstrap.sh setup --system ext-agent-runtime --datasets locomo');
+    expect(runtime.command).toBe('bash eval/systems/bootstrap.sh up --system ext-agent-runtime --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-agent-runtime.recipe --out "$SHOOTOUT_OUT"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-agent-runtime; exit $rc');
+    const fileAgent = specs.find(x => x.id === 's3.baseline-file-agent.baseline')!;
+    expect([fileAgent.setup_command, fileAgent.command]).toEqual(['bash eval/systems/bootstrap.sh setup --datasets locomo', 'bun eval/runner/q1/cell.ts run --cell s3.baseline-file-agent.baseline --out "$SHOOTOUT_OUT"']);
   });
 
   test('estimates come from ledger prices and stay under the cap; blocks carry 1.5x hard caps', () => {

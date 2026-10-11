@@ -4,7 +4,7 @@
 # Run from the repository root on a fresh Ubuntu 24.04 Ubicloud VM. Subcommands:
 #
 #   setup  [--system NAME] [--datasets locomo,lme-s,beam-100k] [--conversations id,id]
-#          Once per VM (ubi-runner --setup): Docker with the compose plugin, Bun 1.4.2 (as CI), `bun install --frozen-lockfile`,
+#          Once per VM (ubi-runner --setup): Docker with the compose plugin, ripgrep (the file agent's grep), Bun 1.4.2 (as CI), `bun install --frozen-lockfile`,
 #          the pinned datasets through `bun run eval:decide fetch` (each file checked against its SHA-256), and the
 #          system's pinned images (`docker compose pull`, then `build` for the shim image). --conversations fetches
 #          only those BEAM conversations' files (a dev smoke never downloads a sealed conversation).
@@ -125,6 +125,11 @@ case "$cmd" in
       sudo apt-get update -qq >/dev/null
       sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq docker.io docker-compose-v2 unzip curl python3 >/dev/null
       sudo usermod -aG docker "$(id -un)"
+    fi
+    if ! command -v rg >/dev/null 2>&1; then
+      log "installing ripgrep (the file agent's grep)"
+      sudo apt-get update -qq >/dev/null
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ripgrep >/dev/null
     fi
     if ! command -v bun >/dev/null 2>&1 || [ "$(bun --version)" != "$BUN_VERSION" ]; then
       log "installing Bun $BUN_VERSION"

@@ -180,10 +180,19 @@ export interface ChatOptions {
 
 export interface ChatLike { chat(model: string, prompt: string, opts: ChatOptions): Promise<ChatResult> }
 
+/**
+ * Anthropic `max_tokens` as sent. Claude models that take only their default temperature think adaptively and cannot
+ * turn it off; the thinking shares max_tokens, so a 10-token verdict call can end before any text. Verdict calls
+ * (under 1,024 tokens) get the 2,000-token floor OpenAI's reasoning models get; the 1,024-token rubric and 2,048-token
+ * reader calls, which already finish, are sent as asked (A19).
+ */
+export const anthropicMaxTokens = (name: string, maxTokens: number) => !sendsTemperature(`anthropic:${name}`) && maxTokens < 1024 ? 2000 : maxTokens;
+
 /** The cache key of one call. */
 export function chatCacheKey(model: string, prompt: string, opts: ChatOptions): string {
   const [provider, name] = model.includes(':') ? [model.slice(0, model.indexOf(':')), model.slice(model.indexOf(':') + 1)] : ['openai', model];
   return createHash('sha256').update(JSON.stringify({ provider, name, prompt, maxTokens: opts.maxTokens, temperature: opts.temperature === null ? 'default' : opts.temperature ?? 0, replicate: opts.replicate,
+    ...(provider === 'anthropic' && anthropicMaxTokens(name, opts.maxTokens) !== opts.maxTokens ? { sent_max_tokens: anthropicMaxTokens(name, opts.maxTokens) } : {}),
     ...(opts.effort !== undefined ? { effort: opts.effort } : {}), ...(opts.system !== undefined ? { system: opts.system } : {}), ...(opts.attempt ? { attempt: opts.attempt } : {}) })).digest('hex');
 }
 
@@ -237,7 +246,7 @@ async function openaiChat(model: string, prompt: string, opts: ChatOptions): Pro
 async function anthropicChat(model: string, prompt: string, opts: ChatOptions): Promise<ProviderReply> {
   const res = await fetch(`${(process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com').replace(/\/$/, '')}/v1/messages`, {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: opts.maxTokens, ...(opts.temperature === null || !sendsTemperature(`anthropic:${model}`) ? {} : { temperature: opts.temperature ?? 0 }), ...(opts.system !== undefined ? { system: opts.system } : {}),
+    body: JSON.stringify({ model, max_tokens: anthropicMaxTokens(model, opts.maxTokens), ...(opts.temperature === null || !sendsTemperature(`anthropic:${model}`) ? {} : { temperature: opts.temperature ?? 0 }), ...(opts.system !== undefined ? { system: opts.system } : {}),
       ...(opts.effort !== undefined ? { output_config: { effort: opts.effort } } : {}), messages: [{ role: 'user', content: prompt }] }),
     signal: AbortSignal.timeout(300_000),
   });

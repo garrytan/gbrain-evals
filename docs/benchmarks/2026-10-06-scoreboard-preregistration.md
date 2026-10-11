@@ -348,9 +348,11 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   (0.60.106.0), resolved hash `415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab` (fact extraction on
   `claude-sonnet-4-6`, no content-repair model).
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
-  cell executes (159 files at the A9, A14 and A17 trees) and the pinned images:
+  cell executes (159 files at the A9, A14, A17 and A19 trees) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,200; launched
-    from the custodian's host. Hash `eefd1799842105260104532b78283f9d9b5379ddfae6d44bb8f75317bc56424c` (A17); it replaces
+    from the custodian's host. Hash `a1ff43c577543e5d08382e9e6d719006ca226d0ac95000147399a928c354ed0c` (A19) for
+    waves 2 to 5 and the four file-agent units. Wave 1's other 49 units run at
+    `eefd1799842105260104532b78283f9d9b5379ddfae6d44bb8f75317bc56424c` (A17), which replaced
     `a7328eed8f77e30523e32a1c4a9756711fabdcfce3118c893dedd006b3877728` (A14), under which nothing was counted.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
     `52757aab6762ddb7c846fdb8bb5943d98e7aecf1cd7f164dc1acda8e65a5b7e2` at its launch tree (`a22e3d81`, 156 files); it
@@ -761,7 +763,137 @@ and snapshots, and neither shard had written one yet. The metering proxy's ledge
   `progress.ndjson`. The persist loop pushes these files with the rest of the state. A lost VM then still leaves
   spend measured to within one interval. The sealed hash `eefd1799…` is unchanged.
 
+**A19 (2026-10-11, before the cells it affects): ripgrep, the frontier judge's output cap, Opus verdict calls and the
+agent-runtime unit; re-frozen for waves 2 to 5.** Wave 1 started at A17 (`eefd1799`). The custodian found two launch
+faults there, and the dry runs below, one per system kind, found two more. Wave 1 keeps running at A17. Waves 2 to 5,
+the four file-agent units and the frontier backfill run at this freeze.
+
+- **A. The file agent had no grep.** `bootstrap.sh setup` never installed ripgrep, so the file agent's preflight
+  refused, and the S1 file-agent unit (`s1.baseline-file-agent.baseline`, wave 1) exited after 10 seconds with no
+  answers. A4's LoCoMo dev smoke of the file agent also recorded 0 of 60 answers. That went
+  unnoticed because a partial smoke does not fail the batch, and its error text was not kept. Setup now installs ripgrep. This affects the four
+  file-agent units ($518.22 in leases: S1 $245.99, S2b $185.75, S2a $60.19, S3 $26.29). The S1 unit relaunches at
+  this freeze as a new attempt of the same unit, and its A17 attempt settles at its measured spend.
+- **B. The proxy refused the GPT frontier judge.** The harness sends `gpt-6.1-sol` judge calls with
+  `max_completion_tokens` 2,000, the floor every OpenAI reasoning model gets (`memory-qa/qa.ts`). The judge route's
+  output cap was 1,024, so the proxy refused every GPT frontier judgment. A refused judgment records nothing and
+  does not fail the cell, so wave 1's cells are missing the GPT half of the frontier column. A17's dry runs missed it
+  for the same reason: their BEAM-1M cell has Opus and canonical judgments but no GPT ones. This preregistration
+  gives no judge output allowance, and A3 says output caps exist to bound the harness's own calls, not to change
+  them. So the judge request stays as it is, and the judge route's cap rises from 1,024 to 2,048
+  (`metering-proxy.ts` `DEFAULT_ROUTE_CAPS`, and the sealed manifest's `output_caps.judge`).
+- **C. Opus verdict calls came back empty.** `claude-opus-5-5` takes only its default temperature and always
+  thinks. The thinking counts against `max_tokens`, so a 10-token verdict call can stop before any text. The
+  harness retries it, and after three attempts records a `judge_error`, never a no. This hit the Opus frontier judge
+  on every short verdict:
+  - LongMemEval and LoCoMo verdicts: 11 of 51 errors in the public v2 hybrid cell, and 8 of 12 in A17's LoCoMo dry
+    run.
+  - BEAM's equivalence calls, which score `event_ordering` items (a tenth of BEAM's questions): A17 code judged a
+    correct `event_ordering` answer `judge_error` twice out of two. BEAM's 1,024-token rubric calls finished
+    normally (80 of 80 in A17's dry runs).
+
+  Claude models that take only their default temperature now get the same 2,000-token floor on calls under 1,024
+  tokens. Rubric calls (1,024) and reader calls (2,048) are sent as asked, and the floored allowance enters the
+  response cache key. On the same 51 public answers, the floor gave 51 of 51 scored, and the 40 that had scored
+  before kept their verdicts (40 of 40). On the two `event_ordering` answers above it gave 2 of 2 scored. The
+  canonical judges (`gpt-4o-2024-08-06`, `gpt-4.1-mini`) and every reader request are unchanged.
+- **D. The agent-runtime unit never started its runtime.** `s3.ext-agent-runtime.recipe` (wave 4) is an
+  in-process cell. Its adapter drives the bundle's own container, but the launch unit neither built that container
+  at setup nor brought it up. The adapter also called `docker` as a user whose docker group membership applies
+  only to later logins. Its dry run recorded 0 answers: "permission denied while trying to connect to the docker
+  API". The unit now sets up and brings up its stack through `bootstrap.sh`, as a shim cell does
+  (`setup --system ext-agent-runtime`, then `up` and `down` around the run). The adapter falls back to
+  `sudo docker`, as `bootstrap.sh` does. The lease ($27.84) is unchanged.
+- **E. Open, not fixed: the agent runtime cannot use GPT-6.1 Sol.** The runtime calls Sol through
+  `/v1/chat/completions` with function tools and a reasoning effort. OpenAI refuses that request: "Function tools
+  with reasoning_effort are not supported for gpt-6.1-sol in /v1/chat/completions." The runtime's Sol answers are
+  therefore `retrieval_error`, and its Opus and Sonnet answers are unaffected. This is the runtime's own request,
+  and changing it changes the system under test, so it is left to the program owner before wave 4. The options:
+  report the Sol row as the runtime's failure, drop Sol from this cell, or run the runtime's GPT path at effort
+  `none`.
+- **Request-versus-cap audit.** Output caps bind only harness routes (A3): `harness` → reader 2,048, `judge` →
+  judge 2,048 (was 1,024), `agent` → agent 16,000. System slots (`/<kind>/…`, every memory system's own calls,
+  including the agent runtime's 64,000-token turns and gbrain's 64,000-token query expansion) are never capped. Every
+  model and slot pair the sealed campaign sends:
+
+  | Slot (cap) | Call | Model | Requested output |
+  |---|---|---|---:|
+  | reader (2,048) | packed, native-default | `claude-opus-5-5`, `claude-sonnet-5-5` | 2,048 |
+  | reader (2,048) | packed, native-default | `gpt-6.1-sol` | 2,048 |
+  | reader (2,048) | full context | Opus, Sonnet; Sol | 2,048; 2,048 |
+  | judge (2,048) | canonical BEAM rubric; equivalence | `gpt-4.1-mini` | 1,024; 10 |
+  | judge (2,048) | canonical LoCoMo verdict | `gpt-4o-2024-08-06` | 10 |
+  | judge (2,048) | frontier rubric; verdict | `claude-opus-5-5` | 1,024; 2,000 (was 10, C) |
+  | judge (2,048) | frontier rubric; verdict | `gpt-6.1-sol` | 2,000; 2,000 (refused at 1,024, B) |
+  | agent (16,000) | file agent turns | Opus, Sonnet; Sol | 8,192; 16,000 |
+  | system slot (none) | agent runtime turns | Opus, Sonnet | 64,000 |
+
+  B was the only refusal by request size. No other pair asks for more than its cap. The agent runtime's 64,000-token
+  Opus turn reserves about $3.05 and the file agent's first Sol turn about $5.52 (the full window). Both fit their
+  sealed leases. They exceeded the small dry-run leases, which is why those two dry runs were rerun with larger
+  leases.
+- **Frontier backfill for wave 1.** `eval/runner/judge-repeat.ts` gains `--frontier <cell judgments.ndjson>`. It
+  judges only answers that already have a replicate-0 frontier judgment in that cell log, which is the arm's
+  frontier scope, and records under the frontier instrument id (`<instrument>@<judge>`) and the keys the cell would
+  have written:
+  - **GPT half.** `--judge openai:gpt-6.1-sol --replicates 1 --frontier <log> --judgments <log>` fills it into each
+    wave-1 cell's own log.
+  - **Opus errors.** `--redo-errors` re-judges only the answers whose Opus frontier judgment is a `judge_error`
+    (C). It writes to a separate file, because a cell log never holds two records under one key. Before any wave-1
+    frontier figure is published, the render is changed to use a redo record in place of the logged error under the
+    same key, and the report says so.
+  - **Custody.** The run happens on the custodian's host, against the pulled cell logs in the custody state
+    directory. Every answered conversation is sealed, so it requires `GBRAIN_EVALS_CUSTODY_LOG`, `--decision-id` and
+    `--purpose`, and it logs the opening. It calls providers directly, outside any proxy route cap, under a budget
+    run in the custodian's ledger.
+  - **Tested.** On public dev answers it filled 3 of 3 GPT judgments under `beam-1m@openai:gpt-6.1-sol`, a rerun
+    skipped all 3, and a redo turned 2 Opus errors into 2 scored without touching the cell log.
+  - **Estimate.** Wave 1 has 4,760 frontier items. The 600 in the S1 file-agent unit are judged in-cell when that
+    unit reruns, which leaves 4,160 for the backfill. GPT judge calls measured 1,182 input and 124 output tokens on
+    average, $0.0042 per call, and a BEAM item takes 4.2 to 5.6 judge calls (event_ordering ×4). That puts the GPT
+    half at $73 to $97, about $87. The Opus redo covers at most the roughly 420 `event_ordering` items, at $0.068
+    each, so $28 or less. The budget run is capped at $150 and counts against the sealed cap.
+- **Dry runs, one per system kind.** Each of the 13 kinds ran a dev copy of its sealed LoCoMo cell from a scratch
+  copy of this tree, on its own VM, through the sealed path: sealed payload, VM custody root, output under
+  `~/custody/out`, and rows pulled outside the checkout. Each used conversation `conv-44`, one or two questions and
+  both frontier judges on every arm. Results:
+  - **Full runs.** gbrain-defaults, ext-memory-bank, ext-graph-pipeline, ext-markdown-kb, ext-verbatim-session,
+    baseline-recency, baseline-hybrid and baseline-none each finished complete. In each, all three readers
+    answered, and every answer has a canonical judgment and both frontier judgments, scored. The proxy refused 0
+    requests.
+  - **The file agent** answered with all three readers (rg `/usr/bin/rg`), every answer judged by both frontier
+    judges.
+  - **The agent runtime** answered with Opus and Sonnet (E covers Sol).
+  - **Full context** answered 5 of 6. The sixth was an Opus read refused by the $0.95 dry lease, not by any cap.
+  - **ext-temporal-graph** finished complete on a $1.50 lease ($0.67). Its first attempt stopped mid-ingest at the
+    $0.95 dry lease.
+  - **ext-extract-first** (recipe): the whole-conversation ingest used up the $0.95 dry lease after 49 minutes
+    ($0.93). Rerun on the first 5 sessions, it finished complete with all three readers and both frontier judges
+    ($0.47).
+  - **Spend.** $5.31 of API spend across 18 leases, plus $0.89 for the backfill and Opus-floor checks run from the
+    host, $6.20 in all. Ubicloud refused 17 VM creates with HTTP 500, and those leases closed at $0 as unstarted.
+    Every VM was destroyed.
+- **Freeze.** The sealed campaign is re-frozen at hash `a1ff43c577543e5d08382e9e6d719006ca226d0ac95000147399a928c354ed0c`. This hash governs waves 2 to 5 and the four
+  file-agent units; wave 1's other 49 units stay at `eefd1799`. The 144 launch units and $6,469.26 in leases are
+  unchanged, and the cap stays $7,200. Only `s3.ext-agent-runtime.recipe`'s setup and command change, along with
+  `output_caps.judge`. The custodian opens a fresh state directory at this freeze for the A19 units. The custodian's
+  manual stop check counts both ledgers, plus the backfill run and VM time, against $7,200. The launch code is
+  shared, so this tree hashes v3-s2 to `82adb645` and v3-m to `19f54054`. Each public campaign renders from its launch
+  tree: v3-s2 (`f3416937`) from `3532b1aa`, and v3-m (`1d119581`) from `0518e2fd`.
+
 ## Changelog
+
+### 2026-10-11: amendment A19
+
+Re-frozen for waves 2 to 5 at `a1ff43c5`. Wave 1 keeps running at `eefd1799`. Four faults are fixed:
+- Setup installs ripgrep for the file agent.
+- The judge route's output cap rises to 2,048, so the GPT frontier judge's 2,000-token request is no longer refused.
+- Opus verdict calls get the 2,000-token floor, so they no longer come back empty.
+- The agent-runtime unit brings up its own container.
+
+The agent runtime's GPT-6.1 Sol request, which OpenAI refuses, is left to the owner. Wave 1's frontier column is
+backfilled from stored answers on the custodian's host: about $87 for the GPT half and up to $28 for Opus redos, with
+a $150 budget run. One dry run per system kind passed. Leases are unchanged.
 
 ### 2026-10-11: amendment A18
 

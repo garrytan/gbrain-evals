@@ -8,7 +8,7 @@
  *   bun eval/runner/judge-repeat.ts run --answers <answers.ndjson> --judgments <judgments.ndjson> \
  *     --benchmark <id> --replicates 11 [--first-replicate 0] [--judge <provider:model>] \
  *     [--corpus-file <custody file>] [--concurrency 8] [--max-attempts 3] [--summary <summary.json>] \
- *     --paid --budget-run-id <id> [--json]
+ *     [--frontier <cell judgments.ndjson> [--redo-errors]] --paid --budget-run-id <id> [--json]
  *   bun eval/runner/judge-repeat.ts summary --answers <answers.ndjson> --judgments <judgments.ndjson> \
  *     --benchmark <id> [--judge <provider:model>] [--summary <summary.json>] [--json]      ($0, no calls)
  *
@@ -17,6 +17,13 @@
  * judge cache key, so ten repeats are ten provider calls. A judge that accepts
  * only its default temperature (OpenAI GPT-5 and later) is sent none and its
  * records say `temperature: null`.
+ *
+ * Frontier backfill (A19): `--frontier <cell judgments.ndjson>` keeps only the answers that have a replicate-0
+ * frontier judgment (instrument id `<instrument>@<judge>`) in that cell log, which is the arm's frontier scope, and
+ * records under the frontier instrument id for `--judge`. `--judge openai:gpt-6.1-sol --replicates 1 --frontier <log>
+ * --judgments <log>` fills the GPT half of the column in the cell's own log, under the keys the cell would have written.
+ * `--redo-errors` keeps only the answers whose frontier judgment by `--judge` in that log is a judge_error and needs
+ * a separate `--judgments` file, since a cell log never holds two records under one key.
  *
  * Restart: judgments are an immutable log keyed by answer, instrument hash,
  * judge and replicate. A rerun skips every judgment already recorded and
@@ -41,13 +48,14 @@ import { instrumentFor, INSTRUMENTS, type Instrument } from './memory-qa/instrum
 import { ChatClient, judgeAnswer, type ChatLike } from './memory-qa/qa.ts';
 import { judgmentKey, readRecords, RecordLog, type AnswerRecord, type JudgmentRecord } from './memory-qa/records.ts';
 import { requirePaidArm } from './paid-arm.ts';
+import { frontierInstrumentId } from './q1/cell.ts';
 import { appendAccessLog } from './sealed-confirmation-lib.ts';
 
 export interface JudgeRepeatResult { judged: number; skipped_existing: number; judge_errors: number; not_judged: number; failed: Array<{ answer_id: string; judge_replicate: number; error: string }>; stopped: string | null }
 
 /** Judge every scored answer at every replicate not already in the log. */
 export async function runJudgeRepeat(o: {
-  answers: readonly AnswerRecord[]; questions: ReadonlyMap<string, MemoryQuestion>; instrument: Instrument; judge: string;
+  answers: readonly AnswerRecord[]; questions: ReadonlyMap<string, MemoryQuestion>; instrument: Instrument; judge: string; instrumentId?: string;
   replicates: readonly number[]; log: RecordLog<'judgment'>; client: ChatLike; concurrency?: number; maxAttempts?: number;
   stopWhen?: () => string | null;
 }): Promise<JudgeRepeatResult> {
@@ -68,7 +76,7 @@ export async function runJudgeRepeat(o: {
       const { answer, judge_replicate } = tasks[next++];
       try {
         const j = await judgeAnswer(o.client, o.instrument, o.questions.get(answer.question_id)!, answer.text, { judge: o.judge, judgeReplicate: judge_replicate, maxAttempts: o.maxAttempts });
-        o.log.append({ answer_id: answer.answer_id, ...j });
+        o.log.append({ answer_id: answer.answer_id, ...j, ...(o.instrumentId ? { instrument_id: o.instrumentId } : {}) });
         result.judged++;
         if (j.outcome === 'judge_error') result.judge_errors++;
       } catch (e) {
@@ -80,6 +88,12 @@ export async function runJudgeRepeat(o: {
   };
   await Promise.all(Array.from({ length: Math.max(1, o.concurrency ?? 8) }, worker));
   return result;
+}
+
+/** The answers in an arm's frontier scope: a replicate-0 frontier judgment exists for them; with `redo`, only those whose frontier judgment by `judge` is a judge_error. */
+export function frontierAnswers(answers: readonly AnswerRecord[], judgments: readonly JudgmentRecord[], instrument: Instrument, judge: string, redo: boolean): AnswerRecord[] {
+  const ids = new Set(judgments.filter(j => j.judge_replicate === 0 && j.instrument_id.startsWith(`${instrument.id}@`) && (!redo || (j.judge === judge && j.outcome === 'judge_error'))).map(j => j.answer_id));
+  return answers.filter(a => ids.has(a.answer_id));
 }
 
 const mean = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
@@ -148,7 +162,11 @@ export async function main(argv: string[]): Promise<number> {
       fix: { next: 'report', user_message: 'run the reader cell that writes answers.ndjson first' } });
     const instrument = instrumentFor(benchmark);
     const judge = one('--judge') ?? instrument.canonical_judge;
-    const answers = readRecords(answersPath, 'answer');
+    const frontier = one('--frontier'), redo = argv.includes('--redo-errors');
+    if (redo && (!frontier || resolve(frontier) === resolve(judgmentsPath))) throw usage('--redo-errors needs --frontier <cell log> and a different --judgments file');
+    const stored = readRecords(answersPath, 'answer');
+    const answers = frontier ? frontierAnswers(stored, readRecords(frontier, 'judgment'), instrument, judge, redo) : stored;
+    if (frontier && !answers.length) throw usage(`--frontier ${frontier}: no answer in ${answersPath} has a replicate-0 frontier${redo ? ` judge_error by ${judge}` : ' judgment'} there`);
     const summaryPath = one('--summary');
     const writeSummary = () => {
       const s = summarizeRepeats(answers, readRecords(judgmentsPath, 'judgment'), instrument, judge);
@@ -172,7 +190,7 @@ export async function main(argv: string[]): Promise<number> {
         fix: { next: 'tell_user_to_run', argv: ['bun', 'eval/runner/judge-repeat.ts', ...argv, '--decision-id', '<id>', '--purpose', '<text>'], user_message: 'the custodian runs sealed judge repeats with GBRAIN_EVALS_CUSTODY_LOG set' } });
       appendAccessLog(log, { action: 'score', purpose: `judge-repeat ${benchmark}: ${purpose}`, decision_id: decision, labels_sha256: 'public-split-file', run_sha256: null });
     }
-    const corpus = loadCorpus(benchmark, one('--corpus-file'));
+    const corpus = loadCorpus(benchmark, one('--corpus-file'), benchmark === 'beam-10m' ? undefined : scoredConvs);
     const questions = new Map(corpus.questions.map(q => [q.id, q]));
     const reps = Array.from({ length: replicates }, (_, i) => first + i);
     const perAnswerCalls = (q: MemoryQuestion | undefined) => !q ? 1 : benchmark.startsWith('beam-') ? (q.rubric?.length || 1) * (q.category === 'event_ordering' ? 4 : 1) : 1;
@@ -187,7 +205,7 @@ export async function main(argv: string[]): Promise<number> {
     const client = new ChatClient(process.env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
     let r: JudgeRepeatResult;
     try {
-      r = await runJudgeRepeat({ answers, questions, instrument, judge, replicates: reps, log, client, concurrency: Number(one('--concurrency') ?? 8), maxAttempts: Number(one('--max-attempts') ?? 3), stopWhen: () => paid.guard.exhausted ? 'budget exhausted' : null });
+      r = await runJudgeRepeat({ answers, questions, instrument, judge, instrumentId: frontier ? frontierInstrumentId(instrument.id, judge) : undefined, replicates: reps, log, client, concurrency: Number(one('--concurrency') ?? 8), maxAttempts: Number(one('--max-attempts') ?? 3), stopWhen: () => paid.guard.exhausted ? 'budget exhausted' : null });
     } finally { paid.run.close(); paid.guard.uninstall(); }
     const s = writeSummary();
     process.stdout.write(JSON.stringify({ ...r, failed: r.failed.length, judge_sd_mean: s.judge_sd_mean, answers_with_flip: s.answers_with_flip, summary: summaryPath ?? null }) + '\n');

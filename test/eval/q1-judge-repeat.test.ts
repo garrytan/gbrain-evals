@@ -6,7 +6,7 @@ import { afterEach, describe, expect, test } from 'bun:test';
 import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { main, runJudgeRepeat, summarizeRepeats } from '../../eval/runner/judge-repeat.ts';
+import { frontierAnswers, main, runJudgeRepeat, summarizeRepeats } from '../../eval/runner/judge-repeat.ts';
 import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { INSTRUMENTS } from '../../eval/runner/memory-qa/instruments.ts';
 import { READER_TEMPLATE, chatCacheKey, judgeAnswer, type ChatLike, type ChatOptions } from '../../eval/runner/memory-qa/qa.ts';
@@ -112,6 +112,29 @@ describe('judge-repeat', () => {
     expect(j.temperature).toBeNull();
     expect(c.calls[0].opts.temperature).toBeNull();
     expect(chatCacheKey('openai:gpt-6.1-sol', 'p', { maxTokens: 10, replicate: 0, temperature: null })).not.toBe(chatCacheKey('openai:gpt-6.1-sol', 'p', { maxTokens: 10, replicate: 0, temperature: 0 }));
+  });
+
+  test('frontier backfill (A19): judges only the frontier scope, records under the frontier instrument id, and redoes only judge errors', async () => {
+    const d = tmp();
+    const OPUS = 'anthropic:claude-opus-5-5', SOL = 'openai:gpt-6.1-sol';
+    const cellLog = new RecordLog(join(d, 'cell.ndjson'), 'judgment');
+    const opus = new ScriptedJudge(Infinity, (p, o) => o.attempt === undefined && p.includes('How many days?') ? '' : 'yes');
+    await runJudgeRepeat({ answers: answers.slice(0, 2), questions, instrument: lme, judge: OPUS, instrumentId: `${lme.id}@${OPUS}`, replicates: [0], log: cellLog, client: opus, maxAttempts: 1 });
+    await runJudgeRepeat({ answers, questions, instrument: lme, judge: JUDGE, replicates: [0], log: cellLog, client: new ScriptedJudge() });
+    const logged = readRecords(join(d, 'cell.ndjson'), 'judgment');
+    expect(logged.filter(j => j.judge === OPUS).map(j => [j.instrument_id, j.outcome])).toEqual([[`${lme.id}@${OPUS}`, 'scored'], [`${lme.id}@${OPUS}`, 'judge_error']]);
+    const scope = frontierAnswers(answers, logged, lme, SOL, false);
+    expect(scope.map(a => a.answer_id)).toEqual(answers.slice(0, 2).map(a => a.answer_id));
+    const sol = new ScriptedJudge();
+    expect(await runJudgeRepeat({ answers: scope, questions, instrument: lme, judge: SOL, instrumentId: `${lme.id}@${SOL}`, replicates: [0], log: cellLog, client: sol })).toMatchObject({ judged: 2, skipped_existing: 0 });
+    expect(readRecords(join(d, 'cell.ndjson'), 'judgment').filter(j => j.judge === SOL).map(j => j.instrument_id)).toEqual([`${lme.id}@${SOL}`, `${lme.id}@${SOL}`]);
+    const redo = frontierAnswers(answers, readRecords(join(d, 'cell.ndjson'), 'judgment'), lme, OPUS, true);
+    expect(redo.map(a => a.question_id)).toEqual(['q2']);
+    expect(frontierAnswers(answers, readRecords(join(d, 'cell.ndjson'), 'judgment'), lme, SOL, true)).toEqual([]);
+    const ap = join(d, 'a.ndjson');
+    writeFileSync(ap, answers.map(a => JSON.stringify(a)).join('\n') + '\n');
+    const cellPath = join(d, 'cell.ndjson');
+    expect(await main(['run', '--answers', ap, '--judgments', cellPath, '--benchmark', 'lme-s', '--replicates', '1', '--judge', OPUS, '--frontier', cellPath, '--redo-errors', '--json'])).toBe(2);
   });
 
   test('CLI: summary costs nothing; a run without its arguments refuses with an operator message', async () => {

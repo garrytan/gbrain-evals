@@ -3672,8 +3672,8 @@
       "benchmark": "locomo",
       "config": "recipe",
       "lease_usd": 27.84,
-      "command": "bun eval/runner/q1/cell.ts run --cell s3.ext-agent-runtime.recipe --out \"$SHOOTOUT_OUT\"",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo",
+      "command": "bash eval/systems/bootstrap.sh up --system ext-agent-runtime --config recipe && bun eval/runner/q1/cell.ts run --cell s3.ext-agent-runtime.recipe --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-agent-runtime; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-agent-runtime --datasets locomo",
       "vm": {
         "size": "standard-4"
       },
@@ -4000,7 +4000,7 @@
   "output_caps": {
     "extraction": 4096,
     "reader": 2048,
-    "judge": 1024,
+    "judge": 2048,
     "agent": 16000
   },
   "route_classes": {

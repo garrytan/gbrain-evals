@@ -1134,6 +1134,9 @@ const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY'
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
 const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4 };
 
+/** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
+const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
+
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format. */
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
@@ -1145,12 +1148,13 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
     const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
     const providers: Array<keyof typeof PROVIDER_KEYS> = c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'];
-    const command = c.runner === 'shim' ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}; exit $rc` : run;
+    const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
+    const command = stack ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}; exit $rc` : run;
     /** A smoke measures what the estimate assumes, so its lease holds twice the estimate. */
     const lease = Math.max(0.01, Math.ceil((smoke ? 2 : 1) * c.estimate.usd / c.shards * 100) / 100);
     return {
       id, system: c.system, benchmark: c.benchmark, config: c.configuration, lease_usd: lease, command,
-      setup_command: `bash eval/systems/bootstrap.sh setup${c.runner === 'shim' ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
+      setup_command: `bash eval/systems/bootstrap.sh setup${stack ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
       vm: { size: `standard-${VM_VCPU}` }, timeout_hours: Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
       ...(smoke ? { smoke: true } : {}), ...(c.only_conversations ? { conversations: c.only_conversations } : {}), providers, pass: providers.map(p => PROVIDER_KEYS[p]),
       expected_hours: c.expected_hours, wave: c.block === 'T1' ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],

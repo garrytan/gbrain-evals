@@ -39,7 +39,7 @@
  *   bun eval/runner/metering-proxy.ts --listen 0.0.0.0:8787 --budget-ledger <file> --lease-usd <n> --run-id <id>
  *     [--usage-log <file>] [--allow-models openai:gpt-4.1-mini,...] [--max-output-tokens 32768]
  *     [--forbidden-markers <file>] [--streaming meter|refuse] [--upstream openai=http://...] [--new-run] [--control-token <t>]
- *     [--cell-token <t> [--trust-local]] [--route-caps extraction=4096,reader=2048,judge=1024 --route-class harness=reader,judge=judge]
+ *     [--cell-token <t> [--trust-local]] [--route-caps extraction=4096,reader=2048,judge=2048 --route-class harness=reader,judge=judge]
  *     [--admission openai=rpm:500,tpm:2000000,concurrency:16]... [--admission-max-wait-s 600]
  *   bun eval/runner/metering-proxy.ts summary --budget-ledger <file> --run-id <id> [--usage-log <file>]
  *
@@ -63,7 +63,7 @@
  *     Phases (`commit` during /ingest calls, `background` from the last /ingest
  *     to /finish ready, `query`) are labels; cost-speed.ts splits commit from
  *     background only for systems whose capability record says synchronous.
- *   route output caps  `--route-caps extraction=4096,reader=2048,judge=1024` with
+ *   route output caps  `--route-caps extraction=4096,reader=2048,judge=2048` with
  *     `--route-class harness=reader,judge=judge` (other slots use
  *     `--default-route-class`, extraction by default) replace the one output
  *     cap, so a 5xx keeps a small reservation instead of 32,768 tokens.
@@ -126,7 +126,7 @@ export const upstreamTrouble = (m: Meter | null | undefined) => !!m?.upstream &&
 /** Output-token caps by route class, and which slot belongs to which class. */
 export interface RouteCaps { caps: Record<string, number>; slots: Record<string, string>; defaultClass: string }
 /** Output caps by route class. `agent` is the harness's own answering baselines (the file agent's loop states 8,192 tokens on Anthropic and 16,000 on OpenAI per turn). */
-export const DEFAULT_ROUTE_CAPS: Record<string, number> = { extraction: 4096, reader: 2048, judge: 1024, agent: 16000 };
+export const DEFAULT_ROUTE_CAPS: Record<string, number> = { extraction: 4096, reader: 2048, judge: 2048, agent: 16000 };
 
 export type Phase = 'commit' | 'background' | 'query';
 export const PHASES: readonly Phase[] = ['commit', 'background', 'query'];
@@ -669,7 +669,7 @@ export function parseProxyArgs(argv: string[]): ProxyCliArgs {
   };
 }
 
-/** `--route-caps extraction=4096,reader=2048,judge=1024 --route-class harness=reader,judge=judge [--default-route-class extraction]`; null without --route-caps. */
+/** `--route-caps extraction=4096,reader=2048,judge=2048 --route-class harness=reader,judge=judge [--default-route-class extraction]`; null without --route-caps. */
 export function parseRouteCaps(argv: string[]): RouteCaps | null {
   const one = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   if (!argv.includes('--route-caps')) return null;

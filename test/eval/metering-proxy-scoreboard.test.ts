@@ -129,14 +129,18 @@ describe('route output caps and billed versus reserved dollars', () => {
       await post('/ext-memory-bank/openai/v1/chat/completions', chat());
       await post('/harness/openai/v1/chat/completions', chat());
       await post('/judge/openai/v1/chat/completions', chat());
-      expect(up.seen.map(s => s.body.max_completion_tokens)).toEqual([undefined, 2048, 1024]);
+      expect(up.seen.map(s => s.body.max_completion_tokens)).toEqual([undefined, 2048, 2048]);
       const big = await post('/ext-memory-bank/openai/v1/chat/completions', chat({ max_completion_tokens: 64000 }));
       expect(big.status).toBe(200);
       expect(up.seen[3].body.max_completion_tokens).toBe(64000);
-      const over = await post('/judge/openai/v1/chat/completions', chat({ max_completion_tokens: 2000 }));
+      // A19: a reasoning-model judge (gpt-6.1-sol) states 2,000 output tokens; the judge route admits it unchanged.
+      const sol = await post('/judge/openai/v1/chat/completions', chat({ max_completion_tokens: 2000 }));
+      expect(sol.status).toBe(200);
+      expect(up.seen[4].body.max_completion_tokens).toBe(2000);
+      const over = await post('/judge/openai/v1/chat/completions', chat({ max_completion_tokens: 2049 }));
       expect(over.status).toBe(400);
-      expect((await over.json() as any).error.message).toContain('judge route cap of 1024');
-      expect(lines().slice(0, 3).map(l => [l.route_class, l.output_cap])).toEqual([['extraction', 4096], ['reader', 2048], ['judge', 1024]]);
+      expect((await over.json() as any).error.message).toContain('judge route cap of 2048');
+      expect(lines().slice(0, 3).map(l => [l.route_class, l.output_cap])).toEqual([['extraction', 4096], ['reader', 2048], ['judge', 2048]]);
     } finally { proxy.stop(); }
   });
 

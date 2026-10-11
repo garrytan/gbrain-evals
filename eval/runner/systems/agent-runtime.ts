@@ -33,7 +33,7 @@
  * tokens per turn, so a paid cell needs the proxy's output cap raised to
  * match (bundle README, "What a native-agent Cat 40 driver needs", item 2).
  */
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -89,11 +89,12 @@ function proc(argv: string[], timeoutMs: number): Promise<RuntimeProcess> {
   });
 }
 
-/** The bundle's runtime container (`container` in the bundle's answer-cell.json). */
+/** The bundle's runtime container (`container` in the bundle's answer-cell.json). Docker runs through sudo when this user cannot reach the daemon, as eval/systems/bootstrap.sh does (a VM's docker group applies only to later logins). */
 export function dockerHost(container = cellConfig().container): RuntimeHost {
+  const docker = spawnSync('docker', ['info'], { stdio: 'ignore' }).status === 0 ? ['docker'] : ['sudo', 'docker'];
   return {
     async copyIn(hostDir, dir) {
-      for (const argv of [['docker', 'exec', container, 'mkdir', '-p', dir], ['docker', 'cp', `${hostDir}/.`, `${container}:${dir}`]]) {
+      for (const argv of [[...docker, 'exec', container, 'mkdir', '-p', dir], [...docker, 'cp', `${hostDir}/.`, `${container}:${dir}`]]) {
         const r = await proc(argv, 120_000);
         if (r.code !== 0) {
           throw decideError({ code: 'NOT_YET_AVAILABLE', message: `could not copy the session files into the runtime container ${container}: ${r.stderr.trim().slice(0, 300)}`,
@@ -102,8 +103,8 @@ export function dockerHost(container = cellConfig().container): RuntimeHost {
         }
       }
     },
-    run: (argv, cwd, timeoutMs) => proc(['docker', 'exec', '-w', cwd, container, ...argv], timeoutMs),
-    async remove(dir) { await proc(['docker', 'exec', container, 'rm', '-rf', dir], 120_000); },
+    run: (argv, cwd, timeoutMs) => proc([...docker, 'exec', '-w', cwd, container, ...argv], timeoutMs),
+    async remove(dir) { await proc([...docker, 'exec', container, 'rm', '-rf', dir], 120_000); },
   };
 }
 
