@@ -1,0 +1,8 @@
+{
+  "run_id": "full-context-control-locomo-r1-a1-5a5b5f52",
+  "lease_usd": 6,
+  "committed_usd": 2.7677190999999977,
+  "requests": 2304,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

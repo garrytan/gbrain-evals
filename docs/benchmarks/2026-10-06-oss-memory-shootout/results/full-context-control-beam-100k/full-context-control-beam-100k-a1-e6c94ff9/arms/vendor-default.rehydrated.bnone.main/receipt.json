@@ -1,0 +1,212 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-100k",
+  "split": "dev",
+  "started_at": "2026-10-07T19:31:08.980Z",
+  "finished_at": "2026-10-07T20:07:21.747Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "BEAM 100k",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "full-context-control-beam-100k-a1-e6c94ff9",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 6,
+    "sessions": 486,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 510
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "5aca3a906b69780e82ef27c27b29b4a354e1fedfd3464f105c6fe4cd820530df",
+  "cell_run_config_hash": "1ea0b3a8028cfb700d1c767e9a45611fe07f1f87da1de982745c3b92c7f73f4a",
+  "arm": {
+    "id": "vendor-default.rehydrated.bnone.main",
+    "policy": "vendor-default",
+    "context": "rehydrated",
+    "budget_tokens": null,
+    "reader": {
+      "id": "main",
+      "model": "openai:gpt-4.1-mini",
+      "slice": null
+    }
+  },
+  "retrieval_path": "MemorySystem.retrieve (full-context, policy full-context:vendor-default), one retrieval per question and policy shared by every arm",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 6,
+    "questions_expected": 120,
+    "reader_slice": null
+  },
+  "counts": {
+    "rows": 120,
+    "scored": 0,
+    "errors": 0,
+    "abstention": 12
+  },
+  "summary": {
+    "recall_all_at_5": null,
+    "recall_any_at_5": null,
+    "recall_all_at_10": null,
+    "ndcg_at_10": null,
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "qa_score": 0.5999272486772488,
+    "qa_rows": 120,
+    "qa_errors": 0,
+    "qa_service_score": 0.5999272486772488,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "reader": "openai:gpt-4.1-mini",
+    "judge": "openai:gpt-4.1-mini",
+    "runs": 1,
+    "context": "rehydrated",
+    "budget_tokens": null,
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "judge_prompts": "per-rubric-item yes/no",
+    "contexts_file": "../../contexts.ndjson"
+  },
+  "system": {
+    "name": "full-context",
+    "capability_system": "full-context",
+    "capabilities": {
+      "system": "full-context",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {},
+          "notes": "harness control"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous; retrieval returns every ingested session, most recent first",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {}
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [],
+      "retrieval_metrics": "not-applicable",
+      "presentation": "event-time"
+    },
+    "identity": {
+      "system": "full-context",
+      "config": null,
+      "versions": null
+    }
+  },
+  "context": "rehydrated",
+  "policy": {
+    "name": "full-context:vendor-default",
+    "mode": "vendor-default",
+    "settings": {},
+    "settings_source": "settings"
+  },
+  "manifest_sha256": "19e5340710a77c078b7403e6b9d94f8236b8eb81bf24971bee4e661b36a8a76d",
+  "outcomes": {
+    "scored": 120,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 120,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "rows_file": "rows.ndjson",
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

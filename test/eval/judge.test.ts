@@ -226,6 +226,34 @@ describe('scoreAnswer — retry + fallback', () => {
     expect(result.output_tokens).toBe(250);
   });
 
+  test('an overflowing JSON score (1e309 parses to Infinity) is retried, not graded 5/5', async () => {
+    const overflow = JSON.parse('1e309') as number;
+    const captured: unknown[] = [];
+    const client = makeStubClient([
+      scoreBlock(SAMPLE_RUBRIC.map(c => [c.id, overflow, '.']), 'pass', '.'),
+      scoreBlock(SAMPLE_RUBRIC.map(c => [c.id, 2, '.']), 'fail', '.'),
+    ], captured);
+    const result = await scoreAnswer(makeEvidence(), { client });
+    expect(result.verdict).toBe('fail');
+    expect(result.overall_score).toBe(2);
+    expect(result.fallback_used).toBe(false);
+    expect(captured.length).toBe(2);
+    expect(JSON.stringify(captured[1])).toContain('must be a finite number');
+    expect(result.input_tokens).toBe(3000);
+    expect(result.output_tokens).toBe(400);
+  });
+
+  test('non-finite scores on both attempts fall back to judge_failed', async () => {
+    for (const score of [Infinity, -Infinity, NaN]) {
+      const bad = scoreBlock(SAMPLE_RUBRIC.map(c => [c.id, score, '.']), 'pass', '.');
+      const result = await scoreAnswer(makeEvidence(), { client: makeStubClient([bad, bad]) });
+      expect(result.verdict).toBe('judge_failed');
+      expect(result.fallback_used).toBe(true);
+      expect(result.overall_score).toBe(0);
+      expect(result.scores.map(s => s.score)).toEqual([0, 0, 0]);
+    }
+  });
+
   test('falls back to judge_failed when both attempts are malformed', async () => {
     const client = makeStubClient([malformedBlock(), malformedBlock()]);
     const result = await scoreAnswer(makeEvidence(), { client });
@@ -769,5 +797,20 @@ describe('untrusted answer fencing (audit C-13)', () => {
     expect(parseCriterionScores([{ criterion_id: 'a', score: 9, rationale: '' }, { criterion_id: 'b', score: 1, rationale: '' }], rubric).scores?.[0].score).toBe(5);
     expect(parseCriterionScores([{ criterion_id: 'a', score: 1, rationale: '' }], rubric).defect).toContain('missing');
     expect(parseCriterionScores('x', rubric).scores).toBeNull();
+  });
+});
+
+describe('parseCriterionScores — numeric validity (shared with the Cat 29 pairwise judge)', () => {
+  const entry = (score: number) => SAMPLE_RUBRIC.map(c => ({ criterion_id: c.id, score, rationale: '.' }));
+  test('rejects Infinity, -Infinity, NaN and an overflowing JSON number, naming the criterion', () => {
+    for (const score of [Infinity, -Infinity, NaN, JSON.parse('1e309') as number]) {
+      const out = parseCriterionScores(entry(score), SAMPLE_RUBRIC);
+      expect(out.scores).toBeNull();
+      expect(out.defect).toContain('names_entity');
+    }
+  });
+  test('still clamps finite out-of-range scores to 0-5', () => {
+    expect(parseCriterionScores(entry(7), SAMPLE_RUBRIC).scores!.map(s => s.score)).toEqual([5, 5, 5]);
+    expect(parseCriterionScores(entry(-2), SAMPLE_RUBRIC).scores!.map(s => s.score)).toEqual([0, 0, 0]);
   });
 });

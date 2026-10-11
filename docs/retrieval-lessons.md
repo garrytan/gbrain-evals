@@ -12,7 +12,7 @@ questions (opaque session ids, gbrain `109b992`). The interesting engineering
 question is how it gets there, and which parts help on other kinds of material.
 
 This page states what the experiments show about gbrain as this repository pins
-it (master `739e5cc`, v0.60.46.0); each number names the gbrain commit it was
+it (master `77cf8e111`, v0.60.169.0); each number names the gbrain commit it was
 measured at. Everything above [Changelog](#changelog) is current.
 [Conversation results](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
@@ -254,6 +254,13 @@ application resemble the ones a measured configuration solves.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-11: The opening names the current pin
+
+gbrain-evals v0.10.76. The opening names gbrain master `77cf8e111` (v0.60.169.0) as the pin; it still named `739e5cc`
+(v0.60.46.0), the pin until October 6. Between the two, the search mode definitions gained only the three
+multi-relation planner keys of v0.60.60.0 (see [settings](settings.md)), and every number names the commit it was
+measured at, so no lesson changes ([re-pin report](benchmarks/2026-10-11-wave14-repin.md)).
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

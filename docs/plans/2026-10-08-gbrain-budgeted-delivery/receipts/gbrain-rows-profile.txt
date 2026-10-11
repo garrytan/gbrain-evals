@@ -1,0 +1,30 @@
+== lme-s n=100 items_returned mean 18.9 min 16 max 24; vd native tokens/item mean 636 median 644; est items packed at 8k 12.1 (64% of returned); retrieved-list lengths {10: 100}
+   rehydrated 8k tokens mean 6064; vd rehydrated tokens 57273; vd retrieval latency p50 427 ms; retrieval usd/q 0.00069
+   rehydrated vs native 8k: +25/-6; of the wins, 24 have recall_all@5 = 1
+     knowledge-update             n= 17 native=  9.0 rehyd= 14.0 r@5=16
+     multi-session                n= 17 native=  5.0 rehyd=  8.0 r@5=15
+     single-session-assistant     n= 17 native= 17.0 rehyd= 17.0 r@5=17
+     single-session-preference    n= 17 native=  7.0 rehyd= 12.0 r@5=17
+     single-session-user          n= 16 native= 13.0 rehyd= 16.0 r@5=15
+     temporal-reasoning           n= 16 native=  8.0 rehyd= 11.0 r@5=14
+== locomo-r1 n=587 items_returned mean 21.6 min 19 max 26; vd native tokens/item mean 542 median 544; est items packed at 8k 14.3 (66% of returned); retrieved-list lengths {10: 587}
+   rehydrated 8k tokens mean 7515; vd rehydrated tokens 18479; vd retrieval latency p50 401 ms; retrieval usd/q 0.00064
+   rehydrated vs native 8k: +90/-44; of the wins, 72 have recall_all@5 = 1
+     adversarial                  n=123 native= 77.0 rehyd= 72.0 r@5=0
+     multi-hop                    n= 71 native= 42.0 rehyd= 41.0 r@5=33
+     open-domain                  n= 30 native= 16.0 rehyd= 12.0 r@5=20
+     single-hop                   n=263 native=221.0 rehyd=228.0 r@5=257
+     temporal                     n=100 native= 25.0 rehyd= 74.0 r@5=95
+== beam-100k n=120 items_returned mean 19.1 min 13 max 40; vd native tokens/item mean 623 median 639; est items packed at 8k 12.8 (67% of returned); retrieved-list lengths {10: 120}
+   rehydrated 8k tokens mean 6731; vd rehydrated tokens 33552; vd retrieval latency p50 460 ms; retrieval usd/q 0.00076
+   rehydrated vs native 8k: +19/-23; of the wins, 9 have recall_all@5 = 1
+     abstention                   n= 12 native=  1.0 rehyd=  1.0 r@5=0
+     contradiction_resolution     n= 12 native=  8.5 rehyd=  6.8 r@5=9
+     event_ordering               n= 12 native=  6.9 rehyd=  7.1 r@5=0
+     information_extraction       n= 12 native= 11.5 rehyd=  9.5 r@5=11
+     instruction_following        n= 12 native=  9.5 rehyd=  8.5 r@5=7
+     knowledge_update             n= 12 native=  5.5 rehyd=  5.5 r@5=8
+     multi_session_reasoning      n= 12 native=  9.1 rehyd= 10.3 r@5=3
+     preference_following         n= 12 native= 10.5 rehyd=  9.0 r@5=11
+     summarization                n= 12 native=  4.6 rehyd=  4.1 r@5=1
+     temporal_reasoning           n= 12 native=  5.5 rehyd=  9.5 r@5=12

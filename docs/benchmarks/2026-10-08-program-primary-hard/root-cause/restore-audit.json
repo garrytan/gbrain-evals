@@ -1,0 +1,469 @@
+[
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/baseline-uncapped",
+  "metered_cells": 1456,
+  "reranked_cells": 362
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/dev-rounds",
+  "metered_cells": 750,
+  "reranked_cells": 0,
+  "transcript_cells": 907,
+  "searches": 2424,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/entity-recall/dev-frontier/master",
+  "metered_cells": 250,
+  "reranked_cells": 0,
+  "transcript_cells": 250,
+  "searches": 1233,
+  "notice_cells": 243
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/entity-recall/dev-frontier/round1",
+  "metered_cells": 250,
+  "reranked_cells": 0,
+  "transcript_cells": 250,
+  "searches": 964,
+  "notice_cells": 245
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/entity-recall/dev-frontier/round2",
+  "metered_cells": 250,
+  "reranked_cells": 0,
+  "transcript_cells": 250,
+  "searches": 629,
+  "notice_cells": 250
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/entity-recall/holdout/a714410a5-new-models",
+  "metered_cells": 300,
+  "reranked_cells": 0,
+  "transcript_cells": 300,
+  "searches": 1524,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/entity-recall/holdout/wave",
+  "metered_cells": 500,
+  "reranked_cells": 0,
+  "transcript_cells": 500,
+  "searches": 1265,
+  "notice_cells": 496
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/entity-recall/uc3/entity-dev-kwonly",
+  "metered_cells": 150,
+  "reranked_cells": 0,
+  "transcript_cells": 150,
+  "searches": 770,
+  "notice_cells": 68
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/entity-recall/uc3/entity-dev-master",
+  "metered_cells": 150,
+  "reranked_cells": 0,
+  "transcript_cells": 150,
+  "searches": 506,
+  "notice_cells": 147
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/fix-wave-ladder",
+  "metered_cells": 550,
+  "reranked_cells": 0,
+  "transcript_cells": 550,
+  "searches": 2073,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/fix-wave-ladder-round4",
+  "metered_cells": 708,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/followups/control",
+  "metered_cells": 600,
+  "reranked_cells": 0,
+  "transcript_cells": 600,
+  "searches": 2253,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/followups/dev-51a30c1-E",
+  "metered_cells": 30,
+  "reranked_cells": 0,
+  "transcript_cells": 30,
+  "searches": 241,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/followups/dev-566a242a-E",
+  "metered_cells": 29,
+  "reranked_cells": 0,
+  "transcript_cells": 29,
+  "searches": 216,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/followups/dev-base",
+  "metered_cells": 150,
+  "reranked_cells": 0,
+  "transcript_cells": 150,
+  "searches": 524,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/followups/dev1",
+  "metered_cells": 150,
+  "reranked_cells": 0,
+  "transcript_cells": 150,
+  "searches": 560,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/followups/dev2",
+  "metered_cells": 150,
+  "reranked_cells": 0,
+  "transcript_cells": 150,
+  "searches": 541,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/followups/holdout",
+  "metered_cells": 600,
+  "reranked_cells": 0,
+  "transcript_cells": 600,
+  "searches": 2363,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/holdout",
+  "metered_cells": 1800,
+  "reranked_cells": 1691,
+  "transcript_cells": 4320,
+  "searches": 5848,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/p8-hidden-tool-dev-smoke/b6622a-surface-full",
+  "metered_cells": 20,
+  "reranked_cells": 0,
+  "transcript_cells": 20,
+  "searches": 36,
+  "notice_cells": 12
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/p8-hidden-tool-dev-smoke/b6622a-surface-starter",
+  "metered_cells": 20,
+  "reranked_cells": 0,
+  "transcript_cells": 20,
+  "searches": 157,
+  "notice_cells": 20
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/p8-hidden-tool-dev-smoke/c6c958-adv-full",
+  "metered_cells": 20,
+  "reranked_cells": 0,
+  "transcript_cells": 20,
+  "searches": 48,
+  "notice_cells": 17
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/p8-hidden-tool-dev-smoke/c6c958-adv-starter",
+  "metered_cells": 20,
+  "reranked_cells": 0,
+  "transcript_cells": 20,
+  "searches": 117,
+  "notice_cells": 20
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/p8-hidden-tool-dev-smoke/c6c958-adv-verbs",
+  "metered_cells": 20,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/p8-hidden-tool-dev-smoke/pilot",
+  "metered_cells": 2,
+  "reranked_cells": 0,
+  "transcript_cells": 2,
+  "searches": 1,
+  "notice_cells": 1
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/pilot-capped-20k",
+  "metered_cells": 300,
+  "reranked_cells": 185
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-02-model-ladder/scale-tier",
+  "metered_cells": 200,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-cat40-after-7d16702",
+  "metered_cells": 300,
+  "reranked_cells": 300,
+  "transcript_cells": 300,
+  "searches": 945,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-cat40-after-b3f4e8b",
+  "metered_cells": 300,
+  "reranked_cells": 300,
+  "transcript_cells": 300,
+  "searches": 877,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-cat40-base-same-window-b3f4e8b",
+  "metered_cells": 300,
+  "reranked_cells": 0,
+  "transcript_cells": 300,
+  "searches": 1052,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-cat40-baseline-master",
+  "metered_cells": 300,
+  "reranked_cells": 300,
+  "transcript_cells": 300,
+  "searches": 991,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/runs/B-rerun-566a242",
+  "metered_cells": 100,
+  "reranked_cells": 0,
+  "transcript_cells": 100,
+  "searches": 292,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/runs/T0-full-baseline-prompt",
+  "metered_cells": 100,
+  "reranked_cells": 0,
+  "transcript_cells": 100,
+  "searches": 309,
+  "notice_cells": 100
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/runs/V0-baseline",
+  "metered_cells": 100,
+  "reranked_cells": 0,
+  "transcript_cells": 100,
+  "searches": 301,
+  "notice_cells": 100
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/runs/V1-no-error-protocol",
+  "metered_cells": 100,
+  "reranked_cells": 0,
+  "transcript_cells": 100,
+  "searches": 283,
+  "notice_cells": 100
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/runs/V3-baseline-memory-line",
+  "metered_cells": 100,
+  "reranked_cells": 0,
+  "transcript_cells": 100,
+  "searches": 290,
+  "notice_cells": 100
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/runs/V5-restore-shared-skills-lines",
+  "metered_cells": 100,
+  "reranked_cells": 0,
+  "transcript_cells": 100,
+  "searches": 291,
+  "notice_cells": 99
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/runs/VC-candidate",
+  "metered_cells": 100,
+  "reranked_cells": 0,
+  "transcript_cells": 100,
+  "searches": 273,
+  "notice_cells": 100
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/runs/fixedledger-base-566a242",
+  "metered_cells": 100,
+  "reranked_cells": 0,
+  "transcript_cells": 100,
+  "searches": 309,
+  "notice_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-03-agent-operator/f1f10-instruction-ab/runs/fixedledger-cand-b3f4e8b",
+  "metered_cells": 100,
+  "reranked_cells": 0,
+  "transcript_cells": 100,
+  "searches": 267,
+  "notice_cells": 100
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-04-p8-dev/cat40/pilot-adv-full",
+  "metered_cells": 20,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-04-p8-dev/cat40/pilot-adv-starter",
+  "metered_cells": 20,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-04-p8-dev/cat40/pilot-adv-verbs",
+  "metered_cells": 20,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-04-p8-dev/cat40/rest2-adv-full",
+  "metered_cells": 80,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-04-p8-dev/cat40/rest2-adv-starter",
+  "metered_cells": 80,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-04-p8-dev/cat40/rest2-adv-verbs",
+  "metered_cells": 80,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-05-registration-surface/full",
+  "metered_cells": 40,
+  "reranked_cells": 0,
+  "transcript_cells": 40,
+  "searches": 205,
+  "notice_cells": 40
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-05-registration-surface/starter",
+  "metered_cells": 40,
+  "reranked_cells": 0,
+  "transcript_cells": 40,
+  "searches": 215,
+  "notice_cells": 40
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-05-registration-surface/verbs",
+  "metered_cells": 40,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave11-agent-smoke/master-fable-smoke",
+  "metered_cells": 10,
+  "reranked_cells": 0,
+  "transcript_cells": 10,
+  "searches": 10,
+  "notice_cells": 10
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave11-agent-smoke/master-gated",
+  "metered_cells": 120,
+  "reranked_cells": 0,
+  "transcript_cells": 120,
+  "searches": 298,
+  "notice_cells": 120
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave11-agent-smoke/master-sentinel",
+  "metered_cells": 27,
+  "reranked_cells": 0,
+  "transcript_cells": 27,
+  "searches": 71,
+  "notice_cells": 27
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave11-agent-smoke/pilot",
+  "metered_cells": 2,
+  "reranked_cells": 0,
+  "transcript_cells": 2,
+  "searches": 8,
+  "notice_cells": 2
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave11-agent-smoke/wave11-fable-smoke",
+  "metered_cells": 10,
+  "reranked_cells": 0,
+  "transcript_cells": 10,
+  "searches": 11,
+  "notice_cells": 10
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave11-agent-smoke/wave11-gated",
+  "metered_cells": 120,
+  "reranked_cells": 0,
+  "transcript_cells": 120,
+  "searches": 294,
+  "notice_cells": 115
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave11-agent-smoke/wave11-sentinel",
+  "metered_cells": 27,
+  "reranked_cells": 0,
+  "transcript_cells": 27,
+  "searches": 67,
+  "notice_cells": 27
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave12-agent-smoke/baseline-gated",
+  "metered_cells": 120,
+  "reranked_cells": 0,
+  "transcript_cells": 120,
+  "searches": 303,
+  "notice_cells": 115
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave12-agent-smoke/baseline-opus-f-extra",
+  "metered_cells": 10,
+  "reranked_cells": 0,
+  "transcript_cells": 10,
+  "searches": 21,
+  "notice_cells": 10
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave12-agent-smoke/wave12-baseline-instructions",
+  "metered_cells": 20,
+  "reranked_cells": 0,
+  "transcript_cells": 20,
+  "searches": 51,
+  "notice_cells": 20
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave12-agent-smoke/wave12-gated",
+  "metered_cells": 120,
+  "reranked_cells": 0,
+  "transcript_cells": 120,
+  "searches": 283,
+  "notice_cells": 115
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-07-wave12-agent-smoke/wave12-opus-f-extra",
+  "metered_cells": 10,
+  "reranked_cells": 0,
+  "transcript_cells": 10,
+  "searches": 20,
+  "notice_cells": 10
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-08-program-primary/baseline",
+  "metered_cells": 288,
+  "reranked_cells": 94
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-08-program-primary/hermetic",
+  "metered_cells": 16,
+  "reranked_cells": 0
+ },
+ {
+  "dir": "docs/benchmarks/2026-10-08-program-primary/smoke",
+  "metered_cells": 3,
+  "reranked_cells": 3
+ }
+]

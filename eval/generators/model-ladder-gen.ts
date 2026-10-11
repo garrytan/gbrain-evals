@@ -736,6 +736,29 @@ export function ladderManifest(world: LadderWorld, text: string): LadderManifest
   };
 }
 
+/** Generator flags; anything else is refused before anything is written (DX-F3). `--flag=value` also works. */
+const GEN_VALUE_FLAGS = ['--seed', '--scale', '--out', '--mode', '--knobs', '--base-world', '--templates', '--world-templates-file', '--decision-id', '--purpose', '--custodian-out'];
+const GEN_SWITCHES = ['--check', '--help'];
+export const GEN_USAGE = `Usage: bun eval/generators/model-ladder-gen.ts [--mode v1|hard] [--seed N] [--scale large|wide] [--templates SET] [--out DIR] [--check]
+  v1 (default): the Cat 40 v1 world (eval/data/model-ladder-v1), with --scale large the 52k world, with --scale wide the wide world.
+    Custodian mode: --world-templates-file <file> --decision-id <id> --purpose <text> --custodian-out <dir outside the repository>.
+  hard: the Cat 40 Hard world; see --mode hard --help.`;
+
+export function parseGenArgs(argv: readonly string[]): Record<string, string | true> {
+  const out: Record<string, string | true> = {};
+  for (let i = 0; i < argv.length; i++) {
+    const eq = argv[i].startsWith('--') ? argv[i].indexOf('=') : -1;
+    const a = eq > 0 ? argv[i].slice(0, eq) : argv[i];
+    if (GEN_SWITCHES.includes(a) && eq < 0) { out[a.slice(2)] = true; continue; }
+    if (!GEN_VALUE_FLAGS.includes(a)) throw new Error(`unknown argument ${JSON.stringify(argv[i])}. Flags: ${[...GEN_VALUE_FLAGS, ...GEN_SWITCHES].join(' ')}`);
+    const v = eq > 0 ? argv[i].slice(eq + 1) : argv[++i];
+    if (v === undefined || v.startsWith('--')) throw new Error(`${a} needs a value`);
+    if (a === '--seed' && !/^\d+$/.test(v)) throw new Error(`--seed must be a non-negative integer (got ${JSON.stringify(v)})`);
+    out[a.slice(2)] = v;
+  }
+  return out;
+}
+
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 const insideRepo = (p: string) => { const r = relative(REPO_ROOT, resolve(p)); return r === '' || (!r.startsWith('..') && !isAbsolute(r)); };
 
@@ -768,8 +791,18 @@ export function argValue(argv: readonly string[], flag: string): string | undefi
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  const arg = (n: string) => argValue(argv, n);
+  let parsed: Record<string, string | true>;
+  try { parsed = parseGenArgs(process.argv.slice(2)); } catch (e) { console.error(`${(e as Error).message}\n\n${GEN_USAGE}`); process.exit(2); }
+  if (parsed.mode !== undefined && parsed.mode !== 'v1' && parsed.mode !== 'hard') { console.error(`--mode must be v1 or hard\n\n${GEN_USAGE}`); process.exit(2); }
+  if (parsed.mode === 'hard') {
+    const { hardGenMain, HARD_GEN_USAGE } = await import('./model-ladder-hard.ts');
+    if (parsed.help) { console.log(HARD_GEN_USAGE); process.exit(0); }
+    try { process.exit(hardGenMain({ seed: parsed.seed as string | undefined, knobs: parsed.knobs as string | undefined, scale: parsed.scale as string | undefined, out: parsed.out as string | undefined, 'base-world': parsed['base-world'] as string | undefined, check: parsed.check === true })); }
+    catch (e) { console.error(`[model-ladder-gen] ${(e as Error).message}`); process.exit(2); }
+  }
+  if (parsed.help) { console.log(GEN_USAGE); process.exit(0); }
+  if (parsed.knobs !== undefined || parsed['base-world'] !== undefined) { console.error('--knobs and --base-world apply to --mode hard only'); process.exit(2); }
+  const arg = (n: string) => parsed[n.slice(2)] as string | undefined;
   const seed = Number(arg('--seed') ?? LADDER_DEFAULT_SEED);
   const scale = (arg('--scale') ?? 'v1') as LadderScale;
   if (scale !== 'v1' && scale !== 'large' && scale !== 'wide') throw new Error(`--scale must be v1, large or wide, not ${scale}`);
@@ -792,7 +825,7 @@ if (import.meta.main) {
   const text = JSON.stringify(world, null, 1) + '\n';
   const path = join(out, 'world.json');
   const manifestPath = join(out, 'manifest.json');
-  if (argv.includes('--check')) {
+  if (parsed.check === true) {
     const same = existsSync(path) && readFileSync(path, 'utf8') === text;
     const manifestOk = scale === 'v1' || (existsSync(manifestPath) && JSON.parse(readFileSync(manifestPath, 'utf8')).digest === worldDigest(world));
     console.log(same && manifestOk ? `ok: ${path} matches seed ${seed}` : `DIFFERS: ${!same ? path : manifestPath}`);

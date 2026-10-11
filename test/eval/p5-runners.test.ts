@@ -37,7 +37,9 @@ describe('P5 shared plumbing', () => {
     writeFileSync(file, JSON.stringify({ id: 'set-x', templates: { a: 1 } }));
     expect(() => custodyInput(['--phrasing-file', file, '--seeds', '7'], [7], [1, 2, 3])).toThrow('--decision-id and --purpose');
     expect(existsSync(join(dir, 'access-log.jsonl'))).toBe(false);
-    const got = custodyInput(['--phrasing-file', file, '--decision-id', 'p5-x', '--purpose', 'confirm'], [7], [1, 2, 3])!;
+    expect(() => custodyInput(['--phrasing-file', file, '--decision-id', 'p5-x', '--purpose', 'confirm'], [7], [1, 2, 3])).toThrow('explicit --output');
+    expect(existsSync(join(dir, 'access-log.jsonl'))).toBe(false);
+    const got = custodyInput(['--phrasing-file', file, '--decision-id', 'p5-x', '--purpose', 'confirm', '--output', join(dir, 'out')], [7], [1, 2, 3])!;
     expect(got.parsed.id).toBe('set-x');
     expect(got.sha256).toMatch(/^[0-9a-f]{64}$/);
     const log = JSON.parse(readFileSync(join(dir, 'access-log.jsonl'), 'utf8').trim());

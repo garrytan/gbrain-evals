@@ -1,0 +1,52 @@
+{
+  "suite": "time-relationships",
+  "version": "time-relationships-v1",
+  "seed": 20261007,
+  "smoke": false,
+  "counts": {
+    "documents": 354,
+    "queries": 374,
+    "labels": 374,
+    "users": 2,
+    "by_category": {
+      "as_of_employer": 104,
+      "multi_hop_advisor_founders": 9,
+      "multi_hop_coinvestors": 19,
+      "multi_hop_founder_investors": 23,
+      "multi_hop_founder_portfolio_peers": 22,
+      "multi_hop_investor_founder_meetings": 9,
+      "multi_hop_investor_founders": 16,
+      "multi_hop_meeting_investors": 27,
+      "one_hop_advises": 16,
+      "one_hop_attended": 50,
+      "one_hop_invested_in": 39,
+      "one_hop_works_at": 40
+    }
+  },
+  "approx_tokens": {
+    "total": 225905,
+    "per_user_max": 206740,
+    "per_user_mean": 112953
+  },
+  "timestamp_provenance": "observed_session_time: as-of conversations are sent on the day the N3 note was recorded, and an event date inside the text is never the document timestamp; world-v1 conversations carry seeded session times with no meaning for the questions.",
+  "files": {
+    "documents.jsonl": {
+      "sha256": "b20fdf8191be7159b5a3940f2f0c972981175432150e50a4cc3af048f3da8697",
+      "bytes": 1966268
+    },
+    "frontier-subset.jsonl": {
+      "sha256": "e7c865066d5835ae0eaaf9e8404236ff713d2fc31a03eecdc8e28f5f4f38f5a7",
+      "bytes": 1805
+    },
+    "queries.jsonl": {
+      "sha256": "7ee919636dffa329eaa596bd1443982553c3421cbc53780867becbcb3e890cc8",
+      "bytes": 113129
+    },
+    "scorer-labels.jsonl": {
+      "sha256": "3de1f35bfed87c7c644395050db4bb406108b6ab24c7eb6992ba55549b57cb87",
+      "bytes": 570362
+    }
+  },
+  "digest": "600c9ad4fbcbda583e12b3786544f919dc906a910e3ba739773d1dd3da55ff3f",
+  "command": "bun run eval:time-relationships --seed 20261007"
+}

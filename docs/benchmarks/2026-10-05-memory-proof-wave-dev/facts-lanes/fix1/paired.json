@@ -1,0 +1,98 @@
+{
+ "100k f1800 -> f1800+fd": {
+  "temporal_reasoning": {
+   "n": 8,
+   "wins": 1,
+   "losses": 1,
+   "ties": 6,
+   "mean_diff": 0.0938
+  },
+  "ALL": {
+   "n": 80,
+   "wins": 8,
+   "losses": 15,
+   "ties": 57,
+   "mean_diff": -0.0066
+  }
+ },
+ "500k f1800 -> f1800+fd": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 0,
+   "losses": 0,
+   "ties": 14,
+   "mean_diff": 0.0
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 10,
+   "losses": 15,
+   "ties": 115,
+   "mean_diff": -0.0044
+  }
+ },
+ "1m f1800 -> f1800+fd": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 0,
+   "losses": 0,
+   "ties": 14,
+   "mean_diff": 0.0
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 19,
+   "losses": 20,
+   "ties": 101,
+   "mean_diff": -0.0058
+  }
+ },
+ "100k f600 -> f600+fd": {
+  "temporal_reasoning": {
+   "n": 8,
+   "wins": 1,
+   "losses": 1,
+   "ties": 6,
+   "mean_diff": 0.0
+  },
+  "ALL": {
+   "n": 80,
+   "wins": 9,
+   "losses": 8,
+   "ties": 63,
+   "mean_diff": 0.0126
+  }
+ },
+ "100k f1800 -> f600+fd": {
+  "temporal_reasoning": {
+   "n": 8,
+   "wins": 1,
+   "losses": 1,
+   "ties": 6,
+   "mean_diff": 0.0938
+  },
+  "ALL": {
+   "n": 80,
+   "wins": 12,
+   "losses": 12,
+   "ties": 56,
+   "mean_diff": 0.0296
+  }
+ },
+ "500k f1800 -> f600+fd": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 0,
+   "losses": 0,
+   "ties": 14,
+   "mean_diff": 0.0
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 20,
+   "losses": 18,
+   "ties": 102,
+   "mean_diff": 0.0098
+  }
+ }
+}

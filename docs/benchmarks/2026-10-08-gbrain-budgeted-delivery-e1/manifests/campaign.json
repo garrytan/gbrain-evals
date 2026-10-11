@@ -1,0 +1,22 @@
+{
+  "kind": "oss-shootout-campaign",
+  "schema_version": 1,
+  "campaign_id": "gbrain-budgeted-delivery-e1",
+  "cap_usd": 100,
+  "ledger": ".budget/gbrain-budgeted-delivery-e1.sqlite",
+  "parameters": {
+    "gbrain_sha": "c5fb0201d1960a0a5a81c35d77718311b03154b7",
+    "b_native_lme_s": 6200,
+    "b_pseudo_lme_s": 5500,
+    "b_native_locomo": 7300,
+    "b_pseudo_locomo": 6400,
+    "b_native_beam_100k": 6400,
+    "b_pseudo_beam_100k": 6000
+  },
+  "cells_from": [
+    "cells/freeze.json",
+    "cells/deliver.json",
+    "cells/facts.json"
+  ],
+  "cells": []
+}

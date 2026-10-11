@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { ParamDef } from 'gbrain/operations';
 import { generateN6World, ledgerFingerprint, N6_CLASSES, N6_DEFAULT_SEED } from '../../eval/generators/n6-visibility-gen.ts';
 import {
-  controlSeen, countOccurrences, deliveredUnits, echoCredit, hasSourceRow, isTargeted, namedSlugs, normalizeForOracle,
+  controlSeen, countOccurrences, deliveredUnits, echoCredit, hasSourceRow, isTargeted, namedSlugs, normalizeForOracle, decodeOpaqueJson,
   namingWindow, oracleView, parseToolResult, runN6, scanLeaks, synthesizeParams, targetTitle, variantsFor, type CallOutcome,
 } from '../../eval/runner/n6-visibility-fuzz.ts';
 import { gbrainSpecFrom, parseGbrainSpec } from '../../eval/runner/gbrain-under-test.ts';
@@ -86,6 +86,15 @@ describe('N6 tool-result parsing with gbrain notice blocks', () => {
     expect(normalizeForOracle(oracleView(a), [])).not.toBe(normalizeForOracle(oracleView(c), []));
   });
 
+  test('an opaque cursor that echoes the masked target compares equal; one that differs in anything else does not (N6-4)', () => {
+    const cursor = (slug: string, extra = '') => Buffer.from(JSON.stringify({ v: 1, p: ['2000-01-01T00:00:00.000Z', slug], f: [extra || null] })).toString('base64');
+    const view = (slug: string, extra = '') => ({ data: { next_cursor: { cursor: cursor(slug, extra), slug } } });
+    const mask = ['notes/protected-example', 'notes/ghost-example'];
+    expect(normalizeForOracle(view('notes/protected-example'), mask)).toBe(normalizeForOracle(view('notes/ghost-example'), mask));
+    expect(normalizeForOracle(view('notes/protected-example', 'private row'), mask)).not.toBe(normalizeForOracle(view('notes/ghost-example'), mask));
+    expect(decodeOpaqueJson('not a cursor at all')).toBeNull();
+  });
+
   test('an error body keeps its code', () => {
     expect(parseToolResult({ content: [{ text: JSON.stringify({ error: 'page_not_found' }) }, { text: notice }], isError: true }).error_code).toBe('page_not_found');
   });
@@ -142,6 +151,16 @@ describe('N6 parameter synthesis', () => {
     expect(variantsFor(params).map(v => v.id)).toEqual(['base', 'unit=a', 'unit=b', 'source_id=beta', 'source_id=__all__']);
     expect(isTargeted(params)).toBe(true);
     expect(isTargeted({ limit: { type: 'number' } })).toBe(false);
+  });
+
+  test('an optional question gets its own ranked variant without widening flags; a required one is always filled', () => {
+    const recall: Record<string, ParamDef> = { entity: { type: 'string' }, question: { type: 'string' }, include_expired: { type: 'boolean' }, supersessions: { type: 'boolean' } };
+    expect(variantsFor(recall).map(v => v.id)).toEqual(['base', 'question']);
+    expect(synthesizeParams(recall, target).params).toEqual({ entity: target.slug, include_expired: true, supersessions: true });
+    expect(synthesizeParams(recall, target, { ranked: true }).params).toEqual({ entity: target.slug, question: target.query });
+    const think: Record<string, ParamDef> = { question: { type: 'string', required: true } };
+    expect(variantsFor(think).map(v => v.id)).toEqual(['base']);
+    expect(synthesizeParams(think, target).params).toEqual({ question: target.query });
   });
 
   test('a hits array names the target with its source', () => {

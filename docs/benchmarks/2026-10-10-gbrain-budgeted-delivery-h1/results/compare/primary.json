@@ -1,0 +1,152 @@
+{
+  "inputs": [
+    {
+      "side": "A",
+      "path": "sonnet-5-5.cap_only.json",
+      "sha256": "9283f8e0bc51a208e690916ddfb6ecc732be8e2243938962f4ee2a28d4cb7c3e",
+      "rows": 200,
+      "skipped_summary_rows": 0
+    },
+    {
+      "side": "B",
+      "path": "sonnet-5-5.depth_first.json",
+      "sha256": "438eb9692e3b94ee2f2818e1bcde6f1c49d34809bf221c3b82c34dff179df64a",
+      "rows": 200,
+      "skipped_summary_rows": 0
+    }
+  ],
+  "family": {
+    "schema_version": 1,
+    "family_id": "budgeted-delivery-h1",
+    "registered_at": "2026-10-10",
+    "description": "Budgeted delivery H1 (sealed confirmation v2, release decision 2): depth_first (B) against cap_only (A), both with an explicit 5,500-token gbrain budget on one frozen 25-hit list, pseudo-session rendering packed to 8,000 harness tokens, read by claude-sonnet-5-5 and judged by gpt-4o-2024-08-06. Judged answer correctness over all 200 questions, paired by question and clustered by persona (haystack). The verdict is the rule in decision.json (decideH1 in eval/runner/budgeted-delivery/h1.ts), not compare.ts's report-only verdict.",
+    "alpha": 0.05,
+    "seed": 20261010,
+    "draws": 20000,
+    "min_clusters": 10,
+    "id_field": "question_id",
+    "comparisons": [
+      {
+        "id": "answer_accuracy_depth_first_vs_cap_only",
+        "metric": "answer_correct",
+        "gate": "exploratory",
+        "direction": "higher",
+        "cluster_by": "haystack_id",
+        "description": "Primary. Read by the preregistered H1 rule: delta > 0, persona-clustered 95% bootstrap interval above zero and exact two-sided McNemar p < 0.05, with guards 1, 3, 4, 7 and 8. compare.ts reports it without a verdict."
+      },
+      {
+        "id": "packed_recall_all",
+        "metric": "recall_all",
+        "gate": "exploratory",
+        "direction": "higher",
+        "cluster_by": "haystack_id",
+        "description": "Every gold chat among the chats the reader saw (the answers file's retrieved list is the packed chats), over the 160 answerable questions; abstention rows have no recall and are ineligible on both sides. Descriptive: a correct cap can deliver fewer chats."
+      }
+    ],
+    "exclude_when": []
+  },
+  "preregistered": true,
+  "decision": {
+    "family_id": "budgeted-delivery-h1",
+    "verdict": "report_only",
+    "reasons": [],
+    "alpha": 0.05,
+    "holm_family": [],
+    "comparisons": [
+      {
+        "id": "answer_accuracy_depth_first_vs_cap_only",
+        "metric": "answer_correct",
+        "gate": "exploratory",
+        "status": "report_only",
+        "reasons": [
+          "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        ],
+        "n_pairs": 200,
+        "n_clusters": 40,
+        "n_excluded": 0,
+        "stats": {
+          "n_pairs": 200,
+          "n_clusters": 40,
+          "mean_a": 0.725,
+          "mean_b": 0.61,
+          "delta": -0.115,
+          "se_cluster": 0.034999999999999996,
+          "se_iid": 0.03485612928515897,
+          "design_effect": 1.0082721538620631,
+          "effective_n": 198.35914265203542,
+          "ci95": [
+            -0.18,
+            -0.045
+          ],
+          "p_two_sided": 0.00359982000899955,
+          "p_greater": 0.99930003499825,
+          "p_less": 0.0015999200039998,
+          "p_method": "monte-carlo-sign-flip"
+        },
+        "mcnemar": {
+          "losses": 37,
+          "wins": 14,
+          "both_pass": 108,
+          "both_fail": 41,
+          "discordant": 51,
+          "p_two_sided": 0.0017691971837869858
+        },
+        "power": {
+          "alpha": 0.05,
+          "power": 0.8,
+          "mde": 0.09805548265963847,
+          "min_one_sided_discordant": 6,
+          "note": "with 200 pairs in 40 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0981; the observed delta is at least that size; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+        },
+        "direction": "higher"
+      },
+      {
+        "id": "packed_recall_all",
+        "metric": "recall_all",
+        "gate": "exploratory",
+        "status": "report_only",
+        "reasons": [
+          "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        ],
+        "n_pairs": 160,
+        "n_clusters": 40,
+        "n_excluded": 40,
+        "stats": {
+          "n_pairs": 160,
+          "n_clusters": 40,
+          "mean_a": 0.99375,
+          "mean_b": 0.475,
+          "delta": -0.51875,
+          "se_cluster": 0.0302069517809632,
+          "se_iid": 0.03962468875738332,
+          "design_effect": 0.5811417498164474,
+          "effective_n": 275.3200919578325,
+          "ci95": [
+            -0.575,
+            -0.45625
+          ],
+          "p_two_sided": 0.00004999750012499375,
+          "p_greater": 1,
+          "p_less": 0.00004999750012499375,
+          "p_method": "monte-carlo-sign-flip"
+        },
+        "mcnemar": {
+          "losses": 83,
+          "wins": 0,
+          "both_pass": 76,
+          "both_fail": 1,
+          "discordant": 83,
+          "p_two_sided": 2.0679515313825692e-25
+        },
+        "power": {
+          "alpha": 0.05,
+          "power": 0.8,
+          "mde": 0.08462734961596494,
+          "min_one_sided_discordant": 6,
+          "note": "with 160 pairs in 40 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0846; the observed delta is at least that size; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+        },
+        "direction": "higher"
+      }
+    ]
+  }
+}

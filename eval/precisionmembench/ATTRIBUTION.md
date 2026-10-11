@@ -38,4 +38,6 @@ The scorer parity fixture checks this behavior. It does not establish that every
 
 The local `providers.config.json` contains a gbrain entry. Its adapter uses an in-memory PGLite database rather than sending HTTP `/add`, `/search` and `/reset` requests, so the configured `defaultUrl` is not contacted.
 
+`systemAdapter.ts` is a second local provider, for the open-source memory shootout (`eval/runner/precisionmembench-system.ts`). Like `gbrainAdapter.ts` it extends `BaseAdapter`, overrides only `searchText` and reuses the gbrain entry's unused HTTP settings, so the shared evaluator is the same for every system and no vendored file changes.
+
 The [benchmark report](../../docs/benchmarks/2026-05-29-precisionmembench.md) records the separate correction to gbrain's seed behavior: superseded beliefs must be loaded as live inputs when the upstream contract does not provide a supersession label. Keeping the scorer faithful is necessary, but the adapter must also avoid learning the answer during setup.

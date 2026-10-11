@@ -1,0 +1,382 @@
+{
+ "pairs": [
+  {
+   "gbrain": "beam-100k-gbrain-rag-17e85b266ad3",
+   "comparator": "beam-100k-comparator-rag-f504827a788f",
+   "samples": 1
+  },
+  {
+   "gbrain": "beam-500k-gbrain-rag-1564910a0528",
+   "comparator": "beam-500k-comparator-rag-ca58fe069534",
+   "samples": 1
+  },
+  {
+   "gbrain": "beam-1m-gbrain-rag-0c4104c4ef0e",
+   "comparator": "beam-1m-comparator-rag-bf65a7fdf4b8",
+   "samples": 1
+  }
+ ],
+ "schema": "gbrain-evals/mpw-dev-power/v1",
+ "margin": 3,
+ "estimate": {
+  "n": 360,
+  "clusters": 18,
+  "mean_points": 0.67,
+  "diff_variance": 0.15836,
+  "tau_points": 1.76,
+  "discordance": 0.475
+ },
+ "per_split": {
+  "100k": {
+   "n": 80,
+   "clusters": 4,
+   "mean_points": -4.09,
+   "diff_variance": 0.14624,
+   "tau_points": 0,
+   "discordance": 0.4375
+  },
+  "500k": {
+   "n": 140,
+   "clusters": 7,
+   "mean_points": 0.81,
+   "diff_variance": 0.16102,
+   "tau_points": 6.98,
+   "discordance": 0.4714
+  },
+  "1m": {
+   "n": 140,
+   "clusters": 7,
+   "mean_points": 3.25,
+   "diff_variance": 0.16263,
+   "tau_points": 0,
+   "discordance": 0.5
+  }
+ },
+ "scenario": {
+  "name": "central",
+  "diff_variance": 0.15836,
+  "tau_points": 1.76,
+  "source": "dev pairs: 360 questions in 18 conversations"
+ },
+ "closed_form_mdm80": 3.12,
+ "power_at_true_0": {
+  "analytic": 0.7608,
+  "percentile": 0.7817,
+  "boot-t": 0.7538,
+  "wild-u-rademacher": 0.7605,
+  "wild-u-webb": 0.761,
+  "wild-r-rademacher": 0.7595,
+  "wild-r-webb": 0.7608
+ },
+ "decision_rule": "stop and report before anything else if power at a true difference of 0 drops below 80% at the adopted margin",
+ "stop": true,
+ "summary": {
+  "design": "beam-100k-500k-1m-18-18-54",
+  "label": "Adopted: BEAM 100k + 500k + 1M by conversation, 54 sealed",
+  "scenario": "central",
+  "sealed_clusters": 54,
+  "sealed_questions": 1080,
+  "discordance_probability": {
+   "beam/100k": 0.8086,
+   "beam/500k": 0.7223,
+   "beam/1m": 0.9817
+  },
+  "effective_diff_variance": {
+   "beam/100k": 0.15836,
+   "beam/500k": 0.15836,
+   "beam/1m": 0.15836
+  },
+  "capped_strata": [],
+  "mean_se_points": 1.233,
+  "sd_estimate_points": 1.247,
+  "methods": {
+   "analytic": {
+    "coverage": 0.9537,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0462,
+      "theta_-1": 0.201,
+      "theta_0": 0.4723,
+      "theta_1": 0.7608,
+      "theta_2": 0.9377
+     },
+     "margin_2.5": {
+      "theta_-2": 0.0988,
+      "theta_-1": 0.329,
+      "theta_0": 0.623,
+      "theta_1": 0.8662,
+      "theta_2": 0.9758
+     },
+     "margin_3": {
+      "theta_-2": 0.201,
+      "theta_-1": 0.4723,
+      "theta_0": 0.7608,
+      "theta_1": 0.9377,
+      "theta_2": 0.9908
+     },
+     "margin_3.5": {
+      "theta_-2": 0.329,
+      "theta_-1": 0.623,
+      "theta_0": 0.8662,
+      "theta_1": 0.9758,
+      "theta_2": 0.997
+     },
+     "margin_4": {
+      "theta_-2": 0.4723,
+      "theta_-1": 0.7608,
+      "theta_0": 0.9377,
+      "theta_1": 0.9908,
+      "theta_2": 0.9992
+     }
+    },
+    "mdm80": 3.18
+   },
+   "percentile": {
+    "coverage": 0.946,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.054,
+      "theta_-1": 0.2218,
+      "theta_0": 0.5035,
+      "theta_1": 0.7817,
+      "theta_2": 0.9437
+     },
+     "margin_2.5": {
+      "theta_-2": 0.1115,
+      "theta_-1": 0.3578,
+      "theta_0": 0.65,
+      "theta_1": 0.8825,
+      "theta_2": 0.9792
+     },
+     "margin_3": {
+      "theta_-2": 0.2218,
+      "theta_-1": 0.5035,
+      "theta_0": 0.7817,
+      "theta_1": 0.9437,
+      "theta_2": 0.992
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3578,
+      "theta_-1": 0.65,
+      "theta_0": 0.8825,
+      "theta_1": 0.9792,
+      "theta_2": 0.9978
+     },
+     "margin_4": {
+      "theta_-2": 0.5035,
+      "theta_-1": 0.7817,
+      "theta_0": 0.9437,
+      "theta_1": 0.992,
+      "theta_2": 0.9992
+     }
+    },
+    "mdm80": 3.09
+   },
+   "boot-t": {
+    "coverage": 0.9523,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0478,
+      "theta_-1": 0.1968,
+      "theta_0": 0.472,
+      "theta_1": 0.7538,
+      "theta_2": 0.935
+     },
+     "margin_2.5": {
+      "theta_-2": 0.0993,
+      "theta_-1": 0.3275,
+      "theta_0": 0.6205,
+      "theta_1": 0.866,
+      "theta_2": 0.971
+     },
+     "margin_3": {
+      "theta_-2": 0.1968,
+      "theta_-1": 0.472,
+      "theta_0": 0.7538,
+      "theta_1": 0.935,
+      "theta_2": 0.9892
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3275,
+      "theta_-1": 0.6205,
+      "theta_0": 0.866,
+      "theta_1": 0.971,
+      "theta_2": 0.9972
+     },
+     "margin_4": {
+      "theta_-2": 0.472,
+      "theta_-1": 0.7538,
+      "theta_0": 0.935,
+      "theta_1": 0.9892,
+      "theta_2": 0.999
+     }
+    },
+    "mdm80": 3.18
+   },
+   "wild-u-rademacher": {
+    "coverage": 0.9535,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0465,
+      "theta_-1": 0.1965,
+      "theta_0": 0.4733,
+      "theta_1": 0.7605,
+      "theta_2": 0.936
+     },
+     "margin_2.5": {
+      "theta_-2": 0.0975,
+      "theta_-1": 0.3292,
+      "theta_0": 0.6205,
+      "theta_1": 0.8655,
+      "theta_2": 0.9735
+     },
+     "margin_3": {
+      "theta_-2": 0.1965,
+      "theta_-1": 0.4733,
+      "theta_0": 0.7605,
+      "theta_1": 0.936,
+      "theta_2": 0.9908
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3292,
+      "theta_-1": 0.6205,
+      "theta_0": 0.8655,
+      "theta_1": 0.9735,
+      "theta_2": 0.9972
+     },
+     "margin_4": {
+      "theta_-2": 0.4733,
+      "theta_-1": 0.7605,
+      "theta_0": 0.936,
+      "theta_1": 0.9908,
+      "theta_2": 0.999
+     }
+    },
+    "mdm80": 3.18
+   },
+   "wild-u-webb": {
+    "coverage": 0.953,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.047,
+      "theta_-1": 0.1975,
+      "theta_0": 0.472,
+      "theta_1": 0.761,
+      "theta_2": 0.9375
+     },
+     "margin_2.5": {
+      "theta_-2": 0.098,
+      "theta_-1": 0.3262,
+      "theta_0": 0.6212,
+      "theta_1": 0.8665,
+      "theta_2": 0.974
+     },
+     "margin_3": {
+      "theta_-2": 0.1975,
+      "theta_-1": 0.472,
+      "theta_0": 0.761,
+      "theta_1": 0.9375,
+      "theta_2": 0.9902
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3262,
+      "theta_-1": 0.6212,
+      "theta_0": 0.8665,
+      "theta_1": 0.974,
+      "theta_2": 0.9968
+     },
+     "margin_4": {
+      "theta_-2": 0.472,
+      "theta_-1": 0.761,
+      "theta_0": 0.9375,
+      "theta_1": 0.9902,
+      "theta_2": 0.999
+     }
+    },
+    "mdm80": 3.19
+   },
+   "wild-r-rademacher": {
+    "coverage": 0.9548,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.0452,
+      "theta_-1": 0.1993,
+      "theta_0": 0.472,
+      "theta_1": 0.7595,
+      "theta_2": 0.9375
+     },
+     "margin_2.5": {
+      "theta_-2": 0.0978,
+      "theta_-1": 0.33,
+      "theta_0": 0.6228,
+      "theta_1": 0.863,
+      "theta_2": 0.9732
+     },
+     "margin_3": {
+      "theta_-2": 0.1993,
+      "theta_-1": 0.472,
+      "theta_0": 0.7595,
+      "theta_1": 0.9375,
+      "theta_2": 0.9902
+     },
+     "margin_3.5": {
+      "theta_-2": 0.33,
+      "theta_-1": 0.6228,
+      "theta_0": 0.863,
+      "theta_1": 0.9732,
+      "theta_2": 0.9965
+     },
+     "margin_4": {
+      "theta_-2": 0.472,
+      "theta_-1": 0.7595,
+      "theta_0": 0.9375,
+      "theta_1": 0.9902,
+      "theta_2": 0.999
+     }
+    },
+    "mdm80": 3.2
+   },
+   "wild-r-webb": {
+    "coverage": 0.952,
+    "power": {
+     "margin_2": {
+      "theta_-2": 0.048,
+      "theta_-1": 0.1988,
+      "theta_0": 0.4758,
+      "theta_1": 0.7608,
+      "theta_2": 0.9363
+     },
+     "margin_2.5": {
+      "theta_-2": 0.0983,
+      "theta_-1": 0.3285,
+      "theta_0": 0.6248,
+      "theta_1": 0.8628,
+      "theta_2": 0.9732
+     },
+     "margin_3": {
+      "theta_-2": 0.1988,
+      "theta_-1": 0.4758,
+      "theta_0": 0.7608,
+      "theta_1": 0.9363,
+      "theta_2": 0.9905
+     },
+     "margin_3.5": {
+      "theta_-2": 0.3285,
+      "theta_-1": 0.6248,
+      "theta_0": 0.8628,
+      "theta_1": 0.9732,
+      "theta_2": 0.997
+     },
+     "margin_4": {
+      "theta_-2": 0.4758,
+      "theta_-1": 0.7608,
+      "theta_0": 0.9363,
+      "theta_1": 0.9905,
+      "theta_2": 0.9992
+     }
+    },
+    "mdm80": 3.19
+   }
+  }
+ }
+}

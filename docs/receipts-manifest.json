@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-07",
+  "updated": "2026-10-09",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -4539,6 +4539,87 @@
       "note": "P0 starting line on gbrain master 6622a119e (v0.60.48.0), dev splits only, 2026-10-04. summary.json is recounted from the committed shard rows."
     },
     {
+      "claim_id": "mpw-c2-interleave-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Interleaved supersession candidates",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/c2-interleave-dev/verdict.json",
+      "artifact_sha256": "19a7ae6a101c008bb02a2c70e1ca3998594fa146dc86644496bcf56e3a4cf5b3",
+      "status": "covered",
+      "expected": {
+        "/overall": "inconclusive",
+        "/fixture/gbrain_git_head": "91081f319b724bd1ca1a82d4636d0cc7eadae208",
+        "/sources/0/family/comparisons/0/stats/losses": 2,
+        "/sources/0/family/comparisons/0/stats/wins": 0
+      },
+      "note": "Mirror of gbrain's C2 dev verdict (#6066, measured at 91081f319); copied byte for byte, not re-measured."
+    },
+    {
+      "claim_id": "mpw-supersession-threshold-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Supersession threshold per embedding model",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/supersession-threshold-dev/verdict.json",
+      "artifact_sha256": "6e30b14a1c33a80bc62bdc3f97b55ab0e436df49253b301a4a154953738fbb72",
+      "status": "covered",
+      "expected": {
+        "/overall": "inconclusive",
+        "/models/voyage:voyage-4/fixture/gbrain_git_head": "7d2cc1c7049ae6820131b91d146d2c950714583d",
+        "/models/voyage:voyage-4/threshold_pick/guarded": 0.95,
+        "/models/voyage:voyage-4/threshold_pick/balanced": 0.94
+      },
+      "note": "Mirror of gbrain's supersession-threshold dev finding (#6066, measured at 7d2cc1c70); copied byte for byte, not re-measured."
+    },
+    {
+      "claim_id": "mpw-pinned-questions-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Pinned questions",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/c4-pinned-questions/verdict.json",
+      "artifact_sha256": "d35a366d385345035fefe3b719513660abd01e7ff528f9d26c1911ad588657b7",
+      "status": "covered",
+      "expected": {
+        "/overall": "opt_in",
+        "/deciding_run": "run_3",
+        "/measured_build": "garrytan/gbrain@1384a0db",
+        "/run_3/decision/outcome": "tie_anchored_retrieval_wins",
+        "/run_3/leakage/probes": 144,
+        "/metered_spend_usd": 11.8061
+      },
+      "note": "Mirror of gbrain's C4 pinned-questions verdict (#6066; run 3 at 1384a0db, runs 1-2 and the diagnostic attempt inside); copied byte for byte, not re-measured."
+    },
+    {
+      "claim_id": "mpw-entity-anchoring-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Entity-anchored query retrieval",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/entity-anchoring-query/verdict.json",
+      "artifact_sha256": "3561fd6ed8af02ebea5ab5afd9ba53b63ccfc387813282894a514595268ddc88",
+      "status": "covered",
+      "expected": {
+        "/overall": "off_pending_gate_3",
+        "/measured_build": "garrytan/gbrain@2fa44f149",
+        "/gate_1/status": "pass",
+        "/gate_2/status": "pass",
+        "/gate_3/status": "pending",
+        "/gate_1/metered_spend_usd": 1.5243
+      },
+      "note": "Mirror of gbrain's entity-anchored query retrieval gates (#6066, measured at 2fa44f149); copied byte for byte, not re-measured; gate 3 belongs to the harness lane."
+    },
+    {
+      "claim_id": "mpw-query-facts-arm-verdict-mirror",
+      "readme_anchor": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md: Facts arm in query",
+      "artifact_path": "docs/benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts/query-facts-arm/verdict.json",
+      "artifact_sha256": "cae829e7ecd40b038c854d472e13fccb01efc9423ab78c9e238680f336ce5506",
+      "status": "covered",
+      "expected": {
+        "/overall": "on_gates_1b_and_2_passed",
+        "/measured_build": "garrytan/gbrain@16288b95c",
+        "/gate_1/status": "fail",
+        "/gate_1b/status": "pass",
+        "/gate_1b/measured_build": "garrytan/gbrain@947536f4c",
+        "/gate_1b/forget_remember/off/checkpoints/1/correct": 92,
+        "/gate_1b/forget_remember/on/checkpoints/1/correct": 100,
+        "/gate_1b/forget_remember/on/checkpoints/5/correct": 100,
+        "/gate_2_revised/status": "pass",
+        "/gate_2_revised/sets/relational+facts/recall10_lower": 0,
+        "/gate_1b/metered_spend_usd": 18.0532
+      },
+      "note": "Mirror of gbrain's facts-arm-in-query gates (#6066): gates 1 and 2 at 16288b95c, gates 1b and revised 2 at 947536f4c; copied byte for byte. The gate-1 runs used bench-flags.patch locally; gate 1b used the flags merged at d01d3bc."
+    },
+    {
       "claim_id": "fix-wave-9-mirror",
       "readme_anchor": "docs/benchmarks/2026-10-05-fix-wave-9-mirror.md: The finding",
       "artifact_path": "docs/benchmarks/2026-10-05-fix-wave-9-mirror/verdict.json",
@@ -4677,6 +4758,168 @@
         "/gbrain_shipped_in/merge_commit": "7aa2caa0"
       },
       "note": "Preregistered (5ee10126, amendment c8042a27) Cat 40 gbrain-arm smoke, capy/fix-wave-11 027d3c69f vs capy/fix-wave-12 209b20a96, same window; counts recomputable from the committed results.jsonl and transcripts.jsonl.gz in each set directory. The attribution set runs the wave 12 build with the baseline served instructions. Shipped in gbrain v0.60.106.0 (7aa2caa0, #6269) with W4.6 reverted (instructions identical to the baseline) and W4.16 kept."
+    },
+    {
+      "claim_id": "beam-1m-failure-analysis-decomposition",
+      "readme_anchor": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis.md: 1. Free decomposition of the published row",
+      "artifact_path": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis/decomposition.json",
+      "artifact_sha256": "467eafdfcd9bdcd8dda6f0b77bdbc262ae34c10b3736f333e4022d4bdbc4f39f",
+      "status": "covered",
+      "expected": {
+        "/feasibility/strict_at_5/feasible": 145,
+        "/feasibility/strict_at_5/strict_hits": 36,
+        "/feasibility/strict_at_10/feasible": 160,
+        "/feasibility/strict_at_10/strict_hits": 57,
+        "/feasibility/strict_at_5/infeasible": 49,
+        "/answers_overall/all_items_met": 75,
+        "/none_at_5/n": 57,
+        "/none_at_5/by_label/semantic_drift": 30,
+        "/none_at_5/by_label/lexical_gap": 15,
+        "/none_at_5/by_label/date_scoped": 12,
+        "/committed_wrong/committed_wrong/all": 50,
+        "/batches/top5_turn_groups_cover_every_gold_batch": 124
+      },
+      "golden_test": "bun docs/benchmarks/2026-10-08-beam-1m-failure-analysis/decompose.ts --check (needs the free BEAM-1M dev files)",
+      "note": "Free recount of the committed 2026-10-06 BEAM-1M bridge rows (gbrain 6622a119e, gpt-4.1-mini reader and judge) joined with the dataset gold and the keyless hash arm; committed-wrong counts are labels by a model reader (committed-wrong-labels.json), not human labels."
+    },
+    {
+      "claim_id": "beam-1m-failure-analysis-arms",
+      "readme_anchor": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms-summary.json",
+      "artifact_sha256": "22c307790fc3e582a1a998886a64e87d98fd7311c305e24d05a46b45ecb3c771",
+      "status": "covered",
+      "expected": {
+        "/answers/a1-nomem-gpt41mini/all/mean_score": 0.2621,
+        "/answers/a1-nomem-sonnet55/all/mean_score": 0.3127,
+        "/answers/a1-nomem-opus55/all/mean_score": 0.3101,
+        "/answers/a1-nomem-gpt61sol/all/mean_score": 0.2857,
+        "/answers/a0-bridge-top5/all/mean_score": 0.5387,
+        "/answers/a2-top5-gpt61sol/all/mean_score": 0.6196,
+        "/answers/a2-top5-gpt61sol/all/all_items_met": 96,
+        "/answers/a3-top10-gpt61sol/all/mean_score": 0.6488,
+        "/answers/a4-oracle-gpt61sol/all/mean_score": 0.8489,
+        "/answers/a5-r1-top5-gpt61sol/all/mean_score": 0.6605,
+        "/retrieval/r0-voyage4/strict_at_5": 47,
+        "/retrieval/r1-voyage4-rerank/strict_at_5": 57,
+        "/retrieval/r3-voyage4-rerank-deep/strict_at_10": 83,
+        "/retrieval/r1-voyage4-rerank/fidelity/rerank_provider_requests/voyage:rerank-2.5": 220,
+        "/spend_usd/total": 52.0122
+      },
+      "golden_test": "bun docs/benchmarks/2026-10-08-beam-1m-failure-analysis/analyze.ts --check",
+      "note": "Preregistered (46013ab, amendments 05a7cbb, 593b557, 1d28760) BEAM-1M dev arms: no-memory floors for four readers, frozen top-5/top-10 replays, the oracle ceiling, voyage-4 retrieval at gbrain 7aa2caa0 with and without the reranker, and reranker answers; judge gpt-4.1-mini. The A2 reader ranking is confounded by unequal output limits (amendment 3)."
+    },
+    {
+      "claim_id": "reading-headroom-recount",
+      "readme_anchor": "docs/benchmarks/2026-10-08-reading-headroom.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-08-reading-headroom/headroom.json",
+      "artifact_sha256": "cd10b9ac0b778efd31577acd968c7367fc72cad4859a1e2044525b887d7571b4",
+      "status": "covered",
+      "expected": {
+        "/delivered/mean_delivered_chars4": 15822.9,
+        "/delivered/mean_gold_chars4": 6489.6,
+        "/delivered/gold_share_chars4": 0.41,
+        "/delivered/by_type/multi-session/mean_gold_chars4": 8981.1,
+        "/notes_length/w10a-sonnet55-notes/mean_chars4": 138.5,
+        "/notes_length/w10b-opus55-notes/mean_chars4": 150.8,
+        "/commitment/arms/w10a-sonnet55-notes/committed_wrong": 25,
+        "/commitment/arms/w10b-opus55-notes/committed_wrong": 19,
+        "/commitment/arms/w10b-sonnet55-notes/committed_wrong": 29,
+        "/commitment/arms/w10b-sol-notes/committed_wrong": 24,
+        "/status": "recount: exploratory, from committed receipts, not preregistered"
+      },
+      "golden_test": "test/eval/reading-headroom.test.ts",
+      "note": "$0 keyless recount over committed W10a and W10b receipts (eval/runner/reading-headroom.ts); exploratory, not preregistered; commitment counts rest on agent-written labels (commitment-labels.json) that no person has reviewed."
+    },
+    {
+      "claim_id": "r2-facts-absorb-gate",
+      "readme_anchor": "docs/benchmarks/2026-10-08-facts-extraction-model.md: The preregistered verdict",
+      "artifact_path": "docs/benchmarks/2026-10-08-facts-extraction-model/gate/receipt.json",
+      "artifact_sha256": "522649696c5f5acd67997543fdbd236fd903384e797a57747eab256f7b41bd4e",
+      "status": "covered",
+      "expected": {
+        "/preregistration/sha256": "8f9be0d9f872ad4bf47b7a019ec4eb850aba47951e51958f594cff4e9f6e7c11",
+        "/gbrain/commit": "1935c74a9e217b276c7bbf3075ddd3c220e96a09",
+        "/verdicts/0/label": "luna",
+        "/verdicts/0/verdict/pass": false,
+        "/verdicts/1/label": "haiku55",
+        "/verdicts/1/verdict/pass": true,
+        "/mutants_fail": true,
+        "/arms/0/resolved_models_at_facts_invocation/0": "anthropic:claude-sonnet-4-6",
+        "/arms/0/totals/recalled": 516,
+        "/arms/2/totals/recalled": 515,
+        "/drop_mutant_responses/dropped": 190
+      },
+      "golden_test": "test/eval/facts-absorb-gate.test.ts",
+      "note": "Preregistered facts-absorb gate (R2, 10x plan wave 0). Per-arm stored facts in gate/arm-*.json reproduce every score with `bun eval/runner/facts-absorb-gate.ts --rescore --out <copy of gate/>` (amended scorer, see the preregistration's Amendments)."
+    },
+    {
+      "claim_id": "r2-write-cost-sonnet46",
+      "readme_anchor": "docs/benchmarks/2026-10-08-facts-extraction-model.md: Write cost on P8's sessions",
+      "artifact_path": "docs/benchmarks/2026-10-08-facts-extraction-model/write-cost/receipt-on-sonnet46.json",
+      "artifact_sha256": "c27e622e4896a5b08f83a9abca14741bbc53af925844f56f4879766711b81b32",
+      "status": "covered",
+      "expected": {
+        "/arms/0/arm": "on",
+        "/arms/0/usd": 15.9359,
+        "/arms/0/generative_calls": 999,
+        "/arms/0/resolved_extraction_models/0": "anthropic:claude-sonnet-4-6",
+        "/gbrain/commit": "1935c74a9e217b276c7bbf3075ddd3c220e96a09"
+      },
+      "note": "P8 write-cost protocol, 1,000 LongMemEval-S sessions, default extraction model."
+    },
+    {
+      "claim_id": "r2-write-cost-off-cheap",
+      "readme_anchor": "docs/benchmarks/2026-10-08-facts-extraction-model.md: Write cost on P8's sessions",
+      "artifact_path": "docs/benchmarks/2026-10-08-facts-extraction-model/write-cost/receipt-off-luna-haiku55.json",
+      "artifact_sha256": "5687ccd760b4eea287540bf51d03be0025d074b74ee3986b792a1af3670772d2",
+      "status": "covered",
+      "expected": {
+        "/arms/0/arm": "off",
+        "/arms/0/usd": 0.3152,
+        "/arms/1/arm": "on:openai:gpt-6-luna",
+        "/arms/1/jobs_after_drain/facts-absorb/waiting": 372,
+        "/arms/2/arm": "on:anthropic:claude-haiku-5-5",
+        "/arms/2/usd": 1.3849,
+        "/arms/2/generative_calls": 996,
+        "/arms/2/resolved_extraction_models/0": "anthropic:claude-haiku-5-5"
+      },
+      "note": "The GPT-6 Luna arm hit the 3-hour drain limit with 372 jobs queued; its dollar row is partial and the report labels the extrapolation as an estimate."
+    },
+    {
+      "claim_id": "cat41-rebaseline-dda603a",
+      "readme_anchor": "docs/benchmarks/2026-10-09-cat41-rebaseline.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-09-cat41-rebaseline/rebaseline-dda603a/summary.json",
+      "artifact_sha256": "2be193a2c69cbfb694c2964725f5440c48106b562fabd3f153d16137ad7d57d1",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+        "/totals/runs": 12,
+        "/totals/successes": 12,
+        "/totals/consent_violations": 0,
+        "/cells/0/harness": "claude",
+        "/cells/0/mean_wall_s": 98.8,
+        "/cells/1/harness": "codex",
+        "/cells/1/mean_wall_s": 161.9
+      },
+      "note": "Preregistered (8655d2f, amendments ff54526 and c2e8cd1) Cat 41 fresh_install_to_wired_recall on gbrain dda603ac9 (v0.60.130.0), Claude Code and Codex, six runs each; the wave 2 D8 comparator."
+    },
+    {
+      "claim_id": "cat41-rebaseline-control-b3f4e8b",
+      "readme_anchor": "docs/benchmarks/2026-10-09-cat41-rebaseline.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-09-cat41-rebaseline/control-b3f4e8b/summary.json",
+      "artifact_sha256": "6f161e9ea5f72fd9fec59ac48a02da7f4125f9d67158ae1a32507f426a069404",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "b3f4e8ba5935004066b4715bdc19bc9de4721b81",
+        "/totals/runs": 12,
+        "/totals/successes": 12,
+        "/totals/consent_violations": 0,
+        "/cells/0/harness": "claude",
+        "/cells/0/mean_wall_s": 107,
+        "/cells/1/harness": "codex",
+        "/cells/1/mean_wall_s": 175.4
+      },
+      "note": "Same-window control for the Cat 41 re-baseline: the published b3f4e8b build rerun interleaved with dda603ac9 on 2026-10-09, six runs per harness."
     }
   ]
 }

@@ -1,0 +1,16 @@
+{
+  "note": "Paid acceptance cell (A0 step 9): ten BEAM 100k questions from the first conversation, gbrain raw lane, 8,000-token delivered-context target. Measures per-stage usage for the cell ledger; not a comparison result.",
+  "dataset": "beam",
+  "split": "100k",
+  "provider": "gbrain",
+  "mode": "rag",
+  "lane": "raw",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": { "answer": "gemini:gemini-3.8-flash", "judge": "gemini:gemini-3.5-flash" },
+  "budget_usd": 10,
+  "questions": { "limit": 10 },
+  "k": 10,
+  "gbrain_credentials": ["voyage"],
+  "provider_config": { "token_budget": 8100, "embedding_model": "voyage:voyage-4", "embedding_dimensions": 1024 }
+}

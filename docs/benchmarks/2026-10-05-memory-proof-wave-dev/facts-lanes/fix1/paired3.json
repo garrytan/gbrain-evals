@@ -1,0 +1,98 @@
+{
+ "100k a87c->505a": {
+  "temporal_reasoning": {
+   "n": 8,
+   "wins": 0,
+   "losses": 0,
+   "ties": 8,
+   "mean_diff": 0.0
+  },
+  "ALL": {
+   "n": 80,
+   "wins": 11,
+   "losses": 10,
+   "ties": 59,
+   "mean_diff": 0.0085
+  }
+ },
+ "500k a87c->505a": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 0,
+   "losses": 0,
+   "ties": 14,
+   "mean_diff": 0.0
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 12,
+   "losses": 16,
+   "ties": 112,
+   "mean_diff": 0.0052
+  }
+ },
+ "1m a87c->505a": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 1,
+   "losses": 0,
+   "ties": 13,
+   "mean_diff": 0.0536
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 21,
+   "losses": 19,
+   "ties": 100,
+   "mean_diff": 0.0082
+  }
+ },
+ "100k e8e1->505a": {
+  "temporal_reasoning": {
+   "n": 8,
+   "wins": 2,
+   "losses": 3,
+   "ties": 3,
+   "mean_diff": -0.0312
+  },
+  "ALL": {
+   "n": 80,
+   "wins": 16,
+   "losses": 21,
+   "ties": 43,
+   "mean_diff": -0.0109
+  }
+ },
+ "500k e8e1->505a": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 2,
+   "losses": 0,
+   "ties": 12,
+   "mean_diff": 0.1429
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 28,
+   "losses": 23,
+   "ties": 89,
+   "mean_diff": 0.0353
+  }
+ },
+ "1m e8e1->505a": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 1,
+   "losses": 1,
+   "ties": 12,
+   "mean_diff": -0.0536
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 31,
+   "losses": 30,
+   "ties": 79,
+   "mean_diff": 0.0191
+  }
+ }
+}

@@ -9,6 +9,10 @@ harness check that the family measures what it is meant to measure. It is one
 cheap model and one repeat, so it is not evidence for the held-out
 advertised-surface decision, which uses the four preregistered models.
 
+<a id="correction-2026-10-09"></a>
+
+> **Correction, 2026-10-09: every cell searched without gbrain's reranker.** Each restored slot brain kept the slot build's metering-proxy port in its Voyage URL, and that port was closed when the cells ran, so every rerank request failed and gbrain quietly returned unreranked results (fixed in gbrain-evals #76, commit `7709a70`, and #109). No cell's metered gbrain calls include a rerank request: 0 of 20 in each of the five sets and 0 of 2 in the pilot ([audit](../../2026-10-08-program-primary-hard/root-cause/restore-audit.json)). Every row is the gbrain arm under the same condition, so the comparison between listed surfaces stays internally valid. The original numbers stay as measured. For scale, the only measurement of the reranker's effect comes from a different world and tier: on the Cat 40 Hard development world, Sonnet 5.5 on gbrain `8e11aa1f3` finished 21 of 50 tasks with reranking and 19 of 50 without (7 tasks won, 5 lost, within noise; gbrain-evals [#76](https://github.com/garrytan/gbrain-evals/pull/76), `docs/benchmarks/2026-10-07-model-ladder-hard.md`). It is context, not a correction factor.
+
 ## The tasks
 
 Each H task asks for a renewal forecast that revenue operations keeps as takes
@@ -66,3 +70,7 @@ bun eval/runner/cat40-model-ladder.ts --models gpt-6-luna --arms gbrain \
 The baseline rows use `@6622a119e` with `--surface full` or `--surface
 starter` and no `--advertised`. Each directory holds the experiment binding,
 receipt, per-cell results, run log, compressed transcripts and the analysis.
+
+## Changelog
+
+- 2026-10-09: [Correction](#correction-2026-10-09) added: all 102 cells searched without gbrain's reranker (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). Original numbers unchanged.

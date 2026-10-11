@@ -1,0 +1,130 @@
+{
+  "readings": {
+    "lme-s-slice": {
+      "questions": 96,
+      "rerank_scale": 96,
+      "recall_all_at_5": {
+        "n": 96,
+        "clusters": 96,
+        "today": 0.9791666666666666,
+        "fused": 0.9791666666666666,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      },
+      "recall_all_at_10": {
+        "n": 96,
+        "clusters": 96,
+        "today": 1,
+        "fused": 1,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      }
+    },
+    "lme-s-500": {
+      "questions": 470,
+      "rerank_scale": 470,
+      "recall_all_at_5": {
+        "n": 470,
+        "clusters": 470,
+        "today": 0.9574468085106383,
+        "fused": 0.9574468085106383,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      },
+      "recall_all_at_10": {
+        "n": 470,
+        "clusters": 470,
+        "today": 0.9829787234042553,
+        "fused": 0.9829787234042553,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      }
+    },
+    "locomo": {
+      "questions": 464,
+      "rerank_scale": 464,
+      "recall_all_at_5": {
+        "n": 464,
+        "clusters": 3,
+        "today": 0.875,
+        "fused": 0.875,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      },
+      "recall_all_at_10": {
+        "n": 464,
+        "clusters": 3,
+        "today": 0.9245689655172413,
+        "fused": 0.9245689655172413,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      }
+    },
+    "beam-100k": {
+      "questions": 108,
+      "rerank_scale": 108,
+      "recall_all_at_5": {
+        "n": 108,
+        "clusters": 6,
+        "today": 0.5740740740740741,
+        "fused": 0.5740740740740741,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      },
+      "recall_all_at_10": {
+        "n": 108,
+        "clusters": 6,
+        "today": 0.6481481481481481,
+        "fused": 0.6481481481481481,
+        "delta_points": 0,
+        "ci95_points": [
+          0,
+          0
+        ],
+        "wins": 0,
+        "losses": 0
+      }
+    }
+  },
+  "gate": {
+    "slice_non_inferior": true,
+    "beam_superior": false,
+    "pass": false,
+    "qa_follow_up": "not earned"
+  }
+}

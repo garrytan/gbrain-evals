@@ -1,0 +1,43 @@
+{
+  "cell_id": "beam-100k-comparator-rag-894be477adbb",
+  "runs": [
+    {
+      "run_id": "harness-cell:beam-100k-comparator-rag-894be477adbb-2026-10-05T06-26-48-231Z-dab24ec5",
+      "ledger": ".budget/mpw-harness-lane.sqlite",
+      "usd": 0.435729,
+      "requests": 228,
+      "started_at": "2026-10-05T06:30:05.022Z",
+      "stub": false
+    },
+    {
+      "run_id": "harness-cell:beam-100k-comparator-rag-894be477adbb-2026-10-05T06-30-55-430Z-5445a21b",
+      "ledger": ".budget/mpw-harness-lane.sqlite",
+      "usd": 0,
+      "requests": 0,
+      "started_at": "2026-10-05T07:00:39.440Z",
+      "stub": false
+    },
+    {
+      "run_id": "harness-cell:beam-100k-comparator-rag-894be477adbb-2026-10-05T07-01-31-157Z-4f0e3257",
+      "ledger": ".budget/mpw-harness-lane.sqlite",
+      "usd": 0,
+      "requests": 0,
+      "started_at": "2026-10-05T07:39:56.891Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 0,
+      "refused": 0,
+      "reserved_usd": 0,
+      "actual_usd": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "byLabel": {},
+    "byProvider": {},
+    "exhausted": false
+  },
+  "unmetered": []
+}

@@ -1,0 +1,202 @@
+[
+ {
+  "scope": "claude-opus-5-5",
+  "pairs": 48,
+  "personas": 8,
+  "baseline": {
+   "failures": 4,
+   "clustered": {
+    "rate": 0.08333333333333333,
+    "lower": 0,
+    "upper": 0.23229065985301345,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 8,
+   "clustered": {
+    "rate": 0.16666666666666666,
+    "lower": 0,
+    "upper": 0.4352033059780359,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 1.8888888888888888,
+   "factor": 0.5294117647058824,
+   "baseline_failures": 4,
+   "candidate_failures": 8,
+   "clusters": 8,
+   "lower": 0.10761068089446396,
+   "upper": 111.3083490671773
+  },
+  "risk_difference": {
+   "diff": 0.08333333333333333,
+   "lower": -0.25797077871401025,
+   "upper": 0.4246374453806769
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_correction": 2,
+    "unsupported": 3
+   },
+   "candidate": {
+    "unsupported": 4,
+    "stale_correction": 4
+   }
+  }
+ },
+ {
+  "scope": "claude-sonnet-5-5",
+  "pairs": 48,
+  "personas": 8,
+  "baseline": {
+   "failures": 20,
+   "clustered": {
+    "rate": 0.4166666666666667,
+    "lower": 0.2342319449554861,
+    "upper": 0.5991013883778473,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 3,
+   "clustered": {
+    "rate": 0.0625,
+    "lower": 0,
+    "upper": 0.16616991177233878,
+    "clusters": 8
+   }
+  },
+  "verdict": "improvement",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.17073170731707318,
+   "factor": 5.857142857142857,
+   "baseline_failures": 20,
+   "candidate_failures": 3,
+   "clusters": 8,
+   "lower": 0.021202672509941248,
+   "upper": 0.5869824577444362
+  },
+  "risk_difference": {
+   "diff": -0.3541666666666667,
+   "lower": -0.582968950777161,
+   "upper": -0.12536438255617233
+  },
+  "non_inferior": true,
+  "kinds": {
+   "baseline": {
+    "stale_correction": 17,
+    "unsupported": 1,
+    "missed_commitment": 3,
+    "stale_date": 1
+   },
+   "candidate": {
+    "unsupported": 1,
+    "stale_correction": 2
+   }
+  }
+ },
+ {
+  "scope": "gpt-6.1-sol",
+  "pairs": 48,
+  "personas": 8,
+  "baseline": {
+   "failures": 1,
+   "clustered": {
+    "rate": 0.020833333333333332,
+    "lower": 0,
+    "upper": 0.07009633857484833,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 0,
+   "clustered": {
+    "rate": 0,
+    "lower": 0,
+    "upper": 0,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.3333333333333333,
+   "factor": 3,
+   "baseline_failures": 1,
+   "candidate_failures": 0,
+   "clusters": 8,
+   "lower": 0,
+   "upper": 38.99999999999979
+  },
+  "risk_difference": {
+   "diff": -0.020833333333333332,
+   "lower": -0.07009633857484833,
+   "upper": 0.02842967190818167
+  },
+  "non_inferior": true,
+  "kinds": {
+   "baseline": {
+    "unsupported": 1
+   },
+   "candidate": {}
+  }
+ },
+ {
+  "scope": "pooled",
+  "pairs": 144,
+  "personas": 8,
+  "baseline": {
+   "failures": 25,
+   "clustered": {
+    "rate": 0.1736111111111111,
+    "lower": 0.11572021747845379,
+    "upper": 0.23150200474376842,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 11,
+   "clustered": {
+    "rate": 0.0763888888888889,
+    "lower": 0,
+    "upper": 0.18153460317913095,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.45098039215686275,
+   "factor": 2.217391304347826,
+   "baseline_failures": 25,
+   "candidate_failures": 11,
+   "clusters": 8,
+   "lower": 0.1146773778747391,
+   "upper": 1.412389407256996
+  },
+  "risk_difference": {
+   "diff": -0.09722222222222222,
+   "lower": -0.22800245690238713,
+   "upper": 0.03355801245794267
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_correction": 19,
+    "unsupported": 5,
+    "missed_commitment": 3,
+    "stale_date": 1
+   },
+   "candidate": {
+    "unsupported": 5,
+    "stale_correction": 6
+   }
+  }
+ }
+]

@@ -1,0 +1,4 @@
+{"t":1791452486297,"at":"2026-10-08T09:41:26.297Z","action":"lock_held","episode":1,"statement":"LOCK TABLE pages IN ACCESS EXCLUSIVE MODE","via":"pooler","pass":1,"committed":148}
+{"t":1791452786403,"at":"2026-10-08T09:46:26.403Z","action":"lock_released","episode":1,"pass":1,"committed":176}
+{"t":1791453086538,"at":"2026-10-08T09:51:26.538Z","action":"lock_held","episode":2,"statement":"LOCK TABLE pages IN ACCESS EXCLUSIVE MODE","via":"pooler","pass":1,"committed":257}
+{"t":1791453386638,"at":"2026-10-08T09:56:26.638Z","action":"lock_released","episode":2,"pass":1,"committed":257}

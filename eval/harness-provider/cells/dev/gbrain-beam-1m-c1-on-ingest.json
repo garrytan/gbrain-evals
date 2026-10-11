@@ -1,0 +1,39 @@
+{
+  "dataset": "beam",
+  "split": "1m",
+  "provider": "gbrain",
+  "mode": "rag",
+  "lane": "raw",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "budget_usd": 60,
+  "questions": {
+    "units": [
+      "1",
+      "6",
+      "16",
+      "21",
+      "22",
+      "25",
+      "26"
+    ]
+  },
+  "k": 10,
+  "provider_config": {
+    "embedding_model": "voyage:voyage-4",
+    "embedding_dimensions": 1024,
+    "date_header": false,
+    "gbrain_config": {
+      "search.evidence_date_header": "true"
+    },
+    "token_budget": 8100
+  },
+  "note": "memory proof wave dev gbrain-beam-1m-c1-on 8000-token target",
+  "gbrain_credentials": [
+    "voyage"
+  ]
+}

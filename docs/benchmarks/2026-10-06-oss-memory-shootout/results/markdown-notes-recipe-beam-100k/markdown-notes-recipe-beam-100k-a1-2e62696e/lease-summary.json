@@ -1,0 +1,8 @@
+{
+  "run_id": "markdown-notes-recipe-beam-100k-a1-2e62696e",
+  "lease_usd": 5,
+  "committed_usd": 2.3709291999999973,
+  "requests": 1716,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

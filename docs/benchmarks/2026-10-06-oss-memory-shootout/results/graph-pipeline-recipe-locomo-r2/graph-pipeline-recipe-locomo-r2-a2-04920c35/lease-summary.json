@@ -1,0 +1,8 @@
+{
+  "run_id": "graph-pipeline-recipe-locomo-r2-a2-04920c35",
+  "lease_usd": 8,
+  "committed_usd": 1.1448714599999994,
+  "requests": 5354,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

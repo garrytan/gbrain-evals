@@ -1,0 +1,326 @@
+{
+ "schema": "gbrain.bench.foreground-put-page/v1",
+ "label": "HEAD@d00f4d03",
+ "commit": "capy/sync-feeder-fast-writes@d00f4d035",
+ "started_at": "2026-10-08T02:51:15.474Z",
+ "params": {
+  "rtt_ms": 57,
+  "writes": 30,
+  "warmup": 2,
+  "switches": {}
+ },
+ "rerun": "bun scripts/bench/foreground-put-page.ts --rtt 57 --writes 30 --out out/g5-putpage.json",
+ "measured_rtt_ms": 60,
+ "writes": {
+  "count": 30,
+  "failures": 0,
+  "states": [
+   "committed"
+  ],
+  "p50_ms": 2527.4,
+  "p95_ms": 2775.5,
+  "max_ms": 3216.5,
+  "all_ms": [
+   2563.2,
+   2499,
+   2492.1,
+   2734.6,
+   2342.4,
+   2340.4,
+   2411.7,
+   2354.7,
+   3216.5,
+   2664.9,
+   2355,
+   2338.5,
+   2588,
+   2299.5,
+   2602.3,
+   2639,
+   2590.1,
+   2658,
+   2393.1,
+   2526.6,
+   2775.5,
+   2527.4,
+   2522.5,
+   2639.8,
+   2400.4,
+   2516.3,
+   2536,
+   2666.8,
+   2592.4,
+   2472.1
+  ],
+  "raw": [
+   {
+    "start": 1791427895993.5154,
+    "end": 1791427898556.6963,
+    "ms": 2563.2,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427898556.7131,
+    "end": 1791427901055.755,
+    "ms": 2499,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427901055.7712,
+    "end": 1791427903547.8816,
+    "ms": 2492.1,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427903547.8977,
+    "end": 1791427906282.468,
+    "ms": 2734.6,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427906282.4849,
+    "end": 1791427908624.9297,
+    "ms": 2342.4,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427908624.9473,
+    "end": 1791427910965.3113,
+    "ms": 2340.4,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427910965.3284,
+    "end": 1791427913376.9807,
+    "ms": 2411.7,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427913377.014,
+    "end": 1791427915731.757,
+    "ms": 2354.7,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427915731.773,
+    "end": 1791427918948.3157,
+    "ms": 3216.5,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427918948.3313,
+    "end": 1791427921613.251,
+    "ms": 2664.9,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427921613.2666,
+    "end": 1791427923968.218,
+    "ms": 2355,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427923968.2334,
+    "end": 1791427926306.7773,
+    "ms": 2338.5,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427926306.798,
+    "end": 1791427928894.7502,
+    "ms": 2588,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427928894.788,
+    "end": 1791427931194.3088,
+    "ms": 2299.5,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427931194.3237,
+    "end": 1791427933796.6719,
+    "ms": 2602.3,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427933796.6912,
+    "end": 1791427936435.6528,
+    "ms": 2639,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427936435.6682,
+    "end": 1791427939025.7947,
+    "ms": 2590.1,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427939025.8105,
+    "end": 1791427941683.7715,
+    "ms": 2658,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427941683.8013,
+    "end": 1791427944076.856,
+    "ms": 2393.1,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427944076.8706,
+    "end": 1791427946603.4856,
+    "ms": 2526.6,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427946603.5017,
+    "end": 1791427949379.0366,
+    "ms": 2775.5,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427949379.052,
+    "end": 1791427951906.4456,
+    "ms": 2527.4,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427951906.463,
+    "end": 1791427954428.968,
+    "ms": 2522.5,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427954428.982,
+    "end": 1791427957068.7812,
+    "ms": 2639.8,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427957068.7961,
+    "end": 1791427959469.2388,
+    "ms": 2400.4,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427959469.274,
+    "end": 1791427961985.5334,
+    "ms": 2516.3,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427961985.5493,
+    "end": 1791427964521.5383,
+    "ms": 2536,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427964521.5532,
+    "end": 1791427967188.3342,
+    "ms": 2666.8,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427967188.3477,
+    "end": 1791427969780.752,
+    "ms": 2592.4,
+    "ok": true,
+    "state": "committed"
+   },
+   {
+    "start": 1791427969780.7673,
+    "end": 1791427972252.8474,
+    "ms": 2472.1,
+    "ok": true,
+    "state": "committed"
+   }
+  ]
+ },
+ "spans_found": 21,
+ "publication_kinds": {
+  "group": 21
+ },
+ "spans": {
+  "pre_admission": {
+   "ms_p50": 184.6,
+   "ms_p95": 436.2,
+   "statements_p50": 12,
+   "waves_p50": 12,
+   "describes_p50": 0
+  },
+  "admission": {
+   "ms_p50": 307.6,
+   "ms_p95": 311.6,
+   "statements_p50": 29,
+   "waves_p50": 20,
+   "describes_p50": 0
+  },
+  "claim": {
+   "ms_p50": 310.4,
+   "ms_p95": 493.2,
+   "statements_p50": 14,
+   "waves_p50": 13,
+   "describes_p50": 0
+  },
+  "preparation": {
+   "ms_p50": 614.8,
+   "ms_p95": 677.1,
+   "statements_p50": 33,
+   "waves_p50": 32,
+   "describes_p50": 0
+  },
+  "recovery_record": {
+   "ms_p50": 186,
+   "ms_p95": 188,
+   "statements_p50": 14,
+   "waves_p50": 11,
+   "describes_p50": 0
+  },
+  "publication_txn": {
+   "ms_p50": 926.7,
+   "ms_p95": 942.8,
+   "statements_p50": 76,
+   "waves_p50": 40,
+   "describes_p50": 0
+  },
+  "completion": {
+   "ms_p50": 1.9,
+   "ms_p95": 6,
+   "statements_p50": 5,
+   "waves_p50": 1,
+   "describes_p50": 0
+  }
+ },
+ "trace": "~/work/head-co/out/g5-putpage.trace.jsonl",
+ "writer_stderr_tail": "",
+ "finished_at": "2026-10-08T02:52:52.495Z"
+}

@@ -1,0 +1,24 @@
+{
+  "task_id": "boltons-discount-001",
+  "codebase": "boltons-discount",
+  "variant": "base",
+  "history": "provided",
+  "agent": "opencode",
+  "model": "google/gemini-3.8-flash",
+  "solved": true,
+  "interventions": 0,
+  "capped": false,
+  "final_pytest": "4 passed in 0.01s",
+  "patch_bytes": 565,
+  "tokens": {
+    "input": 179235,
+    "output": 1211,
+    "reasoning": 6098,
+    "cache_read": 543559,
+    "cache_write": 0
+  },
+  "turns": 25,
+  "wall_s": 70.3,
+  "cost_usd": 0.0,
+  "memory_diag": null
+}

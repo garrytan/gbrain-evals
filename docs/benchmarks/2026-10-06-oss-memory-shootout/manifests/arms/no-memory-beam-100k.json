@@ -1,0 +1,17 @@
+{
+  "policies": {
+    "vendor-default": {
+      "budget_tokens": null
+    }
+  },
+  "contexts": [
+    "native"
+  ],
+  "readers": [
+    {
+      "id": "main",
+      "model": "openai:gpt-4.1-mini"
+    }
+  ],
+  "judge": "openai:gpt-4.1-mini"
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "memory-trust-flag-rate-v1",
+  "smoke": false,
+  "amendment": 5,
+  "gbrain": {
+    "repo": "<gbrain checkout>",
+    "ref": "5b9c814b55bd04f6df03c2801642c6820db21abc",
+    "commit": "5b9c814b55bd04f6df03c2801642c6820db21abc",
+    "version": "0.60.139.0",
+    "tree": "3ec4d8b764513bfb7ea8ceb34bcd4a274cf2795d"
+  },
+  "preregistration": {
+    "path": "docs/benchmarks/2026-10-07-memory-trust-preregistration.md",
+    "sha256": "a63e32d63cc1b49c06030873e9fe0baa85df79e6aac97a62c7f71b28ae55a053"
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-07-memory-trust-preregistration.md",
+    "preregistration_commit": "ba79e031887c881495fe1d18c92098a6ef083e36",
+    "runner_commit": "ba79e031887c881495fe1d18c92098a6ef083e36",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-09T23:26:05.713Z"
+  },
+  "corpus": {
+    "name": "LongMemEval-S (longmemeval_s_cleaned.json)",
+    "seed": 5575,
+    "users": 12,
+    "control_users": 3,
+    "inject_per_user": 5,
+    "question_ids": [
+      "u01:8077ef71",
+      "u02:gpt4_fa19884d",
+      "u03:gpt4_e061b84f",
+      "u04:86f00804",
+      "u05:c4ea545c",
+      "u06:3e321797",
+      "u07:8c18457d",
+      "u08:195a1a1b",
+      "u09:157a136e",
+      "u10:gpt4_b5700ca0",
+      "u11:46a3abf7",
+      "u12:29f2956b",
+      "u01c:8077ef71",
+      "u02c:gpt4_fa19884d",
+      "u03c:gpt4_e061b84f"
+    ]
+  },
+  "agent_model": "claude-sonnet-5-5",
+  "embedding_model": "openai:text-embedding-3-large",
+  "estimate_usd": 15.731687611428573,
+  "budget": {
+    "run_id": "memory-trust-amendment-5-2026-10-09T23-24-42-704Z-a0b9ed60",
+    "budget_usd": 25,
+    "reserved_usd": 31.597987931428573,
+    "actual_usd": 12.268626910000004,
+    "charged_reservations": 0,
+    "requests": 15,
+    "input_tokens": 9220082,
+    "output_tokens": 1155902,
+    "overshoot_usd": 0,
+    "ledger_path": ".budget/memory-trust.sqlite",
+    "program_cap_usd": 500,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 1,
+      "max": 1062.3
+    }
+  },
+  "completed": [
+    "u04",
+    "u03",
+    "u01",
+    "u02",
+    "u07",
+    "u05",
+    "u06",
+    "u08",
+    "u09",
+    "u11",
+    "u10",
+    "u12",
+    "u01c",
+    "u03c",
+    "u02c"
+  ]
+}

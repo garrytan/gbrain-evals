@@ -1,0 +1,1949 @@
+{
+ "format": "gbrain-evals-comparator-lock",
+ "schema_version": 1,
+ "note": "The comparator's current release, run as a separate pinned server. `{key}` is the harness registry key resolved by mpw/names.py. Hashes cover CPython wheels for Linux x86_64/aarch64 and macOS arm64.",
+ "version": "0.10.2",
+ "python": "3.12",
+ "torch_backend": "cpu",
+ "generated_with": "uv 0.12.3 (x86_64-unknown-linux-gnu)",
+ "server": {
+  "package": "{key}-api",
+  "package_sha256": "c09ff19502681737e5585ceb5c49d88934a30d94b57e8e498b500985443f9bfa",
+  "module": "{key}_api",
+  "console_script": "{key}-api",
+  "env_prefix": "{KEY}_API_"
+ },
+ "models": {
+  "embeddings": {
+   "repo": "BAAI/bge-small-en-v1.5",
+   "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+   "files": [
+    "1_Pooling/config.json",
+    "README.md",
+    "config.json",
+    "config_sentence_transformers.json",
+    "model.safetensors",
+    "modules.json",
+    "sentence_bert_config.json",
+    "special_tokens_map.json",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "vocab.txt"
+   ]
+  },
+  "reranker": {
+   "repo": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+   "revision": "233902d25c440f23af6f7d6e94d2946bac0bee0a",
+   "files": [
+    "README.md",
+    "config.json",
+    "model.safetensors",
+    "special_tokens_map.json",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "vocab.txt"
+   ]
+  }
+ },
+ "requirements": [
+  {
+   "name": "agent-detector",
+   "version": "2.0.0",
+   "hashes": [
+    "22c6a1c9c23894a12f55aea625f060b8d3330fba774de72d02d5442bb580417f"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "aiofile",
+   "version": "3.12.3",
+   "hashes": [
+    "5c1bcc9e929c50834608e8cc1a4cc1d7503eb60c15a535b779fd39e2f372c017"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "aiohappyeyeballs",
+   "version": "2.7.1",
+   "hashes": [
+    "9243213661e29250eb41368e5daa826fc017156c3b8a11440826b2e3ed376472"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "aiohttp",
+   "version": "3.14.3",
+   "hashes": [
+    "39aded8c7f3b935b54aab1d8d73c70ec0ee2d3ec3b943e0e86611bc150ba47f5",
+    "543906c127fb1d929b95076db19b83fa2d46751006ff1e23b093aa5ac4d8db42",
+    "617105e2c3018ee38d0c8ce5ee3c84f621a6d8b9f723202aacaff28449ca91ee",
+    "f631fe87a6f30df5fbe6d79640b25e4cffb38c31c7fb6f10871517b84b0f8c1a"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "aiosignal",
+   "version": "1.4.0",
+   "hashes": [
+    "053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "alembic",
+   "version": "1.20.0",
+   "hashes": [
+    "77eb101048d95f982c0353e9233404889dcd7a6fc244c107836c0e2fc9cf7d9d"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "annotated-doc",
+   "version": "0.0.5",
+   "hashes": [
+    "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "annotated-types",
+   "version": "0.8.0",
+   "hashes": [
+    "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "anthropic",
+   "version": "1.11.0",
+   "hashes": [
+    "52f97b2c485cca7ac66058374f5073a3febb7e6849b16989c145d602a3efee21"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "anyio",
+   "version": "4.15.1",
+   "hashes": [
+    "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "asgiref",
+   "version": "3.12.1",
+   "hashes": [
+    "fe386d1c2bff7259ea95929266d12a8cf9a8b5a1c2598402967d8792e7a7c094"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "asyncpg",
+   "version": "0.31.0",
+   "hashes": [
+    "0c89ccf741c067614c9b5fc7f1fc6f3b61ab05ae4aaa966e6fd6b93097c7d20d",
+    "12b3b2e39dc5470abd5e98c8d3373e4b1d1234d9fbdedf538798b2c13c64460a",
+    "aad7a33913fb8bcb5454313377cc330fbb19a0cd5faa7272407d8a0c4257b671"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "attrs",
+   "version": "26.1.0",
+   "hashes": [
+    "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "authlib",
+   "version": "1.8.0",
+   "hashes": [
+    "88aebbd9af6757e14e912d5dc007ae1dc1f3e27e3b2152ce7c552ee2c3b3c121"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "beartype",
+   "version": "0.22.9",
+   "hashes": [
+    "d16c9bbc61ea14637596c5f6fbff2ee99cbe3573e46a716401734ef50c3060c2"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "beautifulsoup4",
+   "version": "4.15.0",
+   "hashes": [
+    "d6f88de62e1d4e38ecb1077eb9724cd0eff29d2a08ca16a401e9b9e93f117cf9"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "boto3",
+   "version": "1.43.108",
+   "hashes": [
+    "19e9da95ef0c494e27052049a42137550e66730509bb613e76eaa30ddf9a7170"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "botocore",
+   "version": "1.43.108",
+   "hashes": [
+    "ab9d16c6b4350aaa54ed28202dfa2998b2d735fdbf3247eb60af469d8d48a5b8"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "cachetools",
+   "version": "7.2.0",
+   "hashes": [
+    "3045213f186b89fdd95d94441354c4bd87c570b7a38d8c3fd1d9dd37f6dc90d8"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "caio",
+   "version": "0.12.9",
+   "hashes": [
+    "554c6ee883a0f1e95236d85b8e7d8187b212668855ac3a858acb80f5e2e82e82",
+    "6e72fb0ddd369f712a4ad229ee0f1d7df6852e9b59b36fe8a46210b4c9ea8e82",
+    "bf12d4f014b2a33e642ed7905b5787656ede2fc24be21f7c086826ff0d32cec3",
+    "f0698976f84dd40024204f0f77cf59ed7446e989575c8ad8cb64cd4b3e2871f3"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "certifi",
+   "version": "2026.7.22",
+   "hashes": [
+    "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "cffi",
+   "version": "2.1.1",
+   "hashes": [
+    "68e62fe11f30d5ca8289242866f0a5291402d8529ca2178ab8afc5c9694ae890",
+    "c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf",
+    "f81b3b8f3d4e343550fa4baa0e479bba9f2d29ce9c2e9b51d1ce1718d7442fcf"
+   ],
+   "marker": "python_full_version >= '3.12' and platform_python_implementation != 'PyPy'"
+  },
+  {
+   "name": "charset-normalizer",
+   "version": "3.5.2",
+   "hashes": [
+    "1c50fe28bbc2ced33386f298650d91218076c05420e6cbd790b913adc41659e7",
+    "3d31298449090ab8d47b7b1b2a555ff73cac7ed438a08b7ac160980c7ebed649",
+    "4275811936e2f06feff5e598fb42a1b7ae852da8e39605211892b56b81a34efd",
+    "b6b751274acb69d77b3323d6b7dbaa3c7fdfc1eb829b7eb61d262f32e1af9685",
+    "b91363207bd9dc966a691e959bb47f64b30f7ac4b072be9968b366982f7db77c",
+    "d19fbd981a488e22cd04883659ca6b08f50b5974f9fd7c95655ef6a043e5893f",
+    "ed2a239c0ea213acc1908150a3037257083c7c083128f1a4cec2ec4b97dca491"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "claude-agent-sdk",
+   "version": "0.2.163",
+   "hashes": [
+    "260cb955d237b7e1897f1dbf9ee5efbf815d8622d0c7459a05409c56432d8501",
+    "b025dcc3f9c52779bcd9e9c088b1a587d96afbffb8355b5d3053850796735ede",
+    "e3be00eeb9fc156a3308a2e8fb58390768fdcb2ff16683fac385b4d98e99233c"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "click",
+   "version": "8.5.0",
+   "hashes": [
+    "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "cloudpickle",
+   "version": "3.1.2",
+   "hashes": [
+    "9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "cobble",
+   "version": "0.1.4",
+   "hashes": [
+    "36c91b1655e599fd428e2b95fdd5f0da1ca2e9f1abb0bc871dec21a0e78a2b44"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "cohere",
+   "version": "7.2.0",
+   "hashes": [
+    "d35cb91814d13eac6587e62bf78302b7683cdd036e7697a8e173ec76f2fb4e37"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "colorama",
+   "version": "0.4.6",
+   "hashes": [
+    "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform == 'win32'"
+  },
+  {
+   "name": "croniter",
+   "version": "6.2.4",
+   "hashes": [
+    "8ef3d544107a5c05a150a2d78f8bf5a8eb9c5c4d93405a736b824109574e3f4d"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "cryptography",
+   "version": "50.0.2",
+   "hashes": [
+    "0ddc924c04591c2811ca024d62ecad4f7f6f08af8939c211438f48a16bd23602",
+    "0ec5f09541743261e66e291b4a0cbf0fb2997aeaab6d9e9c740b9dba1b58d1c2",
+    "1981f1db4630889b9ef7803fadef12b056f428cb6b85c27ba57b774793b6093c",
+    "4061c0079120205fb760c58acab6443e217307dcf05e3702cf970e0689972856",
+    "630ebfea3bf689d075f82316324ff7433dc447fe6bc1bfc76524b74b4a9567d2",
+    "79def8d059362e7831389ed3be0ecdf58a89386e1271e35dd9f5af84e81bffd0",
+    "87e9ce85beb6b328ba370cc6e6aea483c92617b4c95b1d33a49297eb662bfb04",
+    "9dab55f57c74c3cad24c323bacbbd04be4705ba6eb0d92e920b1fc4837ed5079",
+    "c5e67125c7dca78d199ec4e116aa93dbb83494808ecbb8211a2cb09b1bf41dbd",
+    "dfe9763530994147d9af1def057a5b9658b00e8f8fe8743d144d1e0911c2e454",
+    "ee247f5c245c9a2fe7c8e2214e295918838e44e00a45a6718451e4004219e767",
+    "f21e8a22c8605750c7af886bab299a363721264061b4ac0a30efb73cfd58efc5",
+    "f9f6143a8c75945eb960d9eb98905a441394abfa24afaae239d514ffb2586480",
+    "fa8f5efb344d6908a1ce62f4a24e2e5780f825d6f53f5f50ec5ffacac72936cb"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "cyclopts",
+   "version": "5.1.1",
+   "hashes": [
+    "ff0da67b2d2d8fe716d20ab82c698277ef30a8fb75d24e9b38a06f56c44931fd"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "dateparser",
+   "version": "1.4.3",
+   "hashes": [
+    "cbce86c64e0cea5c54c84c015d34c903d46c51bfad50632bf2f05a6141d10c05"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "defusedxml",
+   "version": "0.7.1",
+   "hashes": [
+    "a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "detect-installer",
+   "version": "0.2.1",
+   "hashes": [
+    "87e2ce7d05cb108b178f8e45bb80d3d88c0cb4b397983345c18ad6562e02e620"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "distro",
+   "version": "1.9.0",
+   "hashes": [
+    "7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "dnspython",
+   "version": "2.8.0",
+   "hashes": [
+    "01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "docstring-parser",
+   "version": "0.18.0",
+   "hashes": [
+    "b3fcbed555c47d8479be0796ef7e19c2670d428d72e96da63f3a40122860374b"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "einops",
+   "version": "0.8.2",
+   "hashes": [
+    "54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "email-validator",
+   "version": "2.3.0",
+   "hashes": [
+    "80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "et-xmlfile",
+   "version": "2.0.0",
+   "hashes": [
+    "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "exceptiongroup",
+   "version": "1.3.1",
+   "hashes": [
+    "a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "fastapi",
+   "version": "0.142.2",
+   "hashes": [
+    "bd5f4d81f1e93a88bcd77caf4dfe3c2dbffc3805407a0007e9a114c18b3a670b"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "fastapi-cli",
+   "version": "0.0.32",
+   "hashes": [
+    "8dcc286fa32f01bbd3f65dd09cfd5a2540ed5f2230b77db7fd30978d6165f3c4"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "fastapi-cloud-cli",
+   "version": "0.26.0",
+   "hashes": [
+    "94029f92f3dc4289b376e1213f0d6cc7c30d4f32de7e47b5effc6dc754ab9ce9"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "fastar",
+   "version": "0.12.0",
+   "hashes": [
+    "76115050e8f076fb96f1aa7662dc502b5232d21b610aec08035957a93a830cb1",
+    "787e3c8018848b56b7e47918f9a9ec0e13a68e39af6e4d386cf083b2973d254b",
+    "deb0b3882626832361dd0fcee1f4ef1c6e2a7aaa4165e51c86ae0bab95caccd6"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "fastavro",
+   "version": "1.12.2",
+   "hashes": [
+    "0e331896e8efffc72fa03e63b87ebfc37960113127da8e0f5152d91664ffed68",
+    "25ef6855935f67582740ffa6bb978e40ec51be876117a3555c36fa2488dcdf25",
+    "7f01ebaada59d74fdf6d28e5031a961a413b3752e9edb0c03866fa18480cf4c8"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "fastmcp",
+   "version": "4.0.11",
+   "hashes": [
+    "defbc5f2566a702f45817d1acead120dfa8127d60b1c1512b3200232ead13a44"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "fastmcp-slim",
+   "version": "4.0.11",
+   "hashes": [
+    "524905197e318d934908594f16fedea559d44dd682bd763d40f3556233a2b1d9"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "fastuuid",
+   "version": "0.14.0",
+   "hashes": [
+    "0c9ec605ace243b6dbe3bd27ebdd5d33b00d8d1d3f580b39fdd15cd96fd71796",
+    "77e94728324b63660ebf8adb27055e92d2e4611645bf12ed9d88d30486471d0a",
+    "808527f2407f58a76c916d6aa15d58692a4a019fdf8d4c32ac7ff303b7d7af09",
+    "d23ef06f9e67163be38cece704170486715b177f6baae338110983f99a72c070"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "filelock",
+   "version": "4.0.11",
+   "hashes": [
+    "1cbdc4ace7fb11d2f6d073f5c3d91537a23b3d58d2bf2fdffc12c6d717a589c6"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "flashrank",
+   "version": "0.2.10",
+   "hashes": [
+    "5d3272ae657d793c132d1e7917ed9e2adf49e0e1c60735583a67b051c6f0434a"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "flatbuffers",
+   "version": "25.12.19",
+   "hashes": [
+    "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "frozenlist",
+   "version": "1.8.0",
+   "hashes": [
+    "0c18a16eab41e82c295618a77502e17b195883241c563b00f0aa5106fc4eaa0d",
+    "494a5952b1c597ba44e0e78113a7266e656b9794eec897b19ead706bd7074383",
+    "78f7b9e5d6f2fdb88cdde9440dc147259b62b9d3b019924def9f6478be254ac1",
+    "96f423a119f4777a4a056b66ce11527366a8bb92f54e541ade21f2374433f6d4",
+    "f833670942247a14eafbb675458b4e61c82e002a148f49e68257b79296e865c4"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "fsspec",
+   "version": "2026.9.0",
+   "hashes": [
+    "8dd6e646e99ea382bd85f97a45e6b526a442d79423a7dc673f1e2756d05fcb5f"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "github-copilot-sdk",
+   "version": "1.0.16",
+   "hashes": [
+    "fcbc9e2673d5cf3da40c4095fd841d39f04ff2c9b09dfc970b3fb5f962f47a0f"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "google-auth",
+   "version": "2.59.1",
+   "hashes": [
+    "89c3f931683a482ac97e61df7eb9da5e08a91703f3c752b2377d72cfb7d69e6a"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "google-genai",
+   "version": "2.28.0",
+   "hashes": [
+    "cdee15e2fbfea08ea61bce6e5bfbb3301db4bd13a52dccfa8c8d1167e37ca1cc"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "googleapis-common-protos",
+   "version": "1.75.5",
+   "hashes": [
+    "d7285525c23039db98f2463e6d5a4f9b958b94d497f03a844ece3259c4e72d5d"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "greenlet",
+   "version": "3.3.2",
+   "hashes": [
+    "3ceec72030dae6ac0c8ed7591b96b70410a8be370b6a477b1dbc072856ad02bd",
+    "43e99d1749147ac21dde49b99c9abffcbc1e2d55c67501465ef0930d6e78e070",
+    "ac8d61d4343b799d1e526db579833d72f23759c71e07181c2d2944e429eb09cd"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "griffelib",
+   "version": "2.3.0",
+   "hashes": [
+    "1b8f9cd525681c26b1d6d574faa1371651e8459ca51d209684f50b8096ae06e0"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "h11",
+   "version": "0.16.0",
+   "hashes": [
+    "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "h2",
+   "version": "4.4.1",
+   "hashes": [
+    "0e25f1462b23c9cb82d9eb02e28bc706dac2a68cb457c6a0d74d63c8a2a5d0e6"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform != 'darwin'"
+  },
+  {
+   "name": "hf-xet",
+   "version": "1.6.0",
+   "hashes": [
+    "0e6e21fa3cdfcdcd76748564bf593870a5e013f47d97cf10aed63aa222cff5b7",
+    "d62671bb130879cef0ee4c9ebe47a14af6c66ec53e6d84dc15936e5ffdfac82f",
+    "f0906082d9932ae0c0057fa194041c22b4e2cdb46b2592ef3b91f020d62a081a"
+   ],
+   "marker": "(python_full_version >= '3.12' and platform_machine == 'AMD64') or (python_full_version >= '3.12' and platform_machine == 'aarch64') or (python_full_version >= '3.12' and platform_machine == 'amd64') or (python_full_version >= '3.12' and platform_machine == 'arm64') or (python_full_version >= '3.12' and platform_machine == 'x86_64')"
+  },
+  {
+   "name": "{key}-api",
+   "version": "0.10.2",
+   "hashes": [
+    "de4c85e3553671224c5a319f9dc5ca560ff5edd14505736c162404c2d0407e52"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "{key}-api-slim",
+   "version": "0.10.2",
+   "hashes": [
+    "5f05c1017813000e8c46da941ad5cdd7b3d288d864bd985690f8c4f9555f7f64"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "hpack",
+   "version": "4.2.0",
+   "hashes": [
+    "858ac0b02280fa582b5080d68db0899c62a80375e0e5413a74970c5e518b6986"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform != 'darwin'"
+  },
+  {
+   "name": "httpcore",
+   "version": "1.0.9",
+   "hashes": [
+    "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "httpcore2",
+   "version": "2.13.1",
+   "hashes": [
+    "e1e05d4f25f7d7d496bfb96748f6f4b67657b03da069b3a68c36069f3db73d0a"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform != 'emscripten'"
+  },
+  {
+   "name": "httptools",
+   "version": "0.8.0",
+   "hashes": [
+    "425f83884fd6343828d8c565f046cb72b6d19063f6924093e11bcd8e1548cd09",
+    "5931891fb7b441b8a3853cf1b85c82c903defce084dd5f6771ca46e31bf862c5",
+    "880490234c10f70a9830743097e8958d6e4b9f5a0ffc24515023afeef984054d",
+    "b15fc622b0f869d19207c4089a501d9bcc63ca5e071ffdd2f03f922df882dcb2"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "httpx",
+   "version": "0.28.1",
+   "hashes": [
+    "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "httpx2",
+   "version": "2.13.1",
+   "hashes": [
+    "6dff50fabc270ee5fd25d845d0b078ed20564579744d6d962850975996d2f9a4"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "httpx2-jsfetch",
+   "version": "1.0",
+   "hashes": [
+    "cb916b707601e69a07721aabc8f3f6659be3a6893bc1ff5c6f9e02241df2da32"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform == 'emscripten'"
+  },
+  {
+   "name": "huggingface-hub",
+   "version": "1.33.0",
+   "hashes": [
+    "04e434b06e100eddbce9a6e817d72693a7884b10a79bd67ab48080d5c07eb899"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "hyperframe",
+   "version": "6.1.0",
+   "hashes": [
+    "b03380493a519fce58ea5af42e4a42317bf9bd425596f7a0835ffce80f1a42e5"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform != 'darwin'"
+  },
+  {
+   "name": "idna",
+   "version": "3.20",
+   "hashes": [
+    "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "importlib-metadata",
+   "version": "8.9.0",
+   "hashes": [
+    "e0f761b6ea91ced3b0844c14c9d955224d538105921f8e6754c00f6ca79fba7f"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jaraco-classes",
+   "version": "3.4.0",
+   "hashes": [
+    "f662826b6bed8cace05e7ff873ce0f9283b5c924470fe664fff1c2f00f581790"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jaraco-context",
+   "version": "6.1.2",
+   "hashes": [
+    "bf8150b79a2d5d91ae48629d8b427a8f7ba0e1097dd6202a9059f29a36379535"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jaraco-functools",
+   "version": "4.6.0",
+   "hashes": [
+    "99e3dc0060c5cbe8fcd1cdb36258e2a65ca40f1566b2033b12abb1bb44dd3c30"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jeepney",
+   "version": "0.9.0",
+   "hashes": [
+    "97e5714520c16fc0a45695e5365a2e11b81ea79bba796e26f9f1d178cb182683"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform == 'linux'"
+  },
+  {
+   "name": "jinja2",
+   "version": "3.1.6",
+   "hashes": [
+    "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jiter",
+   "version": "0.17.0",
+   "hashes": [
+    "61aed66ee042b3b49ef85fdf75714234d055d89d8496ac1c6e47f89e7a30d5e4",
+    "76eb4a5c20e86f9f848286f167024890f2862258a965d254774deb7fc1545ca1",
+    "8c21265b251d99bbb40080d178a8953e35601d3a1564e05c4de4c0d2ca616797"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jmespath",
+   "version": "1.1.0",
+   "hashes": [
+    "a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "joblib",
+   "version": "1.6.0",
+   "hashes": [
+    "3dbbf9f6e4b592a2357b854608e980fe6390d131d7a82f011a377ef2ebef7aba"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "joserfc",
+   "version": "1.7.5",
+   "hashes": [
+    "add2c2c84e8373b084d526a8b53daba5d7a513a118cd2dcd9fc9f979d0922159"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "json-repair",
+   "version": "0.63.5",
+   "hashes": [
+    "0e39b3066f7829b4bd7fc614e463cfd4ff7a4c46f82f5b65431fc11e29a74c81"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jsonref",
+   "version": "1.1.0",
+   "hashes": [
+    "590dc7773df6c21cbf948b5dac07a72a251db28b0238ceecce0a2abfa8ec30a9"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jsonschema",
+   "version": "4.26.0",
+   "hashes": [
+    "d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jsonschema-path",
+   "version": "0.5.0",
+   "hashes": [
+    "2790a070bc7abb08ea3dbe4d340ece4efadf639223001f020c7503229ba068e2"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "jsonschema-specifications",
+   "version": "2025.9.1",
+   "hashes": [
+    "98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "keyring",
+   "version": "25.7.0",
+   "hashes": [
+    "be4a0b195f149690c166e850609a477c532ddbfbaed96a404d4e43f8d5e2689f"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "litellm",
+   "version": "1.91.5",
+   "hashes": [
+    "db09c6ea0b7c7de034b6c8b628208b000b54e02ef557468f84c2e63fbd7c8560"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform == 'darwin'"
+  },
+  {
+   "name": "litellm",
+   "version": "1.103.3",
+   "hashes": [
+    "3e5e63674c6e17f96ba744ecd04430c9d910e3287b15a540e45ff987484bd231",
+    "e4c4aba8a1c39aa98d3b346e4b854c647474e305ba8e9cafdd3e91704770b7dd"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform != 'darwin'"
+  },
+  {
+   "name": "lxml",
+   "version": "6.1.3",
+   "hashes": [
+    "0c0710ac085a157b593c38fbcacd950f15c4afa8e2057527185875ab302752bc",
+    "379f8a75cf6eb7eef0af074b55f49ab73b868388a98de14646abcdfa4564bb11",
+    "909f4e927bb051f7740d6367285fc60cdcfdaf0258c2dba4ff5ba7eadadc250c",
+    "b37772102d44bb6628186accca3a121b1fa3a6b3d97518a8c29a5229ca4c0d0a",
+    "f683dc6300317700025e41d89a43e0276692ded16113a3c43eab704d605c58e5"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "magika",
+   "version": "0.6.2",
+   "hashes": [
+    "5ef72fbc07723029b3684ef81454bc224ac5f60986aa0fc5a28f4456eebcb5b2"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform == 'win32'"
+  },
+  {
+   "name": "magika",
+   "version": "0.6.3",
+   "hashes": [
+    "3d9661eedbdf445ac9567e97e7ceefb93545d77a6a32858139ea966b5806fb64",
+    "86901e64b05dde5faff408c9b8245495b2e1fd4c226e3393d3d2a3fee65c504b",
+    "eda443d08006ee495e02083b32e51b98cb3696ab595a7d13900d8e2ef506ec9d"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform != 'win32'"
+  },
+  {
+   "name": "mako",
+   "version": "1.4.3",
+   "hashes": [
+    "723296007c870bfd6b3f0c3230dba7198096e5269297ebf5e4eff9e7ffa39d4f"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "mammoth",
+   "version": "1.11.0",
+   "hashes": [
+    "c077ab0d450bd7c0c6ecd529a23bf7e0fa8190c929e28998308ff4eada3f063b"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "markdown-it-py",
+   "version": "4.2.0",
+   "hashes": [
+    "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "markdownify",
+   "version": "1.2.3",
+   "hashes": [
+    "a189a0bedfd14009030fde5f85bb6f77c56897cb839b5c25315dd7d4e3e290ba"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "markitdown",
+   "version": "0.1.8",
+   "hashes": [
+    "de7375a50578a39bcbbf13b48c67d99033d988e0ae8ad25af46ed432dbe4cbab"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "markupsafe",
+   "version": "3.0.4",
+   "hashes": [
+    "0930db9bdc62d22944e10b066448bb65dc9abe9112880c7cab8da54db4284d5f",
+    "6a45c3d514f2436064db00d7fc8778d888f0236ebfed649b53d13a59e69ad51b",
+    "8e124f974786f831d6043728e38296969d3579db8896fe004682f5758e613581"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "mcp",
+   "version": "2.3.0",
+   "hashes": [
+    "dd0c44c089d16453e8ae31a3877a0054d7a2314caaa81f5e0541b9b1734b2377"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "mcp-types",
+   "version": "2.3.0",
+   "hashes": [
+    "968efdbdaedfab06adae40d378a34395f1090c5921d4be3c9cde283aaf76d91d"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "mdurl",
+   "version": "0.1.2",
+   "hashes": [
+    "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "mlx",
+   "version": "0.32.3",
+   "hashes": [
+    "72711cb23cc6dccc5a460f63f39c11931a00b2c6dcd6fba253921090072e21bc",
+    "7aecc3d4a904279492dae58e28378a3c4bec4533e7066e64ae5c78c7a5511f22",
+    "a6241ea8f56a08a6c3a06bbaad7d7fc2fc1c05f23757c61fe0a8797325ac6d46"
+   ],
+   "marker": "python_full_version >= '3.12' and platform_machine == 'arm64' and sys_platform == 'darwin'"
+  },
+  {
+   "name": "mlx-lm",
+   "version": "0.32.0",
+   "hashes": [
+    "9a0f3843135fd88d36ad791f0d82210cdc4130c5c1cb5416f5f0c4b56a135778"
+   ],
+   "marker": "python_full_version >= '3.12' and platform_machine == 'arm64' and sys_platform == 'darwin'"
+  },
+  {
+   "name": "mlx-metal",
+   "version": "0.32.3",
+   "hashes": [
+    "34ae9b83ad2f0ccdd3e5d48ec35176e7119f57069eef187122916dc941a4ae1f",
+    "fdba88ed9131448cf163be2c7ad6374746d8818205f28657aa91b6c69050f691",
+    "feea99fe4d01f9e9f33ca73d869f988219a1725de1c18870baa7d5cd5aef6cb3"
+   ],
+   "marker": "python_full_version >= '3.12' and platform_machine == 'arm64' and sys_platform == 'darwin'"
+  },
+  {
+   "name": "more-itertools",
+   "version": "11.1.0",
+   "hashes": [
+    "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "mpmath",
+   "version": "1.3.0",
+   "hashes": [
+    "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "multidict",
+   "version": "6.9.1",
+   "hashes": [
+    "29138fef49828542e859828107e42e50d0e587c513b7eb4b2d92bade2b0860fe",
+    "35fc236507fb1b3138f0af5ecd5f94ed752d4d6d826248eae425f86204013eea",
+    "6ed30be8918e18c8bed0a2e8b70639ecf02feb61ed00ca2e41cfcb2a50fa3f42",
+    "7bf6478188f4e47bf5686e8a33da4ae28bf43b1b2528d9ee144d28492bfac60b",
+    "976fd7689d69ec78d67d31d38d396d8adb562f7e8368279f76aed4aa451fa06d"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "narwhals",
+   "version": "2.26.0",
+   "hashes": [
+    "29326d74f107c347fd1009bd58e38d9f7c7c5b51e6de97bc93dbc325d9038b54"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "networkx",
+   "version": "3.7",
+   "hashes": [
+    "e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "numpy",
+   "version": "2.5.3",
+   "hashes": [
+    "76c2c1e6bfa5c84adc6434dfbf013aa92096a7985221762c8f11fedfd20fff58",
+    "a72f874bc9e10e4b8f80426fb49716d5141f64442a0c8418065093ec8017fbb0",
+    "b7e18c623bb5c95acb3b3328861272816ba199fb531921c5d6d0b675f1fde9e3",
+    "f59a878c33d6b88122d80d239bb3b845d58708750b0cb06a09aebb9b18ec696c"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "obstore",
+   "version": "0.11.1",
+   "hashes": [
+    "093152daa5c32b70a032f231bbc6a7eff76dda4285eed5a81d272b4485032dab",
+    "2a9f3d66dbf3c073dd6b6033c0787ef14edf78d97bff95595d6f6979692da264",
+    "2ba3bceec4263b3a70eea873abedb82e03da9599f2326e80d6505cab0c10d401"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "onnxruntime",
+   "version": "1.30.0",
+   "hashes": [
+    "001ed726c9bd5e2bc92faade7d37d889e9606a350b7d5529f0227df2e3bb57fd",
+    "6c32a000d5139a38ba9349030b0032e3331acb559d596b22738d9d2b343a2b83",
+    "fa688e7891a6aa206636fe7372e27ee75fd17713289f6b4fc7b190e0a7de9328"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "openai",
+   "version": "2.54.0",
+   "hashes": [
+    "89089789197ccdb87f173a03145ed1598d00795220c93e96cf712b1cbf5e5f2b"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "openapi-pydantic",
+   "version": "0.6.0",
+   "hashes": [
+    "8bd6d548a250da37db96f461bcd52b3468e8834ad7d6db14b00a6b2ebbd163a3"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "openpyxl",
+   "version": "3.1.5",
+   "hashes": [
+    "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-api",
+   "version": "1.45.0",
+   "hashes": [
+    "80e068aba7cd56c8b58512d6a36f8d25cb1dfaa0c0a4cc1c938ccf9f362d9cb3"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-exporter-http-transport",
+   "version": "0.66b0",
+   "hashes": [
+    "c82689928a11505a2a0a26a04afe0ce06d270d3db984bc16c1a80ffa902db00e"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-exporter-otlp-common",
+   "version": "0.66b0",
+   "hashes": [
+    "35d24c867310f4713a9738b0202b6bade77955418fccb9e2f7eea01b76263916"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-exporter-otlp-proto-common",
+   "version": "1.45.0",
+   "hashes": [
+    "7e1410ae6d3ed301f7a74bec96467d519d3f37e52f9d95b309ae125e5a1af863"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-exporter-otlp-proto-http",
+   "version": "1.45.0",
+   "hashes": [
+    "74385f99266dafdefff41f3da4b76f6dba79d237a9d4487e6ff1ee653c74a0a3"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-exporter-prometheus",
+   "version": "0.66b0",
+   "hashes": [
+    "12448682ee2824fef00bd290568297bb5bebd5fd8403fd7d70b3e567cf8b2a93"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-instrumentation",
+   "version": "0.66b0",
+   "hashes": [
+    "0b32e2fcfec1e4bd48511a3b77ce32bfb1c16dcd5479396b21f9086a4b06c0c9"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-instrumentation-asgi",
+   "version": "0.66b0",
+   "hashes": [
+    "8c31fe67b2aef6f7dc3df9c0434ebd0cacd6d8545da703a55a6f160f9bc06fc5"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-instrumentation-fastapi",
+   "version": "0.66b0",
+   "hashes": [
+    "ad9543fc5a87b511d487aa94625a97299ccd818611cb0c979b46985ba782f1cc"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-proto",
+   "version": "1.45.0",
+   "hashes": [
+    "9731566359d7b8e1ee1e149d8e4ad6865bab965e657ad3387ec2784d16927666"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-sdk",
+   "version": "1.45.0",
+   "hashes": [
+    "5dc634c946546f61b757c5b1781f9fd1a10e96ffaf7357c797e508fe9c57e75e"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-semantic-conventions",
+   "version": "0.66b0",
+   "hashes": [
+    "175b19dd98c4473f4f43a2b1df59186fd7b4a48cd3f77cbe03438b6d6fda230a"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "opentelemetry-util-http",
+   "version": "0.66b0",
+   "hashes": [
+    "7f5e581e94f023b30995f700e41ce319cec82bd542ff1c1c7c9b56d6b10bb687"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "orjson",
+   "version": "3.12.0",
+   "hashes": [
+    "1192a7021b6d071aaf909864f6e924d6a2675ca360485b972b8401749311750b",
+    "11edb4660a6680abee9788a3a9072208a2c96538cc1322bd79542065229d8e54",
+    "aa3e43a6846e91d7bde3d5a9c66090fcd8744f569a9b6cffc5e1ca38f6a461c0",
+    "bf44e374aadde77b1f6109f1030be51433eb61984379852766b6f4e187db7b1e"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "packaging",
+   "version": "26.3",
+   "hashes": [
+    "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pandas",
+   "version": "3.0.6",
+   "hashes": [
+    "0704044b676496b8350e023b09f174a26772456c974a2b11c36bebb558c9490d",
+    "9dab635a549e58a053c7b0fa054dc0bd7be22f0ed9a720f4a85d5fb993276172",
+    "e3dccb584123b399c07562ac4d62543e90ede49ddf8ce3c13ffc64cbe828c281"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pathable",
+   "version": "0.6.0",
+   "hashes": [
+    "82c4ca6c98c502ad12e0d4e9779b6210afee93c38990988c8c5d1b49bdcdf566"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pdfminer-six",
+   "version": "20260107",
+   "hashes": [
+    "366585ba97e80dffa8f00cebe303d2f381884d8637af4ce422f1df3ef38111a9"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pdfplumber",
+   "version": "0.11.10",
+   "hashes": [
+    "7741ea81bf165b474b153e6789d10d18e06b6ddcf3ec84289c3ef2fed6802580"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pg0-embedded",
+   "version": "0.15.2",
+   "hashes": [
+    "aaf89e3c4cfe8affb87910f13dd1e8604596f5f3da7efff5a5eb812bd8b4437c",
+    "c55f43e36de626d4d1cd1ea2f8897e17779c3b5a38cba0107329a149dddfae18",
+    "cbfb988ef6ad39009835f7d1f734b6df5bc05db944050f932e08465bcc6bfe2d"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pgvector",
+   "version": "0.5.0",
+   "hashes": [
+    "fedc9800894e6da2be51358d7b7c574bf34f247ca741a5a09513622135f5964f"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pillow",
+   "version": "12.3.0",
+   "hashes": [
+    "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91",
+    "d9c7f76c0673154f044e9d78c8655fb4213f6ca31a836df48b40fe5d187717b9",
+    "ffd0c5368496f41b0944be820fcb7a838aa6e623d250b01acf2643939c3f99d7"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "platformdirs",
+   "version": "4.12.3",
+   "hashes": [
+    "080f3b39423b5abfca9a23d84c4e9795f54d395cd8459867a8ded44084fcd5f8"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "prometheus-client",
+   "version": "0.26.0",
+   "hashes": [
+    "fa93d06737aa02bacd05794768508bb97d2fbee28cb3bca04eaae92f0ca953d6"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "propcache",
+   "version": "0.5.4",
+   "hashes": [
+    "2814ecd8e818f487bee4b0f921bc4d1c176cc5fc71ac0f072d0fa67eda4ac14b",
+    "60a64cbccaa11b7760ce705a14ada17ba459e7ca9f23ba587eb013821032d7ef",
+    "62c60aec739ed00124573cce1178138fd690c7676352d67a37328c1cf51d7468",
+    "87a3caecf8095e48dc72f84bfa42e23a848cf410cc9cc13031fba4869b706a21",
+    "b28f41fa3b8c6900457f858ec5b03998f3a6d535fbc1bb2edec5961ea05ec429"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "protobuf",
+   "version": "7.36.2",
+   "hashes": [
+    "89f23aa53c24553a2416fd4fd1ec06f74fa42b14b546d8883128813f775bbfd2",
+    "bdb3a345d48db958e6ce1f18e508beb0cc981d64f24088427549c866cd039f1e",
+    "cbc70b17ee27e28894c7fee8bb04be1abead49e936bc70eb60052531eee2079e",
+    "e11e1f0180583a2af89db6a2ecd9e8dc40aa6d2988ca175bfd0e6d12ea72d74e"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "psycopg2-binary",
+   "version": "2.9.13",
+   "hashes": [
+    "07b7bd9f410650c34c3532162cc329f112368d78a3fc8668cb1ea9df61bc11bf",
+    "3dc3372b3731b3ef23407fe06b94f640ef87a2bda242fa386033d5589c87514a",
+    "e3861eba31f8ea8663fd876166b032fd89179e42aa63764d6feb281f13f9eb60"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "py-key-value-aio",
+   "version": "0.4.6",
+   "hashes": [
+    "820b30c7959fc738ea3d00160cdb10cd258f51e38737b2add530defeea1ded77"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pyasn1",
+   "version": "0.6.4",
+   "hashes": [
+    "deda9277cfd454080ec40b207fb6df82206a3a2688735233cdcd8d3d565f088b"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pyasn1-modules",
+   "version": "0.4.2",
+   "hashes": [
+    "29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pycparser",
+   "version": "3.0",
+   "hashes": [
+    "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
+   ],
+   "marker": "python_full_version >= '3.12' and implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'"
+  },
+  {
+   "name": "pydantic",
+   "version": "2.13.5",
+   "hashes": [
+    "346a034f080da3755d8e9cb5e00e8b07de1d39e4f6e2c87d8ab7cafa0b269a73"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pydantic-core",
+   "version": "2.46.5",
+   "hashes": [
+    "0fc5be0abd4a407e200d844b404e33639a554e7bd0d448e7b9ae181be4789ac2",
+    "4fdc8b93a41521988916eeaa271173fcca7fa0803d62f87675aac8dcec1c8e29",
+    "a39ac25a9a2fa4072efdb429833c4a4c8009a51ff9eea3eeae131713cd27991e"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pydantic-extra-types",
+   "version": "2.11.1",
+   "hashes": [
+    "1722ea2bddae5628ace25f2aa685b69978ef533123e5638cfbddb999e0100ec1"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pydantic-settings",
+   "version": "2.15.0",
+   "hashes": [
+    "0ba092c291c94baceb5eff768aa0d56400a457585bc0175925a5a5510303da42"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pygments",
+   "version": "2.21.0",
+   "hashes": [
+    "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pyjwt",
+   "version": "2.15.1",
+   "hashes": [
+    "42d59d631f7768a1028a64c7ff581a9bf7519804daf91fc5b6c56e30eec5e193"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pypdfium2",
+   "version": "5.14.0",
+   "hashes": [
+    "11f281613fa22313d9c7ab89947665e84eccf8ebe40e1198a84a88352305648d",
+    "2de384df66ba55fcaab0775f30f28ec1090af3dfa60276a07821efc96d993118",
+    "f1b696e6901e16f114a2ec6332e5e3f8f5033a901614ead28499ab18ca6024f5"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pyperclip",
+   "version": "1.11.0",
+   "hashes": [
+    "299403e9ff44581cb9ba2ffeed69c7aa96a008622ad0c46cb575ca75b5b84273"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "python-dateutil",
+   "version": "2.9.0.post0",
+   "hashes": [
+    "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "python-dotenv",
+   "version": "1.2.4",
+   "hashes": [
+    "42269a8a5b3fd54ffa6f3d84b18abed50064717576b4ecf03dc4a55d8aa04fdc"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "python-multipart",
+   "version": "0.0.32",
+   "hashes": [
+    "ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "python-pptx",
+   "version": "1.0.2",
+   "hashes": [
+    "160838e0b8565a8b1f67947675886e9fea18aa5e795db7ae531606d68e785cba"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pytz",
+   "version": "2026.5",
+   "hashes": [
+    "e658af3757f9e26a9d25dd2aff38335acd92bc9104f890a894b2c1ba28311b03"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "pywin32-ctypes",
+   "version": "0.2.3",
+   "hashes": [
+    "8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform == 'win32'"
+  },
+  {
+   "name": "pyyaml",
+   "version": "6.0.3",
+   "hashes": [
+    "9149cad251584d5fb4981be1ecde53a1ca46c891a79788c0df828d2f166bda28",
+    "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+    "fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "referencing",
+   "version": "0.37.0",
+   "hashes": [
+    "381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "regex",
+   "version": "2026.9.29",
+   "hashes": [
+    "39ab5894d971f9ac68baa6eca5c50387db579cfcacf36ae8df3feceb1815e6d0",
+    "dc79d36d0618752265f0d575915bdc5c5130ecb9c9f6b3bcefeae32e4bdfafcf",
+    "f57dc6b8fef170f105d2cf5cdce254f47b137d7755086cf7050f47e16582abba",
+    "f93bc1c3486ef3747e07c9d7c1d0a147b8fbaab975f80e348aed6f71309dfaca"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "requests",
+   "version": "2.34.2",
+   "hashes": [
+    "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "rich",
+   "version": "15.0.0",
+   "hashes": [
+    "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "rich-rst",
+   "version": "2.2.0",
+   "hashes": [
+    "1ea1c43813dc4a8d86475fce27ffb74e0ada3d4656c9f8130ba2a59868055fe9"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "rich-toolkit",
+   "version": "0.20.5",
+   "hashes": [
+    "e21fd616db9c0539d3c50f3433fb1173db95c19d3cbf215615e224182fad6c18"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "rignore",
+   "version": "0.8.1",
+   "hashes": [
+    "2e68cfc4ee0a2909952af2aebd608d1cd22f7d1cdce332cb0b5ea3762939865d",
+    "ac0a7cadcf6154dd60b2f101425644179b34c540a88b84089995c1745e8c623e",
+    "b9e7ba47a5bb25ad45d39983047ecfbcba01ecda0145458c548cd3f390b73bb7"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "rpds-py",
+   "version": "2026.9.1",
+   "hashes": [
+    "2693b2728bbcc48d09a981a356954b0c47c53ff25b545856f28a889ea619f69a",
+    "addeda51556dac7c1a2f14cda62db8b621cd12afba3091d03a96c72932387eab",
+    "e21c1429e205828ea886a2293a4a2c8e01f4c25d9893ca330e97a6cf73f52e7b"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "s3transfer",
+   "version": "0.19.2",
+   "hashes": [
+    "d8168eccca828cbb2cd573675333f3bddd254313a9c42494b84c76b539e8ba25"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "safetensors",
+   "version": "0.8.0",
+   "hashes": [
+    "7a46e5ff292c356d6991e60942ba7f79817682d3a2cef0702136448cb9c4d235",
+    "c80201d22cbf405b80647a60ada77bba06c8fba2da2743ba1e89cdcc39a81f25",
+    "fd6f3f93c9a0a7cc2788ee63fb763353d4bd2e89b0751bc78fcf7dda00bea774"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "scikit-learn",
+   "version": "1.9.1",
+   "hashes": [
+    "8c14ce41d561f7749f990b41d6703fe02c4669fbc485e598e069e0a1967b488e",
+    "e4c20a6c017d820faa7ac8c783e3d0c6a9a2e297bf9f55332ca17cdf7fd4d04d",
+    "e5d7b18a5b9dca241a74695f3275fa4c895a9dadc72b3d8df5fa9d1083c9b83e"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "scipy",
+   "version": "1.18.1",
+   "hashes": [
+    "3c085faa2cfa879c5141df483f836f4d691045a078224a670fa570fa01612d89",
+    "7bbf207c4453ce1ad2e00b17313852b33310b83090c2311bdaf97f93c0380d12",
+    "e708533e8b2ae2497d65346538a7dcc92814410b25b81432eac66de0f2af8265",
+    "f55fa87b6c612ecd6b058f167c53231b1d14e412efe361d3d6e38b3631c73218"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "secretstorage",
+   "version": "3.5.0",
+   "hashes": [
+    "0ce65888c0725fcb2c5bc0fdb8e5438eece02c523557ea40ce0703c266248137"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform == 'linux'"
+  },
+  {
+   "name": "sentence-transformers",
+   "version": "6.1.0",
+   "hashes": [
+    "eb8122f4d180f552eda26dc3d77e84e8c11dc2b1d456a406b9f24abb70ceeadd"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "sentencepiece",
+   "version": "0.2.2",
+   "hashes": [
+    "1edb10e520e4bddf74d85b0f5ae74cc2d60c2b448885080bfb618bc2b3a49f6b",
+    "38111ed1f79268f399c505028023d5eaaf0ab4e5eafceb709468b0d3323e7838"
+   ],
+   "marker": "python_full_version >= '3.12' and platform_machine == 'arm64' and sys_platform == 'darwin'"
+  },
+  {
+   "name": "sentry-sdk",
+   "version": "2.71.0",
+   "hashes": [
+    "9ed36b4c206048aa67b5ddba0a6e28d59fc55cf10d60f5f7aea2c3917184bf4a"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "setuptools",
+   "version": "84.0.0",
+   "hashes": [
+    "51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "shellingham",
+   "version": "1.5.4",
+   "hashes": [
+    "7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "six",
+   "version": "1.17.0",
+   "hashes": [
+    "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "sniffio",
+   "version": "1.3.1",
+   "hashes": [
+    "2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "soupsieve",
+   "version": "2.10",
+   "hashes": [
+    "8596eb8967d744174820280fa62b4542a2e955bfaccca73ed8a13c6eb8e9b502"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "sqlalchemy",
+   "version": "2.0.54",
+   "hashes": [
+    "63cae7210fea9899e0bf35c1f1ae55d3ddd9c6d47cae8b6b43d945afa79dd65b",
+    "68d994e9b0d0423a02a20039631fa6fcbb7fa829a992f7605025774940305d19",
+    "7e33a631ab1474f8fe6b910bd1a07b7b8009c4c78cdd3fb18001b03e3bc2e1d2",
+    "ffba7eb2d67c7505e82a0902aa854d8824b74c28a183820d6a8bd3cfd0f812c2"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "sse-starlette",
+   "version": "3.5.0",
+   "hashes": [
+    "3e6e1070df3f0f5d9cea81496de92dbb72f6721871d99748ece67441dd8b7997"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "starlette",
+   "version": "1.7.0",
+   "hashes": [
+    "67f8e99895493dd2911a03f11314af6ceebeae4e704bb9f43dfc6a9db151c93e"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "sympy",
+   "version": "1.14.0",
+   "hashes": [
+    "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "tenacity",
+   "version": "9.1.4",
+   "hashes": [
+    "6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "threadpoolctl",
+   "version": "3.7.0",
+   "hashes": [
+    "cd8b60b5641b45c67bbf73c64c843235fc2d8a480c87389f52f5dbee893b86be"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "tiktoken",
+   "version": "0.14.0",
+   "hashes": [
+    "7896eea257fe497a2b7134474d909156c6744ce8da35bce88011a960e008aa0d",
+    "7db45b98e94adf4173a5cd7422b150999a7ee11ff847783a14f6e1b80cc38cb6",
+    "d6cebe67765569df3dafac8474e4eccf5c19d24140492567a5e58a11445732a4"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "tokenizers",
+   "version": "0.22.2",
+   "hashes": [
+    "1e418a55456beedca4621dbab65a318981467a2b188e982a23e117f115ce5001",
+    "2249487018adec45d6e3554c71d46eb39fa8ea67156c640f7513eb26f318cec7",
+    "369cc9fc8cc10cb24143873a0d95438bb8ee257bb80c71989e3ee290e8d72c67"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "toktok-rs",
+   "version": "0.1.4",
+   "hashes": [
+    "43ab1d12f91faada33eb59648088e294bdb1e235cc31a0a37ce7f6b1c950aebf",
+    "d52814fa973c0dec408acc80797ddba12cdc26aa0cc9b2fe58c30458f06e7590",
+    "f738105be418632a34d144e812803e513ba1e41228aa1f13656b5d6642b19fb1"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "torch",
+   "version": "2.14.1",
+   "hashes": [
+    "9cf3082d25560efb1eef921871595227c0cf305abb7761ca45b6b988ef6cdd45"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform == 'darwin'"
+  },
+  {
+   "name": "torch",
+   "version": "2.14.1+cpu",
+   "hashes": [
+    "2af649994b36dffc627175c3f306d9e513a309b58d4619ac7107577613336454",
+    "5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform != 'darwin'"
+  },
+  {
+   "name": "tqdm",
+   "version": "4.70.1",
+   "hashes": [
+    "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "transformers",
+   "version": "5.15.1",
+   "hashes": [
+    "b7cdf238ff583e3a58dbc7fa34da1aaf091ce063141f65a30538160bd5afe93f"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "truststore",
+   "version": "0.10.4",
+   "hashes": [
+    "adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform != 'emscripten'"
+  },
+  {
+   "name": "typer",
+   "version": "0.27.2",
+   "hashes": [
+    "b3a5fc4342d5fc8fda8fc3010b1cf117e9249aab7fae800c2eff62fd3842d97d"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "types-requests",
+   "version": "2.33.0.20260906",
+   "hashes": [
+    "9f53622652bd921ead7a54d665be1b8d518165c8b51cc9d68d944cd6b6bfa8fb"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "typing-extensions",
+   "version": "4.16.0",
+   "hashes": [
+    "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "typing-inspection",
+   "version": "0.4.4",
+   "hashes": [
+    "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "tzdata",
+   "version": "2026.5",
+   "hashes": [
+    "b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac"
+   ],
+   "marker": "(python_full_version >= '3.12' and sys_platform == 'emscripten') or (python_full_version >= '3.12' and sys_platform == 'win32')"
+  },
+  {
+   "name": "tzlocal",
+   "version": "5.4.4",
+   "hashes": [
+    "aae09f0126a8a86fa736be266eb4a471380d26a0de3bc14844e7821fee3e2a15"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "uncalled-for",
+   "version": "0.4.0",
+   "hashes": [
+    "16c4bb3337532e4bd5569adc192285976f3ad5305402256d34c67a12b5c968bd"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "urllib3",
+   "version": "2.8.0",
+   "hashes": [
+    "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "uvicorn",
+   "version": "0.54.0",
+   "hashes": [
+    "505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "uvloop",
+   "version": "0.23.0",
+   "hashes": [
+    "090865d8ce7a03986755a3ce711b7dd0d4b44eb14ab74368b717f3fad1180208",
+    "93935ab27b6eaef4c3e5489aebc84284f0644592f7ab516df60ee1b27eaf5eb3",
+    "f7548ede3ee908cfabc0d068106e303a9a2d811af959cdf6ab85676344cedcda"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform != 'win32'"
+  },
+  {
+   "name": "watchfiles",
+   "version": "1.3.0",
+   "hashes": [
+    "4af9c464d410e8c44b58ddf1cbec7c3a02c1cb2c6c80df9c74659ba2fbda0ab5",
+    "b5768b49e426fd5b550b012c866db347cdf15c398ef98dc557b6e6b72fa74cd1",
+    "bbc1198edfdc90fda0600f825aa94150f428dfcbf8138746f55998e0e660d64c"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "websockets",
+   "version": "16.1.1",
+   "hashes": [
+    "01fbdcbac298efe19360b94bc0039c8f746f0220ba570f327577bfee81059175",
+    "0f62863e8a00a6d33c3d6566ec0b89f23787b747ffe0c3bc71ec0e76b82c94b1",
+    "6abbd3e82c731c8e531714466acd5d87b5e88ac3243465337ba71d68e23ae7e3",
+    "8087e82f842609734c9b5a1330464f8e94e346ba0e18c832c08bafa4b0d63c15",
+    "cc97814dfb786a83b6e2dc2e79351e1b83e6d715647d6887fcabd83026417a00"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "winloop",
+   "version": "0.7.0",
+   "hashes": [
+    "dcdea8aa687711e0a41cbe6280cb0957e2cb1f5dcbc51e65138503ea3a70ff7a"
+   ],
+   "marker": "python_full_version >= '3.12' and sys_platform == 'win32'"
+  },
+  {
+   "name": "wrapt",
+   "version": "2.5.0",
+   "hashes": [
+    "0cabb9c17ab79b2549d1f23b36f436473ad9253ef53995a817feba26fae69d5b",
+    "107eea1a511e98a3a5033b0c2cb403fbb37f05dee6ac1fb85c0460d311ec278c",
+    "6761765cc520ff9616fb035c02a85d1d744f7f70edd4649718fd0d09c589eacf",
+    "8837fbe708cb9d8a2d32a37dee836d24a531f02560db26418e2b181986fa21cb"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "wsproto",
+   "version": "1.3.2",
+   "hashes": [
+    "61eea322cdf56e8cc904bd3ad7573359a242ba65688716b0710a5eb12beab584"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "xlrd",
+   "version": "2.0.2",
+   "hashes": [
+    "ea762c3d29f4cca48d82df517b6d89fbce4db3107f9d78713e48cd321d5c9aa9"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "xlsxwriter",
+   "version": "3.2.9",
+   "hashes": [
+    "9a5db42bc5dff014806c58a20b9eae7322a134abb6fce3c92c181bfb275ec5b3"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "yarl",
+   "version": "1.25.1",
+   "hashes": [
+    "4d781294bb815ecb5ea57ff6bbf8038e0a31a95fdf3e1788f66e0dc100d64b58",
+    "681c758b0490f9e96b78e5fa8e8dc6e648e9185bb6eaebe73183c33ea0c445f3",
+    "94d7aa6debf92a1dd14cb5280b083a764169a13cfb23a452111160274ed989f4",
+    "c6f117789d22dce188e5754e8bc65b7e6ebf8cb73963b9fa761f672a5883769d",
+    "e029648f9c951db30e98a7d7ec90835db88ec4b32820efe2a9bdc2287e032eb6"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  },
+  {
+   "name": "zipp",
+   "version": "4.1.1",
+   "hashes": [
+    "8979f52d874162f485ff2981e3891f3a3317b7a3dd43ff1e1775b9304f307a9c"
+   ],
+   "marker": "python_full_version >= '3.12'"
+  }
+ ]
+}

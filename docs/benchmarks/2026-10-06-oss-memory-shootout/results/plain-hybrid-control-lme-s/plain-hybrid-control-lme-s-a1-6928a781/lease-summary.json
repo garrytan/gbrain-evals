@@ -1,0 +1,8 @@
+{
+  "run_id": "plain-hybrid-control-lme-s-a1-6928a781",
+  "lease_usd": 44,
+  "committed_usd": 17.778908789999928,
+  "requests": 5557,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

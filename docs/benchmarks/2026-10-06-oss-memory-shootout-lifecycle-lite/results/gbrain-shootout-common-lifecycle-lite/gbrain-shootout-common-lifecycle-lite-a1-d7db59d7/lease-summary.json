@@ -1,0 +1,8 @@
+{
+  "run_id": "gbrain-shootout-common-lifecycle-lite-a1-d7db59d7",
+  "lease_usd": 1.42,
+  "committed_usd": 0.26681217000000085,
+  "requests": 1486,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

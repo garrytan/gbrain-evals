@@ -1,0 +1,91 @@
+{
+  "version": "t0b-program-primary-v1",
+  "scorer": "t0b-score-v1",
+  "delivery": {
+    "version": "t0-delivery-v1",
+    "harness": "Claude Code hook protocol, emulated by the evaluator (injected-context path)",
+    "context_sources": {
+      "session_start": "`gbrain hook session-start` stdout: MEMORY.md digest of the workspace (none here), push, backup and status notes, the context pack over IPC (`context_pack`) and always-loaded core memory; src/commands/hook.ts hookSessionStart",
+      "user_prompt_submit": "`gbrain hook user-prompt` hookSpecificOutput.additionalContext: reflex pointers, volunteered pages and hot facts assembled by serve over IPC (`turn_context`); src/commands/hook.ts hookUserPrompt",
+      "not_emulated": "Stop (push debounce, opt-in ambient writeback) and SessionEnd (transcript capture into the dream corpus) are not fired; the dream cycle and autopilot do not run between sessions, so captured transcripts could not reach session 2 at this release without them"
+    },
+    "timing": {
+      "order": "per session: serve started (stdio MCP initialize answered) -> settle -> SessionStart -> UserPromptSubmit for the one user prompt -> model loop",
+      "settle_ms_after_initialize": 4000,
+      "session_start_self_deadline_ms": 1500,
+      "user_prompt_self_deadline_ms": 800,
+      "ipc_deadlines_ms": {
+        "turn_context_client": 600,
+        "turn_context_server": 400,
+        "context_pack_client": 1000,
+        "context_pack_server": 600
+      },
+      "harness_timeout_ms": {
+        "session_start": 5000,
+        "user_prompt_submit": 3000
+      },
+      "source": "src/commands/hook.ts SESSION_START_DEADLINE_MS / USER_PROMPT_DEADLINE_MS; src/core/context/resolve-ipc.ts:84-101; src/core/bootstrap/host-specs.ts CLAUDE_HOOK_DEFAULT_TIMEOUT_SECS"
+    },
+    "byte_cap": {
+      "hook_output_chars": 10000,
+      "memory_digest_bytes": 3072,
+      "prior_context_bytes": 32768,
+      "source": "src/core/bootstrap/host-specs.ts CLAUDE_HOOK_OUTPUT_CAP_CHARS; src/commands/hook.ts DIGEST_MEMORY_CAP_BYTES, PRIOR_CONTEXT_MAX_BYTES"
+    },
+    "session_reset": "each session is a new conversation with a new session_id and a new `gbrain serve` process (Claude Code spawns a stdio MCP server per session); no transcript, no transcript_path (the user-prompt window is the one prompt)",
+    "persistence": "the brain (PGLite data directory and vault checkout) persists from session 1 to session 2 unchanged; nothing is restored between sessions in the baseline arm",
+    "startup_maintenance": "serve boot runs its own startup sweep and session-cursor GC (src/mcp/server.ts); the harness waits settle_ms_after_initialize before SessionStart; GBRAIN_SKIP_STARTUP_HOOKS=1 disables only update checks; no autopilot, dream cycle or extraction drain runs between sessions",
+    "workspace": "an empty, non-git workspace directory per session (no MEMORY.md, no bootstrap manifest)",
+    "surface": "starter: the surface `gbrain bootstrap` registers for Claude Code at this release (src/core/mcp-registration.ts REGISTRATION_SURFACE)",
+    "rendering": "hook text is prepended to the user turn inside <system-reminder> blocks labelled \"SessionStart hook additional context\" and \"UserPromptSubmit hook additional context\", the way Claude Code renders hook context"
+  },
+  "knobs": {
+    "tasks_per_persona": 3,
+    "session1": "explicit",
+    "scale": 1,
+    "hop": true,
+    "supersession": true
+  },
+  "world_digest": "dccafc6f7cc28c44ce5f255713762739359f1f76ab526d99975707fedfe8504a",
+  "seeds": [
+    20261101,
+    20261102,
+    20261103,
+    20261104,
+    20261105,
+    20261106,
+    20261107,
+    20261108
+  ],
+  "readers": [
+    "claude-opus-5-5"
+  ],
+  "arms": [
+    "mutant-forced-drop"
+  ],
+  "repeat": 1,
+  "gbrain": {
+    "requested": "/workspace/gbrain@9ac26bea780e15cb660b2f29691613fcad5d0bf6",
+    "commit": "9ac26bea780e15cb660b2f29691613fcad5d0bf6",
+    "tree": "41f95308fc901fbafd95e4f53c14d709d9fdac60",
+    "version": "0.60.130.0",
+    "verified": {
+      "copy_tree": "41f95308fc901fbafd95e4f53c14d709d9fdac60",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.130.0",
+      "cli_version_matches": true
+    },
+    "frozen_release": false
+  },
+  "surface": "starter",
+  "max_turns": 20,
+  "resolved_config": {
+    "decide": "provider keys present (paid arm)",
+    "hermetic": false,
+    "stripped_keys": []
+  },
+  "bun": "1.4.2",
+  "builds": {}
+}

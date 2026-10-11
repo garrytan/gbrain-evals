@@ -1,0 +1,28 @@
+{
+  "dataset": "beam",
+  "split": "1m",
+  "provider": "comparator",
+  "mode": "rag",
+  "lane": "combined",
+  "seal": "dev",
+  "target_tokens": null,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "budget_usd": 40,
+  "questions": {
+    "units": [
+      "1",
+      "6",
+      "16",
+      "21",
+      "22",
+      "25",
+      "26"
+    ]
+  },
+  "k": 10,
+  "provider_config": {},
+  "note": "memory proof wave dev comparator-beam-1m-rag-combined system default"
+}

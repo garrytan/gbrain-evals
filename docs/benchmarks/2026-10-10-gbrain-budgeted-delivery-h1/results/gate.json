@@ -1,0 +1,273 @@
+{
+  "kind": "budgeted-delivery-h1-gate",
+  "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only",
+  "decision_sha256": "3c2e8c20cd1cee737bd700cfb60eadda78d41cd659bb149e6f342e472cb79ba6",
+  "phase": "final",
+  "created_at": "2026-10-10T22:07:31.546Z",
+  "access_log_lines_at_gate": 27,
+  "labels_read_under_this_decision": 0,
+  "inputs": {
+    "retrieval_rows": 200,
+    "cells": 4
+  },
+  "guards": {
+    "1_no_budget_bytes_identical": {
+      "questions": 200,
+      "equal": 200,
+      "pass": true
+    },
+    "3_product_token_cap_candidate": {
+      "questions": 200,
+      "over_budget": 0,
+      "wrong_packing_or_implicit_budget": 0,
+      "pass": true
+    },
+    "3_product_token_cap_reported": {
+      "depth_first-b_pseudo": {
+        "questions": 200,
+        "over_budget": 0,
+        "wrong_packing_or_implicit_budget": 0,
+        "pass": true
+      },
+      "cap_only-b_pseudo": {
+        "questions": 200,
+        "over_budget": 0,
+        "wrong_packing_or_implicit_budget": 0,
+        "pass": true
+      },
+      "off-b_pseudo": {
+        "questions": 200,
+        "over_budget": 200,
+        "wrong_packing_or_implicit_budget": 0,
+        "pass": false
+      },
+      "off-l5-b_pseudo": {
+        "questions": 200,
+        "over_budget": 0,
+        "wrong_packing_or_implicit_budget": 0,
+        "pass": true
+      }
+    },
+    "5_one_frozen_list_per_question": {
+      "questions": 200,
+      "every_variant_delivered": 200,
+      "pass": true
+    },
+    "6_default_budget": {
+      "pass": true,
+      "note": "exact by guard 1: without an explicit budget every packing delivers the bytes off delivers, so callers without a budget see no change"
+    },
+    "4_reader_context_cap_candidate": {
+      "rows": 200,
+      "cut_or_over": 0,
+      "pass": true
+    }
+  },
+  "delivery": {
+    "depth_first-b_pseudo": {
+      "questions": 200,
+      "budget_tokens": 5500,
+      "budget_used_mean": 5466.36,
+      "over_budget": 0,
+      "blocks_mean": 3.005,
+      "whole_pages_mean": 3,
+      "spilled_blocks_mean": 0,
+      "sessions_out_mean": 3.005,
+      "dropped_reasons_total": {
+        "budget_floor": 3134
+      }
+    },
+    "cap_only-b_pseudo": {
+      "questions": 200,
+      "budget_tokens": 5500,
+      "budget_used_mean": 5491.385,
+      "over_budget": 0,
+      "blocks_mean": 9.92,
+      "whole_pages_mean": 9.905,
+      "spilled_blocks_mean": 0,
+      "sessions_out_mean": 9.92,
+      "dropped_reasons_total": {
+        "budget_floor": 1751
+      }
+    },
+    "off-b_pseudo": {
+      "questions": 200,
+      "budget_tokens": 5500,
+      "budget_used_mean": 10322.8,
+      "over_budget": 200,
+      "blocks_mean": 18.675,
+      "whole_pages_mean": 9.905,
+      "spilled_blocks_mean": 8.755,
+      "sessions_out_mean": 18.675,
+      "dropped_reasons_total": {}
+    },
+    "off-l5-b_pseudo": {
+      "questions": 200,
+      "budget_tokens": 5500,
+      "budget_used_mean": 5488.765,
+      "over_budget": 0,
+      "blocks_mean": 4.88,
+      "whole_pages_mean": 4.88,
+      "spilled_blocks_mean": 0,
+      "sessions_out_mean": 4.88,
+      "dropped_reasons_total": {}
+    }
+  },
+  "problems": [],
+  "contexts": {
+    "sonnet-5-5.depth_first": {
+      "rows": 200,
+      "outcomes": {
+        "scored": 200
+      },
+      "guard4": {
+        "rows": 200,
+        "cut_or_over": 0,
+        "pass": true
+      },
+      "recipe_hash": "b1e6c55cca4d2754dd39e28237a47cde2a8c51560405bda2a9ecadcb6fbc0267",
+      "expected_recipe_hash": "b1e6c55cca4d2754dd39e28237a47cde2a8c51560405bda2a9ecadcb6fbc0267",
+      "rows_with_other_recipe_or_renderer": 0,
+      "rerendered": 200,
+      "rerender_mismatches": 0,
+      "tokens_mean": 6696.515,
+      "items_cut_total": 0
+    },
+    "sonnet-5-5.cap_only": {
+      "rows": 200,
+      "outcomes": {
+        "scored": 200
+      },
+      "guard4": {
+        "rows": 200,
+        "cut_or_over": 0,
+        "pass": true
+      },
+      "recipe_hash": "3edcd166ea40a2436ae65115f9c664b4d39ad853a764e20e9436f327bce0874f",
+      "expected_recipe_hash": "3edcd166ea40a2436ae65115f9c664b4d39ad853a764e20e9436f327bce0874f",
+      "rows_with_other_recipe_or_renderer": 0,
+      "rerendered": 200,
+      "rerender_mismatches": 0,
+      "tokens_mean": 6729.88,
+      "items_cut_total": 0
+    },
+    "sonnet-5-5.off": {
+      "rows": 200,
+      "outcomes": {
+        "scored": 200
+      },
+      "guard4": {
+        "rows": 200,
+        "cut_or_over": 200,
+        "pass": false
+      },
+      "recipe_hash": "ad213143f75194cb4143a9193d2ccb9aafa25c414cb64a0591e0431d73c28df3",
+      "expected_recipe_hash": "ad213143f75194cb4143a9193d2ccb9aafa25c414cb64a0591e0431d73c28df3",
+      "rows_with_other_recipe_or_renderer": 0,
+      "rerendered": 200,
+      "rerender_mismatches": 0,
+      "tokens_mean": 7590.03,
+      "items_cut_total": 1578
+    },
+    "sonnet-5-5.off-l5": {
+      "rows": 200,
+      "outcomes": {
+        "scored": 200
+      },
+      "guard4": {
+        "rows": 200,
+        "cut_or_over": 0,
+        "pass": true
+      },
+      "recipe_hash": "689c5565649ee1da7cd9b1dda4273708baf863dd59c2db0f5459a834e177b720",
+      "expected_recipe_hash": "689c5565649ee1da7cd9b1dda4273708baf863dd59c2db0f5459a834e177b720",
+      "rows_with_other_recipe_or_renderer": 0,
+      "rerendered": 200,
+      "rerender_mismatches": 0,
+      "tokens_mean": 6723.02,
+      "items_cut_total": 0
+    },
+    "opus-5-5.depth_first": {
+      "rows": 200,
+      "outcomes": {
+        "scored": 200
+      },
+      "guard4": {
+        "rows": 200,
+        "cut_or_over": 0,
+        "pass": true
+      },
+      "recipe_hash": "b1e6c55cca4d2754dd39e28237a47cde2a8c51560405bda2a9ecadcb6fbc0267",
+      "expected_recipe_hash": "b1e6c55cca4d2754dd39e28237a47cde2a8c51560405bda2a9ecadcb6fbc0267",
+      "rows_with_other_recipe_or_renderer": 0,
+      "rerendered": 200,
+      "rerender_mismatches": 0,
+      "tokens_mean": 6696.515,
+      "items_cut_total": 0
+    },
+    "opus-5-5.cap_only": {
+      "rows": 200,
+      "outcomes": {
+        "scored": 200
+      },
+      "guard4": {
+        "rows": 200,
+        "cut_or_over": 0,
+        "pass": true
+      },
+      "recipe_hash": "3edcd166ea40a2436ae65115f9c664b4d39ad853a764e20e9436f327bce0874f",
+      "expected_recipe_hash": "3edcd166ea40a2436ae65115f9c664b4d39ad853a764e20e9436f327bce0874f",
+      "rows_with_other_recipe_or_renderer": 0,
+      "rerendered": 200,
+      "rerender_mismatches": 0,
+      "tokens_mean": 6729.88,
+      "items_cut_total": 0
+    },
+    "gpt-6-1-sol.depth_first": {
+      "rows": 200,
+      "outcomes": {
+        "scored": 200
+      },
+      "guard4": {
+        "rows": 200,
+        "cut_or_over": 0,
+        "pass": true
+      },
+      "recipe_hash": "b1e6c55cca4d2754dd39e28237a47cde2a8c51560405bda2a9ecadcb6fbc0267",
+      "expected_recipe_hash": "b1e6c55cca4d2754dd39e28237a47cde2a8c51560405bda2a9ecadcb6fbc0267",
+      "rows_with_other_recipe_or_renderer": 0,
+      "rerendered": 200,
+      "rerender_mismatches": 0,
+      "tokens_mean": 6696.515,
+      "items_cut_total": 0
+    },
+    "gpt-6-1-sol.cap_only": {
+      "rows": 200,
+      "outcomes": {
+        "scored": 200
+      },
+      "guard4": {
+        "rows": 200,
+        "cut_or_over": 0,
+        "pass": true
+      },
+      "recipe_hash": "3edcd166ea40a2436ae65115f9c664b4d39ad853a764e20e9436f327bce0874f",
+      "expected_recipe_hash": "3edcd166ea40a2436ae65115f9c664b4d39ad853a764e20e9436f327bce0874f",
+      "rows_with_other_recipe_or_renderer": 0,
+      "rerendered": 200,
+      "rerender_mismatches": 0,
+      "tokens_mean": 6729.88,
+      "items_cut_total": 0
+    }
+  },
+  "render_identity": {
+    "recipes_equal_e2": true,
+    "rerender_mismatches": 0
+  },
+  "control_context_cuts": {
+    "rows": 200,
+    "cut_or_over": 0,
+    "pass": true
+  },
+  "pass": true
+}

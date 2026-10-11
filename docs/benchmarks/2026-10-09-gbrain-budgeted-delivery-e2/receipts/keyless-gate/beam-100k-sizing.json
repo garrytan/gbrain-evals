@@ -1,0 +1,45 @@
+{
+  "benchmark": "beam-100k",
+  "questions": 8,
+  "b_pseudo_primary": {
+    "name": "b_pseudo_primary",
+    "grid": "b8",
+    "variants": [
+      "off",
+      "cap_only",
+      "breadth_capped",
+      "depth_first"
+    ],
+    "rendering": "pseudo",
+    "budget": 6000,
+    "steps": [
+      {
+        "budget": 7000,
+        "r_max": 1.2755714285714286,
+        "next": 6100
+      },
+      {
+        "budget": 6000,
+        "r_max": null,
+        "next": 6000
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 32,
+    "ratio": {
+      "max": 1.2793798966494416,
+      "p50": 1.1725310215876255,
+      "p90": 1.2308333333333332,
+      "p99": 1.2737531486146096,
+      "mean": 1.1112676230633378
+    },
+    "verification": {
+      "overflow": 8,
+      "overflow_from_gbrain_overrun": 8,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 8
+    }
+  }
+}

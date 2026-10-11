@@ -1,0 +1,45 @@
+{
+  "benchmark": "lme-s-slice",
+  "questions": 100,
+  "b16_pseudo": {
+    "name": "b16_pseudo",
+    "grid": "b16",
+    "variants": [
+      "off",
+      "cap_only",
+      "breadth_capped",
+      "depth_first"
+    ],
+    "rendering": "pseudo",
+    "budget": 11700,
+    "steps": [
+      {
+        "budget": 13500,
+        "r_max": 1.3399970273483948,
+        "next": 11700
+      },
+      {
+        "budget": 11700,
+        "r_max": 1.3327631916531257,
+        "next": 11700
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 16000,
+    "samples": 400,
+    "ratio": {
+      "max": 1.3327631916531257,
+      "p50": 1.1881255881598083,
+      "p90": 1.2487179487179487,
+      "p99": 1.3232478632478633,
+      "mean": 1.1914256773126422
+    },
+    "verification": {
+      "overflow": 0,
+      "overflow_from_gbrain_overrun": 0,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 0
+    }
+  }
+}

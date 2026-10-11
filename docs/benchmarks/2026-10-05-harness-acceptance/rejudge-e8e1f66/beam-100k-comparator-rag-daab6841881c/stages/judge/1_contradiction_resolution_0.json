@@ -1,0 +1,123 @@
+{
+  "cell_id": "beam-100k-comparator-rag-daab6841881c",
+  "query_id": "1_contradiction_resolution_0",
+  "outcome": "answered",
+  "score": 0.75,
+  "correct": true,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=0.750 over 4 rubric items",
+  "rubric": [
+    {
+      "criterion": "LLM response should state: there is contradictory information",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The LLM response clearly states that there is conflicting information, which is semantically equivalent to contradictory information.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: You said you have never written any Flask routes or handled HTTP requests in this project",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The LLM response explicitly quotes the user stating they have never written any Flask routes or handled HTTP requests in this project.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: you also mentioned implementing a basic homepage route with Flask",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The LLM response explicitly mentions that the user had already implemented a basic homepage route.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: which statement is correct?",
+      "valid": true,
+      "score": 0.0,
+      "reason": "The LLM response does not state which statement is correct, but instead asks the user to clarify which one is correct.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I worked with Flask routes and handled HTTP requests in this project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether you have worked with Flask routes and handled HTTP requests in this project:\n\n1. On one hand, you stated: \"I've never written any Flask routes or handled HTTP requests in this project, so I'm starting from scratch. I need to implement user registration with hashed passwords and session login.\"\n\n2. On the other hand, in an earlier conversation you shared: \"Here's my current code for handling user login:\n```python\n@app.route(\"/login\", methods=[\"GET\", \"POST\"])\ndef login():\n    if request.method == \"POST\":\n        username = request.form[\"username\"]\n        password = request.form[\"password\"]\n        user = User.query.filter_by(username=username).first()\n        if user and user.password_hash == password:\n            session[\"user_id\"] = user.id\n            return redirect(url_for(\"index\"))\n    return render_template(\"login.html\")\n```\"\n(Additionally, other records indicate you had already implemented a basic homepage route and handled POST requests for transactions).\n\nCould you please clarify which of these is correct?\n\nRUBRIC CRITERION:\nLLM response should state: there is contradictory information\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "7bb2a792086c5c18801ca16f92d125c5f3046345a10a7d4dabd90e831e0e4c69",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The LLM response clearly states that there is conflicting information, which is semantically equivalent to contradictory information."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The LLM response clearly states that there is conflicting information, which is semantically equivalent to contradictory information."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I worked with Flask routes and handled HTTP requests in this project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether you have worked with Flask routes and handled HTTP requests in this project:\n\n1. On one hand, you stated: \"I've never written any Flask routes or handled HTTP requests in this project, so I'm starting from scratch. I need to implement user registration with hashed passwords and session login.\"\n\n2. On the other hand, in an earlier conversation you shared: \"Here's my current code for handling user login:\n```python\n@app.route(\"/login\", methods=[\"GET\", \"POST\"])\ndef login():\n    if request.method == \"POST\":\n        username = request.form[\"username\"]\n        password = request.form[\"password\"]\n        user = User.query.filter_by(username=username).first()\n        if user and user.password_hash == password:\n            session[\"user_id\"] = user.id\n            return redirect(url_for(\"index\"))\n    return render_template(\"login.html\")\n```\"\n(Additionally, other records indicate you had already implemented a basic homepage route and handled POST requests for transactions).\n\nCould you please clarify which of these is correct?\n\nRUBRIC CRITERION:\nLLM response should mention: You said you have never written any Flask routes or handled HTTP requests in this project\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "f0c52a23965ed917eb241fa82871042596d983bb1aa082e97430390ae66c799e",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The LLM response explicitly quotes the user stating they have never written any Flask routes or handled HTTP requests in this project."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The LLM response explicitly quotes the user stating they have never written any Flask routes or handled HTTP requests in this project."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I worked with Flask routes and handled HTTP requests in this project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether you have worked with Flask routes and handled HTTP requests in this project:\n\n1. On one hand, you stated: \"I've never written any Flask routes or handled HTTP requests in this project, so I'm starting from scratch. I need to implement user registration with hashed passwords and session login.\"\n\n2. On the other hand, in an earlier conversation you shared: \"Here's my current code for handling user login:\n```python\n@app.route(\"/login\", methods=[\"GET\", \"POST\"])\ndef login():\n    if request.method == \"POST\":\n        username = request.form[\"username\"]\n        password = request.form[\"password\"]\n        user = User.query.filter_by(username=username).first()\n        if user and user.password_hash == password:\n            session[\"user_id\"] = user.id\n            return redirect(url_for(\"index\"))\n    return render_template(\"login.html\")\n```\"\n(Additionally, other records indicate you had already implemented a basic homepage route and handled POST requests for transactions).\n\nCould you please clarify which of these is correct?\n\nRUBRIC CRITERION:\nLLM response should mention: you also mentioned implementing a basic homepage route with Flask\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "83e3555c2707bf384adf94dcfc08a5d2749f85142a4930487d20b922fdfbe3e0",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The LLM response explicitly mentions that the user had already implemented a basic homepage route."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The LLM response explicitly mentions that the user had already implemented a basic homepage route."
+      }
+    },
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I worked with Flask routes and handled HTTP requests in this project?\n\nLLM RESPONSE:\nThere is conflicting information in the records regarding whether you have worked with Flask routes and handled HTTP requests in this project:\n\n1. On one hand, you stated: \"I've never written any Flask routes or handled HTTP requests in this project, so I'm starting from scratch. I need to implement user registration with hashed passwords and session login.\"\n\n2. On the other hand, in an earlier conversation you shared: \"Here's my current code for handling user login:\n```python\n@app.route(\"/login\", methods=[\"GET\", \"POST\"])\ndef login():\n    if request.method == \"POST\":\n        username = request.form[\"username\"]\n        password = request.form[\"password\"]\n        user = User.query.filter_by(username=username).first()\n        if user and user.password_hash == password:\n            session[\"user_id\"] = user.id\n            return redirect(url_for(\"index\"))\n    return render_template(\"login.html\")\n```\"\n(Additionally, other records indicate you had already implemented a basic homepage route and handled POST requests for transactions).\n\nCould you please clarify which of these is correct?\n\nRUBRIC CRITERION:\nLLM response should mention: which statement is correct?\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "fda042af1995603807d88f15dfd4e63e0f8763b7317d439cac44e95289f3a962",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 0.0,
+            "reason": "The LLM response does not state which statement is correct, but instead asks the user to clarify which one is correct."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 0.0,
+        "reason": "The LLM response does not state which statement is correct, but instead asks the user to clarify which one is correct."
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "gbrain-shootout-common-pmb-a1-23f449b5",
+  "lease_usd": 0.5,
+  "committed_usd": 0.004930730000000002,
+  "requests": 184,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

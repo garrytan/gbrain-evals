@@ -1,0 +1,955 @@
+{
+  "t": 1791448300037,
+  "at": "2026-10-08T08:31:40.037Z",
+  "pass": 1,
+  "sync_pid": 26018,
+  "via": "pooler",
+  "running": [],
+  "activity": [
+    {
+      "pid": 171,
+      "state": "idle in transaction",
+      "application_name": "gbrain:cli-sync:26018:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": 99634,
+      "query_age_ms": 99634,
+      "state_age_ms": 99634,
+      "query": "begin ",
+      "blocked_by": []
+    },
+    {
+      "pid": 174,
+      "state": "idle",
+      "application_name": "gbrain:dream:26016:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 107888,
+      "state_age_ms": 107888,
+      "query": "SELECT c.* FROM persistence_topology_changes c\n    JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid\n    WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS",
+      "blocked_by": []
+    },
+    {
+      "pid": 175,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:26018:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 101367,
+      "state_age_ms": 101367,
+      "query": "SELECT c.* FROM persistence_topology_changes c\n    JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid\n    WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS",
+      "blocked_by": []
+    },
+    {
+      "pid": 177,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:26018:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 103776,
+      "state_age_ms": 103776,
+      "query": "SELECT * FROM persistence_requests WHERE id=$1::uuid",
+      "blocked_by": []
+    },
+    {
+      "pid": 179,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:26018:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 101781,
+      "state_age_ms": 101781,
+      "query": "SELECT value FROM config WHERE key = $1",
+      "blocked_by": []
+    },
+    {
+      "pid": 180,
+      "state": "idle",
+      "application_name": "gbrain:dream:26016:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 130858,
+      "state_age_ms": 130858,
+      "query": "SELECT value FROM config WHERE key = $1",
+      "blocked_by": []
+    },
+    {
+      "pid": 181,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:26018:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 103776,
+      "state_age_ms": 103776,
+      "query": "SELECT c.* FROM persistence_topology_changes c\n    JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid\n    WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS",
+      "blocked_by": []
+    },
+    {
+      "pid": 182,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:26018:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 101321,
+      "state_age_ms": 101321,
+      "query": "SELECT c.* FROM persistence_topology_changes c\n    JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid\n    WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS",
+      "blocked_by": []
+    },
+    {
+      "pid": 183,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:26018:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 101781,
+      "state_age_ms": 101781,
+      "query": "SELECT value FROM config WHERE key = $1",
+      "blocked_by": []
+    },
+    {
+      "pid": 185,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:26018:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 101298,
+      "state_age_ms": 101298,
+      "query": "commit",
+      "blocked_by": []
+    }
+  ],
+  "states": [
+    {
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "state": "committed",
+      "n": 2
+    },
+    {
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "state": "failed",
+      "n": 6
+    },
+    {
+      "kind": "managed_sync_import",
+      "state": "committed",
+      "n": 24
+    }
+  ],
+  "committed": 24,
+  "failed": [
+    {
+      "request_id": "863051b4-add7-4a7b-a549-86b9f33b944c",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "people/scale-0-11",
+      "error_code": "invalid_params",
+      "error_message": "The adopted fence row does not render its legacy fact.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:29:26.841Z"
+    },
+    {
+      "request_id": "478f943d-df07-4e57-afdd-01fbec5512ba",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "people/scale-0-10",
+      "error_code": "invalid_params",
+      "error_message": "The adopted fence row does not render its legacy fact.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:29:24.996Z"
+    },
+    {
+      "request_id": "ef5d88aa-85e9-4672-a002-69a5658c304c",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "people/scale-0-1",
+      "error_code": "invalid_params",
+      "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:29:12.926Z"
+    },
+    {
+      "request_id": "f56f02c6-e9ad-4ee4-a47d-38fb19e9bcaa",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "people/scale-0-0",
+      "error_code": "invalid_params",
+      "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:29:10.688Z"
+    },
+    {
+      "request_id": "5d973f0b-4c6b-4a05-ae9e-3b1ff1fee1aa",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "companies/scale-0-2",
+      "error_code": "invalid_params",
+      "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:29:02.546Z"
+    },
+    {
+      "request_id": "b2fd16c2-e3c9-4442-a671-caf03f9b67e3",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "companies/scale-0-12",
+      "error_code": "invalid_params",
+      "error_message": "The adopted fence row does not render its legacy fact.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:29:00.390Z"
+    }
+  ],
+  "holds": [
+    {
+      "op": "sync-hold",
+      "fingerprint": "bench:65e35fcf-8d41-4f7a-94f7-3a5885d03c59:companies/scale-0-102.md",
+      "record": {
+        "code": "invalid_fence",
+        "meta": {
+          "line": 32,
+          "fence": {
+            "line": 14,
+            "rows": [],
+            "fence": "facts",
+            "reason": "repeated_marker",
+            "columns": [],
+            "section": "timeline"
+          },
+          "reason": "repeated_marker",
+          "blob_oid": "973b671be0a131776a1f038d2f29d8bdf3fd3728",
+          "fence_version": 3,
+          "recovery_version": 1
+        },
+        "mode": "managed",
+        "path": "companies/scale-0-102.md",
+        "slug": "companies/scale-0-102",
+        "run_id": "a17c0c98-ee56-40fc-a386-e2d304e13dd2",
+        "held_at": "2026-10-08T08:29:01.034Z",
+        "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "page_id": null,
+        "version": 1,
+        "source_id": "bench",
+        "updated_at": "2026-10-08T08:29:01.034Z",
+        "incarnation": "65e35fcf-8d41-4f7a-94f7-3a5885d03c59",
+        "observed_at": "2026-10-08T08:28:59.151Z",
+        "source_path": "companies/scale-0-102.md",
+        "upstream_version": "7a3651520467d54f9db5a3f2c6485f8b477342db23301bbbd7f106b9328922b1"
+      }
+    },
+    {
+      "op": "sync-hold-summary",
+      "fingerprint": "bench:65e35fcf-8d41-4f7a-94f7-3a5885d03c59",
+      "record": {
+        "count": 1,
+        "stale": 0,
+        "fences": 1,
+        "images": 0,
+        "source_id": "bench",
+        "concurrent": 0,
+        "incarnation": "65e35fcf-8d41-4f7a-94f7-3a5885d03c59"
+      }
+    }
+  ],
+  "locks": [],
+  "committed_stale_ms": 73972,
+  "writer_status": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": "[gbrain] Prepared statements disabled (PgBouncer transaction-mode convention on port 6543). Override with GBRAIN_PREPARE=true if your pooler runs in session mode.\nCannot connect to database: write CONNECT_TIMEOUT undefined:undefined. Fix: Check the database URL; `gbrain engine status --probe` names where it comes from (environment variable or the config file under GBRAIN_HOME)\n"
+  },
+  "stall_since": "2026-10-08T08:30:26.101Z",
+  "trace": {
+    "total_round_trips": 4141,
+    "last_round_trip_age_ms": 110317.68896484375,
+    "in_flight_hint": "a statement in flight is not yet in the trace; see activity[] for the backend side",
+    "recent_statement_classes": [
+      {
+        "sql": "commit",
+        "n": 85,
+        "last_age_ms": 110317.68896484375
+      },
+      {
+        "sql": "WITH effects AS (SELECT COALESCE(SUM(octet_length(data::text)+octet_length(kind)",
+        "n": 4,
+        "last_age_ms": 110340.36694335938
+      },
+      {
+        "sql": "SELECT 1 FROM chronicle_page_state WHERE source_id=$1 AND page_id=$2 AND state='",
+        "n": 14,
+        "last_age_ms": 110384.48901367188
+      },
+      {
+        "sql": "SELECT set_config('gbrain.write_sources',$1,true),set_config('gbrain.write_reque",
+        "n": 4,
+        "last_age_ms": 110427.61303710938
+      },
+      {
+        "sql": "SELECT 1 FROM op_checkpoints WHERE op=$1 AND fingerprint=$2",
+        "n": 13,
+        "last_age_ms": 110470.29809570312
+      },
+      {
+        "sql": "INSERT INTO op_checkpoints(op,fingerprint,completed_keys) VALUES($1,$2,$3::text:",
+        "n": 12,
+        "last_age_ms": 110513.19189453125
+      },
+      {
+        "sql": "SELECT COALESCE((completed_keys->0->>'count')::int,0) AS count FROM op_checkpoin",
+        "n": 2,
+        "last_age_ms": 110555.92895507812
+      },
+      {
+        "sql": "UPDATE pages SET text_projection_revision=knowledge_revision, search_vector=setw",
+        "n": 12,
+        "last_age_ms": 110599.80395507812
+      },
+      {
+        "sql": "UPDATE timeline_entries t SET detail=r.next FROM jsonb_to_recordset($2::text::js",
+        "n": 12,
+        "last_age_ms": 110643.18188476562
+      },
+      {
+        "sql": " WITH page_state AS ( SELECT id FROM pages WHERE slug = $1 AND source_id = $2 FO",
+        "n": 24,
+        "last_age_ms": 110686.89697265625
+      },
+      {
+        "sql": "DELETE FROM timeline_entries t USING jsonb_to_recordset($2::text::jsonb) AS d(id",
+        "n": 12,
+        "last_age_ms": 110775.77392578125
+      },
+      {
+        "sql": "DELETE FROM takes WHERE page_id=$1 AND row_num=ANY($2::integer[])",
+        "n": 12,
+        "last_age_ms": 110821.09912109375
+      },
+      {
+        "sql": "SELECT k.row_num FROM takes k JOIN jsonb_to_recordset($2::text::jsonb) AS n(row_",
+        "n": 12,
+        "last_age_ms": 110864.36889648438
+      },
+      {
+        "sql": "UPDATE facts f SET expired_at=COALESCE(expired_at,now()),row_num=NULL WHERE sour",
+        "n": 12,
+        "last_age_ms": 110907.56591796875
+      },
+      {
+        "sql": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 ORDE",
+        "n": 54,
+        "last_age_ms": 110951.80004882812
+      },
+      {
+        "sql": "UPDATE pages SET source_path=$3 WHERE source_id=$1 AND slug=$2 AND source_path I",
+        "n": 12,
+        "last_age_ms": 110995.32299804688
+      },
+      {
+        "sql": "DELETE FROM page_aliases WHERE source_id = $1 AND slug = $2 AND origin IN ('decl",
+        "n": 12,
+        "last_age_ms": 111038.49096679688
+      },
+      {
+        "sql": "DELETE FROM page_aliases WHERE source_id=$1 AND slug=$2 AND origin='frontmatter'",
+        "n": 12,
+        "last_age_ms": 111081.92993164062
+      },
+      {
+        "sql": "savepoint \"s1\"",
+        "n": 1,
+        "last_age_ms": 111124.93798828125
+      },
+      {
+        "sql": "INSERT INTO content_chunks (page_id, chunk_index, chunk_text, chunk_source, \"emb",
+        "n": 12,
+        "last_age_ms": 111148.19506835938
+      },
+      {
+        "sql": "SELECT value FROM config WHERE key = 'embedding_model'",
+        "n": 1,
+        "last_age_ms": 111191.71411132812
+      },
+      {
+        "sql": "SELECT key, value FROM config WHERE key IN ('search_embedding_column', 'embeddin",
+        "n": 1,
+        "last_age_ms": 111213.39599609375
+      },
+      {
+        "sql": "UPDATE pages SET chunker_version = $1 WHERE slug = $2 AND source_id = $3 RETURNI",
+        "n": 12,
+        "last_age_ms": 111235.98901367188
+      },
+      {
+        "sql": " DELETE FROM content_chunks WHERE page_id = (SELECT id FROM pages WHERE slug = $",
+        "n": 12,
+        "last_age_ms": 111279.98193359375
+      },
+      {
+        "sql": " UPDATE pages SET contextual_retrieval_mode = $1, corpus_generation = $2, update",
+        "n": 12,
+        "last_age_ms": 111325.43994140625
+      }
+    ],
+    "tail": [
+      {
+        "age_ms": 111614.36694335938,
+        "ms": 21.271,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT local_path FROM sources WHERE id=$1 FOR SHARE"
+      },
+      {
+        "age_ms": 111592.74389648438,
+        "ms": 21.385,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "SELECT completed_keys->0->>'runId' AS run_id,completed_keys->0->'pending'->>'requestId' AS request_id, (SELECT jsonb_agg(m->>'requestId') FROM (SELECT m FROM jsonb_array_elements(COALESCE(completed_keys->0->'group','[]'::jsonb)) m UNION ALL SELECT m FROM jsonb_array_elements(COALESCE(completed_keys-"
+      },
+      {
+        "age_ms": 111571.28491210938,
+        "ms": 21.731,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT completed_keys->0->>'runId' AS run_id,completed_keys->0->'pending'->>'requestId' AS request_id, (SELECT jsonb_agg(m->>'requestId') FROM (SELECT m FROM jsonb_array_elements(COALESCE(completed_keys->0->'group','[]'::jsonb)) m UNION ALL SELECT m FROM jsonb_array_elements(COALESCE(completed_keys-"
+      },
+      {
+        "age_ms": 111549.25805664062,
+        "ms": 21.299,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "SELECT s.source_id,s.source_incarnation,s.worktree_id,s.relative_path, s.topology_generation::text AS topology_generation,w.owner_host_id,w.owner_epoch::text AS owner_epoch,w.state, h.local_path,h.coordination_path FROM persistence_source_bindings s JOIN persistence_worktrees w ON w.id=s.worktree_id"
+      },
+      {
+        "age_ms": 111527.8720703125,
+        "ms": 21.63,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT s.source_id,s.source_incarnation,s.worktree_id,s.relative_path, s.topology_generation::text AS topology_generation,w.owner_host_id,w.owner_epoch::text AS owner_epoch,w.state, h.local_path,h.coordination_path FROM persistence_source_bindings s JOIN persistence_worktrees w ON w.id=s.worktree_id"
+      },
+      {
+        "age_ms": 111505.47900390625,
+        "ms": 21.209,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])"
+      },
+      {
+        "age_ms": 111484.18408203125,
+        "ms": 21.524,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])"
+      },
+      {
+        "age_ms": 111462.29711914062,
+        "ms": 21.372,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "SELECT b.brain_id,prev.*, CASE WHEN b.brain_id IS NOT NULL THEN concat(set_config('gbrain.write_sources',$1,true), set_config('gbrain.write_request',CASE WHEN prev.s2<>'' THEN prev.s1 ELSE $2 END,true), set_config('gbrain.write_principal_kind',CASE WHEN prev.s2<>'' THEN prev.s2 ELSE $3 END,true), se"
+      },
+      {
+        "age_ms": 111440.85791015625,
+        "ms": 21.426,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT b.brain_id,prev.*, CASE WHEN b.brain_id IS NOT NULL THEN concat(set_config('gbrain.write_sources',$1,true), set_config('gbrain.write_request',CASE WHEN prev.s2<>'' THEN prev.s1 ELSE $2 END,true), set_config('gbrain.write_principal_kind',CASE WHEN prev.s2<>'' THEN prev.s2 ELSE $3 END,true), se"
+      },
+      {
+        "age_ms": 111418.82202148438,
+        "ms": 21.275,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "savepoint \"s0\""
+      },
+      {
+        "age_ms": 111397.11889648438,
+        "ms": 21.85,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": " INSERT INTO pages (source_id, slug, type, page_kind, title, compiled_truth, timeline, frontmatter, content_hash, updated_at, effective_date, effective_date_source, import_filename, chunker_version, source_path, source_kind, source_uri, ingested_via, ingested_at) VALUES ($1, $2, $3, $4, $5, $6, $7, "
+      },
+      {
+        "age_ms": 111375.10888671875,
+        "ms": 27.75,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": " INSERT INTO pages (source_id, slug, type, page_kind, title, compiled_truth, timeline, frontmatter, content_hash, updated_at, effective_date, effective_date_source, import_filename, chunker_version, source_path, source_kind, source_uri, ingested_via, ingested_at) VALUES ($1, $2, $3, $4, $5, $6, $7, "
+      },
+      {
+        "age_ms": 111347.01098632812,
+        "ms": 21.493,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": " UPDATE pages SET contextual_retrieval_mode = $1, corpus_generation = $2, updated_at = now() WHERE source_id = $3 AND slug = $4 AND deleted_at IS NULL "
+      },
+      {
+        "age_ms": 111325.43994140625,
+        "ms": 23.468,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": " UPDATE pages SET contextual_retrieval_mode = $1, corpus_generation = $2, updated_at = now() WHERE source_id = $3 AND slug = $4 AND deleted_at IS NULL "
+      },
+      {
+        "age_ms": 111301.68896484375,
+        "ms": 21.606,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": " DELETE FROM content_chunks WHERE page_id = (SELECT id FROM pages WHERE slug = $1 AND source_id = $2) "
+      },
+      {
+        "age_ms": 111279.98193359375,
+        "ms": 22.065,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": " DELETE FROM content_chunks WHERE page_id = (SELECT id FROM pages WHERE slug = $1 AND source_id = $2) "
+      },
+      {
+        "age_ms": 111257.35693359375,
+        "ms": 21.278,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "UPDATE pages SET chunker_version = $1 WHERE slug = $2 AND source_id = $3 RETURNING id"
+      },
+      {
+        "age_ms": 111235.98901367188,
+        "ms": 22.325,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "UPDATE pages SET chunker_version = $1 WHERE slug = $2 AND source_id = $3 RETURNING id"
+      },
+      {
+        "age_ms": 111213.39599609375,
+        "ms": 21.383,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT key, value FROM config WHERE key IN ('search_embedding_column', 'embedding_columns')"
+      },
+      {
+        "age_ms": 111191.71411132812,
+        "ms": 21.273,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT value FROM config WHERE key = 'embedding_model'"
+      },
+      {
+        "age_ms": 111170.15600585938,
+        "ms": 21.89,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "INSERT INTO content_chunks (page_id, chunk_index, chunk_text, chunk_source, \"embedding\", model, token_count, embedded_at, embedded_text_hash, embedding_input_hash, language, symbol_name, symbol_type, start_line, end_line, parent_symbol_path, doc_comment, symbol_name_qualified, modality, embedding_im"
+      },
+      {
+        "age_ms": 111148.19506835938,
+        "ms": 22.839,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "INSERT INTO content_chunks (page_id, chunk_index, chunk_text, chunk_source, \"embedding\", model, token_count, embedded_at, embedded_text_hash, embedding_input_hash, language, symbol_name, symbol_type, start_line, end_line, parent_symbol_path, doc_comment, symbol_name_qualified, modality, embedding_im"
+      },
+      {
+        "age_ms": 111124.93798828125,
+        "ms": 21.196,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "savepoint \"s1\""
+      },
+      {
+        "age_ms": 111103.4169921875,
+        "ms": 21.417,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "DELETE FROM page_aliases WHERE source_id=$1 AND slug=$2 AND origin='frontmatter'"
+      },
+      {
+        "age_ms": 111081.92993164062,
+        "ms": 21.824,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "DELETE FROM page_aliases WHERE source_id=$1 AND slug=$2 AND origin='frontmatter'"
+      },
+      {
+        "age_ms": 111059.78393554688,
+        "ms": 21.226,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "DELETE FROM page_aliases WHERE source_id = $1 AND slug = $2 AND origin IN ('declared','subject')"
+      },
+      {
+        "age_ms": 111038.49096679688,
+        "ms": 21.457,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "DELETE FROM page_aliases WHERE source_id = $1 AND slug = $2 AND origin IN ('declared','subject')"
+      },
+      {
+        "age_ms": 111016.83203125,
+        "ms": 21.436,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "UPDATE pages SET source_path=$3 WHERE source_id=$1 AND slug=$2 AND source_path IS DISTINCT FROM $3"
+      },
+      {
+        "age_ms": 110995.32299804688,
+        "ms": 21.499,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "UPDATE pages SET source_path=$3 WHERE source_id=$1 AND slug=$2 AND source_path IS DISTINCT FROM $3"
+      },
+      {
+        "age_ms": 110973.61694335938,
+        "ms": 21.709,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1 ) SELECT p.*, (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation, COALESCE((SELECT jsonb_agg(t.tag ORDER BY t.tag) FRO"
+      },
+      {
+        "age_ms": 110951.80004882812,
+        "ms": 22.413,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "WITH chosen AS ( SELECT p.* FROM pages p WHERE p.slug=$1 AND p.source_id=$2 ORDER BY (p.slug=$1) DESC, (p.source_id=$3) DESC, p.source_id ASC LIMIT 1 ) SELECT p.*, (SELECT s.incarnation FROM sources s WHERE s.id=p.source_id) AS source_incarnation, COALESCE((SELECT jsonb_agg(t.tag ORDER BY t.tag) FRO"
+      },
+      {
+        "age_ms": 110928.95288085938,
+        "ms": 21.332,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "UPDATE facts f SET expired_at=COALESCE(expired_at,now()),row_num=NULL WHERE source_id=$1 AND source_markdown_slug=$2 AND row_num IS NOT NULL AND (COALESCE(f.source,'') NOT LIKE 'cli:extract-conversation-facts%' OR EXISTS (SELECT 1 FROM jsonb_to_recordset($3::text::jsonb) AS c(row_num integer) WHERE "
+      },
+      {
+        "age_ms": 110907.56591796875,
+        "ms": 21.764,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "UPDATE facts f SET expired_at=COALESCE(expired_at,now()),row_num=NULL WHERE source_id=$1 AND source_markdown_slug=$2 AND row_num IS NOT NULL AND (COALESCE(f.source,'') NOT LIKE 'cli:extract-conversation-facts%' OR EXISTS (SELECT 1 FROM jsonb_to_recordset($3::text::jsonb) AS c(row_num integer) WHERE "
+      },
+      {
+        "age_ms": 110885.69091796875,
+        "ms": 21.253,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "SELECT k.row_num FROM takes k JOIN jsonb_to_recordset($2::text::jsonb) AS n(row_num integer,claim text,kind text,holder text) ON n.row_num=k.row_num WHERE k.page_id=$1 AND (k.claim,k.kind,k.holder) IS DISTINCT FROM (n.claim,n.kind,n.holder) ORDER BY k.row_num LIMIT $3"
+      },
+      {
+        "age_ms": 110864.36889648438,
+        "ms": 21.774,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT k.row_num FROM takes k JOIN jsonb_to_recordset($2::text::jsonb) AS n(row_num integer,claim text,kind text,holder text) ON n.row_num=k.row_num WHERE k.page_id=$1 AND (k.claim,k.kind,k.holder) IS DISTINCT FROM (n.claim,n.kind,n.holder) ORDER BY k.row_num LIMIT $3"
+      },
+      {
+        "age_ms": 110842.44409179688,
+        "ms": 21.241,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "DELETE FROM takes WHERE page_id=$1 AND row_num=ANY($2::integer[])"
+      },
+      {
+        "age_ms": 110821.09912109375,
+        "ms": 21.524,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "DELETE FROM takes WHERE page_id=$1 AND row_num=ANY($2::integer[])"
+      },
+      {
+        "age_ms": 110799.208984375,
+        "ms": 23.273,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "DELETE FROM timeline_entries t USING jsonb_to_recordset($2::text::jsonb) AS d(id integer,date date,source text,summary text,detail text,removed boolean) WHERE t.page_id=$1 AND t.event_page_id IS NULL AND t.id=d.id AND t.date=d.date AND t.source=d.source AND t.summary=d.summary AND t.detail=d.detail "
+      },
+      {
+        "age_ms": 110775.77392578125,
+        "ms": 21.804,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "DELETE FROM timeline_entries t USING jsonb_to_recordset($2::text::jsonb) AS d(id integer,date date,source text,summary text,detail text,removed boolean) WHERE t.page_id=$1 AND t.event_page_id IS NULL AND t.id=d.id AND t.date=d.date AND t.source=d.source AND t.summary=d.summary AND t.detail=d.detail "
+      },
+      {
+        "age_ms": 110753.80590820312,
+        "ms": 21.406,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": " WITH page_state AS ( SELECT id FROM pages WHERE slug = $1 AND source_id = $2 FOR KEY SHARE ), inserted AS ( INSERT INTO timeline_entries (page_id, date, source, summary, detail) SELECT id, $3::date, $4, $5, $6 FROM page_state ON CONFLICT (page_id, date, md5(summary), source) DO NOTHING RETURNING 1 "
+      },
+      {
+        "age_ms": 110732.28393554688,
+        "ms": 23.734,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": " WITH page_state AS ( SELECT id FROM pages WHERE slug = $1 AND source_id = $2 FOR KEY SHARE ), inserted AS ( INSERT INTO timeline_entries (page_id, date, source, summary, detail) SELECT id, $3::date, $4, $5, $6 FROM page_state ON CONFLICT (page_id, date, md5(summary), source) DO NOTHING RETURNING 1 "
+      },
+      {
+        "age_ms": 110708.38989257812,
+        "ms": 21.334,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": " WITH page_state AS ( SELECT id FROM pages WHERE slug = $1 AND source_id = $2 FOR KEY SHARE ), inserted AS ( INSERT INTO timeline_entries (page_id, date, source, summary, detail) SELECT id, $3::date, $4, $5, $6 FROM page_state ON CONFLICT (page_id, date, md5(summary), source) DO NOTHING RETURNING 1 "
+      },
+      {
+        "age_ms": 110686.89697265625,
+        "ms": 22.142,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": " WITH page_state AS ( SELECT id FROM pages WHERE slug = $1 AND source_id = $2 FOR KEY SHARE ), inserted AS ( INSERT INTO timeline_entries (page_id, date, source, summary, detail) SELECT id, $3::date, $4, $5, $6 FROM page_state ON CONFLICT (page_id, date, md5(summary), source) DO NOTHING RETURNING 1 "
+      },
+      {
+        "age_ms": 110664.59301757812,
+        "ms": 21.338,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "UPDATE timeline_entries t SET detail=r.next FROM jsonb_to_recordset($2::text::jsonb) AS r(id integer,detail text,next text) WHERE t.page_id=$1 AND t.event_page_id IS NULL AND t.id=r.id AND t.detail=r.detail"
+      },
+      {
+        "age_ms": 110643.18188476562,
+        "ms": 21.49,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "UPDATE timeline_entries t SET detail=r.next FROM jsonb_to_recordset($2::text::jsonb) AS r(id integer,detail text,next text) WHERE t.page_id=$1 AND t.event_page_id IS NULL AND t.id=r.id AND t.detail=r.detail"
+      },
+      {
+        "age_ms": 110621.19702148438,
+        "ms": 21.296,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "UPDATE pages SET text_projection_revision=knowledge_revision, search_vector=setweight(to_tsvector('english',COALESCE(title,'')),'A') || setweight(to_tsvector('english',$3::text),'C') WHERE source_id=$1 AND slug=$2 AND knowledge_revision=$4::uuid"
+      },
+      {
+        "age_ms": 110599.80395507812,
+        "ms": 22.362,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "UPDATE pages SET text_projection_revision=knowledge_revision, search_vector=setweight(to_tsvector('english',COALESCE(title,'')),'A') || setweight(to_tsvector('english',$3::text),'C') WHERE source_id=$1 AND slug=$2 AND knowledge_revision=$4::uuid"
+      },
+      {
+        "age_ms": 110577.27709960938,
+        "ms": 21.275,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "SELECT COALESCE((completed_keys->0->>'count')::int,0) AS count FROM op_checkpoints WHERE op=$1 AND fingerprint=$2"
+      },
+      {
+        "age_ms": 110555.92895507812,
+        "ms": 21.259,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT COALESCE((completed_keys->0->>'count')::int,0) AS count FROM op_checkpoints WHERE op=$1 AND fingerprint=$2"
+      },
+      {
+        "age_ms": 110534.4541015625,
+        "ms": 21.193,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "INSERT INTO op_checkpoints(op,fingerprint,completed_keys) VALUES($1,$2,$3::text::jsonb) ON CONFLICT(op,fingerprint) DO UPDATE SET completed_keys=EXCLUDED.completed_keys,updated_at=now()"
+      },
+      {
+        "age_ms": 110513.19189453125,
+        "ms": 21.417,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "INSERT INTO op_checkpoints(op,fingerprint,completed_keys) VALUES($1,$2,$3::text::jsonb) ON CONFLICT(op,fingerprint) DO UPDATE SET completed_keys=EXCLUDED.completed_keys,updated_at=now()"
+      },
+      {
+        "age_ms": 110491.65209960938,
+        "ms": 21.261,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "SELECT 1 FROM op_checkpoints WHERE op=$1 AND fingerprint=$2"
+      },
+      {
+        "age_ms": 110470.29809570312,
+        "ms": 21.323,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT 1 FROM op_checkpoints WHERE op=$1 AND fingerprint=$2"
+      },
+      {
+        "age_ms": 110448.78198242188,
+        "ms": 21.107,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "SELECT set_config('gbrain.write_sources',$1,true),set_config('gbrain.write_request',$2,true),set_config('gbrain.write_principal_kind',$3,true),set_config('gbrain.write_principal_id',$4,true)"
+      },
+      {
+        "age_ms": 110427.61303710938,
+        "ms": 21.093,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT set_config('gbrain.write_sources',$1,true),set_config('gbrain.write_request',$2,true),set_config('gbrain.write_principal_kind',$3,true),set_config('gbrain.write_principal_id',$4,true)"
+      },
+      {
+        "age_ms": 110406.12109375,
+        "ms": 21.563,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "SELECT 1 FROM chronicle_page_state WHERE source_id=$1 AND page_id=$2 AND state='extracted' AND cardinality(event_hashes) > 0 LIMIT 1"
+      },
+      {
+        "age_ms": 110384.48901367188,
+        "ms": 21.626,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "SELECT 1 FROM chronicle_page_state WHERE source_id=$1 AND page_id=$2 AND state='extracted' AND cardinality(event_hashes) > 0 LIMIT 1"
+      },
+      {
+        "age_ms": 110362.43188476562,
+        "ms": 21.934,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "describe",
+        "sql": "WITH effects AS (SELECT COALESCE(SUM(octet_length(data::text)+octet_length(kind)+1024),0) AS bytes FROM persistence_effects WHERE request_id=$1::uuid), done AS (UPDATE persistence_requests SET state=$2,outcome=$3::text::jsonb, error_code=$4,error_message=$5,error_detail=COALESCE($8::text::jsonb,erro"
+      },
+      {
+        "age_ms": 110340.36694335938,
+        "ms": 22.392,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "WITH effects AS (SELECT COALESCE(SUM(octet_length(data::text)+octet_length(kind)+1024),0) AS bytes FROM persistence_effects WHERE request_id=$1::uuid), done AS (UPDATE persistence_requests SET state=$2,outcome=$3::text::jsonb, error_code=$4,error_message=$5,error_detail=COALESCE($8::text::jsonb,erro"
+      },
+      {
+        "age_ms": 110317.68896484375,
+        "ms": 22.025,
+        "pool": "module",
+        "conn": 2,
+        "backend": 309225185,
+        "kind": "execute",
+        "sql": "commit"
+      }
+    ]
+  },
+  "running_detail": [],
+  "queued_head": []
+}

@@ -1,0 +1,1454 @@
+{
+  "t": 1791446560591,
+  "at": "2026-10-08T08:02:40.591Z",
+  "pass": 1,
+  "sync_pid": 171917,
+  "via": "pooler",
+  "running": [
+    {
+      "request_id": "4fb733b8-d0cf-4b63-be8d-39fb194f3a59",
+      "operation": "submit_job",
+      "kind": "managed_sync_import",
+      "grp": null,
+      "claim_phase": {
+        "phase": "preparing",
+        "since": "2026-10-08T08:01:40.478Z",
+        "token": "9e9f5ffb-bee0-4993-ba2d-f85da5496138",
+        "claimed_at": "2026-10-08T08:01:40.478Z"
+      },
+      "blocked_reason": null,
+      "state": "running",
+      "publication_started": false,
+      "claim_lapsed": false,
+      "age_ms": 73555,
+      "since_update_ms": 109
+    }
+  ],
+  "activity": [
+    {
+      "pid": 1027,
+      "state": "idle in transaction",
+      "application_name": "postgres.js",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": 67966,
+      "query_age_ms": 67964,
+      "state_age_ms": 67964,
+      "query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocked_by": []
+    },
+    {
+      "pid": 1023,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:171917:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 67938,
+      "query_age_ms": 67938,
+      "state_age_ms": 67938,
+      "query": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j\n      WHERE (j.reason IS DISTINCT F",
+      "blocked_by": [
+        1027
+      ]
+    },
+    {
+      "pid": 1031,
+      "state": "active",
+      "application_name": "gbrain:cli-sync:171917:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 59896,
+      "query_age_ms": 59896,
+      "state_age_ms": 59896,
+      "query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "blocked_by": [
+        1027
+      ]
+    },
+    {
+      "pid": 1019,
+      "state": "active",
+      "application_name": "gbrain:dream:173941:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Lock",
+      "wait_event": "relation",
+      "xact_age_ms": 22205,
+      "query_age_ms": 22205,
+      "state_age_ms": 22205,
+      "query": "SELECT id, source_id, entity_slug, fact, kind, visibility, notability,\n            context, valid_from, valid_until, source, confidence,\n            claim_metric, claim_value, claim_unit, claim_period",
+      "blocked_by": [
+        1027
+      ]
+    },
+    {
+      "pid": 1029,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:171917:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 301,
+      "state_age_ms": 301,
+      "query": "SELECT c.* FROM persistence_topology_changes c\n    JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid\n    WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS",
+      "blocked_by": []
+    },
+    {
+      "pid": 1030,
+      "state": "idle",
+      "application_name": "gbrain:dream:171915:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 97523,
+      "state_age_ms": 97523,
+      "query": "SELECT value FROM config WHERE key = $1",
+      "blocked_by": []
+    },
+    {
+      "pid": 1032,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:171917:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 75682,
+      "state_age_ms": 75682,
+      "query": "SELECT e.* FROM persistence_effects e\n    JOIN persistence_worktrees w ON w.id=e.worktree_id\n    WHERE e.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND e.next_attempt_at<=now()\n      AND ($2::b",
+      "blocked_by": []
+    },
+    {
+      "pid": 1033,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:171917:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 279,
+      "state_age_ms": 278,
+      "query": "commit",
+      "blocked_by": []
+    },
+    {
+      "pid": 1022,
+      "state": "idle",
+      "application_name": "gbrain:writer-status:174213:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 1851,
+      "state_age_ms": 1850,
+      "query": "SELECT outcome FROM persistence_topology_changes WHERE operation='writer_deactivate' AND state='committed'",
+      "blocked_by": []
+    },
+    {
+      "pid": 1026,
+      "state": "idle",
+      "application_name": "gbrain:dream:171915:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 97523,
+      "state_age_ms": 97523,
+      "query": "SELECT value FROM config WHERE key = $1",
+      "blocked_by": []
+    },
+    {
+      "pid": 1028,
+      "state": "idle",
+      "application_name": "gbrain:cli-sync:171917:module",
+      "backend_type": "client backend",
+      "wait_event_type": "Client",
+      "wait_event": "ClientRead",
+      "xact_age_ms": null,
+      "query_age_ms": 10090,
+      "state_age_ms": 10090,
+      "query": "SELECT id,state FROM persistence_worktree_refreshes\n    WHERE worktree_id=$1::uuid AND state IN ('draining','fenced','merged','recovery_required')",
+      "blocked_by": []
+    }
+  ],
+  "states": [
+    {
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "state": "committed",
+      "n": 2
+    },
+    {
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "state": "failed",
+      "n": 6
+    },
+    {
+      "kind": "managed_sync_import",
+      "state": "committed",
+      "n": 23
+    },
+    {
+      "kind": "managed_sync_import",
+      "state": "running",
+      "n": 1
+    }
+  ],
+  "committed": 23,
+  "failed": [
+    {
+      "request_id": "48c91610-49ca-4ab3-a2ad-4f5fb2b79212",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "people/scale-0-11",
+      "error_code": "invalid_params",
+      "error_message": "The adopted fence row does not render its legacy fact.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:01:00.684Z"
+    },
+    {
+      "request_id": "e096e73b-a89a-46dc-ab0c-d1b87febe00c",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "people/scale-0-10",
+      "error_code": "invalid_params",
+      "error_message": "The adopted fence row does not render its legacy fact.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:00:58.783Z"
+    },
+    {
+      "request_id": "9047c227-20fa-4e9d-a787-0a9466647ea7",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "people/scale-0-1",
+      "error_code": "invalid_params",
+      "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:00:46.624Z"
+    },
+    {
+      "request_id": "c99874f8-7155-4a04-a5f5-5fdd7bd1b624",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "people/scale-0-0",
+      "error_code": "invalid_params",
+      "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:00:44.425Z"
+    },
+    {
+      "request_id": "b91275d9-36e4-4798-a2de-92c03f4ccef4",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "companies/scale-0-2",
+      "error_code": "invalid_params",
+      "error_message": "Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:00:36.189Z"
+    },
+    {
+      "request_id": "47d86dff-fe06-4736-ab3b-ddf5ae76bdd8",
+      "operation": "submit_job",
+      "kind": "managed_maintenance_adopt_fact_fence",
+      "slug": "companies/scale-0-12",
+      "error_code": "invalid_params",
+      "error_message": "The adopted fence row does not render its legacy fact.",
+      "blocked_reason": null,
+      "completed_at": "2026-10-08T08:00:34.037Z"
+    }
+  ],
+  "holds": [
+    {
+      "op": "sync-hold",
+      "fingerprint": "bench:39199b49-b161-463d-ac32-8cfc0e26a0d5:companies/scale-0-102.md",
+      "record": {
+        "code": "invalid_fence",
+        "meta": {
+          "line": 32,
+          "fence": {
+            "line": 14,
+            "rows": [],
+            "fence": "facts",
+            "reason": "repeated_marker",
+            "columns": [],
+            "section": "timeline"
+          },
+          "reason": "repeated_marker",
+          "blob_oid": "973b671be0a131776a1f038d2f29d8bdf3fd3728",
+          "fence_version": 3,
+          "recovery_version": 1
+        },
+        "mode": "managed",
+        "path": "companies/scale-0-102.md",
+        "slug": "companies/scale-0-102",
+        "run_id": "f2e00e23-0672-4ecf-896e-cd84af494e34",
+        "held_at": "2026-10-08T08:00:34.717Z",
+        "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+        "page_id": null,
+        "version": 1,
+        "source_id": "bench",
+        "updated_at": "2026-10-08T08:00:34.717Z",
+        "incarnation": "39199b49-b161-463d-ac32-8cfc0e26a0d5",
+        "observed_at": "2026-10-08T08:00:32.800Z",
+        "source_path": "companies/scale-0-102.md",
+        "upstream_version": "7a3651520467d54f9db5a3f2c6485f8b477342db23301bbbd7f106b9328922b1"
+      }
+    },
+    {
+      "op": "sync-hold-summary",
+      "fingerprint": "bench:39199b49-b161-463d-ac32-8cfc0e26a0d5",
+      "record": {
+        "count": 1,
+        "stale": 0,
+        "fences": 1,
+        "images": 0,
+        "source_id": "bench",
+        "concurrent": 0,
+        "incarnation": "39199b49-b161-463d-ac32-8cfc0e26a0d5"
+      }
+    }
+  ],
+  "locks": [
+    {
+      "pid": 1019,
+      "waiting_app": "gbrain:dream:173941:module",
+      "waiting_query": "SELECT id, source_id, entity_slug, fact, kind, visibility, notability,\n            context, valid_from, valid_until, source, confidence,\n            claim_metric, claim_value, claim_unit, claim_period,\n            EXISTS (SELECT 1 FROM pages p WHERE p.source_id = f.source_id\n              AND p.slug",
+      "wait_ms": 22225,
+      "blocker_pid": 1027,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 67986
+    },
+    {
+      "pid": 1023,
+      "waiting_app": "gbrain:cli-sync:171917:module",
+      "waiting_query": "SELECT s.id AS source_id,j.source_incarnation,j.slug,j.revision,p.page_kind\n    FROM (SELECT source_incarnation,slug,revision,updated_at FROM page_projection_jobs j\n      WHERE (j.reason IS DISTINCT FROM 'rebuild_failed' OR j.updated_at<now()-interval '30 seconds')\n      ORDER BY updated_at,source_i",
+      "wait_ms": 67958,
+      "blocker_pid": 1027,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 67986
+    },
+    {
+      "pid": 1031,
+      "waiting_app": "gbrain:cli-sync:171917:module",
+      "waiting_query": "SELECT id,slug,source_path FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+      "wait_ms": 59916,
+      "blocker_pid": 1027,
+      "blocker_app": "postgres.js",
+      "blocker_state": "idle in transaction",
+      "blocker_query": "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE",
+      "blocker_xact_ms": 67986
+    }
+  ],
+  "committed_stale_ms": 66624,
+  "writer_status": {
+    "selected_brain": "host",
+    "enabled": true,
+    "brain_id": "2f1aba93-0424-41a1-9db4-8ecbe300b72f",
+    "sampled_at": "2026-10-08T08:02:41.312Z",
+    "publication_concurrency": 2,
+    "local_process_ingress": {
+      "state": "not_running",
+      "accepting": false,
+      "active_preparations": 0,
+      "active_worktrees": 0,
+      "scope": "The process that answered has no resident consumer (a one-shot CLI, for example); another process may own writes. See worktrees and bindings for ownership."
+    },
+    "worktrees": [
+      {
+        "id": "d1283bd5-62ae-4400-8533-b7b311387b5b",
+        "owner_host_id": "eda0dcba-9997-412c-ae79-4051952a3b2e",
+        "owner_epoch": "1",
+        "topology_generation": "1",
+        "state": "active",
+        "heartbeat_at": null,
+        "queued": 0,
+        "running": 1,
+        "recovering": 0,
+        "oldest_request_at": "2026-10-08T08:01:27.044Z",
+        "last_completed_sequence": "31",
+        "recovery_bytes": "0",
+        "recovering_effects": 0
+      }
+    ],
+    "counters": [
+      {
+        "key": "brain",
+        "outstanding_count": "1",
+        "intent_bytes": "2161",
+        "lifetime_ids": "32",
+        "terminal_bytes": "524288",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "principal:local_cli:ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+        "outstanding_count": "1",
+        "intent_bytes": "2161",
+        "lifetime_ids": "32",
+        "terminal_bytes": "524288",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "worktree:d1283bd5-62ae-4400-8533-b7b311387b5b",
+        "outstanding_count": "0",
+        "intent_bytes": "0",
+        "lifetime_ids": "0",
+        "terminal_bytes": "0",
+        "recovery_bytes": "0"
+      }
+    ],
+    "queue": [
+      {
+        "state": "running",
+        "count": 1,
+        "intent_bytes": "2161",
+        "oldest_request_at": "2026-10-08T08:01:27.044Z",
+        "oldest_age_ms": "74187"
+      }
+    ],
+    "effects": [],
+    "limits": {
+      "principalOutstanding": 100,
+      "brainOutstanding": 1000,
+      "principalIntentBytes": 33554432,
+      "brainIntentBytes": 268435456,
+      "principalLifetimeIds": 250000,
+      "brainLifetimeIds": 1000000,
+      "principalTerminalBytes": 1610612736,
+      "brainTerminalBytes": 8589934592,
+      "brainRecoveryBytes": 1073741824,
+      "worktreeRecoveryBytes": 268435456
+    },
+    "capacity": [
+      {
+        "scope": "brain",
+        "resource": "outstanding_count",
+        "used": 1,
+        "limit": 1000,
+        "remaining": 999,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_outstanding"
+      },
+      {
+        "scope": "brain",
+        "resource": "intent_bytes",
+        "used": 2161,
+        "limit": 268435456,
+        "remaining": 268433295,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_intent_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "lifetime_ids",
+        "used": 32,
+        "limit": 1000000,
+        "remaining": 999968,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_lifetime_ids"
+      },
+      {
+        "scope": "brain",
+        "resource": "terminal_bytes",
+        "used": 524288,
+        "limit": 8589934592,
+        "remaining": 8589410304,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_terminal_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 1073741824,
+        "remaining": 1073741824,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_recovery_bytes"
+      },
+      {
+        "scope": "principal:local_cli:ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+        "resource": "outstanding_count",
+        "used": 1,
+        "limit": 100,
+        "remaining": 99,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_outstanding"
+      },
+      {
+        "scope": "principal:local_cli:ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+        "resource": "intent_bytes",
+        "used": 2161,
+        "limit": 33554432,
+        "remaining": 33552271,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_intent_bytes"
+      },
+      {
+        "scope": "principal:local_cli:ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+        "resource": "lifetime_ids",
+        "used": 32,
+        "limit": 250000,
+        "remaining": 249968,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_lifetime_ids"
+      },
+      {
+        "scope": "principal:local_cli:ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+        "resource": "terminal_bytes",
+        "used": 524288,
+        "limit": 1610612736,
+        "remaining": 1610088448,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_terminal_bytes"
+      },
+      {
+        "scope": "worktree:d1283bd5-62ae-4400-8533-b7b311387b5b",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 268435456,
+        "remaining": 268435456,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.worktree_recovery_bytes"
+      }
+    ],
+    "recent_failures": [],
+    "blockers": [
+      {
+        "request_id": "4fb733b8-d0cf-4b63-be8d-39fb194f3a59",
+        "worktree_id": "d1283bd5-62ae-4400-8533-b7b311387b5b",
+        "state": "running",
+        "blocked_reason": null,
+        "error_code": null,
+        "created_at": "2026-10-08T08:01:27.044Z",
+        "retry_after_ms": 5000,
+        "diagnostic": {
+          "age_ms": 74268,
+          "assessment": "pending",
+          "reason": "pending",
+          "next_action": "poll"
+        },
+        "claim": {
+          "phase": "preparing",
+          "claim_age_ms": 60834,
+          "phase_age_ms": 60834,
+          "resumes_on_its_own": false,
+          "why": "Its owner is still renewing the claim while it is preparing the write, so the lease never lapses and nothing else on its root runs until that work settles or the owner restarts."
+        },
+        "next_action": "Inspect the sanitized receipt and owner diagnostics before retrying with the same request_id."
+      }
+    ],
+    "mode": "managed",
+    "mode_epoch": 2,
+    "local_markers": {
+      "state": "cleared",
+      "removed": [],
+      "pending": []
+    },
+    "host_id": "eda0dcba-9997-412c-ae79-4051952a3b2e",
+    "local_host_id": "eda0dcba-9997-412c-ae79-4051952a3b2e",
+    "bindings": [
+      {
+        "source_id": "bench",
+        "source_incarnation": "39199b49-b161-463d-ac32-8cfc0e26a0d5",
+        "worktree_id": "d1283bd5-62ae-4400-8533-b7b311387b5b",
+        "relative_path": "",
+        "topology_generation": "1",
+        "owner_host_id": "eda0dcba-9997-412c-ae79-4051952a3b2e",
+        "owner_epoch": "1",
+        "state": "active",
+        "manifest_digest": null,
+        "local_path": "<fixture-home>/repo-bench"
+      }
+    ],
+    "admin_state": "1de90c442b8cf2408b7c2126c3279a529fd3a730507749f8b864e2ed31fd122c",
+    "admin_lock": {
+      "locked": false,
+      "set_at": null,
+      "host_id": null
+    },
+    "blocking_effects": [],
+    "writer_versions": [
+      {
+        "role": "consumer",
+        "host_id": "eda0dcba-9997-412c-ae79-4051952a3b2e",
+        "principal": "local_cli:ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+        "version": "0.60.105.0",
+        "version_label": "0.60.105.0",
+        "last_seen": "2026-10-08T08:01:27.152Z"
+      },
+      {
+        "role": "admitter",
+        "host_id": "eda0dcba-9997-412c-ae79-4051952a3b2e",
+        "principal": "local_cli:ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+        "version": "0.60.105.0",
+        "version_label": "0.60.105.0",
+        "last_seen": "2026-10-08T08:01:27.044Z"
+      }
+    ],
+    "onboarding": {
+      "sources": [
+        {
+          "source_id": "bench",
+          "state": "ready",
+          "write_through": true,
+          "storage": {
+            "container": false,
+            "durability_verified": false,
+            "paths": [
+              {
+                "role": "canonical_root",
+                "path": "<fixture-home>/repo-bench",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "reservation_parent",
+                "path": "<fixture-home>",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "persistence_home",
+                "path": "<fixture-home>/.gbrain/persistence",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "coordination_directory",
+                "path": "<fixture-home>/.gbrain/persistence/locks",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              }
+            ],
+            "next_action": "Verify that the canonical checkout, its parent (which holds the sibling reservation), and the persistence home/coordination lock survive container recreation together. A mounted path is not proof of durability. Do not delete ownership or lock files."
+          }
+        },
+        {
+          "source_id": "default",
+          "state": "database_only",
+          "write_through": true
+        }
+      ],
+      "legacy_locks": [
+        {
+          "id": "gbrain-cycle:bench",
+          "holder_pid": 173941,
+          "holder_host": "cox.local",
+          "acquisition_token": "d394844b-0fbb-4091-b751-e733d9d44cb0",
+          "liveness": "alive"
+        }
+      ],
+      "unsupported_maintenance": [],
+      "procedure": "For deliberate onboarding, stop and upgrade older writers on every host, review all sources and durable paths, explicitly claim each filesystem source using its fresh admin_state, inspect status again, then explicitly activate with --confirm-quiesced and a fresh admin_state. A claim alone fences legacy sync; finish activation before ordinary writes or sync. This inspection never claims, activates, repairs or switches to database-only storage."
+    },
+    "shared_skills": {
+      "writer_protocol_floor": 1,
+      "skill_bundles_enabled": false
+    },
+    "native_lock": {
+      "target": "linux-x64-glibc",
+      "napi": 3,
+      "acquired": true,
+      "released": true
+    },
+    "worktree_refreshes": []
+  },
+  "stall_since": "2026-10-08T08:01:35.634Z",
+  "trace": {
+    "total_round_trips": 7392,
+    "last_round_trip_age_ms": 359.468994140625,
+    "in_flight_hint": "a statement in flight is not yet in the trace; see activity[] for the backend side",
+    "recent_statement_classes": [
+      {
+        "sql": "commit",
+        "n": 154,
+        "last_age_ms": 359.468994140625
+      },
+      {
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id",
+        "n": 157,
+        "last_age_ms": 383.365966796875
+      },
+      {
+        "sql": "SELECT e.* FROM persistence_effects e LEFT JOIN persistence_worktrees w ON w.id=",
+        "n": 152,
+        "last_age_ms": 428.2939453125
+      },
+      {
+        "sql": "SELECT set_config('gbrain.persistence_protocol','2',true),(SELECT singleton FROM",
+        "n": 154,
+        "last_age_ms": 428.443115234375
+      },
+      {
+        "sql": "begin ",
+        "n": 154,
+        "last_age_ms": 450.89306640625
+      },
+      {
+        "sql": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state='running",
+        "n": 154,
+        "last_age_ms": 472.81494140625
+      },
+      {
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w",
+        "n": 310,
+        "last_age_ms": 472.861083984375
+      },
+      {
+        "sql": "SELECT r.* FROM persistence_requests r JOIN persistence_worktrees w ON w.id=r.wo",
+        "n": 148,
+        "last_age_ms": 517.35693359375
+      },
+      {
+        "sql": "SELECT e.* FROM persistence_effects e JOIN persistence_worktrees w ON w.id=e.wor",
+        "n": 156,
+        "last_age_ms": 517.389892578125
+      },
+      {
+        "sql": "SELECT brain_id,enabled,to_jsonb(persistence_brain)->>'mode_epoch' AS mode_epoch",
+        "n": 77,
+        "last_age_ms": 608.431884765625
+      },
+      {
+        "sql": "SELECT DISTINCT ON (local_path) * FROM ( SELECT h.local_path,s.source_id,s.sourc",
+        "n": 154,
+        "last_age_ms": 1085.113037109375
+      },
+      {
+        "sql": "SELECT f.* FROM persistence_worktree_refreshes f JOIN persistence_worktrees w ON",
+        "n": 150,
+        "last_age_ms": 1557.843017578125
+      },
+      {
+        "sql": "SELECT * FROM persistence_requests r WHERE state IN ('committed','conflict','fai",
+        "n": 2,
+        "last_age_ms": 7711.39111328125
+      },
+      {
+        "sql": "SELECT value FROM config WHERE key=$1",
+        "n": 2,
+        "last_age_ms": 7755.89990234375
+      },
+      {
+        "sql": "SELECT lane,revoked_at,grant_ceiling FROM persistence_local_writers WHERE id=$1:",
+        "n": 4,
+        "last_age_ms": 10966.883056640625
+      },
+      {
+        "sql": "SELECT * FROM persistence_requests WHERE principal_kind=$1 AND principal_id=$2 A",
+        "n": 4,
+        "last_age_ms": 11010.02294921875
+      },
+      {
+        "sql": " SELECT key, value FROM config ",
+        "n": 1,
+        "last_age_ms": 11096.72509765625
+      },
+      {
+        "sql": "SELECT value FROM config WHERE key = $1",
+        "n": 24,
+        "last_age_ms": 11118.365966796875
+      },
+      {
+        "sql": "SELECT completed_keys FROM op_checkpoints WHERE op=$1 AND fingerprint=$2",
+        "n": 4,
+        "last_age_ms": 11427.81201171875
+      },
+      {
+        "sql": "SELECT lane,credential_hash,grant_ceiling,revoked_at FROM persistence_local_writ",
+        "n": 4,
+        "last_age_ms": 11556.9990234375
+      },
+      {
+        "sql": "SELECT brain_id FROM persistence_brain WHERE singleton=1",
+        "n": 2,
+        "last_age_ms": 11643.93798828125
+      },
+      {
+        "sql": "INSERT INTO persistence_local_writers(id,lane,credential_hash,grant_ceiling) VAL",
+        "n": 2,
+        "last_age_ms": 11665.41796875
+      },
+      {
+        "sql": "SELECT revoked_at,credential_hash,lane FROM persistence_local_writers WHERE id=$",
+        "n": 2,
+        "last_age_ms": 11708.9609375
+      },
+      {
+        "sql": "UPDATE persistence_requests SET claim_expires_at=now()+($3::double precision*int",
+        "n": 6,
+        "last_age_ms": 11772.7451171875
+      },
+      {
+        "sql": "SELECT id,state FROM persistence_worktree_refreshes WHERE worktree_id=$1::uuid A",
+        "n": 2,
+        "last_age_ms": 11775.300048828125
+      }
+    ],
+    "tail": [
+      {
+        "age_ms": 5179.115966796875,
+        "ms": 3686.737,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1005406568,
+        "kind": "execute",
+        "sql": "SELECT e.* FROM persistence_effects e JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE e.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND e.next_attempt_at<=now() AND ($2::bigint IS NULL OR e.id>$2::bigint) ORDER BY e.id LIMIT $3"
+      },
+      {
+        "age_ms": 7238.1669921875,
+        "ms": 5746.033,
+        "pool": "module",
+        "conn": 9,
+        "backend": 76391895,
+        "kind": "execute",
+        "sql": "SELECT f.* FROM persistence_worktree_refreshes f JOIN persistence_worktrees w ON w.id=f.worktree_id WHERE w.owner_host_id=$1::uuid AND f.state IN ('draining','fenced','merged') ORDER BY f.created_at LIMIT 16"
+      },
+      {
+        "age_ms": 1491.943115234375,
+        "ms": 21.29,
+        "pool": "module",
+        "conn": 7,
+        "backend": 364668574,
+        "kind": "simple",
+        "sql": "begin "
+      },
+      {
+        "age_ms": 4729.3779296875,
+        "ms": 3258.898,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1005406568,
+        "kind": "describe",
+        "sql": "SELECT DISTINCT ON (local_path) * FROM ( SELECT h.local_path,s.source_id,s.source_incarnation,s.worktree_id,s.topology_generation FROM persistence_host_bindings h JOIN persistence_source_bindings s ON s.worktree_id=h.worktree_id WHERE h.host_id=$1::uuid UNION SELECT local_path,id,incarnation,NULL,NU"
+      },
+      {
+        "age_ms": 1492.2099609375,
+        "ms": 21.791,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "describe",
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS NULL OR c.id>$2::uuid) ORDER BY c.id LIMIT $3"
+      },
+      {
+        "age_ms": 4707.712890625,
+        "ms": 3260.613,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1005406568,
+        "kind": "execute",
+        "sql": "SELECT DISTINCT ON (local_path) * FROM ( SELECT h.local_path,s.source_id,s.source_incarnation,s.worktree_id,s.topology_generation FROM persistence_host_bindings h JOIN persistence_source_bindings s ON s.worktree_id=h.worktree_id WHERE h.host_id=$1::uuid UNION SELECT local_path,id,incarnation,NULL,NU"
+      },
+      {
+        "age_ms": 1470.111083984375,
+        "ms": 23.146,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "execute",
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS NULL OR c.id>$2::uuid) ORDER BY c.id LIMIT $3"
+      },
+      {
+        "age_ms": 1470.3798828125,
+        "ms": 23.508,
+        "pool": "module",
+        "conn": 7,
+        "backend": 364668574,
+        "kind": "simple",
+        "sql": "SELECT set_config('gbrain.persistence_protocol','2',true),(SELECT singleton FROM persistence_brain WHERE singleton=1 FOR SHARE) AS brain"
+      },
+      {
+        "age_ms": 1446.797119140625,
+        "ms": 21.385,
+        "pool": "module",
+        "conn": 7,
+        "backend": 364668574,
+        "kind": "describe",
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active')) AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_worktree_refreshes fence WHERE fenc"
+      },
+      {
+        "age_ms": 4595.431884765625,
+        "ms": 3170.134,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1005406568,
+        "kind": "simple",
+        "sql": "begin "
+      },
+      {
+        "age_ms": 1425.214111328125,
+        "ms": 23.803,
+        "pool": "module",
+        "conn": 7,
+        "backend": 364668574,
+        "kind": "execute",
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active')) AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_worktree_refreshes fence WHERE fenc"
+      },
+      {
+        "age_ms": 1401.156005859375,
+        "ms": 21.539,
+        "pool": "module",
+        "conn": 7,
+        "backend": 364668574,
+        "kind": "execute",
+        "sql": "commit"
+      },
+      {
+        "age_ms": 1129.14501953125,
+        "ms": 21.693,
+        "pool": "module",
+        "conn": 3,
+        "backend": 885748604,
+        "kind": "simple",
+        "sql": "SELECT brain_id,enabled,to_jsonb(persistence_brain)->>'mode_epoch' AS mode_epoch FROM persistence_brain WHERE singleton=1"
+      },
+      {
+        "age_ms": 1107.139892578125,
+        "ms": 21.966,
+        "pool": "module",
+        "conn": 10,
+        "backend": 1722859807,
+        "kind": "describe",
+        "sql": "SELECT DISTINCT ON (local_path) * FROM ( SELECT h.local_path,s.source_id,s.source_incarnation,s.worktree_id,s.topology_generation FROM persistence_host_bindings h JOIN persistence_source_bindings s ON s.worktree_id=h.worktree_id WHERE h.host_id=$1::uuid UNION SELECT local_path,id,incarnation,NULL,NU"
+      },
+      {
+        "age_ms": 1085.113037109375,
+        "ms": 21.876,
+        "pool": "module",
+        "conn": 10,
+        "backend": 1722859807,
+        "kind": "execute",
+        "sql": "SELECT DISTINCT ON (local_path) * FROM ( SELECT h.local_path,s.source_id,s.source_incarnation,s.worktree_id,s.topology_generation FROM persistence_host_bindings h JOIN persistence_source_bindings s ON s.worktree_id=h.worktree_id WHERE h.host_id=$1::uuid UNION SELECT local_path,id,incarnation,NULL,NU"
+      },
+      {
+        "age_ms": 1062.6259765625,
+        "ms": 22.238,
+        "pool": "module",
+        "conn": 5,
+        "backend": 8197095,
+        "kind": "describe",
+        "sql": "SELECT e.* FROM persistence_effects e JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE e.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND e.next_attempt_at<=now() AND ($2::bigint IS NULL OR e.id>$2::bigint) ORDER BY e.id LIMIT $3"
+      },
+      {
+        "age_ms": 1062.553955078125,
+        "ms": 22.224,
+        "pool": "module",
+        "conn": 1,
+        "backend": 1214756642,
+        "kind": "describe",
+        "sql": "SELECT r.* FROM persistence_requests r JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE w.owner_host_id=$1::uuid AND r.recovery IS NOT NULL AND NOT(r.worktree_id::text=ANY($2::text[])) AND NOT EXISTS (SELECT 1 FROM persistence_requests earlier WHERE earlier.worktree_id=r.worktree_id AND earl"
+      },
+      {
+        "age_ms": 1040.279052734375,
+        "ms": 22.063,
+        "pool": "module",
+        "conn": 5,
+        "backend": 8197095,
+        "kind": "execute",
+        "sql": "SELECT e.* FROM persistence_effects e JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE e.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND e.next_attempt_at<=now() AND ($2::bigint IS NULL OR e.id>$2::bigint) ORDER BY e.id LIMIT $3"
+      },
+      {
+        "age_ms": 6809.56591796875,
+        "ms": 5791.779,
+        "pool": "module",
+        "conn": 9,
+        "backend": 76391895,
+        "kind": "simple",
+        "sql": "SELECT brain_id,enabled,to_jsonb(persistence_brain)->>'mode_epoch' AS mode_epoch FROM persistence_brain WHERE singleton=1"
+      },
+      {
+        "age_ms": 1040.248046875,
+        "ms": 22.691,
+        "pool": "module",
+        "conn": 1,
+        "backend": 1214756642,
+        "kind": "execute",
+        "sql": "SELECT r.* FROM persistence_requests r JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE w.owner_host_id=$1::uuid AND r.recovery IS NOT NULL AND NOT(r.worktree_id::text=ANY($2::text[])) AND NOT EXISTS (SELECT 1 FROM persistence_requests earlier WHERE earlier.worktree_id=r.worktree_id AND earl"
+      },
+      {
+        "age_ms": 1017.383056640625,
+        "ms": 21.348,
+        "pool": "module",
+        "conn": 7,
+        "backend": 364668574,
+        "kind": "describe",
+        "sql": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state='running' AND r.recovery IS NULL AND r.publication_started=false AND r.claim_expires_at<now() AND set_config('gbrain.persistence_protocol','2',true)='2' AND (r.worktree_id IS NULL OR EXISTS (SELECT 1 FROM persistence_worktrees w"
+      },
+      {
+        "age_ms": 1017.998046875,
+        "ms": 22.102,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "simple",
+        "sql": "begin "
+      },
+      {
+        "age_ms": 995.94189453125,
+        "ms": 22.253,
+        "pool": "module",
+        "conn": 7,
+        "backend": 364668574,
+        "kind": "execute",
+        "sql": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state='running' AND r.recovery IS NULL AND r.publication_started=false AND r.claim_expires_at<now() AND set_config('gbrain.persistence_protocol','2',true)='2' AND (r.worktree_id IS NULL OR EXISTS (SELECT 1 FROM persistence_worktrees w"
+      },
+      {
+        "age_ms": 995.76611328125,
+        "ms": 22.284,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "simple",
+        "sql": "SELECT set_config('gbrain.persistence_protocol','2',true),(SELECT singleton FROM persistence_brain WHERE singleton=1 FOR SHARE) AS brain"
+      },
+      {
+        "age_ms": 4573.60400390625,
+        "ms": 3600.3,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1005406568,
+        "kind": "simple",
+        "sql": "SELECT set_config('gbrain.persistence_protocol','2',true),(SELECT singleton FROM persistence_brain WHERE singleton=1 FOR SHARE) AS brain"
+      },
+      {
+        "age_ms": 973.386962890625,
+        "ms": 22.601,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "describe",
+        "sql": "SELECT e.* FROM persistence_effects e LEFT JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE (e.state='queued' OR e.state='running' AND e.claim_expires_at<now()) AND e.next_attempt_at<=now() AND (e.worktree_id IS NULL OR w.owner_host_id=$1::uuid) AND (e.worktree_id IS NULL OR NOT EXISTS (SELE"
+      },
+      {
+        "age_ms": 973.217041015625,
+        "ms": 22.624,
+        "pool": "module",
+        "conn": 10,
+        "backend": 1722859807,
+        "kind": "describe",
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS NULL OR c.id>$2::uuid) ORDER BY c.id LIMIT $3"
+      },
+      {
+        "age_ms": 973.2529296875,
+        "ms": 22.711,
+        "pool": "module",
+        "conn": 3,
+        "backend": 885748604,
+        "kind": "simple",
+        "sql": "begin "
+      },
+      {
+        "age_ms": 950.68505859375,
+        "ms": 22.223,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "execute",
+        "sql": "SELECT e.* FROM persistence_effects e LEFT JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE (e.state='queued' OR e.state='running' AND e.claim_expires_at<now()) AND e.next_attempt_at<=now() AND (e.worktree_id IS NULL OR w.owner_host_id=$1::uuid) AND (e.worktree_id IS NULL OR NOT EXISTS (SELE"
+      },
+      {
+        "age_ms": 950.423095703125,
+        "ms": 22.115,
+        "pool": "module",
+        "conn": 10,
+        "backend": 1722859807,
+        "kind": "execute",
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS NULL OR c.id>$2::uuid) ORDER BY c.id LIMIT $3"
+      },
+      {
+        "age_ms": 950.368896484375,
+        "ms": 22.104,
+        "pool": "module",
+        "conn": 3,
+        "backend": 885748604,
+        "kind": "simple",
+        "sql": "SELECT set_config('gbrain.persistence_protocol','2',true),(SELECT singleton FROM persistence_brain WHERE singleton=1 FOR SHARE) AS brain"
+      },
+      {
+        "age_ms": 928.18701171875,
+        "ms": 22.364,
+        "pool": "module",
+        "conn": 3,
+        "backend": 885748604,
+        "kind": "describe",
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active')) AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_worktree_refreshes fence WHERE fenc"
+      },
+      {
+        "age_ms": 928.1201171875,
+        "ms": 22.691,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "execute",
+        "sql": "commit"
+      },
+      {
+        "age_ms": 905.56298828125,
+        "ms": 24.057,
+        "pool": "module",
+        "conn": 3,
+        "backend": 885748604,
+        "kind": "execute",
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active')) AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_worktree_refreshes fence WHERE fenc"
+      },
+      {
+        "age_ms": 881.214111328125,
+        "ms": 22.366,
+        "pool": "module",
+        "conn": 3,
+        "backend": 885748604,
+        "kind": "execute",
+        "sql": "commit"
+      },
+      {
+        "age_ms": 608.431884765625,
+        "ms": 22.944,
+        "pool": "module",
+        "conn": 5,
+        "backend": 8197095,
+        "kind": "simple",
+        "sql": "SELECT brain_id,enabled,to_jsonb(persistence_brain)->>'mode_epoch' AS mode_epoch FROM persistence_brain WHERE singleton=1"
+      },
+      {
+        "age_ms": 6656.47509765625,
+        "ms": 6093.642,
+        "pool": "module",
+        "conn": 9,
+        "backend": 76391895,
+        "kind": "describe",
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS NULL OR c.id>$2::uuid) ORDER BY c.id LIMIT $3"
+      },
+      {
+        "age_ms": 6634.85205078125,
+        "ms": 6094.609,
+        "pool": "module",
+        "conn": 9,
+        "backend": 76391895,
+        "kind": "execute",
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS NULL OR c.id>$2::uuid) ORDER BY c.id LIMIT $3"
+      },
+      {
+        "age_ms": 4551.676025390625,
+        "ms": 4033.9,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1005406568,
+        "kind": "describe",
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active')) AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_worktree_refreshes fence WHERE fenc"
+      },
+      {
+        "age_ms": 539.52294921875,
+        "ms": 22.04,
+        "pool": "module",
+        "conn": 7,
+        "backend": 364668574,
+        "kind": "describe",
+        "sql": "SELECT e.* FROM persistence_effects e JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE e.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND e.next_attempt_at<=now() AND ($2::bigint IS NULL OR e.id>$2::bigint) ORDER BY e.id LIMIT $3"
+      },
+      {
+        "age_ms": 539.448974609375,
+        "ms": 22.005,
+        "pool": "module",
+        "conn": 1,
+        "backend": 1214756642,
+        "kind": "describe",
+        "sql": "SELECT r.* FROM persistence_requests r JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE w.owner_host_id=$1::uuid AND r.recovery IS NOT NULL AND NOT(r.worktree_id::text=ANY($2::text[])) AND NOT EXISTS (SELECT 1 FROM persistence_requests earlier WHERE earlier.worktree_id=r.worktree_id AND earl"
+      },
+      {
+        "age_ms": 517.35693359375,
+        "ms": 21.845,
+        "pool": "module",
+        "conn": 1,
+        "backend": 1214756642,
+        "kind": "execute",
+        "sql": "SELECT r.* FROM persistence_requests r JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE w.owner_host_id=$1::uuid AND r.recovery IS NOT NULL AND NOT(r.worktree_id::text=ANY($2::text[])) AND NOT EXISTS (SELECT 1 FROM persistence_requests earlier WHERE earlier.worktree_id=r.worktree_id AND earl"
+      },
+      {
+        "age_ms": 517.389892578125,
+        "ms": 22.161,
+        "pool": "module",
+        "conn": 7,
+        "backend": 364668574,
+        "kind": "execute",
+        "sql": "SELECT e.* FROM persistence_effects e JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE e.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND e.next_attempt_at<=now() AND ($2::bigint IS NULL OR e.id>$2::bigint) ORDER BY e.id LIMIT $3"
+      },
+      {
+        "age_ms": 4528.819091796875,
+        "ms": 4033.687,
+        "pool": "module",
+        "conn": 8,
+        "backend": 1005406568,
+        "kind": "execute",
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active')) AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_worktree_refreshes fence WHERE fenc"
+      },
+      {
+        "age_ms": 494.966064453125,
+        "ms": 21.999,
+        "pool": "module",
+        "conn": 3,
+        "backend": 885748604,
+        "kind": "describe",
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS NULL OR c.id>$2::uuid) ORDER BY c.id LIMIT $3"
+      },
+      {
+        "age_ms": 495.05810546875,
+        "ms": 22.173,
+        "pool": "module",
+        "conn": 10,
+        "backend": 1722859807,
+        "kind": "describe",
+        "sql": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state='running' AND r.recovery IS NULL AND r.publication_started=false AND r.claim_expires_at<now() AND set_config('gbrain.persistence_protocol','2',true)='2' AND (r.worktree_id IS NULL OR EXISTS (SELECT 1 FROM persistence_worktrees w"
+      },
+      {
+        "age_ms": 494.992919921875,
+        "ms": 22.215,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "simple",
+        "sql": "begin "
+      },
+      {
+        "age_ms": 472.64404296875,
+        "ms": 21.381,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "simple",
+        "sql": "SELECT set_config('gbrain.persistence_protocol','2',true),(SELECT singleton FROM persistence_brain WHERE singleton=1 FOR SHARE) AS brain"
+      },
+      {
+        "age_ms": 472.81494140625,
+        "ms": 21.769,
+        "pool": "module",
+        "conn": 10,
+        "backend": 1722859807,
+        "kind": "execute",
+        "sql": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state='running' AND r.recovery IS NULL AND r.publication_started=false AND r.claim_expires_at<now() AND set_config('gbrain.persistence_protocol','2',true)='2' AND (r.worktree_id IS NULL OR EXISTS (SELECT 1 FROM persistence_worktrees w"
+      },
+      {
+        "age_ms": 472.861083984375,
+        "ms": 22.035,
+        "pool": "module",
+        "conn": 3,
+        "backend": 885748604,
+        "kind": "execute",
+        "sql": "SELECT c.* FROM persistence_topology_changes c JOIN persistence_worktrees w ON w.id=(c.recovery->>'worktreeId')::uuid WHERE c.recovery IS NOT NULL AND w.owner_host_id=$1::uuid AND ($2::uuid IS NULL OR c.id>$2::uuid) ORDER BY c.id LIMIT $3"
+      },
+      {
+        "age_ms": 450.89306640625,
+        "ms": 22.227,
+        "pool": "module",
+        "conn": 5,
+        "backend": 8197095,
+        "kind": "simple",
+        "sql": "begin "
+      },
+      {
+        "age_ms": 6185.60009765625,
+        "ms": 5757.102,
+        "pool": "module",
+        "conn": 9,
+        "backend": 76391895,
+        "kind": "describe",
+        "sql": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state='running' AND r.recovery IS NULL AND r.publication_started=false AND r.claim_expires_at<now() AND set_config('gbrain.persistence_protocol','2',true)='2' AND (r.worktree_id IS NULL OR EXISTS (SELECT 1 FROM persistence_worktrees w"
+      },
+      {
+        "age_ms": 451.1201171875,
+        "ms": 22.797,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "describe",
+        "sql": "SELECT e.* FROM persistence_effects e LEFT JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE (e.state='queued' OR e.state='running' AND e.claim_expires_at<now()) AND e.next_attempt_at<=now() AND (e.worktree_id IS NULL OR w.owner_host_id=$1::uuid) AND (e.worktree_id IS NULL OR NOT EXISTS (SELE"
+      },
+      {
+        "age_ms": 428.2939453125,
+        "ms": 21.87,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "execute",
+        "sql": "SELECT e.* FROM persistence_effects e LEFT JOIN persistence_worktrees w ON w.id=e.worktree_id WHERE (e.state='queued' OR e.state='running' AND e.claim_expires_at<now()) AND e.next_attempt_at<=now() AND (e.worktree_id IS NULL OR w.owner_host_id=$1::uuid) AND (e.worktree_id IS NULL OR NOT EXISTS (SELE"
+      },
+      {
+        "age_ms": 6163.93408203125,
+        "ms": 5757.736,
+        "pool": "module",
+        "conn": 9,
+        "backend": 76391895,
+        "kind": "execute",
+        "sql": "WITH expired AS ( SELECT r.id FROM persistence_requests r WHERE r.state='running' AND r.recovery IS NULL AND r.publication_started=false AND r.claim_expires_at<now() AND set_config('gbrain.persistence_protocol','2',true)='2' AND (r.worktree_id IS NULL OR EXISTS (SELECT 1 FROM persistence_worktrees w"
+      },
+      {
+        "age_ms": 428.443115234375,
+        "ms": 22.286,
+        "pool": "module",
+        "conn": 5,
+        "backend": 8197095,
+        "kind": "simple",
+        "sql": "SELECT set_config('gbrain.persistence_protocol','2',true),(SELECT singleton FROM persistence_brain WHERE singleton=1 FOR SHARE) AS brain"
+      },
+      {
+        "age_ms": 406.075927734375,
+        "ms": 22.458,
+        "pool": "module",
+        "conn": 5,
+        "backend": 8197095,
+        "kind": "describe",
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active')) AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_worktree_refreshes fence WHERE fenc"
+      },
+      {
+        "age_ms": 406.283935546875,
+        "ms": 23.033,
+        "pool": "module",
+        "conn": 4,
+        "backend": 201668050,
+        "kind": "execute",
+        "sql": "commit"
+      },
+      {
+        "age_ms": 383.365966796875,
+        "ms": 23.74,
+        "pool": "module",
+        "conn": 5,
+        "backend": 8197095,
+        "kind": "execute",
+        "sql": "SELECT r.* FROM persistence_requests r LEFT JOIN persistence_worktrees w ON w.id=r.worktree_id WHERE r.state='queued' AND (r.worktree_id IS NULL OR (w.owner_host_id=$1::uuid AND w.state='active')) AND (r.worktree_id IS NULL OR NOT EXISTS (SELECT 1 FROM persistence_worktree_refreshes fence WHERE fenc"
+      },
+      {
+        "age_ms": 359.468994140625,
+        "ms": 21.765,
+        "pool": "module",
+        "conn": 5,
+        "backend": 8197095,
+        "kind": "execute",
+        "sql": "commit"
+      }
+    ]
+  },
+  "running_detail": [
+    {
+      "id": "43a2e790-e0aa-479d-a7a8-dbb1a7b57c96",
+      "principal_kind": "local_cli",
+      "principal_id": "ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+      "request_id": "4fb733b8-d0cf-4b63-be8d-39fb194f3a59",
+      "operation": "submit_job",
+      "source_id": "bench",
+      "source_incarnation": "39199b49-b161-463d-ac32-8cfc0e26a0d5",
+      "page_id": null,
+      "slug": "companies/scale-0-342",
+      "worktree_id": "d1283bd5-62ae-4400-8533-b7b311387b5b",
+      "topology_generation": "1",
+      "digest": "74004168a95022e5e2d585fc3298dc490dc8e7774567554b5605765b5b2f3612",
+      "intent": {
+        "from": "551a389d485633ac5cf6f707b6164d84ef5b00a4",
+        "kind": "managed_sync_import",
+        "path": "companies/scale-0-342.md",
+        "index": 24,
+        "runId": "f2e00e23-0672-4ecf-896e-cd84af494e34",
+        "total": 600,
+        "target": "52eba0076de8e3384a9bbed97e86d9d2396ef864",
+        "blobOid": "395af1353500cff12561a81ca3371e8cd2f553dc",
+        "content": "---\ntitle: Scale 0 342\ntype: company\n---\n# Scale 0 342\n\nkestrel summit canvas russet summit falcon russet pepper signal island ember linden canvas summit linden pepper marble ember oracle russet ledger ledger signal meadow.\n\ncanvas nectar quiver signal meadow harbor falcon island summit garnet oracle linden quiver summit island thicket garnet russet harbor ledger canvas marble meadow juniper.\n\nquiver ledger island lantern ember ledger canvas island hollow pepper quiver ember thicket linden signal thicket orbit meadow garnet island quartz pepper hollow ember. Marker scaletok0x342.\n\nSee [[notes/scale-0-468]].\nSee [[people/scale-0-221]].\nSee [[notes/scale-0-589]].\n\n## Timeline\n\n- **2025-06-26** | Scale event 342 recorded\n- **2026-06-26** | Scale follow-up 342\n",
+        "rawHash": "06fb912d4b041a8963222ff51bbf63b95c46fc03ee4b7fb1ba4761951433cef9",
+        "working": false,
+        "slugMode": "git-root",
+        "cursorKey": "54befad26cec98468b3bb35d84c821e922ded88cdb3150992f47753d3c20d23a",
+        "ownerEpoch": "1",
+        "sourcePath": "companies/scale-0-342.md",
+        "syncAuthority": {
+          "writer": {
+            "remote": false,
+            "scopes": [
+              "read",
+              "write"
+            ],
+            "version": 1,
+            "sourceId": "bench",
+            "principal": {
+              "id": "ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+              "kind": "local_cli"
+            },
+            "operations": null,
+            "slugPrefixes": null,
+            "takesHolders": null,
+            "excludePrivate": false,
+            "autoLinkTrusted": true,
+            "sourceIncarnation": "39199b49-b161-463d-ac32-8cfc0e26a0d5"
+          }
+        },
+        "holdObservedAt": "2026-10-08T08:00:32.800Z",
+        "lineEndingOnly": true,
+        "expected_revision": null,
+        "processingOptions": {
+          "noEmbed": true,
+          "noExtract": false,
+          "noSchemaPack": false
+        }
+      },
+      "authority": {
+        "remote": false,
+        "scopes": [
+          "read",
+          "write"
+        ],
+        "version": 1,
+        "sourceId": "bench",
+        "principal": {
+          "id": "ba7b76e0-5ed5-4f93-bb58-5279c71ff6cf",
+          "kind": "local_cli"
+        },
+        "operations": null,
+        "slugPrefixes": null,
+        "takesHolders": null,
+        "excludePrivate": false,
+        "autoLinkTrusted": true,
+        "sourceIncarnation": "39199b49-b161-463d-ac32-8cfc0e26a0d5"
+      },
+      "sequence": "32",
+      "state": "running",
+      "execution_token": "9e9f5ffb-bee0-4993-ba2d-f85da5496138",
+      "claim_expires_at": "2026-10-08T08:03:10.489Z",
+      "recovery": null,
+      "recovery_bytes": "0",
+      "intent_bytes": "2161",
+      "terminal_reservation": "16384",
+      "outcome": null,
+      "error_code": null,
+      "error_message": null,
+      "blocked_reason": null,
+      "compacted": false,
+      "publication_started": false,
+      "created_at": "2026-10-08T08:01:27.044Z",
+      "updated_at": "2026-10-08T08:02:40.489Z",
+      "completed_at": null,
+      "target_kind": "page",
+      "protocol_version": 1,
+      "admitter_version": "0.60.105.0",
+      "admitter_host_id": "eda0dcba-9997-412c-ae79-4051952a3b2e",
+      "consumer_version": null,
+      "consumer_host_id": null,
+      "published_at": null,
+      "error_detail": null,
+      "claim_phase": {
+        "phase": "preparing",
+        "since": "2026-10-08T08:01:40.478Z",
+        "token": "9e9f5ffb-bee0-4993-ba2d-f85da5496138",
+        "claimed_at": "2026-10-08T08:01:40.478Z"
+      }
+    }
+  ],
+  "queued_head": []
+}

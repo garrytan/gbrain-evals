@@ -1,0 +1,30 @@
+{
+  "version": "model-ladder-hard-v2",
+  "seed": 20261021,
+  "scale": "large",
+  "digest": "6f08629ed86f8913152d562820088ba914fd6862bb48c7836b866ad363388f78",
+  "base_digest": "84f0614ae35ff28014d5fb815d02dfbc5799488e5ac7d61a0c56c06b1b301c8e",
+  "knob_digest": "37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434",
+  "file_sha256": "99c53db046c4efa256d39133d6b149f6e557ae8e6cad0664f672434b7b207186",
+  "bytes": 99397833,
+  "docs": 55838,
+  "tasks": 100,
+  "by_type": {
+    "crm": 5726,
+    "contract": 2863,
+    "amendment": 1246,
+    "email": 30836,
+    "meeting": 5726,
+    "agent-note": 1206,
+    "team-update": 976,
+    "ticket": 7259
+  },
+  "by_family": {
+    "H1": 20,
+    "H2": 20,
+    "H3": 20,
+    "H4": 20,
+    "H5": 20
+  },
+  "command": "bun eval/generators/model-ladder-gen.ts --mode hard --seed 20261021 --knobs docs/benchmarks/cat40-hard/knobs.frozen.json --scale large --base-world <4k world.json>"
+}

@@ -20,6 +20,10 @@
 
 Two caveats come with it. **Most cells are at the ceiling**: all three counted models answered every permission task correctly on both builds, and Sonnet 5.5 and GPT-6.1 Sol answered every write-back task, so only Opus 5.5 on write-back could show a difference. And **this smoke did not exercise the put_page text**: no model called `put_page` or `put_pages` in any of the 314 cells. They wrote corrections with `remember`, `edit_page` and `add_timeline_entry`. The instruction reorder was read in every cell.
 
+<a id="correction-2026-10-09"></a>
+
+> **Correction, 2026-10-09: both builds searched without gbrain's reranker.** Each restored slot brain kept the slot build's metering-proxy port in its Voyage URL, and that port was closed when the cells ran, so every rerank request failed and gbrain quietly returned unreranked results (fixed in gbrain-evals #76, commit `7709a70`, and #109). No cell's metered gbrain calls include a rerank request: 0 of 157 on master and 0 of 157 on the wave (gated, sentinel and Fable smoke sets), plus the 2-cell pilot ([audit](2026-10-08-program-primary-hard/root-cause/restore-audit.json)). Master and the wave share the condition, so the comparison stays internally valid and the pass verdict stands; the success counts describe gbrain without its reranker. The original numbers stay as measured. For scale, the only measurement of the reranker's effect comes from a different world and tier: on the Cat 40 Hard development world, Sonnet 5.5 on gbrain `8e11aa1f3` finished 21 of 50 tasks with reranking and 19 of 50 without (7 tasks won, 5 lost, within noise; gbrain-evals [#76](https://github.com/garrytan/gbrain-evals/pull/76), `docs/benchmarks/2026-10-07-model-ladder-hard.md`). It is context, not a correction factor.
+
 ## The concrete case
 
 The test world is a fictional company, Acme Example Inc. The agent works for Sam Rivera, an account manager who is not in finance, through gbrain's own MCP server with its starter tool list.
@@ -92,3 +96,7 @@ bun eval/runner/cat40-model-ladder.ts --models claude-opus-5-5,claude-sonnet-5-5
 Each directory in [`2026-10-07-wave11-agent-smoke/`](2026-10-07-wave11-agent-smoke/) holds the experiment binding, receipt, per-cell results, run log, served instructions and tools, compressed transcripts and the `analyze.ts` output for one set: `<label>-gated`, `<label>-sentinel`, `<label>-fable-smoke`, the slot builds `slots-<label>-b`, and the excluded two-cell `pilot`. The summary is [`verdict.json`](2026-10-07-wave11-agent-smoke/verdict.json).
 
 **Time and cost.** About 45 minutes per build for its 157 cells on four slots, both builds in parallel, plus 20 minutes of slot builds. Cells cost $48.44 (master $23.82, wave $24.52, pilot $0.10), of which the Fable smoke was $14.68; the eight slot builds cost $0.77. The ledger reconciles to $49.21. A first pair of slot builds, run without separate `--gbrain-root` directories, collided on one overlay and was stopped after about two minutes, before any cell (amendment 1); its two $1 allowance reservations stay open in the ledger, so the ledger's upper bound is $51.21. Their logs and receipts are kept in `interrupted-slot-builds/`.
+
+## Changelog
+
+- 2026-10-09: [Correction](#correction-2026-10-09) added: all 316 cells searched without gbrain's reranker (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). Both builds shared the condition, so the verdict stands. Original numbers unchanged.

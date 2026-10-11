@@ -1,0 +1,27 @@
+{
+  "schema": "mpw-store-v1",
+  "dataset": "locomo",
+  "split": "locomo10",
+  "provider": "gbrain",
+  "revision": "gbrain-ingest-1",
+  "ingest_config": {
+    "embedding_model": "voyage:voyage-4",
+    "embedding_dimensions": 1024,
+    "extraction_model": "openai:gpt-6-luna"
+  },
+  "credentials": [
+    "voyage",
+    "openai"
+  ],
+  "pins": {
+    "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+    "harness_lock_sha256": "6b6ace4f721ae10bf66214a8a617c3c6e97a930e91c163728835691994a07b8f",
+    "torch": "2.10.0+cpu",
+    "gbrain": {
+      "version": "0.60.64.0",
+      "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+      "loaded_git_head": "e8e1f66b8e5225b113cacd18931b627fca451bae",
+      "package_sha256": "da82b3935169fa1264395f06a7637c10ae515e34ba01a72100451eb1301c1f36"
+    }
+  }
+}

@@ -559,7 +559,10 @@ async function runHermeticInner(gut: GbrainUnderTest, world: ReturnType<typeof g
       local_all_sources: await fc({ remote: false, sourceId: '__all__' }),
       local_bare_cli: await (async () => {
         try {
-          const { makeContext } = await importGbrain<{ makeContext: (e: Engine, p: Record<string, unknown>) => Promise<Record<string, unknown>> }>(gut, 'src/cli.ts');
+          type MakeContext = { makeContext?: (e: Engine, p: Record<string, unknown>) => Promise<Record<string, unknown>> };
+          // gbrain v0.60.125.0 moved the CLI's makeContext from src/cli.ts to src/cli/main.ts.
+          const { makeContext } = await importGbrain<MakeContext>(gut, 'src/cli/main.ts').catch(() => ({} as MakeContext)).then(m => m.makeContext ? m : importGbrain<MakeContext>(gut, 'src/cli.ts'));
+          if (!makeContext) throw new Error('makeContext is exported by neither src/cli/main.ts nor src/cli.ts');
           return await fc(await makeContext(sut.engine, {}));
         } catch (e) { return { error: e instanceof Error ? e.message : String(e) }; }
       })(),

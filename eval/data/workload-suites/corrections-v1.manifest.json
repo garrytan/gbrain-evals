@@ -1,0 +1,64 @@
+{
+  "suite": "corrections",
+  "version": "corrections-v1",
+  "seed": 20261006,
+  "smoke": false,
+  "counts": {
+    "documents": 400,
+    "queries": 300,
+    "labels": 300,
+    "users": 100,
+    "by_category": {
+      "assistant": 51,
+      "bank": 36,
+      "counsel": 21,
+      "dog-name": 21,
+      "gym": 33,
+      "lunch-spot": 45,
+      "offsite-city": 39,
+      "release-codename": 54
+    }
+  },
+  "approx_tokens": {
+    "total": 333289,
+    "per_user_max": 3552,
+    "per_user_mean": 3333
+  },
+  "timestamp_provenance": "observed_session_time: base conversations, the correction and each unrelated write carry the time they were sent; probes carry query_timestamp after the write they follow.",
+  "files": {
+    "arms.json": {
+      "sha256": "775ade15c62c7cfb269ae730aa1853e434c8d29e750baf3c568dd893dba84b27",
+      "bytes": 2544
+    },
+    "corrections.jsonl": {
+      "sha256": "45d99b84a10399bbbd3e73b0d58785f5d4184cab8d12df5c6810a7a632ee6819",
+      "bytes": 839836
+    },
+    "documents.jsonl": {
+      "sha256": "6cde2b678e687afb180b6a2c20ab417730ad018cbf444f5f4e2c30fa09886e82",
+      "bytes": 2853844
+    },
+    "frontier-subset.jsonl": {
+      "sha256": "67195a421766fdd0ebbfc8fcd48b201a7478cc95f9309d515688e7c3c026aa84",
+      "bytes": 1425
+    },
+    "queries.jsonl": {
+      "sha256": "720661d3d0da5d294e820935be717cb46b2bd425af250cb082d8c5600518c79f",
+      "bytes": 81267
+    },
+    "schedule.jsonl": {
+      "sha256": "04290b10a0a30ad8548b7f0693ce147100bfc02f168edbd6367f2a36c60da5f7",
+      "bytes": 108000
+    },
+    "scorer-labels.jsonl": {
+      "sha256": "456896cca3b6364bddf473d3f852fe3c2d95c36ad7f3ba1a42c8640bb8512693",
+      "bytes": 204897
+    },
+    "writes.jsonl": {
+      "sha256": "ca121fc3aa7cea9dc679167ef5211005c93d55a8e02d98e72290bc0d17b3eed7",
+      "bytes": 435652
+    }
+  },
+  "digest": "f85a396b485750a55346b5dee134f70580f8afe01b7f32ff1346a47d96f0f89f",
+  "command": "bun run eval:corrections --seed 20261006"
+}

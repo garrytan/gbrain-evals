@@ -1,0 +1,130 @@
+{
+  "task_id": "boltons-dedupe-amended-001",
+  "arm": "gbrain",
+  "history": "provided",
+  "source": "conversation-amended",
+  "tier": "planted",
+  "category": "collection-merge",
+  "model": "google/gemini-3.8-flash",
+  "started_at": "2026-10-05T15:20:28.318Z",
+  "retrieval": {
+    "unit": "u-114a151a3393",
+    "documents": 242,
+    "document_tokens_cl100k": 110928,
+    "ingest_s": 65.98,
+    "ingest": {
+      "template_copy_s": 0.225,
+      "child_start_s": 0.938,
+      "write_path": "put_pages",
+      "pages": 242,
+      "write_s": 6.616,
+      "barrier_ms": 58198.4,
+      "barrier": {
+        "polls": 22,
+        "pages": 242,
+        "missing_embeddings": 0,
+        "stale_pages": 222,
+        "embed_coverage": 1
+      },
+      "server": {
+        "name": "gbrain",
+        "version": "0.60.64.0"
+      },
+      "gbrain": {
+        "cli": ".gbrain-overlays/e8e1f66b8e5225b113cacd18931b627fca451bae/src/cli.ts",
+        "version": "gbrain 0.60.64.0",
+        "template_build_s": 8.32,
+        "config": {
+          "search.return_budget_max_remote": "200000"
+        }
+      }
+    },
+    "retrieve_ms": 368.4,
+    "delivery": {
+      "requested": {
+        "query": "After a sync run the same contact shows up more than once in the merged list - records that are obviously the same person are both kept. A failing repro is at tests/test_regression.py. Fix merge_records so sync stops producing duplicate contacts, without breaking existing behaviour.",
+        "token_budget": 8000,
+        "return_unit": "page",
+        "limit": 50
+      },
+      "tokens_delivered": 4763,
+      "tokenizer": "cl100k",
+      "applied_unit": "page",
+      "blocks": 18,
+      "dropped": 0,
+      "fallbacks": [],
+      "budget_clamped": false,
+      "vector_enabled": true,
+      "expansion_applied": false
+    },
+    "context_tokens_cl100k": 4837,
+    "retrieved": [
+      "boltons-dedupe-amended-001:chat0",
+      "boltons-dedupe-amended-001:chat1",
+      "boltons-dedupe-amended-001:git-c463d16",
+      "boltons-dedupe-amended-001:decoy-test_dictutils-5",
+      "boltons-dedupe-amended-001:decoy-mboxutils-51-b",
+      "boltons-dedupe-amended-001:git-f9c4f30",
+      "boltons-dedupe-amended-001:decoy-mboxutils-57",
+      "boltons-dedupe-amended-001:git-6cac49c",
+      "boltons-dedupe-amended-001:decoy-txurl-63",
+      "boltons-dedupe-amended-001:decoy-bench_omd-45",
+      "boltons-dedupe-amended-001:git-f96caf2",
+      "boltons-dedupe-amended-001:git-1408e27",
+      "boltons-dedupe-amended-001:git-c0d580d",
+      "boltons-dedupe-amended-001:git-8f84e2a",
+      "boltons-dedupe-amended-001:git-0e4dc6a",
+      "boltons-dedupe-amended-001:git-2bf0256",
+      "boltons-dedupe-amended-001:git-675afd8",
+      "boltons-dedupe-amended-001:git-766b554"
+    ],
+    "decision_documents": [
+      "boltons-dedupe-amended-001:chat0",
+      "boltons-dedupe-amended-001:chat1"
+    ],
+    "decision_retrieved": [
+      "boltons-dedupe-amended-001:chat0",
+      "boltons-dedupe-amended-001:chat1"
+    ],
+    "decision_ranks": [
+      1,
+      2
+    ]
+  },
+  "wall_s": 172.8,
+  "exit_code": 0,
+  "solved": true,
+  "interventions": 0,
+  "capped": false,
+  "final_pytest": "11 passed in 0.02s",
+  "turns": 22,
+  "tokens": {
+    "input": 341522,
+    "output": 2376,
+    "reasoning": 38756,
+    "cache_read": 754735,
+    "cache_write": 0
+  },
+  "patch_bytes": 1797,
+  "harness_cost_usd": 0.0,
+  "ended_at": "2026-10-05T15:24:27.614Z",
+  "metered": {
+    "requests": 267,
+    "refused": 0,
+    "usd": 0.483093,
+    "by_label": {
+      "gbrain": {
+        "requests": 243,
+        "usd": 0.007129020000000008,
+        "input_tokens": 118817,
+        "output_tokens": 0
+      },
+      "agent": {
+        "requests": 24,
+        "usd": 0.47596440000000007,
+        "input_tokens": 1186770,
+        "output_tokens": 41249
+      }
+    }
+  }
+}

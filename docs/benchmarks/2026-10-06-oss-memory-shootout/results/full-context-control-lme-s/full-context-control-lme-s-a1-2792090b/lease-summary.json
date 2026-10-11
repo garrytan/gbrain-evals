@@ -1,0 +1,8 @@
+{
+  "run_id": "full-context-control-lme-s-a1-2792090b",
+  "lease_usd": 48,
+  "committed_usd": 29.697459999999985,
+  "requests": 400,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

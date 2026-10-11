@@ -1,0 +1,35 @@
+{
+  "cell_id": "beam-1m-comparator-rag-bc67cab4c692",
+  "runs": [
+    {
+      "run_id": "harness-cell:beam-1m-comparator-rag-bc67cab4c692-2026-10-05T15-36-27-110Z-75971b10",
+      "ledger": ".budget/mpw-dev-vm.sqlite",
+      "usd": 8.636307,
+      "requests": 632,
+      "started_at": "2026-10-05T16:03:19.833Z",
+      "stub": false
+    },
+    {
+      "run_id": "harness-cell:beam-1m-comparator-rag-bc67cab4c692-2026-10-05T18-20-07-798Z-5f086511",
+      "ledger": ".budget/mpw-dev-vm.sqlite",
+      "usd": 0,
+      "requests": 0,
+      "started_at": "2026-10-05T18:20:56.698Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 0,
+      "refused": 0,
+      "reserved_usd": 0,
+      "actual_usd": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "byLabel": {},
+    "byProvider": {},
+    "exhausted": false
+  },
+  "unmetered": []
+}

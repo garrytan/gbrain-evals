@@ -17,7 +17,9 @@ async function schemaFingerprint(engine: PGLiteEngine) {
   const functions = await engine.db.query(`SELECT proname, pg_get_function_identity_arguments(oid) AS args
     FROM pg_proc WHERE pronamespace = 'public'::regnamespace ORDER BY proname, args`);
   const config = await engine.db.query(`SELECT key, value FROM config ORDER BY key`);
-  return { columns: columns.rows, indexes: indexes.rows, constraints: constraints.rows, functions: functions.rows, config: config.rows };
+  // A `*_completed_at` row (gbrain v0.60.139.0's trust.backfill_completed_at) records when its migration ran, so only its presence is compared.
+  const configRows = (config.rows as Array<{ key: string; value: string }>).map(r => (r.key.endsWith('_completed_at') ? { key: r.key, value: '<migration time>' } : r));
+  return { columns: columns.rows, indexes: indexes.rows, constraints: constraints.rows, functions: functions.rows, config: configRows };
 }
 
 const engines: PGLiteEngine[] = [];

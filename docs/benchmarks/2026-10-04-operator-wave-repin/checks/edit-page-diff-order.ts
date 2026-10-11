@@ -13,7 +13,8 @@ const one = await mcp.call('edit_page', { slug: SLUG, expected_revision: await r
 const two = await mcp.call('edit_page', { slug: SLUG, expected_revision: await revisionOf(), edits: [{ old_text: 'The beds face south.\nWatering is daily.', new_text: 'The beds face east.\nWatering is weekly.' }] });
 await mcp.close();
 h.cleanup();
-const diffOf = (t: string) => { try { return String(JSON.parse(t.slice(t.indexOf('{'))).diff ?? ''); } catch { return ''; } };
+// The receipt is the first text block; gbrain may append notice blocks (such as first_run_decisions) after it.
+const diffOf = (r: { raw: any }) => { try { const t = String(r.raw.result.content[0].text); return String(JSON.parse(t.slice(t.indexOf('{'))).diff ?? ''); } catch { return ''; } };
 const lines = (d: string) => d.split('\n').filter(l => /^[-+](?![-+]{2} )/.test(l));
 const removedFirst = (d: string) => {
   const ls = lines(d);
@@ -21,7 +22,7 @@ const removedFirst = (d: string) => {
   const firstPlus = ls.map(l => l[0]).indexOf('+');
   return ls.length > 0 && lastMinus >= 0 && firstPlus >= 0 && lastMinus < firstPlus;
 };
-const d1 = diffOf(one.text); const d2 = diffOf(two.text);
+const d1 = diffOf(one); const d2 = diffOf(two);
 finish('edit-page-diff-order', {
   setup_ok: put.code === 0 && !one.isError && !two.isError,
   E2_single_line_edit_removed_before_added: removedFirst(d1) && lines(d1).length === 2,

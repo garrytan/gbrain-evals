@@ -309,7 +309,8 @@ export function loadCustodyCorpus(path: string): Corpus {
     source: { name: `custodian sealed corpus ${raw.id}`, files: [{ path: 'custody', sha256: sha256(bytes) }], revision: raw.id, license: 'custodian-authored' } };
 }
 
-export function loadCorpus(benchmark: string, corpusFile?: string): Corpus {
+/** `only` limits BEAM loading to those conversations, so a dev run never reads a sealed conversation's files. */
+export function loadCorpus(benchmark: string, corpusFile?: string, only?: ReadonlySet<string>): Corpus {
   if (benchmark === 'custody') {
     if (!corpusFile) throw new Error('benchmark custody needs --corpus-file <custody path>');
     return loadCustodyCorpus(corpusFile);
@@ -317,9 +318,9 @@ export function loadCorpus(benchmark: string, corpusFile?: string): Corpus {
   switch (benchmark) {
     case 'locomo': return loadLocomo();
     case 'lme-s': return loadLmeS();
-    case 'beam-100k': return loadBeam('100k');
-    case 'beam-500k': return loadBeam('500k');
-    case 'beam-1m': return loadBeam('1m');
+    case 'beam-100k': return loadBeam('100k', only);
+    case 'beam-500k': return loadBeam('500k', only);
+    case 'beam-1m': return loadBeam('1m', only);
     case 'fixture': return loadFixture();
     default: throw new Error(`unknown benchmark ${benchmark}`);
   }

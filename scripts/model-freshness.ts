@@ -5,12 +5,14 @@
  *   bun scripts/model-freshness.ts [--models a,b,c]
  *
  * Reads OpenAI's and Anthropic's model lists (free metadata endpoints), finds the newest model of each
- * family the eval rules name (Opus, Sonnet, Fable, GPT), and compares them with the models a run will
- * call (default: the 2026-10 follow-up round's set). Prints a fix command for every problem.
+ * family the eval rules name (Opus, Sonnet and GPT for counted runs; Fable, which runs only in smoke tests),
+ * and compares them with the models a run will call (default: the 2026-10 follow-up round's set). Prints a
+ * fix command for every problem. The rules are CLAUDE.md's "Choose models".
  *
- * Exit 0: every called model is priced and no newer family model exists.
- * Exit 0 with warnings: a newer model of a family exists (never a reason to change a frozen arm).
- * Exit 1: a called model has no price in this repository's ledger or in gbrain's table (blocks the run).
+ * Exit 0: every called model is priced and allowed, and no newer counted-family model exists.
+ * Exit 0 with warnings: a newer Opus, Sonnet or GPT model exists (never a reason to change a frozen arm), the run
+ * calls Fable (smoke tests only) or gpt-4.1-mini (only as the bridge to earlier BEAM runs).
+ * Exit 1: a called model has no price in this repository's ledger or in gbrain's table, or is gpt-5.4-mini (blocks the run).
  * Exit 2: a provider's model list could not be read.
  */
 import { chatPrice } from '../eval/runner/budget-ledger.ts';
@@ -55,9 +57,14 @@ export function assess(called: string[], listed: ListedModel[], priced: (id: str
   const newest = newestByFamily(listed);
   const calledIds = new Set(called.map(c => c.split(':').pop()!));
   for (const [family, id] of Object.entries(newest)) {
+    if (family === 'fable') continue;
     if (id && !calledIds.has(id)) warnings.push(`newer ${family} model listed: ${id} (not in this run's models; add it at the next preregistration, never to a frozen arm)`);
   }
   for (const c of called) {
+    const id = c.split(':').pop()!;
+    if (id === 'gpt-5.4-mini') blocking.push(`${c} is never run (CLAUDE.md "Choose models"): drop it from the run`);
+    if (/^claude-fable-/.test(id)) warnings.push(`${c} is Fable: smoke tests only, never paid counted cells, practice rounds or held-out runs (Opus 5.5 is the top counted Anthropic model)`);
+    if (id === 'gpt-4.1-mini') warnings.push(`${c} runs only as the single bridge to an earlier eval's results (earlier BEAM runs); drop it if another model already links the two runs`);
     if (!priced(c)) blocking.push(`${c} has no price: register it in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts (and pass --price-input/--price-output to harnesses that read gbrain's table), with the provider's pricing page as the source`);
   }
   return { warnings, blocking };

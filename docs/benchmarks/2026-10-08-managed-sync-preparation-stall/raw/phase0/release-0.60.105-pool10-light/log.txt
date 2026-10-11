@@ -1,0 +1,226 @@
+[stall-repro 07:19:28] out: <work>/gbrain/.context/bench/stall-run-light
+[stall-repro 07:19:28] cli: <work>/gbrain-release (0.60.105.0, HEAD@8e11aa1f); files=15000 history=1500 legacy=60 markers=6+20 rtt=57 pool=10 pooler=pgbouncer
+[stall-repro 07:19:30] schema initialized by <work>/gbrain-release (0.60.105.0) in 1.9 s
+[stall-repro 07:19:43] classic history sync: 1500 pages in 11.6 s
+[stall-repro 07:19:43] seeded 60 legacy fact rows (60 pending) over 15 pages; 6 history + 20 backlog repeated-marker pages
+[stall-repro 07:19:48] backlog committed: 15000 pages
+[stall-repro 07:19:48] session timeouts: {"requested_startup_parameters":{"statement_timeout":"5min","idle_in_transaction_session_timeout":"5min"},"via_pooler":{"statement_timeout":"0","idle_in_transaction_session_timeout":"0","lock_timeout":"0"},"direct":{"statement_timeout":"5min","idle_in_transaction_session_timeout":"5min","lock_timeout":"0"}}
+[stall-repro 07:19:50] pass 1 started: timeout pid 15449, gbrain pid 15450
+[stall-repro 07:19:51] sample 0: pass=null committed=0 stale=20s running=0 activity=0 locks=0
+[stall-repro 07:20:21] sample 1: pass=1 committed=2 stale=0s running=0 activity=9 locks=0
+[stall-repro 07:20:55] sample 2: pass=1 committed=6 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=10 locks=0
+[stall-repro 07:21:25] sample 3: pass=1 committed=10 stale=0s running=0 activity=10 locks=0
+[stall-repro 07:21:58] sample 4: pass=1 committed=12 stale=0s running=1 [managed_sync_import:?] activity=10 locks=0
+[stall-repro 07:22:28] sample 5: pass=1 committed=15 stale=0s running=1 [managed_sync_import:?] activity=10 locks=0
+[stall-repro 07:22:36] adoption 0: exit=0 dripped=0 status=warn fenced=0 pending=60 fence_failed=15 167.6s
+[stall-repro 07:23:01] sample 6: pass=1 committed=18 stale=0s running=2 [managed_sync_import:?, managed_sync_import:?] activity=10 locks=0
+[stall-repro 07:23:31] sample 7: pass=1 committed=22 stale=0s running=2 [managed_sync_import:?, managed_sync_import:?] activity=10 locks=0
+[stall-repro 07:24:05] sample 8: pass=1 committed=32 stale=0s running=6 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=10 locks=0
+[stall-repro 07:24:35] sample 9: pass=1 committed=48 stale=0s running=9 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=10 locks=0
+[stall-repro 07:25:08] sample 10: pass=1 committed=68 stale=0s running=0 activity=11 locks=0
+[stall-repro 07:25:38] sample 11: pass=1 committed=73 stale=0s running=1 [managed_sync_import:?] activity=11 locks=0
+[stall-repro 07:26:11] sample 12: pass=1 committed=77 stale=0s running=1 [managed_sync_import:?] activity=11 locks=0
+[stall-repro 07:26:42] sample 13: pass=1 committed=80 stale=0s running=0 activity=11 locks=0
+[stall-repro 07:27:15] sample 14: pass=1 committed=82 stale=0s running=1 [managed_sync_import:?] activity=11 locks=0
+[stall-repro 07:27:45] sample 15: pass=1 committed=85 stale=0s running=1 [managed_sync_import:?] activity=11 locks=0
+[stall-repro 07:28:18] sample 16: pass=1 committed=88 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=11 locks=0
+[stall-repro 07:28:47] adoption 1: exit=0 dripped=6 status=warn fenced=6 pending=60 fence_failed=15 250.5s
+[stall-repro 07:28:48] sample 17: pass=1 committed=89 stale=0s running=1 [managed_sync_import:?] activity=11 locks=0
+[stall-repro 07:29:22] sample 18: pass=1 committed=92 stale=0s running=2 [managed_sync_import:?, managed_sync_import:?] activity=11 locks=0
+[stall-repro 07:29:52] sample 19: pass=1 committed=96 stale=0s running=2 [managed_sync_import:?, managed_sync_import:?] activity=11 locks=0
+[stall-repro 07:30:25] sample 20: pass=1 committed=112 stale=0s running=7 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=11 locks=0
+[stall-repro 07:30:55] sample 21: pass=1 committed=123 stale=0s running=18 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=11 locks=0
+[stall-repro 07:31:28] sample 22: pass=1 committed=145 stale=0s running=1 [managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:31:59] sample 23: pass=1 committed=148 stale=0s running=0 activity=14 locks=0
+[stall-repro 07:32:32] sample 24: pass=1 committed=148 stale=30s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:33:02] sample 25: pass=1 committed=164 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:33:16] adoption 2: exit=0 dripped=6 status=warn fenced=0 pending=62 fence_failed=17 149.6s
+[stall-repro 07:33:35] sample 26: pass=1 committed=164 stale=30s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:34:05] sample 27: pass=1 committed=165 stale=0s running=1 [managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:34:39] sample 28: pass=1 committed=170 stale=0s running=3 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:35:09] sample 29: pass=1 committed=176 stale=0s running=15 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:35:42] sample 30: pass=1 committed=206 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:36:12] sample 31: pass=1 committed=213 stale=0s running=0 activity=14 locks=0
+[stall-repro 07:36:46] sample 32: pass=1 committed=214 stale=0s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:37:16] sample 33: pass=1 committed=214 stale=33s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:37:45] adoption 3: exit=0 dripped=6 status=warn fenced=0 pending=64 fence_failed=17 148s
+[stall-repro 07:37:49] sample 34: pass=1 committed=230 stale=0s running=0 activity=14 locks=0
+[stall-repro 07:38:19] sample 35: pass=1 committed=231 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:38:52] sample 36: pass=1 committed=232 stale=0s running=4 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:39:22] sample 37: pass=1 committed=239 stale=0s running=3 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:39:56] sample 38: pass=1 committed=257 stale=0s running=15 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=1
+[stall-repro 07:40:26] sample 39: pass=1 committed=278 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:40:59] sample 40: pass=1 committed=280 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:41:29] sample 41: pass=1 committed=280 stale=33s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:42:02] sample 42: pass=1 committed=296 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:42:08] adoption 4: exit=0 dripped=6 status=warn fenced=0 pending=66 fence_failed=17 142.9s
+[stall-repro 07:42:33] sample 43: pass=1 committed=297 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:43:06] sample 44: pass=1 committed=297 stale=30s running=1 [managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:43:36] sample 45: pass=1 committed=314 stale=0s running=20 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:44:09] sample 46: pass=1 committed=342 stale=0s running=22 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:44:39] sample 47: pass=1 committed=351 stale=0s running=33 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:45:13] sample 48: pass=1 committed=384 stale=0s running=1 [managed_sync_import:?] activity=14 locks=1
+[stall-repro 07:45:43] sample 49: pass=1 committed=386 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:45:59] adoption 5: exit=0 dripped=6 status=warn fenced=0 pending=62 fence_failed=17 111s
+[stall-repro 07:46:16] sample 50: pass=1 committed=387 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:46:46] sample 51: pass=1 committed=388 stale=0s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:47:19] sample 52: pass=1 committed=388 stale=30s running=20 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:47:49] sample 53: pass=1 committed=412 stale=0s running=20 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:48:23] sample 54: pass=1 committed=452 stale=0s running=6 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:48:53] sample 55: pass=1 committed=458 stale=0s running=11 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:49:26] sample 56: pass=1 committed=469 stale=0s running=8 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:49:41] adoption 6: exit=0 dripped=6 status=warn fenced=0 pending=66 fence_failed=17 101.9s
+[stall-repro 07:49:56] sample 57: pass=1 committed=477 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:50:30] sample 58: pass=1 committed=477 stale=30s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=0
+[stall-repro 07:51:00] sample 59: pass=1 committed=478 stale=0s running=8 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:51:33] sample 60: pass=1 committed=502 stale=0s running=0 activity=14 locks=0
+[stall-repro 07:52:03] sample 61: pass=1 committed=502 stale=33s running=10 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:52:36] sample 62: pass=1 committed=512 stale=0s running=16 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:53:07] sample 63: pass=1 committed=512 stale=33s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:53:40] sample 64: pass=1 committed=528 stale=0s running=0 activity=14 locks=0
+[stall-repro 07:53:54] adoption 7: exit=0 dripped=6 status=warn fenced=0 pending=66 fence_failed=17 133.2s
+[stall-repro 07:54:10] sample 65: pass=1 committed=529 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=14 locks=1
+[stall-repro 07:54:43] sample 66: pass=1 committed=530 stale=0s running=1 [managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:55:13] sample 67: pass=1 committed=531 stale=0s running=10 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:55:47] sample 68: pass=1 committed=541 stale=0s running=20 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:56:17] sample 69: pass=1 committed=581 stale=0s running=4 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=14 locks=0
+[stall-repro 07:56:50] sample 70: pass=1 committed=589 stale=0s running=1 [managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:57:20] sample 71: pass=1 committed=592 stale=0s running=0 activity=14 locks=0
+[stall-repro 07:57:53] sample 72: pass=1 committed=593 stale=0s running=1 [managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:58:24] sample 73: pass=1 committed=596 stale=0s running=0 activity=14 locks=0
+[stall-repro 07:58:57] sample 74: pass=1 committed=597 stale=0s running=1 [managed_sync_import:?] activity=14 locks=0
+[stall-repro 07:59:27] sample 75: pass=1 committed=600 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:00:00] sample 76: pass=1 committed=602 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:00:18] adoption 8: exit=0 dripped=6 status=warn fenced=6 pending=60 fence_failed=15 263.6s
+[stall-repro 08:00:30] sample 77: pass=1 committed=605 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:01:04] sample 78: pass=1 committed=609 stale=0s running=3 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:01:34] sample 79: pass=1 committed=614 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:02:07] sample 80: pass=1 committed=628 stale=0s running=8 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:02:37] sample 81: pass=1 committed=641 stale=0s running=6 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:03:10] sample 82: pass=1 committed=647 stale=0s running=6 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:03:41] sample 83: pass=1 committed=653 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=13 locks=0
+[stall-repro 08:04:13] adoption 9: exit=0 dripped=6 status=warn fenced=0 pending=60 fence_failed=17 114.8s
+[stall-repro 08:04:13] sample 84: pass=1 committed=654 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:04:44] sample 85: pass=1 committed=656 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:05:17] sample 86: pass=1 committed=656 stale=30s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:05:47] sample 87: pass=1 committed=676 stale=0s running=12 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:06:20] sample 88: pass=1 committed=700 stale=0s running=26 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:06:50] sample 89: pass=1 committed=726 stale=0s running=17 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=15 locks=0
+[stall-repro 08:07:24] sample 90: pass=1 committed=743 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=15 locks=0
+[stall-repro 08:07:54] sample 91: pass=1 committed=751 stale=0s running=0 activity=15 locks=0
+[stall-repro 08:07:57] adoption 10: exit=0 dripped=6 status=warn fenced=0 pending=66 fence_failed=17 103.4s
+[stall-repro 08:08:27] sample 92: pass=1 committed=751 stale=30s running=1 [managed_maintenance_adopt_fact_fence:?] activity=15 locks=1
+[stall-repro 08:08:57] sample 93: pass=1 committed=751 stale=63s running=1 [managed_sync_import:?] activity=15 locks=0
+[stall-repro 08:09:30] sample 94: pass=1 committed=752 stale=0s running=24 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=15 locks=0
+[stall-repro 08:10:01] sample 95: pass=1 committed=792 stale=0s running=4 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=15 locks=0
+[stall-repro 08:10:34] sample 96: pass=1 committed=805 stale=0s running=13 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=15 locks=0
+[stall-repro 08:11:04] sample 97: pass=1 committed=818 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=15 locks=0
+[stall-repro 08:11:37] sample 98: pass=1 committed=818 stale=30s running=10 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=15 locks=0
+[stall-repro 08:11:51] adoption 11: exit=0 dripped=6 status=warn fenced=0 pending=62 fence_failed=17 114.5s
+[stall-repro 08:12:07] sample 99: pass=1 committed=828 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=15 locks=0
+[stall-repro 08:12:41] sample 100: pass=1 committed=828 stale=30s running=1 [managed_sync_import:?] activity=15 locks=0
+[stall-repro 08:13:11] sample 101: pass=1 committed=833 stale=0s running=24 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=15 locks=1
+[stall-repro 08:13:44] sample 102: pass=1 committed=869 stale=0s running=4 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=15 locks=0
+[stall-repro 08:14:14] sample 103: pass=1 committed=882 stale=0s running=33 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=15 locks=0
+[stall-repro 08:14:48] sample 104: pass=1 committed=915 stale=0s running=7 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=15 locks=0
+[stall-repro 08:15:18] sample 105: pass=1 committed=922 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=15 locks=0
+[stall-repro 08:15:47] adoption 12: exit=0 dripped=6 status=warn fenced=0 pending=64 fence_failed=17 115.8s
+[stall-repro 08:15:51] sample 106: pass=1 committed=922 stale=30s running=0 activity=15 locks=0
+[stall-repro 08:16:21] sample 107: pass=1 committed=923 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=15 locks=0
+[stall-repro 08:16:54] sample 108: pass=1 committed=924 stale=0s running=4 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:17:24] sample 109: pass=1 committed=931 stale=0s running=4 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:17:58] sample 110: pass=1 committed=949 stale=0s running=6 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:18:28] sample 111: pass=1 committed=958 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=13 locks=0
+[stall-repro 08:19:01] sample 112: pass=1 committed=960 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:19:31] sample 113: pass=1 committed=963 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:19:48] pass 1 ended: code=124 timeout_3600 committed 0 -> 964 in 3598.5 s; stderr tail: e and one takes fence. Merge the fences into one or delete the extra marker."; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log | [sync] 966/15000 processed (966 written, 0 waived this run) · 16.1 pages/min · indexing ETA 14h29m | 
+[stall-repro 08:19:48] pass 1 status: null
+[stall-repro 08:19:55] pass 2 started: timeout pid 22141, gbrain pid 22142
+[stall-repro 08:20:05] sample 114: pass=2 committed=964 stale=0s running=1 [managed_sync_import:?] activity=10 locks=0
+[stall-repro 08:20:35] sample 115: pass=2 committed=965 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=10 locks=0
+[stall-repro 08:21:08] sample 116: pass=2 committed=965 stale=30s running=1 [managed_sync_import:?] activity=10 locks=0
+[stall-repro 08:21:11] adoption 13: exit=0 dripped=6 status=warn fenced=0 pending=60 fence_failed=17 203s
+[stall-repro 08:21:38] sample 117: pass=2 committed=967 stale=0s running=4 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=10 locks=0
+[stall-repro 08:22:12] sample 118: pass=2 committed=974 stale=0s running=0 activity=10 locks=0
+[stall-repro 08:22:42] sample 119: pass=2 committed=986 stale=0s running=8 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=9 locks=0
+[stall-repro 08:23:15] sample 120: pass=2 committed=1001 stale=0s running=12 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=10 locks=0
+[stall-repro 08:23:45] sample 121: pass=2 committed=1023 stale=0s running=0 activity=12 locks=0
+[stall-repro 08:24:18] sample 122: pass=2 committed=1024 stale=0s running=1 [managed_sync_import:?] activity=12 locks=0
+[stall-repro 08:24:48] sample 123: pass=2 committed=1027 stale=0s running=0 activity=11 locks=0
+[stall-repro 08:25:22] sample 124: pass=2 committed=1029 stale=0s running=1 [managed_sync_import:?] activity=11 locks=0
+[stall-repro 08:25:52] sample 125: pass=2 committed=1032 stale=0s running=0 activity=10 locks=0
+[stall-repro 08:26:25] sample 126: pass=2 committed=1033 stale=0s running=1 [managed_sync_import:?] activity=10 locks=0
+[stall-repro 08:26:55] sample 127: pass=2 committed=1034 stale=0s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=10 locks=0
+[stall-repro 08:27:28] sample 128: pass=2 committed=1034 stale=30s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=9 locks=1
+[stall-repro 08:27:33] adoption 14: exit=0 dripped=6 status=warn fenced=6 pending=60 fence_failed=15 262.4s
+[stall-repro 08:27:59] sample 129: pass=2 committed=1051 stale=0s running=9 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=10 locks=0
+[stall-repro 08:28:32] sample 130: pass=2 committed=1051 stale=30s running=9 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=10 locks=0
+[stall-repro 08:29:02] sample 131: pass=2 committed=1076 stale=0s running=21 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=10 locks=0
+[stall-repro 08:29:35] sample 132: pass=2 committed=1100 stale=0s running=34 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=10 locks=0
+[stall-repro 08:30:05] sample 133: pass=2 committed=1111 stale=0s running=39 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:30:39] sample 134: pass=2 committed=1150 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:31:09] sample 135: pass=2 committed=1152 stale=0s running=1 [managed_sync_import:?] activity=12 locks=0
+[stall-repro 08:31:42] sample 136: pass=2 committed=1154 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=12 locks=0
+[stall-repro 08:31:54] adoption 15: exit=0 dripped=6 status=warn fenced=0 pending=60 fence_failed=17 140.3s
+[stall-repro 08:32:12] sample 137: pass=2 committed=1156 stale=0s running=0 activity=11 locks=0
+[stall-repro 08:32:46] sample 138: pass=2 committed=1156 stale=30s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=11 locks=0
+[stall-repro 08:33:16] sample 139: pass=2 committed=1176 stale=0s running=9 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=11 locks=0
+[stall-repro 08:33:49] sample 140: pass=2 committed=1200 stale=0s running=26 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=10 locks=0
+[stall-repro 08:34:19] sample 141: pass=2 committed=1226 stale=0s running=36 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=10 locks=0
+[stall-repro 08:34:52] sample 142: pass=2 committed=1243 stale=0s running=19 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=12 locks=0
+[stall-repro 08:35:23] sample 143: pass=2 committed=1262 stale=0s running=11 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:35:48] adoption 16: exit=0 dripped=6 status=warn fenced=0 pending=66 fence_failed=17 114.4s
+[stall-repro 08:35:56] sample 144: pass=2 committed=1273 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=13 locks=0
+[stall-repro 08:36:26] sample 145: pass=2 committed=1273 stale=33s running=1 [managed_maintenance_adopt_fact_fence:?] activity=13 locks=1
+[stall-repro 08:36:59] sample 146: pass=2 committed=1274 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:37:29] sample 147: pass=2 committed=1279 stale=0s running=3 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:38:03] sample 148: pass=2 committed=1282 stale=0s running=2 [managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:38:33] sample 149: pass=2 committed=1285 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:39:06] sample 150: pass=2 committed=1288 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:39:36] sample 151: pass=2 committed=1291 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:40:10] sample 152: pass=2 committed=1293 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:40:40] sample 153: pass=2 committed=1295 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:41:13] sample 154: pass=2 committed=1298 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:41:43] sample 155: pass=2 committed=1302 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:42:08] adoption 17: exit=0 dripped=6 status=warn fenced=6 pending=60 fence_failed=15 260s
+[stall-repro 08:42:17] sample 156: pass=2 committed=1304 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:42:47] sample 157: pass=2 committed=1307 stale=0s running=2 [managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:43:20] sample 158: pass=2 committed=1311 stale=0s running=2 [managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:43:50] sample 159: pass=2 committed=1329 stale=0s running=6 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:44:23] sample 160: pass=2 committed=1338 stale=0s running=17 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:44:54] sample 161: pass=2 committed=1355 stale=0s running=5 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:45:27] sample 162: pass=2 committed=1360 stale=0s running=1 [managed_sync_import:?] activity=11 locks=0
+[stall-repro 08:45:57] sample 163: pass=2 committed=1363 stale=0s running=1 [managed_sync_import:?] activity=11 locks=0
+[stall-repro 08:46:30] sample 164: pass=2 committed=1364 stale=0s running=1 [managed_sync_import:?] activity=11 locks=0
+[stall-repro 08:46:48] adoption 18: exit=0 dripped=6 status=warn fenced=0 pending=60 fence_failed=17 159s
+[stall-repro 08:47:00] sample 165: pass=2 committed=1367 stale=0s running=0 activity=11 locks=0
+[stall-repro 08:47:34] sample 166: pass=2 committed=1370 stale=0s running=2 [managed_sync_import:?, managed_sync_import:?] activity=11 locks=0
+[stall-repro 08:48:04] sample 167: pass=2 committed=1374 stale=0s running=6 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=11 locks=0
+[stall-repro 08:48:37] sample 168: pass=2 committed=1392 stale=0s running=6 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=11 locks=0
+[stall-repro 08:49:07] sample 169: pass=2 committed=1401 stale=0s running=17 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:49:41] sample 170: pass=2 committed=1419 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:50:11] sample 171: pass=2 committed=1420 stale=0s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:50:44] sample 172: pass=2 committed=1420 stale=30s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:51:14] sample 173: pass=2 committed=1436 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=13 locks=1
+[stall-repro 08:51:44] adoption 19: exit=0 dripped=6 status=warn fenced=0 pending=62 fence_failed=17 176s
+[stall-repro 08:51:48] sample 174: pass=2 committed=1437 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:52:18] sample 175: pass=2 committed=1439 stale=0s running=0 activity=13 locks=0
+[stall-repro 08:52:51] sample 176: pass=2 committed=1443 stale=0s running=3 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:53:21] sample 177: pass=2 committed=1448 stale=0s running=4 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:53:54] sample 178: pass=2 committed=1464 stale=0s running=8 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:54:25] sample 179: pass=2 committed=1474 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=13 locks=0
+[stall-repro 08:54:58] sample 180: pass=2 committed=1474 stale=30s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:55:28] sample 181: pass=2 committed=1474 stale=63s running=16 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:56:01] sample 182: pass=2 committed=1491 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=13 locks=0
+[stall-repro 08:56:32] sample 183: pass=2 committed=1492 stale=0s running=1 [managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:56:37] adoption 20: exit=0 dripped=6 status=warn fenced=4 pending=60 fence_failed=16 173.5s
+[stall-repro 08:57:05] sample 184: pass=2 committed=1494 stale=0s running=16 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:57:35] sample 185: pass=2 committed=1494 stale=33s running=20 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:58:08] sample 186: pass=2 committed=1514 stale=0s running=24 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=13 locks=0
+[stall-repro 08:58:38] sample 187: pass=2 committed=1554 stale=0s running=10 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=13 locks=0
+[stall-repro 08:59:12] sample 188: pass=2 committed=1564 stale=0s running=36 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=11 locks=0
+[stall-repro 08:59:42] sample 189: pass=2 committed=1600 stale=0s running=11 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=12 locks=0
+[stall-repro 09:00:15] sample 190: pass=2 committed=1600 stale=30s running=11 [managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing, managed_sync_import:publishing] activity=12 locks=0
+[stall-repro 09:00:44] adoption 21: exit=0 dripped=6 status=warn fenced=0 pending=64 fence_failed=17 126.1s
+[stall-repro 09:00:45] sample 191: pass=2 committed=1611 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=12 locks=0
+[stall-repro 09:01:19] sample 192: pass=2 committed=1611 stale=30s running=1 [managed_maintenance_adopt_fact_fence:?] activity=12 locks=0

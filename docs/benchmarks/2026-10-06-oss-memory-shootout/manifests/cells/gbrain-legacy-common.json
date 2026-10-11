@@ -1,0 +1,55 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-legacy",
+  "config": "common",
+  "notes": "Draft. The legacy memory-qa path (hybridSearch with the harness pins, sessions rehydrated): the link to the starting line, one arm per benchmark.",
+  "cells": [
+    {
+      "id": "gbrain-legacy-common-locomo-r1",
+      "benchmark": "locomo",
+      "lease_usd": 2,
+      "lease_basis": "1.5 x estimate, not piloted: 587 reader+judge calls at the markdown-notes rate ($1.30)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system gbrain --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --qa reader --reader openai:gpt-4o-mini --judge openai:gpt-4o-2024-08-06 --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-legacy-common-beam-100k",
+      "benchmark": "beam-100k",
+      "lease_usd": 2,
+      "lease_basis": "1.5 x estimate, not piloted: 120 x $0.0068 ($0.90)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark beam-100k --split dev --system gbrain --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --qa reader --reader openai:gpt-4.1-mini --judge openai:gpt-4.1-mini --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "gbrain-legacy-common-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 10,
+      "lease_basis": "1.5 x estimate, not piloted: 100 x $0.065 ($6.60)",
+      "command": "bun eval/runner/memory-qa/run.ts --benchmark lme-s --limit {{lme_s_limit}} --seed 42 --system gbrain --embed real --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --qa reader --reader openai:gpt-4o-2024-08-06 --judge openai:gpt-4o-2024-08-06 --output \"$SHOOTOUT_OUT/mqa\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k,lme-s",
+      "vm": {
+        "size": "standard-8"
+      },
+      "pass": [
+        "OPENAI_API_KEY"
+      ],
+      "lease_scale": {
+        "param": "lme_s_limit",
+        "base": 100
+      }
+    }
+  ]
+}

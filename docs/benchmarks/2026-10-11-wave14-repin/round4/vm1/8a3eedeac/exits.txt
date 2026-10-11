@@ -1,0 +1,8 @@
+checks-aow 0
+n6-attest 0
+n6pg-control 1
+n6pg 0
+n8-attest 0
+perf-1 0
+perf-2 0
+perf-3 0

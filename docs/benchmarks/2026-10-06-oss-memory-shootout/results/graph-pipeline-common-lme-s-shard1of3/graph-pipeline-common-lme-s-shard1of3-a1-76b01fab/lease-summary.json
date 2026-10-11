@@ -1,0 +1,8 @@
+{
+  "run_id": "graph-pipeline-common-lme-s-shard1of3-a1-76b01fab",
+  "lease_usd": 36,
+  "committed_usd": 22.765860320000492,
+  "requests": 33513,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

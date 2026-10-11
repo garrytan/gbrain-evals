@@ -1,0 +1,40 @@
+{
+  "task_id": "boltons-discount-001",
+  "arm": "none",
+  "history": "full",
+  "source": "conversation",
+  "tier": "planted",
+  "category": "ordering",
+  "model": "google/gemini-3.8-flash",
+  "started_at": "2026-10-05T14:48:00.037Z",
+  "wall_s": 111.1,
+  "exit_code": 0,
+  "solved": true,
+  "interventions": 2,
+  "capped": false,
+  "final_pytest": "4 passed in 0.01s",
+  "turns": 38,
+  "tokens": {
+    "input": 332783,
+    "output": 1568,
+    "reasoning": 11697,
+    "cache_read": 738791,
+    "cache_write": 0
+  },
+  "patch_bytes": 599,
+  "harness_cost_usd": 0.0,
+  "ended_at": "2026-10-05T14:49:51.123Z",
+  "metered": {
+    "requests": 42,
+    "refused": 0,
+    "usd": 0.380568,
+    "by_label": {
+      "agent": {
+        "requests": 42,
+        "usd": 0.38056799999999996,
+        "input_tokens": 1185242,
+        "output_tokens": 13633
+      }
+    }
+  }
+}

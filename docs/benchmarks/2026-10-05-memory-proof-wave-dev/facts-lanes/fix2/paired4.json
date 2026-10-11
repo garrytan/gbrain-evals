@@ -1,0 +1,94 @@
+{
+ "100k off->on": {
+  "temporal_reasoning": {
+   "n": 8,
+   "wins": 0,
+   "losses": 1,
+   "ties": 7,
+   "mean_diff": -0.0312
+  },
+  "event_ordering": {
+   "n": 8,
+   "wins": 1,
+   "losses": 0,
+   "ties": 7,
+   "mean_diff": 0.0375
+  },
+  "ALL": {
+   "n": 80,
+   "wins": 6,
+   "losses": 11,
+   "ties": 63,
+   "mean_diff": 0.0017
+  }
+ },
+ "500k off->on": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 0,
+   "losses": 1,
+   "ties": 13,
+   "mean_diff": -0.0714
+  },
+  "event_ordering": {
+   "n": 14,
+   "wins": 2,
+   "losses": 4,
+   "ties": 8,
+   "mean_diff": -0.014
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 16,
+   "losses": 16,
+   "ties": 108,
+   "mean_diff": 0.0061
+  }
+ },
+ "1m off->on": {
+  "temporal_reasoning": {
+   "n": 14,
+   "wins": 0,
+   "losses": 1,
+   "ties": 13,
+   "mean_diff": -0.0536
+  },
+  "event_ordering": {
+   "n": 14,
+   "wins": 3,
+   "losses": 6,
+   "ties": 5,
+   "mean_diff": -0.0167
+  },
+  "ALL": {
+   "n": 140,
+   "wins": 13,
+   "losses": 24,
+   "ties": 103,
+   "mean_diff": -0.0323
+  }
+ },
+ "pooled": {
+  "temporal_reasoning": {
+   "n": 36,
+   "wins": 0,
+   "losses": 3,
+   "ties": 33,
+   "mean_diff": -0.0555
+  },
+  "event_ordering": {
+   "n": 36,
+   "wins": 6,
+   "losses": 10,
+   "ties": 20,
+   "mean_diff": -0.0036
+  },
+  "ALL": {
+   "n": 360,
+   "wins": 35,
+   "losses": 51,
+   "ties": 274,
+   "mean_diff": -0.0098
+  }
+ }
+}

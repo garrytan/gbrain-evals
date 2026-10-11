@@ -100,6 +100,10 @@ This preflight is deliberately conservative. More importantly, the measured rece
 
 The default Cat35 command runs two transcripts as a paid setup check. `CAT35_FULL=1` selects the full corpus. Match the task's authorized budget before increasing a cap.
 
+## Cat 40 Hard stops with exit code 3
+
+Cat 40 Hard runs exit 3 with a stable code (for example `HARD_JUDGE_REQUIRED` or `HARD_BUDGET_SHORT`) and print what failed, the fix and any decision Garry must make. Every code, every paid step's command, output path, projection and wall clock are in the [Cat 40 Hard runbook](../docs/benchmarks/cat40-hard/RUNBOOK.md). Hard commands always pass `--judge gpt-6.1-sol`; v1 Cat 40 commands without it are refused on a Hard world. `scripts/cat40-hard.sh hello` checks a setup at $0.
+
 ## Query validation fails
 
 **A temporal question needs a date.** Set `as_of_date` to `"corpus-end"`, `"per-source"`, or a specific ISO date. If the question is not temporal, clarify its wording. The trigger rules live in `eval/runner/queries/validator.ts`.

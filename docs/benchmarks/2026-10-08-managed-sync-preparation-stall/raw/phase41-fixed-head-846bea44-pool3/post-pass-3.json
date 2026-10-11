@@ -1,0 +1,1892 @@
+{
+  "pass": 3,
+  "at": "2026-10-08T13:47:45.806Z",
+  "sources_status": {
+    "schema_version": 1,
+    "sources": [
+      {
+        "source_id": "bench",
+        "name": "bench",
+        "local_path": "<fixture-home>/repo-bench",
+        "federated": false,
+        "total_pages": 16480,
+        "total_chunks": 32960,
+        "embedded_chunks": 0,
+        "embed_coverage_pct": 0,
+        "last_sync_at": "2026-10-08T13:46:03.269Z",
+        "lag_seconds": 96,
+        "failed_jobs_24h": 0,
+        "queue_depth": 0,
+        "backfill_active": 0,
+        "backfill_queued": 0,
+        "tracked_branch": null,
+        "priority_label": "normal",
+        "webhook_configured": false,
+        "sync_running": false,
+        "sync_holder": null,
+        "git_holds": {
+          "count": 20,
+          "items": [
+            {
+              "path": "companies/scale-0-1502.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "companies/scale-0-1502",
+              "stale": false,
+              "held_since": "2026-10-08T11:23:13.936Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "companies/scale-0-1502.md"
+                ],
+                "why": "companies/scale-0-1502.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in companies/scale-0-1502.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected companies/scale-0-1502.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "companies/scale-0-1512.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "companies/scale-0-1512",
+              "stale": false,
+              "held_since": "2026-10-08T11:23:22.410Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "companies/scale-0-1512.md"
+                ],
+                "why": "companies/scale-0-1512.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in companies/scale-0-1512.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected companies/scale-0-1512.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1503.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1503",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:12.667Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1503.md"
+                ],
+                "why": "notes/scale-0-1503.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1503.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1503.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1504.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1504",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:19.710Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1504.md"
+                ],
+                "why": "notes/scale-0-1504.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1504.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1504.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1505.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1505",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:26.663Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1505.md"
+                ],
+                "why": "notes/scale-0-1505.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1505.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1505.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1506.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1506",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:33.615Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1506.md"
+                ],
+                "why": "notes/scale-0-1506.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1506.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1506.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1507.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1507",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:40.622Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1507.md"
+                ],
+                "why": "notes/scale-0-1507.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1507.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1507.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1508.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1508",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:47.621Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1508.md"
+                ],
+                "why": "notes/scale-0-1508.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1508.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1508.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1509.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1509",
+              "stale": false,
+              "held_since": "2026-10-08T12:06:54.527Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1509.md"
+                ],
+                "why": "notes/scale-0-1509.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1509.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1509.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1513.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1513",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:13.811Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1513.md"
+                ],
+                "why": "notes/scale-0-1513.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1513.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1513.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1514.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1514",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:20.848Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1514.md"
+                ],
+                "why": "notes/scale-0-1514.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1514.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1514.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1515.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1515",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:27.772Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1515.md"
+                ],
+                "why": "notes/scale-0-1515.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1515.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1515.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1516.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1516",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:34.761Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1516.md"
+                ],
+                "why": "notes/scale-0-1516.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1516.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1516.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1517.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1517",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:41.777Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1517.md"
+                ],
+                "why": "notes/scale-0-1517.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1517.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1517.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1518.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1518",
+              "stale": false,
+              "held_since": "2026-10-08T12:07:48.738Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1518.md"
+                ],
+                "why": "notes/scale-0-1518.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1518.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1518.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "notes/scale-0-1519.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "notes/scale-0-1519",
+              "stale": false,
+              "held_since": "2026-10-08T12:08:09.487Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "notes/scale-0-1519.md"
+                ],
+                "why": "notes/scale-0-1519.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in notes/scale-0-1519.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected notes/scale-0-1519.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "people/scale-0-1500.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 52,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "people/scale-0-1500",
+              "stale": false,
+              "held_since": "2026-10-08T13:21:58.210Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "people/scale-0-1500.md"
+                ],
+                "why": "people/scale-0-1500.md is held because the facts fence (timeline), at line 52 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in people/scale-0-1500.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected people/scale-0-1500.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "people/scale-0-1501.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "people/scale-0-1501",
+              "stale": false,
+              "held_since": "2026-10-08T13:22:03.562Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "people/scale-0-1501.md"
+                ],
+                "why": "people/scale-0-1501.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in people/scale-0-1501.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected people/scale-0-1501.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "people/scale-0-1510.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 52,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "people/scale-0-1510",
+              "stale": false,
+              "held_since": "2026-10-08T13:22:18.048Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "people/scale-0-1510.md"
+                ],
+                "why": "people/scale-0-1510.md is held because the facts fence (timeline), at line 52 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in people/scale-0-1510.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected people/scale-0-1510.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            },
+            {
+              "path": "people/scale-0-1511.md",
+              "code": "invalid_fence",
+              "reason": "repeated_marker",
+              "line": 32,
+              "fence": {
+                "line": 14,
+                "rows": [],
+                "fence": "facts",
+                "reason": "repeated_marker",
+                "columns": [],
+                "section": "timeline",
+                "classes": [
+                  "repeated_marker"
+                ],
+                "tier": "manual",
+                "auto_retry": false,
+                "next_attempt_after": null
+              },
+              "message": "Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker.",
+              "slug": "people/scale-0-1511",
+              "stale": false,
+              "held_since": "2026-10-08T13:22:23.340Z",
+              "fix": {
+                "consent": [],
+                "actor": "agent",
+                "requires_exclusive": false,
+                "verify": {
+                  "argv": [
+                    "gbrain",
+                    "sources",
+                    "status",
+                    "bench",
+                    "--json"
+                  ]
+                },
+                "docs": "docs/guides/repair.md#fences",
+                "argv": [
+                  "gbrain",
+                  "repair",
+                  "fences",
+                  "--source",
+                  "bench",
+                  "--only",
+                  "people/scale-0-1511.md"
+                ],
+                "why": "people/scale-0-1511.md is held because the facts fence (timeline), at line 32 cannot be imported (repeated_marker). gbrain will not guess this repair. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker. The preview names the exact edit, read-only: make it in people/scale-0-1511.md (never the frontmatter), commit, then sync. The rest of the source keeps syncing.",
+                "then": {
+                  "consent": [],
+                  "actor": "agent",
+                  "requires_exclusive": false,
+                  "verify": {
+                    "argv": [
+                      "gbrain",
+                      "sources",
+                      "status",
+                      "bench",
+                      "--json"
+                    ]
+                  },
+                  "argv": [
+                    "gbrain",
+                    "sync",
+                    "--source",
+                    "bench",
+                    "--no-pull"
+                  ],
+                  "why": "Imports the corrected people/scale-0-1511.md and clears the hold; a fence that still does not parse stays held without blocking the sync."
+                }
+              },
+              "docs": "docs/guides/write-refusals.md#fence-repeated_marker"
+            }
+          ],
+          "sync_argv": [
+            "gbrain",
+            "sync",
+            "--source",
+            "bench",
+            "--no-pull"
+          ]
+        },
+        "shared_skills": {
+          "source_id": "bench",
+          "configured": null,
+          "mode": "content",
+          "reason_code": null,
+          "reason": null,
+          "explanation": "Shared skills are on for bench: the migration may inventory and adopt its skillpack. Opt out with gbrain sources shared-skills bench off.",
+          "parked": null
+        }
+      }
+    ]
+  },
+  "writer_status": {
+    "selected_brain": "host",
+    "enabled": true,
+    "brain_id": "9fd2bf2f-ff89-4027-900c-14a4e760ac6a",
+    "sampled_at": "2026-10-08T13:47:43.689Z",
+    "publication_concurrency": 2,
+    "local_process_ingress": {
+      "state": "not_running",
+      "accepting": false,
+      "active_preparations": 0,
+      "active_worktrees": 0,
+      "scope": "The process that answered has no resident consumer (a one-shot CLI, for example); another process may own writes. See worktrees and bindings for ownership."
+    },
+    "worktrees": [
+      {
+        "id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "owner_host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "owner_epoch": "1",
+        "topology_generation": "1",
+        "state": "active",
+        "heartbeat_at": null,
+        "queued": 0,
+        "running": 0,
+        "recovering": 0,
+        "oldest_request_at": null,
+        "last_completed_sequence": "15332",
+        "recovery_bytes": "0",
+        "recovering_effects": 0
+      }
+    ],
+    "counters": [
+      {
+        "key": "brain",
+        "outstanding_count": "0",
+        "intent_bytes": "0",
+        "lifetime_ids": "15332",
+        "terminal_bytes": "251199488",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "outstanding_count": "0",
+        "intent_bytes": "0",
+        "lifetime_ids": "15332",
+        "terminal_bytes": "251199488",
+        "recovery_bytes": "0"
+      },
+      {
+        "key": "worktree:34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "outstanding_count": "0",
+        "intent_bytes": "0",
+        "lifetime_ids": "0",
+        "terminal_bytes": "0",
+        "recovery_bytes": "0"
+      }
+    ],
+    "queue": [],
+    "effects": [],
+    "limits": {
+      "principalOutstanding": 100,
+      "brainOutstanding": 1000,
+      "principalIntentBytes": 33554432,
+      "brainIntentBytes": 268435456,
+      "principalLifetimeIds": 250000,
+      "brainLifetimeIds": 1000000,
+      "principalTerminalBytes": 1610612736,
+      "brainTerminalBytes": 8589934592,
+      "brainRecoveryBytes": 1073741824,
+      "worktreeRecoveryBytes": 268435456
+    },
+    "capacity": [
+      {
+        "scope": "brain",
+        "resource": "outstanding_count",
+        "used": 0,
+        "limit": 1000,
+        "remaining": 1000,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_outstanding"
+      },
+      {
+        "scope": "brain",
+        "resource": "intent_bytes",
+        "used": 0,
+        "limit": 268435456,
+        "remaining": 268435456,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_intent_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "lifetime_ids",
+        "used": 15332,
+        "limit": 1000000,
+        "remaining": 984668,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_lifetime_ids"
+      },
+      {
+        "scope": "brain",
+        "resource": "terminal_bytes",
+        "used": 251199488,
+        "limit": 8589934592,
+        "remaining": 8338735104,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_terminal_bytes"
+      },
+      {
+        "scope": "brain",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 1073741824,
+        "remaining": 1073741824,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.brain_recovery_bytes"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "outstanding_count",
+        "used": 0,
+        "limit": 100,
+        "remaining": 100,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_outstanding"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "intent_bytes",
+        "used": 0,
+        "limit": 33554432,
+        "remaining": 33554432,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_intent_bytes"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "lifetime_ids",
+        "used": 15332,
+        "limit": 250000,
+        "remaining": 234668,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_lifetime_ids"
+      },
+      {
+        "scope": "principal:local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "resource": "terminal_bytes",
+        "used": 251199488,
+        "limit": 1610612736,
+        "remaining": 1359413248,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.principal_terminal_bytes"
+      },
+      {
+        "scope": "worktree:34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "resource": "recovery_bytes",
+        "used": 0,
+        "limit": 268435456,
+        "remaining": 268435456,
+        "approaching_capacity": false,
+        "config_key": "persistence.limits.worktree_recovery_bytes"
+      }
+    ],
+    "preparation_policy": {
+      "deadlines": true,
+      "sync_preparation_ms": 120000,
+      "maintenance_preparation_ms": 120000,
+      "preparation_ceiling_ms": 600000,
+      "max_preparation_attempts": 2
+    },
+    "recent_failures": [],
+    "blockers": [],
+    "mode": "managed",
+    "mode_epoch": 2,
+    "local_markers": {
+      "state": "cleared",
+      "removed": [],
+      "pending": []
+    },
+    "host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+    "local_host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+    "bindings": [
+      {
+        "source_id": "bench",
+        "source_incarnation": "2f8ef4e7-80dc-44af-97ac-540e057acc51",
+        "worktree_id": "34a3a0ef-f6df-42c8-8afa-feddbfc69c27",
+        "relative_path": "",
+        "topology_generation": "1",
+        "owner_host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "owner_epoch": "1",
+        "state": "active",
+        "manifest_digest": null,
+        "local_path": "<fixture-home>/repo-bench"
+      }
+    ],
+    "admin_state": "031f9c8ac56cf0362047fc429a430ad31a382d48a8dd154d53c6d4a9b1212cbe",
+    "admin_lock": {
+      "locked": false,
+      "set_at": null,
+      "host_id": null
+    },
+    "blocking_effects": [],
+    "writer_versions": [
+      {
+        "role": "consumer",
+        "host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "principal": "local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "version": "0.60.108.0",
+        "version_label": "0.60.108.0",
+        "last_seen": "2026-10-08T13:46:03.269Z"
+      },
+      {
+        "role": "admitter",
+        "host_id": "adb9da6e-57b9-4738-a4b7-35564a9760f5",
+        "principal": "local_cli:8513f48e-59af-4b14-bc24-1173a70839a9",
+        "version": "0.60.108.0",
+        "version_label": "0.60.108.0",
+        "last_seen": "2026-10-08T13:46:01.783Z"
+      }
+    ],
+    "onboarding": {
+      "sources": [
+        {
+          "source_id": "bench",
+          "state": "ready",
+          "write_through": true,
+          "storage": {
+            "container": false,
+            "durability_verified": false,
+            "paths": [
+              {
+                "role": "canonical_root",
+                "path": "<fixture-home>/repo-bench",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "reservation_parent",
+                "path": "<fixture-home>",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "persistence_home",
+                "path": "<fixture-home>/.gbrain/persistence",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              },
+              {
+                "role": "coordination_directory",
+                "path": "<fixture-home>/.gbrain/persistence/locks",
+                "backing": "mounted_unverified",
+                "mount_path": "/",
+                "filesystem": "ext4"
+              }
+            ],
+            "next_action": "Verify that the canonical checkout, its parent (which holds the sibling reservation), and the persistence home/coordination lock survive container recreation together. A mounted path is not proof of durability. Do not delete ownership or lock files."
+          }
+        },
+        {
+          "source_id": "default",
+          "state": "database_only",
+          "write_through": true
+        }
+      ],
+      "legacy_locks": [],
+      "unsupported_maintenance": [],
+      "procedure": "For deliberate onboarding, stop and upgrade older writers on every host, review all sources and durable paths, explicitly claim each filesystem source using its fresh admin_state, inspect status again, then explicitly activate with --confirm-quiesced and a fresh admin_state. A claim alone fences legacy sync; finish activation before ordinary writes or sync. This inspection never claims, activates, repairs or switches to database-only storage."
+    },
+    "shared_skills": {
+      "writer_protocol_floor": 1,
+      "skill_bundles_enabled": false
+    },
+    "worktree_refreshes": []
+  },
+  "holds": {
+    "by_code_reason": [
+      {
+        "code": "invalid_fence",
+        "reason": "repeated_marker",
+        "step": null,
+        "n": 20
+      }
+    ],
+    "summary": {
+      "count": 20,
+      "stale": 0,
+      "fences": 20,
+      "images": 0,
+      "stalled": 0,
+      "source_id": "bench",
+      "concurrent": 0,
+      "incarnation": "2f8ef4e7-80dc-44af-97ac-540e057acc51"
+    },
+    "paths": [
+      {
+        "path": "companies/scale-0-1502.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "companies/scale-0-1512.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1503.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1504.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1505.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1506.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1507.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1508.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1509.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1513.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1514.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1515.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1516.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1517.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1518.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1519.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "people/scale-0-1500.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "people/scale-0-1501.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "people/scale-0-1510.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "people/scale-0-1511.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      }
+    ]
+  },
+  "preparation_stalled_receipts": [],
+  "preparation_attempts": []
+}

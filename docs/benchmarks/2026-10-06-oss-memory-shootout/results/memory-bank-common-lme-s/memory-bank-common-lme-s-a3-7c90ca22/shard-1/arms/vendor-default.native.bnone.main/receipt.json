@@ -1,0 +1,323 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "lme-s",
+  "split": "dev",
+  "started_at": "2026-10-07T22:44:45.952Z",
+  "finished_at": "2026-10-08T00:43:44.817Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "LongMemEval-S cleaned",
+    "files": [
+      {
+        "path": "longmemeval/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+      }
+    ],
+    "revision": "98d7416c",
+    "license": "MIT"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "memory-bank",
+    "lease_id": "memory-bank-common-lme-s-a3-7c90ca22",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 13,
+    "sessions": 641,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 4.9059937899999975,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 19701
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "59849ac6eac6b5caa111b1b9a2cc44ddac224b9ab014a996e9c2c19910e4a9b3",
+  "cell_run_config_hash": "c22e75464ef207cc8650394e51ffceed1c2dc7300f95392d4c11c1b013caccaa",
+  "arm": {
+    "id": "vendor-default.native.bnone.main",
+    "policy": "vendor-default",
+    "context": "native",
+    "budget_tokens": null,
+    "reader": {
+      "id": "main",
+      "model": "openai:gpt-4o-2024-08-06",
+      "slice": null
+    }
+  },
+  "retrieval_path": "MemorySystem.retrieve (http:http://127.0.0.1:8700, policy memory-bank:vendor-default), one retrieval per question and policy shared by every arm",
+  "selection": {
+    "categories": null,
+    "limit": 100,
+    "seed": 42,
+    "shard": {
+      "index": 1,
+      "count": 8
+    },
+    "conversations": 13,
+    "questions_expected": 13,
+    "reader_slice": null
+  },
+  "counts": {
+    "rows": 13,
+    "scored": 12,
+    "errors": 0,
+    "abstention": 1
+  },
+  "summary": {
+    "recall_all_at_5": 1,
+    "recall_any_at_5": 1,
+    "recall_all_at_10": 1,
+    "ndcg_at_10": 0.9489044006028785,
+    "latency_p50_ms": 3910.55,
+    "latency_p95_ms": 6060.104999999999,
+    "qa_score": 1,
+    "qa_rows": 13,
+    "qa_errors": 0,
+    "qa_service_score": 1,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "reader": "openai:gpt-4o-2024-08-06",
+    "judge": "openai:gpt-4o-2024-08-06",
+    "runs": 1,
+    "context": "native",
+    "budget_tokens": null,
+    "reader_prompt": "native memory-item reading prompt (shootout-render-v1, approx-chars-div-4)",
+    "judge_prompts": "LongMemEval official per-type prompts",
+    "contexts_file": "../../contexts.ndjson"
+  },
+  "system": {
+    "name": "http:http://127.0.0.1:8700",
+    "capability_system": "memory-bank",
+    "capabilities": {
+      "protocol": 1,
+      "system": "memory-bank",
+      "versions": {
+        "package": "see comparison-systems table: memory-bank (server at upstream commit 5fc4ce20917b916240cef27c212c387a177f115b, plus the matching Python client)",
+        "lock_sha256": "f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8",
+        "image": "see comparison-systems table: memory-bank (vendor image digest sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70)",
+        "backend_image": "pgvector/pgvector:0.8.1-pg18@sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c",
+        "shim_base_image": "python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "vendor_benchmark_code": "see comparison-systems table: memory-bank (vendor benchmark code at commit f618ed7b1f0eb9cad7b42e876f91a42f0eadb150: the HTTP provider module of the vendor's agent memory benchmark, the ref memory-bank's own system evals run, AMB_REF=main; the vendor's separate extraction benchmark at commit 55c51f1d6e2477ee69c0a730a80b96a1596ff475 scores the extraction LLM directly, not server ingestion, so it is not used)"
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "extraction": "gpt-4o-mini",
+            "small": null,
+            "embedder": "BAAI/bge-small-en-v1.5 (local, in the vendor image)",
+            "dims": 384,
+            "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2 (local, in the vendor image)"
+          },
+          "provider": "openai (HINDSIGHT_API_LLM_PROVIDER default)",
+          "notes": "Documented self-hosted install (docker/docker-compose/external-pg: server image + pgvector). Every value is the server default at v0.10.2: config.py DEFAULT_LLM_PROVIDER='openai', PROVIDER_DEFAULT_MODELS['openai']='gpt-4o-mini', DEFAULT_EMBEDDINGS_PROVIDER='local' with BAAI/bge-small-en-v1.5 (DEFAULT_EMBEDDING_DIMENSION=384), DEFAULT_RERANKER_PROVIDER='local' with cross-encoder/ms-marco-MiniLM-L-6-v2. One LLM serves every role (retain, reflect, consolidation); only retain runs here. Embedding and reranking make no provider calls."
+        },
+        "common": {
+          "model_roles": {
+            "extraction": "gpt-4.1-mini",
+            "small": null,
+            "embedder": "text-embedding-3-large",
+            "dims": 1536,
+            "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2 (local, unchanged)"
+          },
+          "settings": "HINDSIGHT_API_LLM_MODEL=gpt-4.1-mini; HINDSIGHT_API_EMBEDDINGS_PROVIDER=openai, HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL=text-embedding-3-large, HINDSIGHT_API_EMBEDDINGS_OPENAI_DIMENSIONS=1536 (sent as the API's dimensions parameter, engine/embeddings.py)",
+          "unsettable": [],
+          "notes": "The reranker is outside the common contract and stays at the recipe's local cross-encoder."
+        }
+      },
+      "time": "native",
+      "time_notes": "retain item `timestamp` = session event_time (AMB passes Document.timestamp the same way); recall `query_timestamp` = query_time, the anchor for relative dates and recency. An event_time or query_time without a UTC offset is read as UTC.",
+      "granularity": "one retain item per session (content = JSON of the session's turns, as AMB serializes LoCoMo and LongMemEval sessions), document_id = source_id",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "every recall result carries `document_id`, which is the source_id the shim passed to retain; a chunk item takes the document_id of the fact that cites it. Observations (consolidated facts) would carry no document_id and report unavailable, but they are disabled per bank (see deviations)."
+      },
+      "delete": "native",
+      "delete_notes": "DocumentsApi.delete_document(bank, document_id): deletes the document and every memory unit and link extracted from it in one transaction, and invalidates observations built on them (memory_engine.py delete_document). Re-retaining the same document_id replaces it (update_mode default 'replace').",
+      "readiness": "retain is submitted with retain_async=true (as AMB does); /ingest polls OperationsApi.get_operation_status until completed or failed and then reads DocumentsApi.get_document().memory_unit_count; /finish polls OperationsApi.list_operations totals until in_flight = total - completed - failed is 0 (AMB `_in_flight_ops`), failed > 0 => degraded",
+      "namespace": "bank (bank_id = ns); reset = BanksApi.delete_bank + create_bank",
+      "parallel_namespaces": true,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "budget": "mid",
+            "max_tokens": 4096,
+            "include_chunks": false
+          },
+          "notes": "The pinned Python client's `recall` defaults (its client module, lines 618-639): token-budgeted, not top-k. budget mid, max_tokens 4096 of fact text, chunks off, entities off, all fact types. query_timestamp is always the question date."
+        },
+        "fixed-evidence": {
+          "settings": {
+            "budget": "mid",
+            "max_tokens": 8000,
+            "include_chunks": false
+          },
+          "notes": "Same call with the fact-token cap raised to the shootout's 8,000-token evidence budget, so the harness packer, not memory-bank's 4,096 cap, decides what fits. memory-bank counts tokens with its own tokenizer, the harness with approxTokens; the packer truncates."
+        },
+        "allowed_settings_overrides": [
+          "budget",
+          "max_tokens",
+          "include_chunks",
+          "max_chunk_tokens",
+          "types"
+        ],
+        "vendor_benchmark_reference": {
+          "recall": {
+            "budget": "high",
+            "max_tokens": 32768,
+            "include_chunks": true,
+            "max_chunk_tokens": 16384,
+            "include_entities": false
+          },
+          "notes": "What AMB's memory-bank provider sends for LoCoMo (`_recall_kwargs`); BEAM uses max_tokens 12288 and max_chunk_tokens 8192. Recorded for reference, not a shootout policy."
+        },
+        "item_mapping": "recall results in memory-bank's rank order: world and experience facts -> type fact, observations -> type observation, text = AMB `_format_result` ('**[type]** text' plus an occurred/mentioned line); with include_chunks, each chunk follows the first fact that cites it as a type chunk item (AMB inlines it there). valid_from/valid_to stay null: occurred_start/occurred_end are when an event happened, not a validity window, so they live in the text."
+      },
+      "streaming": "disabled",
+      "provider_routes": [
+        "POST /v1/chat/completions (retain extraction, OpenAI-compatible provider)",
+        "POST /v1/embeddings (common config only)"
+      ],
+      "telemetry_off": [
+        "HINDSIGHT_API_OTEL_TRACES_ENABLED=false",
+        "HINDSIGHT_ENABLE_CP=false (control plane UI not started)",
+        "HF_HUB_OFFLINE=1",
+        "TRANSFORMERS_OFFLINE=1"
+      ],
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "http",
+        "version": "memory-bank server at the pinned release, mounted at /mcp/{bank_id} (api/mcp.py), HINDSIGHT_API_MCP_ENABLED"
+      },
+      "deviations_from_vendor_code": [
+        "No raw dataset ids anywhere: AMB sets document_id and metadata.doc_id to '<sample_id>_<session>' and context to '... (session_N of conv-26)' or 'Session <question_id>_<session_id> ...'; the shim sends document_id = opaque source_id, no metadata at all (metadata influences extraction), and context = 'Conversation between <speakers>'.",
+        "No per-user tags: AMB tags items 'user:<id>' when it shares one bank; the shim uses one bank per namespace, which AMB also does in per-unit mode.",
+        "Turns are serialized as the harness sends them ({role, speaker, content}) instead of the dataset's own JSON keys (LoCoMo {speaker, dia_id, text}, LongMemEval {role, content}).",
+        "One retain request per session, waited on before the next session, instead of AMB's async batches of 20 items; ordering and per-session receipts follow the shootout's ingestion contract.",
+        "No retries: AMB retries failed submissions and failed operations up to 5 times; the shim reports a failed operation as a degraded session and the harness accounts for it.",
+        "Retrieval amount follows the shootout's two policies (client defaults, and an 8,000-token cap) rather than AMB's per-dataset recall settings, which are recorded under vendor_benchmark_reference.",
+        "Observations off in both configs: enable_observations=false per bank, as AMB's `_bank_kwargs` sets for every dataset, memory-bank's own benchmark setting. The server default (DEFAULT_ENABLE_OBSERVATIONS) is on.",
+        "HINDSIGHT_API_SKIP_LLM_VERIFICATION=true, so the server does not spend a provider call checking the key at boot (operational only)."
+      ]
+    },
+    "identity": {
+      "system": "memory-bank",
+      "config": "common",
+      "versions": {
+        "package": "see comparison-systems table: memory-bank (server at upstream commit 5fc4ce20917b916240cef27c212c387a177f115b, plus the matching Python client)",
+        "lock_sha256": "f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8",
+        "image": "see comparison-systems table: memory-bank (vendor image digest sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70)",
+        "backend_image": "pgvector/pgvector:0.8.1-pg18@sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c",
+        "shim_base_image": "python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "vendor_benchmark_code": "see comparison-systems table: memory-bank (vendor benchmark code at commit f618ed7b1f0eb9cad7b42e876f91a42f0eadb150: the HTTP provider module of the vendor's agent memory benchmark, the ref memory-bank's own system evals run, AMB_REF=main; the vendor's separate extraction benchmark at commit 55c51f1d6e2477ee69c0a730a80b96a1596ff475 scores the extraction LLM directly, not server ingestion, so it is not used)"
+      },
+      "health": {
+        "ok": true,
+        "config": "common",
+        "llm_provider": "openai",
+        "readiness": {
+          "status": "healthy",
+          "database": "connected",
+          "db_acquire_ms": 0.6,
+          "db_pool_waiting": 0,
+          "db_pool_in_use": 0,
+          "db_pool_max": 100,
+          "db_pool_idle": 5
+        },
+        "server_version": {
+          "api_version": "0.10.2",
+          "features": {
+            "observations": true,
+            "mcp": true,
+            "worker": true,
+            "bank_config_api": true,
+            "bank_llm_health": false,
+            "file_upload_api": true,
+            "document_export_api": true,
+            "document_import_api": true,
+            "audit_log": false,
+            "llm_trace": true,
+            "store_document_text": true
+          }
+        }
+      }
+    }
+  },
+  "context": "native",
+  "policy": {
+    "name": "memory-bank:vendor-default",
+    "mode": "vendor-default",
+    "settings": {
+      "budget": "mid",
+      "max_tokens": 4096,
+      "include_chunks": false
+    },
+    "settings_source": "settings"
+  },
+  "manifest_sha256": "494cc614c7e6b9b1a0e192ce1fd46a8a96b8f8ba56d324aa833b98263ace89ef",
+  "outcomes": {
+    "scored": 13,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 13,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "rows_file": "rows.ndjson",
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

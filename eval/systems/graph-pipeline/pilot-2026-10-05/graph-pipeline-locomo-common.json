@@ -1,0 +1,110 @@
+{
+  "run": "pilots/graph-pipeline-locomo-common",
+  "status": "complete",
+  "invalid_reasons": [],
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 3
+    },
+    "conversations": 1,
+    "questions_expected": 158
+  },
+  "ingest_receipt": {
+    "conversations": 1,
+    "sessions": 28,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0
+  },
+  "counts": {
+    "rows": 158,
+    "scored": 123,
+    "errors": 0,
+    "abstention": 35
+  },
+  "outcomes": {
+    "scored": 158
+  },
+  "summary": {
+    "recall_all_at_5": 0.6991869918699187,
+    "recall_any_at_5": 0.9105691056910569,
+    "recall_all_at_10": 0.7317073170731707,
+    "ndcg_at_10": 0.7434280890158314,
+    "latency_p50_ms": 728.1,
+    "latency_p95_ms": 1178.729999999999,
+    "qa_score": 0.7088607594936709,
+    "qa_rows": 158,
+    "qa_errors": 0,
+    "qa_service_score": 0.7088607594936709,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "ingest_window": {
+    "from": "2026-10-05T19:57:01.517Z",
+    "to": "2026-10-05T20:00:00.750Z"
+  },
+  "ingest_usage": {
+    "text-embedding-3-large /v1/embeddings": {
+      "requests": 270,
+      "input_tokens": 134128,
+      "output_tokens": 0,
+      "usd": 0.01744
+    },
+    "gpt-4.1-mini /v1/chat/completions": {
+      "requests": 687,
+      "input_tokens": 432204,
+      "output_tokens": 111399,
+      "usd": 0.35112
+    },
+    "total_usd": 0.36856
+  },
+  "query_usage": {
+    "text-embedding-3-large /v1/embeddings": {
+      "requests": 314,
+      "input_tokens": 4020,
+      "output_tokens": 0,
+      "usd": 0.00052
+    },
+    "total_usd": 0.00052
+  },
+  "reader_judge_usage": {
+    "gpt-4o-mini /v1/chat/completions": {
+      "requests": 158,
+      "input_tokens": 324628,
+      "output_tokens": 51788,
+      "usd": 0.07977
+    },
+    "gpt-4o-2024-08-06 /v1/chat/completions": {
+      "requests": 158,
+      "input_tokens": 72735,
+      "output_tokens": 289,
+      "usd": 0.18473
+    },
+    "total_usd": 0.26449
+  },
+  "reader_judge_usd_per_question": 0.00167,
+  "query_usd_per_question": 3e-06,
+  "latency_ms": {
+    "p50": 721.9,
+    "p95": 1061.3,
+    "mean": 759.8
+  },
+  "items_per_question": 30.0,
+  "provenance_mix": {
+    "exact": 1580,
+    "partial": 0,
+    "unavailable": 3160
+  },
+  "item_types": {
+    "chunk": 1580,
+    "entity": 1580,
+    "fact": 1580
+  },
+  "refusals": 0,
+  "context_tokens_mean": 1946.0
+}

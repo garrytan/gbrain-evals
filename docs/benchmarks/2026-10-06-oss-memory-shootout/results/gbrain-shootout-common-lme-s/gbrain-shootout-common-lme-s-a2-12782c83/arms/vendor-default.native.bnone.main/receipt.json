@@ -1,0 +1,229 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "lme-s",
+  "split": "dev",
+  "started_at": "2026-10-06T23:22:46.120Z",
+  "finished_at": "2026-10-07T00:44:52.952Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 150,
+      "misses": 21821,
+      "inserts": 21821,
+      "bytes": 134068224
+    }
+  },
+  "dataset": {
+    "name": "LongMemEval-S cleaned",
+    "files": [
+      {
+        "path": "longmemeval/longmemeval_s_cleaned.json",
+        "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+      }
+    ],
+    "revision": "98d7416c",
+    "license": "MIT"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "gbrain-shootout-common-lme-s-a2-12782c83",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 100,
+    "sessions": 4799,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 1.53425246,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 19701
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "7b60da07adfd85fc6cbbbed01494f4cde474b034a65e8ba255e72b6146d5e916",
+  "cell_run_config_hash": "286b69c6a1bdf87ffa32082a8c77ddc6f8bbb368cfa9eac641dcb44ef0f4ab52",
+  "arm": {
+    "id": "vendor-default.native.bnone.main",
+    "policy": "vendor-default",
+    "context": "native",
+    "budget_tokens": null,
+    "reader": {
+      "id": "main",
+      "model": "openai:gpt-4o-2024-08-06",
+      "slice": null
+    }
+  },
+  "retrieval_path": "MemorySystem.retrieve (gbrain-shootout, policy gbrain-shootout:vendor-default), one retrieval per question and policy shared by every arm",
+  "selection": {
+    "categories": null,
+    "limit": 100,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 100,
+    "questions_expected": 100,
+    "reader_slice": null
+  },
+  "counts": {
+    "rows": 100,
+    "scored": 96,
+    "errors": 0,
+    "abstention": 4
+  },
+  "summary": {
+    "recall_all_at_5": 0.9791666666666666,
+    "recall_any_at_5": 1,
+    "recall_all_at_10": 1,
+    "ndcg_at_10": 0.9758569358397021,
+    "latency_p50_ms": 421,
+    "latency_p95_ms": 482.125,
+    "qa_score": 0.58,
+    "qa_rows": 100,
+    "qa_errors": 0,
+    "qa_service_score": 0.58,
+    "qa_product_failures": 0,
+    "qa_incomplete": 0
+  },
+  "qa": {
+    "reader": "openai:gpt-4o-2024-08-06",
+    "judge": "openai:gpt-4o-2024-08-06",
+    "runs": 1,
+    "context": "native",
+    "budget_tokens": null,
+    "reader_prompt": "native memory-item reading prompt (shootout-render-v1, approx-chars-div-4)",
+    "judge_prompts": "LongMemEval official per-type prompts",
+    "contexts_file": "../../contexts.ndjson"
+  },
+  "system": {
+    "name": "gbrain-shootout",
+    "capability_system": "gbrain-shootout",
+    "capabilities": {
+      "system": "gbrain-shootout",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.46.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "gbrain init defaults for search; embedder from the run"
+        },
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "unsettable": [
+            "extraction"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each chunk cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 40
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [
+        "retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-shootout",
+      "config": "{}",
+      "versions": null
+    }
+  },
+  "context": "native",
+  "policy": {
+    "name": "gbrain-shootout:vendor-default",
+    "mode": "vendor-default",
+    "settings": {},
+    "settings_source": "settings"
+  },
+  "manifest_sha256": "618fde32576d4c08908d589570ee339ab54b9c093fd9031a3c9fef30bde71188",
+  "outcomes": {
+    "scored": 100,
+    "retrieval_error": 0,
+    "unsupported": 0,
+    "ingest_degraded": 0,
+    "reader_error": 0,
+    "judge_error": 0,
+    "harness_invalid": 0,
+    "budget_not_run": 0
+  },
+  "attempts_this_run": 100,
+  "comparison_complete": true,
+  "upstream": {
+    "trouble_rows": 0,
+    "retried_rows": 0
+  },
+  "rows_file": "rows.ndjson",
+  "files": {
+    "manifest": "manifest.json",
+    "attempts": "attempts.ndjson",
+    "outcomes": "outcomes.ndjson",
+    "rows": "rows.ndjson"
+  }
+}

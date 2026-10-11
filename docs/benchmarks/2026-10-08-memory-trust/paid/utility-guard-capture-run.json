@@ -1,0 +1,42 @@
+{
+ "started": "2026-10-08T13:08:08.983Z",
+ "finished": "2026-10-08T16:01:00.780Z",
+ "args": [
+  "~/.capy/work/lane-e/lme/longmemeval_s_cleaned.json",
+  "--top-k",
+  "5",
+  "--no-trajectory",
+  "--mode",
+  "balanced",
+  "--reranker",
+  "on",
+  "--autocut",
+  "off",
+  "--model",
+  "anthropic:claude-sonnet-5-5",
+  "--reader-mode",
+  "notes",
+  "--reader-max-tokens",
+  "1024",
+  "--yes",
+  "--embed-cache",
+  "~/.capy/work/lane-e/guard/embed-cache.sqlite",
+  "--output",
+  "~/.capy/work/lane-e/guard/rows.ndjson",
+  "--resume-from",
+  "~/.capy/work/lane-e/guard/rows.ndjson"
+ ],
+ "gbrain": {
+  "version": "0.60.110.0",
+  "commit": "c2f10ee8ba598f440f3e22549b9f6963784442da"
+ },
+ "attestation": {
+  "preregistration": "docs/benchmarks/2026-10-07-memory-trust-preregistration.md",
+  "preregistration_commit": "7538c91e968f008a43e969f41ee3d1b4dd973319",
+  "runner_commit": "73524d0d9f8fe1bb2dc17e00eb56ddbef5e3851f",
+  "worktree_clean_for_preregistration": true,
+  "on_origin": true,
+  "attested_at": "2026-10-08T13:08:07.450Z"
+ },
+ "exit": 0
+}

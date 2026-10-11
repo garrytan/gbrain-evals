@@ -1,0 +1,40 @@
+{
+  "task_id": "boltons-dedupe-amended-001",
+  "arm": "none",
+  "history": "full",
+  "source": "conversation-amended",
+  "tier": "planted",
+  "category": "collection-merge",
+  "model": "google/gemini-3.8-flash",
+  "started_at": "2026-10-05T14:57:10.213Z",
+  "wall_s": 169.5,
+  "exit_code": 0,
+  "solved": true,
+  "interventions": 2,
+  "capped": false,
+  "final_pytest": "11 passed in 0.02s",
+  "turns": 40,
+  "tokens": {
+    "input": 406213,
+    "output": 2283,
+    "reasoning": 25536,
+    "cache_read": 1268197,
+    "cache_write": 0
+  },
+  "patch_bytes": 923,
+  "harness_cost_usd": 0.0,
+  "ended_at": "2026-10-05T14:59:59.761Z",
+  "metered": {
+    "requests": 40,
+    "refused": 0,
+    "usd": 0.534347,
+    "by_label": {
+      "agent": {
+        "requests": 40,
+        "usd": 0.5343470249999999,
+        "input_tokens": 1865248,
+        "output_tokens": 28340
+      }
+    }
+  }
+}

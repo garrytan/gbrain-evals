@@ -1,0 +1,8 @@
+{
+  "run_id": "temporal-graph-recipe-pmb-a1-f885cb5b",
+  "lease_usd": 11.5,
+  "committed_usd": 1.7624212799999885,
+  "requests": 4561,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

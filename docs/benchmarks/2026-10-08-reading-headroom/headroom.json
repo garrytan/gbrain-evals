@@ -1,0 +1,229 @@
+{
+ "kind": "reading-headroom",
+ "schema_version": 1,
+ "status": "recount: exploratory, from committed receipts, not preregistered",
+ "inputs": {
+  "captures": {
+   "path": "docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin/capture/captures.ndjson.gz",
+   "sha256": "65e0def9be56cb3290674b728200925c3b7e87d786be099f719fa96230eca512"
+  },
+  "harness_rows": {
+   "path": "docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin/capture/harness-rows.ndjson.gz",
+   "sha256": "6be5e320d6ec3b08419853450b6cb11e34429f053c15a302d0474d789faefc34"
+  },
+  "w10a-sonnet55-notes": {
+   "path": "docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin/arms/w10a-sonnet55-notes/rows.ndjson",
+   "sha256": "5d5c4763155da2359b8f891b77588de339f32fcb9f7912832b1164fbe18af00e"
+  },
+  "w10b-opus55-notes": {
+   "path": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-opus55-notes/rows.ndjson",
+   "sha256": "5e4971cb1cd350e2187a3bd0c207fd0e8820eee32b5e30f7e6175920680c943c"
+  },
+  "w10b-sonnet55-notes": {
+   "path": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-sonnet55-notes/rows.ndjson",
+   "sha256": "a832d2eaca6d5a492d88eae99f9aef47f5fb29fa3edf0331e98372a670d1861a"
+  },
+  "w10b-sol-notes": {
+   "path": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-sol-notes/rows.ndjson",
+   "sha256": "9c0f8274786e3821730719580cfb61230503366606d6354ae642b3d461b8a793"
+  },
+  "labels": {
+   "path": "docs/benchmarks/2026-10-08-reading-headroom/commitment-labels.json",
+   "sha256": "4be2b0e313c1f93c244651717a35852f934c5d90410c8c846ec22e04f2951ddc"
+  }
+ },
+ "units": {
+  "chars4": "ceil(characters / 4) per trimmed session block or answer",
+  "cl100k": "gbrain estimateTokens (cl100k_base)",
+  "percentile": "linear interpolation (eval/runner/metrics.ts percentile)"
+ },
+ "delivered": {
+  "n": 500,
+  "mean_delivered_chars4": 15822.9,
+  "mean_gold_chars4": 6489.6,
+  "mean_delivered_cl100k": 13573.9,
+  "mean_gold_cl100k": 5574.1,
+  "gold_share_chars4": 0.41,
+  "p95_gold_chars4": 13108.8,
+  "questions_missing_a_gold_session": 25,
+  "questions_with_no_gold_session_delivered": 1,
+  "by_type": {
+   "knowledge-update": {
+    "n": 78,
+    "mean_delivered_chars4": 15940,
+    "mean_gold_chars4": 7036.4,
+    "mean_delivered_cl100k": 13771.2,
+    "mean_gold_cl100k": 6095.6,
+    "gold_share_chars4": 0.441,
+    "p95_gold_chars4": 8916.4
+   },
+   "multi-session": {
+    "n": 133,
+    "mean_delivered_chars4": 16750.2,
+    "mean_gold_chars4": 8981.1,
+    "mean_delivered_cl100k": 14333.4,
+    "mean_gold_cl100k": 7703.8,
+    "gold_share_chars4": 0.536,
+    "p95_gold_chars4": 15337.4
+   },
+   "single-session-assistant": {
+    "n": 56,
+    "mean_delivered_chars4": 12330.1,
+    "mean_gold_chars4": 1393.3,
+    "mean_delivered_cl100k": 10483.9,
+    "mean_gold_cl100k": 1199.8,
+    "gold_share_chars4": 0.113,
+    "p95_gold_chars4": 2631.3
+   },
+   "single-session-preference": {
+    "n": 30,
+    "mean_delivered_chars4": 17422,
+    "mean_gold_chars4": 4600.9,
+    "mean_delivered_cl100k": 15158.5,
+    "mean_gold_cl100k": 4010.5,
+    "gold_share_chars4": 0.264,
+    "p95_gold_chars4": 6132.3
+   },
+   "single-session-user": {
+    "n": 70,
+    "mean_delivered_chars4": 15354.9,
+    "mean_gold_chars4": 3622.3,
+    "mean_delivered_cl100k": 13160.4,
+    "mean_gold_cl100k": 3107.9,
+    "gold_share_chars4": 0.236,
+    "p95_gold_chars4": 4847
+   },
+   "temporal-reasoning": {
+    "n": 133,
+    "mean_delivered_chars4": 16183.3,
+    "mean_gold_chars4": 7758.6,
+    "mean_delivered_cl100k": 13860,
+    "mean_gold_cl100k": 6631.2,
+    "gold_share_chars4": 0.479,
+    "p95_gold_chars4": 14102
+   }
+  }
+ },
+ "notes_length": {
+  "w10a-sonnet55-notes": {
+   "model": "claude-sonnet-5-5",
+   "n": 500,
+   "mean_chars4": 138.5,
+   "p50_chars4": 119.5,
+   "p95_chars4": 316.5,
+   "mean_cl100k": 138.3,
+   "mean_provider_output_tokens": 203
+  },
+  "w10b-opus55-notes": {
+   "model": "claude-opus-5-5",
+   "n": 500,
+   "mean_chars4": 150.8,
+   "p50_chars4": 130,
+   "p95_chars4": 343.6,
+   "mean_cl100k": 152.6,
+   "mean_provider_output_tokens": 294
+  },
+  "w10b-sonnet55-notes": {
+   "model": "claude-sonnet-5-5",
+   "n": 500,
+   "mean_chars4": 137.8,
+   "p50_chars4": 117.5,
+   "p95_chars4": 317.1,
+   "mean_cl100k": 138.1,
+   "mean_provider_output_tokens": 203
+  },
+  "w10b-sol-notes": {
+   "model": "gpt-6.1-sol",
+   "n": 500,
+   "mean_chars4": 62.5,
+   "p50_chars4": 42,
+   "p95_chars4": 188.2,
+   "mean_cl100k": 58.3,
+   "mean_provider_output_tokens": 110
+  }
+ },
+ "commitment": {
+  "rule": "declined: the answer gives no value for what was asked; facts it mentions are explicitly disclaimed as not the answer. committed: the answer gives a value for what was asked (a number, name, date, order, choice or yes/no), however hedged, including a conditional value (\"0 days, assuming the visit was MoMA\"), a candidate (\"it may have been Target\"), a partial value (\"6 weeks for two of the three books\") and generic advice for a preference question.",
+  "labeller": "GBRA-60 wave 0 builder (Capy agent, claude-opus-5-5), 2026-10-08, from the committed answer text with the judge verdicts visible. Agent-written; no person has reviewed these labels.",
+  "arms": {
+   "w10a-sonnet55-notes": {
+    "model": "claude-sonnet-5-5",
+    "answerable": 470,
+    "answerable_correct": 440,
+    "answerable_wrong": 30,
+    "wrong_declined": 5,
+    "committed_wrong": 25,
+    "abstention_questions": 30,
+    "abstention_answered": 2,
+    "committed_wrong_rate_all": 0.054,
+    "declined_ids": [
+     "5e1b23de",
+     "61f8c8f8",
+     "7024f17c",
+     "gpt4_68e94287",
+     "gpt4_d6585ce9"
+    ]
+   },
+   "w10b-opus55-notes": {
+    "model": "claude-opus-5-5",
+    "answerable": 470,
+    "answerable_correct": 445,
+    "answerable_wrong": 25,
+    "wrong_declined": 6,
+    "committed_wrong": 19,
+    "abstention_questions": 30,
+    "abstention_answered": 1,
+    "committed_wrong_rate_all": 0.04,
+    "declined_ids": [
+     "61f8c8f8",
+     "7024f17c",
+     "71017277",
+     "92a0aa75",
+     "gpt4_68e94287",
+     "gpt4_d6585ce9"
+    ]
+   },
+   "w10b-sonnet55-notes": {
+    "model": "claude-sonnet-5-5",
+    "answerable": 470,
+    "answerable_correct": 435,
+    "answerable_wrong": 35,
+    "wrong_declined": 6,
+    "committed_wrong": 29,
+    "abstention_questions": 30,
+    "abstention_answered": 3,
+    "committed_wrong_rate_all": 0.064,
+    "declined_ids": [
+     "37f165cf",
+     "61f8c8f8",
+     "71017277",
+     "92a0aa75",
+     "gpt4_68e94287",
+     "gpt4_d6585ce9"
+    ]
+   },
+   "w10b-sol-notes": {
+    "model": "gpt-6.1-sol",
+    "answerable": 470,
+    "answerable_correct": 437,
+    "answerable_wrong": 33,
+    "wrong_declined": 9,
+    "committed_wrong": 24,
+    "abstention_questions": 30,
+    "abstention_answered": 3,
+    "committed_wrong_rate_all": 0.054,
+    "declined_ids": [
+     "37f165cf",
+     "51c32626",
+     "61f8c8f8",
+     "71017277",
+     "92a0aa75",
+     "dd2973ad",
+     "gpt4_59149c77",
+     "gpt4_68e94287",
+     "gpt4_d6585ce9"
+    ]
+   }
+  }
+ }
+}

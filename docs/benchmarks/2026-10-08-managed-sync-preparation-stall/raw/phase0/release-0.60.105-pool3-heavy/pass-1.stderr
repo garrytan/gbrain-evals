@@ -1,0 +1,119 @@
+--------------------- Bun Inspector ---------------------
+Listening:
+  ws://127.0.0.1:6499/e5dff607-96ec-400a-b288-7cbad3dd454a
+Inspect in browser:
+  https://debug.bun.sh/#127.0.0.1:6499/e5dff607-96ec-400a-b288-7cbad3dd454a
+--------------------- Bun Inspector ---------------------
+[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); extends while the sync keeps progressing (stops after 900s without progress); disable with --no-hard-deadline
+[gbrain] Prepared statements disabled (PgBouncer transaction-mode convention on port 6543). Override with GBRAIN_PREPARE=true if your pooler runs in session mode.
+[sync] managed catch-up: 15000 entries frozen, 15000 remaining; publishing in bulk groups (each page keeps its own request).
+[sync] 1/15000 processed (1 written, 0 waived this run) · 1.9 pages/min · indexing ETA 134h02m
+[sync-watchdog] parent alive 60s elapsed, deadline in ~3540s (extends while progressing)
+[sync] 2/15000 processed (2 written, 0 waived this run) · 2 pages/min · indexing ETA 123h17m
+[sync] 3/15000 processed (3 written, 0 waived this run) · 2.5 pages/min · indexing ETA 100h51m
+[sync] 4/15000 processed (4 written, 0 waived this run) · 2.4 pages/min · indexing ETA 103h29m
+[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)
+[sync] 5/15000 processed (5 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h03m
+[sync] 6/15000 processed (6 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h59m
+[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)
+[sync] 7/15000 processed (7 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h59m
+[sync] 8/15000 processed (8 written, 0 waived this run) · 2.3 pages/min · indexing ETA 107h21m
+[sync] 9/15000 processed (9 written, 0 waived this run) · 2.3 pages/min · indexing ETA 107h51m
+[sync-watchdog] parent alive 240s elapsed, deadline in ~3360s (extends while progressing)
+[sync] 10/15000 processed (10 written, 0 waived this run) · 2.3 pages/min · indexing ETA 108h06m
+[sync] 11/15000 processed (11 written, 0 waived this run) · 2.3 pages/min · indexing ETA 108h55m
+[sync-watchdog] parent alive 300s elapsed, deadline in ~3300s (extends while progressing)
+[sync] 12/15000 processed (12 written, 0 waived this run) · 2.4 pages/min · indexing ETA 104h31m
+[sync] 13/15000 processed (13 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h14m
+[sync] 14/15000 processed (14 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h49m
+[sync-watchdog] parent alive 360s elapsed, deadline in ~3240s (extends while progressing)
+[persistence] phase=preparation reason=invalid_params message="Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker."; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 15/15000 processed (15 written, 0 waived this run) · 2.4 pages/min · indexing ETA 102h40m
+[sync] 16/15000 processed (16 written, 0 waived this run) · 2.4 pages/min · indexing ETA 103h22m
+[sync-watchdog] parent alive 420s elapsed, deadline in ~3180s (extends while progressing)
+[sync] 17/15000 processed (17 written, 0 waived this run) · 2.4 pages/min · indexing ETA 104h04m
+[sync] 18/15000 processed (18 written, 0 waived this run) · 2.4 pages/min · indexing ETA 104h36m
+[sync-watchdog] parent alive 480s elapsed, deadline in ~3120s (extends while progressing)
+[sync] 19/15000 processed (19 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h00m
+[sync] 20/15000 processed (20 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h21m
+[sync] 21/15000 processed (21 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h40m
+[sync-watchdog] parent alive 540s elapsed, deadline in ~3060s (extends while progressing)
+[sync] 22/15000 processed (22 written, 0 waived this run) · 2.4 pages/min · indexing ETA 106h02m
+[sync] 23/15000 processed (23 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h26m
+[sync-watchdog] parent alive 600s elapsed, deadline in ~3000s (extends while progressing)
+[sync] 24/15000 processed (24 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h41m
+[sync] 25/15000 processed (25 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h54m
+[sync] 26/15000 processed (26 written, 0 waived this run) · 2.4 pages/min · indexing ETA 104h58m
+[sync-watchdog] parent alive 660s elapsed, deadline in ~2940s (extends while progressing)
+[sync] 27/15000 processed (27 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h14m
+[sync] 28/15000 processed (28 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h31m
+[sync-watchdog] parent alive 720s elapsed, deadline in ~2880s (extends while progressing)
+[sync] 29/15000 processed (29 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h35m
+[sync] 30/15000 processed (30 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h48m
+[sync-watchdog] parent alive 780s elapsed, deadline in ~2820s (extends while progressing)
+[sync] 31/15000 processed (31 written, 0 waived this run) · 2.4 pages/min · indexing ETA 106h02m
+[sync] 32/15000 processed (32 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h14m
+[sync-watchdog] parent alive 840s elapsed, deadline in ~2760s (extends while progressing)
+[sync] 33/15000 processed (33 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h25m
+[sync] 34/15000 processed (34 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h37m
+[sync-watchdog] parent alive 900s elapsed, deadline in ~2700s (extends while progressing)
+[sync] 35/15000 processed (35 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h44m
+[sync] 36/15000 processed (36 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h54m
+[persistence] phase=preparation reason=invalid_params message="Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker."; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 37/15000 processed (37 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h35m
+[sync-watchdog] parent alive 960s elapsed, deadline in ~2640s (extends while progressing)
+[sync] 38/15000 processed (38 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h47m
+[sync] 39/15000 processed (39 written, 0 waived this run) · 2.4 pages/min · indexing ETA 105h56m
+[sync-watchdog] parent alive 1020s elapsed, deadline in ~2580s (extends while progressing)
+[sync] 40/15000 processed (40 written, 0 waived this run) · 2.4 pages/min · indexing ETA 106h04m
+[sync] 41/15000 processed (41 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h10m
+[sync] 42/15000 processed (42 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h17m
+[sync-watchdog] parent alive 1080s elapsed, deadline in ~2520s (extends while progressing)
+[sync] 43/15000 processed (43 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h25m
+[sync] 44/15000 processed (44 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h35m
+[sync-watchdog] parent alive 1140s elapsed, deadline in ~2460s (extends while progressing)
+[sync] 45/15000 processed (45 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h44m
+[sync] 46/15000 processed (46 written, 0 waived this run) · 2.3 pages/min · indexing ETA 106h53m
+[sync-watchdog] parent alive 1200s elapsed, deadline in ~2400s (extends while progressing)
+[sync] 47/15000 processed (47 written, 0 waived this run) · 2.3 pages/min · indexing ETA 108h33m
+[sync] 48/15000 processed (48 written, 0 waived this run) · 2.3 pages/min · indexing ETA 108h34m
+[sync-watchdog] parent alive 1260s elapsed, deadline in ~2340s (extends while progressing)
+[sync] 52/15000 processed (52 written, 0 waived this run) · 2.4 pages/min · indexing ETA 101h54m
+[sync] 56/15000 processed (56 written, 0 waived this run) · 2.6 pages/min · indexing ETA 95h34m
+[sync-watchdog] parent alive 1320s elapsed, deadline in ~2280s (extends while progressing)
+[sync] 58/15000 processed (58 written, 0 waived this run) · 2.6 pages/min · indexing ETA 94h19m
+[persistence] phase=preparation reason=invalid_params message="Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker."; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync] 59/15000 processed (59 written, 0 waived this run) · 2.6 pages/min · indexing ETA 94h09m
+[sync-watchdog] parent alive 1380s elapsed, deadline in ~2220s (extends while progressing)
+[sync] 60/15000 processed (60 written, 0 waived this run) · 2.6 pages/min · indexing ETA 97h24m
+[sync-watchdog] parent alive 1440s elapsed, deadline in ~2160s (extends while progressing)
+[sync-watchdog] parent alive 1500s elapsed, deadline in ~2100s (extends while progressing)
+[persistence] phase=preparation reason=invalid_params message="The adopted fence row does not render its legacy fact."; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 1560s elapsed, deadline in ~2040s (extends while progressing)
+[sync-watchdog] parent alive 1620s elapsed, deadline in ~1980s (extends while progressing)
+[sync] 61/15000 processed (61 written, 0 waived this run) · 2.3 pages/min · indexing ETA 110h09m
+[persistence] phase=preparation reason=invalid_params message="The adopted fence row does not render its legacy fact."; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 1680s elapsed, deadline in ~1920s (extends while progressing)
+[sync-watchdog] parent alive 1740s elapsed, deadline in ~1860s (extends while progressing)
+[sync-watchdog] parent alive 1800s elapsed, deadline in ~1800s (extends while progressing)
+[persistence] phase=preparation reason=invalid_params message="Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker."; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 1860s elapsed, deadline in ~1740s (extends while progressing)
+[sync-watchdog] parent alive 1920s elapsed, deadline in ~1680s (extends while progressing)
+[sync-watchdog] parent alive 1980s elapsed, deadline in ~1620s (extends while progressing)
+[sync-watchdog] parent alive 2040s elapsed, deadline in ~1560s (extends while progressing)
+[persistence] phase=preparation reason=invalid_params message="Fence repeated_marker: in the facts fence (timeline), at line 14. The timeline repeats a facts fence marker (line 14); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker."; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 2100s elapsed, deadline in ~1500s (extends while progressing)
+[sync-watchdog] parent alive 2160s elapsed, deadline in ~1440s (extends while progressing)
+[sync] 62/15000 processed (62 written, 0 waived this run) · 1.7 pages/min · indexing ETA 144h25m
+[sync-watchdog] parent alive 2220s elapsed, deadline in ~1380s (extends while progressing)
+[sync-watchdog] parent alive 2280s elapsed, deadline in ~1320s (extends while progressing)
+[sync-watchdog] parent alive 2340s elapsed, deadline in ~1260s (extends while progressing)
+[sync-watchdog] parent alive 2400s elapsed, deadline in ~1200s (extends while progressing)
+[persistence] phase=preparation reason=invalid_params message="Fence repeated_marker: in the facts fence (timeline), at line 18. The timeline repeats a facts fence marker (line 18); a section holds at most one facts fence and one takes fence. Merge the fences into one or delete the extra marker."; unfinished work remains tracked; fix: gbrain sources writer status --json; docs: docs/ENGINES.md#persistence-consumer-log
+[sync-watchdog] parent alive 2460s elapsed, deadline in ~1140s (extends while progressing)
+[sync-watchdog] parent alive 2520s elapsed, deadline in ~1080s (extends while progressing)
+[sync-watchdog] parent alive 2580s elapsed, deadline in ~1020s (extends while progressing)
+[sync-watchdog] parent alive 2640s elapsed, deadline in ~960s (extends while progressing)
+[sync-watchdog] parent alive 2700s elapsed, deadline in ~900s (extends while progressing)
+[sync-watchdog] parent alive 2760s elapsed, deadline in ~840s (extends while progressing)
+[sync-watchdog] parent alive 2820s elapsed, deadline in ~780s (extends while progressing)

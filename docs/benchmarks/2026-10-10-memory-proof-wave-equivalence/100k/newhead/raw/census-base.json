@@ -1,0 +1,39 @@
+{
+ "gbrain": "~/work/gbrain-evals/.gbrain-overlays/d7467d1cf",
+ "store": "~/eq/cells/_stores/gbrain-beam-100k-2d02e39c622c",
+ "units": {
+  "u-0fb34a89159d": {
+   "pages": 194,
+   "chunks": 395,
+   "facts": 0,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  },
+  "u-574b83cc412a": {
+   "pages": 97,
+   "chunks": 619,
+   "facts": 0,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  },
+  "u-6f4272549ea4": {
+   "pages": 196,
+   "chunks": 402,
+   "facts": 0,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  },
+  "u-a9f1820f7067": {
+   "pages": 136,
+   "chunks": 239,
+   "facts": 0,
+   "page_sources": 1,
+   "quarantined_pages": 0
+  }
+ },
+ "queries": {
+  "n": 80,
+  "relational": 0,
+  "dash_negation_runs_32": 0
+ }
+}

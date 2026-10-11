@@ -1,0 +1,60 @@
+{
+  "policies": {
+    "vendor-default": {
+      "budget_tokens": null
+    },
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "native"
+  ],
+  "readers": [
+    {
+      "id": "opus-5-5",
+      "model": "anthropic:claude-opus-5-5",
+      "slice": {
+        "limit": 100,
+        "seed": 2026
+      },
+      "policies": [
+        "fixed-evidence"
+      ]
+    },
+    {
+      "id": "gpt-6-1-sol",
+      "model": "openai:gpt-6.1-sol",
+      "slice": {
+        "limit": 100,
+        "seed": 2026
+      },
+      "policies": [
+        "fixed-evidence"
+      ]
+    },
+    {
+      "id": "sonnet-5-5",
+      "model": "anthropic:claude-sonnet-5-5",
+      "slice": {
+        "limit": 100,
+        "seed": 2026
+      },
+      "policies": [
+        "fixed-evidence"
+      ]
+    },
+    {
+      "id": "fable-5-1",
+      "model": "anthropic:claude-fable-5-1",
+      "slice": {
+        "limit": 100,
+        "seed": 2026
+      },
+      "policies": [
+        "fixed-evidence"
+      ]
+    }
+  ],
+  "judge": "openai:gpt-4o-2024-08-06"
+}

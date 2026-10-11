@@ -1,0 +1,332 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "beam-100k",
+  "split": "dev",
+  "started_at": "2026-10-07T19:32:03.083Z",
+  "finished_at": "2026-10-07T20:54:15.940Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": {
+      "hits": 277,
+      "misses": 2663,
+      "inserts": 2663,
+      "bytes": 16361472
+    }
+  },
+  "dataset": {
+    "name": "BEAM 100k",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "gbrain-shootout-common-beam-100k-a1-66f1f662",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 6,
+    "sessions": 486,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0.11463348,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 510
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "0b14ae949f7d86286087569a54c12f3ce000b69ae1ab6cede6b911d35c732ab9",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 6,
+    "questions_expected": 120
+  },
+  "system": {
+    "name": "gbrain-shootout",
+    "capability_system": "gbrain-shootout",
+    "capabilities": {
+      "system": "gbrain-shootout",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.46.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "gbrain init defaults for search; embedder from the run"
+        },
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "unsettable": [
+            "extraction"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each chunk cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 40
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [
+        "retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-shootout",
+      "config": "{}",
+      "versions": null
+    }
+  },
+  "counts": {
+    "rows": 240,
+    "scored": 216,
+    "errors": 0,
+    "abstention": 24
+  },
+  "summary": {
+    "recall_all_at_5": 0.5740740740740741,
+    "recall_any_at_5": 0.8611111111111112,
+    "recall_all_at_10": 0.6481481481481481,
+    "ndcg_at_10": 0.6361662681008886,
+    "latency_p50_ms": 735.45,
+    "latency_p95_ms": 1241.875
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 240,
+    "outcomes": {
+      "scored": 240,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence",
+      "vendor-default"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 480
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.native.b8000.main",
+      "dir": "arms/fixed-evidence.native.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.5740740740740741,
+        "recall_any_at_5": 0.8611111111111112,
+        "recall_all_at_10": 0.6481481481481481,
+        "ndcg_at_10": 0.6361662681008889,
+        "latency_p50_ms": 875.5,
+        "latency_p95_ms": 1558.9249999999995,
+        "qa_score": 0.5902314814814815,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5902314814814815,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.rehydrated.b8000.main",
+      "dir": "arms/fixed-evidence.rehydrated.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.5740740740740741,
+        "recall_any_at_5": 0.8611111111111112,
+        "recall_all_at_10": 0.6481481481481481,
+        "ndcg_at_10": 0.6361662681008889,
+        "latency_p50_ms": 875.5,
+        "latency_p95_ms": 1558.9249999999995,
+        "qa_score": 0.5955621693121693,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5955621693121693,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "vendor-default.native.bnone.main",
+      "dir": "arms/vendor-default.native.bnone.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.5740740740740741,
+        "recall_any_at_5": 0.8611111111111112,
+        "recall_all_at_10": 0.6481481481481481,
+        "ndcg_at_10": 0.6361662681008889,
+        "latency_p50_ms": 452.6,
+        "latency_p95_ms": 899.9399999999998,
+        "qa_score": 0.5913888888888887,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.5913888888888887,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "vendor-default.rehydrated.bnone.main",
+      "dir": "arms/vendor-default.rehydrated.bnone.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 120,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 120,
+        "scored": 108,
+        "errors": 0,
+        "abstention": 12
+      },
+      "summary": {
+        "recall_all_at_5": 0.5740740740740741,
+        "recall_any_at_5": 0.8611111111111112,
+        "recall_all_at_10": 0.6481481481481481,
+        "ndcg_at_10": 0.6361662681008889,
+        "latency_p50_ms": 452.6,
+        "latency_p95_ms": 899.9399999999998,
+        "qa_score": 0.619748677248677,
+        "qa_rows": 120,
+        "qa_errors": 0,
+        "qa_service_score": 0.619748677248677,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+# memory-bank behind the shootout shim (eval/systems/PROTOCOL.md).
+#
+#   SHIM_CONFIG=recipe|common  PROXY_URL=http://<metering proxy host:port>  docker compose up -d --build
+#
+# Every vendor container sits on `internal`, a Docker network with no route out. The `egress` relay is the only
+# container on both networks: it publishes the shim on 127.0.0.1:${SHIM_HOST_PORT:-8700} and forwards
+# egress:9000 to the metering proxy at PROXY_URL (scheme://host:port; its path is ignored). Provider base URLs
+# point at http://egress:9000${PROXY_OPENAI_PATH}, so a provider call can only reach the proxy, which injects
+# the real key. The containers hold a dummy key.
+name: shootout-memory-bank
+
+x-proxy-openai: &proxy_openai http://egress:9000${PROXY_OPENAI_PATH:-/openai/v1}
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.1-pg18@sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c
+    # Docker gives a container 64 MB of /dev/shm. memory-bank builds each new bank's HNSW indexes on the shared
+    # memory_units table inside the bank-create transaction; once that table passes min_parallel_table_scan_size,
+    # the build runs in parallel and asks for a maintenance_work_mem-sized (64 MB) dynamic shared memory segment,
+    # which no longer fits, and every bank create returns HTTP 500 ("could not resize shared memory segment").
+    shm_size: 1g
+    environment:
+      POSTGRES_USER: memory_bank
+      POSTGRES_PASSWORD: memory_bank
+      POSTGRES_DB: memory_bank
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U memory_bank -d memory_bank"]
+      interval: 2s
+      retries: 60
+    networks: [internal]
+
+  memory-bank:
+    image: ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70
+    env_file: ["memory-bank.${SHIM_CONFIG:-recipe}.env"]
+    environment:
+      HINDSIGHT_API_DATABASE_URL: postgresql://memory_bank:memory_bank@db:5432/memory_bank
+      HINDSIGHT_API_LLM_PROVIDER: ${MEMORY_BANK_LLM_PROVIDER:-openai}
+      HINDSIGHT_API_LLM_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      HINDSIGHT_API_LLM_BASE_URL: *proxy_openai
+      HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: *proxy_openai
+      OPENAI_BASE_URL: *proxy_openai
+      OPENAI_API_KEY: dummy-key-the-proxy-injects-the-real-one
+      HINDSIGHT_API_SKIP_LLM_VERIFICATION: "true"
+      HINDSIGHT_API_OTEL_TRACES_ENABLED: "false"
+      HINDSIGHT_ENABLE_CP: "false"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [internal]
+
+  shim:
+    build: { context: .., dockerfile: memory-bank/Dockerfile }
+    environment:
+      SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
+      SHIM_LLM_PROVIDER: ${MEMORY_BANK_LLM_PROVIDER:-openai}
+      MEMORY_BANK_URL: http://memory-bank:8888
+    depends_on: [memory-bank]
+    networks: [internal]
+
+  egress:
+    image: alpine/socat@sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        upstream=$${PROXY_URL#*://}; upstream=$${upstream%%/*}
+        socat TCP-LISTEN:8700,fork,reuseaddr TCP:shim:8700 &
+        exec socat TCP-LISTEN:9000,fork,reuseaddr TCP:$$upstream
+    environment:
+      PROXY_URL: ${PROXY_URL:-http://host.docker.internal:8787}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["127.0.0.1:${SHIM_HOST_PORT:-8700}:8700"]
+    networks: [internal, outside]
+
+networks:
+  internal: { internal: true }
+  outside: {}

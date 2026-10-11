@@ -1,0 +1,50 @@
+{
+  "dataset": "beam",
+  "split": "100k",
+  "seed": 20261005,
+  "schedule_size": 80,
+  "schedule_sha256": "fa3851d9facea80710befea9a280ce34fde4a97ae6fa9dd9ea4b4e5412622e62",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "cells": {
+    "beam-100k-gbrain-rag-3c5df7cf3fdd": {
+      "scheduled": 80,
+      "counts": {
+        "answered": 65,
+        "abstention": 15,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 80,
+      "correct": 56,
+      "accuracy": 0.7,
+      "mean_score": 0.6444419642857142,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "beam-100k-gbrain-rag-3c5df7cf3fdd-s23": {
+      "scheduled": 80,
+      "counts": {
+        "answered": 67,
+        "abstention": 13,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 80,
+      "correct": 57,
+      "accuracy": 0.7125,
+      "mean_score": 0.6654761904761906,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    }
+  }
+}

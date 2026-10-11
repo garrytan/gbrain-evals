@@ -1,0 +1,3 @@
+{"ts":"2026-10-05T23:12:43.469Z","step":"ingest","code":0,"cell":"beam-100k-gbrain-rag-bcd148dd0e02","tail":"[cell] beam-100k-gbrain-rag-bcd148dd0e02: resuming with $10.00 of $10.00 left; proxy http://127.0.0.1:39921 | [cell] beam-100k-gbrain-rag-bcd148dd0e02 exited 0; receipts in eval/reports/harness-cells/beam-100k-gbrain-rag-bcd148dd0e02 | "}
+{"ts":"2026-10-05T23:14:16.059Z","step":"tune","code":0,"chosen":{"8000":{"facts_tokens":600,"token_budget":7500}},"closest":{"8000":{"facts_tokens":600,"token_budget":7500}}}
+{"ts":"2026-10-05T23:14:35.318Z","step":"run","target":8000,"code":1,"cell":null,"summary":null,"tail":"[harness:cell] run budget $24.00 exceeds the $23.71 left of the $120.00 program cap (.budget/mpw-dev-facts.sqlite) | "}

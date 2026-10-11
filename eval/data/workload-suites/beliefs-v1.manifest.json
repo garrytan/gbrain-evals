@@ -1,0 +1,44 @@
+{
+  "suite": "beliefs",
+  "version": "beliefs-v1",
+  "seed": 20261008,
+  "smoke": false,
+  "counts": {
+    "documents": 1200,
+    "queries": 150,
+    "labels": 150,
+    "users": 25,
+    "by_category": {
+      "holder": 50,
+      "resolved_one": 25,
+      "resolved_set": 25,
+      "weight_change": 50
+    }
+  },
+  "approx_tokens": {
+    "total": 539431,
+    "per_user_max": 24067,
+    "per_user_mean": 21577
+  },
+  "timestamp_provenance": "observed_session_time: each conversation carries the time it happened; the order of confidence statements and resolutions is the order of those times.",
+  "files": {
+    "documents.jsonl": {
+      "sha256": "e7f84018ed08f152587ec04d722644f15b7122bb5901d47a3d5b453ac0b41d18",
+      "bytes": 4990406
+    },
+    "frontier-subset.jsonl": {
+      "sha256": "b117bdb4d6155dd58c11e45cc618e0af3e6f515773de71e7da933855cd5fc57d",
+      "bytes": 722
+    },
+    "queries.jsonl": {
+      "sha256": "eaa9fe3fbe783962b1ab7fb4fbfb096801690fa9c1bc6d62c9f91a2b9b72ecf3",
+      "bytes": 49410
+    },
+    "scorer-labels.jsonl": {
+      "sha256": "09206b93fb199e0482338c928b094ddba6bb67904ef5ef35c4f10260e994cd06",
+      "bytes": 197542
+    }
+  },
+  "digest": "bb6dea9648f4f59dd72886ef081573d26541d81b48ca5218731e9cf78fe35ece",
+  "command": "bun run eval:beliefs --seed 20261008"
+}

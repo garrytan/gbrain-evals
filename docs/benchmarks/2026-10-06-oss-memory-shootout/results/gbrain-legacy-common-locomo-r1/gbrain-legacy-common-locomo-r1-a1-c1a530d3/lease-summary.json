@@ -1,0 +1,8 @@
+{
+  "run_id": "gbrain-legacy-common-locomo-r1-a1-c1a530d3",
+  "lease_usd": 2,
+  "committed_usd": 1.01297482,
+  "requests": 1817,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

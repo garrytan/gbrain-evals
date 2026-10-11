@@ -129,13 +129,14 @@ export function targetTitle(ledger: Pick<N6Ledger, 'pages'>, target: N6Target, p
 export function synthesizeParams(
   params: Record<string, ParamDef>,
   target: N6Target | null,
-  opts: { scope?: ScopeVariant; enumOverride?: [string, string]; title?: string } = {},
+  opts: { scope?: ScopeVariant; enumOverride?: [string, string]; ranked?: boolean; title?: string } = {},
 ): Synthesized | Unsupported {
   const out: Record<string, unknown> = {};
   for (const [name, def] of Object.entries(params)) {
     let value: unknown;
     if (target) {
       if (name === 'window' && opts.title) value = namingWindow(opts.title);
+      else if (name === 'question' && !def.required) value = opts.ranked ? target.query : undefined;
       else if (SLUG_PARAMS.has(name)) value = target.slug;
       else if (QUERY_PARAMS.has(name)) value = target.query;
       else if (ENTITY_PARAMS.has(name)) value = target.slug;
@@ -152,7 +153,7 @@ export function synthesizeParams(
       else if (['since', 'after', 'updated_after'].includes(name) && def.type === 'string') value = '2000-01-01';
       else if (['until', 'before', 'asof'].includes(name) && def.type === 'string') value = '2100-01-01';
       else if (name === 'limit' && def.type === 'number') value = 50;
-      else if (def.type === 'boolean' && WIDENING_BOOLEANS.has(name)) value = true;
+      else if (def.type === 'boolean' && WIDENING_BOOLEANS.has(name) && !opts.ranked) value = true;
       else if (name === 'type' && def.required) value = target?.type ?? 'note';
       else if (def.required && def.type === 'number') value = 10;
     }
@@ -169,13 +170,18 @@ export function isTargeted(params: Record<string, ParamDef>): boolean {
   return Object.keys(params).some(p => TARGET_PARAMS.has(p));
 }
 
-/** Variants for one op: the base call, one per enum value, one per scope override. */
-export function variantsFor(params: Record<string, ParamDef>): Array<{ id: string; scope: ScopeVariant; enumOverride?: [string, string] }> {
-  const out: Array<{ id: string; scope: ScopeVariant; enumOverride?: [string, string] }> = [{ id: 'base', scope: 'ambient' }];
+/**
+ * Variants for one op: the base call, one per enum value, one per scope override, and for an optional `question`
+ * a ranked call that passes it without the widening flags (recall refuses `question` with `include_expired` or
+ * `supersessions`); the base call leaves an optional `question` out.
+ */
+export function variantsFor(params: Record<string, ParamDef>): Array<{ id: string; scope: ScopeVariant; enumOverride?: [string, string]; ranked?: boolean }> {
+  const out: Array<{ id: string; scope: ScopeVariant; enumOverride?: [string, string]; ranked?: boolean }> = [{ id: 'base', scope: 'ambient' }];
   for (const [name, def] of Object.entries(params)) {
     if (!def.enum) continue;
     for (const value of def.enum.slice(0, 8)) out.push({ id: `${name}=${value}`, scope: 'ambient', enumOverride: [name, value] });
   }
+  if (params.question && !params.question.required) out.push({ id: 'question', scope: 'ambient', ranked: true });
   if ('source_id' in params) {
     out.push({ id: 'source_id=beta', scope: 'foreign' });
     out.push({ id: 'source_id=__all__', scope: 'all' });
@@ -214,10 +220,22 @@ export function hasSourceRow(data: unknown, source: string): boolean {
 }
 
 /** Mask target values and drop volatile keys so a protected response can be compared with its ghost. */
+/** A base64 or base64url string that decodes to a JSON object or array (an opaque cursor), parsed; else null. */
+export function decodeOpaqueJson(s: string): unknown {
+  if (s.length < 16 || !/^[A-Za-z0-9+/_-]+={0,2}$/.test(s)) return null;
+  try {
+    const parsed: unknown = JSON.parse(Buffer.from(s, s.includes('-') || s.includes('_') ? 'base64url' : 'base64').toString('utf8'));
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch { return null; }
+}
+
 export function normalizeForOracle(data: unknown, mask: readonly string[]): string {
   const needles = [...new Set(mask.filter(m => m && m.length >= 4))].sort((a, b) => b.length - a.length);
   const visit = (v: unknown): unknown => {
     if (typeof v === 'string') {
+      // An opaque cursor echoes the caller's own arguments (delta's `since_slug`); compare its decoded content, masked.
+      const decoded = decodeOpaqueJson(v);
+      if (decoded) return { '<decoded cursor>': visit(decoded) };
       let s = v;
       for (const n of needles) s = s.split(n).join('<T>');
       return s;

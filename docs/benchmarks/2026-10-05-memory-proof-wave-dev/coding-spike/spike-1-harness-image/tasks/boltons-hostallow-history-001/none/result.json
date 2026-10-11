@@ -1,0 +1,24 @@
+{
+  "task_id": "boltons-hostallow-history-001",
+  "codebase": "boltons-hostallow-history",
+  "variant": "base",
+  "history": "full",
+  "agent": "opencode",
+  "model": "google/gemini-3.8-flash",
+  "solved": true,
+  "interventions": 1,
+  "capped": false,
+  "final_pytest": "14 passed in 0.02s",
+  "patch_bytes": 2009,
+  "tokens": {
+    "input": 292990,
+    "output": 2270,
+    "reasoning": 11407,
+    "cache_read": 336927,
+    "cache_write": 0
+  },
+  "turns": 32,
+  "wall_s": 100.7,
+  "cost_usd": 0.0,
+  "memory_diag": null
+}

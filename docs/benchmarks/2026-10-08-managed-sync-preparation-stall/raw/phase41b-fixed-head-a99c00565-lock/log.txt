@@ -1,0 +1,118 @@
+[stall-repro 14:30:27] out: <work>/gbrain/.context/bench/stall-lock-b
+[stall-repro 14:30:27] cli: <work>/gbrain (0.60.108.0, capy/6278-phase41b@a99c0056); files=3000 history=1500 legacy=1000 markers=20+20 rtt=57 pool=10 pooler=pgbouncer
+[stall-repro 14:30:49] schema initialized by <work>/gbrain (0.60.108.0) in 2.4 s
+[stall-repro 14:31:01] classic history sync: 1500 pages in 10.7 s
+[stall-repro 14:31:01] seeded 1000 legacy fact rows (1000 pending) over 250 pages; 20 history + 20 backlog repeated-marker pages
+[stall-repro 14:31:04] backlog committed: 3000 pages
+[stall-repro 14:31:04] session timeouts: {"requested_startup_parameters":{"statement_timeout":"5min","idle_in_transaction_session_timeout":"5min"},"via_pooler":{"statement_timeout":"0","idle_in_transaction_session_timeout":"0","lock_timeout":"0"},"direct":{"statement_timeout":"5min","idle_in_transaction_session_timeout":"5min","lock_timeout":"0"}}
+[stall-repro 14:31:06] pass 1 started: timeout pid 9234, gbrain pid 9235
+[stall-repro 14:31:07] sample 0: pass=null committed=0 stale=37s running=0 activity=0 locks=0
+[stall-repro 14:31:23] sample 1: pass=1 committed=0 stale=16s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=7 locks=1
+[stall-repro 14:31:41] sample 2: pass=1 committed=2 stale=0s running=49 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=9 locks=0
+[stall-repro 14:31:56] sample 3: pass=1 committed=34 stale=0s running=33 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=9 locks=0
+[stall-repro 14:32:14] sample 4: pass=1 committed=66 stale=0s running=10 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=9 locks=0
+[stall-repro 14:32:29] sample 5: pass=1 committed=75 stale=0s running=1 [managed_sync_import:preparing] activity=9 locks=0
+[stall-repro 14:32:48] sample 6: pass=1 committed=91 stale=0s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=9 locks=0
+[stall-repro 14:33:03] sample 7: pass=1 committed=100 stale=0s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=9 locks=0
+[stall-repro 14:33:21] sample 8: pass=1 committed=120 stale=0s running=0 activity=9 locks=0
+[stall-repro 14:33:36] sample 9: pass=1 committed=139 stale=0s running=9 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=9 locks=0
+[stall-repro 14:33:54] sample 10: pass=1 committed=139 stale=15s running=1 [managed_sync_import:preparing] activity=9 locks=0
+[stall-repro 14:34:10] sample 11: pass=1 committed=149 stale=0s running=24 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=11 locks=8
+[stall-repro 14:34:10] CHAOS 1/2: holding "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE" in an open transaction through the pooler for 300 s
+[stall-repro 14:34:28] sample 12: pass=1 committed=163 stale=0s running=12 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=15 locks=12
+[stall-repro 14:34:43] sample 13: pass=1 committed=163 stale=18s running=12 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=15 locks=13
+[stall-repro 14:35:01] sample 14: pass=1 committed=163 stale=33s running=10 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=15 locks=13
+[stall-repro 14:35:16] sample 15: pass=1 committed=163 stale=52s running=10 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=16 locks=13
+[stall-repro 14:35:35] sample 16: pass=1 committed=163 stale=67s running=10 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=16 locks=12
+[stall-repro 14:35:50] sample 17: pass=1 committed=163 stale=85s running=10 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=16 locks=12
+[stall-repro 14:36:08] sample 18: pass=1 committed=163 stale=100s running=10 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=16 locks=13
+[stall-repro 14:36:23] sample 19: pass=1 committed=163 stale=118s running=10 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=16 locks=13
+[stall-repro 14:36:41] sample 20: pass=1 committed=163 stale=134s running=9 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=17 locks=13
+[stall-repro 14:36:41] STALL: no committed sync request for 134 s in pass 1 (pid 9235)
+[stall-repro 14:36:45] stall capture written: stall-1.json
+[stall-repro 14:37:00] sample 21: pass=1 committed=163 stale=155s running=9 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=17 locks=13
+[stall-repro 14:37:18] sample 22: pass=1 committed=163 stale=170s running=9 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=17 locks=13
+[stall-repro 14:37:33] sample 23: pass=1 committed=163 stale=189s running=9 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=17 locks=13
+[stall-repro 14:37:52] sample 24: pass=1 committed=163 stale=204s running=9 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=17 locks=13
+[stall-repro 14:38:07] sample 25: pass=1 committed=163 stale=222s running=9 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=17 locks=13
+[stall-repro 14:38:25] sample 26: pass=1 committed=163 stale=237s running=8 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:?] activity=17 locks=13
+[stall-repro 14:38:40] sample 27: pass=1 committed=163 stale=255s running=8 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:?] activity=17 locks=13
+[stall-repro 14:38:58] sample 28: pass=1 committed=163 stale=271s running=8 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:?] activity=17 locks=13
+[stall-repro 14:39:07] CHAOS 1/2: lock released
+[stall-repro 14:39:13] sample 29: pass=1 committed=163 stale=289s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=1
+[stall-repro 14:39:32] sample 30: pass=1 committed=163 stale=304s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:39:47] sample 31: pass=1 committed=163 stale=322s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=1
+[stall-repro 14:40:05] sample 32: pass=1 committed=163 stale=337s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:40:20] sample 33: pass=1 committed=163 stale=356s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:40:39] sample 34: pass=1 committed=163 stale=371s running=0 activity=17 locks=0
+[stall-repro 14:40:54] sample 35: pass=1 committed=163 stale=389s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:41:12] sample 36: pass=1 committed=163 stale=404s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:41:27] sample 37: pass=1 committed=174 stale=0s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:41:45] sample 38: pass=1 committed=185 stale=0s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:42:01] sample 39: pass=1 committed=196 stale=0s running=11 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=17 locks=0
+[stall-repro 14:42:19] sample 40: pass=1 committed=207 stale=0s running=12 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=17 locks=0
+[stall-repro 14:42:34] sample 41: pass=1 committed=228 stale=0s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:42:52] sample 42: pass=1 committed=228 stale=15s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:43:07] sample 43: pass=1 committed=228 stale=33s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:43:26] sample 44: pass=1 committed=228 stale=49s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:43:41] sample 45: pass=1 committed=228 stale=67s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:43:59] sample 46: pass=1 committed=228 stale=82s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=0
+[stall-repro 14:44:07] CHAOS 2/2: holding "LOCK TABLE pages IN ACCESS EXCLUSIVE MODE" in an open transaction through the pooler for 300 s
+[stall-repro 14:44:14] sample 47: pass=1 committed=228 stale=100s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=6
+[stall-repro 14:44:33] sample 48: pass=1 committed=228 stale=115s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=6
+[stall-repro 14:44:48] sample 49: pass=1 committed=228 stale=134s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=7
+[stall-repro 14:45:06] sample 50: pass=1 committed=228 stale=149s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=7
+[stall-repro 14:45:21] sample 51: pass=1 committed=228 stale=167s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=6
+[stall-repro 14:45:39] sample 52: pass=1 committed=228 stale=182s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=7
+[stall-repro 14:45:54] sample 53: pass=1 committed=228 stale=201s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=7
+[stall-repro 14:46:13] sample 54: pass=1 committed=228 stale=216s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=7
+[stall-repro 14:46:28] sample 55: pass=1 committed=228 stale=234s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=8
+[stall-repro 14:46:46] sample 56: pass=1 committed=228 stale=249s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=7
+[stall-repro 14:47:01] sample 57: pass=1 committed=228 stale=267s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=7
+[stall-repro 14:47:20] sample 58: pass=1 committed=228 stale=282s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=8
+[stall-repro 14:47:35] sample 59: pass=1 committed=228 stale=301s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=17 locks=8
+[stall-repro 14:47:53] sample 60: pass=1 committed=228 stale=316s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=16 locks=8
+[stall-repro 14:48:08] sample 61: pass=1 committed=228 stale=334s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=16 locks=8
+[stall-repro 14:48:26] sample 62: pass=1 committed=228 stale=349s running=0 activity=16 locks=8
+[stall-repro 14:48:41] sample 63: pass=1 committed=228 stale=368s running=0 activity=16 locks=8
+[stall-repro 14:49:00] sample 64: pass=1 committed=228 stale=383s running=0 activity=16 locks=9
+[stall-repro 14:49:07] CHAOS 2/2: lock released
+[stall-repro 14:49:15] sample 65: pass=1 committed=228 stale=401s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=12 locks=0
+[stall-repro 14:49:33] sample 66: pass=1 committed=228 stale=416s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=12 locks=0
+[stall-repro 14:49:48] sample 67: pass=1 committed=228 stale=434s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=12 locks=0
+[stall-repro 14:50:07] sample 68: pass=1 committed=228 stale=449s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=12 locks=0
+[stall-repro 14:50:22] sample 69: pass=1 committed=228 stale=468s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=12 locks=0
+[stall-repro 14:50:40] sample 70: pass=1 committed=228 stale=483s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=12 locks=0
+[stall-repro 14:50:55] sample 71: pass=1 committed=228 stale=501s running=0 activity=12 locks=0
+[stall-repro 14:51:05] adoption 0: exit=143 dripped=0 status=null fenced=null pending=null fence_failed=0 1200.1s
+[stall-repro 14:51:13] sample 72: pass=1 committed=228 stale=516s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:51:28] sample 73: pass=1 committed=228 stale=535s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:51:47] sample 74: pass=1 committed=228 stale=550s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:52:02] sample 75: pass=1 committed=228 stale=568s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:52:20] sample 76: pass=1 committed=228 stale=583s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:52:35] sample 77: pass=1 committed=228 stale=601s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:52:54] sample 78: pass=1 committed=228 stale=616s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:53:09] sample 79: pass=1 committed=228 stale=635s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:53:27] sample 80: pass=1 committed=228 stale=650s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:53:42] sample 81: pass=1 committed=228 stale=668s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:54:01] sample 82: pass=1 committed=228 stale=683s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:54:16] sample 83: pass=1 committed=228 stale=702s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:54:34] sample 84: pass=1 committed=228 stale=717s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:54:49] sample 85: pass=1 committed=228 stale=735s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:55:07] sample 86: pass=1 committed=228 stale=750s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:55:22] sample 87: pass=1 committed=228 stale=769s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:55:41] sample 88: pass=1 committed=228 stale=784s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=1
+[stall-repro 14:55:56] sample 89: pass=1 committed=228 stale=802s running=14 [managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing, managed_sync_import:preparing] activity=11 locks=0
+[stall-repro 14:56:08] pass 1 ended: code=1  committed 0 -> 242 in 1501.7 s; stderr tail:  the cause, then run: gbrain sync --source bench --no-pull --retry-failed --no-embed | Fix: Inspect writer status and configured persistence limits. Existing requests retain their reserved completion space. | Docs: https://github.com/garrytan/gbrain/blob/master/docs/guides/error-codes.md#queue_capacity | 
+[stall-repro 14:56:08] pass 1 status: null
+[stall-repro 14:56:14] sample 90: pass=null committed=242 stale=0s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:56:15] post-pass 1: holds=[invalid_fence/repeated_marker:2, preparation_stalled/-@origin_check:1] stalled_receipts=2
+[stall-repro 14:56:21] pass 2 started: timeout pid 13043, gbrain pid 13044
+[stall-repro 14:56:27] pass 2 ended: code=1  committed 242 -> 242 in 6.1 s; stderr tail:  the cause, then run: gbrain sync --source bench --no-pull --retry-failed --no-embed | Fix: Inspect writer status and configured persistence limits. Existing requests retain their reserved completion space. | Docs: https://github.com/garrytan/gbrain/blob/master/docs/guides/error-codes.md#queue_capacity | 
+[stall-repro 14:56:27] pass 2 status: null
+[stall-repro 14:56:29] sample 91: pass=null committed=242 stale=8s running=1 [managed_maintenance_adopt_fact_fence:preparing] activity=11 locks=0
+[stall-repro 14:56:34] post-pass 2: holds=[invalid_fence/repeated_marker:2, preparation_stalled/-@origin_check:1] stalled_receipts=2
+[stall-repro 15:06:25] adoption 1: exit=0 dripped=20 status=warn fenced=0 pending=562 fence_failed=184 860.3s
+[stall-repro 15:06:27] retry-held: exit=0 scheduled=3 fix=sync --source bench --no-pull --no-embed
+[stall-repro 15:23:13] retry-held sync: exit=0 in 1006.1 s; tail: (extends while progressing) | [sync] lanes: 6 of 16, 3.16 busy on average; lanes waited for the sync loop to prepare groups (3.16 of 6 busy on average). | [sync] 3496 page(s) have un-extracted edges — run 'gbrain extract --stale' | [sync] Skipped automatic .gitignore maintenance for the managed worktree. | 
+[stall-repro 15:23:31] report: <work>/gbrain/.context/bench/stall-lock-b/report.json

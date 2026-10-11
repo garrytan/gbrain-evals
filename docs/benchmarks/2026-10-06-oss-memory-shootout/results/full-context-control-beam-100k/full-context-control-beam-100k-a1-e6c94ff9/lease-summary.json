@@ -1,0 +1,8 @@
+{
+  "run_id": "full-context-control-beam-100k-a1-e6c94ff9",
+  "lease_usd": 8,
+  "committed_usd": 2.313132800000001,
+  "requests": 876,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

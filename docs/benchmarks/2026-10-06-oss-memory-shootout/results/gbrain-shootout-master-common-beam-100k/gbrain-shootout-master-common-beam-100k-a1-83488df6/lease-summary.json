@@ -1,0 +1,8 @@
+{
+  "run_id": "gbrain-shootout-master-common-beam-100k-a1-83488df6",
+  "lease_usd": 6,
+  "committed_usd": 2.725744709999999,
+  "requests": 2611,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

@@ -1,0 +1,130 @@
+{
+  "schema": "gbrain.bench.managed-sync-stall-repro/v1",
+  "label": "release-pool10-light",
+  "cli_repo": "<work>/gbrain-release",
+  "cli_version": "0.60.105.0",
+  "cli_commit": "HEAD@8e11aa1f",
+  "harness_commit": "capy/6278-phase0@e1ae395f",
+  "started_at": "2026-10-08T07:19:28.928Z",
+  "params": {
+    "files": 15000,
+    "history": 1500,
+    "legacy_facts": 60,
+    "marker_pages": 6,
+    "backlog_marker_pages": 20,
+    "rtt_ms": 57,
+    "pool_size": 10,
+    "pooler": "pgbouncer",
+    "doomed_pages": 9,
+    "drip_rows": 6,
+    "max_minutes": 170,
+    "passes": 3,
+    "sample_seconds": 30,
+    "adoption_interval_s": 120,
+    "stall_minutes": 5,
+    "stall_kill_minutes": 40,
+    "seed": 1
+  },
+  "pooler": {
+    "kind": "pgbouncer",
+    "image": "edoburu/pgbouncer@sha256:9c78945868a6a142c7fc40ccd843bbe5a606df163c7ffce4de70e0d628d696a2",
+    "listen": "127.0.0.1:55434",
+    "pool_mode": "transaction",
+    "default_pool_size": "50",
+    "max_client_conn": "2000",
+    "ignore_startup_parameters": "extra_float_digits,options,statement_timeout,idle_in_transaction_session_timeout"
+  },
+  "host": {
+    "cpus": 16,
+    "platform": "linux",
+    "bun": "1.4.2"
+  },
+  "rerun": "bun scripts/bench/managed-sync-stall-repro.ts --cli-repo ../gbrain-release --files 15000 --history 1500 --legacy-facts 60 --marker-pages 6 --doomed-pages 9 --drip-rows 6 --backlog-marker-pages 20 --rtt 57 --pool-size 10 --max-minutes 170 --passes 3 --sample-seconds 30 --adoption-interval 120 --stall-minutes 5 --stall-kill-minutes 40 --stall-signal SIGUSR2 --inspect --out .context/bench/stall-run-light --label release-pool10-light",
+  "fixture": {
+    "database": "<db>",
+    "home": "<fixture-home>",
+    "root": "<fixture-home>/repo-bench",
+    "backlog_entries": 15000,
+    "history_pages": 1500,
+    "legacy_rows": 60,
+    "legacy_pages": 15,
+    "legacy_by_shape": {
+      "trailing_ws": 3,
+      "leading_ws": 2,
+      "whitespace_only": 2,
+      "crlf": 2,
+      "plain": 11,
+      "pipe": 10,
+      "newline": 10,
+      "backslash": 10,
+      "backtick": 10
+    },
+    "doomed_pages": 9,
+    "adoptable_pages": 0,
+    "drip_pool_pages": 435,
+    "drip_rows_per_run": 6,
+    "marker_history_pages": [
+      "people/scale-0-0",
+      "people/scale-0-1",
+      "companies/scale-0-2",
+      "people/scale-0-10",
+      "people/scale-0-11",
+      "companies/scale-0-12"
+    ],
+    "marker_backlog_pages": [
+      "people/scale-0-1500",
+      "people/scale-0-1501",
+      "companies/scale-0-1502",
+      "notes/scale-0-1503",
+      "notes/scale-0-1504",
+      "notes/scale-0-1505",
+      "notes/scale-0-1506",
+      "notes/scale-0-1507",
+      "notes/scale-0-1508",
+      "notes/scale-0-1509",
+      "people/scale-0-1510",
+      "people/scale-0-1511",
+      "companies/scale-0-1512",
+      "notes/scale-0-1513",
+      "notes/scale-0-1514",
+      "notes/scale-0-1515",
+      "notes/scale-0-1516",
+      "notes/scale-0-1517",
+      "notes/scale-0-1518",
+      "notes/scale-0-1519"
+    ]
+  },
+  "session_timeouts": {
+    "requested_startup_parameters": {
+      "statement_timeout": "5min",
+      "idle_in_transaction_session_timeout": "5min"
+    },
+    "via_pooler": {
+      "statement_timeout": "0",
+      "idle_in_transaction_session_timeout": "0",
+      "lock_timeout": "0"
+    },
+    "direct": {
+      "statement_timeout": "5min",
+      "idle_in_transaction_session_timeout": "5min",
+      "lock_timeout": "0"
+    }
+  },
+  "passes": [
+    {
+      "pass": 1,
+      "pid": 15450,
+      "startedAt": 1791443990220,
+      "committedAtStart": 0,
+      "inspect": "127.0.0.1:6499",
+      "endedAt": 1791447588740,
+      "code": 124,
+      "committedAtEnd": 964,
+      "killedBy": "timeout_3600",
+      "status": null,
+      "wall_s": 3598.5,
+      "pages_per_min": 16.1,
+      "time_to_stall_s": null
+    }
+  ]
+}

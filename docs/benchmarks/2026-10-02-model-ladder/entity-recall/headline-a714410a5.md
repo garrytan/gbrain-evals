@@ -1,5 +1,9 @@
 # Corrected Cat 40 headline: gbrain `a714410a5` against the preregistered comparator
 
+<a id="correction-2026-10-09"></a>
+
+> **Correction, 2026-10-09: the gbrain cells searched without their reranker.** Each restored slot brain kept the slot build's metering-proxy port in its Voyage URL, and that port was closed when the cells ran, so every rerank request failed and gbrain quietly returned unreranked results (fixed in gbrain-evals #76, commit `7709a70`, and #109). None of the 600 gbrain cells in `followups/holdout/results.jsonl` include a rerank request in their metered calls ([audit](../../2026-10-08-program-primary-hard/root-cause/restore-audit.json)), so this headline compares gbrain without its reranker with the file, memory-tool and Postgres arms, which have none to lose. See the [Cat 40 report correction](../../2026-10-02-model-ladder.md#correction-2026-10-09). The output below is unchanged.
+
 Output of the command below, unedited. The comparator rule and sentences are in [PREREGISTRATION.md](PREREGISTRATION.md); the simple-arm cells are audited in [simple-arms-rescored/](simple-arms-rescored/README.md).
 
 ```
@@ -232,3 +236,7 @@ Spend in these records (agent + gbrain internal + judge): $177.41
 - pg: $14.37
 - memory: $84.06
 - gbrain-c1234-holdout: $49.74
+
+## Changelog
+
+- 2026-10-09: [Correction](#correction-2026-10-09) added above the unedited output: the gbrain cells ran without reranking (0 of 600; stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109).

@@ -1,0 +1,166 @@
+[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); extends while the sync keeps progressing (stops after 900s without progress); disable with --no-hard-deadline
+[gbrain] Prepared statements disabled (PgBouncer transaction-mode convention on port 6543). Override with GBRAIN_PREPARE=true if your pooler runs in session mode.
+[sync] managed catch-up: 15000 entries frozen, 7265 remaining; publishing in bulk groups (each page keeps its own request).
+[sync] 7736/15000 processed (1 written, 0 waived this run) · 2.7 pages/min · indexing ETA 44h34m
+[sync] 7758/15000 processed (23 written, 0 waived this run) · 38 pages/min · indexing ETA 3h10m
+[sync] 7773/15000 processed (38 written, 0 waived this run) · 48.3 pages/min · indexing ETA 2h29m
+[sync] 7794/15000 processed (59 written, 0 waived this run) · 61.6 pages/min · indexing ETA 1h56m
+[sync-watchdog] parent alive 60s elapsed, deadline in ~3540s (extends while progressing)
+[sync] 7810/15000 processed (75 written, 0 waived this run) · 62.8 pages/min · indexing ETA 1h54m
+[sync] 7884/15000 processed (149 written, 0 waived this run) · 107.4 pages/min · indexing ETA 1h06m
+[sync] 7970/15000 processed (235 written, 0 waived this run) · 150.7 pages/min · indexing ETA 46m39s
+[sync] 8029/15000 processed (294 written, 0 waived this run) · 168 pages/min · indexing ETA 41m30s
+[sync] 8092/15000 processed (357 written, 0 waived this run) · 186 pages/min · indexing ETA 37m09s
+[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)
+[sync] 8164/15000 processed (429 written, 0 waived this run) · 203.1 pages/min · indexing ETA 33m40s
+[sync] 8237/15000 processed (502 written, 0 waived this run) · 218.1 pages/min · indexing ETA 31m01s
+[sync] 8266/15000 processed (531 written, 0 waived this run) · 213.5 pages/min · indexing ETA 31m33s
+[sync] 8340/15000 processed (605 written, 0 waived this run) · 226.4 pages/min · indexing ETA 29m25s
+[sync] 8414/15000 processed (679 written, 0 waived this run) · 239.1 pages/min · indexing ETA 27m33s
+[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)
+[sync] 8462/15000 processed (727 written, 0 waived this run) · 240.7 pages/min · indexing ETA 27m10s
+[sync] 8520/15000 processed (785 written, 0 waived this run) · 244.6 pages/min · indexing ETA 26m30s
+[sync] 8597/15000 processed (862 written, 0 waived this run) · 252.5 pages/min · indexing ETA 25m22s
+[sync] 8657/15000 processed (922 written, 0 waived this run) · 253.7 pages/min · indexing ETA 25m01s
+[sync] 8710/15000 processed (975 written, 0 waived this run) · 254.6 pages/min · indexing ETA 24m43s
+[sync-watchdog] parent alive 240s elapsed, deadline in ~3360s (extends while progressing)
+[sync] 8784/15000 processed (1049 written, 0 waived this run) · 262.2 pages/min · indexing ETA 23m43s
+[sync] 8868/15000 processed (1133 written, 0 waived this run) · 265.3 pages/min · indexing ETA 23m08s
+[sync] 8932/15000 processed (1197 written, 0 waived this run) · 267.9 pages/min · indexing ETA 22m39s
+[sync] 9006/15000 processed (1271 written, 0 waived this run) · 271.2 pages/min · indexing ETA 22m07s
+[sync] 9090/15000 processed (1355 written, 0 waived this run) · 275 pages/min · indexing ETA 21m30s
+[sync-watchdog] parent alive 300s elapsed, deadline in ~3300s (extends while progressing)
+[sync] 9164/15000 processed (1429 written, 0 waived this run) · 278.7 pages/min · indexing ETA 20m57s
+[sync] 9228/15000 processed (1493 written, 0 waived this run) · 278.5 pages/min · indexing ETA 20m44s
+[sync] 9312/15000 processed (1577 written, 0 waived this run) · 283.5 pages/min · indexing ETA 20m04s
+[sync] 9376/15000 processed (1641 written, 0 waived this run) · 286.2 pages/min · indexing ETA 19m40s
+[sync] 9450/15000 processed (1715 written, 0 waived this run) · 288.3 pages/min · indexing ETA 19m15s
+[sync-watchdog] parent alive 360s elapsed, deadline in ~3240s (extends while progressing)
+[sync] 9524/15000 processed (1789 written, 0 waived this run) · 292.5 pages/min · indexing ETA 18m44s
+[sync] 9586/15000 processed (1851 written, 0 waived this run) · 293.1 pages/min · indexing ETA 18m29s
+[sync] 9656/15000 processed (1921 written, 0 waived this run) · 293.3 pages/min · indexing ETA 18m14s
+[sync] 9731/15000 processed (1996 written, 0 waived this run) · 296.7 pages/min · indexing ETA 17m46s
+[sync] 9769/15000 processed (2034 written, 0 waived this run) · 293.7 pages/min · indexing ETA 17m49s
+[sync-watchdog] parent alive 420s elapsed, deadline in ~3180s (extends while progressing)
+[sync] 9833/15000 processed (2098 written, 0 waived this run) · 294.9 pages/min · indexing ETA 17m32s
+[sync] 9882/15000 processed (2147 written, 0 waived this run) · 294.3 pages/min · indexing ETA 17m24s
+[sync] 9956/15000 processed (2221 written, 0 waived this run) · 296.6 pages/min · indexing ETA 17m01s
+[sync] 10027/15000 processed (2292 written, 0 waived this run) · 298.1 pages/min · indexing ETA 16m41s
+[sync] 10104/15000 processed (2369 written, 0 waived this run) · 298.6 pages/min · indexing ETA 16m24s
+[sync-watchdog] parent alive 480s elapsed, deadline in ~3120s (extends while progressing)
+[sync] 10190/15000 processed (2455 written, 0 waived this run) · 301.2 pages/min · indexing ETA 15m59s
+[sync] 10264/15000 processed (2529 written, 0 waived this run) · 303.6 pages/min · indexing ETA 15m36s
+[sync] 10338/15000 processed (2603 written, 0 waived this run) · 305.7 pages/min · indexing ETA 15m16s
+[sync] 10412/15000 processed (2677 written, 0 waived this run) · 307.9 pages/min · indexing ETA 14m55s
+[sync] 10446/15000 processed (2711 written, 0 waived this run) · 305.5 pages/min · indexing ETA 14m55s
+[sync-watchdog] parent alive 540s elapsed, deadline in ~3060s (extends while progressing)
+[sync] 10499/15000 processed (2764 written, 0 waived this run) · 305.7 pages/min · indexing ETA 14m44s
+[sync] 10573/15000 processed (2838 written, 0 waived this run) · 307.8 pages/min · indexing ETA 14m23s
+[sync] 10634/15000 processed (2899 written, 0 waived this run) · 308.6 pages/min · indexing ETA 14m09s
+[sync] 10708/15000 processed (2973 written, 0 waived this run) · 308.7 pages/min · indexing ETA 13m55s
+[sync] 10817/15000 processed (3082 written, 0 waived this run) · 314 pages/min · indexing ETA 13m20s
+[sync-watchdog] parent alive 600s elapsed, deadline in ~3000s (extends while progressing)
+[sync] 10891/15000 processed (3156 written, 0 waived this run) · 315.9 pages/min · indexing ETA 13m01s
+[sync] 10942/15000 processed (3207 written, 0 waived this run) · 313.7 pages/min · indexing ETA 12m57s
+[sync] 11027/15000 processed (3292 written, 0 waived this run) · 315.8 pages/min · indexing ETA 12m35s
+[sync] 11090/15000 processed (3355 written, 0 waived this run) · 316.4 pages/min · indexing ETA 12m22s
+[sync] 11152/15000 processed (3417 written, 0 waived this run) · 316.9 pages/min · indexing ETA 12m09s
+[sync-watchdog] parent alive 660s elapsed, deadline in ~2940s (extends while progressing)
+[sync] 11214/15000 processed (3479 written, 0 waived this run) · 316.7 pages/min · indexing ETA 11m58s
+[sync] 11288/15000 processed (3553 written, 0 waived this run) · 317.7 pages/min · indexing ETA 11m41s
+[sync] 11374/15000 processed (3639 written, 0 waived this run) · 318.5 pages/min · indexing ETA 11m24s
+[sync] 11436/15000 processed (3701 written, 0 waived this run) · 318.2 pages/min · indexing ETA 11m12s
+[sync] 11519/15000 processed (3784 written, 0 waived this run) · 320.1 pages/min · indexing ETA 10m53s
+[sync-watchdog] parent alive 720s elapsed, deadline in ~2880s (extends while progressing)
+[sync] 11584/15000 processed (3849 written, 0 waived this run) · 319 pages/min · indexing ETA 10m43s
+[sync] 11654/15000 processed (3919 written, 0 waived this run) · 318.5 pages/min · indexing ETA 10m31s
+[sync] 11743/15000 processed (4008 written, 0 waived this run) · 320.1 pages/min · indexing ETA 10m11s
+[sync] 11806/15000 processed (4071 written, 0 waived this run) · 319.6 pages/min · indexing ETA 10m00s
+[sync] 11876/15000 processed (4141 written, 0 waived this run) · 319.5 pages/min · indexing ETA 9m47s
+[sync-watchdog] parent alive 780s elapsed, deadline in ~2820s (extends while progressing)
+[sync] 11976/15000 processed (4241 written, 0 waived this run) · 322.6 pages/min · indexing ETA 9m23s
+[sync] 12025/15000 processed (4290 written, 0 waived this run) · 320.4 pages/min · indexing ETA 9m18s
+[sync] 12051/15000 processed (4316 written, 0 waived this run) · 317.9 pages/min · indexing ETA 9m17s
+[sync] 12109/15000 processed (4374 written, 0 waived this run) · 318.2 pages/min · indexing ETA 9m06s
+[sync] 12161/15000 processed (4426 written, 0 waived this run) · 317.7 pages/min · indexing ETA 8m57s
+[sync-watchdog] parent alive 840s elapsed, deadline in ~2760s (extends while progressing)
+[sync] 12199/15000 processed (4464 written, 0 waived this run) · 315.9 pages/min · indexing ETA 8m52s
+[sync] 12250/15000 processed (4515 written, 0 waived this run) · 315.3 pages/min · indexing ETA 8m44s
+[sync] 12294/15000 processed (4559 written, 0 waived this run) · 314.5 pages/min · indexing ETA 8m37s
+[sync] 12331/15000 processed (4596 written, 0 waived this run) · 312.4 pages/min · indexing ETA 8m33s
+[sync] 12394/15000 processed (4659 written, 0 waived this run) · 312.5 pages/min · indexing ETA 8m21s
+[sync-watchdog] parent alive 900s elapsed, deadline in ~2700s (extends while progressing)
+[sync] 12442/15000 processed (4707 written, 0 waived this run) · 311.6 pages/min · indexing ETA 8m13s
+[sync] 12492/15000 processed (4757 written, 0 waived this run) · 311 pages/min · indexing ETA 8m04s
+[sync] 12530/15000 processed (4795 written, 0 waived this run) · 309.8 pages/min · indexing ETA 7m59s
+[sync] 12575/15000 processed (4840 written, 0 waived this run) · 309.1 pages/min · indexing ETA 7m51s
+[sync] 12627/15000 processed (4892 written, 0 waived this run) · 308.7 pages/min · indexing ETA 7m42s
+[sync-watchdog] parent alive 960s elapsed, deadline in ~2640s (extends while progressing)
+[sync] 12656/15000 processed (4921 written, 0 waived this run) · 307.3 pages/min · indexing ETA 7m38s
+[sync] 12707/15000 processed (4972 written, 0 waived this run) · 307.3 pages/min · indexing ETA 7m28s
+[sync] 12758/15000 processed (5023 written, 0 waived this run) · 306.9 pages/min · indexing ETA 7m19s
+[sync] 12788/15000 processed (5053 written, 0 waived this run) · 303.7 pages/min · indexing ETA 7m18s
+[sync] 12797/15000 processed (5062 written, 0 waived this run) · 298.9 pages/min · indexing ETA 7m23s
+[sync-watchdog] parent alive 1020s elapsed, deadline in ~2580s (extends while progressing)
+[sync] 12838/15000 processed (5103 written, 0 waived this run) · 295.5 pages/min · indexing ETA 7m19s
+[sync] 12852/15000 processed (5117 written, 0 waived this run) · 293 pages/min · indexing ETA 7m20s
+[sync] 12854/15000 processed (5119 written, 0 waived this run) · 289.8 pages/min · indexing ETA 7m25s
+[sync] 12899/15000 processed (5164 written, 0 waived this run) · 289.6 pages/min · indexing ETA 7m16s
+[sync-watchdog] parent alive 1080s elapsed, deadline in ~2520s (extends while progressing)
+[sync] 12944/15000 processed (5209 written, 0 waived this run) · 289.4 pages/min · indexing ETA 7m07s
+[sync] 13001/15000 processed (5266 written, 0 waived this run) · 289.7 pages/min · indexing ETA 6m55s
+[sync] 13005/15000 processed (5270 written, 0 waived this run) · 286.5 pages/min · indexing ETA 6m58s
+[sync] 13027/15000 processed (5292 written, 0 waived this run) · 283 pages/min · indexing ETA 6m59s
+[sync] 13076/15000 processed (5341 written, 0 waived this run) · 283.1 pages/min · indexing ETA 6m48s
+[sync-watchdog] parent alive 1140s elapsed, deadline in ~2460s (extends while progressing)
+[sync] 13122/15000 processed (5387 written, 0 waived this run) · 282.8 pages/min · indexing ETA 6m39s
+[sync] 13182/15000 processed (5447 written, 0 waived this run) · 282.8 pages/min · indexing ETA 6m26s
+[sync] 13231/15000 processed (5496 written, 0 waived this run) · 282.6 pages/min · indexing ETA 6m16s
+[sync] 13284/15000 processed (5549 written, 0 waived this run) · 282.4 pages/min · indexing ETA 6m05s
+[sync] 13351/15000 processed (5616 written, 0 waived this run) · 282.9 pages/min · indexing ETA 5m50s
+[sync-watchdog] parent alive 1200s elapsed, deadline in ~2400s (extends while progressing)
+[sync] 13379/15000 processed (5644 written, 0 waived this run) · 281.7 pages/min · indexing ETA 5m46s
+[sync] 13432/15000 processed (5697 written, 0 waived this run) · 281.8 pages/min · indexing ETA 5m34s
+[sync] 13492/15000 processed (5757 written, 0 waived this run) · 282.1 pages/min · indexing ETA 5m21s
+[sync] 13552/15000 processed (5817 written, 0 waived this run) · 281.5 pages/min · indexing ETA 5m09s
+[sync] 13608/15000 processed (5873 written, 0 waived this run) · 281.6 pages/min · indexing ETA 4m57s
+[sync-watchdog] parent alive 1260s elapsed, deadline in ~2340s (extends while progressing)
+[sync] 13675/15000 processed (5940 written, 0 waived this run) · 282.2 pages/min · indexing ETA 4m42s
+[sync] 13728/15000 processed (5993 written, 0 waived this run) · 282.3 pages/min · indexing ETA 4m31s
+[sync] 13767/15000 processed (6032 written, 0 waived this run) · 281.6 pages/min · indexing ETA 4m23s
+[sync] 13823/15000 processed (6088 written, 0 waived this run) · 281.8 pages/min · indexing ETA 4m11s
+[sync] 13876/15000 processed (6141 written, 0 waived this run) · 281.9 pages/min · indexing ETA 4m00s
+[sync-watchdog] parent alive 1320s elapsed, deadline in ~2280s (extends while progressing)
+[sync] 13915/15000 processed (6180 written, 0 waived this run) · 281.2 pages/min · indexing ETA 3m52s
+[sync] 13964/15000 processed (6229 written, 0 waived this run) · 281.1 pages/min · indexing ETA 3m42s
+[sync] 14031/15000 processed (6296 written, 0 waived this run) · 281.9 pages/min · indexing ETA 3m27s
+[sync] 14077/15000 processed (6342 written, 0 waived this run) · 281.8 pages/min · indexing ETA 3m17s
+[sync] 14119/15000 processed (6384 written, 0 waived this run) · 281.4 pages/min · indexing ETA 3m08s
+[sync] 14172/15000 processed (6437 written, 0 waived this run) · 281.2 pages/min · indexing ETA 2m57s
+[sync-watchdog] parent alive 1380s elapsed, deadline in ~2220s (extends while progressing)
+[sync] 14232/15000 processed (6497 written, 0 waived this run) · 281.5 pages/min · indexing ETA 2m44s
+[sync] 14267/15000 processed (6532 written, 0 waived this run) · 280.8 pages/min · indexing ETA 2m37s
+[sync] 14320/15000 processed (6585 written, 0 waived this run) · 281 pages/min · indexing ETA 2m26s
+[sync] 14380/15000 processed (6645 written, 0 waived this run) · 281.2 pages/min · indexing ETA 2m13s
+[sync] 14440/15000 processed (6705 written, 0 waived this run) · 280.6 pages/min · indexing ETA 2m00s
+[sync-watchdog] parent alive 1440s elapsed, deadline in ~2160s (extends while progressing)
+[sync] 14496/15000 processed (6761 written, 0 waived this run) · 280.5 pages/min · indexing ETA 1m48s
+[sync] 14563/15000 processed (6828 written, 0 waived this run) · 281.2 pages/min · indexing ETA 1m34s
+[sync] 14616/15000 processed (6881 written, 0 waived this run) · 281.3 pages/min · indexing ETA 1m22s
+[sync] 14655/15000 processed (6920 written, 0 waived this run) · 280.9 pages/min · indexing ETA 1m14s
+[sync] 14711/15000 processed (6976 written, 0 waived this run) · 280.9 pages/min · indexing ETA 1m02s
+[sync-watchdog] parent alive 1500s elapsed, deadline in ~2100s (extends while progressing)
+[sync] 14757/15000 processed (7022 written, 0 waived this run) · 280.8 pages/min · indexing ETA 52s
+[sync] 14803/15000 processed (7068 written, 0 waived this run) · 280.4 pages/min · indexing ETA 43s
+[sync] 14852/15000 processed (7117 written, 0 waived this run) · 280.4 pages/min · indexing ETA 32s
+[sync] 14919/15000 processed (7184 written, 0 waived this run) · 281 pages/min · indexing ETA 18s
+[sync] 14972/15000 processed (7237 written, 0 waived this run) · 280.2 pages/min · indexing ETA 6s
+[sync-watchdog] parent alive 1560s elapsed, deadline in ~2040s (extends while progressing)
+[sync-watchdog] parent alive 1620s elapsed, deadline in ~1980s (extends while progressing)
+[sync-watchdog] parent alive 1680s elapsed, deadline in ~1920s (extends while progressing)
+[sync-watchdog] parent alive 1740s elapsed, deadline in ~1860s (extends while progressing)
+[sync-watchdog] parent alive 1800s elapsed, deadline in ~1800s (extends while progressing)
+[sync-watchdog] parent alive 1860s elapsed, deadline in ~1740s (extends while progressing)
+[sync] lanes: 6 of 16, 3.27 busy on average; lanes waited for the sync loop to prepare groups (3.27 of 6 busy on average).
+[sync] 15482 page(s) have un-extracted edges — run 'gbrain extract --stale'
+[sync] Skipped automatic .gitignore maintenance for the managed worktree.

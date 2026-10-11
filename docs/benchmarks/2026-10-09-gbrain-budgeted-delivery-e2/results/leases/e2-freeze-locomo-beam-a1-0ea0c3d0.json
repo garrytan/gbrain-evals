@@ -1,0 +1,8 @@
+{
+  "run_id": "e2-freeze-locomo-beam-a1-0ea0c3d0",
+  "lease_usd": 4,
+  "committed_usd": 0.6007637,
+  "requests": 1997,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

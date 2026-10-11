@@ -1,0 +1,15 @@
+{
+  "note": "Keyless plumbing check: the real gbrain adapter end to end on the committed fixture, every model request answered by the local stub upstream. Not benchmark evidence.",
+  "dataset": "fixture",
+  "split": "tiny",
+  "provider": "gbrain",
+  "mode": "rag",
+  "lane": "raw",
+  "seal": "fixture",
+  "target_tokens": null,
+  "models": { "answer": "openai:gpt-6-luna", "judge": "openai:gpt-6-luna" },
+  "budget_usd": 1,
+  "questions": {},
+  "k": 10,
+  "provider_config": { "token_budget": 2000 }
+}

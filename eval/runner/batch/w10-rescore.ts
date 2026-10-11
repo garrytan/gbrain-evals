@@ -20,6 +20,7 @@ import { runCompare, type CompareOutput } from '../compare.ts';
 import { exactMcNemar } from '../stats/paired.ts';
 import { crossArmRows } from './receipts.ts';
 import { judgeVerdict, readNdjson } from './sources.ts';
+import { normalizeUsage, usageSourceOf } from '../usage-receipt.ts';
 
 const ROOT = resolve(import.meta.dir, '../../..');
 const FAMILIES = join(ROOT, 'docs/benchmarks/2026-10-06-longmemeval-w10-families');
@@ -28,7 +29,6 @@ const OPAQUE = join(ROOT, 'docs/benchmarks/2026-09-29-longmemeval-opaque-qa/rera
 export interface Scored { question_id: string; question_type: string; official: 0 | 1; secondary: 0 | 1 | null; reader_error: string | null; finish: string | null; usd: number; output_tokens: number; input_tokens: number }
 
 const verdict = (j: { raw?: string | null; error?: string | null } | null | undefined): 0 | 1 => (j && !j.error && typeof j.raw === 'string' && judgeVerdict(j.raw) ? 1 : 0);
-const num = (u: Record<string, unknown> | null, ...keys: string[]) => keys.reduce((s, k) => s + (typeof u?.[k] === 'number' ? (u[k] as number) : 0), 0);
 
 /** Re-score one exported arm from its rows: judge verdicts from the stored replies, reader errors wrong. */
 export function scoreArm(dir: string): Map<string, Scored> {
@@ -39,7 +39,7 @@ export function scoreArm(dir: string): Map<string, Scored> {
       question_id: r.question_id, question_type: r.question_type,
       official: r.error ? 0 : verdict(r.official), secondary: hasSecondary ? (r.error ? 0 : verdict(r.secondary)) : null,
       reader_error: r.error ?? null, finish: r.finish ?? null, usd: r.usd ?? 0,
-      output_tokens: num(r.usage, 'output_tokens', 'completion_tokens'), input_tokens: num(r.usage, 'input_tokens', 'prompt_tokens'),
+      ...(() => { const u = r.usage ? normalizeUsage(r.model ? usageSourceOf(r.model) : 'prompt_tokens' in r.usage ? 'openai' : 'anthropic', r.usage) : null; return { output_tokens: u?.output_total ?? 0, input_tokens: u?.input_total ?? 0 }; })(),
     });
   }
   return out;

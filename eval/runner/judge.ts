@@ -377,7 +377,8 @@ interface ParsedJudgeOutput {
 /**
  * Validate a criterion-score array against the rubric (WS0 judge policy):
  * exactly one score per rubric criterion, no duplicates, no unknown ids.
- * Scores are clamped to 0-5. Shared with the Cat 29 pairwise judge.
+ * Finite scores are clamped to 0-5; a non-finite score (NaN, Infinity, an overflowing JSON number such as 1e309)
+ * is malformed. Shared with the Cat 29 pairwise judge.
  */
 export function parseCriterionScores(
   raw: unknown,
@@ -390,6 +391,9 @@ export function parseCriterionScores(
     const sc = s as Record<string, unknown>;
     if (typeof sc.criterion_id !== 'string' || typeof sc.score !== 'number' || typeof sc.rationale !== 'string') {
       return { scores: null, defect: 'scores[] entries require {criterion_id, score, rationale}' };
+    }
+    if (!Number.isFinite(sc.score)) {
+      return { scores: null, defect: `score for criterion_id "${sc.criterion_id}" must be a finite number from 0 to 5` };
     }
     scores.push({
       criterion_id: sc.criterion_id,

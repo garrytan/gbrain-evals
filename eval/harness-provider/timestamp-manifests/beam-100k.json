@@ -1,0 +1,15 @@
+{
+  "counts": {
+    "observed_session_time": 170
+  },
+  "dataset": "beam",
+  "dates_passed_to_providers": 170,
+  "documents": 170,
+  "policy": "Only observed session times reach providers; stated event dates and unknown dates are withheld from both systems.",
+  "rows_sha256": "10dbcaadb34c720a94ccda6792f6ae36de29263e1bc709dc6ca0ef08c188cc29",
+  "rule": {
+    "provenance": "observed_session_time",
+    "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+  },
+  "split": "100k"
+}

@@ -16,9 +16,22 @@
 import type { Arm, ToolSpec } from './loop.ts';
 import type { LadderDoc, LadderTask, LadderWorld } from '../../generators/model-ladder-gen.ts';
 import { renderDoc } from '../../generators/model-ladder-gen.ts';
+import { grepWorkerFor, HARD_GREP_TIMEOUT_MS } from './hard-grep.ts';
 
 export type ArmName = 'oracle' | 'fs' | 'fs-acl' | 'memory' | 'pg' | 'gbrain';
 export const ALL_ARMS: readonly ArmName[] = ['oracle', 'fs', 'fs-acl', 'memory', 'pg', 'gbrain'];
+
+/**
+ * Tool limits (plan 2026-10-05, CEO-T4, DX-F10, DX-F11). `v1` keeps the limits every v1 and large result was
+ * measured with; `hard` (Hard worlds only) lifts them: grep returns every match with full lines and its total,
+ * pg searches page with `offset` up to 100 rows and report their total and whether the results are exhausted.
+ */
+export type ToolLimits = 'v1' | 'hard';
+/** fs grep limits per tool-limit setting (null: no limit). The tool descriptions state these. */
+export const GREP_LIMITS: Record<ToolLimits, { defaultResults: number | null; maxResults: number | null; lineChars: number | null }> = {
+  v1: { defaultResults: 50, maxResults: 200, lineChars: 300 },
+  hard: { defaultResults: null, maxResults: null, lineChars: null },
+};
 
 /** Normalize a path, slug or id an agent cites to a corpus doc id. */
 export function normalizeDocRef(ref: string): string {
@@ -29,7 +42,7 @@ export function normalizeDocRef(ref: string): string {
 
 export class FileStore {
   readonly overlay = new Map<string, string | null>();
-  constructor(private base: Map<string, string>) {}
+  constructor(readonly base: Map<string, string>) {}
   static fromWorld(world: LadderWorld, filter: (d: LadderDoc) => boolean = () => true): FileStore {
     return new FileStore(new Map(world.docs.filter(filter).map(d => [`${d.id}.md`, renderDoc(d)])));
   }
@@ -62,12 +75,31 @@ function listDir(store: FileStore, dir: string): string[] {
   return [...out].sort();
 }
 
+export interface FsArmOptions {
+  /** Default `v1`. */
+  limits?: ToolLimits;
+  /** Per-call time limit of the Hard grep worker (default 20 s). */
+  grepTimeoutMs?: number;
+}
+
+/** The Hard grep tool: every match, full lines, total; `max_results` optionally caps what is shown. */
+export const HARD_GREP_TOOL: ToolSpec = {
+  name: 'grep',
+  description: `Search file contents with a regular expression, like ripgrep. Returns every matching line in full as path:line: text, then the total on a final line "[N matches]". max_results is optional: when given, only the first max_results matches are shown and the final line still counts every match ("[N matches; showing the first K]"). A search that runs longer than ${HARD_GREP_TIMEOUT_MS / 1000} s is stopped with an error; use a simpler pattern or a narrower path.`,
+  input_schema: { type: 'object', properties: { pattern: { type: 'string' }, path: { type: 'string', description: 'Directory or file to search; default the root.' }, ignore_case: { type: 'boolean', description: 'Default true.' }, max_results: { type: 'number', description: 'Optional cap on matches shown; default every match.' } }, required: ['pattern'] },
+};
+
 export class FsArm implements Arm {
-  constructor(readonly name: 'fs' | 'fs-acl', readonly store: FileStore) {}
+  readonly limits: ToolLimits;
+  constructor(readonly name: 'fs' | 'fs-acl', readonly store: FileStore, private options: FsArmOptions = {}) { this.limits = options.limits ?? 'v1'; }
   systemHint() {
     return 'The knowledge base is a directory of Markdown files with YAML frontmatter. Use list_dir, grep and read_file to find information. Use write_file to save new notes.';
   }
   tools(): ToolSpec[] {
+    const tools = this.v1Tools();
+    return this.limits === 'hard' ? tools.map(t => t.name === 'grep' ? HARD_GREP_TOOL : t) : tools;
+  }
+  private v1Tools(): ToolSpec[] {
     return [
       { name: 'list_dir', description: 'List the entries of one directory (not recursive). Directories end with /.', input_schema: { type: 'object', properties: { path: { type: 'string', description: 'Directory path relative to the knowledge base root; "." for the root.' } } } },
       { name: 'grep', description: 'Search file contents with a regular expression, like ripgrep. Returns matching lines as path:line: text.', input_schema: { type: 'object', properties: { pattern: { type: 'string' }, path: { type: 'string', description: 'Directory or file to search; default the root.' }, ignore_case: { type: 'boolean', description: 'Default true.' }, max_results: { type: 'number', description: 'Default 50.' } }, required: ['pattern'] } },
@@ -81,6 +113,15 @@ export class FsArm implements Arm {
       const dir = cleanPath(args.path === '.' ? '' : args.path);
       const entries = listDir(this.store, dir);
       return entries.length ? entries.join('\n') : `No such directory or empty: ${dir || '.'}`;
+    }
+    if (name === 'grep' && this.limits === 'hard') {
+      const flags = args.ignore_case === false ? '' : 'i';
+      const pattern = String(args.pattern ?? '');
+      try { new RegExp(pattern, flags); } catch (e) { return `Invalid regular expression: ${(e as Error).message}`; }
+      const max = Math.floor(Number(args.max_results));
+      return grepWorkerFor(this.store.base).grep({
+        pattern, flags, scope: cleanPath(args.path === '.' ? '' : args.path), max: max > 0 ? max : null, overlay: [...this.store.overlay],
+      }, this.options.grepTimeoutMs);
     }
     if (name === 'grep') {
       const flags = args.ignore_case === false ? '' : 'i';

@@ -2,7 +2,7 @@
 
 Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `739e5cc` (v0.60.46.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `77cf8e111` (v0.60.169.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
 
 ## Write questions in your own words
 
@@ -79,6 +79,8 @@ A category is a runner, a seeded generator, a scorer and a dated report that ans
 9. **Measure the run time** of the hermetic arm and keep it under the registry's CI budget (target 60 seconds); `bun eval/runner/all.ts --only <id>` runs just your category through the same gate CI uses.
 10. **Write the report and the docs row.** A dated report in `docs/benchmarks/` following the N3 report outline, with "gbrain bugs found" and "documented limits (not bugs)" sections, and a question-first row in [docs/README.md](../docs/README.md). Copy worthwhile receipts out of `eval/reports/` and scrub machine paths with `bun eval/runner/receipt.ts scrub`.
 
+A category with more than one tier keeps one operator guide per tier. Cat 40 Hard is the example: its generator mode, world contract ([WORLD_SCHEMA.md](../docs/benchmarks/cat40-hard/WORLD_SCHEMA.md)), runner path, scorer and paid steps are documented in the [Cat 40 Hard runbook](../docs/benchmarks/cat40-hard/RUNBOOK.md), and its registry row is `model-ladder-hard`.
+
 ## Reproduce a result
 
 A report identifies two pieces of code: this repository's runner and the gbrain dependency it tested. Use the corresponding gbrain-evals revision, then install its pinned dependency. If the report used a local gbrain checkout, select the specified revision in that separate checkout before linking it.
@@ -99,6 +101,11 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-11: The opening names the current pin
+
+gbrain-evals v0.10.76. The gbrain under test is named as master `77cf8e111` (v0.60.169.0). The page still named
+`739e5cc` (v0.60.46.0), the pin until October 6 ([re-pin report](../docs/benchmarks/2026-10-11-wave14-repin.md)).
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

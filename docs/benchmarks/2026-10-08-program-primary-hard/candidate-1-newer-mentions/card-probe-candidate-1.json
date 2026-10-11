@@ -1,0 +1,370 @@
+{
+ "gbrain": {
+  "ref": "82460865ef7e9313cdcd69b3b52a665ba8825bdb",
+  "commit": "82460865ef7e9313cdcd69b3b52a665ba8825bdb",
+  "tree": "cab96a0e2775d4f3bbb2f585bf7e407250be1adb",
+  "version": "0.60.122.0"
+ },
+ "rows": [
+  {
+   "persona": "h20261101",
+   "task": "h20261101-t1",
+   "args": {
+    "entities": "people/elodie-udeh,Yarithe Retail"
+   },
+   "ms": 309,
+   "chars": 10166,
+   "present": {
+    "inbox/2026-09-23-udeh-procurement-handoff": true,
+    "inbox/2026-10-11-udeh-reschedule": true,
+    "meetings/2026-10-12-yarithe-call": false
+   },
+   "newer_rows": 12
+  },
+  {
+   "persona": "h20261102",
+   "task": "h20261102-t1",
+   "args": {
+    "entities": "people/felix-mehta,Gralonex Robotics"
+   },
+   "ms": 757,
+   "chars": 10016,
+   "present": {
+    "inbox/2026-09-21-mehta-procurement-handoff": true,
+    "inbox/2026-10-12-mehta-reschedule": true,
+    "meetings/2026-10-12-gralonex-call": false
+   },
+   "newer_rows": 11
+  },
+  {
+   "persona": "h20261101",
+   "task": "h20261101-t2",
+   "args": {
+    "entities": "people/bram-castellan,Ondrenza Logistics"
+   },
+   "ms": 596,
+   "chars": 11625,
+   "present": {
+    "inbox/2026-09-26-castellan-procurement-handoff": true,
+    "inbox/2026-10-11-castellan-reschedule": true,
+    "meetings/2026-10-10-ondrenza-call": false
+   },
+   "newer_rows": 14
+  },
+  {
+   "persona": "h20261102",
+   "task": "h20261102-t2",
+   "args": {
+    "entities": "people/vikram-haddad,Dovumbr Logistics"
+   },
+   "ms": 517,
+   "chars": 10145,
+   "present": {
+    "inbox/2026-09-24-haddad-procurement-handoff": true,
+    "inbox/2026-10-12-haddad-reschedule": true,
+    "meetings/2026-10-11-dovumbr-call": false
+   },
+   "newer_rows": 11
+  },
+  {
+   "persona": "h20261101",
+   "task": "h20261101-t3",
+   "args": {
+    "entities": "people/elodie-abara,Thalique Freight"
+   },
+   "ms": 394,
+   "chars": 9487,
+   "present": {
+    "inbox/2026-09-21-abara-procurement-handoff": true,
+    "inbox/2026-10-12-abara-reschedule": true,
+    "meetings/2026-10-12-thalique-call": false
+   },
+   "newer_rows": 10
+  },
+  {
+   "persona": "h20261102",
+   "task": "h20261102-t3",
+   "args": {
+    "entities": "people/ruben-sato,Telostra Health"
+   },
+   "ms": 331,
+   "chars": 10241,
+   "present": {
+    "inbox/2026-09-21-sato-procurement-handoff": true,
+    "inbox/2026-10-11-sato-reschedule": true,
+    "meetings/2026-10-11-telostra-call": false
+   },
+   "newer_rows": 12
+  },
+  {
+   "persona": "h20261103",
+   "task": "h20261103-t1",
+   "args": {
+    "entities": "people/mira-morales,Orvoria Energy"
+   },
+   "ms": 1779,
+   "chars": 11251,
+   "present": {
+    "inbox/2026-09-24-morales-procurement-handoff": true,
+    "inbox/2026-10-12-morales-reschedule": true,
+    "meetings/2026-10-13-orvoria-call": false
+   },
+   "newer_rows": 14
+  },
+  {
+   "persona": "h20261104",
+   "task": "h20261104-t1",
+   "args": {
+    "entities": "people/kofi-aziz,Joronex Foods"
+   },
+   "ms": 844,
+   "chars": 10883,
+   "present": {
+    "inbox/2026-09-26-aziz-procurement-handoff": true,
+    "inbox/2026-10-09-aziz-reschedule": true,
+    "meetings/2026-10-10-joronex-call": false
+   },
+   "newer_rows": 14
+  },
+  {
+   "persona": "h20261104",
+   "task": "h20261104-t2",
+   "args": {
+    "entities": "people/vikram-marchetti,Gralenza Analytics"
+   },
+   "ms": 204,
+   "chars": 14309,
+   "present": {
+    "inbox/2026-09-26-marchetti-procurement-handoff": true,
+    "inbox/2026-10-11-marchetti-reschedule": true,
+    "meetings/2026-10-11-gralenza-call": false
+   },
+   "newer_rows": 14
+  },
+  {
+   "persona": "h20261103",
+   "task": "h20261103-t2",
+   "args": {
+    "entities": "people/arjun-thorne,Branesso Logistics"
+   },
+   "ms": 459,
+   "chars": 13380,
+   "present": {
+    "inbox/2026-09-20-thorne-procurement-handoff": true,
+    "inbox/2026-10-09-thorne-reschedule": true,
+    "meetings/2026-10-13-branesso-call": false
+   },
+   "newer_rows": 13
+  },
+  {
+   "persona": "h20261104",
+   "task": "h20261104-t3",
+   "args": {
+    "entities": "people/calla-castellan,Naxumbr Robotics"
+   },
+   "ms": 476,
+   "chars": 10496,
+   "present": {
+    "inbox/2026-09-26-castellan-procurement-handoff": true,
+    "inbox/2026-10-10-castellan-reschedule": true,
+    "meetings/2026-10-11-naxumbr-call": false
+   },
+   "newer_rows": 12
+  },
+  {
+   "persona": "h20261103",
+   "task": "h20261103-t3",
+   "args": {
+    "entities": "people/talia-castellan,Thalellis Energy"
+   },
+   "ms": 312,
+   "chars": 10785,
+   "present": {
+    "inbox/2026-09-22-castellan-procurement-handoff": true,
+    "inbox/2026-10-10-castellan-reschedule": true,
+    "meetings/2026-10-13-thalellis-call": false
+   },
+   "newer_rows": 13
+  },
+  {
+   "persona": "h20261106",
+   "task": "h20261106-t1",
+   "args": {
+    "entities": "people/ayla-eskildsen,Vesivel Robotics"
+   },
+   "ms": 659,
+   "chars": 11592,
+   "present": {
+    "inbox/2026-09-25-eskildsen-procurement-handoff": true,
+    "inbox/2026-10-11-eskildsen-reschedule": true,
+    "meetings/2026-10-12-vesivel-call": false
+   },
+   "newer_rows": 11
+  },
+  {
+   "persona": "h20261105",
+   "task": "h20261105-t1",
+   "args": {
+    "entities": "people/mira-sato,Xerellis Foods"
+   },
+   "ms": 661,
+   "chars": 11269,
+   "present": {
+    "inbox/2026-09-20-sato-procurement-handoff": true,
+    "inbox/2026-10-11-sato-reschedule": true,
+    "meetings/2026-10-11-xerellis-call": false
+   },
+   "newer_rows": 11
+  },
+  {
+   "persona": "h20261106",
+   "task": "h20261106-t2",
+   "args": {
+    "entities": "people/ruben-udeh,Fenivel Robotics"
+   },
+   "ms": 368,
+   "chars": 11582,
+   "present": {
+    "inbox/2026-09-25-udeh-procurement-handoff": true,
+    "inbox/2026-10-11-udeh-reschedule": true,
+    "meetings/2026-10-12-fenivel-call": false
+   },
+   "newer_rows": 13
+  },
+  {
+   "persona": "h20261105",
+   "task": "h20261105-t2",
+   "args": {
+    "entities": "people/noor-varga,Iskanta Logistics"
+   },
+   "ms": 391,
+   "chars": 10703,
+   "present": {
+    "inbox/2026-09-26-varga-procurement-handoff": true,
+    "inbox/2026-10-10-varga-reschedule": true,
+    "meetings/2026-10-10-iskanta-call": false
+   },
+   "newer_rows": 11
+  },
+  {
+   "persona": "h20261106",
+   "task": "h20261106-t3",
+   "args": {
+    "entities": "people/petra-varga,Zelellis Media"
+   },
+   "ms": 513,
+   "chars": 10098,
+   "present": {
+    "inbox/2026-09-26-varga-procurement-handoff": true,
+    "inbox/2026-10-10-varga-reschedule": true,
+    "meetings/2026-10-10-zelellis-call": false
+   },
+   "newer_rows": 12
+  },
+  {
+   "persona": "h20261105",
+   "task": "h20261105-t3",
+   "args": {
+    "entities": "people/vikram-wexler,Ondrumbr Foods"
+   },
+   "ms": 490,
+   "chars": 10027,
+   "present": {
+    "inbox/2026-09-20-wexler-procurement-handoff": true,
+    "inbox/2026-10-09-wexler-reschedule": true,
+    "meetings/2026-10-13-ondrumbr-call": false
+   },
+   "newer_rows": 11
+  },
+  {
+   "persona": "h20261107",
+   "task": "h20261107-t1",
+   "args": {
+    "entities": "people/yusuf-valdez,Pralithe Freight"
+   },
+   "ms": 291,
+   "chars": 13041,
+   "present": {
+    "inbox/2026-09-21-valdez-procurement-handoff": true,
+    "inbox/2026-10-12-valdez-reschedule": true,
+    "meetings/2026-10-12-pralithe-call": false
+   },
+   "newer_rows": 14
+  },
+  {
+   "persona": "h20261107",
+   "task": "h20261107-t2",
+   "args": {
+    "entities": "people/maren-sato,Voronex Robotics"
+   },
+   "ms": 244,
+   "chars": 10685,
+   "present": {
+    "inbox/2026-09-24-sato-procurement-handoff": true,
+    "inbox/2026-10-09-sato-reschedule": true,
+    "meetings/2026-10-13-voronex-call": false
+   },
+   "newer_rows": 11
+  },
+  {
+   "persona": "h20261107",
+   "task": "h20261107-t3",
+   "args": {
+    "entities": "people/omari-quist,Dovvane Analytics"
+   },
+   "ms": 150,
+   "chars": 9380,
+   "present": {
+    "inbox/2026-09-24-quist-procurement-handoff": true,
+    "inbox/2026-10-12-quist-reschedule": true,
+    "meetings/2026-10-10-dovvane-call": false
+   },
+   "newer_rows": 10
+  },
+  {
+   "persona": "h20261108",
+   "task": "h20261108-t1",
+   "args": {
+    "entities": "people/zara-galloway,Xervane Analytics"
+   },
+   "ms": 211,
+   "chars": 11525,
+   "present": {
+    "inbox/2026-09-25-galloway-procurement-handoff": true,
+    "inbox/2026-10-09-galloway-reschedule": true,
+    "meetings/2026-10-11-xervane-call": false
+   },
+   "newer_rows": 14
+  },
+  {
+   "persona": "h20261108",
+   "task": "h20261108-t2",
+   "args": {
+    "entities": "people/kenji-fairbourne,Naxanta Energy"
+   },
+   "ms": 191,
+   "chars": 11495,
+   "present": {
+    "inbox/2026-09-23-fairbourne-procurement-handoff": true,
+    "inbox/2026-10-11-fairbourne-reschedule": true,
+    "meetings/2026-10-12-naxanta-call": false
+   },
+   "newer_rows": 14
+  },
+  {
+   "persona": "h20261108",
+   "task": "h20261108-t3",
+   "args": {
+    "entities": "people/dario-haddad,Muranta Logistics"
+   },
+   "ms": 171,
+   "chars": 9492,
+   "present": {
+    "inbox/2026-09-26-haddad-procurement-handoff": true,
+    "inbox/2026-10-12-haddad-reschedule": true,
+    "meetings/2026-10-11-muranta-call": false
+   },
+   "newer_rows": 10
+  }
+ ]
+}

@@ -1,0 +1,20 @@
+{
+  "policies": {
+    "vendor-default": {
+      "budget_tokens": null
+    },
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "rehydrated"
+  ],
+  "readers": [
+    {
+      "id": "main",
+      "model": "openai:gpt-4.1-mini"
+    }
+  ],
+  "judge": "openai:gpt-4.1-mini"
+}

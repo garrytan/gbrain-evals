@@ -1,0 +1,33 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-query",
+  "config": "common",
+  "notes": "Budgeted delivery E2, budget sizing at $0: re-import with hash vectors and the reranker off (delivery reads no vector; every frozen chunk is re-resolved and its text checked), then the E2 sizing deliveries on the frozen lists. No provider call is expected; the lease covers none.",
+  "cells": [
+    {
+      "id": "e2-size-lme-s",
+      "benchmark": "lme-s",
+      "lease_usd": 0.5,
+      "lease_basis": "no provider call expected (hash vectors, reranker off)",
+      "command": "( bash eval/runner/budgeted-delivery/e2-parallel.sh 24 \"$SHOOTOUT_OUT/lme-s\" -- --benchmark lme-s --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=size --policy-setting grid=4000:7000:100 --frozen-from .e2-transfer/lme-s/frozen.ndjson ) & pa=$!; ( bash eval/runner/budgeted-delivery/e2-parallel.sh 6 \"$SHOOTOUT_OUT/lme-s-slice16\" -- --benchmark lme-s --limit 100 --seed 42 --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=size --policy-setting grid16=9000:13500:100 --frozen-from .e2-transfer/lme-s/frozen.ndjson ) & pb=$!; wait $pa; ra=$?; wait $pb; rb=$?; exit $((ra | rb))",
+      "setup_command": "BUN_VERSION=1.4.2 bash eval/systems/bootstrap.sh setup --datasets lme-s && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-30"
+      },
+      "timeout_hours": 4
+    },
+    {
+      "id": "e2-size-locomo-beam",
+      "benchmark": "locomo,beam-100k",
+      "lease_usd": 0.5,
+      "lease_basis": "no provider call expected (hash vectors, reranker off)",
+      "command": "( bash eval/runner/budgeted-delivery/e2-parallel.sh 3 \"$SHOOTOUT_OUT/locomo\" -- --benchmark locomo --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=size --policy-setting size_set=primary --policy-setting grid=4500:7500:100 --frozen-from .e2-transfer/locomo/frozen.ndjson ) & pa=$!; ( bash eval/runner/budgeted-delivery/e2-parallel.sh 6 \"$SHOOTOUT_OUT/beam-100k\" -- --benchmark beam-100k --split dev --system gbrain-query --embed hash --embedding-model openai:text-embedding-3-large --embedding-dims 1536 --config search.reranker.enabled=false --gbrain \"$HOME/gbrain-master@{{gbrain_sha}}\" --arms docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/manifests/arms/retrieval-only.json --policy-setting variants=e2 --policy-setting stage=size --policy-setting size_set=primary --policy-setting grid=4500:7500:100 --frozen-from .e2-transfer/beam-100k/frozen.ndjson ) & pb=$!; wait $pa; ra=$?; wait $pb; rb=$?; exit $((ra | rb))",
+      "setup_command": "BUN_VERSION=1.4.2 bash eval/systems/bootstrap.sh setup --datasets locomo,beam-100k && { test -d \"$HOME/gbrain-master/.git\" || git clone -q https://github.com/garrytan/gbrain \"$HOME/gbrain-master\"; } && git -C \"$HOME/gbrain-master\" fetch -q origin {{gbrain_sha}} && git -C \"$HOME/gbrain-master\" checkout -q {{gbrain_sha}}",
+      "vm": {
+        "size": "standard-16"
+      },
+      "timeout_hours": 4
+    }
+  ]
+}

@@ -141,7 +141,7 @@ async function main(argv: string[]): Promise<void> {
   }
   const log = (s: string) => process.stderr.write(`[h5b] ${s}\n`);
   const seeds = (argValue(argv, '--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
-  const custody = custodyInput(argv, seeds, DEV_SEEDS);
+  const custody = custodyInput(argv, seeds, DEV_SEEDS, { needsWork: true });
   const sealedTemplates = custody ? { id: custody.parsed.id, templates: validateTemplates(custody.parsed.templates) } : undefined;
   const tasksPerSeed = Number(flagValue(argv, '--tasks-per-seed') ?? 20);
   const models = (flagValue(argv, '--models') ?? DEFAULT_MODELS.join(',')).split(',').filter(Boolean);

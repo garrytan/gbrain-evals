@@ -1,0 +1,199 @@
+[
+ {
+  "scope": "claude-opus-5-5",
+  "pairs": 24,
+  "personas": 8,
+  "baseline": {
+   "failures": 19,
+   "clustered": {
+    "rate": 0.7916666666666666,
+    "lower": 0.584326843121989,
+    "upper": 0.9990064902113442,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 18,
+   "clustered": {
+    "rate": 0.75,
+    "lower": 0.55294797903394,
+    "upper": 0.94705202096606,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.9487179487179487,
+   "factor": 1.0540540540540542,
+   "baseline_failures": 19,
+   "candidate_failures": 18,
+   "clusters": 8,
+   "lower": 0.4688906005832832,
+   "upper": 1.9070036537016701
+  },
+  "risk_difference": {
+   "diff": -0.041666666666666664,
+   "lower": -0.27422621815721143,
+   "upper": 0.1908928848238781
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_date": 13,
+    "stale_correction": 18,
+    "unsupported": 1
+   },
+   "candidate": {
+    "stale_date": 10,
+    "stale_correction": 17,
+    "unsupported": 1
+   }
+  }
+ },
+ {
+  "scope": "claude-sonnet-5-5",
+  "pairs": 24,
+  "personas": 8,
+  "baseline": {
+   "failures": 17,
+   "clustered": {
+    "rate": 0.7083333333333334,
+    "lower": 0.43215905843906677,
+    "upper": 0.9845076082276,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 14,
+   "clustered": {
+    "rate": 0.5833333333333334,
+    "lower": 0.38628131236727337,
+    "upper": 0.7803853542993934,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.8285714285714286,
+   "factor": 1.206896551724138,
+   "baseline_failures": 17,
+   "candidate_failures": 14,
+   "clusters": 8,
+   "lower": 0.37582805002878583,
+   "upper": 1.775138873862307
+  },
+  "risk_difference": {
+   "diff": -0.125,
+   "lower": -0.48796410693497017,
+   "upper": 0.23796410693497017
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_date": 5,
+    "stale_correction": 13,
+    "missed_commitment": 6
+   },
+   "candidate": {
+    "stale_date": 3,
+    "stale_correction": 12,
+    "unsupported": 1,
+    "missed_commitment": 3
+   }
+  }
+ },
+ {
+  "scope": "gpt-6.1-sol",
+  "pairs": 24,
+  "personas": 8,
+  "baseline": {
+   "failures": 0,
+   "clustered": {
+    "rate": 0,
+    "lower": 0,
+    "upper": 0,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 2,
+   "clustered": {
+    "rate": 0.08333333333333333,
+    "lower": 0,
+    "upper": 0.2803853542993933,
+    "clusters": 8
+   }
+  },
+  "verdict": "ceiling",
+  "ratio": null,
+  "risk_difference": {
+   "diff": 0.08333333333333333,
+   "lower": -0.11371868763272668,
+   "upper": 0.2803853542993933
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {},
+   "candidate": {
+    "stale_correction": 1,
+    "unsupported": 1
+   }
+  }
+ },
+ {
+  "scope": "pooled",
+  "pairs": 72,
+  "personas": 8,
+  "baseline": {
+   "failures": 36,
+   "clustered": {
+    "rate": 0.5,
+    "lower": 0.4006951156535466,
+    "upper": 0.5993048843464535,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 34,
+   "clustered": {
+    "rate": 0.4722222222222222,
+    "lower": 0.3760706814045053,
+    "upper": 0.5683737630399391,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.9452054794520548,
+   "factor": 1.0579710144927537,
+   "baseline_failures": 36,
+   "candidate_failures": 34,
+   "clusters": 8,
+   "lower": 0.5733218767403675,
+   "upper": 1.5527993726260418
+  },
+  "risk_difference": {
+   "diff": -0.027777777777777776,
+   "lower": -0.12392931859549469,
+   "upper": 0.06837376303993914
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_date": 18,
+    "stale_correction": 31,
+    "unsupported": 1,
+    "missed_commitment": 6
+   },
+   "candidate": {
+    "stale_date": 13,
+    "stale_correction": 30,
+    "unsupported": 3,
+    "missed_commitment": 3
+   }
+  }
+ }
+]

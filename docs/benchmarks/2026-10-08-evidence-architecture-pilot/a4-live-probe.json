@@ -1,0 +1,234 @@
+[
+ {
+  "model": "claude-sonnet-5-5",
+  "role": "reader",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "anthropic",
+   "input_total": 1761,
+   "input_uncached": 1761,
+   "cache_read": 0,
+   "cache_write": 0,
+   "output_total": 60,
+   "reasoning": 0
+  },
+  "usd": 0.00412,
+  "latency_ms": 1136,
+  "text": "The retrieved session covers only your search for affordable housing on an $800/month budget. It says nothing about an asylum application or how long you waited"
+ },
+ {
+  "model": "gpt-6.1-sol",
+  "role": "reader",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "openai-chat",
+   "input_total": 1154,
+   "input_uncached": 3,
+   "cache_read": 0,
+   "cache_write": 1151,
+   "output_total": 52,
+   "reasoning": 14
+  },
+  "usd": 0.0034,
+  "latency_ms": 2222,
+  "text": "The retrieved session only covers your housing search; it doesn’t mention your asylum application or decision date. I don’t know how long you waited."
+ },
+ {
+  "model": "claude-opus-5-5",
+  "role": "reader",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "anthropic",
+   "input_total": 1761,
+   "input_uncached": 1761,
+   "cache_read": 0,
+   "cache_write": 0,
+   "output_total": 262,
+   "reasoning": 22
+  },
+  "usd": 0.01228,
+  "latency_ms": 4940,
+  "text": "**Notes from the retrieved session (2023/05/28):**\n- You asked for help finding a permanent place to live.\n- Details you shared: an $800/month rent budget, savi"
+ },
+ {
+  "model": "gpt-6-luna",
+  "role": "builder",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "openai-chat",
+   "input_total": 3730,
+   "input_uncached": 3,
+   "cache_read": 0,
+   "cache_write": 3727,
+   "output_total": 132,
+   "reasoning": 0
+  },
+  "usd": 0.00053,
+  "latency_ms": 1899,
+  "text": "{\n  \"claims\": [\n    {\n      \"id\": \"c1\",\n      \"text\": \"The user waited over a year for their asylum application to be approved.\",\n      \"quote\": \"Over a year of",
+  "parsed": true,
+  "brief": "brief"
+ },
+ {
+  "model": "claude-haiku-5-5",
+  "role": "builder",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "anthropic",
+   "input_total": 5720,
+   "input_uncached": 5720,
+   "cache_read": 0,
+   "cache_write": 0,
+   "output_total": 376,
+   "reasoning": 0
+  },
+  "usd": 0.00076,
+  "latency_ms": 1975,
+  "text": "{\n  \"claims\": [\n    {\n      \"id\": \"c1\",\n      \"text\": \"User said the asylum application took a long time to get approved, with over a year of uncertainty.\",\n   ",
+  "parsed": true,
+  "brief": "brief"
+ },
+ {
+  "model": "gpt-6-luna",
+  "role": "label",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "openai-chat",
+   "input_total": 539,
+   "input_uncached": 539,
+   "cache_read": 0,
+   "cache_write": 0,
+   "output_total": 5,
+   "reasoning": 0
+  },
+  "usd": 0.00006,
+  "latency_ms": 874,
+  "text": "hedged"
+ },
+ {
+  "model": "claude-haiku-5-5",
+  "role": "label",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "anthropic",
+   "input_total": 780,
+   "input_uncached": 780,
+   "cache_read": 0,
+   "cache_write": 0,
+   "output_total": 5,
+   "reasoning": 0
+  },
+  "usd": 0.00008,
+  "latency_ms": 750,
+  "text": "hedged"
+ },
+ {
+  "model": "gpt-4o-2024-08-06",
+  "role": "judge",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "openai-chat",
+   "input_total": 127,
+   "input_uncached": 127,
+   "cache_read": 0,
+   "cache_write": 0,
+   "output_total": 1,
+   "reasoning": 0
+  },
+  "usd": 0.00033,
+  "latency_ms": 563,
+  "text": "No"
+ },
+ {
+  "model": "claude-sonnet-5-5",
+  "role": "cache-cold",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "anthropic",
+   "input_total": 19885,
+   "input_uncached": 4,
+   "cache_read": 0,
+   "cache_write": 19881,
+   "output_total": 98,
+   "reasoning": 0
+  },
+  "usd": 0.05069,
+  "latency_ms": 1777,
+  "text": "The relevant session is the one from 2023/05/28. There the user said that it \"took for my asylum application to get approved. Over a year of uncertainty was rea"
+ },
+ {
+  "model": "claude-sonnet-5-5",
+  "role": "cache-warm",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "anthropic",
+   "input_total": 19885,
+   "input_uncached": 4,
+   "cache_read": 19881,
+   "cache_write": 0,
+   "output_total": 97,
+   "reasoning": 0
+  },
+  "usd": 0.00495,
+  "latency_ms": 1787,
+  "text": "The user said in the 2023/05/28 session that their asylum application took \"over a year\" to be approved (\"Over a year of uncertainty was really tough\"). No exac"
+ },
+ {
+  "model": "gpt-6.1-sol",
+  "role": "cache-cold",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "openai-chat",
+   "input_total": 12374,
+   "input_uncached": 3,
+   "cache_read": 0,
+   "cache_write": 12371,
+   "output_total": 96,
+   "reasoning": 62
+  },
+  "usd": 0.03189,
+  "latency_ms": 3790,
+  "text": "You waited **over a year** for your asylum application to be approved, as you mentioned in our May 28 conversation."
+ },
+ {
+  "model": "gpt-6.1-sol",
+  "role": "cache-warm",
+  "status": "succeeded",
+  "finish": "stop",
+  "error": null,
+  "usage": {
+   "convention": "openai-chat",
+   "input_total": 12374,
+   "input_uncached": 3,
+   "cache_read": 12371,
+   "cache_write": 0,
+   "output_total": 155,
+   "reasoning": 115
+  },
+  "usd": 0.00279,
+  "latency_ms": 5108,
+  "text": "You waited **over a year** for your asylum application to be approved, as you mentioned in our May 28 conversation."
+ }
+]

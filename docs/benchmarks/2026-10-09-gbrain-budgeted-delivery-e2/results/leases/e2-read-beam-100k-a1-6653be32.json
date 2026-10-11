@@ -1,0 +1,8 @@
+{
+  "run_id": "e2-read-beam-100k-a1-6653be32",
+  "lease_usd": 36,
+  "committed_usd": 13.331470799999966,
+  "requests": 1629,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

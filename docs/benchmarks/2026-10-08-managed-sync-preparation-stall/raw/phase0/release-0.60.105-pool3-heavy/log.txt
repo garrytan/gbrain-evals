@@ -1,0 +1,102 @@
+[stall-repro 06:15:20] out: <work>/gbrain/.context/bench/stall-run
+[stall-repro 06:15:20] cli: <work>/gbrain-release (0.60.105.0, HEAD@8e11aa1f); files=15000 history=1500 legacy=1000 markers=20+20 rtt=57 pool=3 pooler=pgbouncer
+[stall-repro 06:15:41] schema initialized by <work>/gbrain-release (0.60.105.0) in 2.5 s
+[stall-repro 06:15:55] classic history sync: 1500 pages in 12.7 s
+[stall-repro 06:15:55] seeded 1000 legacy fact rows (1000 pending) over 250 pages; 20 history + 20 backlog repeated-marker pages
+[stall-repro 06:16:00] backlog committed: 15000 pages
+[stall-repro 06:16:00] session timeouts: {"requested_startup_parameters":{"statement_timeout":"5min","idle_in_transaction_session_timeout":"5min"},"via_pooler":{"statement_timeout":"0","idle_in_transaction_session_timeout":"0","lock_timeout":"0"},"direct":{"statement_timeout":"5min","idle_in_transaction_session_timeout":"5min","lock_timeout":"0"}}
+[stall-repro 06:16:01] pass 1 started: timeout pid 9547, gbrain pid 9548
+[stall-repro 06:16:03] sample 0: pass=null committed=0 stale=39s running=0 activity=0 locks=0
+[stall-repro 06:16:33] sample 1: pass=1 committed=0 stale=31s running=1 [managed_sync_import:?] activity=5 locks=0
+[stall-repro 06:17:06] sample 2: pass=1 committed=2 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=5 locks=0
+[stall-repro 06:17:36] sample 3: pass=1 committed=3 stale=0s running=1 [managed_sync_import:?] activity=5 locks=0
+[stall-repro 06:18:09] sample 4: pass=1 committed=4 stale=0s running=1 [managed_sync_import:?] activity=5 locks=0
+[stall-repro 06:18:39] sample 5: pass=1 committed=6 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:19:13] sample 6: pass=1 committed=7 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:19:43] sample 7: pass=1 committed=8 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:20:16] sample 8: pass=1 committed=9 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:20:46] sample 9: pass=1 committed=10 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:21:20] sample 10: pass=1 committed=12 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:21:50] sample 11: pass=1 committed=13 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:22:23] sample 12: pass=1 committed=15 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:22:53] sample 13: pass=1 committed=16 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:23:27] sample 14: pass=1 committed=17 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:23:57] sample 15: pass=1 committed=18 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:24:30] sample 16: pass=1 committed=19 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:25:00] sample 17: pass=1 committed=21 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:25:34] sample 18: pass=1 committed=22 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:26:04] sample 19: pass=1 committed=23 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:26:37] sample 20: pass=1 committed=24 stale=0s running=0 activity=6 locks=0
+[stall-repro 06:27:07] sample 21: pass=1 committed=26 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:27:40] sample 22: pass=1 committed=27 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:28:10] sample 23: pass=1 committed=28 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:28:44] sample 24: pass=1 committed=29 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:29:14] sample 25: pass=1 committed=31 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:29:47] sample 26: pass=1 committed=32 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:30:17] sample 27: pass=1 committed=33 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:30:51] sample 28: pass=1 committed=34 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:31:21] sample 29: pass=1 committed=35 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:31:54] sample 30: pass=1 committed=37 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:32:24] sample 31: pass=1 committed=38 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:32:58] sample 32: pass=1 committed=39 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:33:28] sample 33: pass=1 committed=40 stale=0s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:34:01] sample 34: pass=1 committed=42 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:34:31] sample 35: pass=1 committed=43 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:35:05] sample 36: pass=1 committed=44 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:35:35] sample 37: pass=1 committed=45 stale=0s running=0 activity=6 locks=0
+[stall-repro 06:36:00] adoption 0: exit=143 dripped=0 status=null fenced=null pending=null fence_failed=0 1200.8s
+[stall-repro 06:36:08] sample 38: pass=1 committed=46 stale=0s running=1 [managed_maintenance_adopt_fact_fence:publishing] activity=4 locks=0
+[stall-repro 06:36:38] sample 39: pass=1 committed=47 stale=0s running=4 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=4 locks=0
+[stall-repro 06:37:12] sample 40: pass=1 committed=51 stale=0s running=4 [managed_sync_import:?, managed_sync_import:?, managed_sync_import:?, managed_sync_import:?] activity=5 locks=0
+[stall-repro 06:37:42] sample 41: pass=1 committed=57 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=5 locks=0
+[stall-repro 06:38:15] sample 42: pass=1 committed=58 stale=0s running=0 activity=5 locks=0
+[stall-repro 06:38:45] sample 43: pass=1 committed=59 stale=0s running=0 activity=5 locks=0
+[stall-repro 06:39:18] sample 44: pass=1 committed=59 stale=30s running=1 [managed_maintenance_adopt_fact_fence:?] activity=5 locks=1
+[stall-repro 06:39:49] sample 45: pass=1 committed=60 stale=0s running=0 activity=6 locks=1
+[stall-repro 06:40:22] sample 46: pass=1 committed=60 stale=30s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:40:52] sample 47: pass=1 committed=60 stale=63s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:41:25] sample 48: pass=1 committed=60 stale=94s running=0 activity=6 locks=0
+[stall-repro 06:41:55] sample 49: pass=1 committed=60 stale=127s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:42:29] sample 50: pass=1 committed=60 stale=157s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:42:59] sample 51: pass=1 committed=60 stale=190s running=1 [managed_sync_import:?] activity=6 locks=0
+[stall-repro 06:43:32] sample 52: pass=1 committed=61 stale=0s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:44:02] sample 53: pass=1 committed=61 stale=33s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:44:36] sample 54: pass=1 committed=61 stale=63s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:45:06] sample 55: pass=1 committed=61 stale=97s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:45:39] sample 56: pass=1 committed=61 stale=127s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:46:09] sample 57: pass=1 committed=61 stale=160s running=0 activity=6 locks=0
+[stall-repro 06:46:43] sample 58: pass=1 committed=61 stale=190s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:47:13] sample 59: pass=1 committed=61 stale=224s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:47:46] sample 60: pass=1 committed=61 stale=254s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:48:16] sample 61: pass=1 committed=61 stale=287s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:48:50] sample 62: pass=1 committed=61 stale=317s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:48:50] STALL: no committed sync request for 317 s in pass 1 (pid 9548)
+[stall-repro 06:48:53] stall capture written: stall-1.json
+[stall-repro 06:49:23] sample 63: pass=1 committed=61 stale=354s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:49:57] sample 64: pass=1 committed=61 stale=384s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:50:27] sample 65: pass=1 committed=61 stale=418s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:51:00] sample 66: pass=1 committed=61 stale=448s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:51:30] sample 67: pass=1 committed=61 stale=481s running=0 activity=6 locks=0
+[stall-repro 06:52:04] sample 68: pass=1 committed=62 stale=0s running=0 activity=6 locks=0
+[stall-repro 06:52:34] sample 69: pass=1 committed=62 stale=33s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:53:07] sample 70: pass=1 committed=62 stale=64s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:53:37] sample 71: pass=1 committed=62 stale=97s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:53:54] adoption 1: exit=0 dripped=20 status=warn fenced=0 pending=648 fence_failed=210 1013.8s
+[stall-repro 06:54:10] sample 72: pass=1 committed=62 stale=127s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:54:41] sample 73: pass=1 committed=62 stale=160s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:55:14] sample 74: pass=1 committed=62 stale=190s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:55:44] sample 75: pass=1 committed=62 stale=224s running=0 activity=6 locks=0
+[stall-repro 06:56:17] sample 76: pass=1 committed=62 stale=254s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:56:47] sample 77: pass=1 committed=62 stale=287s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:57:21] sample 78: pass=1 committed=62 stale=317s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 06:57:51] sample 79: pass=1 committed=62 stale=351s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:58:24] sample 80: pass=1 committed=62 stale=381s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:58:54] sample 81: pass=1 committed=62 stale=414s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:59:28] sample 82: pass=1 committed=62 stale=444s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 06:59:58] sample 83: pass=1 committed=62 stale=478s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 07:00:31] sample 84: pass=1 committed=62 stale=508s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 07:01:01] sample 85: pass=1 committed=62 stale=541s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=1
+[stall-repro 07:01:35] sample 86: pass=1 committed=62 stale=571s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 07:02:05] sample 87: pass=1 committed=62 stale=605s running=0 activity=6 locks=0
+[stall-repro 07:02:38] sample 88: pass=1 committed=62 stale=635s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0
+[stall-repro 07:03:08] sample 89: pass=1 committed=62 stale=668s running=1 [managed_maintenance_adopt_fact_fence:?] activity=6 locks=0

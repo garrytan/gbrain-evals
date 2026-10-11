@@ -1,0 +1,32 @@
+{
+  "dataset": "beam",
+  "split": "100k",
+  "provider": "gbrain",
+  "mode": "rag",
+  "lane": "facts",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "budget_usd": 3,
+  "questions": {
+    "units": [
+      "3"
+    ]
+  },
+  "k": 10,
+  "provider_config": {
+    "embedding_model": "voyage:voyage-4",
+    "embedding_dimensions": 1024,
+    "lane": "facts",
+    "extraction_model": "openai:gpt-6-luna",
+    "facts_tokens": 8000
+  },
+  "note": "memory proof wave dev gbrain facts extraction probe: BEAM 100k unit 3 only, to measure extraction cost before the sweep",
+  "gbrain_credentials": [
+    "voyage",
+    "openai"
+  ]
+}

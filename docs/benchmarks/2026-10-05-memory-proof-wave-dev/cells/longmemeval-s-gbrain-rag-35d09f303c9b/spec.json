@@ -1,0 +1,73 @@
+{
+  "dataset": "longmemeval",
+  "split": "s",
+  "provider": "gbrain",
+  "mode": "rag",
+  "lane": "raw",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "budget_usd": 24,
+  "questions": {
+    "ids": [
+      "852ce960",
+      "gpt4_93f6379c",
+      "a1eacc2a",
+      "gpt4_2487a7cb",
+      "0ddfec37",
+      "gpt4_4cd9eba1",
+      "gpt4_468eb063",
+      "gpt4_e414231f",
+      "50635ada",
+      "gpt4_2d58bcd6",
+      "gpt4_5dcc0aab",
+      "gpt4_e061b84g",
+      "89941a93",
+      "gpt4_2c50253f",
+      "9a707b82",
+      "bcbe585f",
+      "0bc8ad92",
+      "9bbe84a2",
+      "08f4fc43",
+      "gpt4_2655b836",
+      "982b5123_abs",
+      "9a707b81",
+      "dcfa8644",
+      "6aeb4375_abs",
+      "c6853660",
+      "gpt4_76048e76",
+      "d01c6aa8",
+      "c8090214_abs",
+      "gpt4_78cf46a3",
+      "gpt4_8e165409",
+      "gpt4_21adecb5",
+      "bbf86515",
+      "b01defab",
+      "cc5ded98",
+      "gpt4_1d80365e",
+      "6613b389",
+      "2ebe6c90",
+      "2698e78f",
+      "945e3d21",
+      "gpt4_70e84552",
+      "f685340e",
+      "2ebe6c92"
+    ]
+  },
+  "k": 10,
+  "provider_config": {
+    "embedding_model": "voyage:voyage-4",
+    "embedding_dimensions": 1024,
+    "search_config": {
+      "search.entity_anchoring": "false"
+    },
+    "token_budget": 8100
+  },
+  "note": "memory proof wave dev gate3-lme-ku-temporal-off 8000-token target",
+  "gbrain_credentials": [
+    "voyage"
+  ]
+}

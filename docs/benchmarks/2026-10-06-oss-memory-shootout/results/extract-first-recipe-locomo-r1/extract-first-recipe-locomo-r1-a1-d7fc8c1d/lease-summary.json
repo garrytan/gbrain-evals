@@ -1,0 +1,8 @@
+{
+  "run_id": "extract-first-recipe-locomo-r1-a1-d7fc8c1d",
+  "lease_usd": 19,
+  "committed_usd": 13.765106239999907,
+  "requests": 14779,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

@@ -1,0 +1,8 @@
+{
+  "run_id": "gbrain-shootout-master-common-lme-s-a1-9a428a1a",
+  "lease_usd": 42,
+  "committed_usd": 19.90679665000005,
+  "requests": 6097,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

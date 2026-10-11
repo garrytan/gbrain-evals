@@ -1,0 +1,30 @@
+{
+  "format": "gbrain-evals-harness-lock",
+  "schema_version": 1,
+  "harness_repo": "https://github.com/vectorize-io/agent-memory-benchmark",
+  "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+  "python": "3.12",
+  "torch_backend": "cpu",
+  "excluded_requirements": [
+    "nvidia-",
+    "cuda-",
+    "triton"
+  ],
+  "extra_requirements": [
+    "pytest==8.3.5"
+  ],
+  "comparator": {
+    "registry_key_sha256": "aa475625981493dc52fceb3cb9a39f54d22903284538f5562d2118678b6e6149",
+    "note": "The comparator is the extract-first memory server whose harness provider key hashes to registry_key_sha256. Its package and env names are derived at runtime from that key, so no product name is written in this repository."
+  },
+  "datasets": {
+    "lifebench": {
+      "env": "LIFEBENCH_DATA_PATH",
+      "file": "lifebench-our_en.json",
+      "url": "https://raw.githubusercontent.com/1754955896/LifeBench/4c97fd13a58e32208ff2040aff041d57a15f89c0/life_bench_data/locomo_format/our_en.json",
+      "sha256": "9f10d933a313e9c7af9a9882888c055915dcc63968d4fc642bcc50fccaf49330",
+      "why": "The harness loader reads this file from the dataset's main branch, which moved it in commit a975d4a; this is the last commit that has it (2,003 questions, 10 users, as in the committed rows)."
+    }
+  },
+  "dataset_note": "Other datasets download through the harness loaders; every cell id includes a sha256 over the scheduled questions and their documents, so a changed upstream file makes a new cell instead of a silent rerun."
+}

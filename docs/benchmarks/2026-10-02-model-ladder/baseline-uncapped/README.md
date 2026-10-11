@@ -2,6 +2,10 @@
 
 Raw output from the first full Cat 40 ladder with tool results uncapped (`--max-tool-chars 100000000`). No tool result was truncated; the largest single tool result was 182,859 characters. This folder holds the measurements only. The write-up belongs in the Cat 40 report.
 
+<a id="correction-2026-10-09"></a>
+
+> **Correction, 2026-10-09: the gbrain arm reranked in only part of this run.** Each restored slot brain kept the slot build's metering-proxy port in its Voyage URL, and that port was closed when the cells ran, so every rerank request failed and gbrain quietly returned unreranked results (fixed in gbrain-evals #76, commit `7709a70`, and #109). 362 of the 1,456 gbrain cells' metered calls include a rerank request: repeat 0's families A to C and 33 of its 110 family E cells. No family F cell and no cell of repeats 1 and 2 reranked ([audit](../../2026-10-08-program-primary-hard/root-cause/restore-audit.json)). The gbrain arm therefore mixes two conditions, and its gaps to the other arms, which have no reranker, mostly measure gbrain without its reranker. See the [Cat 40 report correction](../../2026-10-02-model-ladder.md#correction-2026-10-09).
+
 ## What finished
 
 The run stopped at its $800 budget with 7,624 of 8,580 planned cells recorded.
@@ -63,3 +67,7 @@ Recorded cells account for $777.00. The rest is cells lost in flight, slot build
 - `analysis.md`, `analysis.json`: analysis of all 7,624 cells.
 - `analysis-repeats-0-1.md`, `analysis-repeats-0-1.json`: balanced analysis of 5,720 cells.
 - `ledger-summary.json`: per-segment spend from the local budget ledger.
+
+## Changelog
+
+- 2026-10-09: [Correction](#correction-2026-10-09) added: 362 of 1,456 gbrain cells reranked (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). Original numbers unchanged.

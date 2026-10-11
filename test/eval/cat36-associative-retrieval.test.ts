@@ -163,7 +163,7 @@ describe('Cat36 frozen corpus and construction firewall', () => {
     const input = { ...source, query: 'FUTURE_QUERY_SENTINEL', gold: 'ANSWER_SENTINEL', cue: 'LABEL_SENTINEL' };
     const clean = constructionSources([input]);
     expect(JSON.stringify(clean)).not.toContain('SENTINEL');
-    expect(Object.keys(clean[0]).sort()).toEqual(['source_id', 'slug', 'title', 'text', 'created_at', 'updated_at', 'visibility'].sort());
+    expect(Object.keys(clean[0]).sort()).toEqual(['created_at', 'slug', 'source_id', 'text', 'title', 'updated_at', 'visibility'].sort());
   });
   test('counterfactual variants retain family identity and exact alternate evidence', () => {
     const c = loadCat36Corpus(dir);

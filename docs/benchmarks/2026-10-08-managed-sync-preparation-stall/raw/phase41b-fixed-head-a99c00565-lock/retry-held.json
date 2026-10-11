@@ -1,0 +1,245 @@
+{
+  "at": "2026-10-08T15:23:13.862Z",
+  "holds_before": {
+    "by_code_reason": [
+      {
+        "code": "invalid_fence",
+        "reason": "repeated_marker",
+        "step": null,
+        "n": 2
+      },
+      {
+        "code": "preparation_stalled",
+        "reason": null,
+        "step": "origin_check",
+        "n": 1
+      }
+    ],
+    "summary": {
+      "count": 3,
+      "stale": 0,
+      "fences": 2,
+      "images": 0,
+      "stalled": 1,
+      "source_id": "bench",
+      "concurrent": 0,
+      "incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+    },
+    "paths": [
+      {
+        "path": "companies/scale-0-1502.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "companies/scale-0-1512.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "companies/scale-0-3152.md",
+        "code": "preparation_stalled",
+        "reason": null
+      }
+    ]
+  },
+  "retry": {
+    "source_id": "bench",
+    "kind": "git",
+    "dry_run": false,
+    "scheduled": 3,
+    "items": [
+      {
+        "key": "companies/scale-0-1502.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker",
+        "action": "retry_scheduled",
+        "next_action": "Re-screened on the next gbrain sync --source bench --no-pull --no-embed."
+      },
+      {
+        "key": "companies/scale-0-1512.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker",
+        "action": "retry_scheduled",
+        "next_action": "Re-screened on the next gbrain sync --source bench --no-pull --no-embed."
+      },
+      {
+        "key": "companies/scale-0-3152.md",
+        "code": "preparation_stalled",
+        "action": "retry_scheduled",
+        "next_action": "Re-screened on the next gbrain sync --source bench --no-pull --no-embed."
+      }
+    ],
+    "next_action": "3 held file(s) scheduled for a re-screen; none has run yet. Most holds re-screen on the next sync by themselves (the file changed or was deleted, or a newer gbrain can read it); a scheduled re-screen covers a cause outside the file, such as a conflicting page that has since moved. Run it now with: gbrain sync --source bench --no-pull --no-embed, then verify with: gbrain sources status bench. A file that still refuses stays held; nothing repairs the fence holds by itself (no maintenance run is active), so preview the fence repairs with gbrain repair fences --source bench (read-only, no model call: it lists each held file with its planned repair or the exact edit, and prints the apply command with --expect <hash>), then run the apply command it prints; the 1 preparation-stalled hold(s) are not file problems and need no repair: inspect the writer with gbrain sources writer status --source bench --json (read-only), fix what it names or upgrade gbrain, then run gbrain sources retry-held bench and the same sync again (gbrain sync --source bench --no-pull with the run's options).",
+    "fix": {
+      "argv": [
+        "gbrain",
+        "sync",
+        "--source",
+        "bench",
+        "--no-pull",
+        "--no-embed"
+      ],
+      "consent": [],
+      "actor": "agent",
+      "requires_exclusive": false,
+      "verify": {
+        "argv": [
+          "gbrain",
+          "sources",
+          "status",
+          "bench",
+          "--json"
+        ]
+      },
+      "why": "The sync re-screens the 3 scheduled file(s): each one that now passes imports and its hold clears; the rest stay held without blocking the sync."
+    }
+  },
+  "sync_argv": [
+    "sync",
+    "--source",
+    "bench",
+    "--no-pull",
+    "--no-embed"
+  ],
+  "sync": {
+    "code": 0,
+    "wall_ms": 1006127.9,
+    "stdout_tail": "s missing until the file imports. Next: gbrain repair fences --source bench --only notes/scale-0-1517.md, then gbrain sync --source bench --no-pull (docs/guides/write-refusals.md#fence-repeated_marker)\n  Held notes/scale-0-1518.md: invalid_fence (repeated_marker) in the facts fence (timeline), at line 32; its page is missing until the file imports. Next: gbrain repair fences --source bench --only notes/scale-0-1518.md, then gbrain sync --source bench --no-pull (docs/guides/write-refusals.md#fence-repeated_marker)\n  Held notes/scale-0-1519.md: invalid_fence (repeated_marker) in the facts fence (timeline), at line 32; its page is missing until the file imports. Next: gbrain repair fences --source bench --only notes/scale-0-1519.md, then gbrain sync --source bench --no-pull (docs/guides/write-refusals.md#fence-repeated_marker)\n  Held people/scale-0-1500.md: invalid_fence (repeated_marker) in the facts fence (timeline), at line 52; its page is missing until the file imports. Next: gbrain repair fences --source bench --only people/scale-0-1500.md, then gbrain sync --source bench --no-pull (docs/guides/write-refusals.md#fence-repeated_marker)\n  Held people/scale-0-1501.md: invalid_fence (repeated_marker) in the facts fence (timeline), at line 32; its page is missing until the file imports. Next: gbrain repair fences --source bench --only people/scale-0-1501.md, then gbrain sync --source bench --no-pull (docs/guides/write-refusals.md#fence-repeated_marker)\n  Held people/scale-0-1510.md: invalid_fence (repeated_marker) in the facts fence (timeline), at line 52; its page is missing until the file imports. Next: gbrain repair fences --source bench --only people/scale-0-1510.md, then gbrain sync --source bench --no-pull (docs/guides/write-refusals.md#fence-repeated_marker)\n  ... and 1 more held this run (--json lists them all).\n  21 file(s) held this run, 21 held in source bench; they do not block sync. Inspect them with 'gbrain sources status bench'; then nothing repairs the fence holds by itself (no maintenance run is active), so preview the fence repairs with gbrain repair fences --source bench (read-only, no model call: it lists each held file with its planned repair or the exact edit, and prints the apply command with --expect <hash>), then run the apply command it prints; the 1 preparation-stalled hold(s) are not file problems and need no repair: inspect the writer with gbrain sources writer status --source bench --json (read-only), fix what it names or upgrade gbrain, then run gbrain sources retry-held bench and the same sync again (gbrain sync --source bench --no-pull with the run's options). Preview the repair: gbrain repair fences --source bench\n  Converted 1 failed request(s) of the blocked cursor in place: 89ae892c-8d5f-4692-a324-b7b4dfc0efb4.\n  Links: 2907 created, 0 removed across 983 page(s); 3496 page(s) still owe extraction — run 'gbrain extract --stale'.\nManaged sync synced: 2755 entries this run (2755 written, 0 waived), 164.8 pages/min.\n",
+    "stderr_tail": "8 pages/min · indexing ETA 4m33s\n[sync] 2054/3000 processed (1809 written, 0 waived this run) · 227.7 pages/min · indexing ETA 4m10s\n[sync-watchdog] parent alive 480s elapsed, deadline in ~3120s (extends while progressing)\n[sync] 2128/3000 processed (1883 written, 0 waived this run) · 231.2 pages/min · indexing ETA 3m47s\n[sync] 2228/3000 processed (1983 written, 0 waived this run) · 238 pages/min · indexing ETA 3m15s\n[sync] 2263/3000 processed (2018 written, 0 waived this run) · 236.8 pages/min · indexing ETA 3m07s\n[sync] 2337/3000 processed (2092 written, 0 waived this run) · 240.2 pages/min · indexing ETA 2m46s\n[sync] 2404/3000 processed (2159 written, 0 waived this run) · 243.2 pages/min · indexing ETA 2m28s\n[sync-watchdog] parent alive 540s elapsed, deadline in ~3060s (extends while progressing)\n[sync] 2405/3000 processed (2160 written, 0 waived this run) · 238.6 pages/min · indexing ETA 2m30s\n[sync] 2459/3000 processed (2214 written, 0 waived this run) · 239.7 pages/min · indexing ETA 2m16s\n[sync] 2504/3000 processed (2259 written, 0 waived this run) · 240.1 pages/min · indexing ETA 2m04s\n[sync] 2557/3000 processed (2312 written, 0 waived this run) · 241.3 pages/min · indexing ETA 1m51s\n[sync] 2587/3000 processed (2342 written, 0 waived this run) · 239.7 pages/min · indexing ETA 1m44s\n[sync] 2636/3000 processed (2391 written, 0 waived this run) · 240.5 pages/min · indexing ETA 1m31s\n[sync-watchdog] parent alive 600s elapsed, deadline in ~3000s (extends while progressing)\n[sync] 2688/3000 processed (2443 written, 0 waived this run) · 241.4 pages/min · indexing ETA 1m18s\n[sync] 2725/3000 processed (2480 written, 0 waived this run) · 240.6 pages/min · indexing ETA 1m09s\n[sync] 2776/3000 processed (2531 written, 0 waived this run) · 241.4 pages/min · indexing ETA 56s\n[sync] 2829/3000 processed (2584 written, 0 waived this run) · 242.1 pages/min · indexing ETA 43s\n[sync] 2880/3000 processed (2635 written, 0 waived this run) · 242.2 pages/min · indexing ETA 30s\n[sync-watchdog] parent alive 660s elapsed, deadline in ~2940s (extends while progressing)\n[sync] 2924/3000 processed (2679 written, 0 waived this run) · 242 pages/min · indexing ETA 19s\n[sync] 2977/3000 processed (2732 written, 0 waived this run) · 242.9 pages/min · indexing ETA 6s\n[sync-watchdog] parent alive 720s elapsed, deadline in ~2880s (extends while progressing)\n[sync-watchdog] parent alive 780s elapsed, deadline in ~2820s (extends while progressing)\n[sync-watchdog] parent alive 840s elapsed, deadline in ~2760s (extends while progressing)\n[sync-watchdog] parent alive 900s elapsed, deadline in ~2700s (extends while progressing)\n[sync-watchdog] parent alive 960s elapsed, deadline in ~2640s (extends while progressing)\n[sync] lanes: 6 of 16, 3.16 busy on average; lanes waited for the sync loop to prepare groups (3.16 of 6 busy on average).\n[sync] 3496 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n"
+  },
+  "holds_after": {
+    "by_code_reason": [
+      {
+        "code": "invalid_fence",
+        "reason": "repeated_marker",
+        "step": null,
+        "n": 20
+      },
+      {
+        "code": "preparation_stalled",
+        "reason": null,
+        "step": "origin_check",
+        "n": 1
+      }
+    ],
+    "summary": {
+      "count": 21,
+      "stale": 0,
+      "fences": 20,
+      "images": 0,
+      "stalled": 1,
+      "source_id": "bench",
+      "concurrent": 0,
+      "incarnation": "cd11bbf8-02d5-4902-ab66-7c5b294bd245"
+    },
+    "paths": [
+      {
+        "path": "companies/scale-0-1502.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "companies/scale-0-1512.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "companies/scale-0-3152.md",
+        "code": "preparation_stalled",
+        "reason": null
+      },
+      {
+        "path": "notes/scale-0-1503.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1504.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1505.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1506.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1507.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1508.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1509.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1513.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1514.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1515.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1516.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1517.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1518.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "notes/scale-0-1519.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "people/scale-0-1500.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "people/scale-0-1501.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "people/scale-0-1510.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      },
+      {
+        "path": "people/scale-0-1511.md",
+        "code": "invalid_fence",
+        "reason": "repeated_marker"
+      }
+    ]
+  },
+  "committed_after": 2979
+}

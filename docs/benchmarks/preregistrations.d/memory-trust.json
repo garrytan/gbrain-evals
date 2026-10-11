@@ -1,0 +1,12 @@
+{
+  "experiments": [
+    {
+      "id": "memory-trust-cat37-38-39",
+      "preregistration": "docs/benchmarks/2026-10-07-memory-trust-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-*-memory-trust/**",
+        "docs/benchmarks/2026-*-memory-trust-results*.md"
+      ]
+    }
+  ]
+}

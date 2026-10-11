@@ -1,0 +1,332 @@
+{
+  "kind": "memory-qa-arms",
+  "schema_version": 1,
+  "benchmark": "locomo",
+  "split": "dev",
+  "started_at": "2026-10-06T23:48:30.243Z",
+  "finished_at": "2026-10-07T02:54:50.881Z",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "declared_sha": "739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+    "version": "0.60.46.0",
+    "package_sha256": "6ea533ae573e6f0f91d920b14a7a9c8d7e1562ffba69a9547cdcd2da3813261c",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "voyage:voyage-4",
+    "dims": 1024,
+    "cache_stats": {
+      "hits": 598,
+      "misses": 722,
+      "inserts": 722,
+      "bytes": 2957312
+    }
+  },
+  "dataset": {
+    "name": "LoCoMo (locomo10.json)",
+    "files": [
+      {
+        "path": "locomo/locomo10.json",
+        "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4"
+      }
+    ],
+    "revision": "3eb6f2c",
+    "license": "CC BY-NC 4.0"
+  },
+  "facts": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "rerank_missing_queries": 0,
+    "reranked_queries": 0
+  },
+  "cost": null,
+  "ingest_replicate": 1,
+  "metering": {
+    "mode": "lease-proxy",
+    "proxy": "http://127.0.0.1:8787",
+    "slot": "harness",
+    "lease_id": "gbrain-shootout-recipe-locomo-r1-a1-7ffcf53e",
+    "retry_upstream_5xx": true
+  },
+  "ingest": {
+    "conversations": 3,
+    "sessions": 89,
+    "failed_sessions": 0,
+    "synthetic_times": 0,
+    "degraded_conversations": 0,
+    "finish_timeouts": 0,
+    "readiness_probe_misses": 0,
+    "error_kinds": {},
+    "usd": 0.00411216,
+    "upstream_trouble": 0,
+    "errors": [],
+    "errors_truncated": false
+  },
+  "sanitizer": {
+    "forbidden_markers": 2034
+  },
+  "sealed_profile": null,
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "run_config_hash": "7578a2f1a69eed465bfa491b0db2d3d6d3bc60e009fbca697cf4a0cac5ac8ef4",
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 0,
+      "count": 1
+    },
+    "conversations": 3,
+    "questions_expected": 587
+  },
+  "system": {
+    "name": "gbrain-shootout",
+    "capability_system": "gbrain-shootout",
+    "capabilities": {
+      "system": "gbrain-shootout",
+      "protocol": 1,
+      "versions": {
+        "package": "0.60.46.0",
+        "commit": "unknown",
+        "image": null,
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {},
+          "notes": "gbrain init defaults for search; embedder from the run"
+        },
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large",
+            "dims": 1536
+          },
+          "unsettable": [
+            "extraction"
+          ]
+        }
+      },
+      "time": "native",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "each chunk cites its page; one page per session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: import returns after the page and its vectors are written",
+      "namespace": "one in-memory PGLite brain per namespace (truncated between namespaces)",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {}
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 40
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": [
+        "retrieval limits frozen from a keyless LoCoMo check (see eval/runner/systems/gbrain.ts)"
+      ]
+    },
+    "identity": {
+      "system": "gbrain-shootout",
+      "config": "{}",
+      "versions": null
+    }
+  },
+  "counts": {
+    "rows": 1174,
+    "scored": 928,
+    "errors": 0,
+    "abstention": 246
+  },
+  "summary": {
+    "recall_all_at_5": 0.896551724137931,
+    "recall_any_at_5": 0.9719827586206896,
+    "recall_all_at_10": 0.9461206896551724,
+    "ndcg_at_10": 0.9204699320731513,
+    "latency_p50_ms": 543.95,
+    "latency_p95_ms": 699.8799999999999
+  },
+  "retrievals": {
+    "dir": "retrievals",
+    "expected": 1174,
+    "outcomes": {
+      "scored": 1174,
+      "retrieval_error": 0,
+      "unsupported": 0,
+      "ingest_degraded": 0,
+      "reader_error": 0,
+      "judge_error": 0,
+      "harness_invalid": 0,
+      "budget_not_run": 0
+    },
+    "policies": [
+      "fixed-evidence",
+      "vendor-default"
+    ]
+  },
+  "contexts": {
+    "file": "contexts.ndjson",
+    "frozen": 2348
+  },
+  "arms": [
+    {
+      "id": "fixed-evidence.native.b8000.main",
+      "dir": "arms/fixed-evidence.native.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 587,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 587,
+        "scored": 464,
+        "errors": 0,
+        "abstention": 123
+      },
+      "summary": {
+        "recall_all_at_5": 0.896551724137931,
+        "recall_any_at_5": 0.9719827586206896,
+        "recall_all_at_10": 0.9461206896551724,
+        "ndcg_at_10": 0.9204699320731525,
+        "latency_p50_ms": 629.2,
+        "latency_p95_ms": 749.46,
+        "qa_score": 0.6524701873935264,
+        "qa_rows": 587,
+        "qa_errors": 0,
+        "qa_service_score": 0.6524701873935264,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "fixed-evidence.rehydrated.b8000.main",
+      "dir": "arms/fixed-evidence.rehydrated.b8000.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 587,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 587,
+        "scored": 464,
+        "errors": 0,
+        "abstention": 123
+      },
+      "summary": {
+        "recall_all_at_5": 0.896551724137931,
+        "recall_any_at_5": 0.9719827586206896,
+        "recall_all_at_10": 0.9461206896551724,
+        "ndcg_at_10": 0.9204699320731525,
+        "latency_p50_ms": 629.2,
+        "latency_p95_ms": 749.46,
+        "qa_score": 0.747870528109029,
+        "qa_rows": 587,
+        "qa_errors": 0,
+        "qa_service_score": 0.747870528109029,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "vendor-default.native.bnone.main",
+      "dir": "arms/vendor-default.native.bnone.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 587,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 587,
+        "scored": 464,
+        "errors": 0,
+        "abstention": 123
+      },
+      "summary": {
+        "recall_all_at_5": 0.896551724137931,
+        "recall_any_at_5": 0.9719827586206896,
+        "recall_all_at_10": 0.9461206896551724,
+        "ndcg_at_10": 0.9204699320731525,
+        "latency_p50_ms": 386.55,
+        "latency_p95_ms": 453.32999999999976,
+        "qa_score": 0.6592844974446337,
+        "qa_rows": 587,
+        "qa_errors": 0,
+        "qa_service_score": 0.6592844974446337,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    },
+    {
+      "id": "vendor-default.rehydrated.bnone.main",
+      "dir": "arms/vendor-default.rehydrated.bnone.main",
+      "run_status": "complete",
+      "outcomes": {
+        "scored": 587,
+        "retrieval_error": 0,
+        "unsupported": 0,
+        "ingest_degraded": 0,
+        "reader_error": 0,
+        "judge_error": 0,
+        "harness_invalid": 0,
+        "budget_not_run": 0
+      },
+      "counts": {
+        "rows": 587,
+        "scored": 464,
+        "errors": 0,
+        "abstention": 123
+      },
+      "summary": {
+        "recall_all_at_5": 0.896551724137931,
+        "recall_any_at_5": 0.9719827586206896,
+        "recall_all_at_10": 0.9461206896551724,
+        "ndcg_at_10": 0.9204699320731525,
+        "latency_p50_ms": 386.55,
+        "latency_p95_ms": 453.32999999999976,
+        "qa_score": 0.6575809199318569,
+        "qa_rows": 587,
+        "qa_errors": 0,
+        "qa_service_score": 0.6575809199318569,
+        "qa_product_failures": 0,
+        "qa_incomplete": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "schema": "gbrain.bench.managed-sync-stall-repro/v1",
+  "label": "head-pool3",
+  "cli_repo": "<work>/gbrain",
+  "cli_version": "0.60.107.0",
+  "cli_commit": "capy/6278-phase0@d99e2b43",
+  "harness_commit": "capy/6278-phase0@d99e2b43",
+  "started_at": "2026-10-08T06:15:48.659Z",
+  "params": {
+    "files": 15000,
+    "history": 1500,
+    "legacy_facts": 1000,
+    "marker_pages": 20,
+    "backlog_marker_pages": 20,
+    "rtt_ms": 57,
+    "pool_size": 3,
+    "pooler": "pgbouncer",
+    "doomed_pages": 12,
+    "drip_rows": 20,
+    "max_minutes": 170,
+    "passes": 3,
+    "sample_seconds": 30,
+    "adoption_interval_s": 60,
+    "stall_minutes": 5,
+    "stall_kill_minutes": 15,
+    "seed": 1
+  },
+  "pooler": {
+    "kind": "pgbouncer",
+    "image": "edoburu/pgbouncer@sha256:9c78945868a6a142c7fc40ccd843bbe5a606df163c7ffce4de70e0d628d696a2",
+    "listen": "127.0.0.1:55434",
+    "pool_mode": "transaction",
+    "default_pool_size": "50",
+    "max_client_conn": "2000",
+    "ignore_startup_parameters": "extra_float_digits,options,statement_timeout,idle_in_transaction_session_timeout"
+  },
+  "host": {
+    "cpus": 16,
+    "platform": "linux",
+    "bun": "1.4.2"
+  },
+  "rerun": "bun scripts/bench/managed-sync-stall-repro.ts --files 15000 --history 1500 --legacy-facts 1000 --marker-pages 20 --doomed-pages 12 --drip-rows 20 --backlog-marker-pages 20 --rtt 57 --pool-size 3 --max-minutes 170 --passes 3 --sample-seconds 30 --adoption-interval 60 --stall-minutes 5 --stall-kill-minutes 15 --inspect --out .context/bench/stall-run --label head-pool3",
+  "fixture": {
+    "database": "<db>",
+    "home": "<fixture-home>",
+    "root": "<fixture-home>/repo-bench",
+    "backlog_entries": 15000,
+    "history_pages": 1500,
+    "legacy_rows": 1000,
+    "legacy_pages": 250,
+    "legacy_by_shape": {
+      "trailing_ws": 3,
+      "leading_ws": 3,
+      "whitespace_only": 3,
+      "crlf": 3,
+      "plain": 197,
+      "pipe": 198,
+      "newline": 198,
+      "backslash": 198,
+      "backtick": 197
+    },
+    "doomed_pages": 12,
+    "adoptable_pages": 218,
+    "drip_pool_pages": 418,
+    "drip_rows_per_run": 20,
+    "marker_history_pages": [
+      "people/scale-0-0",
+      "people/scale-0-1",
+      "companies/scale-0-2",
+      "people/scale-0-10",
+      "people/scale-0-11",
+      "companies/scale-0-12",
+      "people/scale-0-20",
+      "people/scale-0-21",
+      "companies/scale-0-22",
+      "people/scale-0-30",
+      "people/scale-0-31",
+      "companies/scale-0-32",
+      "people/scale-0-40",
+      "people/scale-0-41",
+      "companies/scale-0-42",
+      "people/scale-0-50",
+      "people/scale-0-51",
+      "companies/scale-0-52",
+      "people/scale-0-60",
+      "people/scale-0-61"
+    ],
+    "marker_backlog_pages": [
+      "people/scale-0-1500",
+      "people/scale-0-1501",
+      "companies/scale-0-1502",
+      "notes/scale-0-1503",
+      "notes/scale-0-1504",
+      "notes/scale-0-1505",
+      "notes/scale-0-1506",
+      "notes/scale-0-1507",
+      "notes/scale-0-1508",
+      "notes/scale-0-1509",
+      "people/scale-0-1510",
+      "people/scale-0-1511",
+      "companies/scale-0-1512",
+      "notes/scale-0-1513",
+      "notes/scale-0-1514",
+      "notes/scale-0-1515",
+      "notes/scale-0-1516",
+      "notes/scale-0-1517",
+      "notes/scale-0-1518",
+      "notes/scale-0-1519"
+    ]
+  },
+  "session_timeouts": {
+    "requested_startup_parameters": {
+      "statement_timeout": "5min",
+      "idle_in_transaction_session_timeout": "5min"
+    },
+    "via_pooler": {
+      "statement_timeout": "0",
+      "idle_in_transaction_session_timeout": "0",
+      "lock_timeout": "0"
+    },
+    "direct": {
+      "statement_timeout": "5min",
+      "idle_in_transaction_session_timeout": "5min",
+      "lock_timeout": "0"
+    }
+  },
+  "passes": [
+    {
+      "pass": 1,
+      "pid": 9624,
+      "startedAt": 1791440170856,
+      "committedAtStart": 0,
+      "inspect": "127.0.0.1:6499",
+      "endedAt": 1791443769335,
+      "code": 124,
+      "committedAtEnd": 3425,
+      "killedBy": "timeout_3600",
+      "status": null,
+      "wall_s": 3598.5,
+      "pages_per_min": 57.1,
+      "time_to_stall_s": null
+    },
+    {
+      "pass": 2,
+      "pid": 23822,
+      "startedAt": 1791443775912,
+      "committedAtStart": 3425,
+      "inspect": "127.0.0.1:6499",
+      "endedAt": 1791447374434,
+      "code": 124,
+      "committedAtEnd": 8172,
+      "killedBy": "timeout_3600",
+      "status": null,
+      "wall_s": 3598.5,
+      "pages_per_min": 79.1,
+      "time_to_stall_s": null
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "counts": {
+    "observed_session_time": 35
+  },
+  "dataset": "precisionmembench",
+  "dates_passed_to_providers": 35,
+  "documents": 35,
+  "policy": "Only observed session times reach providers; stated event dates and unknown dates are withheld from both systems.",
+  "rows_sha256": "7e0aaa032038b9b01cace3f6588384b6ade3b661b24161486dcd470e4bb4a50c",
+  "rule": {
+    "provenance": "observed_session_time",
+    "source": "belief created_at"
+  },
+  "split": "single-turn"
+}
