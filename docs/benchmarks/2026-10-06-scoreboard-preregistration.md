@@ -941,7 +941,49 @@ A to D unchanged. Wave 1 keeps running at A17 (`eefd1799`).
   $6, about $150 of public spend lost under A13, public v2 $107.95, v3 smokes $2.25, v3-m $29.07, v3-s $35 (lost),
   v3-s2 $27.31, and dry runs $7.16. With the $7,800 sealed cap, that is about $8,218 against $8,500.
 
+**A21 (2026-10-11, text only; no cell, lease or hash changes): repeated session ids in LongMemEval-S, and a
+sensitivity row.** Thirteen of LongMemEval-S's 500 haystacks list one session id twice: the same turns under two
+different dates, and never a gold session. The S loader keeps the dataset's session ids (`corpus.ts` `loadLmeS`).
+The source id is a hash of the conversation and the session id, so both copies reach a system under one source id.
+The harness writes sessions in event-time order (`sanitize.ts` `ingestPlan`), so the second write is always the
+later-dated copy. Each adapter then keeps exactly one copy; none keeps both:
+
+- **gbrain-defaults** refuses the later copy and keeps the earlier one. Its adapter (`eval/systems/gbrain-defaults/shim.py`)
+  answers 409 `invalid_request`: "src-… was already written with different content; a conversation is never partly
+  re-ingested". gbrain itself is never called for that write. The harness marks the question `ingest_degraded`.
+  v3-s2 records that error once in each of the 13, and public v2's gbrain shards show the same error.
+- **ext-markdown-kb** and **ext-verbatim-session** overwrite: the later copy replaces the earlier note or drawer
+  under the same source id, with the later date. Their adapters' "replaced an earlier …" warning is not kept by the
+  harness.
+- **baseline-recency** replaces the earlier copy and places the later one as the most recent session.
+  **baseline-hybrid** upserts (`ON CONFLICT … DO UPDATE`), keeping the later copy.
+- **baseline-none** stores nothing and is unaffected.
+
+In public v2, the five of the 13 inside the 100-question slice (`18bc8abd`, `1d4da289`, `58bf7951`, `c7dc5443`,
+`gpt4_76048e76`) ingest with no failed sessions and every row scored, for every slice system. The 13 are:
+`001be529`, `18bc8abd`, `1d4da289`, `1e043500`, `58bf7951`, `91b15a6e`, `caf03d32`, `gpt4_76048e76`, `078150f1`,
+`c7dc5443`, `d23cf73b`, `gpt4_4929293b` and `gpt4_c27434e8_abs`.
+
+- **No rerun.** LongMemEval is a regression row, the repeated copy is never gold, and 13 of 500 questions are
+  affected.
+- **Sensitivity rule.** The report publishes each system's LongMemEval-S score on all of its questions: 500 for
+  gbrain, 100 for the slice systems. Beside it, a sensitivity row excludes these 13 question ids for every system:
+  487 questions for gbrain, 95 for the slice.
+- **LongMemEval-M is unaffected.** 449 of its 500 haystacks repeat a session id: 1,178 ids, all with identical turns
+  and different dates, none gold. 85 of S5's 100 questions are among them. The M loader already gives every dated
+  copy its own occurrence id (`<id>-occ-<i>`, `lmeConversation`), so every system keeps every copy. In v3-m, gbrain
+  ingested all 100 conversations, none degraded. M gets no sensitivity row.
+- **Follow-up, outside every current freeze.** Give LongMemEval-S the M loader's occurrence ids. This renames every
+  LongMemEval-S source id, so it lands with a later public freeze (TODOS, "Data and benchmark fidelity").
+
 ## Changelog
+
+### 2026-10-11: amendment A21
+
+Text only. Thirteen LongMemEval-S haystacks repeat a session id under two dates. Under one source id, gbrain's
+adapter refuses the later copy, while markdown-kb, verbatim-session, recency and hybrid keep it; baseline-none
+stores nothing. No rerun. The report adds a sensitivity row that excludes the 13 for every system. LongMemEval-M
+already keeps each dated copy distinct. Giving LongMemEval-S occurrence ids is a follow-up for a later public freeze.
 
 ### 2026-10-11: amendment A20
 

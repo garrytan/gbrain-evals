@@ -90,6 +90,8 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 
 ## Data and benchmark fidelity
 
+- [ ] **LongMemEval-S occurrence ids** (Q1 scoreboard, A21). The S loader (`eval/runner/memory-qa/corpus.ts` `loadLmeS`) keeps the dataset's session ids, so the 13 haystacks that repeat a session id under two dates send both copies under one source id. gbrain's adapter refuses the second copy (`ingest_degraded`), and the other adapters overwrite the first. Use the M loader's per-occurrence ids (`lmeConversation(q, true)`, scoring recall over `original_id`). This renames every LongMemEval-S source id and changes hashed code, so ship it with a later public freeze, not in a current one, and rerun LongMemEval-S there.
+
 - [x] **Finish the answer-label stubs.** Done in 0.10.1. `poison.json` is now generated from the planted skeleton fixtures, like `contradictions.json` and `implicit-preferences.json`, and a test holds all three byte-identical to the generator. `backlinks.json`, `citations.json`, `entities.json`, `personalization-rubric.json` and `qrels.json` had no generator and no runnable consumer and were removed rather than filled by hand. `validate-data.ts` now fails on a template row.
 
 - [ ] **Score contradiction surfacing (N2) on the planted amara-life fixtures** (coverage audit F6). `gold/contradictions.json` (10 contradiction pairs, 5 stale facts) is generated but no runner reads it; its comment now says it is reserved for N2. Check each premise first: on 2026-09-29 both claims appeared verbatim in their generated source text for 9 of 15 fixtures (22 of 30 source sides); the other six may be paraphrased or missing.
