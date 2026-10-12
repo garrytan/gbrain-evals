@@ -1,6 +1,12 @@
 {
   "campaign_id": "q1-scoreboard",
   "campaign_hash": "43749abd1ebecd8b8e16b3d9f91401647f27e95f247d65339e7819eaedb1cfb6",
+  "published": {
+    "branch": "evals/q1-scoreboard-results",
+    "path": "published/q1-scoreboard",
+    "commit": null,
+    "sha256": null
+  },
   "gbrain": {
     "commit": "f05943e653fd9d938b343b1774a35325ba792271",
     "version": "0.60.138.0",

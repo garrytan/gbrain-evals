@@ -48,6 +48,9 @@ export interface PublicationSource {
 }
 export interface Publication {
   campaign_id: string; campaign_hash: string;
+  /** Where the full receipt is published: a path on the results branch, the branch commit that holds it, and the
+   * sha256 of its SHA256SUMS file (every file's sha256, sorted by path). Filled when the receipt is pushed. */
+  published: { branch: string; path: string; commit: string | null; sha256: string | null };
   gbrain: CampaignManifest['gbrain'];
   hedge_classifier: string;
   statistics: CampaignManifest['statistics'];

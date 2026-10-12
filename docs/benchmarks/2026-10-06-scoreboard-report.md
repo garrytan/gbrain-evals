@@ -12,7 +12,7 @@ The report's tables are generated, never typed. Three commands rebuild them from
 ```bash
 # 1. Assemble the receipt: merge every settled cell at its campaign's launch tree, list unsettled cells as pending.
 bun eval/runner/q1/publish.ts --config docs/benchmarks/2026-10-06-scoreboard/publication.json \
-  --results <checkout of evals/q1-scoreboard-results> --out <receipt dir>
+  --results <checkout of evals/q1-scoreboard-results> --out <results checkout>/published/q1-scoreboard
 # 2. Render scoreboard.json, scoreboard.md and the README headline block from the receipt.
 bun eval/runner/scoreboard.ts render --receipt <receipt dir>
 # 3. Recompute everything from the rows and compare byte for byte.
@@ -24,6 +24,25 @@ external and baseline rows on LongMemEval (`4bccbd5a`), public-v3-s2 for gbrain 
 public-v3-m for gbrain on LongMemEval-M (`0518e2fd`), and the sealed campaign (hash `43749abd`, and `eefd1799` for
 wave 1's other units) for everything else. `--preview` writes no README block and opens the disclosures with a
 public-results-only line; the preview is how this layout was checked.
+
+## Provenance
+
+**Where the receipt lives (decided 2026-10-12, auto-approved under Garry's standing rule of 2026-10-12).** The full
+receipt (campaign.json, every cell's rows, answers, judgments and run configuration, the appendix cells and
+power.json) is pushed to `evals/q1-scoreboard-results` under `published/q1-scoreboard/`, with a `SHA256SUMS` file
+listing every file's sha256 sorted by path. `publication.json` (`published`) and this section record the results-branch
+commit that holds it and the sha256 of `SHA256SUMS`; both are empty until the sealed waves settle and the receipt is
+pushed. Main keeps only the rendered tables: `scoreboard.md` beside this report and the README headline block. To
+verify, check out that commit, confirm the `SHA256SUMS` hash, and run `bun eval/runner/scoreboard.ts check` on the
+receipt, which recomputes every table from the rows. Fetching the receipt by commit inside `check` is not built yet;
+it lands with the real render.
+
+| Field | Value |
+|---|---|
+| Results branch | `evals/q1-scoreboard-results` |
+| Receipt path | `published/q1-scoreboard/` |
+| Commit | pending |
+| `SHA256SUMS` sha256 | pending |
 
 ## Report sections, in order
 
