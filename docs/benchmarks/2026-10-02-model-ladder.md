@@ -51,6 +51,14 @@ decision) ran 2 repeats per model.
   the three new models.
 - **Full tables:** [headline-wave.md](2026-10-02-model-ladder/entity-recall/holdout/headline-wave.md).
 
+<a id="retired-2026-10-12"></a>
+
+> **Retired, 2026-10-12: the success figures in this report no longer describe gbrain.** The finding's 95.6% tie and
+> the six-model set's 75.7% against 72.8% were measured with gbrain's reranker off (correction below), and the world is
+> at its third use and near its ceiling (oracle 97.6%), so a rerun could at best confirm parity. They stay here as
+> measured. The permission result (0 of 100 finance-only leaks into context) does not depend on reranking and still
+> stands. For agent-task success, read the [Cat 40 Hard confirmation](2026-10-10-model-ladder-hard-confirmation.md).
+
 <a id="correction-2026-10-09"></a>
 
 > **Correction, 2026-10-09: gbrain searched without its reranker in most runs of this report, including the
@@ -506,4 +514,5 @@ was $1,763 across four machines' ledgers, under a $2,000 authorization. Each fol
 
 ## Changelog
 
+- 2026-10-12: [Retired](#retired-2026-10-12) the success figures as a current claim, keeping the permission result; no rerun (gbrain-evals #110's recommendations, decided in the next-wave plan).
 - 2026-10-09: [Correction](#correction-2026-10-09) added: gbrain ran without reranking in the finding's runs and in all or part of every other run here except the held-out check (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109), with per-run counts from the restore audit. Original numbers unchanged.

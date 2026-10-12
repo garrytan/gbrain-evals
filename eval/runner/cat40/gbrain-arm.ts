@@ -43,6 +43,8 @@ export const SERVE_BOOT_TIMEOUT_SECONDS = 0;
 export const WARM_BOOT_TIMEOUT_MS = 1_800_000;
 /** Server starts the pre-snapshot warm boot makes at most while queued persistence effects remain. */
 export const WARM_BOOT_ATTEMPTS = 3;
+/** Gap between drain-status samples while the warm boot holds its server open. */
+export const WARM_BOOT_DRAIN_POLL_MS = 5_000;
 const CORPUS_TAG = 'cat40-corpus';
 const execFileAsync = promisify(execFile);
 
@@ -385,19 +387,49 @@ export class GbrainSlot {
    * effects (about 47,000 at 55,000 pages, 230-290 s), holding the event loop until it is done. Since gbrain #6390
    * the server answers initialize before that work, so the start waits for the reply to one read-only tool call (an
    * `entity` miss, no model call), which the server sends only once the work is done. The effects still queued are
-   * counted after each stop; while any remain the start repeats, at most WARM_BOOT_ATTEMPTS times.
+   * counted after each stop; while any remain the start repeats, at most WARM_BOOT_ATTEMPTS times. A gbrain whose
+   * drain yields to the event loop answers that call while the drain still runs, so the start then stays open until
+   * the server reports no drain in progress (`holdWhileDraining`).
    */
   async warmBoot(): Promise<{ attempts: number; queued_effects: number | null }> {
     let attempts = 0, queued: number | null = null;
     do {
       attempts++;
+      const deadline = Date.now() + WARM_BOOT_TIMEOUT_MS;
       const warm = new McpClient(this.run, ['--surface', this.surface]);
       warm.callTimeoutMs = WARM_BOOT_TIMEOUT_MS;
-      try { await warm.start(WARM_BOOT_TIMEOUT_MS); await warm.call('entity', { name: COVERAGE_PROBE_NAME }); }
-      finally { await warm.close(); }
+      try {
+        await warm.start(WARM_BOOT_TIMEOUT_MS);
+        await warm.call('entity', { name: COVERAGE_PROBE_NAME });
+        await this.holdWhileDraining(deadline);
+      } finally { await warm.close(); }
       queued = await this.queuedEffects();
     } while (queued && attempts < WARM_BOOT_ATTEMPTS);
     return { attempts, queued_effects: queued };
+  }
+
+  /**
+   * Keeps the warm server running until two consecutive status samples, WARM_BOOT_DRAIN_POLL_MS apart, show no effects
+   * drain in progress, or until the deadline. A build whose status cannot say (one that answers tool calls only after
+   * its drain) is not held. The stop still counts the queued effects, so a drain cut short starts the server again.
+   */
+  async holdWhileDraining(deadline: number): Promise<void> {
+    for (let idle = 0; idle < 2 && Date.now() < deadline;) {
+      const draining = await this.drainInProgress();
+      if (draining === null) return;
+      idle = draining ? 0 : idle + 1;
+      if (idle < 2) await new Promise(r => setTimeout(r, WARM_BOOT_DRAIN_POLL_MS));
+    }
+  }
+
+  /** Whether the running server's persistence consumer reports an effects drain (`gbrain sources writer status --json`); null when it cannot say. */
+  async drainInProgress(): Promise<boolean | null> {
+    const r = await runCli(this.run, ['sources', 'writer', 'status', '--json'], 120_000);
+    if (r.code !== 0) return null;
+    try {
+      const ingress = (JSON.parse(r.stdout) as { local_process_ingress?: unknown }).local_process_ingress;
+      return ingress && typeof ingress === 'object' ? 'draining' in ingress : null;
+    } catch { return null; }
   }
 
   /** Rows of gbrain's persistence_effects still queued in the stopped slot's brain; null when the build has no such table. */

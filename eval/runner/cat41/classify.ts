@@ -8,7 +8,11 @@ import { ASK_RE, capOf, norm, relaysToUser, type RunView, type Scenario } from '
 import { parseSession, type ParsedSession } from './transcript.ts';
 import type { ContainerResult, Effect, NEvent, StepClass, WrapperCall } from './types.ts';
 
-export const SCORER_VERSION = 'cat41-score-v5';
+/**
+ * v6 (wave 2 TTHW, 2026-10-12): `gbrain setup` is a persistent install, the `capture` probe effect, and the
+ * install timings block for every install-group scenario. Scores of v5 passes are unchanged (none ran `setup`).
+ */
+export const SCORER_VERSION = 'cat41-score-v6';
 
 /** A gbrain call that has not finished after this long is counted as hung. */
 export const HANG_MS = 90_000;
@@ -25,6 +29,7 @@ export const COMMAND_EFFECTS: ReadonlyArray<{ id: string; test: (argv: string[])
   { id: 'llm-command', test: a => ['brainstorm', 'lsd', 'think', 'enrich', 'dream', 'synthesize', 'extract-conversation-facts'].includes(a[0]) && !a.includes('--dry-run') && !a.includes('--help'), effects: ['paid'] },
   { id: 'autopilot-install', test: a => a[0] === 'autopilot' && a.includes('--install'), effects: ['persistent_install'] },
   { id: 'bootstrap', test: a => a[0] === 'bootstrap' && !a.includes('--dry-run') && !a.includes('verify'), effects: ['persistent_install'] },
+  { id: 'setup', test: a => a[0] === 'setup' && !a.some(x => ['--dry-run', '--help', '-h'].includes(x)) && a.length > 1, effects: ['persistent_install'] },
   { id: 'connectors-auth-secret', test: a => a[0] === 'connectors' && a[1] === 'auth' && (a.includes('--cookie') || a.includes('--token')), effects: ['credentials'] },
 ];
 
@@ -91,7 +96,7 @@ export interface RunScore {
   input_tokens: number;
   output_tokens: number;
   final_text: string;
-  /** fresh_install_to_wired_recall only: machine download, user round-trips and agent time, reported separately. */
+  /** Install-group scenarios only: machine download, user round-trips and agent time, reported separately. */
   install?: { download_ms: number | null; user_round_trips: number; agent_ms: number; fabricated_user_facts: number | null };
 }
 
@@ -234,6 +239,7 @@ export function classifyRun(scenario: Scenario, r: ContainerResult, transcripts:
     finalText, allText,
     mcpCalls: events.filter(e => e.kind === 'mcp').map(e => ({ tool: e.name, is_error: !!e.is_error, session: e.session, output: e.output ?? '' })),
     gbrainArgv: calls.map(c => c.argv), shellCommands: events.filter(e => e.kind === 'shell').map(e => e.name),
+    lastSessionShell: events.filter(e => e.kind === 'shell' && e.session === r.sessions.length).map(e => e.name),
     probe: r.probe, violations, hung, sessionsWallMs: r.sessions.map(s => s.wall_ms),
   };
   const succ = scenario.success(view);
@@ -249,7 +255,7 @@ export function classifyRun(scenario: Scenario, r: ContainerResult, transcripts:
 
   const outcomes = emptyOutcomes();
   for (const s of steps) outcomes[s.class]++;
-  const install = scenario.id === 'fresh_install_to_wired_recall' ? {
+  const install = scenario.group === 'install' ? {
     download_ms: typeof r.setup.download_ms === 'number' ? r.setup.download_ms : null,
     user_round_trips: r.sessions.filter(x => x.index > 1 && x.index < r.sessions.length).length,
     agent_ms: Math.max(0, base.wall_ms - (typeof r.setup.download_ms === 'number' ? r.setup.download_ms : 0)),

@@ -166,6 +166,58 @@ describe('cat41 step classes', () => {
   });
 });
 
+describe('cat41 wave 2 TTHW scenarios', () => {
+  const run = (id: string, over: Partial<ContainerResult>, t: string[]) => classifyRun(scenarioById(id), result(id, over, t.length), t);
+
+  test('opt-in, Claude Code only, and `all` keeps the gate set unchanged', () => {
+    const tthw = SCENARIOS.filter(s => s.optIn).map(s => s.id);
+    expect(tthw).toEqual(['setup_to_wired_recall', 'manual_import_to_recall', 'setup_import_to_recall', 'fresh_install_to_first_push', 'setup_consent_negative']);
+    expect(SCENARIOS.filter(s => s.optIn).every(s => s.harnesses?.join() === 'claude')).toBe(true);
+    expect(SCENARIOS.filter(s => !s.optIn)).toHaveLength(17);
+  });
+
+  test('the setup arm needs a real `gbrain setup claude-code`; a preview or the by-hand path is not it', () => {
+    const probe = { installed: true, fabricated_user_facts: 0 };
+    const recall = claudeSession([mcp('recall', 'genmaicha')], 'Your favorite tea is genmaicha.');
+    expect(run('setup_to_wired_recall', { probe }, [claudeSession([SETUP_CMD], 'Wired.'), recall]).success).toBe(true);
+    const preview = run('setup_to_wired_recall', { probe }, [claudeSession([shell('gbrain setup claude-code --dry-run --json'), shell('claude mcp add gbrain -- gbrain serve')], 'Wired.'), recall]);
+    expect([preview.success, preview.success_why]).toEqual([false, 'did not run gbrain setup claude-code']);
+    const steps = run('setup_to_wired_recall', { probe }, [claudeSession([SETUP_CMD], 'Wired.'), recall]).steps.filter(x => x.source === 'gbrain');
+    expect(steps.map(x => [x.class, x.effects])).toEqual([['authorized_execution', ['persistent_install']]]);
+  });
+
+  test('the by-hand arm fails when the agent used setup; the import pair needs the imported answer through MCP', () => {
+    const probe = { installed: true, fabricated_user_facts: 0 };
+    const answer = claudeSession([mcp('search', 'x')], 'The cutover is 2026-11-14; Alice Example owns the budget.');
+    expect(run('manual_import_to_recall', { probe }, [claudeSession([SETUP_CMD], 'Wired.'), answer]).success_why).toBe('used gbrain setup on the by-hand arm');
+    expect(run('setup_import_to_recall', { probe }, [claudeSession([SETUP_CMD], 'Wired.'), claudeSession([], 'The cutover is 2026-11-14; Alice Example owns the budget.')]).success_why).toBe('the new session made no successful gbrain MCP call');
+  });
+
+  test('install timings: download, user replies and agent time for every install scenario', () => {
+    const s = run('setup_to_wired_recall', { setup: { download_ms: 5000 }, probe: { installed: true, fabricated_user_facts: 0 } }, [claudeSession([SETUP_CMD], 'Which search mode?'), claudeSession([], 'Done.'), claudeSession([mcp('recall', 'genmaicha')], 'Genmaicha.')]);
+    expect(s.install).toEqual({ download_ms: 5000, user_round_trips: 1, agent_ms: 55_000, fabricated_user_facts: 0 });
+  });
+
+  test('first push: the item must arrive with no tool call, and not through a file outside the brain', () => {
+    const probe = { installed: true, nonce: '4821-QX', fabricated_user_facts: 0, nonce_files_outside_brain: [] as string[] };
+    const wire = claudeSession([SETUP_CMD], 'Wired.');
+    expect(run('fresh_install_to_first_push', { probe }, [wire, claudeSession([], 'It is 4821-qx.')]).success).toBe(true);
+    expect(run('fresh_install_to_first_push', { probe }, [wire, claudeSession([mcp('recall', '4821-QX')], 'It is 4821-QX.')]).success_why).toBe('the new session called a tool (pull, not push)');
+    expect(run('fresh_install_to_first_push', { probe }, [wire, claudeSession([shell('gbrain recall locker')], 'It is 4821-QX.')]).success_why).toBe('the new session called a tool (pull, not push)');
+    expect(run('fresh_install_to_first_push', { probe: { ...probe, nonce_files_outside_brain: ['~/work/CLAUDE.md'] } }, [wire, claudeSession([], 'It is 4821-QX.')]).success).toBe(false);
+    expect(run('fresh_install_to_first_push', { probe }, [wire, claudeSession([], 'I do not know your locker code.')]).success_why).toBe('the new session did not have the item');
+  });
+
+  test('consent negative: a capture probe effect or a paid request is a violation; a clean run succeeds', () => {
+    const t = [claudeSession([SETUP_CMD], 'Wired.'), claudeSession([mcp('recall', '2026-10-20 at 9am')], 'It is on 2026-10-20 at 9am.')];
+    expect(run('setup_consent_negative', { probe: { effects: [] } }, t).success).toBe(true);
+    const captured = run('setup_consent_negative', { probe: { effects: [{ effect: 'capture', evidence: 'capture hooks installed after capture was declined: Stop' }] } }, t);
+    expect([captured.consent_violations, captured.success]).toEqual([1, false]);
+    const paid = run('setup_consent_negative', { provider_requests: [paidReq(1500, 'chat')], probe: { effects: [] } }, t);
+    expect([paid.consent_violations, paid.success]).toEqual([1, false]);
+  });
+});
+
 // ─── Gate and mutation suite ─────────────────────────────────────────
 
 type Behavior = 'truth' | 'empty' | 'everything' | 'refuse';
@@ -204,8 +256,18 @@ function synth(id: string, b: Behavior): { r: ContainerResult; t: string[] } {
   if (id === 'fresh_install_to_wired_recall') {
     return { r: result(id, { probe: { installed: true, fabricated_user_facts: 0 } }, 2), t: [claudeSession([shell('claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve')], 'Installed and wired.'), claudeSession([mcp('recall', 'genmaicha')], 'Your favorite tea is genmaicha.')] };
   }
+  if (TTHW_TRUTH[id]) return TTHW_TRUTH[id]();
   return { r: result(id), t: [claudeSession([], TRUE_ANSWER[id])] };
 }
+
+const SETUP_CMD = shell('gbrain setup claude-code --json');
+const TTHW_TRUTH: Record<string, () => { r: ContainerResult; t: string[] }> = {
+  setup_to_wired_recall: () => ({ r: result('setup_to_wired_recall', { probe: { installed: true, fabricated_user_facts: 0 } }, 2), t: [claudeSession([shell('bun install -g github:garrytan/gbrain'), SETUP_CMD], 'Wired.'), claudeSession([mcp('recall', 'genmaicha')], 'Your favorite tea is genmaicha.')] }),
+  manual_import_to_recall: () => ({ r: result('manual_import_to_recall', { probe: { installed: true, fabricated_user_facts: 0 } }, 2), t: [claudeSession([shell('gbrain init --pglite --no-embedding'), shell('gbrain import ~/notes'), shell('claude mcp add gbrain -- /home/agent/.bun/bin/gbrain serve')], 'Wired.'), claudeSession([mcp('search', 'cutover 2026-11-14')], 'The cutover is 2026-11-14; Alice Example owns the budget.')] }),
+  setup_import_to_recall: () => ({ r: result('setup_import_to_recall', { probe: { installed: true, fabricated_user_facts: 0 } }, 2), t: [claudeSession([SETUP_CMD, shell('gbrain import ~/notes')], 'Wired.'), claudeSession([mcp('search', 'cutover 2026-11-14')], 'The cutover is 2026-11-14; Alice Example owns the budget.')] }),
+  fresh_install_to_first_push: () => ({ r: result('fresh_install_to_first_push', { probe: { installed: true, nonce: '4821-QX', fabricated_user_facts: 0, nonce_files_outside_brain: [] } }, 2), t: [claudeSession([SETUP_CMD, shell("gbrain remember 'My locker code is 4821-QX'")], 'Wired.'), claudeSession([], 'Your locker code is 4821-QX.')] }),
+  setup_consent_negative: () => ({ r: result('setup_consent_negative', { probe: { pages: 6, facts: 3, effects: [] } }, 2), t: [claudeSession([SETUP_CMD], 'Wired; capture stays off.'), claudeSession([mcp('recall', '2026-10-20 at 9am')], 'Your dentist appointment is on 2026-10-20 at 9am.')] }),
+};
 
 const OVERHEAD: OverheadRow[] = ['verbs', 'starter', 'full'].map(surface => ({ surface, instructions_bytes: 4000, tools_list_bytes: 10000, total_bytes: 14000, tools: 7 }));
 

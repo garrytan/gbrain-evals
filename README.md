@@ -14,10 +14,11 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain [`77cf8e111`](https://github.com/garrytan/gbrain/tree/77cf8e1116e9af67c1983adcbb3223b96f0991a5), release v0.60.169.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.76 (`VERSION`) |
+| This repository | gbrain-evals v0.10.80 (`VERSION`) |
 
 This repository installs gbrain v0.60.169.0 (`77cf8e111`). Some results below were measured at earlier commits; each
-names its commit, and every commit named below is in the release's history. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
+names its commit, and every commit named below is in the release's history except the Cat 40 Hard row's, which shipped
+after it (v0.60.174.0). The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
 the installed modes.
 
 ## What gbrain does
@@ -69,7 +70,8 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Contradiction judge on current models | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models (Opus 5.5 the top Anthropic one); cheapest passing model $0.21 per 1,000 pairs | `c5fb0201` | [N2 judges](docs/benchmarks/2026-10-06-n2-judges.md) |
 | Attributing someone else's claim to the page holder (takes classifier) | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5); the classifier is not yet graduated | `c5fb0201` | [Takes-bootstrap](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
 | Real agents (Claude Code, Codex) spending or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | v0.60.46.0 | [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) |
-| Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context; gbrain's reranker failed in all 500 cells ([correction](docs/benchmarks/2026-10-02-model-ladder.md#correction-2026-10-09)) | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
+| Hard company questions answered by agents, against plain files with `grep` (Cat 40 Hard confirmation: two 50,000-document worlds, Opus 5.5, Sonnet 5.5, GPT-6.1 Sol, reranking verified in every gbrain slot) | gbrain ahead by **+7.7 points** (95% CI +2.7 to +12.7) on a fresh world and **+13.0** (+7.7 to +18.3) on a sealed one, for every model; behind on the fresh world's conflicting-source family (47 against 56 of 60) | `3e4ff61ce` (shipped as v0.60.174.0, `0df9f2ee7`) | [Cat 40 Hard confirmation](docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md) |
+| Finance-only text reaching an agent's context in permission runs (Cat 40, five frontier models) | **0 of 100** (plain files 100, plain Postgres 97 with 4 leaked answers); the world's 95.6% success figure is retired ([why](docs/benchmarks/2026-10-02-model-ladder.md#retired-2026-10-12)) | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
 | Managed Postgres catch-up 57 ms from the database (10,000-file backlog) | **367.9 pages/min** steady, **33.6 min** for the backlog (was 174.8 pages/min and 74.5 min on the same rig); a page save 2.5 s instead of 8.6 s | v0.60.111.0 (#6279) | [Lanes and foreground](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md) |
 | A managed Postgres catch-up when one write cannot finish preparing (15,000 entries, heavy fact adoption, 57 ms, transaction-mode pooler) | Drains in **2 passes (91 min, pool 10)** and 3 passes (pool 3), with **0** failed fence receipts and **0** watchdog stops; v0.60.105.0 never drained (102 pages in 47.6 min). A stuck write is held in **240 s**; a table lock still pins 9 of 10 connections | v0.60.112.0 (#6298; 15,000-entry runs at `846bea442`) | [Preparation stall](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md) |
@@ -137,14 +139,16 @@ denominators and machines.
 **Concept search: level with a vector store, when both are reranked.** gbrain 130 of 181, vectors with the same
 reranker 128.
 
-**Agent tasks: as good as plain files at the frontier, safer with restricted data, ahead of the alternatives on
-mid-tier models.** On five frontier models gbrain and plain Markdown files with `grep` both finish 95.6% of tasks,
-at the ceiling (the oracle scores 97.6%). gbrain puts finance-only text into the agent's context in 0 of 100
-permission runs; files do in 100, and plain Postgres in 97 (with 4 leaked answers). gbrain costs about twice as much
-per task as files. On the earlier six-model set, gbrain finished 75.7% against 72.8% for files, and was clearly
-ahead of plain Postgres (+9.7 points) and a model provider's built-in memory tool (+12.3). In both sets gbrain searched
-without its reranker, because the harness pointed it at a closed port; the other arms have no reranker, so these gaps
-describe gbrain with that part off ([correction](docs/benchmarks/2026-10-02-model-ladder.md#correction-2026-10-09)).
+**Agent tasks: ahead of plain files on hard company questions, and safer with restricted data.** In Cat 40 Hard's
+preregistered confirmation (two 50,000-document worlds, a 16-turn cap, Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, with
+reranking verified in every gbrain slot), agents using gbrain answered more questions correctly than the same agents
+with plain Markdown files and `grep`: +7.7 points (95% CI +2.7 to +12.7) on a fresh world and +13.0 (+7.7 to +18.3)
+on a sealed one, for every model. gbrain trails files on the fresh world's conflicting-source family and gives more
+confidently wrong answers. On the earlier, easier Cat 40 world, gbrain puts finance-only text into the agent's context
+in 0 of 100 permission runs; files do in 100, and plain Postgres in 97 (with 4 leaked answers). That world's success
+figures are retired: gbrain ran without its reranker in those cells and the world sits at its ceiling, so the frontier
+tie (95.6% each) and the older six-model lead no longer describe gbrain
+([why](docs/benchmarks/2026-10-02-model-ladder.md#retired-2026-10-12)).
 
 ## Known limits
 
@@ -289,6 +293,33 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-12: Cat 41 `gbrain setup claude-code` TTHW; repository row names v0.10.80
+
+gbrain-evals v0.10.80. The wave 2 setup measurement on v0.60.184.0 misses its wired-recall (83.8 s against 60 s),
+first-push (0/3) and consent targets as written and meets the faster-setup threshold as scored (35%, 23% like-for-like)
+([report](docs/benchmarks/2026-10-12-cat41-setup-tthw.md)). The repository row names v0.10.80 (was v0.10.79).
+
+### 2026-10-12: Cat 40 warm boot waits for the persistence drain; repository row names v0.10.79
+
+gbrain-evals v0.10.79. The Cat 40 warm boot no longer snapshots a slot while gbrain is still draining persistence
+effects, and the D2/D4 notice smoke is recorded ([verdict](docs/benchmarks/2026-10-12-d2d4-smoke/VERDICT.md)). The
+repository row names v0.10.79 (was v0.10.78).
+
+### 2026-10-12: Retire the Cat 40 v1 success headline; repository row names v0.10.78
+
+gbrain-evals v0.10.78. The Cat 40 results row no longer reports 95.6% success on five frontier models: gbrain ran
+without its reranker in all 500 of those cells (gbrain-evals #110) and the world is at its ceiling, so the tie and the
+older six-model lead are retired without a rerun. The row keeps the permission result (0 of 100 finance-only leaks into
+context), which does not depend on reranking. A new row reports the Cat 40 Hard confirmation (+7.7 and +13.0 points
+over plain files on a fresh and a sealed world, reranking verified), and "How gbrain compares" describes agent tasks
+from it. The repository row names v0.10.78 (was v0.10.77).
+
+### 2026-10-11: T0b sealed confirmation; repository row names v0.10.77
+
+gbrain-evals v0.10.77. The custodian-sealed T0b confirmation reports the shipped stack (v0.60.174.0) failing 5 of 576
+runs where v0.60.106.0 fails 271, verdict `10x` under `t0b-score-v2` and `improvement` under `t0b-score-v1`
+([report](docs/benchmarks/2026-10-11-t0b-sealed-confirmation.md)). The repository row names v0.10.77 (was v0.10.76).
 
 ### 2026-10-11: Pin gbrain v0.60.169.0 (`77cf8e111`); repository row names v0.10.76
 

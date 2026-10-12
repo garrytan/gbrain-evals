@@ -1,0 +1,3034 @@
+{
+  "version": "t0b-program-primary-v1",
+  "scorer": "t0b-score-v2",
+  "delivery": {
+    "version": "t0-delivery-v1",
+    "harness": "Claude Code hook protocol, emulated by the evaluator (injected-context path)",
+    "context_sources": {
+      "session_start": "`gbrain hook session-start` stdout: MEMORY.md digest of the workspace (none here), push, backup and status notes, the context pack over IPC (`context_pack`) and always-loaded core memory; src/commands/hook.ts hookSessionStart",
+      "user_prompt_submit": "`gbrain hook user-prompt` hookSpecificOutput.additionalContext: reflex pointers, volunteered pages and hot facts assembled by serve over IPC (`turn_context`); src/commands/hook.ts hookUserPrompt",
+      "not_emulated": "Stop (push debounce, opt-in ambient writeback) and SessionEnd (transcript capture into the dream corpus) are not fired; the dream cycle and autopilot do not run between sessions, so captured transcripts could not reach session 2 at this release without them"
+    },
+    "timing": {
+      "order": "per session: serve started (stdio MCP initialize answered) -> settle -> SessionStart -> UserPromptSubmit for the one user prompt -> model loop",
+      "settle_ms_after_initialize": 4000,
+      "session_start_self_deadline_ms": 1500,
+      "user_prompt_self_deadline_ms": 800,
+      "ipc_deadlines_ms": {
+        "turn_context_client": 600,
+        "turn_context_server": 400,
+        "context_pack_client": 1000,
+        "context_pack_server": 600
+      },
+      "harness_timeout_ms": {
+        "session_start": 5000,
+        "user_prompt_submit": 3000
+      },
+      "source": "src/commands/hook.ts SESSION_START_DEADLINE_MS / USER_PROMPT_DEADLINE_MS; src/core/context/resolve-ipc.ts:84-101; src/core/bootstrap/host-specs.ts CLAUDE_HOOK_DEFAULT_TIMEOUT_SECS"
+    },
+    "byte_cap": {
+      "hook_output_chars": 10000,
+      "memory_digest_bytes": 3072,
+      "prior_context_bytes": 32768,
+      "source": "src/core/bootstrap/host-specs.ts CLAUDE_HOOK_OUTPUT_CAP_CHARS; src/commands/hook.ts DIGEST_MEMORY_CAP_BYTES, PRIOR_CONTEXT_MAX_BYTES"
+    },
+    "session_reset": "each session is a new conversation with a new session_id and a new `gbrain serve` process (Claude Code spawns a stdio MCP server per session); no transcript, no transcript_path (the user-prompt window is the one prompt)",
+    "persistence": "the brain (PGLite data directory and vault checkout) persists from session 1 to session 2 unchanged; nothing is restored between sessions in the baseline arm",
+    "startup_maintenance": "serve boot runs its own startup sweep and session-cursor GC (src/mcp/server.ts); the harness waits settle_ms_after_initialize before SessionStart; GBRAIN_SKIP_STARTUP_HOOKS=1 disables only update checks; no autopilot, dream cycle or extraction drain runs between sessions",
+    "workspace": "an empty, non-git workspace directory per session (no MEMORY.md, no bootstrap manifest)",
+    "surface": "starter: the surface `gbrain bootstrap` registers for Claude Code at this release (src/core/mcp-registration.ts REGISTRATION_SURFACE)",
+    "rendering": "hook text is prepended to the user turn inside <system-reminder> blocks labelled \"SessionStart hook additional context\" and \"UserPromptSubmit hook additional context\", the way Claude Code renders hook context"
+  },
+  "knobs": {
+    "tasks_per_persona": 3,
+    "session1": "explicit",
+    "scale": 1,
+    "hop": true,
+    "supersession": true,
+    "unique_codes": true
+  },
+  "world_digest": "b113c68f40d12f7fd3ec6f702aa45be54075eb25a13a894a327b5468c55e3e70",
+  "seeds": {
+    "custodian": true,
+    "commitment": "c1c8a0ffeefc49f0054fb8d3c6983aaca4371a057b1ef1d65d894c765a2474b4"
+  },
+  "readers": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "mutant-stale-correction",
+    "mutant-forced-drop"
+  ],
+  "repeat": 1,
+  "gbrain": {
+    "requested": "~/c/gbrain@0df9f2ee77ae7bf8ee004aa222fddc3cf568ec33",
+    "commit": "0df9f2ee77ae7bf8ee004aa222fddc3cf568ec33",
+    "tree": "605f0bf1049dd8109441445dabd504e02a860a12",
+    "version": "0.60.174.0",
+    "verified": {
+      "copy_tree": "605f0bf1049dd8109441445dabd504e02a860a12",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.174.0",
+      "cli_version_matches": true
+    },
+    "frozen_release": false
+  },
+  "surface": "starter",
+  "max_turns": 20,
+  "resolved_config": {
+    "decide": "provider keys present (paid arm)",
+    "hermetic": false,
+    "stripped_keys": []
+  },
+  "bun": "1.4.2",
+  "builds": {
+    "sealed-01-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3774
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1902
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 682
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21267
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 840
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 619
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17250
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2238
+        }
+      ],
+      "usd": 0.006683300000000041,
+      "ms": 50188
+    },
+    "sealed-01-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3948
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1836
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 710
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21251
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 771
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 473
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17931
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2193
+        }
+      ],
+      "usd": 0.006654440000000041,
+      "ms": 50918
+    },
+    "sealed-02-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4206
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1748
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 716
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21504
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 887
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 526
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 41380
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2210
+        }
+      ],
+      "usd": 0.006691100000000042,
+      "ms": 74964
+    },
+    "sealed-02-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3875
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1832
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 709
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21527
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 884
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 678
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17202
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2306
+        }
+      ],
+      "usd": 0.006662240000000041,
+      "ms": 50659
+    },
+    "sealed-03-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3720
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1629
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 632
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 22000
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 908
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 535
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 31943
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2027
+        }
+      ],
+      "usd": 0.006715540000000055,
+      "ms": 64919
+    },
+    "sealed-03-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3850
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1795
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 648
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21347
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 765
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 708
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17050
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2177
+        }
+      ],
+      "usd": 0.006686680000000055,
+      "ms": 49985
+    },
+    "sealed-04-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3860
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1775
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 627
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21217
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 765
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 553
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17775
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2248
+        }
+      ],
+      "usd": 0.006707610000000045,
+      "ms": 50424
+    },
+    "sealed-04-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4497
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1880
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 591
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21575
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 737
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 537
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17468
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2178
+        }
+      ],
+      "usd": 0.006678490000000045,
+      "ms": 51060
+    },
+    "sealed-05-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3939
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1849
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 744
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21855
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 871
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 494
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17335
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2169
+        }
+      ],
+      "usd": 0.006721780000000046,
+      "ms": 50941
+    },
+    "sealed-05-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3906
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1793
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 630
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21291
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 737
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 544
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17775
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2235
+        }
+      ],
+      "usd": 0.006693570000000046,
+      "ms": 50539
+    },
+    "sealed-06-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4009
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1585
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 774
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21710
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 943
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 623
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 28638
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2279
+        }
+      ],
+      "usd": 0.006741930000000046,
+      "ms": 62256
+    },
+    "sealed-06-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3778
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1608
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 748
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21194
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 933
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 546
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17440
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2135
+        }
+      ],
+      "usd": 0.006713590000000047,
+      "ms": 50137
+    },
+    "sealed-07-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4182
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1344
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 733
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21284
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 851
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 556
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17368
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2179
+        }
+      ],
+      "usd": 0.006693440000000045,
+      "ms": 50077
+    },
+    "sealed-07-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4032
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1812
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 720
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21605
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 903
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 553
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17313
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2148
+        }
+      ],
+      "usd": 0.006664840000000045,
+      "ms": 50703
+    },
+    "sealed-08-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3990
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1606
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 845
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21571
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 837
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 594
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 18076
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2252
+        }
+      ],
+      "usd": 0.006724640000000045,
+      "ms": 51257
+    },
+    "sealed-08-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3871
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2414
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 666
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21201
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 846
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 672
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 19780
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2147
+        }
+      ],
+      "usd": 0.006695390000000046,
+      "ms": 53326
+    },
+    "sealed-09-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4040
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2139
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 693
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21219
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 889
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 602
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17437
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2236
+        }
+      ],
+      "usd": 0.006715410000000046,
+      "ms": 50911
+    },
+    "sealed-09-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3761
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1766
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 640
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 22200
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 827
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 572
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17126
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2169
+        }
+      ],
+      "usd": 0.006687200000000045,
+      "ms": 50569
+    },
+    "sealed-10-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3728
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2074
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 719
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21221
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1051
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 549
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16916
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2191
+        }
+      ],
+      "usd": 0.006690840000000036,
+      "ms": 50009
+    },
+    "sealed-10-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3800
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1698
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 748
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21174
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 862
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 586
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16740
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2215
+        }
+      ],
+      "usd": 0.006663020000000036,
+      "ms": 49421
+    },
+    "sealed-11-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3838
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1611
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 671
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21189
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 845
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 613
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16929
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2234
+        }
+      ],
+      "usd": 0.006695650000000048,
+      "ms": 49671
+    },
+    "sealed-11-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3781
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1738
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 685
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21308
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 896
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 596
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17456
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2204
+        }
+      ],
+      "usd": 0.006666790000000048,
+      "ms": 65418
+    },
+    "sealed-12-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3899
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1713
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 653
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21237
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 942
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 522
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17451
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2256
+        }
+      ],
+      "usd": 0.006733870000000035,
+      "ms": 50278
+    },
+    "sealed-12-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3924
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1796
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 743
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21266
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 831
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 619
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17822
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2248
+        }
+      ],
+      "usd": 0.006704750000000035,
+      "ms": 50682
+    },
+    "sealed-13-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3918
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1663
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 650
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21773
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 847
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 607
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17247
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2197
+        }
+      ],
+      "usd": 0.0067494700000000525,
+      "ms": 50688
+    },
+    "sealed-13-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3821
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1632
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 826
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21233
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 936
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 653
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17470
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2184
+        }
+      ],
+      "usd": 0.006720350000000051,
+      "ms": 50295
+    },
+    "sealed-14-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4108
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1921
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 676
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21692
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 903
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 566
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16766
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2167
+        }
+      ],
+      "usd": 0.006670690000000038,
+      "ms": 50325
+    },
+    "sealed-14-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4020
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1790
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 850
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21021
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 923
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 618
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 33769
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2217
+        }
+      ],
+      "usd": 0.006642870000000039,
+      "ms": 66927
+    },
+    "sealed-15-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3717
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1635
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 774
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21528
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 863
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 544
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17594
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2182
+        }
+      ],
+      "usd": 0.0067122900000000495,
+      "ms": 50449
+    },
+    "sealed-15-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3820
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1636
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 689
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21301
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 939
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 690
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 25321
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2166
+        }
+      ],
+      "usd": 0.006684600000000049,
+      "ms": 58267
+    },
+    "sealed-16-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3738
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1884
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 633
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21657
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1027
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 557
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17195
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2228
+        }
+      ],
+      "usd": 0.006704490000000045,
+      "ms": 50594
+    },
+    "sealed-16-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3914
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1759
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 837
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21640
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 878
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 542
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17495
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2152
+        }
+      ],
+      "usd": 0.006674850000000044,
+      "ms": 50841
+    },
+    "sealed-17-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3908
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1784
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 708
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21347
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 912
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 522
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17197
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2245
+        }
+      ],
+      "usd": 0.006719830000000044,
+      "ms": 50282
+    },
+    "sealed-17-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3800
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1796
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 710
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21498
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 826
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 494
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17547
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2202
+        }
+      ],
+      "usd": 0.006691620000000043,
+      "ms": 50470
+    },
+    "sealed-18-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3815
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1426
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 775
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21331
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1023
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 548
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 21231
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2183
+        }
+      ],
+      "usd": 0.0066701700000000395,
+      "ms": 53809
+    },
+    "sealed-18-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3619
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1949
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 679
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21318
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 912
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 563
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 18658
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2156
+        }
+      ],
+      "usd": 0.00664222000000004,
+      "ms": 51669
+    },
+    "sealed-19-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3586
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1751
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 652
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21394
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 840
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 534
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16961
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2081
+        }
+      ],
+      "usd": 0.006691360000000044,
+      "ms": 49315
+    },
+    "sealed-19-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3694
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1728
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 673
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21581
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 830
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 592
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16877
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2097
+        }
+      ],
+      "usd": 0.006663150000000044,
+      "ms": 49650
+    },
+    "sealed-20-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3996
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1754
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 703
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21255
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 980
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 647
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16797
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2141
+        }
+      ],
+      "usd": 0.006691490000000042,
+      "ms": 49883
+    },
+    "sealed-20-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3907
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2841
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 809
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21693
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 898
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 534
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17573
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2157
+        }
+      ],
+      "usd": 0.006663020000000041,
+      "ms": 51951
+    },
+    "sealed-21-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3822
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1775
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 647
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21631
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 889
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 602
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17513
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2224
+        }
+      ],
+      "usd": 0.00668733000000004,
+      "ms": 50805
+    },
+    "sealed-21-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3737
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1763
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 650
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21641
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 866
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 620
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16905
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2220
+        }
+      ],
+      "usd": 0.006657950000000039,
+      "ms": 49964
+    },
+    "sealed-22-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3709
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1699
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 684
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21762
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1006
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 547
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16914
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2225
+        }
+      ],
+      "usd": 0.00673998000000004,
+      "ms": 50289
+    },
+    "sealed-22-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3777
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1751
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 731
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21387
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 843
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 606
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 18533
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1967
+        }
+      ],
+      "usd": 0.006710990000000042,
+      "ms": 51191
+    },
+    "sealed-23-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3880
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1786
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 812
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21487
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 941
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 544
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 18261
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2212
+        }
+      ],
+      "usd": 0.00673322000000003,
+      "ms": 51541
+    },
+    "sealed-23-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3828
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1892
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 770
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21336
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 872
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 691
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17120
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2087
+        }
+      ],
+      "usd": 0.006704750000000031,
+      "ms": 50258
+    },
+    "sealed-24-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3792
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1680
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 774
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21243
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 878
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 605
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17703
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2203
+        }
+      ],
+      "usd": 0.006717360000000045,
+      "ms": 50508
+    },
+    "sealed-24-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3724
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1410
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 701
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 20981
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 858
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 571
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17595
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2244
+        }
+      ],
+      "usd": 0.006689150000000046,
+      "ms": 49741
+    },
+    "sealed-25-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3851
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1682
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 712
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21410
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 922
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 642
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 18552
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2222
+        }
+      ],
+      "usd": 0.006698640000000042,
+      "ms": 51559
+    },
+    "sealed-25-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3756
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1730
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 663
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21546
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 884
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 698
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 36924
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2204
+        }
+      ],
+      "usd": 0.006670170000000042,
+      "ms": 70027
+    },
+    "sealed-26-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3866
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1645
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 661
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21431
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 817
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 561
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 18680
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2181
+        }
+      ],
+      "usd": 0.006670560000000037,
+      "ms": 51560
+    },
+    "sealed-26-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3798
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1806
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 752
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21345
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 972
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 606
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 18233
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2278
+        }
+      ],
+      "usd": 0.006642090000000037,
+      "ms": 51427
+    },
+    "sealed-27-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3944
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 2393
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 752
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21323
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 980
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 562
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17705
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2257
+        }
+      ],
+      "usd": 0.006718140000000037,
+      "ms": 51522
+    },
+    "sealed-27-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3996
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1947
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 771
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21391
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 1014
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 620
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16953
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2142
+        }
+      ],
+      "usd": 0.006689410000000036,
+      "ms": 50551
+    },
+    "sealed-28-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3989
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1947
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 742
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21897
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 910
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 538
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17445
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2033
+        }
+      ],
+      "usd": 0.006673160000000048,
+      "ms": 51018
+    },
+    "sealed-28-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3849
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1648
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 700
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21287
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 903
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 592
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16347
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2214
+        }
+      ],
+      "usd": 0.006644820000000048,
+      "ms": 49204
+    },
+    "sealed-29-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3811
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1840
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 623
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21356
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 886
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 671
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17322
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1996
+        }
+      ],
+      "usd": 0.006715150000000047,
+      "ms": 50089
+    },
+    "sealed-29-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3814
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1873
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 773
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21933
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 840
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 510
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 19881
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2133
+        }
+      ],
+      "usd": 0.006686550000000046,
+      "ms": 53199
+    },
+    "sealed-30-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3853
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1982
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 736
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21175
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 767
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 595
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17882
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1913
+        }
+      ],
+      "usd": 0.0067077400000000445,
+      "ms": 50585
+    },
+    "sealed-30-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3948
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1613
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 745
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21447
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 823
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 507
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17340
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1730
+        }
+      ],
+      "usd": 0.006679400000000044,
+      "ms": 49852
+    },
+    "sealed-31-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3849
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1878
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 618
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21357
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 887
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 581
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 16885
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2226
+        }
+      ],
+      "usd": 0.006744660000000047,
+      "ms": 49957
+    },
+    "sealed-31-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3814
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1961
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 723
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21570
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 928
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 679
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17662
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2265
+        }
+      ],
+      "usd": 0.006715800000000048,
+      "ms": 51201
+    },
+    "sealed-32-nocorr": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3788
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1844
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 835
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 22357
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 747
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 639
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17095
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2078
+        }
+      ],
+      "usd": 0.006713850000000033,
+      "ms": 51052
+    },
+    "sealed-32-noitems": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3898
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1766
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 865
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 21698
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 860
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 566
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 17398
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 2196
+        }
+      ],
+      "usd": 0.006685120000000033,
+      "ms": 50914
+    }
+  }
+}

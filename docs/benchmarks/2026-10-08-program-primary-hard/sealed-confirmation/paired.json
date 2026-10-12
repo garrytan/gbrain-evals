@@ -1,0 +1,201 @@
+[
+ {
+  "scope": "claude-opus-5-5",
+  "pairs": 192,
+  "personas": 32,
+  "baseline": {
+   "failures": 142,
+   "clustered": {
+    "rate": 0.7395833333333334,
+    "lower": 0.6664849915673015,
+    "upper": 0.8126816750993653,
+    "clusters": 32
+   }
+  },
+  "candidate": {
+   "failures": 0,
+   "clustered": {
+    "rate": 0,
+    "lower": 0,
+    "upper": 0,
+    "clusters": 32
+   }
+  },
+  "verdict": "10x",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.0035087719298245615,
+   "factor": 285,
+   "baseline_failures": 142,
+   "candidate_failures": 0,
+   "clusters": 32,
+   "lower": 0,
+   "upper": 0.026318394185884816
+  },
+  "risk_difference": {
+   "diff": -0.7395833333333334,
+   "lower": -0.8126816750993653,
+   "upper": -0.6664849915673015
+  },
+  "non_inferior": true,
+  "kinds": {
+   "baseline": {
+    "stale_correction": 129,
+    "stale_date": 71,
+    "unsupported": 1,
+    "missed_commitment": 1
+   },
+   "candidate": {}
+  }
+ },
+ {
+  "scope": "claude-sonnet-5-5",
+  "pairs": 192,
+  "personas": 32,
+  "baseline": {
+   "failures": 124,
+   "clustered": {
+    "rate": 0.6458333333333334,
+    "lower": 0.5797434294375292,
+    "upper": 0.7119232372291375,
+    "clusters": 32
+   }
+  },
+  "candidate": {
+   "failures": 5,
+   "clustered": {
+    "rate": 0.026041666666666668,
+    "lower": 0,
+    "upper": 0.05295521969598582,
+    "clusters": 32
+   }
+  },
+  "verdict": "improvement",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.04417670682730924,
+   "factor": 22.636363636363637,
+   "baseline_failures": 124,
+   "candidate_failures": 5,
+   "clusters": 32,
+   "lower": 0.011989078526938025,
+   "upper": 0.10056453639064587
+  },
+  "risk_difference": {
+   "diff": -0.6197916666666666,
+   "lower": -0.6964626018707634,
+   "upper": -0.5431207314625699
+  },
+  "non_inferior": true,
+  "kinds": {
+   "baseline": {
+    "missed_commitment": 32,
+    "stale_date": 51,
+    "stale_correction": 108
+   },
+   "candidate": {
+    "unsupported": 3,
+    "missed_commitment": 2
+   }
+  }
+ },
+ {
+  "scope": "gpt-6.1-sol",
+  "pairs": 192,
+  "personas": 32,
+  "baseline": {
+   "failures": 5,
+   "clustered": {
+    "rate": 0.026041666666666668,
+    "lower": 0.0038744390060497305,
+    "upper": 0.048208894327283605,
+    "clusters": 32
+   }
+  },
+  "candidate": {
+   "failures": 0,
+   "clustered": {
+    "rate": 0,
+    "lower": 0,
+    "upper": 0,
+    "clusters": 32
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.09090909090909091,
+   "factor": 11,
+   "baseline_failures": 5,
+   "candidate_failures": 0,
+   "clusters": 32,
+   "lower": 0,
+   "upper": 1.091279105182545
+  },
+  "risk_difference": {
+   "diff": -0.026041666666666668,
+   "lower": -0.048208894327283605,
+   "upper": -0.0038744390060497305
+  },
+  "non_inferior": true,
+  "kinds": {
+   "baseline": {
+    "stale_correction": 5,
+    "stale_date": 1
+   },
+   "candidate": {}
+  }
+ },
+ {
+  "scope": "pooled",
+  "pairs": 576,
+  "personas": 32,
+  "baseline": {
+   "failures": 271,
+   "clustered": {
+    "rate": 0.4704861111111111,
+    "lower": 0.4348785674744209,
+    "upper": 0.5060936547478013,
+    "clusters": 32
+   }
+  },
+  "candidate": {
+   "failures": 5,
+   "clustered": {
+    "rate": 0.008680555555555556,
+    "lower": 0,
+    "upper": 0.017651739898661943,
+    "clusters": 32
+   }
+  },
+  "verdict": "10x",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.020257826887661142,
+   "factor": 49.36363636363636,
+   "baseline_failures": 271,
+   "candidate_failures": 5,
+   "clusters": 32,
+   "lower": 0.0055380704315260935,
+   "upper": 0.04531682531231408
+  },
+  "risk_difference": {
+   "diff": -0.4618055555555556,
+   "lower": -0.4996859984579515,
+   "upper": -0.4239251126531597
+  },
+  "non_inferior": true,
+  "kinds": {
+   "baseline": {
+    "stale_correction": 242,
+    "stale_date": 123,
+    "missed_commitment": 33,
+    "unsupported": 1
+   },
+   "candidate": {
+    "unsupported": 3,
+    "missed_commitment": 2
+   }
+  }
+ }
+]

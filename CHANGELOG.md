@@ -2,6 +2,77 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.80] - 2026-10-12
+
+### Cat 41: time to a working memory with `gbrain setup claude-code`
+
+The wave 2 measurement of `gbrain setup claude-code` on gbrain v0.60.184.0 (`a618302c9`), with real Claude Code
+sessions on Opus 5.5, three runs per cell, against targets frozen before any paid session
+([report](docs/benchmarks/2026-10-12-cat41-setup-tthw.md),
+[preregistration](docs/benchmarks/2026-10-12-cat41-setup-tthw-preregistration.md)).
+
+- **Wired recall missed:** 3/3 correct, 83.8 s mean against the 60 s target (the documented path on v0.60.130.0 was
+  98.8 s).
+- **First push missed, 0/3:** the SessionStart hook prints nothing while Claude Code is still starting gbrain's
+  server, so no fresh session saw the remembered item without a tool call.
+- **Faster-setup threshold met as scored:** 35% lower median than the by-hand path on the same release. Only the
+  by-hand runs got a scripted reply; without that session the gap is 23%, under the 25% threshold. Both are reported.
+- **Consent negatives not met as written:** no capture, no unrequested fact write and no paid request, but every run's
+  `gbrain doctor` sent one unbilled `GET /v1/models` with the user's key.
+- **Harness:** five named-only Claude Code scenarios (the release-gate `all` set is unchanged), scorer v6 (re-scoring
+  the published re-baseline gives identical scores) and a recorded `--preregistration` attestation. Spend $8.37 of a
+  $25 cap.
+
+## [0.10.79] - 2026-10-12
+
+### Cat 40 warm boot waits for gbrain's persistence drain; D2/D4 smoke records
+
+- **Harness fix.** gbrain answers tool calls while it is still draining queued persistence effects. The Cat 40 warm
+  boot treated the first answer as the end of the drain, stopped the server and snapshotted the slot: one master slot
+  was saved with 5,081 effects still queued. `eval/runner/cat40/gbrain-arm.ts` now holds the server until gbrain
+  reports no drain in progress; the rebuilt slot has 0 queued.
+- **D2/D4 smoke** ([verdict](docs/benchmarks/2026-10-12-d2d4-smoke/VERDICT.md), preregistered with one amendment
+  written before any cell). D2's `hidden_tool_content` notice passes: gpt-6.1-sol 10/10 on the branch against 1/10 on
+  master, Opus 5.5 and Sonnet 5.5 10/10 (all at the ceiling, so the smoke cannot rank them), 0 leaks, 0 unsafe writes,
+  0 `unknown_tool` answers after a notice. D4's `grant_blocked_operations` is not exercised by Cat 40's stdio arm, as
+  preregistered. Spend $3.30 of an $8 cap.
+
+## [0.10.78] - 2026-10-12
+
+### Retire the Cat 40 v1 success headline
+
+The README's Cat 40 row reported 95.6% success for gbrain and for plain files on five frontier models. gbrain ran
+without its reranker in all 500 of those cells (gbrain-evals #110), and the world is at its ceiling, so a rerun could
+only confirm parity. The claim is retired without a rerun.
+
+- **Kept:** the permission result, 0 of 100 finance-only leaks into the agent's context, which does not depend on
+  reranking.
+- **Retired:** the frontier tie and the older six-model lead (75.7% against 72.8%), on the README and as the current
+  reading of the [Cat 40 report](docs/benchmarks/2026-10-02-model-ladder.md#retired-2026-10-12). Its numbers stay as
+  measured.
+- **Replaced by:** a README row for the [Cat 40 Hard confirmation](docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md),
+  where gbrain is ahead of plain files by +7.7 points on a fresh world and +13.0 on a sealed one with reranking
+  verified.
+
+## [0.10.77] - 2026-10-11
+
+### T0b sealed confirmation: 10x fewer end-to-end memory failures than v0.60.106.0
+
+The custodian-sealed run preregistered in T0b amendment 5 compares the shipped stack, gbrain v0.60.174.0
+(`0df9f2ee7`), with the frozen v0.60.106.0 (`7aa2caa0`) on 32 personas minted on the maintainer's Mac
+([report](docs/benchmarks/2026-10-11-t0b-sealed-confirmation.md)).
+
+- **Verdict `10x` under `t0b-score-v2`.** The stack fails 5 of 576 runs and the frozen release fails 271 (failure
+  ratio 0.020, 95% interval 0.006 to 0.045). Opus 5.5 goes from 142 to 0, Sonnet 5.5 from 124 to 5, and gpt-6.1-sol
+  from 5 to 0, near its ceiling and inconclusive on its own.
+- **Under `t0b-score-v1` the verdict is `improvement`** (273 to 13, factor 20, interval 0.019 to 0.101).
+- **Validity held.** Both mutants were detected in 144 of 144 runs, every cell was scored, and the stack stayed inside
+  the resource envelope for every reader.
+- **Cost.** The sealed ledger committed $232.01 of its $265 cap; the round stands at $370.12 of the approved $420.
+- **Records are aggregates and receipts only.** Per-cell scores, receipts, cost records, paired statistics and status
+  logs are committed under `docs/benchmarks/2026-10-08-program-primary-hard/sealed-confirmation/`. No world file,
+  seed, sealed documents, task text or transcripts are.
+
 ## [0.10.76] - 2026-10-11
 
 ### Re-pin to gbrain v0.60.169.0 (`77cf8e111`)

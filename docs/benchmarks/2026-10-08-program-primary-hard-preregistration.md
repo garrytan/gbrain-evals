@@ -395,3 +395,34 @@ A stop leaves complete personas in both arms; the verdict is then computed on th
 says how many ran.
 
 **Recorded before sealed cells.** (Appended by the executor.)
+
+- 2026-10-11 (Pacific), custody: on Garry's Mac, at this repository's commit `7d03bcada` (a sparse checkout of the
+  generator and its three imports), `--mint-sealed --personas 32` and `--custodian-seeds` ran. Commitment
+  `c1c8a0ffeefc49f0054fb8d3c6983aaca4371a057b1ef1d65d894c765a2474b4`; world digest
+  `b113c68f40d12f7fd3ec6f702aa45be54075eb25a13a894a327b5468c55e3e70` (`program-primary-hard-v2`, `V2_KNOBS`, 32
+  personas, 96 tasks). The same commit reproduces the version 2 development digest `da47d3d4…` on the Mac and on a
+  Linux machine, so the generator is deterministic across both. The seed file and the world stay on the Mac (0600
+  files in a 0700 directory outside any repository) until the custody VM exists.
+
+- 2026-10-11 (Pacific), note before the paid development smoke (gate 2): the runner's preflight prices cells at the
+  calibration estimates (Opus 5.5 $0.60, Sonnet 5.5 $0.30, gpt-6.1-sol $0.20), so the 72-cell smoke is estimated at
+  $26.40 and the $15 run refused it before any call (ledger run `t0b-program-primary-2026-10-11T16-52-25-922Z-7567639c`,
+  $0 spent, closed). The smoke runs instead under ledger run `t0b-program-primary-2026-10-11T16-57-30-711Z-7dbefe7b`, cap $27; from the alias-stack cells it is expected
+  to cost about $13. The round's total stays inside the approved $420: $125.55 spent, $27 smoke cap, $265 sealed cap.
+  Stack build: gbrain master at #6271's merge, `0df9f2ee77ae7bf8ee004aa222fddc3cf568ec33` (v0.60.174.0). It carries
+  Candidate 1 and #6271's short-code alias rule (`f24ca6afe` is an ancestor). Gate 1 passed on it ($0 scripted smoke,
+  version 2 world: baseline and push-off arms pass, both mutants fail every task).
+
+- 2026-10-11 (Pacific), custody VM and gate 3: the custody VM is `ubirun-gbra60-1791737888-050283c6` (Ubicloud `eu-central-h1`, standard-16, owner
+  `gbra60`), with gbrain checked out to hold both `7aa2caa0` and `0df9f2ee`, gbrain-evals at this branch and Bun 1.4.2.
+  The world file went from the Mac to one Capy cloud machine and then over SSH to `~/custody/world.json` (0600, in a
+  0700 directory) on the VM; the Capy copy was deleted at once. File SHA-256 `c9fe68ca…` matches on both ends; the VM
+  recomputes world digest `b113c68f…` and commitment `c1c8a0ff…`, as recorded above (gate 3 passed). The seed file
+  never left the Mac. Run-day model check: the newest frontier models are still Opus 5.5 (`claude-opus-5-5`),
+  Sonnet 5.5 (`claude-sonnet-5-5`) and gpt-6.1-sol, so the readers are unchanged; Fable does not run. Ledger on the VM:
+  `.budget/t0b-sealed-confirm.sqlite`, program cap $265.
+
+- 2026-10-11 (Pacific), gate 2 passed: the paid development smoke on the stack build (`0df9f2ee`, version 2 world, seeds
+  20261101 to 20261108, repeat 1, three readers, `t0b-score-v2`) scored 72 of 72 cells with no harness error, and the
+  rerank probe passed on all 8 slots. Descriptive only: 1 failure in 72 (Opus 5.5, stale correction), $12.56.
+  Sealed cells start next under the order above.

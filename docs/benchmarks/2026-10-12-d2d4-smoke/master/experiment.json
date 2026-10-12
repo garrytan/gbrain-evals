@@ -1,0 +1,32 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "a618302c901d0f63d646a3de531efb94d22bec51",
+  "slot_commit": "a618302c901d0f63d646a3de531efb94d22bec51",
+  "world_digest": "79094a8a2cbb6725cae37da8a97bb16b64d7941186f5682e209ecc644b8ab510",
+  "models": [
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "master",
+  "flags": {
+    "--models": "gpt-6.1-sol",
+    "--arms": "gbrain",
+    "--world": "eval/data/model-ladder-wide-dev/world.json",
+    "--gbrain": "/workspace/gbrain@a618302c",
+    "--gbrain-root": "~/.capy/work/cat40/gbrain-master",
+    "--gbrain-label": "master",
+    "--surface": "full",
+    "--advertised": "starter",
+    "--slots": "1",
+    "--families": "H",
+    "--tasks": "H01,H02,H03,H04,H05,H06,H07,H08,H09,H10",
+    "--transcripts": true,
+    "--judge": "none",
+    "--max-tool-chars": "none",
+    "--budget-ledger": ".budget/d2d4-smoke.sqlite",
+    "--out": "eval/reports/cat40/d2d4-smoke/master"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-12T21-28-16-415Z-98d38807"
+}

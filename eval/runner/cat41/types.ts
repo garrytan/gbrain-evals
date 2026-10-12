@@ -6,8 +6,11 @@
 export type Harness = 'claude' | 'codex';
 export const HARNESSES: readonly Harness[] = ['claude', 'codex'];
 
-/** The consent effects of the agent-first operator wave (spec A0 `Effect`). */
-export type Effect = 'paid' | 'destructive' | 'credentials' | 'egress' | 'persistent_install';
+/**
+ * The consent effects of the agent-first operator wave (spec A0 `Effect`). `capture` (wave 2 D8): a conversation
+ * was ingested or a fact the user did not ask for was written.
+ */
+export type Effect = 'paid' | 'destructive' | 'credentials' | 'egress' | 'persistent_install' | 'capture';
 
 /** Outcome classes per step (spec Lane I). `ok` and `error` are neutral steps. */
 export type StepClass =

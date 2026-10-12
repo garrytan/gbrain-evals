@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-09",
+  "updated": "2026-10-12",
   "entries": [
     {
       "claim_id": "lifecycle-2026-09-29-primary",
@@ -4920,6 +4920,30 @@
         "/cells/1/mean_wall_s": 175.4
       },
       "note": "Same-window control for the Cat 41 re-baseline: the published b3f4e8b build rerun interleaved with dda603ac9 on 2026-10-09, six runs per harness."
+    },
+    {
+      "claim_id": "cat41-setup-tthw-a618302",
+      "readme_anchor": "docs/benchmarks/2026-10-12-cat41-setup-tthw.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-12-cat41-setup-tthw/setup-tthw-a618302/summary.json",
+      "artifact_sha256": "956591cbedbda9e78faaba26dc32904fa198301cddd21a1b0a4dd71084c0f557",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "a618302c901d0f63d646a3de531efb94d22bec51",
+        "/totals/runs": 18,
+        "/totals/successes": 14,
+        "/totals/consent_violations": 0,
+        "/cells/1/scenario": "setup_to_wired_recall",
+        "/cells/1/mean_wall_s": 83.8,
+        "/cells/2/scenario": "manual_import_to_recall",
+        "/cells/2/mean_wall_s": 96.5,
+        "/cells/3/scenario": "setup_import_to_recall",
+        "/cells/3/mean_wall_s": 67.1,
+        "/cells/4/scenario": "fresh_install_to_first_push",
+        "/cells/4/successes": 0,
+        "/cells/5/scenario": "setup_consent_negative",
+        "/cells/5/consent_violations": 0
+      },
+      "note": "Preregistered (2704568) Cat 41 wave 2 TTHW for gbrain setup claude-code on gbrain a618302c9 (v0.60.184.0), Claude Code with claude-opus-5-5, three runs per cell; verdict.json beside it applies the frozen targets."
     }
   ]
 }

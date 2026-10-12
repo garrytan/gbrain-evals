@@ -17,7 +17,7 @@ import {
   PG_CHUNK_CHARS, PG_CHUNK_OVERLAP, PG_CHUNKING_ID, PG_EMBED_DIMS, PG_EMBED_INPUT_CHARS, PG_SEARCH_LIMITS, PgArm, PgStore,
   cachedOpenAIEmbedder, chunkDocument, type Embedder,
 } from '../../eval/runner/cat40/pg-arm.ts';
-import { COVERAGE_PROBE_NAME, GbrainPool, GbrainSlot, McpClient, SlotQuarantineError, WARM_BOOT_ATTEMPTS, coverageProblem, type PoolSlot } from '../../eval/runner/cat40/gbrain-arm.ts';
+import { COVERAGE_PROBE_NAME, GbrainPool, GbrainSlot, McpClient, SlotQuarantineError, WARM_BOOT_ATTEMPTS, WARM_BOOT_DRAIN_POLL_MS, coverageProblem, type PoolSlot } from '../../eval/runner/cat40/gbrain-arm.ts';
 
 const world = generateLadderWorld();
 const tmp = mkdtempSync(join(tmpdir(), 'cat40-hard-arms-'));
@@ -399,7 +399,10 @@ describe('MCP transport failures are HarnessErrors; tool errors stay text', () =
 describe('GbrainSlot.warmBoot: the pre-snapshot start waits for a tool reply, then counts queued persistence effects', () => {
   class CountedSlot extends GbrainSlot {
     counts: Array<number | null> = [];
+    drains: Array<boolean | null> = [];
+    polls = 0;
     async queuedEffects() { return this.counts.length ? this.counts.shift()! : 0; }
+    async drainInProgress() { this.polls++; return this.drains.length ? this.drains.shift()! : null; }
   }
   const slotWith = (id: string, counts: Array<number | null>, env: Record<string, string> = {}) => {
     const s = new CountedSlot(id, join(tmp, 'warm'), buildDir, 1, 'starter');
@@ -418,6 +421,44 @@ describe('GbrainSlot.warmBoot: the pre-snapshot start waits for a tool reply, th
     expect(await slotWith('w1', [47000, 12, 0]).warmBoot()).toEqual({ attempts: 3, queued_effects: 0 });
     expect(await slotWith('w2', [9, 9, 9, 9]).warmBoot()).toEqual({ attempts: WARM_BOOT_ATTEMPTS, queued_effects: 9 });
     expect(await slotWith('w3', [null]).warmBoot()).toEqual({ attempts: 1, queued_effects: null });
+  });
+  test('holds the server while it reports a drain in progress, until two consecutive samples show none', async () => {
+    const s = slotWith('w4', [0]);
+    s.drains = [true, true, false, true, false, false];
+    const t0 = Date.now();
+    expect(await s.warmBoot()).toEqual({ attempts: 1, queued_effects: 0 });
+    expect(s.polls).toBe(6);
+    expect(Date.now() - t0).toBeGreaterThanOrEqual(5 * WARM_BOOT_DRAIN_POLL_MS - 100);
+  }, 60_000);
+  test('a build whose status cannot report a drain is not held; the deadline ends a hold that never settles', async () => {
+    const s = slotWith('w5', [0]);
+    s.drains = [null];
+    expect(await s.warmBoot()).toEqual({ attempts: 1, queued_effects: 0 });
+    expect(s.polls).toBe(1);
+    const held = slotWith('w6', []);
+    held.drains = [true, true, true];
+    await held.holdWhileDraining(Date.now() + 1);
+    expect(held.polls).toBe(1);
+  }, 60_000);
+  test('drainInProgress reads local_process_ingress.draining from the status JSON; anything else is null', async () => {
+    const statusBuild = join(tmp, 'status-build');
+    mkdirSync(join(statusBuild, 'src'), { recursive: true });
+    writeFileSync(join(statusBuild, 'src/cli.ts'), `if (process.argv.slice(2).join(' ') !== 'sources writer status --json') process.exit(2);
+const out = process.env.FAKE_STATUS ?? ''; if (out === 'fail') process.exit(1); process.stdout.write(out);`);
+    const status = async (out: string) => {
+      const s = new GbrainSlot('w7', join(tmp, 'warm'), statusBuild, 1, 'starter');
+      mkdirSync(s.run.env.GBRAIN_HOME!, { recursive: true });
+      s.run.env.FAKE_STATUS = out;
+      return s.drainInProgress();
+    };
+    expect(await status(JSON.stringify({ local_process_ingress: { accepting: true, draining: { since: 'x', settled_noop_embeddings: 0, ran: 20 } } }))).toBe(true);
+    expect(await status(JSON.stringify({ local_process_ingress: { accepting: true } }))).toBe(false);
+    expect(await status(JSON.stringify({ enabled: true }))).toBeNull();
+    expect(await status('not json')).toBeNull();
+    expect(await status('fail')).toBeNull();
+    const fake = new GbrainSlot('w8', join(tmp, 'warm'), buildDir, 1, 'starter');
+    mkdirSync(fake.run.env.GBRAIN_HOME!, { recursive: true });
+    expect(await fake.drainInProgress()).toBeNull();
   });
   test('queuedEffects counts the queued rows in the stopped brain, and null for a build without the table', async () => {
     const build = join(tmp, 'pglite-build');

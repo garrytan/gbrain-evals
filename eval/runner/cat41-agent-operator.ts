@@ -16,7 +16,9 @@
  *   bun eval/runner/cat41-agent-operator.ts run --gbrain <checkout>@<ref> --label baseline \
  *     [--harnesses claude,codex] [--scenarios all|id,id] [--repeat 3] [--concurrency 3] \
  *     [--claude-model claude-opus-5-5] [--codex-model gpt-6.1-sol] [--out eval/reports/cat41/<label>] \
- *     --paid (--budget-usd <n> | --budget-run-id <id>)
+ *     --paid (--budget-usd <n> | --budget-run-id <id>) [--preregistration <committed, pushed .md>]
+ *   (`all` skips the opt-in wave 2 TTHW scenarios; name them in --scenarios. A scenario limited to some harnesses
+ *   runs only on those.)
  *   # re-score a pass from its raw results ($0)
  *   bun eval/runner/cat41-agent-operator.ts score --out <dir>
  *   # token overhead of initialize instructions + tools/list per surface ($0)
@@ -40,6 +42,7 @@ import { BudgetRun, CHAT_PRICE_OVERRIDES, budgetOptionsFrom, receiptCost } from 
 import { requirePaidArm } from './paid-arm.ts';
 import { McpClient } from './cat40/gbrain-arm.ts';
 import { runCli } from './lifecycle/drivers.ts';
+import { attestPreregistration } from './prereg.ts';
 
 export const CAT41_VERSION = 'cat41-v1';
 export const IMAGE = 'gbrain-evals-cat41:v1';
@@ -172,7 +175,7 @@ async function cmdRun(argv: string[]) {
   if (!spec) throw new Error('--gbrain <checkout>@<ref> is required');
   const label = flag(argv, 'label', 'run')!;
   const harnesses = (flag(argv, 'harnesses', HARNESSES.join(','))!).split(',') as Harness[];
-  const scenarioIds = flag(argv, 'scenarios', 'all') === 'all' ? SCENARIOS.map(s => s.id) : flag(argv, 'scenarios')!.split(',');
+  const scenarioIds = flag(argv, 'scenarios', 'all') === 'all' ? SCENARIOS.filter(s => !s.optIn).map(s => s.id) : flag(argv, 'scenarios')!.split(',');
   const scenarios = scenarioIds.map(scenarioById);
   const repeat = Number(flag(argv, 'repeat', '3'));
   const concurrency = Number(flag(argv, 'concurrency', '3'));
@@ -186,9 +189,11 @@ async function cmdRun(argv: string[]) {
   const installSpec = flag(argv, 'install-spec', `github:garrytan/gbrain#${commit}`)!;
 
   const jobs: Array<{ s: Scenario; h: Harness; r: number }> = [];
-  for (const s of scenarios) for (const h of harnesses) for (let r = 1; r <= repeat; r++) jobs.push({ s, h, r });
+  for (const s of scenarios) for (const h of harnesses) for (let r = 1; r <= repeat; r++) if (!s.harnesses || s.harnesses.includes(h)) jobs.push({ s, h, r });
   const estimate = jobs.reduce((a, j) => a + ESTIMATE_USD[j.h], 0);
   requirePaidArm(argv, { arm: 'cat41 agent sessions', estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath });
+  const prereg = flag(argv, 'preregistration');
+  const attestation = prereg ? attestPreregistration(prereg, REPO) : null;
   const opts = budgetOptionsFrom(argv);
   const budget = opts.runId ? BudgetRun.join({ runId: opts.runId, ledgerPath: opts.ledgerPath, programCapUsd: opts.programCapUsd }) : BudgetRun.open({ runner: 'cat41-agent-operator', budgetUsd: opts.budgetUsd!, estimateUsd: estimate, ledgerPath: opts.ledgerPath, programCapUsd: opts.programCapUsd });
 
@@ -196,6 +201,7 @@ async function cmdRun(argv: string[]) {
     label, gbrain: overlaySummary(gut), image: IMAGE, pins: PINS, models, repeat, harnesses, scenarios: scenarioIds,
     docs_base: docsBase, install_spec: installSpec, budget_run_id: budget.runId, tool_result_cap: 'none (harness defaults; the evaluator adds no per-tool-result cap)',
     seed: { pages: Object.keys(SEED_PAGES).length, facts: SEED_FACTS.length },
+    ...(attestation ? { preregistration: attestation } : {}),
   };
   writeFileSync(join(out, 'meta.json'), JSON.stringify(publishable({ ...meta, started_at: new Date().toISOString() }), null, 2));
   console.log(`[cat41] ${jobs.length} runs (${scenarios.length} scenarios x ${harnesses.join('+')} x ${repeat}) against gbrain ${gut.version} @ ${commit.slice(0, 12)} -> ${out}`);
