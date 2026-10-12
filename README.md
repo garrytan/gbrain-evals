@@ -89,6 +89,28 @@ Other systems publish different metrics on different protocols, so these compari
 the same footing, and say so where we cannot. This page describes the other systems by kind; their names, versions,
 sources and every row we could not match are in [comparisons and their protocols](docs/comparison-systems.md).
 
+**Head-to-head on sealed data: pending.** The [Q1 scoreboard](docs/benchmarks/2026-10-06-scoreboard-preregistration.md)
+gives gbrain `f05943e6` (0.60.138.0) and every other system the same BEAM-10M questions, never used to tune gbrain,
+the same three answer models and the same 8,000-token budget, and names each system by kind. Its sealed waves are running. `bun eval/runner/scoreboard.ts render`
+replaces the table below with the measured block from the campaign receipt; until then every cell reads pending.
+
+<!-- scoreboard:headline:begin -->
+| Kind and configuration | BEAM-10M accuracy at 8k, three-reader mean | Dollars per month, personal agent | p50 answer latency | Write to queryable, p50 | Receipt |
+|---|---|---|---|---|---|
+| `gbrain-defaults`; shipped defaults, `tokenmax` search | pending | pending | pending | pending | none |
+| `ext-extract-first`; component, 8,000 tokens | pending | pending | pending | pending | none |
+| `ext-memory-bank`; component, 8,000 tokens | pending | pending | pending | pending | none |
+| `ext-graph-pipeline`; component, 8,000 tokens | pending | pending | pending | pending | none |
+| `ext-temporal-graph`; component, 8,000 tokens | pending | pending | pending | pending | none |
+| `ext-markdown-kb`; component, 8,000 tokens | pending | pending | pending | pending | none |
+| `ext-verbatim-session`; component, 8,000 tokens | pending | pending | pending | pending | none |
+| `ext-agent-runtime`; no BEAM-10M row | not run on BEAM-10M | n/a | n/a | n/a | none |
+| `baseline-full-context`; whole history, where it fits | pending | pending | pending | pending | none |
+| `baseline-file-agent`; file agent, uncapped grep, 40 turns | pending | pending | pending | pending | none |
+| `baseline-hybrid`; component, 8,000 tokens | pending | pending | pending | pending | none |
+| `baseline-none`; component, 8,000 tokens | pending | pending | pending | pending | none |
+<!-- scoreboard:headline:end -->
+
 **Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
 required session is in the top five.
 
@@ -244,6 +266,12 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-12: Q1 scoreboard headline block, pending
+
+New block at the top of "How gbrain compares": the Q1 scoreboard's six-column headline table between the
+`scoreboard:headline` markers, every cell pending until the sealed waves settle. `bun eval/runner/scoreboard.ts
+render` replaces it from the campaign receipt. No existing result changed.
 
 ### 2026-10-08: ClientRead wedge row; repository row names v0.10.45
 

@@ -267,6 +267,49 @@ describe('cohorts, estimand and claim rules', () => {
   });
 });
 
+describe('appendix rows and sensitivity views (v6)', () => {
+  test('an appendix cell is tabled with its build and reason but never compared; a sensitivity view reports every cell on its set without its questions', () => {
+    const { dir, sb: before } = fresh();
+    const s2a = before.cells.find(c => c.cell_id === 's2a-gbrain-8k')!;
+    cpSync(join(dir, 'cells', 's2a-gbrain-8k'), join(dir, 'appendix', 'old-build', 's2a-gbrain-8k'), { recursive: true });
+    const { campaign } = loadCampaign(dir);
+    const set = campaign.sets.find(s => s.id === 'S2a')!;
+    const out = set.scheduled.slice(0, 3).map(q => q.question_id);
+    editJson(join(dir, 'campaign.json'), c => {
+      const cell = c.cells.find(x => x.cell_id === 's2a-gbrain-8k')!;
+      cell.pin = 'gbrain new-build';
+      c.appendix = [{ ...cell, pin: 'gbrain old-build', dir: 'appendix/old-build/s2a-gbrain-8k', appendix: 'found and fixed', reason: 'measured before a fix; reported for the record' }];
+      c.sets.find(s => s.id === 'S2a')!.sensitivity = [{ id: 'repeats', label: 'without repeated sessions', reason: 'these haystacks repeat a session.', question_ids: out }];
+    });
+    const d = deriveAll(dir);
+    for (const f of renderAll(dir, d, loadCampaign(dir).campaign).files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); }
+    const sb = d.scoreboard;
+    expect(sb.schema).toBe('gbrain-evals/scoreboard/v6');
+    expect(sb.appendix).toHaveLength(1);
+    expect(sb.appendix[0]).toMatchObject({ cell_id: 's2a-gbrain-8k', pin: 'gbrain old-build', mean: s2a.mean, valued: s2a.valued, appendix: 'found and fixed' });
+    expect(sb.comparisons.filter(c => c.set === 'S2a').map(c => c.anchor)).toEqual(before.comparisons.filter(c => c.set === 'S2a').map(c => c.anchor));
+    expect(sb.comparisons.map(c => ({ id: c.id, delta: c.delta }))).toEqual(before.comparisons.map(c => ({ id: c.id, delta: c.delta })));
+    const main = sb.cells.find(c => c.cell_id === 's2a-gbrain-8k')!;
+    expect(main.pin).toBe('gbrain new-build');
+    const view = main.sensitivity[0];
+    expect(view).toMatchObject({ id: 'repeats', scheduled: main.scheduled - 3 });
+    expect(view.valued).toBeLessThanOrEqual(main.valued);
+    expect(view.valued).toBeGreaterThanOrEqual(main.valued - 3);
+    expect(sb.cells.filter(c => c.set === 'S2a').every(c => c.sensitivity.length === 1)).toBe(true);
+    expect(sb.cells.filter(c => c.set !== 'S2a').every(c => c.sensitivity.length === 0)).toBe(true);
+    expect(sb.sensitivity_notes).toEqual([{ set: 'S2a', id: 'repeats', label: 'without repeated sessions', reason: 'these haystacks repeat a session.', question_ids: out }]);
+    const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
+    expect(md).toContain('## Sensitivity views');
+    expect(md).toContain(`Excluded: ${out.join(', ')}.`);
+    expect(md).toContain('## Appendix: found and fixed');
+    expect(md).toContain('| `s2a-gbrain-8k` | S2a | `gbrain-defaults` | gbrain old-build |');
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    editJson(join(dir, 'campaign.json'), c => { c.sets.find(s => s.id === 'S2a')!.sensitivity![0].question_ids.push('not-a-question'); });
+    expect(() => deriveAll(dir)).toThrow(/sensitivity repeats names not-a-question/);
+    rmSync(dir, { recursive: true });
+  });
+});
+
 describe('explain', () => {
   test('prints the chain behind one number', () => {
     const { dir } = fresh();
@@ -353,7 +396,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
 
   test('per cell, per system and set, and pooled over sets, from replicate-0 answers with a scored canonical judgment', () => {
     const { dir, sb } = fresh({ cells: scripted() });
-    expect(sb.schema).toBe('gbrain-evals/scoreboard/v5');
+    expect(sb.schema).toBe('gbrain-evals/scoreboard/v6');
     const s1 = sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived;
     expect(s1).toEqual({ answers: 177, wrong: 107, confident_wrong: 40, abstention_answers: 30, correct_abstentions: 10, answerable_answers: 147, false_abstentions: 27, confident_error_rate: Number((40 / 107).toFixed(6)), correct_abstention_rate: Number((10 / 30).toFixed(6)), false_abstention_rate: Number((27 / 147).toFixed(6)) });
     const s2a = sb.cells.find(c => c.cell_id === 's2a-gbrain-8k')!.derived;

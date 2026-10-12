@@ -119,8 +119,10 @@
  * v3 adds each cell's `derived` and the top-level `derived`; v4 takes the classifier from campaign.json
  * `hedge_classifier` and adds `derived.classifier.source` and `derived.classifier.per_answer`; v5 adds
  * `derived.withheld` and, with `hedge_classifier: "none"`, sets `derived.classifier` to null and drops the
- * classifier-based fields from every DerivedColumns):
+ * classifier-based fields from every DerivedColumns; v6 adds each cell's `pin` and `sensitivity`, `appendix` and `sensitivity_notes`):
  *   schema, generator, campaign {id, hash, campaign_sha256, gbrain, measured, readers},
+ *   appendix [CellAggregate & {appendix, reason}] (cells published only in an appendix, never compared),
+ *   sensitivity_notes [{set, id, label, reason, question_ids}],
  *   inputs [{path, sha256}] (every file the derivation read),
  *   statistics {alpha, draws, descriptive_draws, seed, method},
  *   power {family1, detectable_difference_points, shrunk_comparators, sha256},
@@ -146,7 +148,7 @@ import { HEDGE_CLASSIFIERS, hedgeClassifier, type HedgeVerdict } from './q1/hedg
 import { PASS_THRESHOLD } from './memory-qa/instruments.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
-export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v5';
+export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v6';
 export const CAMPAIGN_SCHEMA = 'gbrain-evals/q1-campaign/v1';
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 export const MAX_TREE_BYTES = 60 * 1024 * 1024;
@@ -210,13 +212,21 @@ export interface CampaignSet {
   cluster_unit: 'conversation' | 'question'; claim_min_clusters: number;
   scheduled: Array<{ question_id: string; conversation: string }>;
   exclusions: Array<{ question_id: string; reason: string }>;
+  /** Sensitivity views: every cell on the set is also reported without these questions (for example A21's repeated LongMemEval-S sessions); never a claim. */
+  sensitivity?: Array<{ id: string; label: string; reason: string; question_ids: string[] }>;
 }
 export interface CampaignCell {
   cell_id: string; set: string; system: string; arm: 'component' | 'whole-system'; budget: number | null;
   configuration: string; label?: string; anchor?: boolean; headline?: boolean;
   status: 'complete' | 'invalid' | 'not-run'; not_run_reason?: string;
   readers: string[]; reader_replicates?: Record<string, number>; canonical_instrument: string; config_sha256: string;
+  /** The system build the cell measured, as the report labels it (for gbrain, the commit and version). */
+  pin?: string;
+  /** The cell's directory under the receipt when it is not cells/<cell_id> (appendix cells). */
+  dir?: string;
 }
+/** A cell published only in an appendix (the found-and-fixed rows): derived and tabled, never compared, never in a headline. */
+export interface AppendixCell extends CampaignCell { appendix: string; reason: string; dir: string; pin: string }
 export interface CampaignFamily { id: 'F1' | 'F2' | 'F3'; label: string; anchor: string; comparators: string[] }
 export interface CampaignManifest {
   schema: typeof CAMPAIGN_SCHEMA; campaign_id: string; campaign_hash: string;
@@ -226,7 +236,7 @@ export interface CampaignManifest {
   statistics: { alpha: number; draws: number; descriptive_draws: number; seed: number };
   /** The eval/runner/q1/hedge.ts version the derived columns use (HEDGE_CLASSIFIERS), or "none", fixed by amendment before render. */
   hedge_classifier: string;
-  sets: CampaignSet[]; cells: CampaignCell[]; families: CampaignFamily[];
+  sets: CampaignSet[]; cells: CampaignCell[]; families: CampaignFamily[]; appendix?: AppendixCell[];
   pins: Array<{ system: string; version: string; latest_release: string | null }>;
   release_assets: Array<{ name: string; sha256: string; bytes: number }>;
   disclosures: string[];
@@ -306,6 +316,18 @@ function validateCampaign(receipt: string, c: CampaignManifest): void {
     for (const e of s.exclusions) if (!ids.has(e.question_id)) throw invalid(receipt, `set ${s.id} excludes ${e.question_id}, which it does not schedule`, why);
     if (!EXPOSURE_LABELS[s.exposure]) throw invalid(receipt, `set ${s.id} has unknown exposure ${s.exposure}`, why);
   }
+  for (const s of c.sets) for (const v of s.sensitivity ?? []) {
+    const ids = new Set(s.scheduled.map(q => q.question_id));
+    const stray = v.question_ids.filter(q => !ids.has(q));
+    if (stray.length) throw invalid(receipt, `set ${s.id} sensitivity ${v.id} names ${stray.slice(0, 3).join(', ')}, which it does not schedule`, why);
+  }
+  const dirs = new Set<string>();
+  for (const a of c.appendix ?? []) {
+    if (!sets.has(a.set)) throw invalid(receipt, `appendix cell ${a.cell_id} names unknown set ${a.set}`, why);
+    if (!a.dir || !a.appendix || !a.reason || !a.pin) throw invalid(receipt, `appendix cell ${a.cell_id} needs dir, appendix, reason and pin`, 'an appendix row says which build it measured and why it is not in the main tables');
+    if (dirs.has(a.dir)) throw invalid(receipt, `appendix dir ${a.dir} is listed twice`, why);
+    dirs.add(a.dir);
+  }
   for (const cell of c.cells) {
     if (cells.has(cell.cell_id)) throw invalid(receipt, `cell ${cell.cell_id} is listed twice`, why);
     if (!sets.has(cell.set)) throw invalid(receipt, `cell ${cell.cell_id} names unknown set ${cell.set}`, why);
@@ -362,8 +384,8 @@ const NO_DERIVED: DerivedCounts = { answers: 0, wrong: 0, confident_wrong: 0, ab
 
 const mean = (xs: readonly number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null);
 
-function cellFiles(receipt: string, id: string) {
-  const dir = join(receipt, 'cells', id);
+function cellFiles(receipt: string, id: string, under?: string) {
+  const dir = join(receipt, under ?? join('cells', id));
   return { dir, rows: join(dir, 'rows.ndjson'), answers: join(dir, 'answers.ndjson'), judgments: join(dir, 'judgments.ndjson'), runConfig: join(dir, 'run-config.json'), receipt: join(dir, 'receipt.json') };
 }
 
@@ -371,7 +393,7 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
   const set = campaign.sets.find(s => s.id === cell.set)!;
   const empty: CellData = { cell, values: new Map(), judgeRuns: [], readerMeans: {}, missingReaders: [], productFailures: 0, harnessFailures: 0, judgeSd: null, latencies: [], rows: new Map(), problems: [], notApplicable: {}, derived: { ...NO_DERIVED }, hedgeLines: '' };
   if (cell.status === 'not-run') return empty;
-  const files = cellFiles(r.root, cell.cell_id);
+  const files = cellFiles(r.root, cell.cell_id, cell.dir);
   if (!existsSync(files.runConfig)) throw invalid(r.root, `cell ${cell.cell_id} has no run-config.json`, 'the configuration identity is the run-config.json hash');
   const configSha = sha256(readInput(r, files.runConfig));
   if (configSha !== cell.config_sha256) throw invalid(r.root, `cell ${cell.cell_id} run-config.json sha256 ${configSha.slice(0, 12)}… does not match campaign.json config_sha256 ${cell.config_sha256.slice(0, 12)}…`, 'a counted cell runs exactly the configuration the campaign froze; a changed configuration is a new cell identity', { next: 'report', user_message: 'restore the frozen run-config.json, or register the changed configuration as a new cell (never rewrite config_sha256 to match)' });
@@ -497,6 +519,10 @@ export interface CellAggregate {
   exclusions: Array<{ question_id: string; reason: string }>;
   /** Descriptive derived columns (confident errors, the "I don't know" column); no family, no Holm. */
   derived: DerivedColumns;
+  /** The build the cell measured (CampaignCell.pin), or null. */
+  pin: string | null;
+  /** The set's sensitivity views for this cell: the mean without the view's questions. */
+  sensitivity: Array<{ id: string; label: string; scheduled: number; valued: number; mean: number | null }>;
 }
 
 export interface FamilyResult { id: string; label: string; metric: string; plan: string; comparisons: string[]; verdict_stability: number | null }
@@ -514,6 +540,9 @@ export interface Scoreboard {
   power: { family1: string; detectable_difference_points: number | null; shrunk_comparators: string[] | null; sha256: string };
   sets: Array<{ id: string; label: string; benchmark: string; role: CampaignSet['role']; exposure: Exposure; exposure_label: string; cluster_unit: string; clusters: number; scheduled: number; preregistered_exclusions: Array<{ question_id: string; reason: string }> }>;
   cells: CellAggregate[]; comparisons: Comparison[]; families: FamilyResult[];
+  appendix: Array<CellAggregate & { appendix: string; reason: string }>;
+  /** Each set's sensitivity views as campaign.json states them (why, and which questions). */
+  sensitivity_notes: Array<{ set: string; id: string; label: string; reason: string; question_ids: string[] }>;
   field: { required: string[]; ran: string[]; missing: string[]; complete: boolean };
   verdict: string; headline: HeadlineRow[];
   size_curve: { sets: Array<{ id: string; label: string }>; rows: Array<{ system: string; label: string; values: string[] }> };
@@ -743,8 +772,7 @@ export function deriveAll(receipt: string): Derivation {
   const ran = required.filter(id => campaign.cells.some(c => c.set === headSet.id && c.system === id && c.status !== 'not-run'));
   const field = { required, ran, missing: required.filter(id => !ran.includes(id)), complete: ran.length === required.length };
 
-  const cells: CellAggregate[] = campaign.cells.map(cell => {
-    const d = data.get(cell.cell_id)!;
+  const aggregate = (cell: CampaignCell, d: CellData): CellAggregate => {
     const vals = [...d.values.values()];
     const valued = vals.filter(v => v.value !== null);
     const rows = [...d.rows.values()];
@@ -769,8 +797,17 @@ export function deriveAll(receipt: string): Derivation {
       latency_p50_ms: lat === null ? null : r6(lat),
       exclusions: vals.filter(v => v.reason !== null).map(v => ({ question_id: v.question_id, reason: v.reason! })),
       derived: derivedColumns(d.derived, !!classifier),
+      pin: cell.pin ?? null,
+      sensitivity: (set.sensitivity ?? []).map(s => {
+        const out = new Set(s.question_ids);
+        const kept = vals.filter(v => !out.has(v.question_id));
+        const keptValued = kept.filter(v => v.value !== null);
+        return { id: s.id, label: s.label, scheduled: set.scheduled.filter(q => !out.has(q.question_id)).length - set.exclusions.filter(e => !out.has(e.question_id)).length, valued: keptValued.length, mean: r6n(mean(keptValued.map(v => v.value!))) };
+      }),
     };
-  });
+  };
+  const cells = campaign.cells.map(c => aggregate(c, data.get(c.cell_id)!));
+  const appendix = (campaign.appendix ?? []).map(a => ({ ...aggregate(a, deriveCell(reader, campaign, a)), appendix: a.appendix, reason: a.reason }));
 
   const costPath = join(receipt, 'cost-speed.json');
   const cost = existsSync(costPath) ? (JSON.parse(readInput(reader, costPath).toString('utf8')) as CostSpeedFile) : null;
@@ -829,7 +866,7 @@ export function deriveAll(receipt: string): Derivation {
     statistics: { ...campaign.statistics, method: 'headline set: restricted wild cluster bootstrap-t with Webb weights, two-sided, Holm within each family; public sets: cluster bootstrap interval and cluster sign-flip test, descriptive' },
     power: { family1: power.family1, detectable_difference_points: power.detectable_difference_points, shrunk_comparators: power.shrunk_comparators, sha256: sha256(powerBuf) },
     sets: campaign.sets.map(s => ({ id: s.id, label: s.label, benchmark: s.benchmark, role: s.role, exposure: s.exposure, exposure_label: EXPOSURE_LABELS[s.exposure], cluster_unit: s.cluster_unit, clusters: new Set(s.scheduled.map(q => q.conversation)).size, scheduled: s.scheduled.length, preregistered_exclusions: s.exclusions })),
-    cells, comparisons, families, field, verdict, headline,
+    cells, comparisons, families, appendix, sensitivity_notes: campaign.sets.flatMap(s => (s.sensitivity ?? []).map(v => ({ set: s.id, ...v }))), field, verdict, headline,
     size_curve: { sets: curveSets.map(s => ({ id: s.id, label: s.label })), rows: curveRows },
     losses, disclosures: campaign.disclosures, staleness,
     derived: {
@@ -891,11 +928,22 @@ export function renderReport(sb: Scoreboard): string {
   const out = [`# Scoreboard tables: ${sb.campaign.id}`, '', 'Generated by `bun eval/runner/scoreboard.ts render` from this directory\'s rows, answers and judgments; `bun eval/runner/scoreboard.ts check` regenerates it byte for byte.', '', '## Headline', '', renderHeadline(sb, '.').trimEnd(), ''];
   const dv = sb.derived, classified = dv.classifier !== null;
   const dhead = classified ? ['Confident-error rate', 'Correct abstention', 'False abstention'] : ['Correct abstention'];
-  out.push('## Cells', '', `| Cell | Set | System | Arm | Budget | Accuracy | Scored | Product failures | Harness failures | Judge SD | recall_all@10 | Fill rate | ${dhead.join(' | ')} | Status |`, `|---|---|---|---|---|---|---|---|---|---|---|---|${dhead.map(() => '---|').join('')}---|`);
+  out.push('## Cells', '', `| Cell | Set | System | Build | Arm | Budget | Accuracy | Scored | Product failures | Harness failures | Judge SD | recall_all@10 | Fill rate | ${dhead.join(' | ')} | Status |`, `|---|---|---|---|---|---|---|---|---|---|---|---|---|${dhead.map(() => '---|').join('')}---|`);
   const num = (x: number | null, f: (x: number) => string) => (x === null ? 'n/a' : f(x));
   const ratio = (r: number | null | undefined, k = 0, n = 0) => (r === null || r === undefined ? 'n/a' : `${pct(r)} (${k}/${n})`);
   const dcols = (d: DerivedColumns) => (classified ? `${ratio(d.confident_error_rate, d.confident_wrong, d.wrong)} | ${ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers)} | ${ratio(d.false_abstention_rate, d.false_abstentions, d.answerable_answers)}` : ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers));
-  for (const c of sb.cells) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${dcols(c.derived)} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`);
+  const cellLine = (c: CellAggregate) => `| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.pin ? cellText(c.pin) : 'n/a'} | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${dcols(c.derived)} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`;
+  for (const c of sb.cells) out.push(cellLine(c));
+  const views = sb.cells.filter(c => c.sensitivity.length && c.status !== 'not-run');
+  if (views.length) {
+    out.push('', '## Sensitivity views', '', 'Each cell on a set with a sensitivity view is also reported without that view\'s questions. Descriptive only: no comparison, family or claim uses these rows.', '');
+    for (const s of sb.sets) for (const v of (sb.cells.find(c => c.set === s.id && c.sensitivity.length)?.sensitivity ?? [])) {
+      const why = sb.sensitivity_notes.find(n => n.set === s.id && n.id === v.id);
+      out.push(`- ${s.label}, ${v.label}${why ? `: ${why.reason} Excluded: ${why.question_ids.join(', ')}.` : '.'}`);
+    }
+    out.push('', '| Cell | Set | System | Build | Accuracy, all questions | View | Accuracy without the view\'s questions |', '|---|---|---|---|---|---|---|');
+    for (const c of views) for (const v of c.sensitivity) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.pin ? cellText(c.pin) : 'n/a'} | ${num(c.mean, pct)} (${c.valued}/${c.scheduled}) | ${cellText(v.label)} | ${num(v.mean, pct)} (${v.valued}/${v.scheduled}) |`);
+  }
   out.push('', '## Per-reader accuracy', '', `| Cell | ${sb.campaign.readers.join(' | ')} |`, `|---|${sb.campaign.readers.map(() => '---|').join('')}`);
   for (const c of sb.cells.filter(x => x.status !== 'not-run')) out.push(`| \`${c.cell_id}\` | ${sb.campaign.readers.map(r => (r in c.per_reader ? num(c.per_reader[r], pct) : 'not promised')).join(' | ')} |`);
   const source = dv.classifier ? `Classifier \`${dv.classifier.file}\` ${dv.classifier.version}, rule table sha256 \`${dv.classifier.rules_sha256}\` (${dv.classifier.source}; per-answer verdicts in \`${dv.classifier.per_answer}\`); an answer is wrong below a canonical score of ${dv.pass_threshold}.` : `The confident-error and false-abstention columns are not published: ${HEDGE_WITHHELD}. An answer passes at a canonical score of ${dv.pass_threshold} or above.`;
@@ -917,6 +965,15 @@ export function renderReport(sb: Scoreboard): string {
   out.push('', '## Exclusions', '');
   for (const c of sb.comparisons.filter(x => x.cohort?.excluded.length)) out.push(`- \`${c.id}\` (${c.cohort!.excluded.length}): ${c.cohort!.excluded.map(e => `${e.question_id} (${e.reason})`).join(', ')}`);
   for (const s of sb.sets.filter(x => x.preregistered_exclusions.length)) out.push(`- ${s.label}, preregistered: ${s.preregistered_exclusions.map(e => `${e.question_id} (${e.reason})`).join(', ')}`);
+  if (sb.appendix.length) {
+    for (const kind of [...new Set(sb.appendix.map(a => a.appendix))]) {
+      const rows = sb.appendix.filter(a => a.appendix === kind);
+      out.push('', `## Appendix: ${kind}`, '', 'These rows are published for the record and are never compared, ranked or used in a headline.', '');
+      for (const reason of [...new Set(rows.map(a => a.reason))]) out.push(`- ${reason}`);
+      out.push('', `| Cell | Set | System | Build | Arm | Budget | Accuracy | Scored | Product failures | Harness failures | recall_all@10 | Status |`, '|---|---|---|---|---|---|---|---|---|---|---|---|');
+      for (const c of rows) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.pin ? cellText(c.pin) : 'n/a'} | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.recall_all_at_10, pct)} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'} |`);
+    }
+  }
   out.push('', '## Inputs', '', `Campaign \`${sb.campaign.id}\`, campaign hash \`${sb.campaign.hash}\`. ${sb.statistics.method}.`, '');
   for (const i of sb.inputs) out.push(`- \`${i.path}\` sha256 \`${i.sha256}\``);
   return out.join('\n') + '\n';

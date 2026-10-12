@@ -1,0 +1,99 @@
+{
+  "campaign_id": "q1-scoreboard",
+  "campaign_hash": "43749abd1ebecd8b8e16b3d9f91401647f27e95f247d65339e7819eaedb1cfb6",
+  "gbrain": {
+    "commit": "f05943e653fd9d938b343b1774a35325ba792271",
+    "version": "0.60.138.0",
+    "resolved_search_mode": "tokenmax"
+  },
+  "hedge_classifier": "none",
+  "statistics": {
+    "alpha": 0.05,
+    "draws": 1999,
+    "descriptive_draws": 1999,
+    "seed": 20261006
+  },
+  "pending": [
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-sealed.json",
+      "reason": "sealed campaign, pending until its wave settles on the custodian's host"
+    }
+  ],
+  "not_run_reason": "no campaign schedules this cell",
+  "sources": [
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-public-v2.json",
+      "launch_tree": "4bccbd5a",
+      "exclude_systems": [
+        "gbrain-defaults"
+      ]
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-public-v2.json",
+      "launch_tree": "4bccbd5a",
+      "systems": [
+        "gbrain-defaults"
+      ],
+      "pins": {
+        "gbrain-defaults": "gbrain 7aa2caa0 (0.60.106.0)"
+      },
+      "appendix": {
+        "name": "found-and-fixed",
+        "dir": "found-and-fixed",
+        "reason": "Public-v2 gbrain-defaults rows at 7aa2caa0 (0.60.106.0), shown for comparison only (A15): LongMemEval-M c1 and c2 stalled at pin 7aa2caa0, fixed in #6389 (0.60.133.0); LongMemEval-S c0 and c1 stalled ingest, likely #6389; LongMemEval-M c0 and c3 scored at 7aa2caa0. The public gbrain rows reran at f05943e6 (0.60.138.0)."
+      }
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-public-v3-s2.json",
+      "launch_tree": "3532b1aa",
+      "systems": [
+        "gbrain-defaults"
+      ]
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-public-v3-m.json",
+      "launch_tree": "0518e2fd",
+      "systems": [
+        "gbrain-defaults"
+      ]
+    }
+  ],
+  "sensitivity": [
+    {
+      "sets": [
+        "S4",
+        "S4-slice"
+      ],
+      "id": "a21-repeated-sessions",
+      "label": "without the 13 repeated-session haystacks (A21)",
+      "reason": "In 13 LongMemEval-S haystacks one session id appears twice with identical turns and different dates, never as gold evidence. gbrain's adapter refuses the second copy; the other systems keep it. This view drops those questions for every system; the headline row keeps all questions.",
+      "question_ids": [
+        "001be529",
+        "18bc8abd",
+        "1d4da289",
+        "1e043500",
+        "58bf7951",
+        "91b15a6e",
+        "caf03d32",
+        "gpt4_76048e76",
+        "078150f1",
+        "c7dc5443",
+        "d23cf73b",
+        "gpt4_4929293b",
+        "gpt4_c27434e8_abs"
+      ]
+    }
+  ],
+  "pins": {
+    "gbrain-defaults": "gbrain f05943e6 (0.60.138.0)",
+    "baseline-none": "harness baseline",
+    "baseline-recency": "harness baseline",
+    "baseline-hybrid": "harness baseline",
+    "baseline-full-context": "harness baseline",
+    "baseline-file-agent": "harness baseline"
+  },
+  "disclosures": [],
+  "render_targets": [
+    "README.md"
+  ]
+}

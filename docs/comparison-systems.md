@@ -105,6 +105,27 @@ and capability-record hashes).
 ]
 ```
 
+### Builds the Q1 scoreboard measured
+
+The scoreboard report's Build column labels each row with the build it measured, and never with a product name. An
+external row reads `bundle lock <hash>, capabilities <hash>`: the first eight characters of the `lock_sha256` and
+`capability_sha256` values in the table above, which name the kind's product and package. The labels are read from
+this table at the tree each campaign launched from (`eval/runner/q1/publish.ts`); the table is the same at every Q1
+launch tree. gbrain rows name the commit and version the campaign pinned.
+
+| Kind id | Build label in the Q1 report |
+|---|---|
+| `gbrain-defaults` | gbrain f05943e6 (0.60.138.0), every sealed and public row (A14, A15) |
+| `gbrain-defaults`, found-and-fixed appendix only | gbrain 7aa2caa0 (0.60.106.0), the public-v2 rows (A15) |
+| `ext-extract-first` | bundle lock 9777b7a8, capabilities 0acaff3a |
+| `ext-memory-bank` | bundle lock f54d89df, capabilities 23a033f4 |
+| `ext-graph-pipeline` | bundle lock 59af44d5, capabilities e00e4600 |
+| `ext-temporal-graph` | bundle lock 4ce9b216, capabilities 0ae56345 |
+| `ext-markdown-kb` | bundle lock e1a14a19, capabilities 4e95f8ef |
+| `ext-agent-runtime` | bundle capabilities d55c28c9 (the table pins no lockfile for it) |
+| `ext-verbatim-session` | bundle lock e2e066bf, capabilities ffd48dae |
+| `baseline-*` | harness baseline (no external system) |
+
 ## Four questions hidden inside the word “recall”
 
 | Measure | What a passing result means | A failure it can hide |
@@ -298,6 +319,12 @@ the former id (`extract-first-common-locomo-r1-a2-7c50fc54` was `mem0-…`), and
 `temporal_graph_beam_recipe` was `graphiti_beam_recipe`. Ledger entries and logs written before A6 use the former ids.
 
 ## Changelog
+
+### 2026-10-12: Builds the Q1 scoreboard measured
+
+New subsection under the pin table: the build label each Q1 scoreboard row carries (gbrain `f05943e6`, 0.60.138.0,
+for every sealed and public row; `7aa2caa0`, 0.60.106.0, for the found-and-fixed appendix; external kinds by bundle
+lockfile and capability-record hash), so the report can label builds without naming products. No pin changed.
 
 ### 2026-10-07: Systems in the open-source comparison
 
