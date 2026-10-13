@@ -1,0 +1,522 @@
+{
+  "cells": {
+    "lme-1": {
+      "raw": {
+        "cell_id": "longmemeval-s-gbrain-rag-e21e02ddf1be",
+        "delivered_mean": 8051.6,
+        "delivered_p95": 8087,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 79
+      },
+      "one-call": {
+        "cell_id": "longmemeval-s-gbrain-rag-e0f1abd7615c",
+        "delivered_mean": 8166.2,
+        "delivered_p95": 8221,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 85
+      },
+      "v1": {
+        "cell_id": "longmemeval-s-gbrain-rag-e34dbfc1833a",
+        "delivered_mean": 8124.7,
+        "delivered_p95": 8154,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 72
+      },
+      "v2": {
+        "cell_id": "longmemeval-s-gbrain-rag-afccd1dd5e1e",
+        "delivered_mean": 8115.1,
+        "delivered_p95": 8161,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 84
+      }
+    },
+    "lme-2": {
+      "one-call": {
+        "cell_id": "longmemeval-s-gbrain-rag-58c7c766d10b",
+        "delivered_mean": 8163.4,
+        "delivered_p95": 8205,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 75
+      },
+      "v1": {
+        "cell_id": "longmemeval-s-gbrain-rag-3db27abbc673",
+        "delivered_mean": 8126.1,
+        "delivered_p95": 8158,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 59
+      },
+      "raw": {
+        "cell_id": "longmemeval-s-gbrain-rag-7653e72eac00",
+        "delivered_mean": 8049.6,
+        "delivered_p95": 8090,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 76
+      },
+      "v2": {
+        "cell_id": "longmemeval-s-gbrain-rag-2a02d02091e4",
+        "delivered_mean": 8118.8,
+        "delivered_p95": 8176,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 79
+      }
+    },
+    "lme-3": {
+      "raw": {
+        "cell_id": "longmemeval-s-gbrain-rag-b477c171e826",
+        "delivered_mean": 8054.9,
+        "delivered_p95": 8090,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 67
+      },
+      "v2": {
+        "cell_id": "longmemeval-s-gbrain-rag-a7660db35a73",
+        "delivered_mean": 8124.3,
+        "delivered_p95": 8172,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 75
+      },
+      "one-call": {
+        "cell_id": "longmemeval-s-gbrain-rag-c46db6b70b85",
+        "delivered_mean": 8170.4,
+        "delivered_p95": 8223,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 75
+      },
+      "v1": {
+        "cell_id": "longmemeval-s-gbrain-rag-1491b002f94b",
+        "delivered_mean": 8126.5,
+        "delivered_p95": 8157,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 58
+      }
+    },
+    "lme-4": {
+      "v2": {
+        "cell_id": "longmemeval-s-gbrain-rag-3d11a8d4a27b",
+        "delivered_mean": 8088.9,
+        "delivered_p95": 8169,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 95
+      },
+      "v1": {
+        "cell_id": "longmemeval-s-gbrain-rag-2994a0f238ba",
+        "delivered_mean": 8127.9,
+        "delivered_p95": 8163,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 87
+      },
+      "raw": {
+        "cell_id": "longmemeval-s-gbrain-rag-b35cb77ffed1",
+        "delivered_mean": 8049.6,
+        "delivered_p95": 8092,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 95
+      },
+      "one-call": {
+        "cell_id": "longmemeval-s-gbrain-rag-1cc06b7861d2",
+        "delivered_mean": 8165,
+        "delivered_p95": 8216,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 95
+      }
+    },
+    "beam-100k": {
+      "v1": {
+        "cell_id": "beam-100k-gbrain-rag-599d06658821",
+        "delivered_mean": 8063.6,
+        "delivered_p95": 8110,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 70.74
+      },
+      "v2-w5": {
+        "cell_id": "beam-100k-gbrain-rag-830d05375ca8",
+        "delivered_mean": 8021.7,
+        "delivered_p95": 8072,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 72.18
+      },
+      "v2": {
+        "cell_id": "beam-100k-gbrain-rag-5c941bbd06a3",
+        "delivered_mean": 8065.1,
+        "delivered_p95": 8120,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 73.23
+      },
+      "comparator": {
+        "cell_id": "beam-100k-comparator-rag-5fb735c46ea7",
+        "delivered_mean": 7539.7,
+        "delivered_p95": 8262,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 66.35
+      }
+    },
+    "beam-1m-1": {
+      "v2": {
+        "cell_id": "beam-1m-gbrain-rag-381748f6d518",
+        "delivered_mean": 8059.2,
+        "delivered_p95": 8168,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 71.23
+      },
+      "v2-w5": {
+        "cell_id": "beam-1m-gbrain-rag-30c3208f16d5",
+        "delivered_mean": 7999.4,
+        "delivered_p95": 8058,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 69.95
+      },
+      "v1": {
+        "cell_id": "beam-1m-gbrain-rag-e689b3f18ba4",
+        "delivered_mean": 8055.7,
+        "delivered_p95": 8166,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 68.47
+      },
+      "comparator": {
+        "cell_id": "beam-1m-comparator-rag-410a3ee84ab4",
+        "delivered_mean": 7765.2,
+        "delivered_p95": 8670,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 69.98
+      }
+    },
+    "beam-1m-2": {
+      "v1": {
+        "cell_id": "beam-1m-gbrain-rag-a239d1976e1d",
+        "delivered_mean": 8062.9,
+        "delivered_p95": 8109,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 68.59
+      },
+      "v2-w5": {
+        "cell_id": "beam-1m-gbrain-rag-88296f8a21e8",
+        "delivered_mean": 8028.9,
+        "delivered_p95": 8069,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 69.07
+      },
+      "v2": {
+        "cell_id": "beam-1m-gbrain-rag-fa8741077207",
+        "delivered_mean": 8065.7,
+        "delivered_p95": 8109,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 68.57
+      },
+      "comparator": {
+        "cell_id": "beam-1m-comparator-rag-a2ae951184df",
+        "delivered_mean": 7975.5,
+        "delivered_p95": 8722,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 63.49
+      }
+    },
+    "beam-500k-1": {
+      "v2": {
+        "cell_id": "beam-500k-gbrain-rag-a49df98da16d",
+        "delivered_mean": 8061.7,
+        "delivered_p95": 8118,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 73.49
+      },
+      "v2-w5": {
+        "cell_id": "beam-500k-gbrain-rag-8ce3fd7d3f8e",
+        "delivered_mean": 8014.6,
+        "delivered_p95": 8064,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 73.55
+      },
+      "v1": {
+        "cell_id": "beam-500k-gbrain-rag-e8b68271178e",
+        "delivered_mean": 8058.5,
+        "delivered_p95": 8113,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 71.55
+      },
+      "comparator": {
+        "cell_id": "beam-500k-comparator-rag-13b8f315a8f6",
+        "delivered_mean": 7533.7,
+        "delivered_p95": 8491,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 71.82
+      }
+    },
+    "beam-500k-2": {
+      "v2": {
+        "cell_id": "beam-500k-gbrain-rag-c6076d411e60",
+        "delivered_mean": 8072.5,
+        "delivered_p95": 8110,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 66.18
+      },
+      "v1": {
+        "cell_id": "beam-500k-gbrain-rag-b9b333a980c2",
+        "delivered_mean": 8070.4,
+        "delivered_p95": 8113,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 64.24
+      },
+      "v2-w5": {
+        "cell_id": "beam-500k-gbrain-rag-d2dec41f62dd",
+        "delivered_mean": 8036.4,
+        "delivered_p95": 8074,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 66.11
+      },
+      "comparator": {
+        "cell_id": "beam-500k-comparator-rag-4f8d151f9685",
+        "delivered_mean": 7657.6,
+        "delivered_p95": 8554,
+        "delivered_ok": true,
+        "complete": true,
+        "in_cell_mean_points": 60.86
+      }
+    }
+  },
+  "gate_1": {
+    "beats_v1": {
+      "pair": "v2 - v1",
+      "questions": 400,
+      "estimate_points": 14,
+      "lower": 10.956,
+      "margin": 0,
+      "claim": "beats (lower > 0)",
+      "holds": true,
+      "complete": true
+    },
+    "non_inferior_to_raw": {
+      "pair": "v2 - raw",
+      "questions": 400,
+      "estimate_points": 2.75,
+      "lower": -0.873,
+      "margin": 2,
+      "claim": "non-inferior (lower > -2)",
+      "holds": true,
+      "complete": true
+    }
+  },
+  "lme_vs_comparator_wave1": {
+    "pair": "v2 - comparator",
+    "questions": 400,
+    "estimate_points": -3.25,
+    "lower": -6.966,
+    "margin": 0,
+    "claim": "beats (lower > 0)",
+    "holds": false,
+    "complete": false
+  },
+  "lme_one_call_vs_v2": {
+    "pair": "one-call - v2",
+    "questions": 400,
+    "estimate_points": 0.5,
+    "lower": -0.698,
+    "margin": 0,
+    "claim": "beats (lower > 0)",
+    "holds": false,
+    "complete": true
+  },
+  "gate_2": {
+    "questions": 1440,
+    "conversations": 72,
+    "margin": 2,
+    "estimate_points": 1.624,
+    "se_points": 0.686,
+    "primary": {
+      "method": "restricted wild cluster bootstrap-t, Webb weights",
+      "draws": 9999,
+      "seed": 20261010,
+      "lower": 0.486,
+      "upper": 2.792
+    },
+    "reported_beside": {
+      "analytic_lower": 0.481,
+      "boot_t_lower": 0.529
+    },
+    "by_split": {
+      "100k": {
+        "questions": 320,
+        "conversations": 16,
+        "mean_points": 1.95
+      },
+      "1m": {
+        "questions": 560,
+        "conversations": 28,
+        "mean_points": 1.42
+      },
+      "500k": {
+        "questions": 560,
+        "conversations": 28,
+        "mean_points": 1.64
+      }
+    },
+    "complete": true,
+    "incomplete": {},
+    "outcome_from_bounds": "ahead",
+    "outcome": "ahead"
+  },
+  "gate_3": {
+    "questions": 1440,
+    "conversations": 72,
+    "margin": 3.5,
+    "estimate_points": 3.971,
+    "se_points": 0.825,
+    "primary": {
+      "method": "restricted wild cluster bootstrap-t, Webb weights",
+      "draws": 9999,
+      "seed": 20261010,
+      "lower": 2.63,
+      "upper": 5.325
+    },
+    "reported_beside": {
+      "analytic_lower": 2.596,
+      "boot_t_lower": 2.525
+    },
+    "by_split": {
+      "100k": {
+        "questions": 320,
+        "conversations": 16,
+        "mean_points": 6.67
+      },
+      "1m": {
+        "questions": 560,
+        "conversations": 28,
+        "mean_points": 3.29
+      },
+      "500k": {
+        "questions": 560,
+        "conversations": 28,
+        "mean_points": 3.11
+      }
+    },
+    "complete": true,
+    "incomplete": {},
+    "outcome_from_bounds": "ahead",
+    "outcome": "ahead"
+  },
+  "w5": {
+    "pooled": {
+      "questions": 1440,
+      "conversations": 72,
+      "margin": 3,
+      "estimate_points": -0.251,
+      "se_points": 0.453,
+      "primary": {
+        "method": "restricted wild cluster bootstrap-t, Webb weights",
+        "draws": 9999,
+        "seed": 20261010,
+        "lower": -0.998,
+        "upper": 0.485
+      },
+      "reported_beside": {
+        "analytic_lower": -1.007,
+        "boot_t_lower": -1.002
+      },
+      "by_split": {
+        "100k": {
+          "questions": 320,
+          "conversations": 16,
+          "mean_points": -0.85
+        },
+        "1m": {
+          "questions": 560,
+          "conversations": 28,
+          "mean_points": -0.5
+        },
+        "500k": {
+          "questions": 560,
+          "conversations": 28,
+          "mean_points": 0.34
+        }
+      },
+      "complete": true,
+      "incomplete": {},
+      "outcome_from_bounds": "non-inferior",
+      "outcome": "non-inferior"
+    },
+    "tc6": {
+      "multi_session_reasoning": {
+        "questions": 144,
+        "estimate_points": -0.12,
+        "lower": -3.508,
+        "upper": 3.275,
+        "entirely_below_minus_3": false
+      },
+      "contradiction_resolution": {
+        "questions": 144,
+        "estimate_points": -0.43,
+        "lower": -2.926,
+        "upper": 2.088,
+        "entirely_below_minus_3": false
+      },
+      "temporal_reasoning": {
+        "questions": 144,
+        "estimate_points": -0.52,
+        "lower": -4.532,
+        "upper": 3.245,
+        "entirely_below_minus_3": false
+      },
+      "event_ordering": {
+        "questions": 144,
+        "estimate_points": -0.38,
+        "lower": -2.232,
+        "upper": 1.492,
+        "entirely_below_minus_3": false
+      },
+      "abstention": {
+        "questions": 144,
+        "estimate_points": 3.13,
+        "lower": 0.162,
+        "upper": 6.204,
+        "entirely_below_minus_3": false
+      }
+    },
+    "passes": true
+  },
+  "beam_lane_points": {
+    "v1": 68.88,
+    "v2": 70.51,
+    "v2-w5": 70.26,
+    "comparator": 66.54
+  },
+  "lme_lane_points": {
+    "v1": 68.5,
+    "v2": 82.5,
+    "one-call": 83,
+    "raw": 79.75,
+    "comparator": 85.75
+  }
+}

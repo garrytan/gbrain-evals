@@ -1,0 +1,50 @@
+{
+ "caps_usd": {
+  "lme": 12,
+  "locomo": 39,
+  "beam-100k": 14,
+  "beam-500k": 28,
+  "beam-1m": 34
+ },
+ "order": {
+  "lme": [
+   "v2",
+   "raw",
+   "v2-facts-arm",
+   "v1",
+   "filler",
+   "one-call"
+  ],
+  "locomo": [
+   "v2",
+   "raw",
+   "v2-facts-arm",
+   "v1",
+   "one-call"
+  ],
+  "beam-100k": [
+   "v2",
+   "v2-w5",
+   "v2-facts-arm",
+   "v1",
+   "one-call",
+   "cost-matched"
+  ],
+  "beam-500k": [
+   "v2",
+   "v2-w5",
+   "v2-facts-arm",
+   "v1",
+   "one-call",
+   "cost-matched"
+  ],
+  "beam-1m": [
+   "v2",
+   "v2-w5",
+   "v2-facts-arm",
+   "v1",
+   "one-call",
+   "cost-matched"
+  ]
+ }
+}

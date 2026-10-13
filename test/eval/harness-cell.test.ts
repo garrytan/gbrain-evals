@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { cellId, cellIdentity, chatPrice, estimateCell, harnessCredentials, identityDiff, validateSpec, type CellSpec, type ResolvedCell } from '../../eval/runner/harness-cell.ts';
+import { cellId, cellIdentity, chatPrice, estimateCell, harnessCredentials, identityDiff, reusedStoreIdentity, storeIdentity, validateSpec, type CellSpec, type ResolvedCell } from '../../eval/runner/harness-cell.ts';
 import { cpuRequirements } from '../../eval/runner/harness-env.ts';
 import { findNeedles, scan } from '../../scripts/check-comparator-name.ts';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -38,6 +38,7 @@ describe('cell identity', () => {
     ['scorer revision', spec, { ...resolved, scorer_revision: '0'.repeat(64) }, pins],
     ['prompt revision', spec, { ...resolved, prompt_revision: '0'.repeat(64) }, pins],
     ['gbrain pin', spec, resolved, { ...pins, gbrain: { version: '0.60.60.0' } }],
+    ['reused store', { ...spec, reuse_store: { store_id: 'gbrain-beam-100k-0123456789ab', reason: 'ingest unchanged' } }, resolved, pins],
   ])('changes when the %s changes', (_name, s, r, p) => {
     const base = cellIdentity(spec, resolved, pins);
     const other = cellIdentity(s as CellSpec, r as ResolvedCell, p);
@@ -49,6 +50,58 @@ describe('cell identity', () => {
     const a = cellIdentity(spec, resolved, pins);
     const b = cellIdentity({ ...spec, budget_usd: 9 }, resolved, { ...pins, gbrain: { version: 'x' } });
     expect(identityDiff(a, b).sort()).toEqual(['budget_usd', 'pins.gbrain.version']);
+  });
+});
+
+describe('store identity', () => {
+  const store = (config: Record<string, unknown>, credentials?: string[]) =>
+    storeIdentity({ ...spec, provider_config: config, ...(credentials ? { gbrain_credentials: credentials } : {}) }, pins)!.id;
+
+  test('raw, explicit-extractor and measured-default stores never share an identity', () => {
+    const ids = [store({}), store({ extraction_model: 'openai:gpt-6-luna' }, ['voyage', 'openai']),
+      store({ extraction_source: 'measured_default' }, ['voyage', 'anthropic']), store({ extraction_source: 'measured_default' }, ['voyage'])];
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test('read-time lanes and budgets share one store', () => {
+    const base = { extraction_source: 'measured_default' };
+    expect(new Set([store(base), store({ ...base, lane: 'combined-v2', delivered_tokens: 8100, facts_tokens: 1800 }),
+      store({ ...base, lane: 'filler-removed', token_budget: 8100, search_config: { 'search.mode': 'conservative' } })]).size).toBe(1);
+  });
+});
+
+describe('store reuse across gbrain builds', () => {
+  const built = storeIdentity({ ...spec, provider_config: { extraction_source: 'measured_default' } }, pins)!;
+  const cellsWith = (identity: Record<string, unknown>) => {
+    const dir = mkdtempSync(join(tmpdir(), 'store-reuse-'));
+    mkdirSync(join(dir, '_stores', 'gbrain-beam-100k-0123456789ab'), { recursive: true });
+    writeFileSync(join(dir, '_stores', 'gbrain-beam-100k-0123456789ab', 'store.json'), JSON.stringify(identity));
+    return dir;
+  };
+  const reuse = { store_id: 'gbrain-beam-100k-0123456789ab' };
+
+  test('reads a store that differs only in the gbrain pin', () => {
+    const older = { ...built.identity, pins: { ...pins, gbrain: { version: '0.60.58.0' } } };
+    const dir = cellsWith(older);
+    try { expect(reusedStoreIdentity(dir, built, reuse)).toEqual({ id: reuse.store_id, identity: older }); } finally { rmSync(dir, { recursive: true }); }
+  });
+
+  test.each([
+    ['ingest config', { ...built.identity, ingest_config: { extraction_source: 'explicit' } }, /ingest_config.extraction_source/],
+    ['harness pin', { ...built.identity, pins: { ...pins, harness_commit: '0'.repeat(40) } }, /pins.harness_commit/],
+  ])('refuses a store whose %s differs', (_name, identity, message) => {
+    const dir = cellsWith(identity);
+    try { expect(() => reusedStoreIdentity(dir, built, reuse)).toThrow(message); } finally { rmSync(dir, { recursive: true }); }
+  });
+
+  test('refuses a store that is not there', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'store-reuse-'));
+    try { expect(() => reusedStoreIdentity(dir, built, reuse)).toThrow(/no store.json/); } finally { rmSync(dir, { recursive: true }); }
+  });
+
+  test('a cell without reuse keeps its id', () => {
+    expect(cellIdentity(spec, resolved, pins)).not.toHaveProperty('reuse_store');
+    expect(() => validateSpec({ ...spec, reuse_store: { store_id: 'x', reason: ' ' } })).toThrow(/reuse_store needs/);
   });
 });
 

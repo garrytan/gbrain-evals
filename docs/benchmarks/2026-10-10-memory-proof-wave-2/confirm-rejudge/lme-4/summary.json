@@ -1,0 +1,110 @@
+{
+  "dataset": "longmemeval",
+  "split": "s",
+  "seed": 20261005,
+  "schedule_size": 100,
+  "schedule_sha256": "688018591b03b21e4d4641e6399321f452c6dcb34cc665a4fe54cd24d91ac134",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "cells": {
+    "longmemeval-s-comparator-rag-d7a615c1cd51": {
+      "scheduled": 100,
+      "counts": {
+        "answered": 94,
+        "abstention": 6,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 100,
+      "correct": 95,
+      "accuracy": 0.95,
+      "mean_score": 0.95,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "longmemeval-s-gbrain-rag-1cc06b7861d2": {
+      "scheduled": 100,
+      "counts": {
+        "answered": 94,
+        "abstention": 6,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 100,
+      "correct": 95,
+      "accuracy": 0.95,
+      "mean_score": 0.95,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "longmemeval-s-gbrain-rag-2994a0f238ba": {
+      "scheduled": 100,
+      "counts": {
+        "answered": 89,
+        "abstention": 10,
+        "answer_failure": 1,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 99,
+      "correct": 86,
+      "accuracy": 0.86,
+      "mean_score": 0.86,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "longmemeval-s-gbrain-rag-3d11a8d4a27b": {
+      "scheduled": 100,
+      "counts": {
+        "answered": 93,
+        "abstention": 7,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 100,
+      "correct": 95,
+      "accuracy": 0.95,
+      "mean_score": 0.95,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "longmemeval-s-gbrain-rag-b35cb77ffed1": {
+      "scheduled": 100,
+      "counts": {
+        "answered": 94,
+        "abstention": 6,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 100,
+      "correct": 95,
+      "accuracy": 0.95,
+      "mean_score": 0.95,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    }
+  }
+}

@@ -73,6 +73,10 @@ A failed claims judgment is re-judged without rerunning the agent: `bun eval/run
 
 The counted arms are oracle, fs, pg, memory and gbrain. `--arms gbrain-fs` (plan 2026-10-07-cat40-hard-fix, item C16) asks whether an agent with gbrain and the plain Markdown files does better than files alone. It is exploratory only: it runs on the calibration-seed development world, never in a program step, a confirmation or a held-out run (`HARD_ARM_EXPLORATORY`), and its results are never counted. The agent gets every gbrain tool, the server instructions, slots, probes and metering of the gbrain arm, plus the fs arm's `list_dir`, `grep` and `read_file` with the fs arm's limits over the same files. `write_file` is not served, so notes live only in gbrain. Its cells are labelled `<--gbrain-label>+fs`, a gbrain tool named like an fs read tool is refused before any cell, and `experiment.json` and the receipt record `exploratory: true`.
 
+### Rerank-pool replay (GBRA-81)
+
+`eval/runner/cat40/rerank-pool-replay.ts` replays the 1,030 hybrid `search` calls of the Hard confirmation's gbrain cells on a fresh world M slot with the reranker seeing 50 and then 25 fused candidates, and applies the preregistered gold hit@5 rule. It spends from the GBRA-81 program ledger, not the Hard ledger. Commands, cost, decision rule and the keyless dry run: [RERANK_POOL_REPLAY.md](RERANK_POOL_REPLAY.md).
+
 ## Stop codes
 
 Every refusal and stop-for-Garry condition exits 3 and prints `STOP <code>`, what failed, the fix and, when it applies, the decision needed. Usage errors (an unknown flag, a missing value) exit 2.

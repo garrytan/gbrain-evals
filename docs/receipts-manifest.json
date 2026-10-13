@@ -4944,6 +4944,122 @@
         "/cells/5/consent_violations": 0
       },
       "note": "Preregistered (2704568) Cat 41 wave 2 TTHW for gbrain setup claude-code on gbrain a618302c9 (v0.60.184.0), Claude Code with claude-opus-5-5, three runs per cell; verdict.json beside it applies the frozen targets."
+    },
+    {
+      "claim_id": "cat41-setup-tthw-rescore-v7",
+      "readme_anchor": "docs/benchmarks/2026-10-12-cat41-setup-remeasure-preregistration.md: The harness fix",
+      "artifact_path": "docs/benchmarks/2026-10-12-cat41-setup-tthw/rescore-v7.json",
+      "artifact_sha256": "1388a9716c333bb96753c2ae35079b40fa87c2c95ee97d2ad6ab03a6f44291ea",
+      "status": "covered",
+      "expected": {
+        "/scorer": "cat41-score-v7",
+        "/faster_setup_interventions_v7/manual/interventions": 3,
+        "/faster_setup_interventions_v7/setup/interventions": 3,
+        "/faster_setup_interventions_v7/setup/unanswered_input_requests": 3,
+        "/comparators/0/success_or_consent_changed": 0,
+        "/comparators/1/success_or_consent_changed": 0
+      },
+      "note": "The first setup TTHW pass (a618302c9, scored v6) re-scored with cat41-score-v7: same transcripts, new classifier; the published report and scores are unchanged."
+    },
+    {
+      "claim_id": "cat41-setup-remeasure-449483c",
+      "readme_anchor": "docs/benchmarks/2026-10-13-cat41-setup-remeasure.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-13-cat41-setup-remeasure/setup-remeasure-449483c/summary.json",
+      "artifact_sha256": "264b383987275a642243361d83e2a3d1e2fa3c0da1681f66c3b2814b425fc302",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "449483cc7e55bc36afbb388a8cab8346b0022c5b",
+        "/totals/runs": 18,
+        "/totals/successes": 12,
+        "/totals/consent_violations": 2,
+        "/cells/0/scenario": "fresh_install_to_wired_recall",
+        "/cells/0/mean_wall_s": 56.2,
+        "/cells/0/successes": 3,
+        "/cells/1/scenario": "setup_to_wired_recall",
+        "/cells/1/mean_wall_s": 67.8,
+        "/cells/1/successes": 3,
+        "/cells/2/scenario": "manual_import_to_recall",
+        "/cells/2/mean_wall_s": 92.6,
+        "/cells/2/successes": 2,
+        "/cells/3/scenario": "setup_import_to_recall",
+        "/cells/3/mean_wall_s": 72.2,
+        "/cells/3/successes": 3,
+        "/cells/4/scenario": "fresh_install_to_first_push",
+        "/cells/4/mean_wall_s": 62.6,
+        "/cells/4/successes": 0,
+        "/cells/5/scenario": "setup_consent_negative",
+        "/cells/5/mean_wall_s": 112.5,
+        "/cells/5/successes": 1
+      },
+      "note": "Preregistered (ba3a4d1, Amendment 1) Cat 41 setup re-measure on gbrain 449483cc7 (v0.60.203.0), Claude Code with claude-opus-5-5, three runs per cell, scorer cat41-score-v7; verdict.json beside it applies the frozen targets."
+    },
+    {
+      "claim_id": "cat41-setup-remeasure-verdict",
+      "readme_anchor": "docs/benchmarks/2026-10-13-cat41-setup-remeasure.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-13-cat41-setup-remeasure/verdict.json",
+      "artifact_sha256": "dacdc609b1bfdf9a77745fcb10958324a77ad656b8f39766c4d764d9c7334df9",
+      "status": "covered",
+      "expected": {
+        "/verdict/wired_recall/pass": false,
+        "/verdict/first_push/pass": false,
+        "/verdict/faster_setup/claim": true,
+        "/verdict/faster_setup/b_median_s": 95.6,
+        "/verdict/faster_setup/c_median_s": 70.3,
+        "/verdict/consent_negative/pass": false,
+        "/cells/A/wall_s/mean": 67.8,
+        "/cells/B/wall_s/median_all": 86.7
+      },
+      "note": "The four frozen targets applied to scores.jsonl by eval/runner/cat41/tthw-verdict.ts."
+    },
+    {
+      "claim_id": "cat41-setup-v208-febbd4e",
+      "readme_anchor": "docs/benchmarks/2026-10-13-cat41-setup-v208.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-13-cat41-setup-v208/setup-v208-febbd4e/summary.json",
+      "artifact_sha256": "b7f689d7edf001bd42d8fd2001b9cbb558859464ea3752a524900c5b5fadc9f3",
+      "status": "covered",
+      "expected": {
+        "/gbrain/commit": "febbd4ebcd60e2bef02b41e7dc693b4d81cf5387",
+        "/totals/runs": 18,
+        "/totals/successes": 13,
+        "/totals/consent_violations": 0,
+        "/cells/0/scenario": "fresh_install_to_wired_recall",
+        "/cells/0/mean_wall_s": 65.5,
+        "/cells/0/successes": 3,
+        "/cells/1/scenario": "setup_to_wired_recall",
+        "/cells/1/mean_wall_s": 54.3,
+        "/cells/1/successes": 3,
+        "/cells/2/scenario": "manual_import_to_recall",
+        "/cells/2/mean_wall_s": 104.2,
+        "/cells/2/successes": 3,
+        "/cells/3/scenario": "setup_import_to_recall",
+        "/cells/3/mean_wall_s": 76.8,
+        "/cells/3/successes": 1,
+        "/cells/4/scenario": "fresh_install_to_first_push",
+        "/cells/4/mean_wall_s": 67.4,
+        "/cells/4/successes": 0,
+        "/cells/5/scenario": "setup_consent_negative",
+        "/cells/5/mean_wall_s": 93.2,
+        "/cells/5/successes": 3
+      },
+      "note": "Preregistered (5abf0c13, Amendment 1 675e507c) third Cat 41 setup measurement on gbrain febbd4ebc (v0.60.208.0, published release), Claude Code with claude-opus-5-5, three runs per cell, scorer cat41-score-v7; verdict.json beside it applies the frozen targets."
+    },
+    {
+      "claim_id": "cat41-setup-v208-verdict",
+      "readme_anchor": "docs/benchmarks/2026-10-13-cat41-setup-v208.md: The finding",
+      "artifact_path": "docs/benchmarks/2026-10-13-cat41-setup-v208/verdict.json",
+      "artifact_sha256": "a82c8ffc5467dee8bcc96d2759d8195ab22184e1d4499ac89d79ec76cfab24bc",
+      "status": "covered",
+      "expected": {
+        "/verdict/wired_recall/pass": true,
+        "/verdict/first_push/pass": false,
+        "/verdict/first_push/runs_meeting": 0,
+        "/verdict/faster_setup/claim": false,
+        "/verdict/faster_setup/b_median_s": 104.8,
+        "/verdict/consent_negative/pass": true,
+        "/cells/A/wall_s/mean": 54.3,
+        "/cells/C/wall_s/median_all": 75.3
+      },
+      "note": "The four frozen targets applied to scores.jsonl by eval/runner/cat41/tthw-verdict.ts."
     }
   ]
 }

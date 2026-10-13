@@ -43,7 +43,7 @@ export interface CellSpec {
   split: string;
   provider: (typeof PROVIDERS)[number];
   mode: (typeof MODES)[number];
-  lane: 'raw' | 'facts' | 'combined';
+  lane: (typeof LANES)[number];
   seal: (typeof SEALS)[number];
   /** Delivered-context target in cl100k tokens, or null for the system's own default (reported, not gated). */
   target_tokens: number | null;
@@ -56,6 +56,9 @@ export interface CellSpec {
   gbrain_credentials?: string[];
   /** Spend the cell cannot meter, declared up front (e.g. a provider's own hosted API). */
   unmetered?: string[];
+  /** Read an ingest store built on another gbrain build, whose ingest the operator verified is unchanged. Every
+   * other store identity field must match; the reuse and its reason are part of the cell id. */
+  reuse_store?: { store_id: string; reason: string };
   note?: string;
 }
 
@@ -82,6 +85,9 @@ export interface CellFile {
 
 // ─── spec ────────────────────────────────────────────────────────────
 
+/** The gbrain provider's lanes (eval/harness-provider/mpw/gbrain_provider.py LANES). */
+export const LANES = ['raw', 'facts', 'combined', 'combined-v2', 'filler-removed', 'recall-one-call'] as const;
+
 export function validateSpec(raw: unknown): CellSpec {
   const s = raw as CellSpec;
   const problems: string[] = [];
@@ -89,13 +95,14 @@ export function validateSpec(raw: unknown): CellSpec {
   if (!s.dataset || !s.split) problems.push('dataset and split are required');
   if (!PROVIDERS.includes(s.provider)) problems.push(`provider must be one of ${PROVIDERS.join(', ')}`);
   if (!MODES.includes(s.mode)) problems.push(`mode must be one of ${MODES.join(', ')}`);
-  if (!['raw', 'facts', 'combined'].includes(s.lane)) problems.push('lane must be raw, facts or combined');
+  if (!LANES.includes(s.lane)) problems.push(`lane must be one of ${LANES.join(', ')}`);
   if (!SEALS.includes(s.seal)) problems.push(`seal must be one of ${SEALS.join(', ')}`);
   if (s.target_tokens !== null && !(Number.isInteger(s.target_tokens) && s.target_tokens > 0)) problems.push('target_tokens must be a positive integer or null');
   if (!s.models || !/^[a-z-]+:.+/.test(s.models.answer ?? '') && s.mode !== 'retrieval') problems.push('models.answer must be "<llm>:<model>"');
   if (s.models?.judge !== null && s.models?.judge !== undefined && !/^[a-z-]+:.+/.test(s.models.judge)) problems.push('models.judge must be "<llm>:<model>" or null');
   if (!(typeof s.budget_usd === 'number' && s.budget_usd > 0)) problems.push('budget_usd must be a positive number');
   if (!s.questions || typeof s.questions !== 'object') problems.push('questions selection is required');
+  if (s.reuse_store !== undefined && !(/^[A-Za-z0-9-]+$/.test(s.reuse_store?.store_id ?? '') && s.reuse_store?.reason?.trim())) problems.push('reuse_store needs a store_id and a reason');
   if (problems.length) throw new Error(`invalid cell spec: ${problems.join('; ')}`);
   return s;
 }
@@ -125,6 +132,7 @@ export function cellIdentity(spec: CellSpec, resolved: ResolvedCell, pins: Recor
     scorer_revision: resolved.scorer_revision,
     wrapper_revision: resolved.wrapper_revision,
     budget_usd: spec.budget_usd,
+    ...(spec.reuse_store ? { reuse_store: spec.reuse_store } : {}),
   };
 }
 
@@ -378,6 +386,17 @@ export function storeIdentity(spec: CellSpec, pins: Record<string, unknown>): { 
   return { id: `${spec.provider}-${spec.dataset}-${spec.split}-${sha256(canonical(identity)).slice(0, 12)}`.replace(/[^A-Za-z0-9-]+/g, '-'), identity };
 }
 
+/** The store a `reuse_store` cell reads: the named store, if its identity differs from this build's only in the gbrain pin. */
+export function reusedStoreIdentity(cellsDir: string, built: { id: string; identity: Record<string, unknown> }, reuse: { store_id: string }): { id: string; identity: Record<string, unknown> } {
+  const path = join(cellsDir, '_stores', reuse.store_id, 'store.json');
+  if (!existsSync(path)) throw new Error(`reuse_store ${reuse.store_id} has no store.json under ${cellsDir}/_stores`);
+  const identity = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
+  const withoutGbrain = (i: Record<string, unknown>) => ({ ...i, pins: { ...(i.pins as Record<string, unknown>), gbrain: null } });
+  const diff = identityDiff(withoutGbrain(identity), withoutGbrain(built.identity));
+  if (diff.length) throw new Error(`reuse_store ${reuse.store_id} differs from this cell's store beyond the gbrain pin: ${diff.join(', ')}`);
+  return { id: reuse.store_id, identity };
+}
+
 interface SpendFile { cell_id: string; runs: Array<{ run_id: string; ledger: string; usd: number; requests: number; started_at: string; stub: boolean }>; }
 
 export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGrid: string | null = null): Promise<number> {
@@ -433,14 +452,15 @@ export async function runCell(ctx: Ctx, target: string, resume: boolean, tuneGri
     MPW_CHILD_ENV_COMPARATOR: JSON.stringify(proxy.envFor('comparator')),
     MPW_REPO_ROOT: REPO_ROOT,
   };
-  const store = storeIdentity(cell.spec, pinsFor(ctx, cell.spec));
+  const built = storeIdentity(cell.spec, pinsFor(ctx, cell.spec));
+  const store = built && cell.spec.reuse_store ? reusedStoreIdentity(ctx.cellsDir, built, cell.spec.reuse_store) : built;
   if (store && !ctx.argv.includes('--private-store')) {
     const storeDir = join(ctx.cellsDir, '_stores', store.id);
     mkdirSync(storeDir, { recursive: true });
     writeFileSync(join(storeDir, 'store.json'), JSON.stringify(store.identity, null, 2) + '\n');
     env.MPW_STORE_DIR = storeDir;
     env.MPW_STORE_ID = store.id;
-    ctx.log(`[cell] store ${store.id} (shared by cells with the same ingest inputs)`);
+    ctx.log(`[cell] store ${store.id} (${cell.spec.reuse_store ? `reused from another gbrain build: ${cell.spec.reuse_store.reason}` : 'shared by cells with the same ingest inputs'})`);
   }
   ctx.log(`[cell] ${cell.cell_id}: ${resume ? 'resuming' : 'running'} with $${remaining.toFixed(2)} of $${cell.spec.budget_usd.toFixed(2)} left; proxy ${proxy.url}${ctx.stub ? ' -> stub upstream (keyless)' : ''}`);
   const pyArgs = tuneGrid === null ? ['mpw.cell', 'run', '--cell-dir', dir]

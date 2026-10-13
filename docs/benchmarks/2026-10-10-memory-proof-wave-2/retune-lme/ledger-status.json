@@ -1,0 +1,29 @@
+{
+  "ledger": "~/cells/ledger.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 10,
+    "committed_usd": 5.351885015,
+    "reconciled_usd": 5.351885015,
+    "open_reservations_usd": 0,
+    "remaining_usd": 4.648114985,
+    "requests": 1600,
+    "overshoot_usd": 0
+  },
+  "run": null,
+  "runs": 4,
+  "open_runs": 0,
+  "last_cap_change": {
+    "program_cap_usd": 10,
+    "kind": "open",
+    "reason": "memory proof wave 2, stage retune-lme",
+    "by": "ubi@vmzqec7s",
+    "at": "2026-10-12T15:48:57.144Z"
+  },
+  "size_bytes": 823296,
+  "read_ms": 4.64,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}

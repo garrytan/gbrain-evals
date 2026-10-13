@@ -195,9 +195,7 @@ class CellError(RuntimeError):
     pass
 
 
-def _render_rag_context(docs) -> str:
-    """Exactly RAGMode.async_answer's rendering at the pin."""
-    return "\n\n".join(f"## Memory {i + 1}\n{doc.content}" for i, doc in enumerate(docs))
+_render_rag_context = ctxmod.render_rag_context
 
 
 def _doc_dict(d) -> dict:
@@ -438,7 +436,8 @@ class CellRun:
                 docs, raw = await self.provider.async_retrieve(pq.query, k=k, user_id=pq.user_id, query_timestamp=pq.meta.get("query_timestamp"))
                 meta = {}
             rec = RetrieveRecord(self.cell_id, q.id, True, round((time.perf_counter() - t0) * 1000, 1),
-                                 documents=[_doc_dict(d) for d in docs], raw_response=raw, provider_meta=meta or {})
+                                 documents=[_doc_dict(d) for d in docs], raw_response=raw, provider_meta=meta or {},
+                                 service_ms=((meta or {}).get("timing") or {}).get("service_ms"))
         except Exception as e:  # noqa: BLE001
             rec = RetrieveRecord(self.cell_id, q.id, False, round((time.perf_counter() - t0) * 1000, 1),
                                  error=f"{type(e).__name__}: {e}")

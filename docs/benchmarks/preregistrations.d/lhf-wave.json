@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "lhf-wave-longmemeval-gates",
+      "preregistration": "docs/benchmarks/2026-10-12-lhf-wave-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-12-lhf-wave/receipts/**",
+        "docs/benchmarks/2026-10-12-lhf-wave.md"
+      ]
+    }
+  ]
+}

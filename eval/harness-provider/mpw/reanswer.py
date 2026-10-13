@@ -9,6 +9,11 @@ delivered context is the recorded one, so the only thing that varies is the
 answer. Output is a cell-shaped directory `<out>/<cell_id>-s<N>` with
 `cell.json` and `stages/answer/`, which `mpw.rejudge` judges jointly with the
 original cell.
+
+With `--retrievals` (a replay) and `--questions`, a question outside the list
+keeps the source cell's answer only when the replay classed its context `same`
+(`<retrievals>/../replay-diff.json`). A `changed`, `failed` or `no_baseline`
+question outside the list stops the run: it must be answered again or resolved.
 """
 from __future__ import annotations
 
@@ -26,6 +31,15 @@ async def reanswer(src: Path, out_root: Path, sample: int, retrievals: Path | No
     if spec["spec"]["mode"] != "rag":
         raise SystemExit(f"{src}: reanswer covers rag cells only (mode {spec['spec']['mode']})")
     stored = spec["resolved"]
+    if retrievals is not None and only is not None:
+        diff_path = retrievals.parent / "replay-diff.json"
+        if not diff_path.exists():
+            raise SystemExit(f"{diff_path} is missing: without the replay's classes no question can keep the source cell's answer")
+        classes = json.loads(diff_path.read_text())["questions"]
+        unresolved = sorted(q for q in stored["schedule"] if q not in only and classes.get(q) != "same")
+        if unresolved:
+            raise SystemExit(f"{len(unresolved)} question(s) outside --questions are not `same` in the replay "
+                             f"({', '.join(f'{q}={classes.get(q)}' for q in unresolved[:10])}); only `same` rows keep the source answer")
     fresh_resolve = cellmod.resolve
     # The prompt is checked byte for byte below, so a wrapper or scorer revision change since the cell ran is allowed.
     cellmod.resolve = lambda s: {**fresh_resolve(s), **{k: stored[k] for k in ("prompt_revision", "scorer_revision", "wrapper_revision")}}

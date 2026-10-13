@@ -402,7 +402,7 @@ export function sutPages(q: QuestionSessions): { pages: Array<{ slug: string; co
 
 // ─── Harness ──────────────────────────────────────────────────────
 
-const PRESERVE_TABLES = new Set(['sources', 'config', 'gbrain_cycle_locks', 'subagent_rate_leases']);
+const PRESERVE_TABLES = new Set(['sources', 'config', 'gbrain_cycle_locks', 'subagent_rate_leases', 'persistence_brain', 'shared_skill_state', 'page_generation_clock']);
 
 async function resetTables(engine: PGLiteEngine): Promise<void> {
   const rows = await engine.executeRaw<{ tablename: string }>(
@@ -1701,7 +1701,7 @@ if (import.meta.main) {
         finished_at: new Date().toISOString(),
       });
     } catch { /* receipt write failed too — exit code carries the failure */ }
-    process.stderr.write(`[longmemeval] FATAL: ${e?.stack ?? e}\n`);
+    process.stderr.write(`[longmemeval] FATAL: ${e?.message ?? e}\n${e?.stack ?? ''}\n`);
     process.exit(1);
   }
 }

@@ -1,0 +1,657 @@
+{
+  "bench": "refactor-wave-1",
+  "meta": {
+    "commit": "148b74d1455865151a839cff612bcfdb38b0d2a8",
+    "src_tree": "cb49967a75945cbfe5eebdb7ed22630f85c66776",
+    "dirty": true,
+    "backend": "pglite",
+    "bun": "1.4.2",
+    "platform": "linux-x64",
+    "kernel": "6.1.158+",
+    "cpu_model": "AMD EPYC",
+    "cpu_count": 4,
+    "total_mem_gb": 15.6,
+    "url": null,
+    "admin_url": null,
+    "prepare": "n/a",
+    "embedding": {
+      "model": "voyage:voyage-4",
+      "dims": 1024,
+      "provider": "deterministic stub (sha256-seeded unit vectors)"
+    },
+    "reranker": "deterministic stub (input order)",
+    "max_search_limit": 100,
+    "sizes": {
+      "pages": 400,
+      "paragraphs": 6,
+      "importConcurrency": 4,
+      "warmup": 20,
+      "iterations": 200,
+      "hybridIterations": 50,
+      "countCalls": 10,
+      "coldRuns": 10,
+      "extraImportPages": 10,
+      "searchConcurrency": 1
+    }
+  },
+  "import": {
+    "pages": 400,
+    "paragraphs_per_page": 6,
+    "concurrency": 4,
+    "seconds": 8.281,
+    "pages_per_second": 48.3,
+    "per_page_ms": {
+      "n": 400,
+      "min": 37.483,
+      "median": 80.554,
+      "p95": 110.242,
+      "max": 156.136,
+      "mean": 82.431
+    },
+    "provider_calls": {
+      "embed": 400,
+      "embed_texts": 800,
+      "rerank": 0,
+      "fetch": 0
+    }
+  },
+  "ops": {},
+  "op_timings": {
+    "queries": 20,
+    "responses": 40,
+    "results_only": true,
+    "total_ms": {
+      "n": 0,
+      "min": null,
+      "median": null,
+      "p95": null,
+      "max": null,
+      "mean": 0
+    },
+    "residual_share": {
+      "n": 0,
+      "min": null,
+      "median": null,
+      "p95": null,
+      "max": null,
+      "mean": 0
+    },
+    "stage_ms_sum": {},
+    "result_digest": "7727530313ca5883",
+    "rows": [
+      {
+        "op": "search",
+        "query": "kami kajin",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "a464b43ec181f431"
+      },
+      {
+        "op": "search",
+        "query": "jinbro danmi",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "261297fc4161f85e"
+      },
+      {
+        "op": "search",
+        "query": "vara sito",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "7272edaee3bbb523"
+      },
+      {
+        "op": "search",
+        "query": "toto nugor",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "c20032a1a4ab88c0"
+      },
+      {
+        "op": "search",
+        "query": "vagor danbro",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "906f3a61fbef7139"
+      },
+      {
+        "op": "search",
+        "query": "pemi mito",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "0a7fe4e3d2f580cd"
+      },
+      {
+        "op": "search",
+        "query": "felnu vape",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "b444f5f5f68a9c93"
+      },
+      {
+        "op": "search",
+        "query": "numi rahul",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "b0da07dead4ed14e"
+      },
+      {
+        "op": "search",
+        "query": "pedan vava",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "aa17d769bbdc6d8a"
+      },
+      {
+        "op": "search",
+        "query": "pedan jinbro",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "0d9e1cc1c8e46f52"
+      },
+      {
+        "op": "search",
+        "query": "nujin hulka",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "9f9cd34851ad03bf"
+      },
+      {
+        "op": "search",
+        "query": "nuka mipe",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "0a97d3229ee34c08"
+      },
+      {
+        "op": "search",
+        "query": "mito pebro",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "8999a9fd612fc82a"
+      },
+      {
+        "op": "search",
+        "query": "vafel felnu",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "409454afb377ffeb"
+      },
+      {
+        "op": "search",
+        "query": "lonu hulze",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "7615b1d7725772d7"
+      },
+      {
+        "op": "search",
+        "query": "vagor zejin",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "753be82b8952dad0"
+      },
+      {
+        "op": "search",
+        "query": "brohul jinto",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "6228230b33d5362f"
+      },
+      {
+        "op": "search",
+        "query": "zejin huldan",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "314eb5d2ccad5145"
+      },
+      {
+        "op": "search",
+        "query": "gornu kabro",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "a46fd2fa3d2a5c46"
+      },
+      {
+        "op": "search",
+        "query": "mifel radan",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 20,
+        "digest": "b1c2f2c9cb3f7874"
+      },
+      {
+        "op": "query",
+        "query": "kami kajin",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 24,
+        "digest": "6e2ce14841694eb3"
+      },
+      {
+        "op": "query",
+        "query": "jinbro danmi",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "71527380a7e32e6e"
+      },
+      {
+        "op": "query",
+        "query": "vara sito",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "30fd0be5562f89ae"
+      },
+      {
+        "op": "query",
+        "query": "toto nugor",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "f5225d396fe2ed17"
+      },
+      {
+        "op": "query",
+        "query": "vagor danbro",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "b5d6a4c0d2cda3bc"
+      },
+      {
+        "op": "query",
+        "query": "pemi mito",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "76a0551b0e9c1379"
+      },
+      {
+        "op": "query",
+        "query": "felnu vape",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "51a2f5ba32bea2ca"
+      },
+      {
+        "op": "query",
+        "query": "numi rahul",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 24,
+        "digest": "064713f43bf1455d"
+      },
+      {
+        "op": "query",
+        "query": "pedan vava",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 24,
+        "digest": "76f838df8a27daef"
+      },
+      {
+        "op": "query",
+        "query": "pedan jinbro",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "d1d1290a8c57774d"
+      },
+      {
+        "op": "query",
+        "query": "nujin hulka",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 24,
+        "digest": "cd7f948baa9200bc"
+      },
+      {
+        "op": "query",
+        "query": "nuka mipe",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 23,
+        "digest": "006948ceae87591c"
+      },
+      {
+        "op": "query",
+        "query": "mito pebro",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "02da6f18a88ab53f"
+      },
+      {
+        "op": "query",
+        "query": "vafel felnu",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "75d0ff9068664703"
+      },
+      {
+        "op": "query",
+        "query": "lonu hulze",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 24,
+        "digest": "c534c5ab522f52bf"
+      },
+      {
+        "op": "query",
+        "query": "vagor zejin",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "cddd1d430bf52bb6"
+      },
+      {
+        "op": "query",
+        "query": "brohul jinto",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "a1d03ae79280a766"
+      },
+      {
+        "op": "query",
+        "query": "zejin huldan",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "89897fa48259eb36"
+      },
+      {
+        "op": "query",
+        "query": "gornu kabro",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 23,
+        "digest": "4e7c4ff066b0bd80"
+      },
+      {
+        "op": "query",
+        "query": "mifel radan",
+        "total_ms": null,
+        "stages_ms": null,
+        "other_ms": null,
+        "overlapped_ms": null,
+        "residual": null,
+        "degraded": [
+          "projection_pending"
+        ],
+        "results": 25,
+        "digest": "55ae446fa69151f9"
+      }
+    ]
+  },
+  "semantic_result_cache": {
+    "semantic_result_cache_available": false,
+    "hybrid_calls_observed": 0,
+    "cache_statuses": [],
+    "query_cache_rows": 0
+  },
+  "cold_start": {},
+  "provider_calls_total": {
+    "embed": 420,
+    "embed_texts": 820,
+    "rerank": 80,
+    "fetch": 0
+  }
+}

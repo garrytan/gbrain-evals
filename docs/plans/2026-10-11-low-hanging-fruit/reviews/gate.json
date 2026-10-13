@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "run": "lhf-20261012005308",
+  "gate_rev": 1,
+  "items": [
+    {
+      "id": "d1",
+      "title": "Item 1's retrieval evidence doesn't carry over: query expands in every mode and search never expands, so switching to balanced removes no expansion call [lhf-20261012005308-ceo-native-1]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (native) recommends changing your stated direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d2",
+      "title": "Cat 40 Hard can't detect item 1: query is 11 of about 6,000 calls, the 12K budget never binds, and 68% of search chars come from the mode-independent keyword path [lhf-20261012005308-ceo-native-2]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (native) recommends changing your stated direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d3",
+      "title": "Item 2's trailer dedupe would drop per-call data: [gbrain search] carries totals, page range, evidence_omitted count and the next cursor [lhf-20261012005308-ceo-native-4]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (native) recommends changing your stated direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d4",
+      "title": "Shipping gates lack a non-inferiority rule and ignore confidently wrong answers [lhf-20261012005308-ceo-outside-1]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d5",
+      "title": "The supposedly static trailers carry per-call completeness and date evidence [lhf-20261012005308-ceo-outside-2]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d6",
+      "title": "The paid matrix is substantially underpriced and improperly makes Opus optional [lhf-20261012005308-ceo-outside-3]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d7",
+      "title": "The old facts gate cannot isolate reasoning-off or justify overriding configured extractors [lhf-20261012005308-ceo-outside-5]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d8",
+      "title": "Synthetic embedding delay is not evidence of meaningful user latency improvement [lhf-20261012005308-ceo-outside-8]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d9",
+      "title": "Default-mode quality gate omits ranking changes on ordinary search [lhf-20261012005308-dx-outside-1]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "dx",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "cost": "b reopens dx and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d10",
+      "title": "Item 1 default flip changes the rerank pool (50→25) on every Cat 40 search call; LongMemEval-S small haystacks may understate the harm and the 'Cat 40 cannot detect' argument covers query only [lhf-20261012005308-eng-native-4]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "eng",
+      "why": "one voice (native) recommends changing your stated direction",
+      "cost": "b reopens eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d11",
+      "title": "Item 3 signature dedupe still hides a recurrence of the same transient failure for up to 24h; Notice has no key field and why embeds a per-session counter [lhf-20261012005308-eng-native-6]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "eng",
+      "why": "one voice (native) recommends changing your stated direction",
+      "cost": "b reopens eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d12",
+      "title": "Item 5 timings in eval capture need a schema migration on both engines (eval_candidates has fixed columns); Cat 40 receipts read MCP _meta, not capture [lhf-20261012005308-eng-native-10]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "eng",
+      "why": "one voice (native) recommends changing your stated direction",
+      "cost": "b reopens eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d13",
+      "title": "The mode-flip gate never compares tokenmax and balanced through query [lhf-20261012005308-eng-outside-2]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "eng",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "cost": "b reopens eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "d14",
+      "title": "Batch entity exact lookups and identity siblings bypass quarantine filtering [lhf-20261012005308-eng-outside-5]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "eng",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "cost": "b reopens eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction"
+        },
+        {
+          "key": "b",
+          "text": "accept the change"
+        }
+      ]
+    },
+    {
+      "id": "p1",
+      "title": "Plan approval",
+      "kind": "approval",
+      "recommended": "a",
+      "options": [
+        {
+          "key": "a",
+          "text": "approve as-is"
+        },
+        {
+          "key": "b",
+          "text": "approve with the overrides above"
+        },
+        {
+          "key": "c",
+          "text": "interrogate (ask questions; stays pending)"
+        },
+        {
+          "key": "d",
+          "text": "revise the plan (every phase reruns, Eng last)"
+        },
+        {
+          "key": "e",
+          "text": "reject"
+        }
+      ]
+    }
+  ],
+  "title": "/autoplan final approval gate"
+}

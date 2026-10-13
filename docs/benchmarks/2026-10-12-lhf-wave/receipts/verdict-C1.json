@@ -1,0 +1,53 @@
+{
+  "treatment_path": "<work>/counted/S-B/rows.ndjson",
+  "control_path": "<work>/counted/S-T/rows.ndjson",
+  "treatment": {
+    "valid": true,
+    "reasons": [],
+    "questions": 470,
+    "hits": 451,
+    "no_variants": 0
+  },
+  "control": {
+    "valid": true,
+    "reasons": [],
+    "questions": 470,
+    "hits": 451,
+    "no_variants": 0
+  },
+  "missing_pairs": 0,
+  "margin": -0.01,
+  "resamples": 10000,
+  "seed": 1,
+  "verdict": "pass",
+  "estimate": 0,
+  "lower": 0,
+  "wins": 0,
+  "losses": 0,
+  "treatment_report": {
+    "latency_ms": {
+      "p50": 354,
+      "p95": 488
+    },
+    "model_calls_per_query": {
+      "embedding": 1,
+      "rerank": 1
+    },
+    "crag_confidence": {
+      "none": 470
+    }
+  },
+  "control_report": {
+    "latency_ms": {
+      "p50": 377,
+      "p95": 559
+    },
+    "model_calls_per_query": {
+      "embedding": 1,
+      "rerank": 1
+    },
+    "crag_confidence": {
+      "none": 470
+    }
+  }
+}

@@ -13,6 +13,7 @@ const proc = Bun.spawnSync([install.python, '-m', 'pytest', ...process.argv.slic
     MPW_REPO_ROOT: `${PROVIDER_DIR}/../..`,
     MPW_HARNESS_SRC: install.src,
     ...(process.env.MPW_REQUIRE_HARNESS ? { MPW_REQUIRE_HARNESS: process.env.MPW_REQUIRE_HARNESS } : {}),
+    ...(process.env.MPW_GBRAIN_CLI ? { MPW_GBRAIN_CLI: process.env.MPW_GBRAIN_CLI } : {}),
   }),
   stdout: 'inherit',
   stderr: 'inherit',

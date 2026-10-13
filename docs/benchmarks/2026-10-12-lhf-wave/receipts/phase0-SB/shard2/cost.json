@@ -1,0 +1,25 @@
+{
+  "arm": "phase0-SB-shard2-a1",
+  "run_id": "lhf-wave-longmemeval-phase0-SB-shard2-a1-2026-10-12T17-04-30-700Z-cef2125f",
+  "gbrain_src": "<work>/gbrain-phase0",
+  "attestation": {
+    "preregistration": "docs/benchmarks/2026-10-12-lhf-wave-preregistration.md",
+    "preregistration_commit": "7bb1e00fd37e9c3ad23bd3544594f04726124d38",
+    "runner_commit": "7bb1e00fd37e9c3ad23bd3544594f04726124d38",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-12T17:04:30.611Z"
+  },
+  "usd": 1.865904,
+  "input_tokens": 15355011,
+  "output_tokens": 0,
+  "basis": "budget ledger lhf-wave-longmemeval-phase0-SB-shard2-a1-2026-10-12T17-04-30-700Z-cef2125f: 5803 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "<work>/ledger.sqlite",
+  "program_cap_usd": 30,
+  "overshoot_usd": 0.0009,
+  "event_loop_lag_ms": {
+    "p50": 0,
+    "p99": 80,
+    "max": 1717.4
+  }
+}

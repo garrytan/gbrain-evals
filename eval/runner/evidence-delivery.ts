@@ -555,6 +555,6 @@ if (import.meta.main) {
   const [cmd, ...rest] = process.argv.slice(2);
   const fn = COMMANDS[cmd];
   if (!fn) { process.stderr.write(`usage: bun eval/runner/evidence-delivery.ts <${Object.keys(COMMANDS).join('|')}> ...\n`); process.exit(2); }
-  fn(new Args(rest)).then(() => process.exit(process.exitCode ?? 0)).catch(e => { process.stderr.write(`[evidence-delivery] FATAL: ${e?.stack ?? e}\n`); process.exit(1); });
+  fn(new Args(rest)).then(() => process.exit(process.exitCode ?? 0)).catch(e => { process.stderr.write(`[evidence-delivery] FATAL: ${e?.message ?? e}\n${e?.stack ?? ''}\n`); process.exit(1); });
 }
 

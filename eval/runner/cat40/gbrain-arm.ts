@@ -414,11 +414,12 @@ export class GbrainSlot {
    * its drain) is not held. The stop still counts the queued effects, so a drain cut short starts the server again.
    */
   async holdWhileDraining(deadline: number): Promise<void> {
-    for (let idle = 0; idle < 2 && Date.now() < deadline;) {
+    for (let idle = 0; ;) {
       const draining = await this.drainInProgress();
       if (draining === null) return;
       idle = draining ? 0 : idle + 1;
-      if (idle < 2) await new Promise(r => setTimeout(r, WARM_BOOT_DRAIN_POLL_MS));
+      if (idle === 2 || Date.now() + WARM_BOOT_DRAIN_POLL_MS > deadline) return;
+      await new Promise(r => setTimeout(r, WARM_BOOT_DRAIN_POLL_MS));
     }
   }
 

@@ -1,11 +1,12 @@
 import { afterAll, afterEach, describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { ChatClient, latestDate, renderHistory, sendsTemperature, sessionDateKey } from '../../eval/runner/memory-qa/qa.ts';
-import { ledgerRerankRequests, loadFrozenRetrieval, parseRunArgs, runArm, scoreRetrieval } from '../../eval/runner/memory-qa/run.ts';
+import { ledgerRerankRequests, loadFrozenRetrieval, parseRunArgs, resolveReranker, runArm, scoreRetrieval } from '../../eval/runner/memory-qa/run.ts';
+import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'memory-qa-arms-'));
@@ -156,7 +157,7 @@ describe('reranker fidelity', () => {
     expect(ledgerRerankRequests(ledger, other.runId, null)).toEqual({ 'voyage:rerank-2.5': 1 });
   });
 
-  const rerankRun = async (label: string, respond: (documents: string[]) => Response) => {
+  const rerankRun = async (label: string, respond: (documents: string[]) => Response, out = label) => {
     const ledger = join(tmp, `${label}.sqlite`);
     initLedger({ ledgerPath: ledger });
     const real = globalThis.fetch;
@@ -172,7 +173,7 @@ describe('reranker fidelity', () => {
     }) as never;
     try {
       const { receipt } = await runArm(parseRunArgs(['--benchmark', 'fixture', '--embed', 'hash', '--pin', 'search.reranker.enabled=true', '--pin', 'search.reranker.model=voyage:rerank-2.5',
-        '--paid', '--budget-run-id', BudgetRun.open({ runner: 'test', budgetUsd: 1, estimateUsd: 0.1, ledgerPath: ledger }).runId, '--budget-ledger', ledger, '--output', join(tmp, `${label}-out`)]));
+        '--paid', '--budget-run-id', BudgetRun.open({ runner: 'test', budgetUsd: 1, estimateUsd: 0.1, ledgerPath: ledger }).runId, '--budget-ledger', ledger, '--output', join(tmp, `${out}-out`)]));
       return { receipt, calls, fidelity: receipt.fidelity as Record<string, unknown> };
     } finally {
       globalThis.fetch = real;
@@ -185,17 +186,76 @@ describe('reranker fidelity', () => {
     expect(calls).toBeGreaterThan(0);
     expect(fidelity.reranked_queries).toBe(calls);
     expect(fidelity.rerank_provider_requests).toEqual({ 'voyage:rerank-2.5': calls });
-    expect(fidelity.rerank_degraded_queries).toBe(0);
     expect(receipt.run_status).toBe('complete');
+    expect(receipt.reranker).toEqual({ applies: true, enabled: true, decided_by: 'pin', model: 'voyage:rerank-2.5' });
+    const rows = readFileSync(join(tmp, 'rerank-ok-out', 'rows.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) expect(r.rerank.state).toBe('reranked');
   }, 120_000);
 
-  test('a reranker that failed open makes the run invalid and names the degradation', async () => {
-    const { receipt, fidelity } = await rerankRun('rerank-down', () => new Response(JSON.stringify({ detail: 'unavailable' }), { status: 503, headers: { 'content-type': 'application/json' } }));
-    expect(fidelity.reranked_queries).toBe(0);
-    expect(receipt.run_status).toBe('invalid');
-    const reasons = receipt.invalid_reasons as string[];
-    expect(reasons.some(r => r.includes('without rerank scores'))).toBe(true);
-    expect(reasons.some(r => r.includes('rerank degradation'))).toBe(true);
-    expect(reasons.some(r => r.includes('voyage:rerank-2.5 requests for 0 reranked queries'))).toBe(true);
+  test('a reranker that failed open stops the run with the coded refusal RERANKER_INACTIVE (no silent fallback)', async () => {
+    let err: unknown;
+    try { await rerankRun('rerank-down', () => new Response(JSON.stringify({ detail: 'unavailable' }), { status: 503, headers: { 'content-type': 'application/json' } })); }
+    catch (e) { err = e; }
+    expect(err).toBeInstanceOf(DecideError);
+    expect((err as DecideError).op.code).toBe('RERANKER_INACTIVE');
+    expect((err as DecideError).op.fix.next).toBe('ask_user');
+    const receipt = JSON.parse(readFileSync(join(tmp, 'rerank-down-out', 'receipt.json'), 'utf8'));
+    expect(receipt.run_status).toBe('refused');
+    expect(receipt.refusal.code).toBe('RERANKER_INACTIVE');
+    expect(receipt.refusal.message).toMatch(/rerank degradation|without rerank scores/);
+    expect(receipt.counts.rows).toBe(0);
+    expect(receipt.fidelity.reranked_queries).toBe(0);
   }, 120_000);
+
+  test('a refused arm resumed to completion counts reranked queries, metered requests and cost across both attempts', async () => {
+    const ok = (docs: string[]) => new Response(JSON.stringify({ object: 'list', data: docs.map((_, index) => ({ index, relevance_score: 1 - index / 100 })), model: 'rerank-2.5', usage: { total_tokens: 10 } }), { status: 200, headers: { 'content-type': 'application/json' } });
+    let served = 0;
+    let err: unknown;
+    try { await rerankRun('resume-a', docs => (++served <= 1 ? ok(docs) : new Response('{}', { status: 503 })), 'resume'); }
+    catch (e) { err = e; }
+    expect((err as DecideError).op.code).toBe('RERANKER_INACTIVE');
+    const first = JSON.parse(readFileSync(join(tmp, 'resume-out', 'receipt.json'), 'utf8'));
+    expect(first.run_status).toBe('refused');
+    expect(first.counts.rows).toBe(1);
+    const { receipt, calls, fidelity } = await rerankRun('resume-b', ok, 'resume');
+    expect(receipt.run_status).toBe('complete');
+    const rows = readFileSync(join(tmp, 'resume-out', 'rows.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(rows.filter(r => r.rerank.state === 'reranked').length).toBe(1 + calls);
+    expect(fidelity.reranked_queries).toBe(1 + calls);
+    expect((fidelity.rerank_provider_requests as Record<string, number>)['voyage:rerank-2.5']).toBeGreaterThanOrEqual(1 + calls);
+    const attempts = receipt.attempts as Array<{ run_status: string; rows_added: number; usd: number }>;
+    expect(attempts.map(x => [x.run_status, x.rows_added])).toEqual([['refused', 1], ['complete', calls]]);
+    expect(receipt.cost_usd_all_attempts).toBeCloseTo(attempts.reduce((x, y) => x + y.usd, 0), 6);
+  }, 120_000);
+
+  test('the reranker is on unless the arm is keyless or says otherwise; a contradiction is refused', () => {
+    expect(resolveReranker(undefined, undefined, 'real')).toEqual({ enabled: true, decided_by: 'default' });
+    expect(resolveReranker(undefined, undefined, 'hash')).toEqual({ enabled: false, decided_by: 'keyless-default' });
+    expect(resolveReranker('off', undefined, 'real')).toEqual({ enabled: false, decided_by: 'flag' });
+    expect(resolveReranker('on', 'true', 'hash')).toEqual({ enabled: true, decided_by: 'flag' });
+    expect(resolveReranker(undefined, 'false', 'real')).toEqual({ enabled: false, decided_by: 'pin' });
+    expect(() => resolveReranker('on', 'false', 'real')).toThrow(/contradicts/);
+    expect(() => resolveReranker('maybe', undefined, 'real')).toThrow(/on or off/);
+    const real = parseRunArgs(['--benchmark', 'beam-1m', '--output', join(tmp, 'parse-real')]);
+    expect(real.pins['search.reranker.enabled']).toBe('true');
+    expect(real.reranker.decided_by).toBe('default');
+    const viaConfig = parseRunArgs(['--benchmark', 'fixture', '--embed', 'real', '--config', 'search.reranker.enabled=false', '--output', join(tmp, 'parse-config')]);
+    expect(viaConfig.pins['search.reranker.enabled']).toBe('false');
+    expect(viaConfig.config['search.reranker.enabled']).toBeUndefined();
+  });
+
+  test('a reranker without its provider key is refused before anything is searched', async () => {
+    const prevKey = process.env.VOYAGE_API_KEY;
+    delete process.env.VOYAGE_API_KEY;
+    try {
+      let err: unknown;
+      try { await runArm(parseRunArgs(['--benchmark', 'fixture', '--embed', 'hash', '--reranker', 'on', '--pin', 'search.reranker.model=voyage:rerank-2.5', '--output', join(tmp, 'rerank-nokey-out')])); }
+      catch (e) { err = e; }
+      expect((err as DecideError).op.code).toBe('RERANKER_INACTIVE');
+      expect((err as DecideError).message).toContain('VOYAGE_API_KEY');
+    } finally {
+      if (prevKey !== undefined) process.env.VOYAGE_API_KEY = prevKey;
+    }
+  });
 });

@@ -8,6 +8,7 @@
  *     [--benchmark custody --corpus-file <custody path> (custodian sealed corpus; needs --split sealed)]
  *     [--facts conversation] [--qa reader|think --qa-context sessions|facts|none|oracle]
  *     [--retrieved-from <rows dir>] [--search-limit N] [--pool-depth N] [--max-per-session N]
+ *     [--reranker on|off] [--qa-sessions N] [--qa-max-tokens N]
  *     [--paid --budget-run-id <id>] --output <dir>
  *
  * Memory-system cells (`--system`, `--arms`, `--replay`, `--sealed-profile`, `--provider-proxy` and the other flags in
@@ -45,12 +46,29 @@
  * selects the build under test; the decision kit runs baseline and candidate
  * as separate processes. Gold ids, categories and answers never reach gbrain.
  *
+ * Reranker (since 2026-10-12, BEAM-1M S1): on by default for every arm that
+ * searches with real embeddings, as gbrain's balanced default ships it; off by
+ * default only for keyless `--embed hash` arms, which make no provider call.
+ * `--reranker off` (or an explicit `search.reranker.enabled=false` pin or
+ * config) measures without it on purpose; the receipt's `reranker` block says
+ * which and why, and every searched row carries its own `rerank` state.
+ * With the reranker on, the run fails closed with the coded refusal
+ * RERANKER_INACTIVE (exit 3, ask the user; no silent fallback): before any
+ * search when the reranker's provider key is missing, and at the first query
+ * that comes back without rerank scores or with a rerank degradation (failed,
+ * skipped or passed through), after writing a receipt with
+ * `run_status: refused`. A rerun of the same command resumes.
+ *
  * Fidelity: a page saved without vectors (embedding_deferred) under an
- * embedding arm, or a pinned reranker that never stamps a rerank score, marks
- * the run `invalid` — it measured a different pipeline than the one named.
- * With the reranker pinned on, no query may report a rerank degradation, and
- * the budget ledger must hold at least one request to the configured reranker
- * model per reranked query; otherwise the run is `invalid`.
+ * embedding arm marks the run `invalid` — it measured a different pipeline
+ * than the one named. With the reranker on, the budget ledger must also hold
+ * at least one request to the reranker model per reranked query; otherwise
+ * the run is `invalid`.
+ *
+ * Reading breadth: `--qa-sessions N` turn groups (sessions) per answer
+ * (default 5), recorded as the receipt's `reading.breadth_sessions`;
+ * `--qa-max-tokens N` the reader's output limit (default 1,024; OpenAI
+ * reasoning models get at least 2,000), equal across readers when set.
  */
 import '../budget-ledger.ts';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -93,7 +111,9 @@ export interface RunArgs {
   shard: { index: number; count: number };
   output: string;
   argv: string[];
-  qa: { mode: 'none' | 'reader' | 'think'; reader: string; judge: string; runs: number; sessions: number; budgetTokens: number | null; thinkModel: string; context: 'sessions' | 'facts' | 'none' | 'oracle' };
+  qa: { mode: 'none' | 'reader' | 'think'; reader: string; judge: string; runs: number; sessions: number; budgetTokens: number | null; thinkModel: string; context: 'sessions' | 'facts' | 'none' | 'oracle'; maxTokens?: number };
+  /** Whether hybridSearch reranks, and what decided it (the flag, an explicit pin/config, or the harness default). */
+  reranker: { enabled: boolean; decided_by: 'flag' | 'pin' | 'default' | 'keyless-default' };
   facts: 'none' | 'conversation';
   /** Replay the ranked session lists in this directory's rows instead of searching. */
   retrievedFrom: string | null;
@@ -112,6 +132,8 @@ export interface MemoryQaRow {
   ndcg_at_10?: number;
   retrieved?: string[];
   latency_ms?: number;
+  /** Searched rows only: whether this query's results were reranked (`reranked`), the reranker was off, or the search returned nothing. */
+  rerank?: { state: 'reranked' | 'off' | 'no_results'; model?: string };
   qa_score?: number;
   qa_scores?: number[];
   qa_runs?: number;
@@ -139,14 +161,14 @@ export interface MemoryQaRow {
 }
 
 /** The part of hybridSearch's onMeta report the reranker fidelity check reads. */
-type SearchMeta = { rerank?: { model_resolved: string }; degraded?: Array<string | { stage?: string }> };
+type SearchMeta = { degraded?: Array<string | { stage?: string; reason?: string }> };
 
-const DEFAULT_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.reranker.enabled': 'false', 'search.autocut': 'false' };
+const DEFAULT_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.autocut': 'false' };
 const RECYCLE_EVERY = 25;
 const repoRelative = (p: string) => p.replace(resolve(import.meta.dir, '../../..') + '/', '');
 /** Planning estimate for one session through the conversation-facts extractor (product default model). */
 const FACTS_USD_PER_SESSION = 0.03;
-const PRESERVE_TABLES = new Set(['sources', 'config', 'gbrain_cycle_locks', 'subagent_rate_leases']);
+const PRESERVE_TABLES = new Set(['sources', 'config', 'gbrain_cycle_locks', 'subagent_rate_leases', 'persistence_brain', 'shared_skill_state', 'page_generation_clock']);
 
 function kv(list: string[], flag: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -203,6 +225,25 @@ const SYSTEMS_FLAGS = ['--system', '--arms', '--replay', '--sealed-profile', '--
 export const isSystemsArgv = (argv: string[]) => argv.some(x => SYSTEMS_FLAGS.includes(x));
 export type SystemsRunArgs = systems.RunArgs;
 
+/**
+ * `--reranker on|off` wins; an explicit `search.reranker.enabled` pin or config must agree with it. Without either the
+ * reranker is on, except for keyless hash-embedding arms, which make no provider call.
+ */
+export function resolveReranker(flag: string | undefined, explicit: string | undefined, embed: 'hash' | 'real'): RunArgs['reranker'] {
+  if (flag !== undefined && flag !== 'on' && flag !== 'off') throw new Error(`--reranker must be on or off (got ${flag})`);
+  if (explicit !== undefined && explicit !== 'true' && explicit !== 'false') throw new Error(`search.reranker.enabled must be true or false (got ${explicit})`);
+  if (flag !== undefined && explicit !== undefined && (flag === 'on') !== (explicit === 'true')) throw new Error(`--reranker ${flag} contradicts search.reranker.enabled=${explicit}`);
+  if (flag !== undefined) return { enabled: flag === 'on', decided_by: 'flag' };
+  if (explicit !== undefined) return { enabled: explicit === 'true', decided_by: 'pin' };
+  return embed === 'hash' ? { enabled: false, decided_by: 'keyless-default' } : { enabled: true, decided_by: 'default' };
+}
+
+/** The coded refusal for a reranker that is on but did not run (fail closed, never a silent unreranked fallback). */
+export function rerankerInactive(message: string, rerankModel: string): DecideError {
+  return decideError({ code: 'RERANKER_INACTIVE', message, why: `the arm names gbrain's reranked pipeline (${rerankModel}); results without it would be reported as reranked`,
+    fix: { next: 'ask_user', user_message: `make the reranker reachable (provider key and endpoint for ${rerankModel}) and rerun the same command, which resumes; or pass --reranker off to measure without reranking on purpose and say so in the preregistration` } });
+}
+
 export function parseRunArgs(argv: string[]): RunArgs {
   if (isSystemsArgv(argv)) return systems.parseRunArgs(argv) as unknown as RunArgs;
   const one = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
@@ -224,9 +265,13 @@ export function parseRunArgs(argv: string[]): RunArgs {
   if (!Number.isInteger(si) || !Number.isInteger(sn) || sn < 1 || si < 0 || si >= sn) throw new Error('--shard must look like i/n with 0 <= i < n');
   const embed = (one('--embed') ?? (benchmark === 'fixture' ? 'hash' : 'real')) as 'hash' | 'real';
   if (!['hash', 'real'].includes(embed)) throw new Error('--embed must be hash or real');
+  const config = kv(many('--config'), '--config');
+  const pins = { ...DEFAULT_PINS, ...kv(many('--pin'), '--pin') };
+  const reranker = resolveReranker(one('--reranker'), config['search.reranker.enabled'] ?? pins['search.reranker.enabled'], embed);
+  pins['search.reranker.enabled'] = String(reranker.enabled);
+  delete config['search.reranker.enabled'];
   return {
-    benchmark, split: split as 'dev' | 'sealed', custody, corpusFile: one('--corpus-file'), gbrain: gbrainSpecFrom(argv), config: kv(many('--config'), '--config'),
-    pins: { ...DEFAULT_PINS, ...kv(many('--pin'), '--pin') }, embed,
+    benchmark, split: split as 'dev' | 'sealed', custody, corpusFile: one('--corpus-file'), gbrain: gbrainSpecFrom(argv), config, pins, embed, reranker,
     embeddingModel: one('--embedding-model') ?? 'openai:text-embedding-3-large',
     embeddingDims: Number(one('--embedding-dims') ?? 1536),
     categories: one('--categories') ? one('--categories')!.split(',').map(s => s.trim()).filter(Boolean) : null,
@@ -241,6 +286,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
       budgetTokens: one('--qa-budget-tokens') ? Number(one('--qa-budget-tokens')) : null,
       thinkModel: one('--think-model') ?? 'anthropic:claude-sonnet-5-5',
       context: (one('--qa-context') ?? 'sessions') as RunArgs['qa']['context'],
+      ...(one('--qa-max-tokens') ? { maxTokens: positiveInt(one('--qa-max-tokens'), '--qa-max-tokens')! } : {}),
     },
     facts: (one('--facts') ?? 'none') as 'none' | 'conversation',
     retrievedFrom: one('--retrieved-from') ? resolve(one('--retrieved-from')!) : null,
@@ -341,7 +387,7 @@ export async function readAndJudge(p: {
           answer, usage: normalizeUsage('gbrain-think', res.usage), usage_raw: res.usage ?? null, delivered: d ? { tokenizer: d.tokenizer, tokens: d.tokens_delivered } : null }));
       } else {
         const delivered = p.countTokens ? { tokenizer: 'cl100k', tokens: p.countTokens(p.prompt!) } : null;
-        answer = (await chatWithReceipts(p.chat, { role: 'reader', question_id: p.q.id, replicate: r, model: p.qa.reader, delivered }, p.prompt!, { maxTokens: 1024, replicate: r }, receipts)).text;
+        answer = (await chatWithReceipts(p.chat, { role: 'reader', question_id: p.q.id, replicate: r, model: p.qa.reader, delivered }, p.prompt!, { maxTokens: p.qa.maxTokens ?? 1024, replicate: r }, receipts)).text;
       }
       scores.push(await judgeResponse(p.chat, p.benchmark, p.qa.judge, p.q, answer, r, receipts));
       if (p.q.abstention && repeatsTrap(answer, p.q.trap)) trap++;
@@ -392,6 +438,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const rowsPath = join(a.output, 'rows.ndjson');
   const headerPath = join(a.output, 'run-config.json');
   const done = new Set<string>();
+  type Attempt = { run_status: string; finished_at: string; rows_added: number; reranked_queries: number; rerank_provider_requests: Record<string, number> | null; embedding_deferred_pages: number; usd: number | null };
+  let priorAttempts: Attempt[] = [];
   if (existsSync(headerPath)) {
     const prior = JSON.parse(readFileSync(headerPath, 'utf8')) as { run_config_hash: string };
     if (prior.run_config_hash !== hash) throw new Error(`${a.output} holds rows from a different run configuration; use a fresh --output`);
@@ -399,7 +447,14 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       const r = JSON.parse(line) as MemoryQaRow;
       if (!r.error) done.add(r.id);
     }
+    const receiptPath = join(a.output, 'receipt.json');
+    if (existsSync(receiptPath)) {
+      const prev = JSON.parse(readFileSync(receiptPath, 'utf8')) as { run_status: string; finished_at: string; counts?: { rows: number }; attempts?: Attempt[]; fidelity?: Partial<Attempt>; cost?: { usd?: number } | null };
+      priorAttempts = prev.attempts ?? [{ run_status: prev.run_status, finished_at: prev.finished_at, rows_added: prev.counts?.rows ?? 0, reranked_queries: prev.fidelity?.reranked_queries ?? 0,
+        rerank_provider_requests: prev.fidelity?.rerank_provider_requests ?? null, embedding_deferred_pages: prev.fidelity?.embedding_deferred_pages ?? 0, usd: prev.cost?.usd ?? null }];
+    }
   }
+  const rowsBefore = existsSync(rowsPath) ? readFileSync(rowsPath, 'utf8').split('\n').filter(l => l.trim()).length : 0;
   writeFileSync(headerPath, JSON.stringify({ run_config_hash: hash, benchmark: a.benchmark, shard: a.shard }, null, 2));
 
   // Gateway: hash vectors (keyless) or the real provider through the budget ledger and the content-addressed cache.
@@ -407,8 +462,14 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
   let cache: EmbeddingCache | null = null;
   const provider = a.embeddingModel.split(':')[0];
-  const rerankPinned = !brainless && (a.config['search.reranker.enabled'] ?? a.pins['search.reranker.enabled']) === 'true';
-  const needsPaid = (!brainless && a.embed === 'real') || rerankPinned || a.qa.mode !== 'none' || a.facts !== 'none';
+  const rerankOn = !brainless && a.reranker.enabled;
+  const needsPaid = (!brainless && a.embed === 'real') || rerankOn || a.qa.mode !== 'none' || a.facts !== 'none';
+  const rerankModel = a.config['search.reranker.model'] ?? a.pins['search.reranker.model']
+    ?? (rerankOn ? (await importGbrain<{ DEFAULT_RERANKER_MODEL?: string }>(gut, 'src/core/ai/defaults.ts').catch(() => ({} as { DEFAULT_RERANKER_MODEL?: string }))).DEFAULT_RERANKER_MODEL ?? null : null);
+  if (rerankOn) {
+    const keyEnv = PROVIDER_KEY[(rerankModel ?? 'voyage:').split(':')[0]];
+    if (keyEnv && !process.env[keyEnv]) throw rerankerInactive(`the reranker is on but ${keyEnv} is not set, so every search would fall back to unreranked order (nothing was searched)`, rerankModel ?? 'the default reranker');
+  }
   if (needsPaid) {
     const perQuestion: Record<string, number> = { 'lme-s': 0.012, custody: 0.002, locomo: 0.002, 'beam-100k': 0.01, 'beam-500k': 0.02, 'beam-1m': 0.03, fixture: 0 };
     const perQa: Record<string, number> = { none: 0, reader: a.benchmark === 'lme-s' ? 0.05 : 0.01, think: 0.08 };
@@ -467,8 +528,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     if (targets.length) await e.executeRaw(`TRUNCATE ${targets.map(t => `"${t.replace(/"/g, '""')}"`).join(', ')} RESTART IDENTITY CASCADE`);
   };
 
-  const rerankModel = a.config['search.reranker.model'] ?? a.pins['search.reranker.model'] ?? null;
-  const fidelity = { embedding_deferred_pages: 0, rerank_missing_queries: 0, reranked_queries: 0, rerank_degraded_queries: 0, rerank_provider_requests: null as Record<string, number> | null };
+  const fidelity = { embedding_deferred_pages: 0, reranked_queries: 0, rerank_provider_requests: null as Record<string, number> | null };
+  let refusal: DecideError | null = null;
   const rows: MemoryQaRow[] = [];
   let engine = brainless ? null : await openEngine();
   let processed = 0;
@@ -532,17 +593,19 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             } else if (engine) {
               const seen: { meta: SearchMeta | null } = { meta: null };
               const results = await hybridSearch(engine, q.question, { limit: a.search.limit ?? a.topK * 3, expansion: false,
-                ...(a.search.maxPerSession ? { dedupOpts: { maxPerPage: a.search.maxPerSession } } : {}), ...(rerankPinned ? { onMeta: (m: SearchMeta) => { seen.meta = m; } } : {}) });
+                ...(a.search.maxPerSession ? { dedupOpts: { maxPerPage: a.search.maxPerSession } } : {}), onMeta: (m: SearchMeta) => { seen.meta = m; } });
               const latency = performance.now() - t0;
-              if (rerankPinned && results.length) {
-                if (results.some(r => r.rerank_score !== undefined)) fidelity.reranked_queries++;
-                else fidelity.rerank_missing_queries++;
-                const m = seen.meta;
-                const stages = (m?.degraded ?? []).map(d => (typeof d === 'string' ? d : d.stage ?? '')).filter(st => /rerank/.test(st));
-                if (stages.length) fidelity.rerank_degraded_queries++;
+              let rerank: MemoryQaRow['rerank'] = { state: !results.length ? 'no_results' : rerankOn ? 'reranked' : 'off' };
+              if (rerank.state === 'reranked') {
+                const stages = (seen.meta?.degraded ?? []).map(d => (typeof d === 'string' ? d : `${d.stage ?? ''}${d.reason ? `: ${d.reason}` : ''}`)).filter(st => /rerank/.test(st));
+                if (!results.some(r => r.rerank_score !== undefined) || stages.length) {
+                  throw rerankerInactive(`question ${q.id} came back ${stages.length ? `with a rerank degradation (${stages.join(', ')})` : 'without rerank scores'} although the reranker is on; the run stopped there`, rerankModel ?? 'the default reranker');
+                }
+                fidelity.reranked_queries++;
+                if (rerankModel) rerank = { ...rerank, model: rerankModel };
               }
               retrieved = uniqueInOrder(results.map(r => bySlug.get(r.slug) ?? `?${r.slug}`)).slice(0, a.topK);
-              row = { ...base, ...scoreRetrieval(retrieved, q.gold), retrieved, latency_ms: Math.round(latency * 10) / 10, error: null };
+              row = { ...base, ...scoreRetrieval(retrieved, q.gold), retrieved, latency_ms: Math.round(latency * 10) / 10, rerank, error: null };
             } else row = { ...base, error: null };
             if (chat) {
               const sessById = new Map(conv.sessions.map(x => [x.id, x]));
@@ -555,6 +618,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
                 ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: systems.factsContextTokens(readFacts) } : {}) };
             }
           } catch (e) {
+            if (e instanceof DecideError) throw e;
             row = { ...base, error: (e as Error).message, error_origin: /budget|BudgetExceeded/i.test((e as Error).message) ? 'harness' : 'sut' };
           }
         }
@@ -562,40 +626,55 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         appendFileSync(rowsPath, JSON.stringify(row) + '\n');
       }
     }
+  } catch (e) {
+    if (!(e instanceof DecideError && e.op.code === 'RERANKER_INACTIVE')) throw e;
+    refusal = e;
   } finally {
     try { await engine?.disconnect(); } catch { /* ignore */ }
     cache?.close();
   }
 
-  const allRows: MemoryQaRow[] = readFileSync(rowsPath, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
+  const allRows: MemoryQaRow[] = (existsSync(rowsPath) ? readFileSync(rowsPath, 'utf8') : '').split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
   const scored = allRows.filter(r => !r.abstention && !r.error && r.gold_count > 0);
   const mean = (k: keyof MemoryQaRow) => scored.length ? scored.reduce((s, r) => s + Number(r[k] ?? 0), 0) / scored.length : null;
   const retrievalScored = !!frozen || !brainless;
   const invalidReasons: string[] = [];
-  if (fidelity.embedding_deferred_pages > 0) invalidReasons.push(`${fidelity.embedding_deferred_pages} pages were saved without vectors (embedding_deferred), so vector retrieval was not what ran`);
-  if (rerankPinned && fidelity.rerank_missing_queries > 0) invalidReasons.push(`${fidelity.rerank_missing_queries} queries came back without rerank scores although the reranker is pinned on`);
-  if (rerankPinned && fidelity.rerank_degraded_queries > 0) invalidReasons.push(`${fidelity.rerank_degraded_queries} queries reported a rerank degradation (failed, skipped or passed through)`);
   const expected = questions.filter(q => myConvs.includes(q.conversation)).length;
   let cost: Record<string, unknown> | null = null;
+  if (paid && rerankOn) fidelity.rerank_provider_requests = ledgerRerankRequests(paid.run.ledgerPath, paid.run.runId, paid.run.participant);
+  const attemptFidelity = { ...fidelity };
+  for (const p of priorAttempts) {
+    fidelity.reranked_queries += p.reranked_queries;
+    fidelity.embedding_deferred_pages += p.embedding_deferred_pages;
+    if (p.rerank_provider_requests) {
+      fidelity.rerank_provider_requests ??= {};
+      for (const [m, n] of Object.entries(p.rerank_provider_requests)) fidelity.rerank_provider_requests[m] = (fidelity.rerank_provider_requests[m] ?? 0) + n;
+    }
+  }
+  if (fidelity.embedding_deferred_pages > 0) invalidReasons.push(`${fidelity.embedding_deferred_pages} pages were saved without vectors (embedding_deferred), so vector retrieval was not what ran`);
   if (paid) {
-    if (rerankPinned) {
-      fidelity.rerank_provider_requests = ledgerRerankRequests(paid.run.ledgerPath, paid.run.runId, paid.run.participant);
-      const metered = rerankModel ? fidelity.rerank_provider_requests[rerankModel] ?? 0 : Object.values(fidelity.rerank_provider_requests).reduce((x, y) => x + y, 0);
+    if (rerankOn) {
+      const metered = rerankModel ? fidelity.rerank_provider_requests![rerankModel] ?? 0 : Object.values(fidelity.rerank_provider_requests!).reduce((x, y) => x + y, 0);
       if (metered < fidelity.reranked_queries || (fidelity.reranked_queries === 0 && allRows.length > 0)) invalidReasons.push(`the budget ledger holds ${metered} ${rerankModel ?? 'rerank'} requests for ${fidelity.reranked_queries} reranked queries`);
     }
     const summary = paid.run.close();
     paid.guard.uninstall();
     cost = receiptCost(summary) as unknown as Record<string, unknown>;
   }
-  const runStatus = invalidReasons.length ? 'invalid' : allRows.length < expected ? 'partial' : 'complete';
+  const runStatus = refusal ? 'refused' : invalidReasons.length ? 'invalid' : allRows.length < expected ? 'partial' : 'complete';
+  const finishedAt = new Date().toISOString();
+  const attempts: Attempt[] = [...priorAttempts, { run_status: runStatus, finished_at: finishedAt, rows_added: allRows.length - rowsBefore, reranked_queries: attemptFidelity.reranked_queries,
+    rerank_provider_requests: attemptFidelity.rerank_provider_requests, embedding_deferred_pages: attemptFidelity.embedding_deferred_pages, usd: (cost?.usd as number | undefined) ?? null }];
   const receipt = {
-    kind: 'memory-qa-arm', schema_version: 1, benchmark: a.benchmark, split: a.split, run_status: runStatus, invalid_reasons: invalidReasons,
-    started_at: started, finished_at: new Date().toISOString(), run_config_hash: hash,
+    kind: 'memory-qa-arm', schema_version: 1, benchmark: a.benchmark, split: a.split, run_status: runStatus, invalid_reasons: invalidReasons, ...(refusal ? { refusal: refusal.op } : {}),
+    started_at: started, finished_at: finishedAt, run_config_hash: hash,
     product: productIdentityFor(gut), overlay: overlaySummary(gut), arm_config: a.config, search_pins: a.pins,
     retrieval_path: frozen ? `frozen ranked lists replayed from ${repoRelative(a.retrievedFrom!)}` : a.qa.context === 'none' ? 'none (no-memory reader)' : a.qa.context === 'oracle' ? 'none (oracle: every gold session)'
       : 'hybridSearch (expansion off), chunks reduced to distinct sessions',
     ...(frozen ? { retrieved_from: frozen.files.map(f => ({ path: repoRelative(f.path), sha256: f.sha256 })) } : {}),
     search_knobs: a.search,
+    reranker: brainless ? { applies: false } : { applies: true, enabled: rerankOn, decided_by: a.reranker.decided_by, model: rerankModel },
+    reading: a.qa.mode === 'none' ? null : { breadth_sessions: a.qa.sessions, budget_tokens: a.qa.budgetTokens, max_output_tokens: a.qa.maxTokens ?? 1024 },
     embedding: { mode: a.embed, model: a.embeddingModel, dims: a.embeddingDims, cache_stats: cache ? { ...cache.stats } : null },
     dataset: corpus.source, selection: { categories: a.categories, limit: a.limit, seed: a.seed, shard: a.shard, conversations: myConvs.length, questions_expected: expected },
     counts: { rows: allRows.length, scored: scored.length, errors: allRows.filter(r => r.error).length, abstention: allRows.filter(r => r.abstention).length },
@@ -611,9 +690,10 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       const all = allRows.flatMap(r => r.qa_receipts ?? []);
       return { schema: USAGE_RECEIPT_SCHEMA, by_role: Object.fromEntries([...new Set(all.map(r => r.role))].sort().map(role => [role, sumUsage(all.filter(r => r.role === role))])) };
     })(),
-    fidelity, cost, rows_file: 'rows.ndjson',
+    fidelity, cost, attempts, cost_usd_all_attempts: attempts.some(x => x.usd !== null) ? Math.round(attempts.reduce((x, y) => x + (y.usd ?? 0), 0) * 1e6) / 1e6 : null, rows_file: 'rows.ndjson',
   };
   writeFileSync(join(a.output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
+  if (refusal) throw refusal;
   return { receipt, rows: allRows };
 }
 

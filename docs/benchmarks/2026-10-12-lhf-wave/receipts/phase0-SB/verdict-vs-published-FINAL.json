@@ -1,0 +1,50 @@
+{
+  "treatment_path": "<work>/phase0/SB/rows.ndjson",
+  "control_path": "docs/benchmarks/2026-10-04-longmemeval-opaque-followups/1a-harness/FINAL/rows.ndjson.gz",
+  "treatment": {
+    "valid": true,
+    "reasons": [],
+    "questions": 470,
+    "hits": 451,
+    "no_variants": 0
+  },
+  "control": {
+    "valid": true,
+    "reasons": [],
+    "questions": 470,
+    "hits": 451,
+    "no_variants": 0
+  },
+  "missing_pairs": 0,
+  "margin": -0.01,
+  "resamples": 10000,
+  "seed": 1,
+  "verdict": "pass",
+  "estimate": 0,
+  "lower": -0.00425531914893617,
+  "wins": 1,
+  "losses": 1,
+  "treatment_report": {
+    "latency_ms": {
+      "p50": 626,
+      "p95": 969
+    },
+    "model_calls_per_query": {
+      "embedding": 1,
+      "rerank": 1
+    },
+    "crag_confidence": {
+      "none": 470
+    }
+  },
+  "control_report": {
+    "latency_ms": {
+      "p50": null,
+      "p95": null
+    },
+    "model_calls_per_query": {},
+    "crag_confidence": {
+      "none": 470
+    }
+  }
+}

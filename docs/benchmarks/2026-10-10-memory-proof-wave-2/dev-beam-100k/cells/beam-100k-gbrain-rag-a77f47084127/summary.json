@@ -1,0 +1,100 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-a77f47084127",
+  "scheduled": 40,
+  "answered_receipts": 6,
+  "judged_receipts": 6,
+  "score": {
+    "scheduled": 40,
+    "counts": {
+      "answered": 5,
+      "abstention": 0,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 1,
+      "incomplete_ingest": 0,
+      "missing": 34
+    },
+    "judged": 5,
+    "correct": 2,
+    "accuracy": 0.05,
+    "mean_score": 0.05416666666666666,
+    "complete": false,
+    "missing_ids": [
+      "3_abstention_0",
+      "3_abstention_1",
+      "3_contradiction_resolution_0",
+      "3_contradiction_resolution_1",
+      "3_event_ordering_0",
+      "3_event_ordering_1",
+      "3_information_extraction_0",
+      "3_information_extraction_1",
+      "3_instruction_following_0",
+      "3_instruction_following_1",
+      "3_knowledge_update_0",
+      "3_knowledge_update_1",
+      "3_multi_session_reasoning_0",
+      "3_multi_session_reasoning_1",
+      "3_preference_following_0",
+      "3_preference_following_1",
+      "3_summarization_0",
+      "3_summarization_1",
+      "3_temporal_reasoning_0",
+      "3_temporal_reasoning_1",
+      "11_information_extraction_0",
+      "11_information_extraction_1",
+      "11_instruction_following_0",
+      "11_instruction_following_1",
+      "11_knowledge_update_0",
+      "11_knowledge_update_1",
+      "11_multi_session_reasoning_0",
+      "11_multi_session_reasoning_1",
+      "11_preference_following_0",
+      "11_preference_following_1",
+      "11_summarization_0",
+      "11_summarization_1",
+      "11_temporal_reasoning_0",
+      "11_temporal_reasoning_1"
+    ],
+    "judge_failure_ids": [
+      "11_abstention_1"
+    ],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 6,
+    "mean": 6671.3,
+    "p95": 7187.0,
+    "tolerance": 0.1,
+    "ok": false,
+    "reason": "mean 6671 outside [7200, 8800]; p95 7187 outside [7200, 8800]",
+    "inserted_kinds": {
+      "rendered": 6
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 6,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+    },
+    "counts": {
+      "observed_session_time": 17
+    }
+  },
+  "gates": {
+    "complete": false,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": false,
+    "no_remote_clamp": true
+  },
+  "ok": false
+}

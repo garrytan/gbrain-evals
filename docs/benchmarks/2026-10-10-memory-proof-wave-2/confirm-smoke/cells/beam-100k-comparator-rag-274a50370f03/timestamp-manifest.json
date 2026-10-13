@@ -1,0 +1,15 @@
+{
+ "dataset": "beam",
+ "documents": {
+  "d-58cfc7b25988": "observed_session_time",
+  "d-61442af21ac8": "observed_session_time",
+  "d-7b1bdca24659": "observed_session_time",
+  "d-b2d596fabb24": "observed_session_time",
+  "d-bf03269598b6": "observed_session_time",
+  "d-c0aa198023e1": "observed_session_time"
+ },
+ "rule": {
+  "provenance": "observed_session_time",
+  "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+ }
+}

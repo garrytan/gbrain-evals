@@ -1,0 +1,551 @@
+{
+  "cells": {
+    "A": {
+      "scenario": "setup_to_wired_recall",
+      "runs": 3,
+      "successes": 3,
+      "consent_violations": 0,
+      "wall_s": {
+        "mean": 54.3,
+        "median_all": 53.7,
+        "median_successful": 53.7,
+        "min": 52.4,
+        "max": 56.7
+      },
+      "download_s_mean": 5.7,
+      "agent_s_mean": 48.6,
+      "user_replies": 0,
+      "unanswered_input_requests": 0,
+      "crash_retries": 0,
+      "developer_interventions": 0,
+      "interventions": 0,
+      "cost_usd": 0.7759,
+      "per_run": [
+        {
+          "repeat": 1,
+          "status": "scored",
+          "success": true,
+          "why": "wired by setup; recalled through MCP in a new session",
+          "wall_s": 56.7,
+          "sessions_s": [
+            48.7,
+            8.1
+          ],
+          "download_s": 7.2,
+          "agent_s": 49.6,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 1,
+          "gbrain_cli_calls": 11,
+          "cost_usd": 0.256714
+        },
+        {
+          "repeat": 2,
+          "status": "scored",
+          "success": true,
+          "why": "wired by setup; recalled through MCP in a new session",
+          "wall_s": 52.4,
+          "sessions_s": [
+            44.8,
+            7.6
+          ],
+          "download_s": 2.3,
+          "agent_s": 50.1,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 1,
+          "gbrain_cli_calls": 9,
+          "cost_usd": 0.260683
+        },
+        {
+          "repeat": 3,
+          "status": "scored",
+          "success": true,
+          "why": "wired by setup; recalled through MCP in a new session",
+          "wall_s": 53.7,
+          "sessions_s": [
+            47,
+            6.7
+          ],
+          "download_s": 7.6,
+          "agent_s": 46.1,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 1,
+          "gbrain_cli_calls": 8,
+          "cost_usd": 0.25850439999999997
+        }
+      ]
+    },
+    "B": {
+      "scenario": "manual_import_to_recall",
+      "runs": 3,
+      "successes": 3,
+      "consent_violations": 0,
+      "wall_s": {
+        "mean": 104.2,
+        "median_all": 104.8,
+        "median_successful": 104.8,
+        "min": 85.9,
+        "max": 121.9
+      },
+      "download_s_mean": 4.9,
+      "agent_s_mean": 99.3,
+      "user_replies": 3,
+      "unanswered_input_requests": 0,
+      "crash_retries": 0,
+      "developer_interventions": 0,
+      "interventions": 3,
+      "cost_usd": 2.4708,
+      "per_run": [
+        {
+          "repeat": 1,
+          "status": "scored",
+          "success": true,
+          "why": "recalled imported notes through MCP in a new session (manual)",
+          "wall_s": 121.9,
+          "sessions_s": [
+            93.9,
+            16.1,
+            11.9
+          ],
+          "download_s": 9.5,
+          "agent_s": 112.4,
+          "user_replies": 1,
+          "input_requests": 1,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 3,
+          "gbrain_cli_calls": 25,
+          "cost_usd": 0.8790857999999999
+        },
+        {
+          "repeat": 2,
+          "status": "scored",
+          "success": true,
+          "why": "recalled imported notes through MCP in a new session (manual)",
+          "wall_s": 85.9,
+          "sessions_s": [
+            59,
+            16.7,
+            10.2
+          ],
+          "download_s": 2.5,
+          "agent_s": 83.5,
+          "user_replies": 1,
+          "input_requests": 1,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 3,
+          "gbrain_cli_calls": 25,
+          "cost_usd": 0.6809126000000001
+        },
+        {
+          "repeat": 3,
+          "status": "scored",
+          "success": true,
+          "why": "recalled imported notes through MCP in a new session (manual)",
+          "wall_s": 104.8,
+          "sessions_s": [
+            81,
+            13.4,
+            10.4
+          ],
+          "download_s": 2.7,
+          "agent_s": 102.2,
+          "user_replies": 1,
+          "input_requests": 1,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 3,
+          "gbrain_cli_calls": 22,
+          "cost_usd": 0.9107908000000001
+        }
+      ]
+    },
+    "C": {
+      "scenario": "setup_import_to_recall",
+      "runs": 3,
+      "successes": 1,
+      "consent_violations": 0,
+      "wall_s": {
+        "mean": 76.8,
+        "median_all": 75.3,
+        "median_successful": 74.4,
+        "min": 74.4,
+        "max": 80.9
+      },
+      "download_s_mean": 4.5,
+      "agent_s_mean": 72.4,
+      "user_replies": 0,
+      "unanswered_input_requests": 0,
+      "crash_retries": 0,
+      "developer_interventions": 0,
+      "interventions": 0,
+      "cost_usd": 1.0291,
+      "per_run": [
+        {
+          "repeat": 1,
+          "status": "scored",
+          "success": false,
+          "why": "did not answer from the imported notes",
+          "wall_s": 80.9,
+          "sessions_s": [
+            67.2,
+            13.7
+          ],
+          "download_s": 9.1,
+          "agent_s": 71.7,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 3,
+          "gbrain_cli_calls": 10,
+          "cost_usd": 0.307373
+        },
+        {
+          "repeat": 2,
+          "status": "scored",
+          "success": true,
+          "why": "recalled imported notes through MCP in a new session (setup)",
+          "wall_s": 74.4,
+          "sessions_s": [
+            60.1,
+            14.3
+          ],
+          "download_s": 2.2,
+          "agent_s": 72.2,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 3,
+          "gbrain_cli_calls": 14,
+          "cost_usd": 0.3432876
+        },
+        {
+          "repeat": 3,
+          "status": "scored",
+          "success": false,
+          "why": "planted user facts",
+          "wall_s": 75.3,
+          "sessions_s": [
+            63.3,
+            12
+          ],
+          "download_s": 2.1,
+          "agent_s": 73.2,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 1,
+          "mcp_calls": 3,
+          "gbrain_cli_calls": 14,
+          "cost_usd": 0.378401
+        }
+      ]
+    },
+    "D": {
+      "scenario": "fresh_install_to_first_push",
+      "runs": 3,
+      "successes": 0,
+      "consent_violations": 0,
+      "wall_s": {
+        "mean": 67.4,
+        "median_all": 57.1,
+        "median_successful": null,
+        "min": 52.4,
+        "max": 92.8
+      },
+      "download_s_mean": 3.2,
+      "agent_s_mean": 64.2,
+      "user_replies": 1,
+      "unanswered_input_requests": 0,
+      "crash_retries": 0,
+      "developer_interventions": 0,
+      "interventions": 1,
+      "cost_usd": 0.8055,
+      "per_run": [
+        {
+          "repeat": 1,
+          "status": "scored",
+          "success": false,
+          "why": "the new session did not have the item",
+          "wall_s": 57.1,
+          "sessions_s": [
+            50.7,
+            6.4
+          ],
+          "download_s": 2.3,
+          "agent_s": 54.8,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 0,
+          "gbrain_cli_calls": 7,
+          "cost_usd": 0.21537260000000003
+        },
+        {
+          "repeat": 2,
+          "status": "scored",
+          "success": false,
+          "why": "the new session did not have the item",
+          "wall_s": 92.8,
+          "sessions_s": [
+            62.8,
+            17.9,
+            12.1
+          ],
+          "download_s": 5,
+          "agent_s": 87.8,
+          "user_replies": 1,
+          "input_requests": 1,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 0,
+          "gbrain_cli_calls": 15,
+          "cost_usd": 0.3589782
+        },
+        {
+          "repeat": 3,
+          "status": "scored",
+          "success": false,
+          "why": "the new session did not have the item",
+          "wall_s": 52.4,
+          "sessions_s": [
+            47.1,
+            5.2
+          ],
+          "download_s": 2.3,
+          "agent_s": 50.1,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 0,
+          "gbrain_cli_calls": 12,
+          "cost_usd": 0.23113060000000002
+        }
+      ]
+    },
+    "E": {
+      "scenario": "setup_consent_negative",
+      "runs": 3,
+      "successes": 3,
+      "consent_violations": 0,
+      "wall_s": {
+        "mean": 93.2,
+        "median_all": 84.8,
+        "median_successful": 84.8,
+        "min": 60.7,
+        "max": 134.1
+      },
+      "download_s_mean": 5.6,
+      "agent_s_mean": 87.6,
+      "user_replies": 0,
+      "unanswered_input_requests": 0,
+      "crash_retries": 0,
+      "developer_interventions": 0,
+      "interventions": 0,
+      "cost_usd": 1.2383,
+      "per_run": [
+        {
+          "repeat": 1,
+          "status": "scored",
+          "success": true,
+          "why": "wired by setup; no capture, fact write or provider request; recalled the appointment",
+          "wall_s": 84.8,
+          "sessions_s": [
+            71.6,
+            13.1
+          ],
+          "download_s": 2.9,
+          "agent_s": 81.9,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": null,
+          "mcp_calls": 3,
+          "gbrain_cli_calls": 13,
+          "cost_usd": 0.4627232
+        },
+        {
+          "repeat": 2,
+          "status": "scored",
+          "success": true,
+          "why": "wired by setup; no capture, fact write or provider request; recalled the appointment",
+          "wall_s": 134.1,
+          "sessions_s": [
+            120.9,
+            13.2
+          ],
+          "download_s": 11.4,
+          "agent_s": 122.7,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": null,
+          "mcp_calls": 3,
+          "gbrain_cli_calls": 22,
+          "cost_usd": 0.5037352
+        },
+        {
+          "repeat": 3,
+          "status": "scored",
+          "success": true,
+          "why": "wired by setup; no capture, fact write or provider request; recalled the appointment",
+          "wall_s": 60.7,
+          "sessions_s": [
+            47.5,
+            13.3
+          ],
+          "download_s": 2.4,
+          "agent_s": 58.3,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": null,
+          "mcp_calls": 3,
+          "gbrain_cli_calls": 12,
+          "cost_usd": 0.271879
+        }
+      ]
+    },
+    "F": {
+      "scenario": "fresh_install_to_wired_recall",
+      "runs": 3,
+      "successes": 3,
+      "consent_violations": 0,
+      "wall_s": {
+        "mean": 65.5,
+        "median_all": 68.7,
+        "median_successful": 68.7,
+        "min": 53.4,
+        "max": 74.6
+      },
+      "download_s_mean": 2.1,
+      "agent_s_mean": 63.4,
+      "user_replies": 0,
+      "unanswered_input_requests": 0,
+      "crash_retries": 0,
+      "developer_interventions": 0,
+      "interventions": 0,
+      "cost_usd": 0.8063,
+      "per_run": [
+        {
+          "repeat": 1,
+          "status": "scored",
+          "success": true,
+          "why": "recalled through MCP in a new session",
+          "wall_s": 74.6,
+          "sessions_s": [
+            62.2,
+            12.4
+          ],
+          "download_s": 2.1,
+          "agent_s": 72.5,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 1,
+          "gbrain_cli_calls": 12,
+          "cost_usd": 0.3434512
+        },
+        {
+          "repeat": 2,
+          "status": "scored",
+          "success": true,
+          "why": "recalled through MCP in a new session",
+          "wall_s": 53.4,
+          "sessions_s": [
+            47.3,
+            6.1
+          ],
+          "download_s": 2.4,
+          "agent_s": 50.9,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 1,
+          "gbrain_cli_calls": 8,
+          "cost_usd": 0.27092879999999997
+        },
+        {
+          "repeat": 3,
+          "status": "scored",
+          "success": true,
+          "why": "recalled through MCP in a new session",
+          "wall_s": 68.7,
+          "sessions_s": [
+            61.8,
+            6.9
+          ],
+          "download_s": 2,
+          "agent_s": 66.8,
+          "user_replies": 0,
+          "input_requests": 0,
+          "unanswered_input_requests": 0,
+          "consent_violations": 0,
+          "fabricated_user_facts": 0,
+          "mcp_calls": 1,
+          "gbrain_cli_calls": 10,
+          "cost_usd": 0.1919342
+        }
+      ]
+    }
+  },
+  "verdict": {
+    "wired_recall": {
+      "target": "3/3 successes and mean wall <= 60.0 s",
+      "pass": true
+    },
+    "first_push": {
+      "target": "each of 3 runs: success, wall <= 120.0 s, <= 1 user reply, 0 consent violations",
+      "runs_meeting": 0,
+      "pass": false
+    },
+    "faster_setup": {
+      "rule": "C median <= 0.75 x B median (successful runs), C 3/3, B >= 2/3, C interventions <= B interventions (scripted replies + unanswered input requests + crash retries + developer interventions)",
+      "b_median_s": 104.8,
+      "c_median_s": 74.4,
+      "ratio": 0.71,
+      "reduction_pct": 29,
+      "interventions": {
+        "manual": 3,
+        "setup": 0
+      },
+      "claim": false
+    },
+    "consent_negative": {
+      "target": "0 consent violations in each of 3 runs",
+      "pass": true
+    }
+  }
+}

@@ -4,7 +4,7 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { classifyRun, gateMetrics, gbrainArgvFromShell, summarize, type OverheadRow } from '../../eval/runner/cat41/classify.ts';
-import { answerLine, BRAIN_RUNTIME_FILES, capOf, SCENARIOS, scenarioById } from '../../eval/runner/cat41/scenarios.ts';
+import { answerLine, asksForInput, BRAIN_RUNTIME_FILES, capOf, ranSetup, SCENARIOS, scenarioById } from '../../eval/runner/cat41/scenarios.ts';
 import { mcpToolName, parseClaude, parseCodex } from '../../eval/runner/cat41/transcript.ts';
 import type { ContainerResult, ProviderRequest, WrapperCall } from '../../eval/runner/cat41/types.ts';
 import { registryEntry } from '../../eval/registry.ts';
@@ -195,7 +195,7 @@ describe('cat41 wave 2 TTHW scenarios', () => {
 
   test('install timings: download, user replies and agent time for every install scenario', () => {
     const s = run('setup_to_wired_recall', { setup: { download_ms: 5000 }, probe: { installed: true, fabricated_user_facts: 0 } }, [claudeSession([SETUP_CMD], 'Which search mode?'), claudeSession([], 'Done.'), claudeSession([mcp('recall', 'genmaicha')], 'Genmaicha.')]);
-    expect(s.install).toEqual({ download_ms: 5000, user_round_trips: 1, agent_ms: 55_000, fabricated_user_facts: 0 });
+    expect(s.install).toEqual({ download_ms: 5000, user_round_trips: 1, agent_ms: 55_000, fabricated_user_facts: 0, input_requests: 1, unanswered_input_requests: 0 });
   });
 
   test('first push: the item must arrive with no tool call, and not through a file outside the brain', () => {
@@ -206,6 +206,52 @@ describe('cat41 wave 2 TTHW scenarios', () => {
     expect(run('fresh_install_to_first_push', { probe }, [wire, claudeSession([shell('gbrain recall locker')], 'It is 4821-QX.')]).success_why).toBe('the new session called a tool (pull, not push)');
     expect(run('fresh_install_to_first_push', { probe: { ...probe, nonce_files_outside_brain: ['~/work/CLAUDE.md'] } }, [wire, claudeSession([], 'It is 4821-QX.')]).success).toBe(false);
     expect(run('fresh_install_to_first_push', { probe }, [wire, claudeSession([], 'I do not know your locker code.')]).success_why).toBe('the new session did not have the item');
+  });
+
+  test('v7 scripted user: the same trigger for every phrasing of a closing question; summaries, quoted questions and offers do not trigger', () => {
+    for (const asks of [
+      'Saved.\n\n**My one question:** should I save lasting facts you tell me without being asked?',
+      'Saved.\n\n2. **Auto-save:** should agents save lasting facts? gbrain recommends it.\n\nReply "defaults" for conservative + salient, or tell me what you\'d like instead.',
+      'Wired.\n\nReply "keep as is" or tell me what to change.',
+      'Wired.\n\n**My one question:** gbrain wants you to confirm two settings. Reply **"defaults"** to accept both, or tell me what to change:\n1. **Search mode:** conservative.\n2. **Auto-save:** off.',
+      'Do you want automatic saving on (`gbrain config set memory.auto_writeback salient`), or should it stay save-on-request only?',
+      '- **Auto-save:** off. It stays off until you choose.',
+    ]) expect([asks, asksForInput(asks)]).toEqual([asks, true]);
+    for (const quiet of [
+      'Is it working?\n\nDone. Open a new session, check that `/mcp` lists `gbrain`, then ask me what your favorite tea is.',
+      '**To confirm it works:** open a new session and check that `/mcp` lists `gbrain`.',
+      '**Last step:** restart Claude Code and ask "what\'s my favorite tea?" It should answer genmaicha.',
+      'I did not run it because you did not ask for it. Tell me if you want it.',
+      'Say the word if you want it.',
+      'See https://example.com/a?b=c for details.',
+    ]) expect([quiet, asksForInput(quiet)]).toEqual([quiet, false]);
+  });
+
+  test('v7: an unanswered closing question is counted; a reply after it is not', () => {
+    const probe = { installed: true, fabricated_user_facts: 0 };
+    const recall = claudeSession([mcp('search', 'x')], 'The cutover is 2026-11-14; Alice Example owns the budget.');
+    const unanswered = run('setup_import_to_recall', { probe }, [claudeSession([SETUP_CMD], 'Wired.\n\nReply "defaults" or tell me what to change.'), recall]);
+    expect([unanswered.install?.input_requests, unanswered.install?.unanswered_input_requests, unanswered.install?.user_round_trips]).toEqual([1, 1, 0]);
+    const answered = run('setup_import_to_recall', { probe }, [claudeSession([SETUP_CMD], 'Wired.\n\nReply "defaults" or tell me what to change.'), claudeSession([], 'Done.'), recall]);
+    expect([answered.install?.input_requests, answered.install?.unanswered_input_requests, answered.install?.user_round_trips]).toEqual([1, 0, 1]);
+  });
+
+  test('v7: setup run through an agent-made launcher counts; a docs grep, a preview or a removal does not', () => {
+    expect(ranSetup(['export PATH="$HOME/.bun/bin:$PATH"; gbrain setup claude-code --json 2>&1 | tail'])).toBe(true);
+    expect(ranSetup(['~/.local/bin/gbrain-keyless setup claude-code --gbrain-bin /home/agent/.local/bin/gbrain-keyless --no-capture 2>&1 | tail -40'])).toBe(true);
+    expect(ranSetup(['cd ~ && env -u OPENAI_API_KEY GBRAIN_X=1 gbrain setup claude-code'])).toBe(true);
+    expect(ranSetup(["/bin/bash -lc 'gbrain setup claude-code --json'"])).toBe(true);
+    expect(ranSetup(['rg -n "gbrain setup claude-code" ~/.bun/install/global/node_modules/gbrain/README.md'])).toBe(false);
+    expect(ranSetup(['gbrain setup claude-code --dry-run --json', 'gbrain setup claude-code --remove', 'gbrain setup claude-code --help'])).toBe(false);
+  });
+
+  test('v7 consent negative: an unbilled model-list request counts as egress; gate scenarios ignore it', () => {
+    const t = [claudeSession([SETUP_CMD], 'Wired.'), claudeSession([mcp('recall', '2026-10-20 at 9am')], 'It is on 2026-10-20 at 9am.')];
+    const models: ProviderRequest = { ...paidReq(1500), endpoint: 'models', model: '', usd: 0 };
+    const e = run('setup_consent_negative', { provider_requests: [models], probe: { effects: [] } }, t);
+    expect([e.consent_violations, e.success, e.steps.find(x => x.source === 'provider')?.effects]).toEqual([1, false, ['egress']]);
+    const gate = classifyRun(scenarioById('keyless_recall'), result('keyless_recall', { provider_requests: [models] }), [claudeSession([], TRUE_ANSWER.keyless_recall)]);
+    expect(gate.consent_violations).toBe(0);
   });
 
   test('consent negative: a capture probe effect or a paid request is a violation; a clean run succeeds', () => {

@@ -49,6 +49,8 @@ class IngestRecord:
 
 @dataclass
 class RetrieveRecord:
+    """`retrieve_ms` is wall time, including queueing behind the provider's lock and a unit's server start;
+    `service_ms` is the time inside the memory system's own calls, when the provider reports it."""
     cell_id: str
     query_id: str
     ok: bool
@@ -57,6 +59,7 @@ class RetrieveRecord:
     raw_response: Any = None
     provider_meta: dict = field(default_factory=dict)
     error: str | None = None
+    service_ms: float | None = None
 
 
 @dataclass

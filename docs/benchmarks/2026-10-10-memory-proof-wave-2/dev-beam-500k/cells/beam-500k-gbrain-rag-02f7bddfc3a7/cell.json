@@ -1,0 +1,282 @@
+{
+  "schema": "mpw-cell-v1",
+  "cell_id": "beam-500k-gbrain-rag-02f7bddfc3a7",
+  "identity": {
+    "schema": "mpw-cell-v1",
+    "dataset": "beam",
+    "split": "500k",
+    "dataset_manifest_sha256": "7522d52ba3b14dc8838f1ec900036643fb82d3cc4ea49cc20875e4f5d4697c99",
+    "schedule_sha256": "c245c6b63848b03d173c5b077c900b91602b18868d6b8547aad7d4ce88ea0fd3",
+    "pins": {
+      "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+      "harness_lock_sha256": "6b6ace4f721ae10bf66214a8a617c3c6e97a930e91c163728835691994a07b8f",
+      "torch": "2.10.0+cpu",
+      "gbrain": {
+        "version": "0.60.169.0",
+        "declared_pin": "github:garrytan/gbrain#8a3eedeacb6e52da5b413502019692db80c5cc5d",
+        "loaded_git_head": "fe9e0397b7e523b8db3b83e1202fb297337e71b3",
+        "package_sha256": "096d5e000a539dd5b2c98541f2db729100fb866d8de79ca4b497ea5da790bd86"
+      }
+    },
+    "provider": "gbrain",
+    "provider_config": {
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "facts_limit": 100,
+      "page_split": "exchanges",
+      "gbrain_config": {
+        "extraction.date_grounding": "true",
+        "facts.attribution": "true",
+        "facts.supersession_thresholds": "{\"voyage:voyage-4@1024\": 0.95}"
+      },
+      "extraction_source": "measured_default",
+      "lane": "combined",
+      "search_config": {
+        "search.mode": "tokenmax",
+        "search.reranker.enabled": "true",
+        "search.reranker.model": "voyage:rerank-2.5",
+        "search.reranker.gate": "off",
+        "search.reranker.gate_min_gap": "0.05",
+        "search.query_facts_arm": "true",
+        "search.temporal_fact_reserve": "false",
+        "search.evidence_date_header": "false",
+        "search.entity_anchoring": "false",
+        "recall.question_admission": "reserve",
+        "search.tokenBudget": "10000000",
+        "search.page_rank_budget_ratio": "0"
+      },
+      "facts_tokens": 600,
+      "token_budget": 7500
+    },
+    "gbrain_credentials": [
+      "voyage",
+      "anthropic"
+    ],
+    "mode": "rag",
+    "lane": "combined",
+    "seal": "dev",
+    "k": 10,
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "prompt_revision": "10218989f3b38595115476189ecb7df099260840ae948bc24a7caa9327bb84d8",
+    "scorer_revision": "8b5c364a680af748bb904485009625d93160f01ebe1d37195a6839eb5dd0c804",
+    "wrapper_revision": "b4c9031e078f89ba54395759dc660814d3c207e4b4ecc861c09c5e1ad4338f51",
+    "budget_usd": 7
+  },
+  "spec": {
+    "dataset": "beam",
+    "split": "500k",
+    "provider": "gbrain",
+    "mode": "rag",
+    "lane": "combined",
+    "seal": "dev",
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "budget_usd": 7,
+    "questions": {
+      "units": [
+        "12",
+        "21",
+        "28",
+        "31"
+      ]
+    },
+    "k": 10,
+    "provider_config": {
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "facts_limit": 100,
+      "page_split": "exchanges",
+      "gbrain_config": {
+        "extraction.date_grounding": "true",
+        "facts.attribution": "true",
+        "facts.supersession_thresholds": "{\"voyage:voyage-4@1024\": 0.95}"
+      },
+      "extraction_source": "measured_default",
+      "lane": "combined",
+      "search_config": {
+        "search.mode": "tokenmax",
+        "search.reranker.enabled": "true",
+        "search.reranker.model": "voyage:rerank-2.5",
+        "search.reranker.gate": "off",
+        "search.reranker.gate_min_gap": "0.05",
+        "search.query_facts_arm": "true",
+        "search.temporal_fact_reserve": "false",
+        "search.evidence_date_header": "false",
+        "search.entity_anchoring": "false",
+        "recall.question_admission": "reserve",
+        "search.tokenBudget": "10000000",
+        "search.page_rank_budget_ratio": "0"
+      },
+      "facts_tokens": 600,
+      "token_budget": 7500
+    },
+    "gbrain_credentials": [
+      "voyage",
+      "anthropic"
+    ],
+    "note": "memory proof wave 2 dev, beam-500k arm v1: see the 2026-10-11 and 2026-10-12 addenda"
+  },
+  "resolved": {
+    "dataset": "beam",
+    "split": "500k",
+    "task_type": "open",
+    "isolation_unit": "conversation",
+    "schedule": [
+      "12_abstention_0",
+      "12_abstention_1",
+      "12_contradiction_resolution_0",
+      "12_contradiction_resolution_1",
+      "12_event_ordering_0",
+      "12_event_ordering_1",
+      "12_information_extraction_0",
+      "12_information_extraction_1",
+      "12_instruction_following_0",
+      "12_instruction_following_1",
+      "12_knowledge_update_0",
+      "12_knowledge_update_1",
+      "12_multi_session_reasoning_0",
+      "12_multi_session_reasoning_1",
+      "12_preference_following_0",
+      "12_preference_following_1",
+      "12_summarization_0",
+      "12_summarization_1",
+      "12_temporal_reasoning_0",
+      "12_temporal_reasoning_1",
+      "21_abstention_0",
+      "21_abstention_1",
+      "21_contradiction_resolution_0",
+      "21_contradiction_resolution_1",
+      "21_event_ordering_0",
+      "21_event_ordering_1",
+      "21_information_extraction_0",
+      "21_information_extraction_1",
+      "21_instruction_following_0",
+      "21_instruction_following_1",
+      "21_knowledge_update_0",
+      "21_knowledge_update_1",
+      "21_multi_session_reasoning_0",
+      "21_multi_session_reasoning_1",
+      "21_preference_following_0",
+      "21_preference_following_1",
+      "21_summarization_0",
+      "21_summarization_1",
+      "21_temporal_reasoning_0",
+      "21_temporal_reasoning_1",
+      "28_abstention_0",
+      "28_abstention_1",
+      "28_contradiction_resolution_0",
+      "28_contradiction_resolution_1",
+      "28_event_ordering_0",
+      "28_event_ordering_1",
+      "28_information_extraction_0",
+      "28_information_extraction_1",
+      "28_instruction_following_0",
+      "28_instruction_following_1",
+      "28_knowledge_update_0",
+      "28_knowledge_update_1",
+      "28_multi_session_reasoning_0",
+      "28_multi_session_reasoning_1",
+      "28_preference_following_0",
+      "28_preference_following_1",
+      "28_summarization_0",
+      "28_summarization_1",
+      "28_temporal_reasoning_0",
+      "28_temporal_reasoning_1",
+      "31_abstention_0",
+      "31_abstention_1",
+      "31_contradiction_resolution_0",
+      "31_contradiction_resolution_1",
+      "31_event_ordering_0",
+      "31_event_ordering_1",
+      "31_information_extraction_0",
+      "31_information_extraction_1",
+      "31_instruction_following_0",
+      "31_instruction_following_1",
+      "31_knowledge_update_0",
+      "31_knowledge_update_1",
+      "31_multi_session_reasoning_0",
+      "31_multi_session_reasoning_1",
+      "31_preference_following_0",
+      "31_preference_following_1",
+      "31_summarization_0",
+      "31_summarization_1",
+      "31_temporal_reasoning_0",
+      "31_temporal_reasoning_1"
+    ],
+    "schedule_sha256": "c245c6b63848b03d173c5b077c900b91602b18868d6b8547aad7d4ce88ea0fd3",
+    "dataset_manifest_sha256": "7522d52ba3b14dc8838f1ec900036643fb82d3cc4ea49cc20875e4f5d4697c99",
+    "questions": 80,
+    "units": [
+      "12",
+      "21",
+      "28",
+      "31"
+    ],
+    "documents": 114,
+    "document_tokens_cl100k": 2011365,
+    "document_tokens_by_unit": {
+      "12": 468759,
+      "21": 545281,
+      "28": 463155,
+      "31": 534170
+    },
+    "timestamp_provenance": {
+      "rule": {
+        "provenance": "observed_session_time",
+        "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+      },
+      "counts": {
+        "observed_session_time": 114
+      }
+    },
+    "dataset_judge_model": "gemini:gemini-3.5-flash",
+    "judge_calls": 226,
+    "prompt_revision": "10218989f3b38595115476189ecb7df099260840ae948bc24a7caa9327bb84d8",
+    "scorer_revision": "8b5c364a680af748bb904485009625d93160f01ebe1d37195a6839eb5dd0c804",
+    "wrapper_revision": "b4c9031e078f89ba54395759dc660814d3c207e4b4ecc861c09c5e1ad4338f51"
+  },
+  "planned_at": "2026-10-12T12:05:13.504Z",
+  "estimate": {
+    "usd": 2.2719,
+    "lines": [
+      {
+        "stage": "ingest: gbrain embeddings",
+        "tokens_in": 3198070,
+        "tokens_out": 0,
+        "usd": 0.191884221,
+        "basis": "2011365 cl100k document tokens x 1.59 (provider tokenizer and chunk overlap)"
+      },
+      {
+        "stage": "retrieve: gbrain query embeddings",
+        "tokens_in": 5120,
+        "tokens_out": 0,
+        "usd": 0.0003072,
+        "basis": "64 tokens per question"
+      },
+      {
+        "stage": "answer",
+        "tokens_in": 668000,
+        "tokens_out": 176000,
+        "usd": 1.161,
+        "basis": "80 questions x 1 call(s) x (8000 context + 350 prompt) in, 2200 out"
+      },
+      {
+        "stage": "judge",
+        "tokens_in": 164980,
+        "tokens_out": 74580,
+        "usd": 0.91869,
+        "basis": "226 judge calls x 730 in / 330 out"
+      }
+    ],
+    "unpriced": [],
+    "note": "list-price estimate from token volumes; the run is enforced by the metering proxy, not by this number"
+  },
+  "reproduce": "bun run harness:cell run eval/harness-provider/cells/mpw2/dev/beam-500k-v1.json"
+}

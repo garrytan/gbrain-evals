@@ -41,7 +41,7 @@ export interface GbrainModules {
 }
 
 const RECYCLE_EVERY = 25;
-const PRESERVE_TABLES = new Set(['sources', 'config', 'gbrain_cycle_locks', 'subagent_rate_leases']);
+const PRESERVE_TABLES = new Set(['sources', 'config', 'gbrain_cycle_locks', 'subagent_rate_leases', 'persistence_brain', 'shared_skill_state', 'page_generation_clock']);
 export const slugOf = (sourceId: string) => `chat/${sourceId.replace(/^src-/, '')}`;
 export const sourceOfSlug = (slug: string) => /^chat\/[0-9a-f]{16}$/.test(slug) ? `src-${slug.slice(5)}` : null;
 

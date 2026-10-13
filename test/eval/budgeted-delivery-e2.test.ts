@@ -258,7 +258,7 @@ describe.skipIf(!supported)('E2 stages on real PGLite (gbrain with search.auto_p
     const none = await Promise.all(AUTO_PACKINGS.map(p => c.deliver(rows, 'auto', null, p)));
     expect(new Set(none.map(d => d.record.evidence_sha256)).size).toBe(1);
     expect(none.every(d => d.record.auto_packing === null)).toBe(true);
-  });
+  }, 30_000); // a real PGLite brain: the first one pays the schema setup, past the 5s default under four concurrent shards
 
   test('setPacking writes the config key the handler reads; the live call reports that packing and equals the assembled delivery, dates included', async () => {
     const c = new GbrainQueryConnector(conn as ConnectorModules, await brain(30, 40));
@@ -271,7 +271,7 @@ describe.skipIf(!supported)('E2 stages on real PGLite (gbrain with search.auto_p
       const assembled = await c.deliver(rows, 'auto', 3000, p);
       expect(live.record.evidence_sha256).toBe(assembled.record.evidence_sha256);
     }
-  });
+  }, 30_000); // a real PGLite brain: the first one pays the schema setup, past the 5s default under four concurrent shards
 
   test('GbrainQuerySystem: freeze, size, deliver (with guard 1) and live, on one frozen list re-resolved by chunk text', async () => {
     const dir = join(tmp, 'sys');
@@ -305,7 +305,7 @@ describe.skipIf(!supported)('E2 stages on real PGLite (gbrain with search.auto_p
     expect(calls.slice(4).map(x => x.packing)).toEqual(['cap_only', 'breadth_capped', 'depth_first', 'off']);
     expect(calls.every(x => x.parity_fresh.equal && x.config_read_back === x.packing && x.auto_packing_reported === (x.packing === 'off' ? null : x.packing))).toBe(true);
     expect((live.accounting as any).frozen_list_equal).toBe(true);
-  });
+  }, 30_000); // a real PGLite brain: the first one pays the schema setup, past the 5s default under four concurrent shards
 });
 
 describe('frozen chunk text against the re-import', () => {

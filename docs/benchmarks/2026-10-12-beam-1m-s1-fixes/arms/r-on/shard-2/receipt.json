@@ -1,0 +1,127 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-1m",
+  "split": "dev",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "started_at": "2026-10-12T23:47:51.567Z",
+  "finished_at": "2026-10-12T23:48:31.984Z",
+  "run_config_hash": "1078573a8d9541c081979a0003c5952fbdafac7df97ba48a7a1fa3543d42f0b6",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+    "declared_sha": "77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+    "version": "0.60.186.0",
+    "package_sha256": "ba1c0cbcf57003c0a9365a896ed2e5988979c54d1620ac5a4f4d8fa4ae765777",
+    "loaded_git_head": "ed764bdc07e8c72a5b5167aa66634bdf98af998e"
+  },
+  "overlay": {
+    "requested": "<gbrain checkout>@ed764bdc07e8c72a5b5167aa66634bdf98af998e",
+    "ref": "ed764bdc07e8c72a5b5167aa66634bdf98af998e",
+    "commit": "ed764bdc07e8c72a5b5167aa66634bdf98af998e",
+    "tree": "f868d07ebaf7064c7d7be88c5852962f9e29f577",
+    "version": "0.60.186.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "f868d07ebaf7064c7d7be88c5852962f9e29f577",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.186.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.autocut": "false",
+    "search.reranker.enabled": "true"
+  },
+  "retrieval_path": "hybridSearch (expansion off), chunks reduced to distinct sessions",
+  "search_knobs": {
+    "limit": null,
+    "poolDepth": null,
+    "maxPerSession": null
+  },
+  "reranker": {
+    "applies": true,
+    "enabled": true,
+    "decided_by": "default",
+    "model": "voyage:rerank-2.5"
+  },
+  "reading": null,
+  "embedding": {
+    "mode": "real",
+    "model": "voyage:voyage-4",
+    "dims": 1024,
+    "cache_stats": {
+      "hits": 2080,
+      "misses": 0,
+      "inserts": 0,
+      "bytes": 0
+    }
+  },
+  "dataset": {
+    "name": "BEAM 1m",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 2,
+      "count": 11
+    },
+    "conversations": 1,
+    "questions_expected": 20
+  },
+  "counts": {
+    "rows": 20,
+    "scored": 17,
+    "errors": 0,
+    "abstention": 2
+  },
+  "summary": {
+    "recall_all_at_5": 0.5294117647058824,
+    "recall_any_at_5": 0.8823529411764706,
+    "recall_all_at_10": 0.5882352941176471,
+    "ndcg_at_10": 0.6104668639762253,
+    "latency_p50_ms": 332.1,
+    "latency_p95_ms": 458.18
+  },
+  "facts": null,
+  "qa": null,
+  "usage": null,
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "reranked_queries": 20,
+    "rerank_provider_requests": {
+      "voyage:rerank-2.5": 20
+    }
+  },
+  "cost": {
+    "usd": 0.013806,
+    "input_tokens": 276125,
+    "output_tokens": 0,
+    "basis": "budget ledger s1-r-on-2026-10-12T23-47-51-485Z-646151b4: 20 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/s1-beam-1m-2026-10-12b.sqlite",
+    "program_cap_usd": 59,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 184,
+      "max": 26051.9
+    }
+  },
+  "rows_file": "rows.ndjson"
+}

@@ -1,0 +1,61 @@
+{
+  "cell_id": "locomo-locomo10-gbrain-rag-ac535fd2f1e0",
+  "runs": [
+    {
+      "run_id": "harness-cell:locomo-locomo10-gbrain-rag-ac535fd2f1e0-2026-10-12T08-07-57-998Z-ab03ae54",
+      "ledger": "~/cells/ledger.sqlite",
+      "usd": 4.024253,
+      "requests": 1156,
+      "started_at": "2026-10-12T08:19:21.410Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 1158,
+      "refused": 2,
+      "reserved_usd": 244.02294925999982,
+      "actual_usd": 4.024253170000001,
+      "input_tokens": 9392933,
+      "output_tokens": 257146
+    },
+    "byLabel": {
+      "gbrain": {
+        "requests": 578,
+        "refused": 0,
+        "reserved_usd": 0.36987325999999976,
+        "actual_usd": 0.33192307000000043,
+        "input_tokens": 6637797,
+        "output_tokens": 0
+      },
+      "harness": {
+        "requests": 580,
+        "refused": 2,
+        "reserved_usd": 243.653076,
+        "actual_usd": 3.692330100000004,
+        "input_tokens": 2755136,
+        "output_tokens": 257146
+      }
+    },
+    "byProvider": {
+      "voyage": {
+        "requests": 578,
+        "refused": 0,
+        "reserved_usd": 0.36987325999999976,
+        "actual_usd": 0.33192307000000043,
+        "input_tokens": 6637797,
+        "output_tokens": 0
+      },
+      "gemini": {
+        "requests": 580,
+        "refused": 2,
+        "reserved_usd": 243.653076,
+        "actual_usd": 3.692330100000004,
+        "input_tokens": 2755136,
+        "output_tokens": 257146
+      }
+    },
+    "exhausted": true
+  },
+  "unmetered": []
+}

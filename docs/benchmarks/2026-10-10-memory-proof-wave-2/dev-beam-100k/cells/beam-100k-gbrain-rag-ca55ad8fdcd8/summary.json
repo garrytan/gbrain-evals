@@ -1,0 +1,70 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-ca55ad8fdcd8",
+  "scheduled": 40,
+  "answered_receipts": 36,
+  "judged_receipts": 36,
+  "score": {
+    "scheduled": 40,
+    "counts": {
+      "answered": 34,
+      "abstention": 1,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 1,
+      "incomplete_ingest": 0,
+      "missing": 4
+    },
+    "judged": 35,
+    "correct": 25,
+    "accuracy": 0.625,
+    "mean_score": 0.5939583333333334,
+    "complete": false,
+    "missing_ids": [
+      "3_summarization_0",
+      "3_summarization_1",
+      "3_temporal_reasoning_0",
+      "3_temporal_reasoning_1"
+    ],
+    "judge_failure_ids": [
+      "3_multi_session_reasoning_1"
+    ],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 36,
+    "mean": 8088.7,
+    "p95": 8263.0,
+    "tolerance": 0.1,
+    "ok": true,
+    "reason": "within \u00b110% of target",
+    "inserted_kinds": {
+      "rendered": 36
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 36,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+    },
+    "counts": {
+      "observed_session_time": 17
+    }
+  },
+  "gates": {
+    "complete": false,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": true,
+    "no_remote_clamp": true
+  },
+  "ok": false
+}

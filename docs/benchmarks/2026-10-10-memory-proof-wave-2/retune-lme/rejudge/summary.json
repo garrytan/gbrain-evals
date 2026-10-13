@@ -1,0 +1,90 @@
+{
+  "dataset": "longmemeval",
+  "split": "s",
+  "seed": 20261005,
+  "schedule_size": 100,
+  "schedule_sha256": "d68700a2ba7521a1d4a5f0968a7615efed23685bac41b120cdb9ce5428b235f1",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "cells": {
+    "longmemeval-s-gbrain-rag-04855028dd76": {
+      "scheduled": 100,
+      "counts": {
+        "answered": 86,
+        "abstention": 14,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 100,
+      "correct": 91,
+      "accuracy": 0.91,
+      "mean_score": 0.91,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "longmemeval-s-gbrain-rag-718ff654d02d": {
+      "scheduled": 100,
+      "counts": {
+        "answered": 88,
+        "abstention": 12,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 100,
+      "correct": 92,
+      "accuracy": 0.92,
+      "mean_score": 0.92,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "longmemeval-s-gbrain-rag-d8c65a733105": {
+      "scheduled": 100,
+      "counts": {
+        "answered": 88,
+        "abstention": 12,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 100,
+      "correct": 88,
+      "accuracy": 0.88,
+      "mean_score": 0.88,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "longmemeval-s-gbrain-rag-fe8d1d24ba8e": {
+      "scheduled": 100,
+      "counts": {
+        "answered": 89,
+        "abstention": 11,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 100,
+      "correct": 91,
+      "accuracy": 0.91,
+      "mean_score": 0.91,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    }
+  }
+}

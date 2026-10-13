@@ -1,0 +1,36 @@
+{
+  "run_id": "harness-rejudge:beam-1m-comparator-rag-410a3ee84ab4+beam-1m-gbrain-rag-30c3208f16d5+beam-1m-gbrain-rag-381748f6d518+beam-1m-gbrain-rag-e689b3f18ba4-2026-10-13T04-05-58-374Z-f1836517",
+  "usd": 3.263433,
+  "requests": 781,
+  "metered": {
+    "total": {
+      "requests": 781,
+      "refused": 0,
+      "reserved_usd": 462.2716259999997,
+      "actual_usd": 3.263432999999997,
+      "input_tokens": 730450,
+      "output_tokens": 240862
+    },
+    "byLabel": {
+      "harness": {
+        "requests": 781,
+        "refused": 0,
+        "reserved_usd": 462.2716259999997,
+        "actual_usd": 3.263432999999997,
+        "input_tokens": 730450,
+        "output_tokens": 240862
+      }
+    },
+    "byProvider": {
+      "gemini": {
+        "requests": 781,
+        "refused": 0,
+        "reserved_usd": 462.2716259999997,
+        "actual_usd": 3.263432999999997,
+        "input_tokens": 730450,
+        "output_tokens": 240862
+      }
+    },
+    "exhausted": false
+  }
+}

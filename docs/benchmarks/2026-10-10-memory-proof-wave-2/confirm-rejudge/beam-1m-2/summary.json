@@ -1,0 +1,90 @@
+{
+  "dataset": "beam",
+  "split": "1m",
+  "seed": 20261005,
+  "schedule_size": 280,
+  "schedule_sha256": "095bb7dbe0be2936104c4d070a23e352d4261dd435ed7bdbc6914446d567be84",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "cells": {
+    "beam-1m-comparator-rag-a2ae951184df": {
+      "scheduled": 280,
+      "counts": {
+        "answered": 238,
+        "abstention": 42,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 280,
+      "correct": 206,
+      "accuracy": 0.7357142857142858,
+      "mean_score": 0.6397303391053393,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "beam-1m-gbrain-rag-88296f8a21e8": {
+      "scheduled": 280,
+      "counts": {
+        "answered": 241,
+        "abstention": 39,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 280,
+      "correct": 214,
+      "accuracy": 0.7642857142857142,
+      "mean_score": 0.6916548778602348,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "beam-1m-gbrain-rag-a239d1976e1d": {
+      "scheduled": 280,
+      "counts": {
+        "answered": 243,
+        "abstention": 37,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 280,
+      "correct": 213,
+      "accuracy": 0.7607142857142857,
+      "mean_score": 0.6880625773036488,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    },
+    "beam-1m-gbrain-rag-fa8741077207": {
+      "scheduled": 280,
+      "counts": {
+        "answered": 244,
+        "abstention": 36,
+        "answer_failure": 0,
+        "retrieval_failure": 0,
+        "judge_failure": 0,
+        "incomplete_ingest": 0,
+        "missing": 0
+      },
+      "judged": 280,
+      "correct": 214,
+      "accuracy": 0.7642857142857142,
+      "mean_score": 0.691091591939806,
+      "complete": true,
+      "missing_ids": [],
+      "judge_failure_ids": [],
+      "incomplete_ingest_ids": []
+    }
+  }
+}

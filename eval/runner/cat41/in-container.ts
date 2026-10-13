@@ -358,11 +358,13 @@ async function main() {
     let last = first;
     let index = 1;
     for (const f of (scenario.followups ?? []) as Followup[]) {
-      if (f.when && !f.when(last.finalText, box)) continue;
-      index++;
-      const next = await runHarness(harness, model, f.prompt, { index, resumeId: f.mode === 'resume' ? last.sessionId : null, useRegistrations: f.useHarnessRegistrations === true, mcp: state.mcp, timeoutMs: scenario.timeoutMs });
-      result.sessions.push(next.rec);
-      last = next;
+      for (let sent = 0; sent < (f.max ?? 1); sent++) {
+        if (f.when && !f.when(last.finalText, box)) break;
+        index++;
+        const next = await runHarness(harness, model, f.prompt, { index, resumeId: f.mode === 'resume' ? last.sessionId : null, useRegistrations: f.useHarnessRegistrations === true, mcp: state.mcp, timeoutMs: scenario.timeoutMs });
+        result.sessions.push(next.rec);
+        last = next;
+      }
     }
     write();
     // Stop leftover MCP servers the harness started, keep processes the scenario owns (a user's own serve).

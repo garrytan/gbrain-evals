@@ -190,7 +190,7 @@ async function cmdRun(argv: string[]) {
 
   const jobs: Array<{ s: Scenario; h: Harness; r: number }> = [];
   for (const s of scenarios) for (const h of harnesses) for (let r = 1; r <= repeat; r++) if (!s.harnesses || s.harnesses.includes(h)) jobs.push({ s, h, r });
-  const estimate = jobs.reduce((a, j) => a + ESTIMATE_USD[j.h], 0);
+  const estimate = jobs.filter(j => !existsSync(join(out, 'runs', `${j.s.id}--${j.h}--r${j.r}-a0`, 'result.json'))).reduce((a, j) => a + ESTIMATE_USD[j.h], 0);
   requirePaidArm(argv, { arm: 'cat41 agent sessions', estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath });
   const prereg = flag(argv, 'preregistration');
   const attestation = prereg ? attestPreregistration(prereg, REPO) : null;
