@@ -348,11 +348,11 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   (0.60.106.0), resolved hash `415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab` (fact extraction on
   `claude-sonnet-4-6`, no content-repair model).
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
-  cell executes (159 files at the A9, A14, A17, A19 and A20 trees) and the pinned images:
+  cell executes (159 files at the A9, A14, A17, A19 and A20 trees, 160 at A22) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,800 (A20);
-    launched from the custodian's host. Hash `43749abd1ebecd8b8e16b3d9f91401647f27e95f247d65339e7819eaedb1cfb6` (A20)
-    for waves 2 to 5 and the four file-agent units, replacing `a1ff43c5` (A19, never relayed). Wave 1's other 49 units
-    run at
+    launched from the custodian's host. Hash `0c4459fc4a0ea6164cedf14b650b5483c603a21150534be40fe46dbb1a4fe169` (A22, 160 files)
+    for waves 2 to 5 and the wave-1 reruns, replacing `43749abd1ebecd8b8e16b3d9f91401647f27e95f247d65339e7819eaedb1cfb6`
+    (A20), which replaced `a1ff43c5` (A19, never relayed). Wave 1's settled units ran at
     `eefd1799842105260104532b78283f9d9b5379ddfae6d44bb8f75317bc56424c` (A17), which replaced
     `a7328eed8f77e30523e32a1c4a9756711fabdcfce3118c893dedd006b3877728` (A14), under which nothing was counted.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
@@ -976,7 +976,183 @@ In public v2, the five of the 13 inside the 100-question slice (`18bc8abd`, `1d4
 - **Follow-up, outside every current freeze.** Give LongMemEval-S the M loader's occurrence ids. This renames every
   LongMemEval-S source id, so it lands with a later public freeze (TODOS, "Data and benchmark fidelity").
 
+**A22 (2026-10-12, before the cells it affects): harness fixes from sealed wave 1, and a re-freeze for waves 2 to 5
+and the wave-1 reruns.** Sealed wave 1 closed at $2,819.81 measured. The custodian listed nine gaps. Each one traces
+to the harness, not to a system, and no scored output was damaged. This freeze replaces A20's (`43749abd`) for waves
+2 to 5, none of which has started, and for every wave-1 rerun. Wave 1's settled units keep their A17 receipts
+(`eefd1799`). A19's fixes A to D and A20's leases, pull lock and in-place raises carry over unchanged. The design
+choices below were auto-approved under Garry's standing rule, 2026-10-12.
+
+- **1. Safe pulls.** Overlapping pulls damaged four saved stores: gbrain-defaults c1, c4 and c5, and graph-pipeline
+  c2. `scripts/ubicloud/ubi-runner.sh` now sits in the hashed tree.
+  - Pulls of one VM never overlap (A20's lock).
+  - A pull extracts into a scratch directory beside its target. It moves entries into place only when both ends of
+    the stream exit 0, so a cut-short pull keeps the previous copy and logs that it did.
+  - Before a resume restores a store, it checks every snapshot file's size and sha256 against the values recorded
+    when the store was realized. A file that does not match is never restored. The resume then ingests again and
+    keeps the checkpoint's answers (`snapshot_check: damaged: <file> does not match the sha256 recorded when <id>
+    was realized`).
+- **2. Resume by missing answers.** A resume now asks only the questions that have no answer. Before, it asked the
+  questions that had no row. When no usable store was pulled, it ingests again and carries the checkpoint's
+  answers, judgments and final retrievals into the new realization.
+  - Carried records keep their original realization id. The new realization records `carried_from` and how many
+    answers, judgments and retrievals it carried.
+  - A question that already has a scored answer is never answered again.
+  - A reader error below the attempt limit is retried in the same process before the shard ends.
+  - `resume --from-campaign <manifest> --from-state <dir>` resumes an A17 or A20 unit at this freeze, from that
+    campaign's state.
+- **3. Remote cells run detached from ssh.** temporal-graph c8 and c9 lost about 37 hours when an ssh session dropped
+  (exit 141).
+  - The cell now runs under `setsid` on the VM and writes its log, exit code and pid there.
+  - The launcher follows the log with short ssh polls. While the cell keeps running, a lost session is retried every
+    15 seconds for up to an hour.
+  - If the follow gives up, the lease stays open for `reattach`.
+- **4. Pull before destroy.** On a timeout, the runner stops the cell with SIGTERM and waits for its final checkpoint
+  and lease summary. It then pulls, and only after that destroys the VM. Under the old order, baseline-hybrid lost
+  its rows. The launcher's own backstop moves from 30 minutes to 4 hours past a unit's timeout, so the runner's
+  timeout always acts first. A cell with no restored store no longer copies an old `ingest-complete` marker.
+- **5. graph-pipeline's store.** The error `Storage exception: Checksum verification failed, the WAL file is
+  corrupted` came from the harness's stop.
+  - The shim runs as PID 1 with no SIGTERM handler, so every `docker compose stop` ended in SIGKILL after 10 seconds
+    (exit 137). The system's graph store cannot reopen after a kill during a write or a checkpoint.
+  - On dev fixtures, 13 of 30 forced kills left checkpoint files that fail to reopen with exactly that error, and 11
+    tore the WAL, which the system's recovery deletes, silently dropping writes. A SIGKILL on the real stack while
+    `.wal.checkpoint` was present reproduced the sealed symptom: `/health` OK, every retrieval failing.
+  - The shim now handles SIGTERM. It lets the request in flight finish (up to 300 seconds), cancels leftover tasks,
+    and closes every graph and vector engine, which checkpoints the graph. It then exits 0.
+    `stop_grace_period: 420s` leaves room for the whole sequence, and `bootstrap.sh snapshot` warns when a container
+    still exits 137. Retrieval code is unchanged.
+  - Forced probes sent SIGTERM while `.wal.checkpoint` was present. Four of 4 exited 0 in about 3 seconds with a
+    clean store and 0 retrieval errors.
+  - Four snapshot, restart, snapshot and restore round trips passed with 0 retrieval errors: LoCoMo `conv-44` and
+    BEAM-100K `100k-1` keyless, and `100k-1` and BEAM-1M `1m-16` metered. A seed-pinned run was byte-identical
+    through restart and both restores. The metered runs differ only by the embedder's run-to-run noise.
+  - **Ingest rate.** Ingest measured $2.57 per million tokens on `100k-1` and $3.95 on `1m-16`, by fifth $3.84,
+    $3.67, $4.22, $3.90 and $4.10. That confirms the $3.98 assumption. A S1 shard then needs $50.37 at $3.95 and
+    $53.34 at $4.22, against a $50.70 lease that held no margin. Running out at the end of a shard is what nine of
+    the ten did. The S1 shards now lease $65 (`LEASE_OVERRIDES`). Write time rose from 2.32 to 3.56 hours per
+    million tokens across `1m-16`. The schedule takes 3.56, so a S1 shard expects 40 hours (timeout 62) and S2a's
+    common cell 8 (timeout 14).
+  - The A17 graph-pipeline realizations are not resumed. Their stores were torn at the stop, so their files match
+    their recorded sha256 but do not reopen. All ten S1 shards launch as new attempts.
+  - Dev spend: $3.95.
+- **6. baseline-hybrid.** The index build was not the cause.
+  - PGlite 0.4.3 never returns from the checkpoint Postgres requests itself once about 540 MB of WAL builds up. On a
+    S1-shaped synthetic load (80,000 sessions from public BEAM-1M dev text), the old code froze at row 21,525 every
+    time, early in the third conversation. No timeout could have let it finish.
+  - Every write now ends with an explicit `CHECKPOINT`. Sessions are buffered per namespace (256) and embedded 16
+    requests at a time, still one session per request. A multi-session request returns different vectors and
+    reorders retrieval: 1,805 of 4,064 ranked lists changed on the dev fixtures. Retrieve, delete and finish write
+    the buffer first. A batch lost to an embedding failure makes `finishIngest` report `degraded`. The embedder
+    retries 429 and 5xx responses, never a budget refusal.
+  - The new code ingested all 80,000 rows in 384 seconds of store time. Retrieval is identical with the same
+    vectors: 0 of 4,064 ranked lists differ on LoCoMo, BEAM-100K `100k-1` and BEAM-1M `1m-16`.
+  - Ingest projects to about 0.9 hours on S1 and the sequential question phase to about 8. The S1 unit now expects
+    9 hours (timeout 16, `HOURS_OVERRIDES`). Its lease and the other hybrid units are unchanged. Dev spend: $0.91.
+- **7. `COPYFILE_DISABLE=1`** is set for every tar the runner runs.
+- **8. Shard messages.** A shard that settles with gaps in its own share exits 4 under the new code `CELL_PARTIAL`:
+  "settled with gaps in its share (exit 4); its rows, answers and judgments are kept". The shard log says "shard i/n
+  complete for its share" or "incomplete for its share (gaps …)". A shard whose share is complete exits 0.
+- **9. A19's and A20's fixes carry over.** `eval/systems/bootstrap.sh` (apart from the 137 warning),
+  `eval/runner/metering-proxy.ts` and `eval/runner/memory-qa` are unchanged since A20.
+  - Setup installs ripgrep.
+  - The judge route's output cap is 2,048 (`output_caps.judge`, `route_classes.judge` in the manifest).
+  - Opus verdict calls keep their 2,000-token floor.
+- **Dry runs.** Campaigns `q1-scoreboard-a22-dry` and `-dry2` ran on LoCoMo dev conversation `conv-44` with
+  stand-in fixtures, on Ubicloud VMs, under a $25 cap.
+  - **Forced ssh drop** (markdown-kb). All traffic to the VM was dropped for 240 seconds, starting when
+    `ingest-complete` appeared. The launcher logged the lost session and retried. The cell kept running there: its
+    snapshot completed and the stack restarted. The lease settled, exit 0, with 60 answers, and its realization was
+    recorded with the snapshot's sha256 ($1.65).
+  - **Snapshot round trip** (markdown-kb). The resume verified the snapshot against that sha256 and restored the
+    store. It asked nothing, because every answer was present ($0).
+  - **Damaged snapshot** (markdown-kb). One byte of the pulled tar was flipped. The resume refused it
+    (`snapshot_check: damaged`), ingested again, and carried the 60 answers ($0).
+  - **Forced timeout and resume by missing answers** (recency, timeout 0.03 hours). Each attempt exited 124 after
+    109 seconds and was pulled before its VM was destroyed. Three resumes each re-ingested and carried the earlier
+    answers: 18, then 35, then 52, then 60 of 60. The 60 final answers are unique, every carried answer is unchanged,
+    and no question was answered twice ($1.97 over four attempts).
+  - **graph-pipeline with the new shim** (recipe smoke). The cell ingested, snapshotted with no exit-137 warning,
+    restarted, and answered all 60 with 0 retrieval errors ($1.80). For the restore test, two questions'
+    answers, judgments, retrievals and contexts were deleted from the pulled checkpoint. A resume on a fresh VM
+    then verified the snapshot, restored the store, retrieved 50 items for each of the two questions, and answered
+    and judged only those. The receipt is complete with 60 of 60 scored ($0.14).
+    - An earlier attempt deleted the same records but left the two frozen contexts. It ended `invalid` ("no
+      longer packs to its frozen bytes"), as it should: the restored store ranks a few items differently. The
+      harness never writes a context without its retrieval, so a real checkpoint cannot be in that state ($0.14).
+  - **baseline-hybrid with the new code** (smoke). 60 of 60 answers scored, exit 0 ($1.68).
+  - **Spend.** The Ubicloud dry runs cost $7.39 and the two fixture investigations $4.86, so $12.25 in total
+    against the $25 cap.
+- **Manifest.** `bun eval/runner/q1/cell.ts plan --campaign-out <file> --sealed-cap-usd 7800` now writes the sealed
+  manifest. Run at A20's tree, the same transform reproduces `43749abd`'s manifest byte for byte. Against A20's
+  manifest, only these change:
+  - the graph-pipeline S1 leases ($50.70 to $65), hours (34 to 40) and timeouts (53 to 62);
+  - S1 hybrid's hours (6 to 9) and timeout (11 to 16);
+  - S2a graph-pipeline common's hours (7 to 8) and timeout (13 to 14);
+  - the executes list, which adds `scripts/ubicloud/ubi-runner.sh`.
+
+  The 144 units lease $8,441.24: wave 1 $5,414.33 and waves 2 to 5 $3,026.91.
+- **What runs at this freeze.** Waves 2 to 5 (94 units) and these wave-1 reruns:
+  - `s1.ext-graph-pipeline.common.c0` to `c9`: new attempts.
+  - `s1.ext-temporal-graph.common.c8` and `c9`: resumes from A17's state.
+  - `s1.gbrain-defaults.shipped-defaults.c1`, `c4` and `c5`: resumes from A17's state. Their damaged snapshots are
+    refused, so each re-ingests and answers only what is missing.
+  - `s1.baseline-recency.baseline`: resume from A17's state, answering only what is missing.
+  - `s1.ext-memory-bank.recipe.c1` and `c3`: resumes from A17's state, missing 6 and 2 question-arms. The store is
+    restored if its snapshot verifies, and ingested again if not.
+  - `s1.baseline-hybrid.baseline`: a new attempt, since nothing was pulled.
+  - `s1.baseline-file-agent.baseline`: a new attempt.
+  - The frontier backfill run (A19), capped at $150.
+
+  Each A17 attempt these replace settles at its measured spend.
+- **Ledger.** The units at this freeze run in a ledger of their own, opened at $7,800 minus wave 1's settled spend
+  and the backfill run's cap. A17's and A20's ledgers are not reused.
+- **Price.** Against the remaining ~$4,806 (backfill included):
+
+  | Work | Projected | Leases |
+  |---|---:|---:|
+  | Waves 2 to 5, 94 units (gbrain's four wave-2 S1 shards at their $27 lease) | $3,026.91 | $3,026.91 |
+  | graph-pipeline S1, 10 shards at $53.34 | $533.40 | $650.00 |
+  | temporal-graph c8 and c9, at A20's $305 a shard | $610.00 | $700.00 |
+  | gbrain-defaults c1, c4 and c5, each at its full lease | $81.00 | $81.00 |
+  | baseline-recency, the missing 13% of its reading and judging | $7.16 | $55.07 |
+  | baseline-hybrid, in full | $95.10 | $95.10 |
+  | baseline-file-agent S1, in full | $245.99 | $245.99 |
+  | memory-bank c1 and c3, re-ingest bound (about $1 if both snapshots verify) | $40.00 | $55.20 |
+  | Frontier backfill (A19: $87 GPT half, at most $28 of Opus redos) | $115.00 | $150.00 |
+  | **Total** | **$4,754.56** | **$5,059.27** |
+
+  The projection is $51.44 under the remaining ~$4,806. That is a margin of about 1%, so a temporal-graph shard
+  running past $305 or gbrain re-reading more than its share would use it up. The leases pass the remaining cap by
+  $253.27, as A20's did. The ledger cap is the hard stop. If the ledger reaches it, the preregistered order of cuts
+  applies:
+  1. S5 is not in the sealed campaign; it ran publicly as v3-m.
+  2. S2a (wave 5, 17 units, $475.21) is cut first.
+  3. Then the S2b sweep, the two Sonnet arms at 2k and 16k tokens, which is about $115 of S2b's reading. S2b's
+     ingest stays.
+  4. Then S3's agent-runtime cell ($27.84).
+
+  T1 is never cut once started, so the wave-1 reruns run in full.
+- **Freeze.** The sealed campaign is re-frozen at hash `0c4459fc4a0ea6164cedf14b650b5483c603a21150534be40fe46dbb1a4fe169` (160 tree files, 144 units, $8,441.24 in leases, cap
+  $7,800). At this tree, v3-s2 hashes to `ffefe780` and v3-m to `56c60981`. Each public campaign still renders from
+  its launch tree.
+
 ## Changelog
+
+### 2026-10-12: amendment A22
+
+Sealed wave 1 closed at $2,819.81, and the nine harness gaps it showed are fixed:
+- Pulls are atomic, and a resume checks each snapshot's sha256 before restoring it.
+- A resume answers only questions without an answer and carries every scored answer across a re-ingest.
+- Remote cells run detached from ssh, and a timeout pulls before it destroys the VM.
+- The graph pipeline's shim checkpoints its store on SIGTERM instead of being killed mid-write.
+- The plain hybrid baseline no longer hangs at PGlite's WAL checkpoint, and it embeds 16 sessions at a time.
+- `COPYFILE_DISABLE` is set for every tar.
+- A shard that settles with gaps says so under `CELL_PARTIAL`.
+
+Each fix was dry-run on `conv-44` with stand-in fixtures for $12.25. The graph pipeline's S1 shards lease $65 from
+its measured ingest. Re-frozen at `0c4459fc` for waves 2 to 5 and the wave-1 reruns, replacing A20's `43749abd`; wave 1's
+settled units keep `eefd1799`. Projected spend is $4,754.56 against the remaining ~$4,806.
 
 ### 2026-10-11: amendment A21
 

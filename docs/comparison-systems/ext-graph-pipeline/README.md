@@ -77,6 +77,28 @@ python3 docs/comparison-systems/ext-graph-pipeline/tests/protocol_check.py --que
 
 The shim maps a proxy refusal (HTTP 402) to the protocol's `budget` error.
 
+## Stopping, restarts and snapshots
+
+`bootstrap.sh snapshot`, `restart` and `down` stop the stack with `docker compose stop`: SIGTERM, then SIGKILL at the
+end of the service's `stop_grace_period`. cognee keeps its graph in ladybug 0.19 (a fork of the Kuzu graph database),
+opened in a worker subprocess. A ladybug store killed during a write or a checkpoint does not reopen. Every query
+then fails with `Storage exception: Checksum verification failed, the WAL file is corrupted`. A kill in the middle of
+a checkpoint leaves `.wal.checkpoint` and `.shadow` files, and cognee's recovery deletes only the `.wal` file. A kill in
+the middle of a write leaves a torn `.wal`, which cognee deletes, silently dropping the writes since the last
+checkpoint. Before amendment A22 the shim installed no SIGTERM handler. As PID 1 it ignored SIGTERM, so every stop
+ended in SIGKILL (exit 137) after 10 seconds, whatever the graph was doing. A kill like that reproduces the error a
+sealed S1 shard showed after its snapshot.
+
+The shim now handles SIGTERM. It lets the request in flight finish (up to `SHIM_STOP_DRAIN_S`, default 300 seconds)
+and keeps new requests out. Then it cancels leftover tasks on its event loop and closes every graph and vector engine,
+which checkpoints the graph and ends the worker processes. It prints one `{"stopped": ...}` line and exits 0.
+`stop_grace_period: 420s` leaves room for the whole sequence. An idle stop takes about 1.5 seconds. `bootstrap.sh
+snapshot` warns when a container still exits 137.
+
+The entity items' edge lines (which edges are listed, and in what order) depend on Python's hash randomization, so
+they vary between processes. Chunk and fact items, and the ids and order of all items, do not.
+With `PYTHONHASHSEED=0` a restarted or restored store returns byte-identical results.
+
 ## Known behavior worth measuring
 
 - After a delete, no chunk from the deleted session returns. Graph entities shared with a surviving session stay; in

@@ -2,7 +2,7 @@
  * Q1 cell runner (PLAN §4.3, §4.8 contracts 3, 7, 8, 10 and 12; preregistration
  * docs/benchmarks/2026-10-06-scoreboard-preregistration.md).
  *
- *   bun eval/runner/q1/cell.ts plan [--json] [--campaign-out <q1 campaign manifest.json>] [--with-smoke]
+ *   bun eval/runner/q1/cell.ts plan [--json] [--campaign-out <q1 campaign manifest.json>] [--with-smoke] [--sealed-cap-usd <usd>]
  *     (--with-smoke adds the paid dev smoke cells, manifest `smoke_cells`: dev conversations only, never sealed)
  *   bun eval/runner/q1/cell.ts show --cell <id> [--json]
  *   bun eval/runner/q1/cell.ts run --cell <id> [--paid --budget-run-id <id>] [--limit N] [--out <dir>] [--arms a,b]
@@ -237,13 +237,17 @@ export interface CellDeps {
 }
 
 export interface ArmResult { cell_id: string; dir: string; status: 'complete' | 'partial' | 'invalid'; config_sha256: string; answers: number; judgments: number; rows: number; readers: string[] }
-export interface CellResult { cell: string; out: string; status: 'complete' | 'partial' | 'invalid'; arms: ArmResult[]; stopped: string | null; invalid_reasons: string[] }
+/** A shard's own share (its conversations' questions): what each arm still lacks there (A22). */
+export interface ShareResult { shard: string; questions: number; complete: boolean; gaps: Array<{ cell_id: string; rows_missing: number; answers_missing: number; unjudged: number }> }
+export interface CellResult { cell: string; out: string; status: 'complete' | 'partial' | 'invalid'; arms: ArmResult[]; stopped: string | null; invalid_reasons: string[]; share?: ShareResult }
 
 // ─── Staging ─────────────────────────────────────────────────────────
 
 interface RealizationEvent {
   realization_id: string; conversation: string; attempt: number; event: 'started' | 'ingested' | 'invalidated'; at: string;
   reason?: string; restored_from?: string; ingest?: IngestSummary; probes?: ProbeRecord[];
+  /** A22: the earlier realization whose answers, judgments and final retrievals this one carries. */
+  carried_from?: string; carried?: { answers: number; judgments: number; retrievals: number };
 }
 /** Background work a system reported still queued when its /finish returned (gbrain-defaults: pending gbrain jobs by kind); never dropped, published per realization. */
 export interface BackgroundLiabilities { pending_jobs: Record<string, number> | null; oldest_pending_age_s: number | null; [k: string]: unknown }
@@ -257,6 +261,8 @@ export interface ProbeRecord { realization_id: string; source_id: string; kind: 
 interface StagedRetrieval {
   key: string; question_id: string; policy: string; attempt: number; outcome: Outcome; error?: string; error_kind?: string;
   items: Item[]; applied_settings: Record<string, unknown>; truncated: boolean; latency_ms: number | null; harness_ms: number; query_time: string | null; at: string;
+  /** A22: the realization whose store answered this retrieval, when it was carried into a later realization. */
+  realization_id?: string;
 }
 /** `background_tail` is a realization's system-slot spend after its /finish and outside retrieval and own-answer calls (key `tail:<realization>`). */
 interface MeterLine { phase: 'ingest' | 'retrieval' | 'reader' | 'judge' | 'background_tail'; key: string; usd: number; requests: number; unpriced: number }
@@ -269,12 +275,13 @@ class Staging {
   events(): RealizationEvent[] { return readLines<RealizationEvent>(this.eventsPath); }
   event(e: RealizationEvent) { appendFileSync(this.eventsPath, JSON.stringify(e) + '\n'); }
   /** The latest realization of a conversation and its state. */
-  latest(conversation: string): { id: string; attempt: number; state: 'started' | 'ingested' | 'invalidated'; ingest?: IngestSummary; probes?: ProbeRecord[]; restored_from?: string } | null {
+  latest(conversation: string): { id: string; attempt: number; state: 'started' | 'ingested' | 'invalidated'; ingest?: IngestSummary; probes?: ProbeRecord[]; restored_from?: string; carried_from?: string } | null {
     const evs = this.events().filter(e => e.conversation === conversation);
     if (!evs.length) return null;
     const last = evs[evs.length - 1];
     const ingested = evs.find(e => e.realization_id === last.realization_id && e.event === 'ingested');
-    return { id: last.realization_id, attempt: last.attempt, state: last.event, ingest: ingested?.ingest, probes: ingested?.probes, restored_from: ingested?.restored_from };
+    const carried = evs.find(e => e.realization_id === last.realization_id && e.carried_from);
+    return { id: last.realization_id, attempt: last.attempt, state: last.event, ingest: ingested?.ingest, probes: ingested?.probes, restored_from: ingested?.restored_from, carried_from: carried?.carried_from };
   }
   dir(rid: string) { const d = join(this.root, 'r', rid); mkdirSync(d, { recursive: true }); return d; }
   meters(): MeterLine[] { return readLines<MeterLine>(join(this.root, 'meters.ndjson')); }
@@ -619,7 +626,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       if (prior?.state === 'ingested') {
         const need = pendingOn(prior.id, convId);
         if (!need.store || live.has(prior.id)) { realizations.set(convId, prior.id); continue; }
-        staging.event({ realization_id: prior.id, conversation: convId, attempt: prior.attempt, event: 'invalidated', at: new Date().toISOString(), reason: 'the store behind this realization is gone (new process, no restored snapshot) and store work is pending; the whole conversation is ingested again' });
+        staging.event({ realization_id: prior.id, conversation: convId, attempt: prior.attempt, event: 'invalidated', at: new Date().toISOString(), reason: 'the store behind this realization is gone (new process, no restored snapshot) and store work is pending; the whole conversation is ingested again, and its answers, judgments and final retrievals are carried forward (A22)' });
       } else if (prior?.state === 'started') {
         staging.event({ realization_id: prior.id, conversation: convId, attempt: prior.attempt, event: 'invalidated', at: new Date().toISOString(), reason: 'ingest was interrupted; a conversation is never partly re-ingested' });
       }
@@ -633,6 +640,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       }
       const ingest = await ingestConversation(rid, convId, attempt);
       if (ingest === 'stopped') break;
+      carryForward(convId, rid, attempt);
       realizations.set(convId, rid); live.add(rid);
     }
     if (!stopped) {
@@ -655,7 +663,21 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   }
 
   const armResults = publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts });
-  return { cell: def.id, out, status: invalidReasons.length ? 'invalid' : armResults.every(a => a.status === 'complete') && !stopped ? 'complete' : 'partial', arms: armResults, stopped, invalid_reasons: invalidReasons };
+  let share: ShareResult | undefined;
+  if (shard.count > 1) {
+    const mineQs = new Set(selected.filter(q => convIds.includes(q.conversation)).map(q => q.id));
+    const gaps = arms.map(a => {
+      const dir = join(out, 'cells', a.cell_id);
+      const qs = new Set([...armQs.get(a.id)!].filter(id => mineQs.has(id)));
+      const rows = new Set(readLines<Q1Row>(join(dir, 'rows.ndjson')).filter(r => qs.has(r.id)).map(r => r.id));
+      const ans = readRecords(join(dir, 'answers.ndjson'), 'answer').filter(x => qs.has(x.question_id));
+      const judged = new Set(readRecords(join(dir, 'judgments.ndjson'), 'judgment').filter(j => j.instrument_id === instrument.id && j.judge_replicate === 0).map(j => j.answer_id));
+      const promised = a.mode === 'retrieval-only' ? 0 : readersOf.get(a.id)!.reduce((n, r) => n + (a.reader_replicates[r] ?? 1), 0) * qs.size;
+      return { cell_id: a.cell_id, rows_missing: qs.size - rows.size, answers_missing: Math.max(0, promised - ans.length), unjudged: ans.filter(x => JUDGED.has(x.outcome) && !judged.has(x.answer_id)).length };
+    });
+    share = { shard: `${shard.index}/${shard.count}`, questions: mineQs.size, complete: !stopped && !invalidReasons.length && gaps.every(g => !g.rows_missing && !g.answers_missing && !g.unjudged), gaps: gaps.filter(g => g.rows_missing || g.answers_missing || g.unjudged) };
+  }
+  return { cell: def.id, out, status: invalidReasons.length ? 'invalid' : armResults.every(a => a.status === 'complete') && !stopped ? 'complete' : 'partial', arms: armResults, stopped, invalid_reasons: invalidReasons, ...(share ? { share } : {}) };
 
   // ─── Ingest ───
   async function ingestConversation(rid: string, convId: string, attempt: number): Promise<'ok' | 'stopped'> {
@@ -826,11 +848,11 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       return s.has(qid);
     };
 
-    const identity = (arm: ArmDefinition, q: MemoryQuestion, readerId: string, replicate: number, context: string) => ({ cell_id: arm.cell_id, realization_id: rid, question_id: q.id, conversation: q.conversation, system: def.system, arm: arm.arm, reader: readerId, replicate, effort: arm.mode === 'own-answer' ? null : def.effort, context_sha256: context });
+    const identity = (arm: ArmDefinition, q: MemoryQuestion, readerId: string, replicate: number, context: string, from: string = rid) => ({ cell_id: arm.cell_id, realization_id: from, question_id: q.id, conversation: q.conversation, system: def.system, arm: arm.arm, reader: readerId, replicate, effort: arm.mode === 'own-answer' ? null : def.effort, context_sha256: context });
     const zero = { input: 0, output: 0, cache_read: 0, cache_write: 0 };
 
     const rowFor = (arm: ArmDefinition, q: MemoryQuestion, r: StagedRetrieval | null, pack: PackedContext | null, extra: Partial<Q1Row> = {}): Q1Row => {
-      const base: Q1Row = { id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length, cell_id: arm.cell_id, realization_id: rid,
+      const base: Q1Row = { id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length, cell_id: arm.cell_id, realization_id: r?.realization_id ?? rid,
         delivered_tokens: pack?.delivered ?? {}, fill_rate: pack?.fill_rate ?? null, packing_loss: pack?.packing_loss ?? null, provenance_status: weakest(r?.items ?? []), fanout: { mean: 0, max: 0 }, ...extra };
       if (!r) return { ...base, recall_measurable: false, ...extra };
       const items = r.items;
@@ -864,7 +886,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       const ctx = pack?.context_sha256 ?? sha256(`no-context|${r?.outcome ?? 'missing'}`);
       for (const rd of arm.readers) for (let rep = 0; rep < (arm.reader_replicates[rd] ?? 1); rep++) {
         if (stopped) return pack;
-        const id = identity(arm, q, rd, rep, ctx);
+        const id = identity(arm, q, rd, rep, ctx, r?.realization_id ?? rid);
         const aid = answerId(arm.cell_id, q.id, rd, rep);
         if (answers.has(aid)) continue;
         if (failed) {
@@ -945,9 +967,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       return extra;
     };
 
-    for (const q of selected.filter(x => x.conversation === convId)) {
-      if (stopped) break;
-      if (opts.stopAfterQuestions !== undefined && processed >= opts.stopAfterQuestions) { stopped = 'stopped by the test hook (simulated kill)'; break; }
+    const oneQuestion = async (q: MemoryQuestion) => {
       const staged = new Map<string, StagedRetrieval | null>();
       for (const p of policies) if (arms.some(a => a.policy === p && armQs.get(a.id)!.has(q.id))) staged.set(p, await retrieve(q, p));
       for (const arm of arms) {
@@ -962,10 +982,63 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         for (const a of answers.all().filter(x => x.cell_id === arm.cell_id && x.question_id === q.id)) { if (stopped) break; await judgeOne(q, a, arm); }
         rowBuffer.push(row);
       }
+    };
+    /** A22: work a question still lacks in this process: a promised answer, a canonical judgment, or a retrieval the live store can still retry. */
+    const needs = (q: MemoryQuestion) => {
+      for (const p of policies) {
+        if (!isLive || !arms.some(a => a.policy === p && armQs.get(a.id)!.has(q.id))) continue;
+        const r = retrievals.get(`${q.id}|${p}`);
+        if (!r || (!FINAL.has(r.outcome) && r.attempt < maxAttempts)) return true;
+      }
+      for (const arm of arms) {
+        if (!armQs.get(arm.id)!.has(q.id) || arm.mode === 'retrieval-only') continue;
+        for (const rd of readersOf.get(arm.id)!) for (let rep = 0; rep < (arm.reader_replicates[rd] ?? 1); rep++) {
+          const a = answers.get(answerId(arm.cell_id, q.id, rd, rep));
+          if (!a) return true;
+          if (JUDGED.has(a.outcome) && !judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: instrument.sha256, judge: instrument.canonical_judge, judge_replicate: 0 }))) return true;
+        }
+      }
+      return false;
+    };
+    const mine = selected.filter(x => x.conversation === convId);
+    for (const q of mine) {
+      if (stopped) break;
+      if (opts.stopAfterQuestions !== undefined && processed >= opts.stopAfterQuestions) { stopped = 'stopped by the test hook (simulated kill)'; break; }
+      await oneQuestion(q);
       processed++;
       if (processed % ROW_FLUSH_EVERY === 0) flush();
     }
+    // A22: a question with a row but a missing answer or judgment (a reader or judge error below the attempt limit)
+    // is retried in this process, up to the attempt limit, instead of waiting for a resume that may never come.
+    for (let pass = 1; pass < maxAttempts && !stopped; pass++) {
+      const todo = mine.filter(needs);
+      if (!todo.length) break;
+      for (const q of todo) { if (stopped) break; await oneQuestion(q); }
+    }
     flush();
+  }
+
+  /**
+   * A22: a conversation ingested again (its earlier store was lost) keeps what the earlier realization recorded: its
+   * answers, judgments, answer attempts and final retrievals (stamped with the realization that answered them) are
+   * copied into the new realization, so no answered question is asked again and only missing work runs on the new
+   * store. The new realization's ingested event names the source and the counts.
+   */
+  function carryForward(convId: string, rid: string, attempt: number) {
+    const earlier = [...new Set(staging.events().filter(e => e.conversation === convId && e.event === 'ingested' && e.realization_id !== rid).map(e => e.realization_id))].at(-1);
+    if (!earlier) return;
+    const from = staging.dir(earlier), to = staging.dir(rid);
+    const answersIn = readRecords(join(from, 'answers.ndjson'), 'answer');
+    const judgmentsIn = readRecords(join(from, 'judgments.ndjson'), 'judgment');
+    const kept = [...latestBy<StagedRetrieval>(join(from, 'retrievals.ndjson'), r => r.key).values()].filter(r => FINAL.has(r.outcome) || r.attempt >= maxAttempts).map(r => ({ ...r, realization_id: r.realization_id ?? earlier }));
+    if (!answersIn.length && !judgmentsIn.length && !kept.length) return;
+    const answerLog = new RecordLog(join(to, 'answers.ndjson'), 'answer');
+    for (const a of answersIn) answerLog.append(a);
+    const judgmentLog = new RecordLog(join(to, 'judgments.ndjson'), 'judgment');
+    for (const j of judgmentsIn) judgmentLog.append(j);
+    if (existsSync(join(from, 'answer-attempts.ndjson'))) appendFileSync(join(to, 'answer-attempts.ndjson'), readFileSync(join(from, 'answer-attempts.ndjson'), 'utf8'));
+    if (kept.length) appendFileSync(join(to, 'retrievals.ndjson'), kept.map(r => JSON.stringify(r) + '\n').join(''));
+    staging.event({ realization_id: rid, conversation: convId, attempt, event: 'ingested', at: new Date().toISOString(), carried_from: earlier, carried: { answers: answersIn.length, judgments: judgmentsIn.length, retrievals: kept.length } });
   }
 }
 
@@ -990,14 +1063,14 @@ interface PublishCtx {
 
 /** The valid realization of each conversation across staging roots (shards), and its records. */
 function gatherStaging(cellId: string, roots: string[]) {
-  const convs = new Map<string, { root: string; rid: string; ingest?: IngestSummary; probes: ProbeRecord[]; restored_from?: string; attempts: number }>();
+  const convs = new Map<string, { root: string; rid: string; ingest?: IngestSummary; probes: ProbeRecord[]; restored_from?: string; carried_from?: string; attempts: number }>();
   for (const root of roots) {
     const st = new Staging(root, cellId);
     const evs = st.events();
     for (const conv of [...new Set(evs.map(e => e.conversation))]) {
       const l = st.latest(conv);
       if (!l || l.state !== 'ingested') continue;
-      convs.set(conv, { root: st.root, rid: l.id, ingest: l.ingest, probes: l.probes ?? [], restored_from: l.restored_from, attempts: l.attempt + 1 });
+      convs.set(conv, { root: st.root, rid: l.id, ingest: l.ingest, probes: l.probes ?? [], restored_from: l.restored_from, carried_from: l.carried_from, attempts: l.attempt + 1 });
     }
   }
   return convs;
@@ -1054,7 +1127,7 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
       selection: { questions: qs.size, conversations: new Set(rows.map(r => r.conversation)).size, scheduled_sha256: sha256([...qs].join('\n')) },
       counts: { rows: rows.length, answers: answers.length, answers_promised: promised, judgments: judgments.length, unjudged, outcomes },
       per_reader_mean: Object.fromEntries(readers.map(r => [r, scores(r)])),
-      realizations: staged.map(s => ({ conversation: s.conv, realization_id: s.rid, attempts: s.attempts, restored_from: s.restored_from ?? null, degraded: s.ingest?.degraded ?? null,
+      realizations: staged.map(s => ({ conversation: s.conv, realization_id: s.rid, attempts: s.attempts, restored_from: s.restored_from ?? null, ...(s.carried_from ? { carried_from: s.carried_from } : {}), degraded: s.ingest?.degraded ?? null,
         background_liabilities: s.ingest?.finish.background_liabilities ?? null })).sort((a, b) => (a.conversation < b.conversation ? -1 : 1)),
       ingest: {
         conversations: ingests.length, messages: ingests.reduce((s, x) => s + x.messages, 0), ingested_tokens: ingests.reduce((s, x) => s + x.ingested_tokens, 0),
@@ -1124,7 +1197,7 @@ export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Recor
 export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions',
   'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/openai-judge-shim.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
   'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
-  'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',
+  'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'scripts/ubicloud/ubi-runner.sh', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',
   'eval/systems/PROTOCOL.md', 'eval/systems/_fake', 'eval/systems/_shim', 'eval/systems/bootstrap.sh', 'eval/systems/gbrain-defaults', 'eval/systems/kinds.json',
   'eval/systems/name-guard-baseline.json', 'docs/comparison-systems', 'eval/decisions', 'package.json', 'bun.lock'];
 
@@ -1168,12 +1241,14 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
 }
 
 /** The Q1 scoreboard campaign manifest (shootout-cell.ts `q1-scoreboard-campaign`) for the cell manifest. */
-export function campaignManifest(m: Manifest, opts: { smoke?: boolean } = {}): Q1Campaign {
-  const models = [...new Set([...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5'])].sort();
+export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number } } = {}): Q1Campaign {
+  const models = [...new Set([...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5'])].sort();
+  const cells = campaignCells(m, opts).filter(c => !opts.sealed || c.sealed);
+  const id = opts.sealed ? 'q1-scoreboard-sealed' : 'q1-scoreboard';
   return {
-    kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: 'q1-scoreboard', cap_usd: m.cap_usd, ledger: 'eval/reports/scoreboard/q1-scoreboard/campaign.sqlite',
-    parameters: {}, hedge_classifier: 'none', cells: campaignCells(m, opts), executes: EXECUTES, images: pinnedImages(),
-    blocks: Object.fromEntries(m.blocks.map(b => [b.id, { estimate_usd: b.estimate_usd, cap_usd: b.cap_usd }])),
+    kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: id, cap_usd: opts.sealed?.cap_usd ?? m.cap_usd, ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`,
+    parameters: {}, hedge_classifier: 'none', cells, executes: EXECUTES, images: pinnedImages(),
+    blocks: Object.fromEntries(m.blocks.filter(b => cells.some(c => c.block === b.id)).map(b => [b.id, { estimate_usd: b.estimate_usd, cap_usd: b.cap_usd }])),
     output_caps: { ...DEFAULT_ROUTE_CAPS }, route_classes: { ...DEFAULT_ROUTE_CLASSES }, schedule: { vcpu_cap_day: 128, vcpu_cap_night: 200 }, row_pull_every: ROW_FLUSH_EVERY, pull_interval_minutes: 10, models,
   };
 }
@@ -1226,7 +1301,9 @@ export async function main(argv: string[]): Promise<number> {
   if (sub === 'plan') {
     const m = loadManifest();
     const campaignOut = one('--campaign-out');
-    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify(campaignManifest(m, { smoke: argv.includes('--with-smoke') }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
+    const sealedCap = one('--sealed-cap-usd');
+    if (sealedCap !== undefined && !(Number(sealedCap) > 0)) throw refuse(usage('--sealed-cap-usd needs a positive dollar amount'));
+    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify(campaignManifest(m, { smoke: argv.includes('--with-smoke'), sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
     console.log(json ? JSON.stringify({ ...m, waves: campaignCells(m).map(c => ({ id: c.id, wave: c.wave, lease_usd: c.lease_usd })) }, null, 2) : renderPlan(m));
     return 0;
   }
@@ -1270,7 +1347,12 @@ export async function main(argv: string[]): Promise<number> {
       finishTimeoutS: one('--finish-timeout-s') ? Number(one('--finish-timeout-s')) : undefined, probeTimeoutMs: one('--probe-timeout-s') ? Number(one('--probe-timeout-s')) * 1000 : undefined });
     const agg = one('--aggregates');
     if (agg) writeAtomic(resolve(agg), JSON.stringify(cellAggregates(result.arms), null, 2) + '\n');
-    console.log(json ? JSON.stringify(result, null, 2) : `${def.id} ${result.status}${result.stopped ? ` (stopped: ${result.stopped})` : ''}: ${result.arms.map(a => `${a.cell_id} ${a.status} ${a.answers} answers`).join('; ')}; out ${out}`);
+    // A22: a shard is judged on its own share; the whole cell's status needs every shard (merge).
+    const s = result.share;
+    const line = s ? `${def.id} shard ${s.shard} ${s.complete ? 'complete for its share' : 'incomplete for its share'} (${s.questions} questions${s.gaps.length ? `; gaps: ${s.gaps.map(g => `${g.cell_id} ${g.rows_missing} rows, ${g.answers_missing} answers, ${g.unjudged} unjudged`).join('; ')}` : ''})${result.stopped ? ` (stopped: ${result.stopped})` : ''}; out ${out}`
+      : `${def.id} ${result.status}${result.stopped ? ` (stopped: ${result.stopped})` : ''}: ${result.arms.map(a => `${a.cell_id} ${a.status} ${a.answers} answers`).join('; ')}; out ${out}`;
+    console.log(json ? JSON.stringify(result, null, 2) : line);
+    if (s) return s.complete && result.status !== 'invalid' ? 0 : 4;
     return result.status === 'complete' ? 0 : 4;
   }
   throw refuse(usage(sub ? `unknown subcommand ${sub}` : 'a subcommand is required'));

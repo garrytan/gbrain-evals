@@ -135,7 +135,8 @@ function step(c: Campaign, l: LeaseState): Phase {
 
 for (;;) {
   const c = new Campaign(manifest, state);
-  const open = c.leases().filter(l => l.status === 'launched' && !final.has(l.lease_id));
+  // A launcher that lost its VM's session (ubi-runner exit 255) leaves the lease finished but unsettled, the VM running.
+  const open = c.leases().filter(l => (l.status === 'launched' || (l.status === 'finished' && l.exit_code === 255)) && !final.has(l.lease_id));
   const report: Record<string, Phase> = {};
   for (const l of open) {
     let ph: Phase;
@@ -147,7 +148,7 @@ for (;;) {
   const line = { at: new Date().toISOString(), ...report };
   console.log(JSON.stringify(line));
   writeFileSync(join(state, 'reattach.json'), JSON.stringify(line, null, 2) + '\n');
-  const pending = c.leases().filter(l => l.status === 'launched' && !final.has(l.lease_id)).length;
+  const pending = c.leases().filter(l => (l.status === 'launched' || (l.status === 'finished' && l.exit_code === 255)) && !final.has(l.lease_id)).length;
   if (argv.includes('--once') || !pending || Date.now() + 60_000 > deadline) break;
   await Bun.sleep(Math.min(120_000, Math.max(0, deadline - Date.now())));
 }

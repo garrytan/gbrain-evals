@@ -338,7 +338,7 @@ describe('reader usage (eval/runner/q1/usage.ts)', () => {
 });
 
 describe('resume', () => {
-  test('a killed in-process cell re-ingests every conversation with pending store work as a new realization; nothing is duplicated', async () => {
+  test('a killed in-process cell re-ingests every conversation with pending store work as a new realization, keeps the answers it had and asks only the rest (A22)', async () => {
     const def = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {} })], { configuration: 'baseline' });
     const out = join(tmp, 'resume');
     const first = await runCell(def, { out, stopAfterQuestions: 3, ...quiet }, { corpus, system: new FullContextSystem('recency'), reader: scriptedReader(), judge: scriptedJudge() });
@@ -353,8 +353,30 @@ describe('resume', () => {
     const answers = ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
     expect(answers).toHaveLength(45);
     expect(new Set(answers.map(a => a.answer_id)).size).toBe(45);
-    expect(new Set(answers.map(a => a.realization_id))).toEqual(new Set(['conv-a', 'conv-b', 'conv-c'].map(c => realizationId(def.id, c, 1))));
-    expect(reader.calls).toHaveLength(45);
+    const firstAnswers = ndjson(join(out, 'runs', def.id, 'r', realizationId(def.id, 'conv-a', 0), 'answers.ndjson'));
+    expect(firstAnswers).toHaveLength(9);
+    const kept = new Set(firstAnswers.map(a => a.answer_id));
+    expect(answers.filter(a => kept.has(a.answer_id)).every(a => a.realization_id === realizationId(def.id, 'conv-a', 0))).toBe(true);
+    expect(new Set(answers.filter(a => !kept.has(a.answer_id)).map(a => a.realization_id))).toEqual(new Set(['conv-a', 'conv-b', 'conv-c'].map(c => realizationId(def.id, c, 1))));
+    expect(reader.calls).toHaveLength(45 - 9);
+    const carried = events.filter(e => e.carried_from);
+    expect(carried.map(e => [e.conversation, e.carried_from, e.carried.answers])).toEqual([['conv-a', realizationId(def.id, 'conv-a', 0), 9]]);
+    const receipt = JSON.parse(readFileSync(join(out, 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8'));
+    expect(receipt.realizations.find((r: any) => r.conversation === 'conv-a').carried_from).toBe(realizationId(def.id, 'conv-a', 0));
+  });
+
+  test('a reader error below the attempt limit is retried in the same process, so no question keeps a row without its answer (A22)', async () => {
+    const def = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {} })], { configuration: 'baseline' });
+    const out = join(tmp, 'retry-pass');
+    const inner = scriptedReader();
+    let failures = 0;
+    const flaky = { ...inner, calls: inner.calls, chat: async (...args: Parameters<typeof inner.chat>) => { if (failures < 4) { failures++; throw new Error('upstream 503'); } return inner.chat(...args); } };
+    const res = await runCell(def, { out, ...quiet }, { corpus, system: new FullContextSystem('recency'), reader: flaky as never, judge: scriptedJudge() });
+    expect(res.status).toBe('complete');
+    const answers = ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+    expect(answers).toHaveLength(45);
+    expect(answers.every(a => a.outcome === 'scored')).toBe(true);
+    expect(failures).toBe(4);
   });
 
   test('with a restored realization nothing is re-ingested and only missing answers are read', async () => {
@@ -751,12 +773,21 @@ describe('the generated cell manifest', () => {
     expect(of('s1.gbrain-defaults.shipped-defaults').map(u => u.lease_usd)).toEqual(Array(10).fill(27));
     const tg = m.cells.find(c => c.id === 's1.ext-temporal-graph.common')!;
     expect(tg.estimate.usd / tg.shards).toBeCloseTo(305, 0);
-    expect(m.cells.filter(c => c.lease).map(c => c.id).sort()).toEqual(['s1.ext-temporal-graph.common', 's1.gbrain-defaults.shipped-defaults']);
+    expect(m.cells.filter(c => c.lease).map(c => c.id).sort()).toEqual(['s1.ext-graph-pipeline.common', 's1.ext-temporal-graph.common', 's1.gbrain-defaults.shipped-defaults']);
     for (const u of units.filter(u => !m.cells.find(c => c.lease && u.id.startsWith(`${c.id}.c`)))) {
       const c = m.cells.find(x => u.id === x.id || u.id.startsWith(`${x.id}.c`))!;
       expect(u.lease_usd).toBeCloseTo(Math.max(0.01, Math.ceil(c.estimate.usd / c.shards * 100) / 100), 2);
     }
     expect(of('s1.gbrain-defaults.shipped-defaults').map(u => u.wave)).toEqual([1, 1, 1, 1, 1, 1, 2, 2, 2, 2]);
+  });
+
+  test('A22: graph-pipeline S1 leases $65 a shard from its measured ingest; S1 hybrid is scheduled for its question phase', () => {
+    const units = campaignCells(m);
+    const gp = units.filter(u => u.id.startsWith('s1.ext-graph-pipeline.common.c'));
+    expect(gp.map(u => u.lease_usd)).toEqual(Array(10).fill(65));
+    expect(gp.map(u => [u.expected_hours, u.timeout_hours, u.wave])).toEqual(Array(10).fill([40, 62, 1]));
+    const hybrid = units.find(u => u.id === 's1.baseline-hybrid.baseline')!;
+    expect([hybrid.expected_hours, hybrid.timeout_hours, hybrid.lease_usd]).toEqual([9, 16, 95.1]);
   });
 
   test('estimates come from ledger prices and stay under the cap; blocks carry 1.5x hard caps', () => {

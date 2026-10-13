@@ -23,6 +23,7 @@ export type ScoreboardCode =
   | 'BUDGET_CAP'
   | 'CELL_FAILED'
   | 'CELL_TIMEOUT'
+  | 'CELL_PARTIAL'
   | 'RUNNER_UNRESOLVED'
   | 'OWNER_UNSET'
   | 'CUSTODY_REQUIRED'

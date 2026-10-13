@@ -8,6 +8,11 @@
 # PROXY_HOSTPORT     where the metering proxy listens, as seen from the egress relay (default host.docker.internal:8787)
 # PROXY_OPENAI_PATH  path prefix of the proxy's OpenAI routes (default /cognee/openai/v1: slot "cognee" on eval/runner/metering-proxy.ts)
 # SHIM_HOST_PORT     host port for the shim (default 8701, bound to 127.0.0.1)
+#
+# Stopping (bootstrap.sh snapshot, restart, down): the shim handles SIGTERM by letting the request in flight finish (up to
+# SHIM_STOP_DRAIN_S, default 300), then closing its graph and vector stores, which checkpoints the graph. The graph store
+# cannot reopen after a kill mid-write or mid-checkpoint, so stop_grace_period leaves room for the whole sequence before
+# Docker's SIGKILL.
 name: shootout-cognee
 services:
   cognee:
@@ -26,6 +31,7 @@ services:
     volumes:
       - cognee-data:/data
     mem_limit: ${SHIM_MEM_LIMIT:-6g}
+    stop_grace_period: 420s
     networks: [sealed]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8700/health', timeout=5)"]

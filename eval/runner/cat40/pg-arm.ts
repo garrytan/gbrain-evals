@@ -24,6 +24,9 @@ export const PG_EMBED_DIMS = 1536;
 
 export type Embedder = (texts: string[]) => Promise<number[][]>;
 
+/** Rate limits and provider faults are retried with backoff (or the proxy's retry-after); a budget refusal never is. */
+const RETRY_STATUS = new Set([429, 500, 502, 503, 504]);
+
 /** `baseUrl` defaults to OPENAI_BASE_URL (a shootout cell's metering proxy) or the official endpoint. */
 export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch = fetch, baseUrl = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1'): Embedder {
   // Legacy cache: one JSON object. New entries are appended to a JSONL file beside it (base64 float32), so a
@@ -40,11 +43,17 @@ export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch 
   }
   const key = (t: string) => createHash('sha256').update(`${PG_EMBED_MODEL}:${PG_EMBED_DIMS}:${t}`).digest('hex');
   const fetchBatch = async (batch: string[]) => {
-    const res = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/embeddings`, {
-      method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
-      body: JSON.stringify({ model: PG_EMBED_MODEL, input: batch.map(t => t.slice(0, 24_000)), dimensions: PG_EMBED_DIMS }),
-    });
-    if (!res.ok) throw new Error(`embedding error ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    let res: Response;
+    for (let attempt = 0; ; attempt++) {
+      res = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/embeddings`, {
+        method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
+        body: JSON.stringify({ model: PG_EMBED_MODEL, input: batch.map(t => t.slice(0, 24_000)), dimensions: PG_EMBED_DIMS }),
+      });
+      if (res.ok) break;
+      const text = (await res.text()).slice(0, 300);
+      if (attempt >= 4 || !RETRY_STATUS.has(res.status) || /budget/i.test(text)) throw new Error(`embedding error ${res.status}: ${text}`);
+      await new Promise(r => setTimeout(r, Math.max(Number(res.headers.get('retry-after') ?? 0) * 1000, 2000 * 2 ** attempt)));
+    }
     const body = await res.json() as { data: Array<{ index: number; embedding: number[] }> };
     const lines: string[] = [];
     for (const d of body.data) {

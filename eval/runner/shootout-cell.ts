@@ -23,7 +23,8 @@
  *   bun eval/runner/shootout-cell.ts abandon --campaign <manifest.json> --state <dir> --lease <id> --reason <text> [--unstarted --log <launch log>]
  *   bun eval/runner/shootout-cell.ts status  --campaign <manifest.json> --state <dir>
  *   bun eval/runner/shootout-cell.ts hash    --campaign <manifest.json>   (the hash a preregistration records)
- *   bun eval/runner/shootout-cell.ts resume  --campaign <manifest.json> --state <dir> --cell <id>   (Q1 campaigns: rerun from a pulled realization)
+ *   bun eval/runner/shootout-cell.ts resume  --campaign <manifest.json> --state <dir> --cell <id> [--from-campaign <manifest.json> --from-state <dir>]
+ *                                            (Q1 campaigns: rerun what a cell lacks, from its pulled checkpoint and realization)
  *   bun eval/runner/shootout-cell.ts remote  --cell-b64 <base64 json>        (on the VM: proxy + cell command + lease summary)
  *
  * The VM executor is the repository's own scripts/ubicloud/ubi-runner.sh, or
@@ -41,7 +42,12 @@
  *             a new campaign identity.
  *   timeout   a cell's `timeout_hours` reaches the VM (the cell command is
  *             stopped at the deadline, exit 124) and the launcher (the VM run
- *             is stopped half an hour later, which tears the VM down).
+ *             is stopped BACKSTOP_HOURS later; ubi-runner then stops the
+ *             command and pulls its output before it destroys the VM).
+ *   detach    the cell runs detached on the VM (setsid/nohup, log and exit
+ *             status in files there); ubi-runner follows it over short ssh
+ *             calls, so a dropped session never kills the cell or its
+ *             snapshot step (A22).
  *   rows      the VM checkpoints the cell's output every `row_pull_every`
  *             (20) new attempt rows, and the launcher pulls the checkpoint
  *             every `pull_interval_minutes`, so a lost VM costs at most one
@@ -51,9 +57,12 @@
  *             `$SHOOTOUT_SNAPSHOT_DIR`; the VM records an immutable ingest
  *             realization id over the snapshot's bytes, and the launcher pulls
  *             it to the launching host.
- *   resume    a cell whose VM was lost reruns its query phase from the pulled
- *             realization (`restore_command`), or, without one, repeats the
- *             whole conversation; a conversation is never partly re-ingested.
+ *   resume    a cell whose VM was lost or whose run left gaps restarts from
+ *             its pulled checkpoint: with a realization whose snapshot files
+ *             still match their recorded sha256 and a `restore_command` it
+ *             restores the store and runs only what is missing; otherwise it
+ *             ingests again and answers only the questions the checkpoint
+ *             lacks. An answered question is never asked again (A22).
  *   metering  the VM's proxy gets the cell token, the campaign's per-route
  *             output caps and the cell's share of each provider's limits.
  */
@@ -317,7 +326,8 @@ export interface Realization { realization_id: string; cell: string | null; leas
 export interface RemotePayload {
   lease_id: string; lease_usd: number; max_output_tokens?: number | null; command: string; out: string;
   cell?: string; campaign_sha256?: string; timeout_hours?: number; row_pull_every?: number; snapshot_command?: string;
-  restore?: { realization_id: string; dir: string; restore_command?: string };
+  /** A resume: the staged checkpoint (and, with a verified realization, the store snapshot) to start from. realization_id null: no usable snapshot, so the cell ingests again and answers only what the checkpoint lacks (A22). */
+  restore?: { realization_id: string | null; dir: string; restore_command?: string };
   route_caps?: { caps: Record<string, number>; slots: Record<string, string>; defaultClass: string };
   admission?: Partial<Record<ProviderName, ProviderLimits>>;
   /**
@@ -458,7 +468,7 @@ export class Campaign {
     return [...out.values()];
   }
   lease(id: string): LeaseState { const l = this.leases().find(x => x.lease_id === id); if (!l) throw new Error(`no lease ${id}`); return l; }
-  private realizedEvents(): Extract<LeaseEvent, { event: 'realized' }>[] {
+  realizedEvents(): Extract<LeaseEvent, { event: 'realized' }>[] {
     if (!existsSync(this.eventsPath)) return [];
     return readFileSync(this.eventsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as LeaseEvent).filter((e): e is Extract<LeaseEvent, { event: 'realized' }> => e.event === 'realized');
   }
@@ -629,44 +639,57 @@ export class Campaign {
   }
 
   /**
-   * Q1: rerun a cell whose VM was lost. The cell's last lease must be closed
-   * (an abandoned lease stays charged in full). With a pulled realization and
-   * a `restore_command`, the new lease restores the store snapshot and the
-   * checkpointed rows and reruns only what is missing; otherwise it repeats
-   * the whole conversation and the old realization is not used.
+   * Q1: rerun a cell whose VM was lost or whose run left gaps. The cell's last lease must be closed (an abandoned
+   * lease stays charged in full). `from` names another campaign whose leases hold the cell's earlier run (A22: wave-1
+   * gaps rerun under the re-frozen campaign). The resume stages the last checkpoint, so every answer and judgment
+   * already recorded is kept and never repeated. Before it is used, a pulled realization's snapshot files are checked
+   * against the sha256 values recorded when it was realized: with a verified realization and a `restore_command`
+   * the new lease restores the store and runs only what is missing (mode `snapshot`); with no usable snapshot but a
+   * checkpoint, the cell ingests again and answers only the questions the checkpoint lacks (mode `answers`); with
+   * neither, it runs in full (mode `repeat`).
    */
-  async resume(cellId: string, runner: Runner, opts: { local?: { port: number } } = {}): Promise<{ mode: 'snapshot' | 'repeat'; realization_id: string | null; lease: LeaseState; note: string }> {
+  async resume(cellId: string, runner: Runner, opts: { local?: { port: number }; from?: Campaign } = {}): Promise<{ mode: 'snapshot' | 'answers' | 'repeat'; realization_id: string | null; snapshot_check: string; lease: LeaseState; note: string }> {
     if (!this.q1) throw new Error('resume is for Q1 scoreboard campaigns');
     this.verifyFrozen('resume');
     const c = this.cell(cellId);
-    const mine = this.leases().filter(l => l.cell === cellId);
-    const open = mine.find(l => l.status === 'launched' || l.status === 'finished');
+    const src = opts.from ?? this;
+    const theirs = src.leases().filter(l => l.cell === cellId);
+    const open = [...theirs, ...(src === this ? [] : this.leases().filter(l => l.cell === cellId))].find(l => l.status === 'launched' || l.status === 'finished');
     if (open) throw refuse({ code: 'RESUME_REFUSED', message: `cell ${cellId} still holds lease ${open.lease_id} (${open.status}); its VM never reported back`,
       why: 'a lease is used once; a lost VM\'s lease is closed by abandoning it, which charges its full reservation against the cap',
-      fix: { next: 'run', argv: ['bun', 'eval/runner/shootout-cell.ts', 'abandon', '--campaign', this.manifestPath, '--state', this.stateDir, '--lease', open.lease_id, '--reason', 'VM lost'],
-        verify: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', this.manifestPath, '--state', this.stateDir] } });
-    const ids = new Set(mine.map(l => l.lease_id));
-    const realized = this.realizedEvents().filter(e => ids.has(e.lease_id)).at(-1) ?? null;
+      fix: { next: 'run', argv: ['bun', 'eval/runner/shootout-cell.ts', 'abandon', '--campaign', src.manifestPath, '--state', src.stateDir, '--lease', open.lease_id, '--reason', 'VM lost'],
+        verify: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', src.manifestPath, '--state', src.stateDir] } });
+    const ids = new Set(theirs.map(l => l.lease_id));
+    const realized = src.realizedEvents().filter(e => ids.has(e.lease_id)).at(-1) ?? null;
+    let snapshotCheck = realized ? 'verified' : 'none';
+    if (realized) {
+      const dir = join(src.resultsDir(src.lease(realized.lease_id)), 'realization', 'snapshot');
+      const bad = realized.files.find(f => { const abs = join(dir, f.path); return !existsSync(abs) || statSync(abs).size !== f.bytes || sha256File(abs) !== f.sha256; });
+      if (bad) snapshotCheck = `damaged: ${bad.path} does not match the sha256 recorded when ${realized.realization_id} was realized`;
+    }
+    const usable = realized && snapshotCheck === 'verified' && c.restore_command ? realized : null;
+    const last = [...theirs].reverse().find(l => existsSync(join(src.resultsDir(l), 'checkpoint')));
     let restore: RemotePayload['restore'] | undefined;
     let staged: string | null = null;
-    if (realized && c.restore_command) {
-      const from = this.lease(realized.lease_id);
+    if (usable || last) {
       const sealed = this.sealedQ1(cellId);
-      staged = join(sealed ? join(this.stateDir, 'restore') : join(REPO_ROOT, '.scoreboard-restore'), `${cellId}-${realized.realization_id}`);
+      staged = join(sealed ? join(this.stateDir, 'restore') : join(REPO_ROOT, '.scoreboard-restore'), `${cellId}-${usable?.realization_id ?? 'checkpoint'}`);
       rmSync(staged, { recursive: true, force: true });
       mkdirSync(staged, { recursive: true });
-      cpSync(join(this.resultsDir(from), 'realization'), join(staged, 'realization'), { recursive: true });
-      if (existsSync(join(this.resultsDir(from), 'checkpoint'))) cpSync(join(this.resultsDir(from), 'checkpoint'), join(staged, 'checkpoint'), { recursive: true });
-      restore = { realization_id: realized.realization_id, dir: sealed && !opts.local ? '~/custody/restore' : relative(REPO_ROOT, staged), restore_command: c.restore_command };
+      if (usable) cpSync(join(src.resultsDir(src.lease(usable.lease_id)), 'realization'), join(staged, 'realization'), { recursive: true });
+      const ckpt = last ? join(src.resultsDir(last), 'checkpoint') : null;
+      if (ckpt) cpSync(ckpt, join(staged, 'checkpoint'), { recursive: true });
+      restore = { realization_id: usable?.realization_id ?? null, dir: sealed && !opts.local ? '~/custody/restore' : relative(REPO_ROOT, staged), ...(usable ? { restore_command: c.restore_command } : {}) };
     }
     const lease = this.reserve(cellId);
     try { await this.launch(cellId, runner, { restore, restoreFrom: staged ?? undefined, local: opts.local }); }
     finally { if (staged) rmSync(staged, { recursive: true, force: true }); }
-    const mode = restore ? 'snapshot' : 'repeat';
-    const note = restore ? `resumed from realization ${restore.realization_id}: the store snapshot and checkpointed rows were restored, so only missing questions ran`
-      : realized ? `cell ${cellId} has realization ${realized.realization_id} but no restore_command, so the whole conversation was repeated and that realization is not used`
-        : `no realization was pulled for cell ${cellId}, so the whole conversation was repeated`;
-    return { mode, realization_id: restore?.realization_id ?? null, lease: this.lease(lease.lease_id), note };
+    const mode = usable ? 'snapshot' : last ? 'answers' : 'repeat';
+    const why = realized && !usable ? (snapshotCheck !== 'verified' ? `realization ${realized.realization_id} is ${snapshotCheck}` : `cell ${cellId} has realization ${realized.realization_id} but no restore_command`) : 'no realization was pulled';
+    const note = mode === 'snapshot' ? `resumed from realization ${usable!.realization_id}: the store snapshot and checkpointed rows were restored, so only missing questions ran`
+      : mode === 'answers' ? `${why}, so the store was ingested again; the checkpoint's answers and judgments were kept and only questions without them were answered`
+        : `${why} and no checkpoint was pulled, so the whole cell ran again`;
+    return { mode, realization_id: usable?.realization_id ?? null, snapshot_check: snapshotCheck, lease: this.lease(lease.lease_id), note };
   }
 
   /** Settle a lease to the committed total of its VM ledger (pulled into the results directory). */
@@ -842,8 +865,15 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     ...extra, ...Object.entries(opts.upstream ?? {}).flatMap(([prov, url]) => ['--upstream', `${prov}=${url}`])], { stdout: 'inherit', stderr: 'inherit', env: { ...process.env, SHOOTOUT_CELL_TOKEN: cellToken } });
   let code: number | null = null;
   let timedOut = false;
+  let stoppedBy: string | null = null;
   let checkpointRows = 0;
   let realization: Realization | null = null;
+  const restored = payload.restore?.realization_id ?? null;
+  let stopCell: ((why: string) => void) | null = null;
+  // A22: a SIGTERM (ubi-runner stopping the detached command before teardown) stops the cell the way the timeout
+  // does, so the final checkpoint, snapshot wait and lease summary still run.
+  const onTerm = () => { stoppedBy ??= 'SIGTERM'; stopCell?.('SIGTERM'); };
+  process.on('SIGTERM', onTerm);
   try {
     let up = false;
     for (let i = 0; i < 200 && !up; i++) { try { up = (await fetch(`http://127.0.0.1:${port}/__proxy/status`)).ok; } catch { await Bun.sleep(50); } }
@@ -855,9 +885,13 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
     if (payload.restore) {
       const dir = resolve(REPO_ROOT, expandHome(payload.restore.dir));
-      if (existsSync(join(dir, 'checkpoint'))) for (const e of readdirSync(join(dir, 'checkpoint')).sort()) if (e !== 'checkpoint.json') cpSync(join(dir, 'checkpoint', e), join(out, e), { recursive: true });
+      // Without a restored store the old ingest-complete marker would trigger a snapshot of the empty store at once.
+      if (existsSync(join(dir, 'checkpoint'))) for (const e of readdirSync(join(dir, 'checkpoint')).sort()) if (e !== 'checkpoint.json' && (restored || e !== 'ingest-complete')) cpSync(join(dir, 'checkpoint', e), join(out, e), { recursive: true });
+    }
+    if (payload.restore && restored) {
+      const dir = resolve(REPO_ROOT, expandHome(payload.restore.dir));
       env.SHOOTOUT_RESTORE_DIR = join(dir, 'realization', 'snapshot');
-      env.SHOOTOUT_RESTORED_REALIZATION = payload.restore.realization_id;
+      env.SHOOTOUT_RESTORED_REALIZATION = restored;
       if (payload.restore.restore_command) {
         const r = Bun.spawn(['bash', '-c', payload.restore.restore_command], { cwd: REPO_ROOT, env, stdout: 'inherit', stderr: 'inherit' });
         const rc = await r.exited;
@@ -867,8 +901,12 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     if (payload.snapshot_command) env.SHOOTOUT_SNAPSHOT_DIR = join(out, 'realization', 'snapshot');
     // Not a login shell: a login profile can re-export the real keys over the dummy ones.
     const cell = Bun.spawn(['bash', '-c', payload.command], { cwd: REPO_ROOT, env, stdout: 'inherit', stderr: 'inherit' });
-    const timer = payload.timeout_hours ? setTimeout(() => { timedOut = true; cell.kill('SIGTERM'); setTimeout(() => cell.kill('SIGKILL'), 30_000).unref?.(); }, payload.timeout_hours * 3_600_000) : null;
+    stopCell = () => { cell.kill('SIGTERM'); setTimeout(() => cell.kill('SIGKILL'), 30_000).unref?.(); };
+    if (stoppedBy) stopCell(stoppedBy);
+    const timer = payload.timeout_hours ? setTimeout(() => { timedOut = true; stopCell!('timeout'); }, payload.timeout_hours * 3_600_000) : null;
     const every = payload.row_pull_every ?? 0;
+    const baseRows = every ? attemptRows(out) : 0;
+    checkpointRows = baseRows;
     let snapshotting: Promise<Realization> | null = null;
     let exited = false;
     const watch = async () => {
@@ -876,7 +914,7 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
         await Promise.race([cell.exited, Bun.sleep(opts.pollMs ?? 2000)]);
         const rows = every ? attemptRows(out) : 0;
         if (every && rows >= checkpointRows + every) { writeCheckpoint(out, rows); checkpointRows = rows; }
-        if (payload.snapshot_command && !snapshotting && !payload.restore && (existsSync(join(out, 'ingest-complete')) || rows > 0)) {
+        if (payload.snapshot_command && !snapshotting && !restored && (existsSync(join(out, 'ingest-complete')) || rows > baseRows)) {
           snapshotting = takeSnapshot(payload, out, env, existsSync(join(out, 'ingest-complete')) ? 'ingest-complete' : 'first-row');
         }
       }
@@ -886,34 +924,39 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     exited = true;
     if (timer) clearTimeout(timer);
     await watcher;
-    if (payload.snapshot_command && !snapshotting && !payload.restore && existsSync(join(out, 'ingest-complete'))) snapshotting = takeSnapshot(payload, out, env, 'ingest-complete');
+    if (payload.snapshot_command && !snapshotting && !restored && existsSync(join(out, 'ingest-complete'))) snapshotting = takeSnapshot(payload, out, env, 'ingest-complete');
     if (snapshotting) realization = await snapshotting;
     if (every) { checkpointRows = attemptRows(out); writeCheckpoint(out, checkpointRows); }
     if (timedOut) code = 124;
   } finally {
+    process.off('SIGTERM', onTerm);
     proxy.kill('SIGTERM');
     await proxy.exited;
     if (custody && payload.cell) for (const d of ['datasets', 'restore']) rmSync(join(dirname(custody), d), { recursive: true, force: true });
     const s = ledgerStatus({ ledgerPath: ledger, runId: payload.lease_id });
     writeFileSync(join(out, 'lease-summary.json'), JSON.stringify({ run_id: payload.lease_id, lease_usd: payload.lease_usd, committed_usd: s.run?.committed_usd ?? payload.lease_usd,
       requests: s.run ? BudgetRun.runRequests(ledger, payload.lease_id) : null, max_output_tokens: s.run ? BudgetRun.leaseMaxOutputTokens(ledger, payload.lease_id) ?? DEFAULT_MAX_OUTPUT_TOKENS : null, cell_exit_code: code,
-      ...(payload.timeout_hours !== undefined ? { timeout_hours: payload.timeout_hours, timed_out: timedOut } : {}),
+      ...(payload.timeout_hours !== undefined ? { timeout_hours: payload.timeout_hours, timed_out: timedOut } : {}), ...(stoppedBy ? { stopped_by: stoppedBy } : {}),
       ...(payload.row_pull_every ? { checkpoint_rows: checkpointRows } : {}), ...(realization ? { realization_id: realization.realization_id, realization_status: realization.status } : {}),
-      ...(payload.restore ? { restored_from: payload.restore.realization_id } : {}) }, null, 2) + '\n');
+      ...(payload.restore ? { restored_from: restored, ...(restored ? {} : { resumed_from_checkpoint: true }) } : {}) }, null, 2) + '\n');
   }
   return code ?? 1;
 }
 
 /**
- * The launcher's executor: runs ubi-runner, stops it half an hour after the
- * cell's timeout (its trap destroys the VM), and pulls the VM's checkpoint and
- * realization every pull interval so a lost VM costs at most one interval.
+ * The launcher's executor: runs ubi-runner, stops it BACKSTOP_HOURS after the
+ * cell's timeout (its exit handler stops the command and pulls before it
+ * destroys the VM), and pulls the VM's checkpoint and realization every pull
+ * interval so a lost VM costs at most one interval.
  */
+export const BACKSTOP_HOURS = 4;
 export function ubiRunner(campaign?: Campaign): Runner {
   return async (argv, ctx) => {
     const p = Bun.spawn(argv, { stdout: 'inherit', stderr: 'inherit', env: process.env });
     const timers: Array<ReturnType<typeof setTimeout>> = [];
-    if (ctx.timeoutMs) timers.push(setTimeout(() => { process.stderr.write(`[shootout-cell] ${ctx.lease.lease_id} passed its timeout; stopping the VM run\n`); p.kill('SIGTERM'); }, ctx.timeoutMs + 30 * 60_000));
+    // The VM enforces the cell's timeout itself (from the cell's start); this backstop allows for VM setup and the
+    // snapshot, and its SIGTERM makes ubi-runner stop the command and pull its output before the VM is destroyed (A22).
+    if (ctx.timeoutMs) timers.push(setTimeout(() => { process.stderr.write(`[shootout-cell] ${ctx.lease.lease_id} passed its timeout plus ${BACKSTOP_HOURS} h; ubi-runner stops the command, pulls its output, then destroys the VM\n`); p.kill('SIGTERM'); }, ctx.timeoutMs + BACKSTOP_HOURS * 3_600_000));
     let pulling = false;
     if (ctx.vm && ctx.pullEveryMs) {
       timers.push(setInterval(async () => {
@@ -953,6 +996,12 @@ if (import.meta.main) {
     const finishLaunch = (l: LeaseState) => {
       print(l);
       if (!failed(l)) process.exit(0);
+      // A22: exit 4 is a cell (or a shard, on its own share) that ran and left gaps, not a failed run.
+      if (!l.timed_out && l.status === 'settled' && l.cell_exit_code === 4) throw refuse({ code: 'CELL_PARTIAL', partial: true,
+        message: `cell ${l.cell} lease ${l.lease_id} settled with gaps in its share (exit 4); its rows, answers and judgments are kept`,
+        why: 'a shard is complete when every question of its own conversations has its rows, answers and canonical judgments; resume answers only what is missing',
+        fix: { next: 'run', argv: ['bun', 'eval/runner/shootout-cell.ts', 'resume', '--campaign', manifest, '--state', state, '--cell', l.cell], verify: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', manifest, '--state', state] },
+        state: { lease: l.lease_id, status: l.status, exit_code: l.exit_code ?? null, cell_exit_code: 4 } });
       throw refuse({ code: l.timed_out ? 'CELL_TIMEOUT' : 'CELL_FAILED', message: `cell ${l.cell} lease ${l.lease_id} ${l.timed_out ? 'hit its timeout' : `ended ${l.status} with exit ${l.cell_exit_code ?? l.exit_code ?? 'unknown'}`}`,
         why: 'a cell that did not finish cleanly is not a counted result; its rows stay pulled for diagnosis and resume',
         fix: { next: 'run', argv: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', manifest, '--state', state], verify: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', manifest, '--state', state] },
@@ -965,7 +1014,12 @@ if (import.meta.main) {
       if (!l) throw new Error(`cell ${one('--cell')} has no reserved lease`);
       print({ lease: l.lease_id, argv: c.launchArgv(l, { vm: c.q1 ? c.vmName(l) : null }) });
     } else if (cmd === 'launch') finishLaunch(await c.launch(one('--cell') ?? '', ubiRunner(c)));
-    else if (cmd === 'resume') { const r = await c.resume(one('--cell') ?? '', ubiRunner(c)); print(r); finishLaunch(r.lease); }
+    else if (cmd === 'resume') {
+      const fromManifest = one('--from-campaign'), fromState = one('--from-state');
+      if (!!fromManifest !== !!fromState) throw new Error('resume: --from-campaign and --from-state go together (the earlier campaign whose leases hold the cell\'s run)');
+      const r = await c.resume(one('--cell') ?? '', ubiRunner(c), fromManifest ? { from: new Campaign(fromManifest, resolve(fromState!)) } : {});
+      print(r); finishLaunch(r.lease);
+    }
     else if (cmd === 'settle') print(c.settle(one('--lease') ?? ''));
     else if (cmd === 'abandon') print(c.abandon(one('--lease') ?? '', one('--reason') ?? '', argv.includes('--unstarted') ? { log: one('--log') ?? '' } : undefined));
     else if (cmd === 'status') print(c.status());

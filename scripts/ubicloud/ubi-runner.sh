@@ -11,7 +11,11 @@
 # Creates a VM (standard-16 by default), streams the checkout to it (tracked +
 # untracked-unignored files + .git, so uncommitted edits are included), runs an
 # optional setup script and the command, copies requested artifacts back, and
-# destroys the VM on every exit path. Exits with the command's status.
+# destroys the VM on every exit path. Exits with the command's status. The command runs detached on the VM
+# (setsid/nohup, log and exit status in files there) and this side follows its log over short ssh calls, so a
+# dropped session is retried instead of killing the command; an exit before the command ended (a signal, a
+# timeout) stops the command and pulls its output before the VM is destroyed. A VM unreachable for
+# UBI_FOLLOW_LOST_SECONDS is left running (exit 255) for a reattach watcher.
 # Needs only bash, curl, python3, ssh, ssh-keygen, and tar locally, so it works
 # from dev boxes, containers, and cloud sandboxes.
 #
@@ -43,7 +47,13 @@ API_TIMEOUT="${UBI_API_TIMEOUT:-120}"
 CREATE_GRACE="${UBI_CREATE_GRACE:-180}"
 DOWN_TIMEOUT="${UBI_DOWN_TIMEOUT:-900}"
 POLL="${UBI_POLL_SECONDS:-5}"
+FOLLOW_EVERY="${UBI_FOLLOW_SECONDS:-15}"
+FOLLOW_LOST="${UBI_FOLLOW_LOST_SECONDS:-3600}"
+STOP_WAIT="${UBI_STOP_WAIT_SECONDS:-600}"
+PULL_TIMEOUT="${UBI_PULL_TIMEOUT_SECONDS:-1800}"
 PREFIX="ubirun"
+# macOS tar would otherwise add AppleDouble (._*) entries for extended attributes to every archive it writes.
+export COPYFILE_DISABLE=1
 
 die() { echo "ubi-runner: $*" >&2; exit 1; }
 log() { echo "ubi-runner: $*" >&2; }
@@ -410,15 +420,113 @@ pull_lock() {
 # Pulls of one VM never overlap: a periodic pull and the run's final pull take
 # the VM's pull lock in turn, and a periodic pull that comes after the final
 # pull has begun is skipped instead of racing it into the same directory.
+#
+# A pull extracts into a temporary directory beside LOCAL_DIR and moves each entry into place only after the whole
+# stream arrived and both tar ends exited 0, so a pull cut short (a VM destroyed mid-transfer, a dropped session)
+# leaves the previous copy untouched instead of truncated files.
 cmd_pull() {
-  local name=$1 from=$2 to=$3 dir rc=0
+  local name=$1 from=$2 to=$3 dir rc=0 tmp e
   dir=$(state_dir "$name")
   [ -f "$dir/env" ] || die "no local state for VM '$name' (created on another machine?)"
   pull_lock "$dir" || { log "pull of $from skipped: the run's final pull of $name has begun"; return 0; }
   mkdir -p "$to"
-  remote "$name" "cd $(printf %q "$(dirname "$from")") && tar -czf - $(basename "$from")" | tar -xzf - -C "$to" || rc=$?
-  rm -rf "$dir/pull.lock"
+  tmp=$(mktemp -d "$to/.pull-XXXXXX")
+  ( set -o pipefail; remote "$name" "cd $(printf %q "$(dirname "$from")") && tar -czf - $(basename "$from")" | tar -xzf - -C "$tmp" ) || rc=$?
+  if [ "$rc" = 0 ]; then
+    for e in "$tmp"/* "$tmp"/.[!.]*; do
+      [ -e "$e" ] || [ -L "$e" ] || continue
+      rm -rf "$to/.old-$(basename "$e")"
+      [ ! -e "$to/$(basename "$e")" ] || mv "$to/$(basename "$e")" "$to/.old-$(basename "$e")"
+      mv "$e" "$to/$(basename "$e")"
+      rm -rf "$to/.old-$(basename "$e")"
+    done
+  else
+    log "pull of $from from $name failed (exit $rc); kept the previous copy in $to"
+  fi
+  rm -rf "$tmp" "$dir/pull.lock"
   return "$rc"
+}
+
+# detach NAME DEST COMMAND: start COMMAND on the VM in DEST under setsid/nohup, sourcing ~/.ubirun-env, with its
+# output in ~/.ubirun-cmd.log and its exit status written to ~/.ubirun-cmd.rc when it ends. A dropped ssh session
+# never reaches it: it has no controlling terminal and no pipe back to this side.
+cmd_detach() {
+  local name=$1 dest=$2 cmd=$3 script
+  # The wrapper forwards SIGTERM to the command and still records its status when the command ends.
+  script='echo $$ > ~/.ubirun-cmd.pid; . ~/.ubirun-env; bash -lc "$1" & c=$!; trap "kill -TERM $c 2>/dev/null" TERM; while :; do wait $c; rc=$?; kill -0 $c 2>/dev/null || break; done; echo $rc > ~/.ubirun-cmd.rc.tmp; mv ~/.ubirun-cmd.rc.tmp ~/.ubirun-cmd.rc'
+  remote "$name" "rm -f ~/.ubirun-cmd.rc ~/.ubirun-cmd.rc.tmp ~/.ubirun-cmd.log ~/.ubirun-cmd.pid && cd $(printf %q "$dest") && (setsid nohup bash -c $(printf %q "$script") ubirun-cmd $(printf %q "$cmd") > ~/.ubirun-cmd.log 2>&1 < /dev/null &)"
+}
+
+# follow NAME: copy the detached command's log to stdout as it grows and return its exit status. Each check is its
+# own short ssh call; a failed call is retried every UBI_FOLLOW_SECONDS, and only after UBI_FOLLOW_LOST_SECONDS
+# without one success does follow give up with status 255 (the command may still be running on the VM).
+cmd_follow() {
+  local name=$1 off=0 rc="" n tmp miss=0 now
+  tmp=$(mktemp)
+  while :; do
+    if remote "$name" "tail -c +$((off + 1)) ~/.ubirun-cmd.log 2>/dev/null; true" >"$tmp" 2>/dev/null; then
+      n=$(wc -c <"$tmp" | tr -d ' ')
+      cat "$tmp"
+      off=$((off + n))
+      miss=0
+      [ -z "$rc" ] || break
+      rc=$(remote "$name" "cat ~/.ubirun-cmd.rc 2>/dev/null; true" 2>/dev/null | tr -dc '0-9') || rc=""
+      [ -n "$rc" ] || sleep "$FOLLOW_EVERY"
+      continue
+    fi
+    now=$(date +%s)
+    [ "$miss" != 0 ] || { miss=$now; log "lost the ssh session to $name; retrying every ${FOLLOW_EVERY}s (the command keeps running there)"; }
+    if (( now - miss >= FOLLOW_LOST )); then rm -f "$tmp"; log "no ssh session to $name for ${FOLLOW_LOST}s"; return 255; fi
+    sleep "$FOLLOW_EVERY"
+  done
+  rm -f "$tmp"
+  return "$rc"
+}
+
+# stop_detached NAME: ask the detached command to stop (SIGTERM through its wrapper) and wait up to
+# UBI_STOP_WAIT_SECONDS for its exit status, so its own shutdown (final checkpoint, lease summary) runs first.
+stop_detached() {
+  local name=$1 waited=0
+  remote "$name" "[ -f ~/.ubirun-cmd.rc ] || kill -TERM \$(cat ~/.ubirun-cmd.pid 2>/dev/null) 2>/dev/null || true" >/dev/null 2>&1 || return 0
+  while (( waited < STOP_WAIT )); do
+    remote "$name" "[ -f ~/.ubirun-cmd.rc ]" >/dev/null 2>&1 && return 0
+    sleep "$FOLLOW_EVERY"; waited=$((waited + FOLLOW_EVERY))
+  done
+  log "the command on $name did not stop within ${STOP_WAIT}s"
+}
+
+# with_timeout SECONDS CMD...: run CMD (a function or program), stopping it after SECONDS (macOS has no timeout(1)).
+with_timeout() {
+  local t=$1 pid w rc=0; shift
+  "$@" & pid=$!
+  ( sleep "$t"; kill -TERM "$pid" 2>/dev/null ) & w=$!
+  wait "$pid" || rc=$?
+  kill "$w" 2>/dev/null || true; wait "$w" 2>/dev/null || true
+  return "$rc"
+}
+
+# final_pulls: the run's --pull list, each under the VM's pull lock and at most UBI_PULL_TIMEOUT_SECONDS.
+final_pulls() {
+  local p
+  if [ ${#RUN_PULLS[@]} -gt 0 ]; then
+    touch "$(state_dir "$RUN_VM")/final-pull"
+    for p in "${RUN_PULLS[@]}"; do
+      UBI_FINAL_PULL=1 with_timeout "$PULL_TIMEOUT" cmd_pull "$RUN_VM" "${p%%:*}" "${p#*:}" || log "pull failed: $p"
+    done
+  fi
+  RUN_PULLED=1
+}
+
+# run_exit: the run's EXIT handler. When the command had started and its final pulls had not, it stops the command
+# and pulls first (a timeout, a signal or an error still brings the rows back), then destroys the VM.
+run_exit() {
+  trap "" INT TERM HUP QUIT
+  if [ "${RUN_STARTED:-0}" = 1 ] && [ "${RUN_PULLED:-0}" = 0 ] && [ "${RUN_LOST:-0}" = 0 ]; then
+    log "stopping the command on $RUN_VM and pulling its output before teardown"
+    stop_detached "$RUN_VM" || true
+    final_pulls || true
+  fi
+  [ "${RUN_KEEP:-0}" = 1 ] || cmd_down "$RUN_VM" || log "WARNING: failed to destroy $RUN_VM; run: $0 down $RUN_VM"
 }
 
 cmd_run() {
@@ -439,6 +547,7 @@ cmd_run() {
     esac
   done
   [ $# -gt 0 ] || die "run: missing command after --"
+  RUN_PULLS=(${pulls[@]+"${pulls[@]}"}) RUN_KEEP=$keep RUN_STARTED=0 RUN_PULLED=0 RUN_LOST=0
   [ -z "$setup" ] || [ -f "$setup" ] || die "setup script not found: $setup"
   src=$(cd "$src" && pwd)
   [ -n "$dest" ] || dest="work/$(basename "$src")"
@@ -451,13 +560,10 @@ cmd_run() {
   RUN_VM=$name
   # Armed before the create request: an interrupted `up` still destroys its VM.
   # A second signal must not cut teardown short, so the EXIT handler ignores them.
-  trap 'trap "" INT TERM HUP QUIT; cmd_down "$RUN_VM" || log "WARNING: failed to destroy $RUN_VM; run: $0 down $RUN_VM"' EXIT
+  trap run_exit EXIT
   trap 'exit 130' INT TERM HUP QUIT
   cmd_up "${up_args[@]}" >/dev/null
-  if [ "$keep" = 1 ]; then
-    trap - EXIT
-    log "--keep: leaving $name running; destroy with: $0 down $name"
-  fi
+  [ "$keep" = 0 ] || log "--keep: leaving $name running; destroy with: $0 down $name"
 
   local e
   for e in ${envs[@]+"${envs[@]}"}; do printf 'export %s=%q\n' "${e%%=*}" "${e#*=}"; done \
@@ -478,14 +584,18 @@ cmd_run() {
 
   local start rc=0
   start=$(date +%s)
-  log "running on $name: $*"
-  remote "$name" "cd $qdest && . ~/.ubirun-env && bash -lc $(printf %q "$*")" || rc=$?
+  log "running on $name (detached; output follows): $*"
+  cmd_detach "$name" "$dest" "$*" || die "could not start the command on $name"
+  RUN_STARTED=1
+  cmd_follow "$name" || rc=$?
+  if [ "$rc" = 255 ]; then
+    RUN_LOST=1 RUN_KEEP=1
+    log "lost $name; it is left running for a reattach watcher (eval/runner/q1/reattach.ts) or: $0 down $name"
+    return 255
+  fi
   log "command exited $rc after $(( $(date +%s) - start ))s"
 
-  [ ${#pulls[@]} -eq 0 ] || touch "$(state_dir "$name")/final-pull"
-  for p in ${pulls[@]+"${pulls[@]}"}; do
-    UBI_FINAL_PULL=1 cmd_pull "$name" "${p%%:*}" "${p#*:}" || log "pull failed: $p"
-  done
+  final_pulls
   [ "$keep" = 0 ] || rm -f "$(state_dir "$name")/final-pull"
   return "$rc"
 }
@@ -508,7 +618,14 @@ usage: ubi-runner.sh <command> [args]
                          replace REMOTE_DIR with LOCAL_DIR (or the listed relative paths), mode 0700
   pull NAME REMOTE_GLOB LOCAL_DIR
                          copy matching remote entries into LOCAL_DIR; waits for another
-                         pull of NAME, and is skipped once a run's final pull has begun
+                         pull of NAME, and is skipped once a run's final pull has begun;
+                         entries are replaced only after the whole transfer arrived
+  detach NAME DEST COMMAND
+                         start COMMAND on the VM under setsid/nohup (log ~/.ubirun-cmd.log,
+                         exit status ~/.ubirun-cmd.rc); a dropped session never reaches it
+  follow NAME            print the detached command's log as it grows; exit with its status
+                         (255 after UBI_FOLLOW_LOST_SECONDS without an ssh session)
+  stop NAME              SIGTERM the detached command and wait for its exit status
   down NAME [-l LOC]     destroy the VM; returns once it is confirmed gone or never existed
   list [--mine]          list all VMs in the project, or only this owner's
   usage                  VMs and vCPUs per owner across the project
@@ -543,6 +660,9 @@ case $cmd in
   unpack) cmd_unpack "$@" ;;
   push) cmd_push "$@" ;;
   pull) cmd_pull "$@" ;;
+  detach) cmd_detach "$@" ;;
+  follow) cmd_follow "$@" ;;
+  stop) stop_detached "$@" ;;
   down) cmd_down "$@" ;;
   list) cmd_list "$@" ;;
   usage) cmd_usage ;;

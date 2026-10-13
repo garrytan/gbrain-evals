@@ -233,7 +233,7 @@ export const ASSUMPTIONS = {
   /** gbrain `synthesize` answers with its configured default model (claude-opus-4-7 at gbrain's pinned price) over its default delivery. */
   synthesize: { model: 'anthropic:claude-opus-4-7', input: 34_700, output: 850, price: { input: 5, output: 25 } },
   /** Ingest wall time per million tokens (hours) by `system:configuration` where the dev smokes measured it, else by runner, for the schedule and the /finish wait; a shim cell on S1 runs one conversation per VM. */
-  hours_per_mtok: { shim: 4, 'in-process': 0.05, 'ext-extract-first:recipe': 110, 'ext-extract-first:common': 1.74, 'ext-memory-bank:recipe': 2.32, 'ext-graph-pipeline:recipe': 5.6, 'ext-graph-pipeline:recipe:beam': 4.93, 'ext-graph-pipeline:common:beam': 3.09,
+  hours_per_mtok: { shim: 4, 'in-process': 0.05, 'ext-extract-first:recipe': 110, 'ext-extract-first:common': 1.74, 'ext-memory-bank:recipe': 2.32, 'ext-graph-pipeline:recipe': 5.6, 'ext-graph-pipeline:recipe:beam': 4.93, 'ext-graph-pipeline:common:beam': 3.56,
     'ext-temporal-graph:common': 3.53, 'ext-temporal-graph:recipe': 6.6, 'ext-markdown-kb:recipe': 0.53, 'ext-verbatim-session:recipe': 0.15, 'gbrain-defaults:shipped-defaults': 0.9 } as Record<string, number>,
   vcpu: { shim: 8, 'in-process': 8 },
 };
@@ -339,10 +339,16 @@ const familyOf = (b: string): 'beam' | 'locomo' | 'lme' => b.startsWith('beam') 
 
 interface ArmSpec extends Partial<ArmDefinition> { id: string; mode: ArmMode }
 
-/** Leases set apart from the estimate per shard, for cells wave 1 measured running past their leases (A20). */
+/** Leases set apart from the estimate per shard, for cells wave 1 measured running past their leases (A20, A22). */
 export const LEASE_OVERRIDES: Record<string, { usd: number; basis: string }> = {
   's1.ext-temporal-graph.common': { usd: 350, basis: 'A20: wave 1 projects $305 a shard; the lease holds 15% over it, since a stop mid-ingest wastes the shard' },
   's1.gbrain-defaults.shipped-defaults': { usd: 27, basis: 'A20: every wave-1 shard used up its $18.17 lease while reading' },
+  's1.ext-graph-pipeline.common': { usd: 65, basis: 'A22: nine wave-1 shards used up their $50.70 leases; ingest measured $3.67 to $4.22 per million tokens across a BEAM-1M dev conversation puts a shard at $53.34 at the highest rate, and the lease holds about 22% over it' },
+};
+
+/** Expected hours set apart from the ingest-rate schedule, for units whose question phase dominates their wall time (A22). */
+export const HOURS_OVERRIDES: Record<string, { hours: number; basis: string }> = {
+  's1.baseline-hybrid.baseline': { hours: 9, basis: 'A22: concurrent embedding ingests S1 in about 0.9 hours; the sequential question phase (2,200 answers, canonical and frontier judging) takes about 8' },
 };
 
 function makeCell(set: SetId, system: string, configuration: string, armSpecs: ArmSpec[], extra: { ingest_replicate?: number } = {}): CellDefinition {
@@ -367,7 +373,7 @@ function makeCell(set: SetId, system: string, configuration: string, armSpecs: A
   const hours = Math.max(1, Math.ceil(perMtok * s.corpus_tokens / 1e6 / shards));
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
     ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}`, conversations: set === 'S4' || set === 'S4-slice' || set === 'S5' ? 50 : null },
-    ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), shards, expected_hours: Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
+    ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), shards, expected_hours: HOURS_OVERRIDES[id]?.hours ?? Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
   return { ...base, estimate: estimateCell(base), ...(LEASE_OVERRIDES[id] ? { lease: LEASE_OVERRIDES[id] } : {}) };
 }
 

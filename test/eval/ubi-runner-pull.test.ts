@@ -1,7 +1,9 @@
 /**
  * ubi-runner pulls of one VM never overlap: a periodic pull (the campaign
  * launcher's checkpoint pull) and the run's final pull take the VM's pull lock
- * in turn, and a periodic pull after the final pull has begun is skipped.
+ * in turn, and a periodic pull after the final pull has begun is skipped. A
+ * pull cut short keeps the previous copy (A22). Detached commands (A22) survive
+ * a dropped session, follow retries, and stop forwards SIGTERM.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -73,4 +75,94 @@ describe('ubi-runner pull lock', () => {
     expect(await p.exited).toBe(0);
     expect(v.transfers().length).toBe(1);
   }, 20_000);
+});
+
+/** A VM whose "ssh" runs the remote command locally (HOME is the VM home), failing while `drop` exists. */
+function local(opts: { truncate?: number } = {}) {
+  const root = join(tmp, `l${++n}`), bin = join(root, 'bin'), state = join(root, 'state'), home = join(root, 'home'), name = `ubirun-test-1791700000-l${n}`;
+  for (const d of [bin, join(state, name), home]) mkdirSync(d, { recursive: true });
+  writeFileSync(join(state, name, 'env'), 'IP=127.0.0.1\nLOCATION=eu-central-h1\n');
+  const drop = join(root, 'drop');
+  const cut = opts.truncate ? ` | head -c ${opts.truncate}` : '';
+  writeFileSync(join(bin, 'ssh'), `#!/usr/bin/env bash\nfor a; do last=$a; done\n[ -e ${drop} ] && exit 255\ncd ${home} && HOME=${home} bash -c "$last"${cut}\n`);
+  chmodSync(join(bin, 'ssh'), 0o755);
+  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, UBI_RUNNER_STATE: state, UBI_OWNER: 'test', UBI_FOLLOW_SECONDS: '1', UBI_STOP_WAIT_SECONDS: '10' };
+  const ubi = (args: string[], extra: Record<string, string> = {}) => Bun.spawn(['bash', RUNNER, ...args], { env: { ...env, ...extra }, stdout: 'pipe', stderr: 'pipe' });
+  return { root, home, name, drop, ubi };
+}
+
+describe('ubi-runner atomic pulls', () => {
+  test('a pull cut short keeps the previous copy and leaves no temporary directory', async () => {
+    const v = local({ truncate: 60 });
+    mkdirSync(join(v.home, 'out', 'checkpoint'), { recursive: true });
+    writeFileSync(join(v.home, 'out', 'checkpoint', 'rows.ndjson'), 'new\n'.repeat(5000));
+    const to = join(v.root, 'pulled');
+    mkdirSync(join(to, 'checkpoint'), { recursive: true });
+    writeFileSync(join(to, 'checkpoint', 'rows.ndjson'), 'old\n');
+    const p = v.ubi(['pull', v.name, join(v.home, 'out', 'checkpoint'), to]);
+    expect(await p.exited).not.toBe(0);
+    expect(await new Response(p.stderr).text()).toContain('kept the previous copy');
+    expect(readFileSync(join(to, 'checkpoint', 'rows.ndjson'), 'utf8')).toBe('old\n');
+    expect(require('node:fs').readdirSync(to)).toEqual(['checkpoint']);
+  }, 20_000);
+
+  test('a complete pull replaces the entry', async () => {
+    const v = local();
+    mkdirSync(join(v.home, 'out', 'checkpoint'), { recursive: true });
+    writeFileSync(join(v.home, 'out', 'checkpoint', 'rows.ndjson'), 'new\n');
+    const to = join(v.root, 'pulled');
+    mkdirSync(join(to, 'checkpoint'), { recursive: true });
+    writeFileSync(join(to, 'checkpoint', 'stale.ndjson'), 'old\n');
+    expect(await v.ubi(['pull', v.name, join(v.home, 'out', 'checkpoint'), to]).exited).toBe(0);
+    expect(readFileSync(join(to, 'checkpoint', 'rows.ndjson'), 'utf8')).toBe('new\n');
+    expect(existsSync(join(to, 'checkpoint', 'stale.ndjson'))).toBe(false);
+    expect(require('node:fs').readdirSync(to)).toEqual(['checkpoint']);
+  }, 20_000);
+});
+
+describe('ubi-runner detached commands', () => {
+  test('follow streams the log and returns the command status', async () => {
+    const v = local();
+    writeFileSync(join(v.home, '.ubirun-env'), 'export GREETING=hello\n');
+    expect(await v.ubi(['detach', v.name, v.home, 'echo $GREETING; sleep 2; echo bye; exit 3']).exited).toBe(0);
+    const f = v.ubi(['follow', v.name]);
+    expect(await f.exited).toBe(3);
+    expect(await new Response(f.stdout).text()).toBe('hello\nbye\n');
+  }, 30_000);
+
+  test('a dropped session is retried and the command keeps running', async () => {
+    const v = local();
+    writeFileSync(join(v.home, '.ubirun-env'), '');
+    expect(await v.ubi(['detach', v.name, v.home, 'for i in 1 2 3 4 5 6; do echo $i; sleep 1; done; exit 0']).exited).toBe(0);
+    const f = v.ubi(['follow', v.name]);
+    await Bun.sleep(1500);
+    writeFileSync(v.drop, '');
+    await Bun.sleep(3000);
+    rmSync(v.drop);
+    expect(await f.exited).toBe(0);
+    expect(await new Response(f.stdout).text()).toBe('1\n2\n3\n4\n5\n6\n');
+    expect(await new Response(f.stderr).text()).toContain('lost the ssh session');
+  }, 30_000);
+
+  test('follow gives up with 255 after the lost window, and the command still finishes on the VM', async () => {
+    const v = local();
+    writeFileSync(join(v.home, '.ubirun-env'), '');
+    expect(await v.ubi(['detach', v.name, v.home, 'sleep 4; echo done; exit 5']).exited).toBe(0);
+    writeFileSync(v.drop, '');
+    const f = v.ubi(['follow', v.name], { UBI_FOLLOW_LOST_SECONDS: '2' });
+    expect(await f.exited).toBe(255);
+    await Bun.sleep(4000);
+    expect(readFileSync(join(v.home, '.ubirun-cmd.rc'), 'utf8').trim()).toBe('5');
+    expect(readFileSync(join(v.home, '.ubirun-cmd.log'), 'utf8')).toBe('done\n');
+  }, 30_000);
+
+  test('stop forwards SIGTERM to the command, which records its own status', async () => {
+    const v = local();
+    writeFileSync(join(v.home, '.ubirun-env'), '');
+    expect(await v.ubi(['detach', v.name, v.home, 'trap "echo stopping; exit 7" TERM; sleep 60 & wait']).exited).toBe(0);
+    await Bun.sleep(1000);
+    expect(await v.ubi(['stop', v.name]).exited).toBe(0);
+    expect(readFileSync(join(v.home, '.ubirun-cmd.rc'), 'utf8').trim()).toBe('7');
+    expect(readFileSync(join(v.home, '.ubirun-cmd.log'), 'utf8')).toBe('stopping\n');
+  }, 30_000);
 });

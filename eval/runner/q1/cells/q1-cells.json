@@ -176,7 +176,7 @@
       "ext-memory-bank:recipe": 2.32,
       "ext-graph-pipeline:recipe": 5.6,
       "ext-graph-pipeline:recipe:beam": 4.93,
-      "ext-graph-pipeline:common:beam": 3.09,
+      "ext-graph-pipeline:common:beam": 3.56,
       "ext-temporal-graph:common": 3.53,
       "ext-temporal-graph:recipe": 6.6,
       "ext-markdown-kb:recipe": 0.53,
@@ -1126,7 +1126,7 @@
         "conversations": null
       },
       "shards": 10,
-      "expected_hours": 34,
+      "expected_hours": 40,
       "launch": {
         "env": {},
         "config": "common"
@@ -1273,6 +1273,10 @@
           "judges": 3.01,
           "readers": 50.48
         }
+      },
+      "lease": {
+        "usd": 65,
+        "basis": "A22: nine wave-1 shards used up their $50.70 leases; ingest measured $3.67 to $4.22 per million tokens across a BEAM-1M dev conversation puts a shard at $53.34 at the highest rate, and the lease holds about 22% over it"
       }
     },
     {
@@ -1979,7 +1983,7 @@
         "conversations": null
       },
       "shards": 1,
-      "expected_hours": 6,
+      "expected_hours": 9,
       "arms": [
         {
           "id": "component-b8000",
@@ -4855,7 +4859,7 @@
         "conversations": null
       },
       "shards": 1,
-      "expected_hours": 7,
+      "expected_hours": 8,
       "launch": {
         "env": {},
         "config": "common"
@@ -9399,7 +9403,7 @@
         "1m-16"
       ],
       "shards": 1,
-      "expected_hours": 3,
+      "expected_hours": 4,
       "launch": {
         "env": {},
         "config": "common"

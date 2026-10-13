@@ -1132,13 +1132,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1149,7 +1149,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -1159,13 +1159,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1176,7 +1176,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -1186,13 +1186,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1203,7 +1203,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -1213,13 +1213,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1230,7 +1230,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -1240,13 +1240,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1257,7 +1257,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -1267,13 +1267,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1284,7 +1284,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -1294,13 +1294,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1311,7 +1311,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -1321,13 +1321,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1338,7 +1338,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -1348,13 +1348,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1365,7 +1365,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -1375,13 +1375,13 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-10m",
       "config": "common",
-      "lease_usd": 50.7,
+      "lease_usd": 65,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-graph-pipeline.common --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-10m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 53,
+      "timeout_hours": 62,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -1392,7 +1392,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 34,
+      "expected_hours": 40,
       "wave": 1,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -2243,7 +2243,7 @@
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 11,
+      "timeout_hours": 16,
       "block": "T1",
       "sealed": true,
       "providers": [
@@ -2254,7 +2254,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 6,
+      "expected_hours": 9,
       "wave": 1
     },
     {
@@ -3039,7 +3039,7 @@
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 13,
+      "timeout_hours": 14,
       "block": "T2-S2a",
       "sealed": true,
       "providers": [
@@ -3050,7 +3050,7 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 7,
+      "expected_hours": 8,
       "wave": 5,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
@@ -3930,6 +3930,7 @@
     "eval/runner/lifecycle/builds.ts",
     "eval/runner/longmemeval-cache.ts",
     "eval/runner/receipt.ts",
+    "scripts/ubicloud/ubi-runner.sh",
     "eval/runner/situation-recall-provenance.ts",
     "eval/generators/model-ladder-gen.ts",
     "eval/systems/PROTOCOL.md",

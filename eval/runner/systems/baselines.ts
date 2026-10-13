@@ -29,7 +29,10 @@
  *                 dimensions, fused by reciprocal rank (k = 60). It reuses the
  *                 Cat 40 `pg` arm's table and embedder (cat40/pg-arm.ts), which
  *                 sends embedding calls to OPENAI_BASE_URL, so a cell meters
- *                 them through its lease proxy. No gbrain code runs.
+ *                 them through its lease proxy. Sessions are buffered and
+ *                 embedded 16 requests at a time, still one session per
+ *                 request, and every write ends with a CHECKPOINT (see
+ *                 `write`). No gbrain code runs.
  */
 import { createHash } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
@@ -100,13 +103,24 @@ export class PlainHybridSystem implements MemorySystem {
   static readonly POLICIES = { 'vendor-default': { k: 10 }, 'fixed-evidence': { k: 30 } } as const;
   static readonly POOL = 50;
   static readonly RRF_K = 60;
+  /** Sessions buffered per namespace before they are embedded and written. */
+  static readonly FLUSH_AT = 256;
+  /**
+   * Embedding requests in flight while a buffer is written. Each request still carries one session: the embeddings
+   * endpoint returns slightly different vectors for a text sent inside a multi-input batch, which reorders retrieval.
+   */
+  static readonly EMBED_CONCURRENCY = 16;
   private db: PGlite | null = null;
+  private pending = new Map<string, Array<{ src: string; body: string; event_time: string | null }>>();
+  private lost = new Map<string, number>();
+  private writes: Promise<unknown> = Promise.resolve();
   constructor(private embed: Embedder, private embedderId = `openai:${PG_EMBED_MODEL}@${PG_EMBED_DIMS}`) {}
 
   async capabilities() {
     return record('plain-hybrid', {
       configs: { common: { model_roles: { embedder: this.embedderId, dims: PG_EMBED_DIMS }, notes: 'Postgres full-text plus pgvector cosine, reciprocal-rank fusion; whole sessions; embedding input cut at 24,000 characters' } },
-      retrieval_policies: { 'vendor-default': { settings: { ...PlainHybridSystem.POLICIES['vendor-default'] } }, 'fixed-evidence': { settings: { ...PlainHybridSystem.POLICIES['fixed-evidence'] } } }, readiness: 'synchronous: a session is searchable once its row is written',
+      retrieval_policies: { 'vendor-default': { settings: { ...PlainHybridSystem.POLICIES['vendor-default'] } }, 'fixed-evidence': { settings: { ...PlainHybridSystem.POLICIES['fixed-evidence'] } } },
+      readiness: `synchronous: up to ${PlainHybridSystem.FLUSH_AT} sessions are buffered and embedded ${PlainHybridSystem.EMBED_CONCURRENCY} at a time, one per request; retrieve, delete and finish write every buffered session of the namespace first, so a session is searchable once ingest returns`,
     });
   }
 
@@ -119,21 +133,69 @@ export class PlainHybridSystem implements MemorySystem {
     return this.db = db;
   }
 
-  async reset(ns: string) { await (await this.open()).query('DELETE FROM sessions WHERE ns = $1', [ns]); }
+  /**
+   * Writes run one at a time and end with an explicit CHECKPOINT. PGlite 0.4.3 never returns from the checkpoint that
+   * Postgres requests itself once about 540 MB of WAL builds up (max_wal_size 1 GB): at BEAM-10M scale that froze the
+   * S1 ingest after about 21,500 sessions. Checkpointing after every write keeps the WAL far below that point.
+   */
+  private write<T>(fn: (db: PGlite) => Promise<T>): Promise<T> {
+    const run = this.writes.then(async () => {
+      const db = await this.open();
+      try { return await fn(db); } finally { await db.exec('CHECKPOINT'); }
+    });
+    this.writes = run.catch(() => {});
+    return run;
+  }
+
+  /** Embeds and upserts every buffered session of `ns` in arrival order; a later copy of a source replaces the earlier one, as upserting one at a time would. */
+  private flush(ns: string): Promise<void> {
+    if (!this.pending.get(ns)?.length) return this.writes.then(() => {});
+    return this.write(async db => {
+      const rows = [...new Map((this.pending.get(ns) ?? []).map(r => [r.src, r])).values()];
+      this.pending.delete(ns);
+      let written = 0, next = 0, failed = false;
+      try {
+        const vectors: number[][] = new Array(rows.length);
+        await Promise.all(Array.from({ length: Math.min(PlainHybridSystem.EMBED_CONCURRENCY, rows.length) }, async () => {
+          try { while (next < rows.length && !failed) { const i = next++; [vectors[i]] = await this.embed([rows[i].body]); } } catch (e) { failed = true; throw e; }
+        }));
+        for (const [i, r] of rows.entries()) {
+          await db.query(`INSERT INTO sessions (ns, src, body, event_time, tsv, embedding) VALUES ($1, $2, $3, $4, to_tsvector('english', $3), $5::vector)
+            ON CONFLICT (ns, src) DO UPDATE SET body = EXCLUDED.body, event_time = EXCLUDED.event_time, tsv = EXCLUDED.tsv, embedding = EXCLUDED.embedding`, [ns, r.src, r.body, r.event_time, lit(vectors[i])]);
+          written++;
+        }
+      } catch (e) {
+        this.lost.set(ns, (this.lost.get(ns) ?? 0) + rows.length - written);
+        throw e;
+      }
+    });
+  }
+
+  async reset(ns: string) {
+    this.pending.delete(ns);
+    this.lost.delete(ns);
+    await this.write(db => db.query('DELETE FROM sessions WHERE ns = $1', [ns]));
+  }
 
   async ingestSession(ns: string, s: SessionInput, event_time: string | null): Promise<IngestResult> {
-    const db = await this.open();
-    const body = sessionText(s);
-    const [v] = await this.embed([body]);
-    await db.query(`INSERT INTO sessions (ns, src, body, event_time, tsv, embedding) VALUES ($1, $2, $3, $4, to_tsvector('english', $3), $5::vector)
-      ON CONFLICT (ns, src) DO UPDATE SET body = EXCLUDED.body, event_time = EXCLUDED.event_time, tsv = EXCLUDED.tsv, embedding = EXCLUDED.embedding`, [ns, s.source_id, body, event_time, lit(v)]);
+    const queued = this.pending.get(ns) ?? [];
+    queued.push({ src: s.source_id, body: sessionText(s), event_time });
+    this.pending.set(ns, queued);
+    if (queued.length >= PlainHybridSystem.FLUSH_AT) await this.flush(ns);
     return { items_created: 1, warnings: [], errors: [], completeness: 'known' };
   }
 
-  async finishIngest(): Promise<FinishResult> { return { ready: true, waited_ms: 0, completeness: 'known' }; }
+  /** Writes what is still buffered. Sessions lost to a failed batch (its error went to the ingest call that sent it) make the namespace not ready. */
+  async finishIngest(ns: string, _timeoutS?: number): Promise<FinishResult> {
+    const t0 = performance.now();
+    await this.flush(ns);
+    const lost = this.lost.get(ns) ?? 0;
+    return { ready: lost === 0, waited_ms: Math.round(performance.now() - t0), completeness: lost ? 'degraded' : 'known', ...(lost ? { raw: { sessions_not_written: lost } } : {}) };
+  }
 
   async retrieve(ns: string, q: PublicQuestion, policy: RetrievalPolicy): Promise<RetrieveResult> {
     checkMode(policy);
+    await this.flush(ns);
     const db = await this.open();
     const k = Number(policy.settings?.k ?? PlainHybridSystem.POLICIES[policy.mode].k);
     const t0 = performance.now();
@@ -150,11 +212,12 @@ export class PlainHybridSystem implements MemorySystem {
   }
 
   async deleteSource(ns: string, src: string): Promise<DeleteResult> {
-    const r = await (await this.open()).query('DELETE FROM sessions WHERE ns = $1 AND src = $2', [ns, src]);
+    await this.flush(ns);
+    const r = await this.write(db => db.query('DELETE FROM sessions WHERE ns = $1 AND src = $2', [ns, src]));
     return { status: (r.affectedRows ?? 0) > 0 ? 'deleted' : 'partial', receipt: { rows: r.affectedRows ?? 0 } };
   }
 
-  async close() { await this.db?.close(); this.db = null; }
+  async close() { await this.writes; await this.db?.close(); this.db = null; this.pending.clear(); this.lost.clear(); }
 }
 
 // ─── True full context: reader windows, fit check, cached reading ───

@@ -12,6 +12,7 @@ import asyncio
 import json
 import os
 import re
+import signal
 import sys
 import threading
 import time
@@ -44,6 +45,7 @@ DESCRIPTIVE_KEYS = set(CAPABILITY["retrieval_notes"]["descriptive_keys"])
 LANE_KEYS = ("chunks_top_k", "entities_top_k", "facts_top_k", "max_edges_per_entity")
 ENTITY_HEADER = "## Relevant entities\n"
 PROXY_REFUSAL = re.compile(r"\b402\b|['\"]kind['\"]\s*:\s*['\"]budget['\"]")
+STOP_DRAIN_S = float(os.environ.get("SHIM_STOP_DRAIN_S", "300"))
 
 
 def render_session(session: dict[str, Any], session_number: int) -> list[str]:
@@ -61,6 +63,7 @@ class CogneeAdapter(Adapter):
         self.loop = asyncio.new_event_loop()
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
         self.lock = threading.Lock()
+        self.stopping = threading.Event()
         self.sources: dict[str, dict[str, str]] = {}
         self.session_counts: dict[str, int] = {}
         from cognee.low_level import setup
@@ -193,8 +196,47 @@ class CogneeAdapter(Adapter):
         self.sources.get(ns, {}).pop(str(self.data_id(ns, source_id)), None)
         return {"status": "deleted", "receipt": json.loads(json.dumps(receipt, default=str))}
 
+    async def _cancel_pending(self) -> list[str]:
+        tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        for t in tasks:
+            t.cancel()
+        if tasks:
+            await asyncio.wait(tasks, timeout=30)
+        return [getattr(t.get_coro(), "__qualname__", repr(t.get_coro())) for t in tasks]
+
+    def stop(self) -> None:
+        """SIGTERM (`docker compose stop`, `restart`, `down`): leave the stores closed and checkpointed, then exit.
+
+        The graph store (ladybug 0.19, in cognee's worker subprocess) cannot reopen after a kill during a write or a
+        checkpoint ("Checksum verification failed, the WAL file is corrupted"), and Python as PID 1 ignores SIGTERM
+        without a handler, so before this every stop ended in SIGKILL at the end of the grace period. The request in
+        flight may finish for up to SHIM_STOP_DRAIN_S; holding the request lock keeps new ones out; leftover tasks on
+        the loop are cancelled; every subprocess engine (graph and vector) is closed, which checkpoints the graph and
+        ends its worker. The compose stop_grace_period leaves room for all of it.
+        """
+        if self.stopping.is_set():
+            return
+        self.stopping.set()
+        start, report = time.time(), {}
+        try:
+            report["drained"] = self.lock.acquire(timeout=STOP_DRAIN_S)
+            try:
+                report["cancelled_tasks"] = asyncio.run_coroutine_threadsafe(self._cancel_pending(), self.loop).result(60)
+            except Exception as e:
+                report["cancel_error"] = f"{type(e).__name__}: {e}"
+            from cognee.infrastructure.databases.utils import closing_lru_cache
+            report["closed_engines"] = closing_lru_cache.evict_and_close_idle_all(0)
+            closing_lru_cache._CLOSE_THREAD_POOL.shutdown(wait=True)
+        except BaseException as e:
+            report["error"] = f"{type(e).__name__}: {e}"
+        finally:
+            report["seconds"] = round(time.time() - start, 3)
+            print(json.dumps({"shim": "cognee", "stopped": report}), flush=True)
+            os._exit(1 if "error" in report else 0)
+
 
 if __name__ == "__main__":
     adapter = CogneeAdapter()
+    signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=adapter.stop, daemon=True).start())
     print(json.dumps({"shim": "cognee", "config": CONFIG, "resolved": adapter.resolved_models(), "t": time.time()}), flush=True)
     serve(adapter)

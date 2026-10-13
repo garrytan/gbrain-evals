@@ -201,6 +201,14 @@ case "$cmd" in
     trap 'rc=$?; rm -rf "$work"; [ $rc -eq 0 ] || compose -f "$f" start >/dev/null 2>&1 || true' EXIT
     log "stopping $SYSTEM to snapshot its volumes"
     compose -f "$f" stop
+    # A container still running at the end of its stop_grace_period is SIGKILLed (exit 137); a store it was writing may
+    # not reopen (the graph pipeline's store, amendment A22). Name it, so a torn snapshot is traced to its stop.
+    compose -f "$f" ps -a --format json | python3 -c '
+import json, sys
+text = sys.stdin.read().strip()
+rows = json.loads(text) if text.startswith("[") else [json.loads(l) for l in text.splitlines() if l.strip()]
+for svc in [r.get("Service") for r in rows if r.get("ExitCode") == 137]:
+    print("bootstrap: warning:", svc, "was killed at the end of its stop grace period (exit 137); a store it was writing may not reopen", file=sys.stderr)' || true
     echo '{"system": "'"$SYSTEM"'", "volumes": [' > "$work/volumes.json"
     sep=""
     while read -r key vol; do

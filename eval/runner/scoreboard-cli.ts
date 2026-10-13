@@ -364,7 +364,7 @@ export async function runCells(a: Args, opts: { smoke?: boolean; runner?: Runner
   if (dry) {
     return { data: { dry_run: true, preflight: pre, launcher_host: hostname(), executor: local ? 'this machine (shootout-cell.ts remote)' : (() => { try { return resolveRunner(); } catch { return null; } })(),
       cells: cells.map(x => ({ cell: x.id, rows_to: join(resolve(state), 'results', x.id, '<lease>'), checkpoints_every_rows: isQ1(c.manifest) ? c.manifest.row_pull_every ?? 20 : null,
-        teardown: local ? 'the cell command stops its compose stack; nothing to destroy' : 'ubi-runner destroys the VM (and its disk) on every exit path; the launcher stops it half an hour after timeout_hours',
+        teardown: local ? 'the cell command stops its compose stack; nothing to destroy' : 'ubi-runner destroys the VM (and its disk) on every exit path, after stopping the command and pulling its output; the launcher stops it 4 hours after timeout_hours',
         timeout_hours: x.timeout_hours ?? null })) },
       text: `dry run from ${hostname()}: ${cells.length} cell(s); rows land under ${join(resolve(state), 'results')}; preflight ${pre.ok ? 'passes' : 'FAILS'}` };
   }

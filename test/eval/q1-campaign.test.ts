@@ -218,6 +218,37 @@ describe('on the VM', () => {
   }, 30_000);
 });
 
+describe('A22: the VM side under a stop and a checkpoint-only resume', () => {
+  test('a SIGTERM (ubi-runner stopping the detached command) stops the cell and still writes the final checkpoint and lease summary', async () => {
+    const out = join(tmp, 'sigterm-out');
+    const port = 24000 + Math.floor(Math.random() * 9000);
+    const command = `for i in $(seq 1 25); do echo '{"id":"q'$i'"}' >> "$SHOOTOUT_OUT/attempts.ndjson"; done; sleep 30`;
+    const run = runRemote({ lease_id: 'term-lease', lease_usd: 0.1, command, out, cell: 'kb-locomo', campaign_sha256: 'f'.repeat(64), row_pull_every: 20 }, { port, pollMs: 50 });
+    while (!existsSync(join(out, 'checkpoint', 'checkpoint.json'))) await Bun.sleep(25);
+    process.emit('SIGTERM' as never);
+    const code = await run;
+    expect(code).not.toBe(0);
+    expect(JSON.parse(readFileSync(join(out, 'lease-summary.json'), 'utf8'))).toMatchObject({ stopped_by: 'SIGTERM', checkpoint_rows: 25 });
+    expect(readFileSync(join(out, 'checkpoint', 'attempts.ndjson'), 'utf8').trim().split('\n')).toHaveLength(25);
+  }, 30_000);
+
+  test('a resume without a snapshot drops the old ingest-complete marker, so the new store is snapshotted after its own ingest, not at once', async () => {
+    const out = join(tmp, 'answers-out');
+    const staged = join(inRepo, `staged-${Date.now()}`);
+    mkdirSync(join(staged, 'checkpoint'), { recursive: true });
+    writeFileSync(join(staged, 'checkpoint', 'attempts.ndjson'), '{"id":"q1"}\n{"id":"q2"}\n');
+    writeFileSync(join(staged, 'checkpoint', 'ingest-complete'), '{}\n');
+    const port = 24000 + Math.floor(Math.random() * 9000);
+    const command = `[ ! -e "$SHOOTOUT_OUT/ingest-complete" ] && [ ! -e "$SHOOTOUT_OUT/realization" ] && sleep 0.3 && touch "$SHOOTOUT_OUT/ingest-complete" && sleep 0.5`;
+    const code = await runRemote({ lease_id: 'answers-lease', lease_usd: 0.1, command, out, cell: 'kb-locomo', campaign_sha256: 'f'.repeat(64), row_pull_every: 20,
+      snapshot_command: 'printf "new store" > "$SHOOTOUT_SNAPSHOT_DIR/store.tar"', restore: { realization_id: null, dir: rel(staged) } }, { port, pollMs: 50 });
+    expect(code).toBe(0);
+    expect(readFileSync(join(out, 'attempts.ndjson'), 'utf8')).toBe('{"id":"q1"}\n{"id":"q2"}\n');
+    expect(JSON.parse(readFileSync(join(out, 'realization', 'realization.json'), 'utf8'))).toMatchObject({ status: 'complete', trigger: 'ingest-complete' });
+    expect(JSON.parse(readFileSync(join(out, 'lease-summary.json'), 'utf8'))).toMatchObject({ restored_from: null, resumed_from_checkpoint: true });
+  }, 30_000);
+});
+
 describe('launch, realizations and resume on the launching host', () => {
   test('a pulled realization is recorded once its snapshot bytes verify; resume restores it and reruns only the query phase', async () => {
     const a = q1();
@@ -235,7 +266,7 @@ describe('launch, realizations and resume on the launching host', () => {
     expect(existsSync(staged!)).toBe(false);
   });
 
-  test('a tampered snapshot is not recorded; a cell without a restore command repeats the whole conversation', async () => {
+  test('a tampered snapshot is not recorded; without a usable snapshot the resume keeps the checkpoint and answers only what it lacks (A22)', async () => {
     const a = q1();
     const c = new Campaign(a.manifestPath, a.state);
     c.init();
@@ -243,9 +274,42 @@ describe('launch, realizations and resume on the launching host', () => {
     const tamper = vm(1, { realization: true });
     await c.launch('kb-locomo', async (argv, ctx) => { const code = await tamper(argv, ctx); writeFileSync(join(ctx.resultsDir, 'realization', 'snapshot', 'store.tar'), 'other bytes'); return code; });
     expect((c.status() as any).realizations).toEqual([]);
-    const r = await c.resume('kb-locomo', vm(1, { seen: argv => expect(payloadOf(argv).restore).toBeUndefined() }));
-    expect(r.mode).toBe('repeat');
-    expect(r.note).toContain('whole conversation was repeated');
+    const r = await c.resume('kb-locomo', vm(1, { seen: argv => { const p = payloadOf(argv); expect(p.restore).toMatchObject({ realization_id: null }); expect(p.restore!.restore_command).toBeUndefined();
+      expect(readFileSync(join(ROOT, p.restore!.dir, 'checkpoint', 'attempts.ndjson'), 'utf8')).toBe('{"id":"q1"}\n'); expect(existsSync(join(ROOT, p.restore!.dir, 'realization'))).toBe(false); } }));
+    expect([r.mode, r.snapshot_check]).toEqual(['answers', 'none']);
+    expect(r.note).toContain('only questions without them were answered');
+  });
+
+  test('a snapshot damaged after it was realized (an overlapping pull) is caught by its recorded sha256 before the resume launches (A22)', async () => {
+    const a = q1();
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    c.reserve('hy-locomo');
+    const first = await c.launch('hy-locomo', vm(1, { realization: true }));
+    expect(first.realization_id).toBe('real-hy-locomo-0123456789abcdef');
+    const store = join(c.resultsDir(first), 'realization', 'snapshot', 'store.tar');
+    writeFileSync(store, 'store by\0\0\0');
+    const r = await c.resume('hy-locomo', vm(1, { seen: argv => { const p = payloadOf(argv); expect(p.restore).toMatchObject({ realization_id: null }); expect(existsSync(join(ROOT, p.restore!.dir, 'checkpoint'))).toBe(true); } }));
+    expect(r.mode).toBe('answers');
+    expect(r.snapshot_check).toMatch(/^damaged: store\.tar does not match the sha256 recorded when real-hy-locomo-0123456789abcdef was realized/);
+    expect(r.note).toContain('is damaged');
+  });
+
+  test('resume --from another campaign stages that campaign\'s checkpoint and verified snapshot under this campaign\'s lease (A22: wave-1 gaps rerun at the re-freeze)', async () => {
+    const old = q1();
+    const before = new Campaign(old.manifestPath, old.state);
+    before.init();
+    before.reserve('hy-locomo');
+    await before.launch('hy-locomo', vm(1, { realization: true }));
+    const now = q1();
+    const c = new Campaign(now.manifestPath, now.state);
+    c.init();
+    const r = await c.resume('hy-locomo', vm(0.5, { seen: argv => { const p = payloadOf(argv); expect(p.restore).toMatchObject({ realization_id: 'real-hy-locomo-0123456789abcdef', restore_command: 'true' });
+      expect(readFileSync(join(ROOT, p.restore!.dir, 'realization', 'snapshot', 'store.tar'), 'utf8')).toBe('store bytes'); } }), { from: before });
+    expect([r.mode, r.snapshot_check]).toEqual(['snapshot', 'verified']);
+    expect(r.lease).toMatchObject({ status: 'settled', attempt: 1 });
+    expect(c.leases().map(l => l.cell)).toEqual(['hy-locomo']);
+    expect(before.leases()).toHaveLength(1);
   });
 
   test('a lost VM: resume refuses until the lease is abandoned, and the abandon says it is charged its full reservation', async () => {
