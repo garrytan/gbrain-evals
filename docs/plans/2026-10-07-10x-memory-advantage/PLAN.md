@@ -545,6 +545,26 @@ The text below keeps each challenge as it was presented at the gate.
     - Missed-target takes default to manual review: auto-resolve never applies them as either `partial` or `incorrect` until the real sample settles which one is right.
   - The E2 W5 rerun moved to the Dyson Sphere, in GBRA-49's custody.
   - W7 started next, on its own branch.
+  - W6 merged as gbrain v0.60.282.0 (#6882, `4e698e9d`). It adds:
+    - The take-grading judge prompt `hybrid-evidence-v2` and a parser fix.
+    - `GRADE_TAKES_MEASURED_MODELS = ['openai:gpt-6.1-sol']`, keyed by prompt version.
+    - `gbrain takes grades`, trusted-local only.
+
+    Auto-resolve stays unwired. The verdict is in gbrain-evals v0.10.114 (#169). The `gbrain_shipped_in` fill follows in gbrain-evals#170.
+  - W7, the private forecast journal (#6886), passed its $0 gate:
+    - Median Spearman ρ 0.905 (bar ≥ 0.80).
+    - Set-F1 1.000.
+    - 0 count mismatches.
+    - 8/8 remote probes.
+
+    It adds the additive `take_horizons` table (v251), `gbrain takes journal`, and trusted-local `takes_scorecard {group_by,min_n}`. Remote output is byte-identical. It's queued at .286.
+  - The W3 historical-retrieval design (#6895) closes within budget and was approved under the standing rule:
+    - Under `known_as_of`, think uses a lexical retriever over a new history text index; graph, vector, reranker, calibration and trajectory are off.
+    - A call over an uncovered source refuses with `history_index_incomplete`.
+    - The estimate is about 15 human-days / 73 agent-hours, with W3 QA capped at $20.
+    - W2's second slice shrinks to `search` and `takes_list {known_as_of}`.
+
+    The build has started in the same PR, with the write-cost bench first.
 - **Wave ordering (wave 1's exit obligation, 2026-10-10).** The pilot closed the brief (A6 failed), so the order comes from where the program primary's remaining failures and the largest measured headroom are:
   1. Finish wave 1's primary: #6271's merge, the sealed confirmation, then the namesake failures that are most of what the stack still gets wrong (a $0 diagnostic is running; a product change follows only if it finds a product cause).
   2. Wave 2: `gbrain setup claude-code` (D8's first slice) is being built now, ahead of its Oct 20 to 22 slot, because it shares no files with #6271 beyond the error registry; D2 and D4 wait for #6271, which edits `dispatch.ts`, `search.ts` and `interop-notices.ts`. The paid wave 2 run follows those.
