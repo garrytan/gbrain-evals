@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.119, with gbrain master `77cf8e111` (v0.60.169.0) as the product under test. Results measured at
+gbrain-evals v0.10.120, with gbrain master `77cf8e111` (v0.60.169.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -217,6 +217,13 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-17: W11 preregistration
+
+The [W11 preregistration](benchmarks/2026-10-17-w11-w4-sealed-confirmation-preregistration.md) fixes the sealed
+confirmation of gbrain W4 (weekly belief diff): set-F1 at least 0.95 on every fresh seed, plus exact before and after,
+cause and evidence pointer, before the custodian mints the material. gbrain-evals v0.10.120 (the opening names it; was
+v0.10.119).
 
 ### 2026-10-17: Living pages decided on prior
 

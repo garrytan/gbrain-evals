@@ -2,6 +2,13 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.120] - 2026-10-17
+
+### W11: sealed confirmation of gbrain W4 (weekly belief diff), preregistered
+
+- **Preregistration** ([file](docs/benchmarks/2026-10-17-w11-w4-sealed-confirmation-preregistration.md), results glob in `preregistrations.d/w11-w4-sealed-confirmation.json`). W11 now confirms W4 alone (`delta {beliefs: true}`, `gbrain beliefs`, gbrain #6866) on gbrain release v0.60.289.0. The custodian mints three fresh seeds and fresh wording for every belief-changing line inside custody on the Dyson Sphere; only the aggregate verdict leaves it. Gates: W4's own bar, set-F1 at least 0.95 on every seed, plus exact before and after for every re-score, and correct cause and evidence pointer on every reported change. Tokens against `delta`'s page list are reported, not gated.
+- **Harness**: `eval/runner/belief-weekly-probes.ts` with `eval/generators/belief-weekly-gen.ts`, a port of gbrain's W4 probe that takes custodian phrasing (`--phrasing-file`, access-logged) and fresh seeds. It calls no model. On v0.60.289.0 with development phrasing and seed 20261016 it passes every gate (37 of 37 changes) and matches the gbrain probe's per-week counts exactly. Cost: $0, cap $1.
+
 ## [0.10.119] - 2026-10-17
 
 ### Living pages (gbrain W9) decided on prior: not built in V1, W10 dropped with it
