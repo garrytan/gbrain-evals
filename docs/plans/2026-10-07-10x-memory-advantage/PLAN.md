@@ -538,6 +538,13 @@ The text below keeps each challenge as it was presented at the gate.
     - Opus 5.5 was right whenever it applied but almost never reached 0.95 confidence. Sonnet 5.5's one wrong verdict graded a claim from its own knowledge.
     - Open before auto-resolve: whether a missed target resolves `partial` or `incorrect`, since every model says `incorrect`. The real-sample check also still matters, because gpt-6.1-sol tops these synthetic fixtures.
     - W6 cost $2.87 dev and $9.25 counted ($12.12 of wave 4's $150). Round spend: $553.46 of $840.
+  - Garry approved every wave 4b recommendation on 2026-10-16, through GBRA-108:
+    - The real sample is about 300 hand-graded takes, run on his Mac.
+    - Auto-resolve comes later, only as an opt-in PR after the real sample passes.
+    - The W9 `mcp_request_log` query runs on his machine.
+    - Missed-target takes default to manual review: auto-resolve never applies them as either `partial` or `incorrect` until the real sample settles which one is right.
+  - The E2 W5 rerun moved to the Dyson Sphere, in GBRA-49's custody.
+  - W7 started next, on its own branch.
 - **Wave ordering (wave 1's exit obligation, 2026-10-10).** The pilot closed the brief (A6 failed), so the order comes from where the program primary's remaining failures and the largest measured headroom are:
   1. Finish wave 1's primary: #6271's merge, the sealed confirmation, then the namesake failures that are most of what the stack still gets wrong (a $0 diagnostic is running; a product change follows only if it finds a product cause).
   2. Wave 2: `gbrain setup claude-code` (D8's first slice) is being built now, ahead of its Oct 20 to 22 slot, because it shares no files with #6271 beyond the error registry; D2 and D4 wait for #6271, which edits `dispatch.ts`, `search.ts` and `interop-notices.ts`. The paid wave 2 run follows those.
