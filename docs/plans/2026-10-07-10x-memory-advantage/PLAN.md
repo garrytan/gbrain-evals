@@ -563,6 +563,12 @@ The text below keeps each challenge as it was presented at the gate.
     - A call over an uncovered source refuses with `history_index_incomplete`.
     - The estimate is about 15 human-days / 73 agent-hours, with W3 QA capped at $20.
     - W2's second slice shrinks to `search` and `takes_list {known_as_of}`.
+  - The P1 E2 rerun on W5 (gbrain v0.60.273.0) passed on held-out material, run by GBRA-49 on the Dyson Sphere:
+    - C1: every late closure is disclosed as an upper bound.
+    - C2: Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol all had 0 wrong and 0 undated closures, with as-of exact 0.392–0.397 (floor 0.361), so all three keep `apply`.
+    - Late closures were 48 of 74–75 per run. They're reported, not gated, and aren't comparable with E2's 41/66.
+
+    It cost $2.40 of the $8 cap, on the custodian's eval ledger. The verdict is in gbrain-evals v0.10.116 (#171, `9ec26e59`). gbrain-evals#170 (v0.10.115, `3cf029de`) filled W6's `gbrain_shipped_in`. W7's .286 gate-ahead passed at `18be119d` on a side branch.
 
     The build has started in the same PR, with the write-cost bench first.
 - **Wave ordering (wave 1's exit obligation, 2026-10-10).** The pilot closed the brief (A6 failed), so the order comes from where the program primary's remaining failures and the largest measured headroom are:
