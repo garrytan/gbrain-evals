@@ -563,14 +563,14 @@ The text below keeps each challenge as it was presented at the gate.
     - A call over an uncovered source refuses with `history_index_incomplete`.
     - The estimate is about 15 human-days / 73 agent-hours, with W3 QA capped at $20.
     - W2's second slice shrinks to `search` and `takes_list {known_as_of}`.
+
+    The build has started in the same PR, with the write-cost bench first.
   - The P1 E2 rerun on W5 (gbrain v0.60.273.0) passed on held-out material, run by GBRA-49 on the Dyson Sphere:
     - C1: every late closure is disclosed as an upper bound.
     - C2: Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol all had 0 wrong and 0 undated closures, with as-of exact 0.392–0.397 (floor 0.361), so all three keep `apply`.
     - Late closures were 48 of 74–75 per run. They're reported, not gated, and aren't comparable with E2's 41/66.
 
     It cost $2.40 of the $8 cap, on the custodian's eval ledger. The verdict is in gbrain-evals v0.10.116 (#171, `9ec26e59`). gbrain-evals#170 (v0.10.115, `3cf029de`) filled W6's `gbrain_shipped_in`. W7's .286 gate-ahead passed at `18be119d` on a side branch.
-
-    The build has started in the same PR, with the write-cost bench first.
 - **Wave ordering (wave 1's exit obligation, 2026-10-10).** The pilot closed the brief (A6 failed), so the order comes from where the program primary's remaining failures and the largest measured headroom are:
   1. Finish wave 1's primary: #6271's merge, the sealed confirmation, then the namesake failures that are most of what the stack still gets wrong (a $0 diagnostic is running; a product change follows only if it finds a product cause).
   2. Wave 2: `gbrain setup claude-code` (D8's first slice) is being built now, ahead of its Oct 20 to 22 slot, because it shares no files with #6271 beyond the error registry; D2 and D4 wait for #6271, which edits `dispatch.ts`, `search.ts` and `interop-notices.ts`. The paid wave 2 run follows those.
