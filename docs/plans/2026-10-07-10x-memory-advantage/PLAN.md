@@ -505,6 +505,39 @@ The text below keeps each challenge as it was presented at the gate.
   - gbrain#6792 merged as v0.60.253.0, with the two trust prerequisites Garry approved on 2026-10-15 via GBRA-40. First, lower-trust writes no longer delete, replace or deactivate higher-tier takes or timeline rows; they file `forget` proposals, which the owner accepts or drops on the host CLI. MCP agents get the proposal refs and the exact command to give the user. Second, lowering an input's tier lowers its derivatives, a raise never promotes them, and history keeps its tiers. No migration. N6: 0 leaks over 11,104 probes. Known limits: a dropped proposal keeps the row in the database but not in the page text, and accepting on a segmented page (off by default) refuses for now. The segmented-page fix folds into wave 4a.
   - gbrain#6807 merged as v0.60.254.0. It fixes a data-loss bug in #6792's owner accept: accepting a strike-through or same-claim kind-change hold deleted the take instead of deactivating or re-kinding it. It also makes accept work on segmented pages up to 24 MiB. A sync does not restore a take lost this way, so the explicit, preview-first `gbrain repair accepted-takes` restores it from the accepted proposal, its committed `takes_remove` receipt and the archived page version. Grades that lived only in the database and the original take id can't be restored. The bug could only fire on an explicit owner accept between .253 and .254. GBRA-95 holds the segmented-storage default until this fix is on master; it now is.
   - Wave 4a (W1 `belief_events`) is being built from the cleared design (#6783), which ships in the same PR. One migration (v249 is free today), with segmented page storage (#6787, v248) taken into account.
+- **Wave 4a shipped; wave 4b started (2026-10-16).**
+  - W1 belief ledger merged as gbrain v0.60.265.0 (#6806). It's opt-in through `gbrain beliefs enable` and adds migration v249. Its receipts are in gbrain-evals v0.10.111 (#166). The design PR #6783 was folded into it.
+  - W2 page-at-time (`known_as_of`) merged as v0.60.267.0 (#6850), with N6 receipts in gbrain-evals v0.10.112 (#167).
+  - gbrain#6862 merged as v0.60.271.0. It adds a lane-head guard to `claimNextWrite` and fixes flakes: the .268 purge-review stall now asserts blocked/drain_stalled with no wider bounds, and test (8) resets its retry notice.
+  - gbrain#6866 merged as v0.60.273.0 (`6c3e6fe0`). It contains:
+    - W4: `gbrain beliefs changes` and delta beliefs.
+    - W5 time-model fixes: a nightly-only closure is disclosed as an upper bound (`by <date>`).
+    - The legacy copier now refuses `page_versions`.
+    - The soak-day golden fix.
+  - Overhead for #6866: Postgres large edits cost 8.2–9.6% and typical edits 8.6–9.4%. That misses the default-on target (typical ≤5%), so recording stays opt-in.
+  - gbrain-evals v0.10.113 (#168) reran N6 on delta beliefs against the published v0.60.273.0 tag at $0. Both PGLite and Postgres over HTTP had 0 leaks and 0 oracles, and Postgres covered all 155 mandatory cells. #168 also freezes the P1 E2 W5 rerun preregistration (Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, about $5, capped at $8). That run is with GBRA-108 to take to Garry for custody on his Mac.
+  - Wave 4b decisions, made under the standing rule:
+    - Order: W6 → W7 → W3 design → W2 second slice (reshaped by W3) → W9 (gated) → W10 → W11. W12 is dropped and W8 stays deferred.
+    - W7 keeps its horizon in an additive DB column, decided at W7 time.
+    - W6 judges must pass a measured-models rule (`GRADE_TAKES_MEASURED_MODELS`), and `gbrain takes grades` is trusted-local only.
+    - Auto-resolve stays unwired; today nothing calls it (`cycle.ts`), and there's no config key for it.
+    - W6 caps are $4 dev and $25 counted, on a new ledger under wave 4's $150.
+  - Three wave 4b questions are with Garry through GBRA-108:
+    - How many real takes to hand-grade on his Mac (about 300 for ≤1%).
+    - Whether auto-resolve is ever wired (recommended: a later opt-in PR, only after the real sample passes).
+    - The W9 `mcp_request_log` read/write-ratio query on his machine.
+  - W6 take grading (gbrain#6882, gbrain-evals#169) is in progress. The preregistration was frozen in `d99b84694` before any counted cell ran. Counted results:
+
+    | Model | Applied | Wrong | Upper 95% | Coverage | Qualifies |
+    |---|---|---|---|---|---|
+    | gpt-6.1-sol | 496 | 0 | 0.6% | 99.2% | yes |
+    | claude-sonnet-5-5 | 121 | 1 | 3.9% | 24.0% | no |
+    | claude-opus-5-5 | 2 | 0 | 77.6% | 0.4% | no |
+
+    - Only gpt-6.1-sol qualifies, so it is the only model in `GRADE_TAKES_MEASURED_MODELS`. A measured verdict must also match the measured prompt version.
+    - Opus 5.5 was right whenever it applied but almost never reached 0.95 confidence. Sonnet 5.5's one wrong verdict graded a claim from its own knowledge.
+    - Open before auto-resolve: whether a missed target resolves `partial` or `incorrect`, since every model says `incorrect`. The real-sample check also still matters, because gpt-6.1-sol tops these synthetic fixtures.
+    - W6 cost $2.87 dev and $9.25 counted ($12.12 of wave 4's $150). Round spend: $553.46 of $840.
 - **Wave ordering (wave 1's exit obligation, 2026-10-10).** The pilot closed the brief (A6 failed), so the order comes from where the program primary's remaining failures and the largest measured headroom are:
   1. Finish wave 1's primary: #6271's merge, the sealed confirmation, then the namesake failures that are most of what the stack still gets wrong (a $0 diagnostic is running; a product change follows only if it finds a product cause).
   2. Wave 2: `gbrain setup claude-code` (D8's first slice) is being built now, ahead of its Oct 20 to 22 slot, because it shares no files with #6271 beyond the error registry; D2 and D4 wait for #6271, which edits `dispatch.ts`, `search.ts` and `interop-notices.ts`. The paid wave 2 run follows those.
