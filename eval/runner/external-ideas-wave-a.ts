@@ -10,13 +10,14 @@
  * docs/benchmarks/2026-10-21-external-ideas-wave-a/study-manifest.json.
  *
  *   freeze    --dataset <json> --out-dir <dir> --budget-usd <cap> [--shard k/n] [--limit N] [--ids a,b] [--embed-cache <sqlite>] [--smoke]
- *   affected  --frozen-dir <dir> --dataset <json>
- *   answer    --frozen-dir <dir> --dataset <json> --arm auto|auto_dates --sample 1|2 --model <gateway id> --set all|affected
+ *   affected  --frozen-dir <dir> --dataset <json> [--arm auto_dates|r1_rank_date|r2_tail_trim]
+ *   answer    --frozen-dir <dir> --dataset <json> --arm auto|auto_dates|r1_rank_date|r2_tail_trim [--affected-arm <candidate>] --sample 1|2 --model <gateway id> --set all|affected
  *             --out-dir <dir> --budget-usd <cap> [--wait] [--retry] [--judge-only] [--list-price] [--smoke]
- *   analyze   --rows-dir <dir> --frozen-dir <dir> [--model <id>] [--samples 1,2] [--scope all|affected] [--out <prefix>]
+ *   analyze   --rows-dir <dir> --frozen-dir <dir> [--model <id>] [--samples 1,2] [--scope all|affected] [--arm <candidate>] [--comparator-rows-dir <dir>] [--ni-margin -5] [--out <prefix>]
  *   verdict   --longmemeval <analysis.json> --synthetic <analysis.json> [--secondary <a.json,b.json>] [--audit <audit.json>] [--out <json>]
  *   audit     --frozen-dir <dir> --n 100 --seed 20261021 --model anthropic:claude-opus-5-5 --budget-usd 3 [--smoke]
- *   estimate  --dataset <json> [--frozen-dir <dir>] [--questions N] [--models a,b] [--samples 2]   (keyless)
+ *   estimate  --dataset <json> [--frozen-dir <dir> [--arm <candidate>]] [--questions N] [--models a,b] [--samples 2]   (keyless)
+ *   a2-verdict --r1 <analysis.json> --r2 <analysis.json> --r2-affected <affected-r2_tail_trim.json> [--secondary <a.json,b.json>] [--out <json>]
  *
  * GBRAIN_DIR (or --gbrain-dir) is the gbrain checkout under test. Every paid
  * request is reserved in the lane's one budget ledger (GBRA162_LEDGER, default
@@ -44,7 +45,7 @@ import { BatchLane } from './batch/submit.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import { answerStep, type QuestionMeta, type StepResult } from './external-ideas-wave-a/answer.ts';
 import {
-  AFFECTED_FILE, ARMS, PREREG_REL, analysisMarkdown, analyze, auditCandidates, auditPrompt, auditVerdict, computeAffected, flipVerdict, latestRows, loadStudyManifest, modelKey,
+  A2_NI_MARGIN, ALL_ARMS, a2Verdict, affectedFile, preregFor, type CandidateArm, analysisMarkdown, analyze, auditCandidates, auditPrompt, auditVerdict, computeAffected, flipVerdict, latestRows, loadStudyManifest, modelKey,
   preflightProblems, readRows, readerText, rowsPath, validateStudyManifest, verdicts, type AffectedReport, type AnswerRow, type Analysis, type AuditSummary, type Arm, type JudgeVerdicts, type QuestionText,
   type StudyManifest,
 } from './external-ideas-wave-a/lib.ts';
@@ -95,13 +96,13 @@ function loadDataset(path: string): { sha: string; questions: Array<QuestionText
 }
 
 /** Keyless preflight; refuses with every problem's code and fix. */
-function preflight(g: GbrainModules, m: StudyManifest, header: FrozenHeader | null, o: { datasetSha: string | null; keys: string[]; smoke: boolean; needsPrereg: boolean }): Attestation | null {
+function preflight(g: GbrainModules, m: StudyManifest, header: FrozenHeader | null, o: { datasetSha: string | null; keys: string[]; smoke: boolean; needsPrereg: boolean; prereg?: string }): Attestation | null {
   let attestation: Attestation | null = null;
   const problems = preflightProblems({
     header, gbrainHead: gitOut(g.dir, ['rev-parse', 'HEAD']), gbrainStatus: gitOut(g.dir, ['status', '--porcelain']), datasetSha: o.datasetSha, env: process.env,
     keys: [...new Set(o.keys)], smoke: o.smoke, manifest: m, readerSystemSha: sha256(g.reader.READER_NOTES_SYSTEM_TEXT),
     codeSha: Object.fromEntries(Object.keys(m.pinned_code_sha256).map(f => [f, fileSha(join(g.dir, f))])),
-    needsPrereg: o.needsPrereg, attest: () => { attestation = attestPreregistration(PREREG_REL, REPO_ROOT); },
+    needsPrereg: o.needsPrereg, attest: () => { attestation = attestPreregistration(o.prereg ?? preregFor('auto_dates'), REPO_ROOT); },
   });
   if (problems.length) throw new Refused(problems);
   return attestation;
@@ -195,24 +196,32 @@ function datasetFor(a: Args, header: FrozenHeader) {
   return { sha: ds.sha, map: new Map(ds.questions.map(q => [q.question_id, q as QuestionText])) };
 }
 
+const candidateArm = (raw: string | undefined): CandidateArm => {
+  const arm = (raw ?? 'auto_dates') as CandidateArm;
+  if (!ALL_ARMS.includes(arm) || (arm as string) === 'auto') throw new Error(`--arm must be one of ${ALL_ARMS.filter(x => x !== 'auto').join(', ')}`);
+  return arm;
+};
+
 async function cmdAffected(a: Args) {
   const { manifest } = study();
   const dir = resolve(a.need('--frozen-dir'));
+  const candidate = candidateArm(a.get('--arm') ?? undefined);
   const frozen = readFrozen(dir);
   const g = await gbrain(a);
   const ds = datasetFor(a, frozen.header);
   preflight(g, manifest, frozen.header, { datasetSha: ds.sha, keys: [], smoke: true, needsPrereg: false });
-  const report = computeAffected([...frozen.questions.values()], frozen.store, rendererFrom(g), ds.map, frozen.sha256, frozen.header.gbrain.commit);
-  writeJson(join(dir, AFFECTED_FILE), report);
-  out({ questions: report.questions, affected: report.affected, by_type: report.by_type, relative_dates: report.relative_dates, out: join(dir, AFFECTED_FILE) });
+  const report = computeAffected([...frozen.questions.values()], frozen.store, rendererFrom(g), ds.map, frozen.sha256, frozen.header.gbrain.commit, candidate, g.tokens.estimateTokens);
+  const file = join(dir, affectedFile(candidate));
+  writeJson(file, report);
+  out({ candidate_arm: candidate, questions: report.questions, affected: report.affected, by_type: report.by_type, relative_dates: report.relative_dates, delivered_tokens: report.delivered_tokens, r2: report.r2, out: file });
 }
-
-function readAffected(dir: string, frozenSha: string): AffectedReport {
-  const path = join(dir, AFFECTED_FILE);
-  const fix = `bun eval/runner/external-ideas-wave-a.ts affected --frozen-dir ${dir} --dataset <json>`;
-  if (!existsSync(path)) throw new Refused([{ code: 'affected_missing', message: `no ${AFFECTED_FILE} in ${dir}`, fix }]);
+function readAffected(dir: string, frozenSha: string, candidate: CandidateArm = 'auto_dates'): AffectedReport {
+  const name = affectedFile(candidate);
+  const path = join(dir, name);
+  const fix = `bun eval/runner/external-ideas-wave-a.ts affected --frozen-dir ${dir} --dataset <json> --arm ${candidate}`;
+  if (!existsSync(path)) throw new Refused([{ code: 'affected_missing', message: `no ${name} in ${dir}`, fix }]);
   const report = JSON.parse(readFileSync(path, 'utf8')) as AffectedReport;
-  if (report.frozen_manifest_sha256 !== frozenSha) throw new Refused([{ code: 'affected_stale', message: `${AFFECTED_FILE} was computed for frozen manifest ${report.frozen_manifest_sha256.slice(0, 12)}, not ${frozenSha.slice(0, 12)}`, fix }]);
+  if (report.frozen_manifest_sha256 !== frozenSha) throw new Refused([{ code: 'affected_stale', message: `${name} was computed for frozen manifest ${report.frozen_manifest_sha256.slice(0, 12)}, not ${frozenSha.slice(0, 12)}`, fix }]);
   return report;
 }
 
@@ -255,7 +264,8 @@ async function cmdAnswer(a: Args) {
   const smoke = a.flag('--smoke');
   const { manifest, sha: msha } = study();
   const arm = a.need('--arm') as Arm;
-  if (!ARMS.includes(arm)) throw new Error(`--arm must be ${ARMS.join(' or ')}`);
+  if (!ALL_ARMS.includes(arm)) throw new Error(`--arm must be one of ${ALL_ARMS.join(', ')}`);
+  const candidate = arm === 'auto' ? candidateArm(a.get('--affected-arm') ?? undefined) : arm;
   const sample = Number(a.need('--sample'));
   if (!Number.isInteger(sample) || sample < 1 || sample > manifest.analysis.samples) throw new Error(`--sample must be 1..${manifest.analysis.samples}`);
   const model = modelKey(a.need('--model'));
@@ -269,15 +279,15 @@ async function cmdAnswer(a: Args) {
   const frozen = readFrozen(frozenDir);
   const g = await gbrain(a);
   const ds = datasetFor(a, frozen.header);
-  const attestation = preflight(g, manifest, frozen.header, { datasetSha: ds.sha, keys: [provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY', 'OPENAI_API_KEY'], smoke, needsPrereg: true });
-  const affected = readAffected(frozenDir, frozen.sha256);
+  const attestation = preflight(g, manifest, frozen.header, { datasetSha: ds.sha, keys: [provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY', 'OPENAI_API_KEY'], smoke, needsPrereg: true, prereg: preregFor(candidate) });
+  const affected = readAffected(frozenDir, frozen.sha256, candidate);
   const affectedById = new Map(affected.rows.map(r => [r.question_id, r]));
   const renderer = rendererFrom(g);
   const expected = new Map<string, string>(), meta = new Map<string, QuestionMeta>(), allBodies = new Map<string, Record<string, unknown>>(), texts = new Map<string, { system: string; user: string }>();
   for (const q of frozen.questions.values()) {
     const d = ds.map.get(q.question_id)!;
     const t = readerText(q, arm, frozen.store, renderer, d);
-    if (affectedById.get(q.question_id)?.reader_request_sha256[arm] !== t.reader_request_sha256) throw new Refused([{ code: 'affected_stale', message: `${q.question_id}: the ${arm} request differs from ${AFFECTED_FILE}`, fix: `rerun affected --frozen-dir ${frozenDir}` }]);
+    if (affectedById.get(q.question_id)?.reader_request_sha256[arm] !== t.reader_request_sha256) throw new Refused([{ code: 'affected_stale', message: `${q.question_id}: the ${arm} request differs from ${affectedFile(candidate)}`, fix: `rerun affected --frozen-dir ${frozenDir} --arm ${candidate}` }]);
     const body = readerBody(model, { system: t.system, user: t.user }, settings.max_output_tokens, settings.max_output_tokens);
     allBodies.set(q.question_id, body);
     texts.set(q.question_id, { system: t.system, user: t.user });
@@ -290,7 +300,7 @@ async function cmdAnswer(a: Args) {
   const outDir = resolve(a.need('--out-dir'));
   const bodies = new Map(ids.map(id => [id, allBodies.get(id)!]));
   const armManifest = freezeManifest(join(outDir, 'manifests', `${armId}.json`), buildManifest({
-    arm_id: armId, workstream: 'GBRA-162-wave-a', kind: 'reader', provider, model, max_output_tokens: settings.max_output_tokens, reasoning_effort: settings.effort,
+    arm_id: armId, workstream: candidate === 'auto_dates' ? 'GBRA-162-wave-a' : 'GBRA-162-wave-a2', kind: 'reader', provider, model, max_output_tokens: settings.max_output_tokens, reasoning_effort: settings.effort,
     protocol: { name: 'gbrain-lme-reader-v4-notes-fullsessions', sha256: sha256(renderer.system) },
     source: `frozen ${arm} evidence (${frozen.sha256.slice(0, 12)}) at gbrain ${frozen.header.gbrain.commit.slice(0, 12)}, house notes reader, ${set} questions`,
     denominator: bodies.size, bodies, outputFloor: settings.max_output_tokens,
@@ -350,9 +360,10 @@ async function cmdAnalyze(a: Args) {
   const rowsDir = resolve(a.need('--rows-dir'));
   const frozenDir = resolve(a.need('--frozen-dir'));
   const frozen = readFrozen(frozenDir);
-  const affected = readAffected(frozenDir, frozen.sha256);
-  const dir = join(rowsDir, 'rows');
-  const rows = existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith('.ndjson')).sort().flatMap(f => readRows(join(dir, f))) : [];
+  const candidate = candidateArm(a.get('--arm') ?? undefined);
+  const affected = readAffected(frozenDir, frozen.sha256, candidate);
+  const rowDirs = [rowsDir, ...(a.get('--comparator-rows-dir') ? [resolve(a.get('--comparator-rows-dir')!)] : [])].map(d => join(d, 'rows'));
+  const rows = rowDirs.flatMap(dir => (existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith('.ndjson')).sort().flatMap(f => readRows(join(dir, f))) : []));
   const models = [...new Set(rows.map(r => r.model))];
   const model = a.get('--model') ? modelKey(a.get('--model')!) : models.length === 1 ? models[0] : null;
   if (!model) throw new Error(`pass --model (rows hold ${models.join(', ') || 'no models'})`);
@@ -361,8 +372,8 @@ async function cmdAnalyze(a: Args) {
   const suite = frozen.header.smoke ? 'smoke' : suiteOf(manifest, frozen.header.dataset_sha256) ?? 'smoke';
   const scope = (a.get('--scope') ?? 'all') as 'all' | 'affected';
   if (scope !== 'all' && scope !== 'affected') throw new Error('--scope is all or affected');
-  const result = analyze({ rows, affected, model, samples, seed: manifest.analysis.seed, draws: manifest.analysis.sign_flip_draws, alpha: manifest.analysis.alpha, suite, scope });
-  const prefix = a.get('--out') ?? join(rowsDir, `analysis-${suite}-${model}${scope === 'affected' ? '-affected' : ''}`);
+  const result = analyze({ rows, affected, model, samples, seed: manifest.analysis.seed, draws: manifest.analysis.sign_flip_draws, alpha: manifest.analysis.alpha, suite, scope, candidate, ...(a.get('--ni-margin') ? { niMargin: Number(a.get('--ni-margin')) } : {}) });
+  const prefix = a.get('--out') ?? join(rowsDir, `analysis-${suite}-${model}${candidate === 'auto_dates' ? '' : `-${candidate}`}${scope === 'affected' ? '-affected' : ''}`);
   writeJson(`${prefix}.json`, result);
   writeFileSync(`${prefix}.md`, analysisMarkdown(result));
   const { per_question: _pq, ...summary } = result;
@@ -386,6 +397,24 @@ async function cmdVerdict(a: Args) {
   out(['| Suite | Model | Scope | Verdict | Questions | Affected | Net gain | 95% CI | One-sided p (gain) | One-sided p (loss) |', '|---|---|---|---|---|---|---|---|---|---|',
     ...[report.longmemeval, report.synthetic, ...report.secondary].map(r => `| ${r.suite} | ${r.model} | ${r.scope} | ${r.verdict} | ${r.questions} | ${r.affected} | ${r.net_gain.toFixed(1)} | ${r.ci95_net_gain ? r.ci95_net_gain.map(x => x.toFixed(1)).join(' to ') : 'n/a'} | ${r.p_one_sided.toFixed(4)} | ${r.p_one_sided_less.toFixed(4)} |`)].join('\n'));
   if (![lme, syn, ...secondaries].every(x => x.complete)) process.exitCode = 1;
+}
+
+async function cmdA2Verdict(a: Args) {
+  const read = <T>(path: string) => JSON.parse(readFileSync(resolve(path), 'utf8')) as T;
+  const r1 = read<Analysis>(a.need('--r1')), r2 = read<Analysis>(a.need('--r2'));
+  const aff = read<AffectedReport>(a.need('--r2-affected'));
+  if (aff.candidate_arm !== 'r2_tail_trim' || !aff.delivered_tokens) throw new Error('--r2-affected must be the r2_tail_trim affected report');
+  const secondaries = (a.list('--secondary') ?? []).map(p => read<Analysis>(p));
+  const row = (x: Analysis) => ({ arm: x.candidate_arm, model: x.model, scope: x.scope, verdict: x.verdict, complete: x.complete, questions: x.questions, affected: x.affected, net_gain: x.primary.net_gain, ci95_net_gain: x.primary.ci95_net_gain, lower_bound_one_sided_net_gain: x.primary.lower_bound_one_sided_net_gain, p_one_sided: x.primary.p_one_sided_greater, p_one_sided_less: x.primary.p_one_sided_less, p_noninferior: x.primary.p_noninferior ?? null });
+  const report = {
+    schema: 'gbrain-evals/external-ideas-wave-a2-verdict/v1', rule: 'docs/benchmarks/2026-10-21-external-ideas-wave-a2-preregistration.md',
+    r1_analysis: row(r1), r2_analysis: row(r2), r2_delivered_tokens: aff.delivered_tokens,
+    ...a2Verdict({ r1, r2, r2TokenReduction: aff.delivered_tokens.reduction }),
+    secondaries: secondaries.map(x => ({ ...row(x), harm: x.complete && x.verdict === 'regression' })),
+  };
+  if (a.get('--out')) writeJson(resolve(a.get('--out')!), report);
+  out(report);
+  if (![r1, r2, ...secondaries].every(x => x.complete)) process.exitCode = 1;
 }
 
 // ─── audit ──────────────────────────────────────────────────────────
@@ -457,7 +486,8 @@ async function cmdEstimate(a: Args) {
   if (a.get('--frozen-dir')) {
     const frozenDir = resolve(a.get('--frozen-dir')!);
     const frozen = readFrozen(frozenDir);
-    const affected = readAffected(frozenDir, frozen.sha256);
+    const candidate = candidateArm(a.get('--arm') ?? undefined);
+    const affected = readAffected(frozenDir, frozen.sha256, candidate);
     const g = await gbrain(a);
     const renderer = rendererFrom(g);
     const dsMap = new Map(ds.questions.map(q => [q.question_id, q as QuestionText]));
@@ -470,21 +500,21 @@ async function cmdEstimate(a: Args) {
       const cell = (arm: Arm, ids: string[]) => cellEstimate(model, ids.map(id => { const t = readerText(frozen.questions.get(id)!, arm, frozen.store, renderer, dsMap.get(id)!); return { system: t.system, user: t.user }; }), s.max_output_tokens, g.tokens.estimateTokens, 0);
       const all = [...frozen.questions.keys()];
       const aff = affected.rows.filter(r => r.affected).map(r => r.question_id);
-      const base = cell('auto', all), dates = aff.length ? cell('auto_dates', aff) : null;
+      const base = cell('auto', all), dates = aff.length ? cell(candidate, aff) : null;
       const scale = (x: { expected_usd: number; worst_usd: number }, k: number, n: number) => ({ expected_usd: Number((x.expected_usd / Math.max(1, k) * n).toFixed(2)), worst_usd: Number((x.worst_usd / Math.max(1, k) * n).toFixed(2)) });
       const autoRun = scale(base, all.length, N);
       const datesRun = dates ? scale(dates, aff.length, Math.round(N * fraction)) : { expected_usd: 0, worst_usd: 0 };
       perModel[model] = {
-        mean_input_tokens: base.mean_input_tokens, per_sample: { auto_all: autoRun, auto_dates_affected: datesRun, auto_dates_all: scale(dates ?? base, dates ? aff.length : all.length, N) },
+        mean_input_tokens: base.mean_input_tokens, per_sample: { auto_all: autoRun, [`${candidate}_affected`]: datesRun, [`${candidate}_all`]: scale(dates ?? base, dates ? aff.length : all.length, N) },
         affected_run_total: { samples, expected_usd: Number(((autoRun.expected_usd + datesRun.expected_usd) * samples).toFixed(2)), worst_usd: Number(((autoRun.worst_usd + datesRun.worst_usd) * samples).toFixed(2)) },
       };
     }
-    Object.assign(report, { affected_fraction: fraction, frozen_questions: affected.questions, models: perModel, basis: 'batch price (50% of list) after a 10-request pilot at list; expected output tokens from the W10 receipts; judges synchronous at list' });
+    Object.assign(report, { candidate_arm: candidate, candidate_affected_questions: affected.affected, affected_fraction: fraction, frozen_questions: affected.questions, models: perModel, basis: 'batch price (50% of list) after a 10-request pilot at list; expected output tokens from the W10 receipts; judges synchronous at list' });
   }
   out(report);
 }
 
-const COMMANDS: Record<string, (a: Args) => Promise<void>> = { freeze: cmdFreeze, affected: cmdAffected, answer: cmdAnswer, analyze: cmdAnalyze, verdict: cmdVerdict, audit: cmdAudit, estimate: cmdEstimate };
+const COMMANDS: Record<string, (a: Args) => Promise<void>> = { freeze: cmdFreeze, affected: cmdAffected, answer: cmdAnswer, analyze: cmdAnalyze, verdict: cmdVerdict, audit: cmdAudit, estimate: cmdEstimate, 'a2-verdict': cmdA2Verdict };
 
 if (import.meta.main) {
   const [cmd, ...rest] = process.argv.slice(2);

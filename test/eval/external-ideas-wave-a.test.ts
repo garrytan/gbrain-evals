@@ -22,11 +22,12 @@ import { anthropicTransport, openAiTransport } from '../../eval/runner/batch/tra
 import { BatchLane } from '../../eval/runner/batch/submit.ts';
 import { answerStep } from '../../eval/runner/external-ideas-wave-a/answer.ts';
 import {
-  analyze, auditCandidates, bracketInsertions, computeAffected, decide, flipVerdict, loadStudyManifest, preflightProblems, readRows, validateStudyManifest, verdicts,
+  a2Verdict, analyze, auditCandidates, bracketInsertions, computeAffected, decide, flipVerdict, loadStudyManifest, preflightProblems, readRows, validateStudyManifest, verdicts,
   type AffectedReport, type AnswerRow, type PreflightFacts,
 } from '../../eval/runner/external-ideas-wave-a/lib.ts';
 import { addDays, diffDays, exactPastPhrases, generate, KINDS, longDate, serialize, SYNTHETIC_PATH, weekday } from '../../eval/runner/external-ideas-wave-a/synthetic-dates.ts';
 import { FakeProvider } from './batch-fake-provider.ts';
+import { R1_NOTE, r1Label, r1Order, r2Trim, rankedBlocks, renderView } from '../../eval/runner/external-ideas-wave-a/render-arms.ts';
 
 const dirs: string[] = [];
 const tmp = () => { const d = mkdtempSync(join(tmpdir(), 'xia-')); dirs.push(d); return d; };
@@ -228,8 +229,8 @@ function row(id: string, arm: 'auto' | 'auto_dates', sample: number, official: 0
   };
 }
 
-const run = (rows: AnswerRow[], aff: AffectedReport, samples = [1], extra: { model?: string; suite?: 'longmemeval' | 'synthetic'; scope?: 'all' | 'affected' } = {}) =>
-  analyze({ rows, affected: aff, model: extra.model ?? 'claude-sonnet-5-5', samples, seed: 20261021, draws: 10000, alpha: 0.05, suite: extra.suite ?? 'longmemeval', scope: extra.scope });
+const run = (rows: AnswerRow[], aff: AffectedReport, samples = [1], extra: { model?: string; suite?: 'longmemeval' | 'synthetic'; scope?: 'all' | 'affected'; candidate?: 'auto_dates' | 'r1_rank_date' | 'r2_tail_trim'; niMargin?: number } = {}) =>
+  analyze({ rows, affected: aff, model: extra.model ?? 'claude-sonnet-5-5', samples, seed: 20261021, draws: 10000, alpha: 0.05, suite: extra.suite ?? 'longmemeval', scope: extra.scope, candidate: extra.candidate, niMargin: extra.niMargin });
 
 /** n questions; the first ‘wins’ go 0 -> 1, the next ‘losses’ go 1 -> 0, the rest stay at ‘base’. Every question is affected. */
 function scenario(n: number, wins: number, losses: number, base: 0 | 1 = 1) {
@@ -247,7 +248,8 @@ describe('analysis', () => {
     const rows = [row('q1', 'auto', 1, 0), row('q1', 'auto', 2, 1), row('q1', 'auto_dates', 1, 1), row('q1', 'auto_dates', 2, 1), row('q2', 'auto', 1, 1), row('q2', 'auto', 2, 0)];
     const a = run(rows, aff, [1, 2]);
     expect(a.complete).toBe(true);
-    expect(a.per_question).toMatchObject([{ question_id: 'q1', auto: 0.5, auto_dates: 1 }, { question_id: 'q2', auto: 0.5, auto_dates: 0.5 }]);
+    expect(a.per_question).toMatchObject([{ question_id: 'q1', auto: 0.5, candidate: 1 }, { question_id: 'q2', auto: 0.5, candidate: 0.5 }]);
+    expect(a.candidate_arm).toBe('auto_dates');
     expect(a.primary.net_gain).toBeCloseTo(0.5, 12);
     expect(a.reader_noise).toMatchObject({ questions: 2, discordant: 2 });
   });
@@ -558,5 +560,93 @@ describe('synthetic relative-date generator', () => {
         expect(weekday(addDays(day, p.offset))).toBeGreaterThan(weekday(day));
       }
     }
+  });
+});
+
+// ─── Wave A2 render arms ────────────────────────────────────────────
+
+describe('wave A2 render arms', () => {
+  const pages = [
+    { slug: 'chat/a', page_id: 1, date: '2023/05/30 (Tue) 10:00', harness_body: '', chunks: [] },
+    { slug: 'chat/b', page_id: 2, date: '2023/05/20 (Sat) 10:00', harness_body: '', chunks: [] },
+    { slug: 'chat/c', page_id: 3, date: null, harness_body: '', chunks: [] },
+    { slug: 'chat/d', page_id: 4, date: '2023/05/20 (Sat) 10:00', harness_body: '', chunks: [] },
+    { slug: 'chat/e', page_id: 5, date: '2023/05/25 (Thu) 10:00', harness_body: '', chunks: [] },
+  ];
+  const blocks = ['a', 'b', 'c', 'd', 'e'].map(x => ({ slug: `chat/${x}`, text: `h-${x}` }));
+  const hits = (scores: number[]) => scores.map((score, i) => ({ rank: i + 1, slug: blocks[i].slug, page_id: i + 1, chunk_id: 10 + i, chunk_index: 0, chunk_source: 'compiled_truth', score, text: 'x' }));
+
+  test('r1 orders dated blocks oldest first (ties by rank) and puts undated blocks last in rank order', () => {
+    const order = r1Order(rankedBlocks({ pages } as any, blocks));
+    expect(order.map(b => [b.slug, b.rank])).toEqual([['chat/b', 2], ['chat/d', 4], ['chat/e', 5], ['chat/a', 1], ['chat/c', 3]]);
+  });
+
+  test('r2 protects the top 3, drops later blocks below half of rank 1, and reports what it dropped', () => {
+    const t = r2Trim({ hits5: hits([0.8, 0.1, 0.1, 0.39, 0.41]) } as any, rankedBlocks({ pages } as any, blocks), []);
+    expect(t.kept.map(b => b.slug)).toEqual(['chat/a', 'chat/b', 'chat/c', 'chat/e']);
+    expect(t.dropped).toEqual([{ slug: 'chat/d', rank: 4, score: 0.39 }]);
+    expect(t.score_source).toBe('hybrid_hit_score');
+  });
+
+  test('r2 uses the max hit score per page, keeps a block holding a kept chunk\'s span, and falls back to rank > 10 without usable scores', () => {
+    const q = { hits5: [...hits([0.8, 0.5, 0.5, 0.1, 0.1]), { ...hits([0])[0], slug: 'chat/d', score: 0.6, chunk_id: 99 }] } as any;
+    expect(r2Trim(q, rankedBlocks({ pages } as any, blocks), []).dropped.map(d => d.slug)).toEqual(['chat/e']);
+    const results = [{ slug: 'chat/a', delivered: { chunk_ids: [10, 77] } }, { slug: 'chat/e', delivered: { chunk_ids: [14], match_spans: [{ chunk_id: 77 }] } }];
+    const guarded = r2Trim(q, rankedBlocks({ pages } as any, blocks), results);
+    expect([guarded.dropped.length, guarded.retained_by_span]).toEqual([0, 1]);
+    const noScore = r2Trim({ hits5: hits([0, 0, 0, 0, 0]) } as any, rankedBlocks({ pages } as any, blocks), []);
+    expect([noScore.score_source, noScore.dropped.length]).toEqual(['rank_fallback', 0]);
+  });
+
+  test('render views: r1 adds the note and rank labels around the house framing; r2 renders the kept blocks unchanged', () => {
+    const store = { get: (h: string) => `body of ${h}` };
+    const q = { question_id: 'q', pages, hits5: hits([0.8, 0.7, 0.6, 0.1, 0.5]), arms: { auto: { blocks, results: undefined } } } as any;
+    const v1 = renderView(q, 'r1_rank_date', store, renderer);
+    const sessions = v1.blocks.map(b => ({ session_id: b.slug.replace('chat/', ''), date: 'd', body: store.get(b.text) }));
+    const out = v1.renderer.renderChatBlock(sessions, {}).rendered;
+    expect(out.startsWith(R1_NOTE + '\n\n' + r1Label(2, 5) + '\n<chat_session id="b"')).toBe(true);
+    expect(out.split('\n').filter(l => l.startsWith('[retrieval rank')).length).toBe(5);
+    const v2 = renderView(q, 'r2_tail_trim', store, renderer);
+    expect(v2.blocks.map(b => b.slug)).toEqual(['chat/a', 'chat/b', 'chat/c', 'chat/e']);
+    expect(v2.renderer).toBe(renderer);
+  });
+
+  test('affected report for r2: delivered-token reduction on affected questions only', () => {
+    const blobs = new Map<string, string>();
+    const put = (t: string) => { const h = sha(t); blobs.set(h, t); return h; };
+    const mk = (id: string, scores: number[]) => ({
+      question_id: id, set: 'confirmatory', question_type: 'multi-session', question_sha256: '', question_date: '2023/06/01 (Thu) 10:00', index_sha256: '', search_meta: { reranked: true, degraded: [] },
+      hits5: hits(scores), hits10: [], r1: null, pages,
+      arms: { auto: { source: 'product', blocks: blocks.map(b => ({ slug: b.slug, text: put('x'.repeat(40) + b.slug) })), evidence_sha256: 'e', product_encoding_tokens: 0, serialized_tool_tokens: 0, duplicate_bodies: 0, delivery: {} } },
+    }) as any;
+    const dataset = new Map(['q1', 'q2'].map(id => [id, { question: 'q?', question_date: '2023/06/01 (Thu) 10:00', question_type: 'multi-session', answer: 'x' }]));
+    const r = computeAffected([mk('q1', [1, 0.9, 0.9, 0.1, 0.1]), mk('q2', [1, 0.9, 0.9, 0.9, 0.9])], { get: h => blobs.get(h)! }, renderer, dataset, 'F', 'G', 'r2_tail_trim', t => t.length);
+    expect(r.rows.map(x => x.affected)).toEqual([true, false]);
+    expect(r.delivered_tokens!.affected_questions).toBe(1);
+    expect(r.delivered_tokens!.reduction).toBeCloseTo(2 / 5, 1);
+    expect(r.r2).toEqual({ questions_trimmed: 1, blocks_dropped: 2, retained_by_span: 0, rank_fallback_questions: 0 });
+    expect(r.candidate_arm).toBe('r2_tail_trim');
+  });
+
+  const armRows = (arm: 'r1_rank_date' | 'r2_tail_trim', n: number, wins: number, losses: number) => {
+    const ids = Array.from({ length: n }, (_, i) => `q${String(i).padStart(3, '0')}`);
+    const rows = ids.flatMap((id, i) => { const [x, y] = i < wins ? [0, 1] : i < wins + losses ? [1, 0] : [1, 1]; return [row(id, 'auto', 1, x as 0 | 1), row(id, arm as any, 1, y as 0 | 1)]; });
+    return run(rows, affectedReport(ids.map(id => [id, true])), [1], { candidate: arm, niMargin: arm === 'r2_tail_trim' ? -5 : undefined });
+  };
+
+  test('a2 verdict: Holm across r1 superiority and r2 non-inferiority, with the 20% token bar', () => {
+    const r1Win = armRows('r1_rank_date', 500, 25, 0), r2Flat = armRows('r2_tail_trim', 500, 1, 1);
+    const ok = a2Verdict({ r1: r1Win, r2: r2Flat, r2TokenReduction: 0.37 });
+    expect([ok.r1_rank_date.verdict, ok.r2_tail_trim.verdict]).toEqual(['pass', 'pass']);
+    expect(ok.holm.map(h => h.tested_at)).toEqual([0.025, 0.05]);
+    expect(a2Verdict({ r1: r1Win, r2: r2Flat, r2TokenReduction: 0.15 }).r2_tail_trim.verdict).toBe('inconclusive');
+    const r1Weak = armRows('r1_rank_date', 500, 3, 1);
+    const weak = a2Verdict({ r1: r1Weak, r2: r2Flat, r2TokenReduction: 0.37 });
+    expect(weak.r1_rank_date.verdict).toBe('inconclusive');
+    expect(weak.r2_tail_trim.verdict).toBe('pass');
+    const r2Loss = armRows('r2_tail_trim', 500, 0, 15);
+    const loss = a2Verdict({ r1: r1Weak, r2: r2Loss, r2TokenReduction: 0.37 });
+    expect([loss.r1_rank_date.verdict, loss.r2_tail_trim.verdict]).toEqual(['inconclusive', 'regression']);
+    expect(() => a2Verdict({ r1: r2Flat, r2: r1Win, r2TokenReduction: 0.37 })).toThrow('expected the r1_rank_date analysis');
   });
 });
