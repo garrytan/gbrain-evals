@@ -11,7 +11,7 @@ are absent.
 
 | Piece | Value |
 |---|---|
-| Package | the pinned extract-first package with its `nlp` extra, `fastembed` (BM25 sparse vectors for Qdrant) and `en_core_web_sm` 3.8.0, the documented hybrid-search install. `uv.lock` resolved on 2026-10-05 with `exclude-newer` and no prereleases (qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1) |
+| Package | the pinned extract-first package with its `nlp` extra, `fastembed` (BM25 sparse vectors for Qdrant) and `en_core_web_sm` 3.8.0, the documented hybrid-search install. `uv.lock` resolved on 2026-10-05 with `exclude-newer` (certifi alone raised to 2026.10.19 for its security fix) and no prereleases (qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1) |
 | Backend | Qdrant server `v1.19.2` by digest, on the same internal network |
 | Base image | `python:3.12-slim-bookworm@sha256:54c85f3c…`, uv `0.12.3` by digest |
 | Recipe models | extraction `gpt-5-mini`, embedder `text-embedding-3-small` (1,536 dimensions): the SDK defaults, read back from the running `Memory` and reported by `/health`. The LLM config sets `is_reasoning_model=True` (see deviation 8) |
