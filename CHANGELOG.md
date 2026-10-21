@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.128] - 2026-10-21
+
+### Agent retrieval shapes: gbrain#7195 measured
+
+- **gbrain#7195, merged as `a6204367` (v0.60.349.0), against master `c0b30d71`** ([report](docs/benchmarks/2026-10-20-agent-retrieval-shapes.md#entity-lookup-families-gbrain7195), receipts under `docs/benchmarks/2026-10-20-agent-retrieval-shapes/gbrain-7195/`; keyword path, no embedding key, $0). Name variants beyond N4 (E6) 0/24 to 24/24, and the ambiguous-surname control now stays unresolved (negatives 1/2 to 2/2). Title-prefixed person stubs (E7) stay 0/4: the exact-matching stub remains the card by design and the real page is listed as a possible duplicate. Raw-only names (E8, 2/2) and identifiers (E10, 9/9) already passed on this fixture. Every other family is unchanged.
+
 ## [0.10.127] - 2026-10-20
 
 ### Agent retrieval shapes: gbrain#7186 measured

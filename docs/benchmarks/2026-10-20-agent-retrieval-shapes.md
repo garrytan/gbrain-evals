@@ -78,3 +78,12 @@ bun test test/eval/agent-retrieval-shapes.test.ts
 | 2026-10-20 | gbrain#7186 head 42588edd (collapse stage, rank priors, score order) | **30/30** | **15/15** | 0/6 | **6/6** | 6/6 | 6/6 | 306/306 | 59,883 | 48/50 | `2026-10-20-agent-retrieval-shapes/gbrain-7186/pr-42588edd.receipt.json` |
 
 Counts are search; query matches search on every family. gbrain#7186 bounds a chunk row at 8,000 characters. E13's row is a whole conversation from evidence delivery's implied `auto` unit, and #7186 leaves that unit's bound to a follow-up, so E13 is unchanged. E3's copies share an `origin` key that #7186 does not read yet.
+
+### Entity lookup families (gbrain#7195)
+
+| date | gbrain build | E6 name variants | E6 negatives | E7 prefixed stubs | E8 raw-only names | E10 identifiers | receipts |
+|---|---|---:|---:|---:|---:|---:|---|
+| 2026-10-21 | master c0b30d71 (v0.60.348.0) | 0/24 | 1/2 | 0/4 | 2/2 | 9/9 | `2026-10-20-agent-retrieval-shapes/gbrain-7195/master-c0b30d71.receipt.json` |
+| 2026-10-21 | gbrain#7195 merged as a6204367 (v0.60.349.0; name variants, raw-text mentions, exact identifiers) | **24/24** | **2/2** | 0/4 | 2/2 | 9/9 | `2026-10-20-agent-retrieval-shapes/gbrain-7195/merged-a6204367.receipt.json` |
+
+E6 counts `gbrain entity` resolving the right page; its negatives are the no-referent and ambiguous-surname controls, which must not resolve. The merged build resolves every variant and now leaves the ambiguous surname unresolved. E7 stays 0/4 by design: a stub page that exactly matches the query is still the card, and the real page is listed in `possible_duplicates` instead of substituted; the runner's doctor probe reads the remote `run_doctor` report, which does not carry the new local `person_title_duplicates` check. E8 and E10 already passed on this fixture. Every other family is identical between the two builds (keyword path, no embedding key, 25.8 s, $0).

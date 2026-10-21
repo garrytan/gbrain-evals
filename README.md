@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain [`6e1086492`](https://github.com/garrytan/gbrain/tree/6e1086492dbded0059fcfabc627b846ced7855f4), release v0.60.324.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.127 (`VERSION`) |
+| This repository | gbrain-evals v0.10.128 (`VERSION`) |
 
 This repository installs gbrain v0.60.324.0 (`6e1086492`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except `a7cb37b`, the September 29 branch
@@ -312,6 +312,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-21: Repository row names v0.10.128
+
+gbrain-evals v0.10.128 adds the gbrain#7195 measurements to the [agent retrieval shapes report](docs/benchmarks/2026-10-20-agent-retrieval-shapes.md). The repository row names v0.10.128 (was v0.10.127).
 
 ### 2026-10-20: Repository row names v0.10.127
 

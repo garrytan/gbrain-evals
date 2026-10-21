@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.127, with gbrain master `6e1086492` (v0.60.324.0) as the product under test. Results measured at
+gbrain-evals v0.10.128, with gbrain master `6e1086492` (v0.60.324.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -225,7 +225,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 Correctness and access checks gains the [agent retrieval shapes report](benchmarks/2026-10-20-agent-retrieval-shapes.md)
 (category `agent-retrieval-shapes`, report-only): 15 synthetic retrieval failure shapes from gbrain issues #4612, #6058,
-#7153 to #7157 and #7159 to #7165, measured at gbrain `6e1086492` on the keyword path. The opening names gbrain-evals v0.10.126 (was v0.10.125). gbrain-evals v0.10.127 adds the gbrain#7186 build to that report; the opening names v0.10.127.
+#7153 to #7157 and #7159 to #7165, measured at gbrain `6e1086492` on the keyword path. The opening names gbrain-evals v0.10.126 (was v0.10.125). gbrain-evals v0.10.127 adds the gbrain#7186 build to that report; the opening names v0.10.127. gbrain-evals v0.10.128 adds the gbrain#7195 build; the opening names v0.10.128.
 
 ### 2026-10-20: Sync freshness
 
