@@ -92,4 +92,8 @@ A ceiling is called out: a model at or near 100% on the affected questions in bo
 
 ## Amendments
 
-None yet.
+### 2026-10-21, before any counted cell: the secondary models gate against harm
+
+Per the approved plan, the secondary models gate against harm. The default-flip recommendation additionally requires that neither `gpt-6.1-sol` nor `claude-opus-5-5` shows a **regression** verdict on LongMemEval-S affected questions: the same paired sign-flip test, one-sided loss p ≤ 0.05, over the affected questions only (`analyze --scope affected`). Their point estimates and intervals are reported. They still run only after Sonnet 5.5 passes on both suites, so a run where Sonnet does not pass reports them as skipped and the flip as not ready. `verdict` applies this rule (`flipVerdict`, schema `external-ideas-wave-a-verdict/v2`), together with the audit's 5% wrong-bracket limit.
+
+Reason: the project's model rule requires the newest Opus, GPT and Sonnet, and Sonnet alone decides only the development pass. Arms, data, the decision model's test and the budget are unchanged.

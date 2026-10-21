@@ -22,7 +22,7 @@ import { anthropicTransport, openAiTransport } from '../../eval/runner/batch/tra
 import { BatchLane } from '../../eval/runner/batch/submit.ts';
 import { answerStep } from '../../eval/runner/external-ideas-wave-a/answer.ts';
 import {
-  analyze, auditCandidates, bracketInsertions, computeAffected, decide, loadStudyManifest, preflightProblems, readRows, validateStudyManifest, verdicts,
+  analyze, auditCandidates, bracketInsertions, computeAffected, decide, flipVerdict, loadStudyManifest, preflightProblems, readRows, validateStudyManifest, verdicts,
   type AffectedReport, type AnswerRow, type PreflightFacts,
 } from '../../eval/runner/external-ideas-wave-a/lib.ts';
 import { addDays, diffDays, exactPastPhrases, generate, KINDS, longDate, serialize, SYNTHETIC_PATH, weekday } from '../../eval/runner/external-ideas-wave-a/synthetic-dates.ts';
@@ -228,7 +228,8 @@ function row(id: string, arm: 'auto' | 'auto_dates', sample: number, official: 0
   };
 }
 
-const run = (rows: AnswerRow[], aff: AffectedReport, samples = [1]) => analyze({ rows, affected: aff, model: 'claude-sonnet-5-5', samples, seed: 20261021, draws: 10000, alpha: 0.05, suite: 'longmemeval' });
+const run = (rows: AnswerRow[], aff: AffectedReport, samples = [1], extra: { model?: string; suite?: 'longmemeval' | 'synthetic'; scope?: 'all' | 'affected' } = {}) =>
+  analyze({ rows, affected: aff, model: extra.model ?? 'claude-sonnet-5-5', samples, seed: 20261021, draws: 10000, alpha: 0.05, suite: extra.suite ?? 'longmemeval', scope: extra.scope });
 
 /** n questions; the first ‘wins’ go 0 -> 1, the next ‘losses’ go 1 -> 0, the rest stay at ‘base’. Every question is affected. */
 function scenario(n: number, wins: number, losses: number, base: 0 | 1 = 1) {
@@ -300,6 +301,36 @@ describe('analysis', () => {
   test('decision: a significant loss is a regression', () => {
     const { rows, aff } = scenario(100, 0, 10);
     expect(run(rows, aff).verdict).toBe('regression');
+  });
+
+  test('scope affected scores only affected questions and needs no unaffected cells', () => {
+    const aff = affectedReport([['q1', true], ['q2', false]]);
+    const rows = [row('q1', 'auto', 1, 0), row('q1', 'auto_dates', 1, 1)];
+    expect(run(rows, aff).failures.counts.missing_cell).toBe(1);
+    const a = run(rows, aff, [1], { scope: 'affected' });
+    expect(a.complete).toBe(true);
+    expect([a.scope, a.questions, a.primary.net_gain]).toEqual(['affected', 1, 1]);
+  });
+
+  test('flip verdict: Sonnet passes on both suites, no secondary regresses, audit under 5% wrong', () => {
+    const pass = scenario(100, 12, 0);
+    const lme = run(pass.rows, pass.aff);
+    const syn = run(pass.rows, pass.aff, [1], { suite: 'synthetic' });
+    const sec = (model: string, wins: number, losses: number) => { const s = scenario(100, wins, losses); return run(s.rows.map(r => ({ ...r, model })), s.aff, [1], { model, scope: 'affected' }); };
+    const audit = { complete: true, n: 100, rates: { wrong: 0.02 } };
+    const ok = flipVerdict({ longmemeval: lme, synthetic: syn, secondaries: [sec('gpt-6.1-sol', 2, 1), sec('claude-opus-5-5', 5, 0)], audit });
+    expect(ok.default_flip_ready).toBe(true);
+    expect(ok.blocking).toEqual([]);
+    const harmed = flipVerdict({ longmemeval: lme, synthetic: syn, secondaries: [sec('gpt-6.1-sol', 0, 10), sec('claude-opus-5-5', 5, 0)], audit });
+    expect(harmed.default_flip_ready).toBe(false);
+    expect(harmed.blocking[0]).toStartWith('gpt-6.1-sol: regression on affected questions');
+    const missing = flipVerdict({ longmemeval: lme, synthetic: syn, secondaries: [sec('claude-opus-5-5', 5, 0)], audit });
+    expect(missing.blocking).toEqual(['gpt-6.1-sol: not run']);
+    expect(flipVerdict({ longmemeval: lme, synthetic: syn, secondaries: [sec('gpt-6.1-sol', 2, 1), sec('claude-opus-5-5', 5, 0)], audit: { ...audit, rates: { wrong: 0.06 } } }).default_flip_ready).toBe(false);
+    const weak = scenario(100, 3, 1);
+    const skipped = flipVerdict({ longmemeval: run(weak.rows, weak.aff), synthetic: syn, secondaries: [], audit });
+    expect(skipped.blocking).toEqual(['longmemeval: claude-sonnet-5-5 verdict inconclusive', 'gpt-6.1-sol: not run (skipped: claude-sonnet-5-5 did not pass both suites)', 'claude-opus-5-5: not run (skipped: claude-sonnet-5-5 did not pass both suites)']);
+    expect(() => flipVerdict({ longmemeval: lme, synthetic: syn, secondaries: [run(pass.rows.map(r => ({ ...r, model: 'gpt-6.1-sol' })), pass.aff, [1], { model: 'gpt-6.1-sol' })], audit })).toThrow('scoped to affected');
   });
 
   test('the per-type table and affected-only line add up', () => {

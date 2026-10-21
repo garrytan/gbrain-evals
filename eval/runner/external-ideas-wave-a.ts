@@ -13,8 +13,8 @@
  *   affected  --frozen-dir <dir> --dataset <json>
  *   answer    --frozen-dir <dir> --dataset <json> --arm auto|auto_dates --sample 1|2 --model <gateway id> --set all|affected
  *             --out-dir <dir> --budget-usd <cap> [--wait] [--retry] [--judge-only] [--list-price] [--smoke]
- *   analyze   --rows-dir <dir> --frozen-dir <dir> [--model <id>] [--samples 1,2] [--out <prefix>]
- *   verdict   --longmemeval <analysis.json> --synthetic <analysis.json> [--out <json>]
+ *   analyze   --rows-dir <dir> --frozen-dir <dir> [--model <id>] [--samples 1,2] [--scope all|affected] [--out <prefix>]
+ *   verdict   --longmemeval <analysis.json> --synthetic <analysis.json> [--secondary <a.json,b.json>] [--audit <audit.json>] [--out <json>]
  *   audit     --frozen-dir <dir> --n 100 --seed 20261021 --model anthropic:claude-opus-5-5 --budget-usd 3 [--smoke]
  *   estimate  --dataset <json> [--frozen-dir <dir>] [--questions N] [--models a,b] [--samples 2]   (keyless)
  *
@@ -44,8 +44,8 @@ import { BatchLane } from './batch/submit.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import { answerStep, type QuestionMeta, type StepResult } from './external-ideas-wave-a/answer.ts';
 import {
-  AFFECTED_FILE, ARMS, PREREG_REL, analysisMarkdown, analyze, auditCandidates, auditPrompt, auditVerdict, computeAffected, latestRows, loadStudyManifest, modelKey,
-  preflightProblems, readRows, readerText, rowsPath, validateStudyManifest, verdicts, type AffectedReport, type AnswerRow, type Analysis, type Arm, type JudgeVerdicts, type QuestionText,
+  AFFECTED_FILE, ARMS, PREREG_REL, analysisMarkdown, analyze, auditCandidates, auditPrompt, auditVerdict, computeAffected, flipVerdict, latestRows, loadStudyManifest, modelKey,
+  preflightProblems, readRows, readerText, rowsPath, validateStudyManifest, verdicts, type AffectedReport, type AnswerRow, type Analysis, type AuditSummary, type Arm, type JudgeVerdicts, type QuestionText,
   type StudyManifest,
 } from './external-ideas-wave-a/lib.ts';
 
@@ -359,8 +359,10 @@ async function cmdAnalyze(a: Args) {
   const observed = [...new Set(rows.filter(r => r.model === model && r.arm === 'auto').map(r => r.sample))].sort();
   const samples = a.list('--samples')?.map(Number) ?? (frozen.header.smoke ? (observed.length ? observed : [1]) : Array.from({ length: manifest.analysis.samples }, (_, i) => i + 1));
   const suite = frozen.header.smoke ? 'smoke' : suiteOf(manifest, frozen.header.dataset_sha256) ?? 'smoke';
-  const result = analyze({ rows, affected, model, samples, seed: manifest.analysis.seed, draws: manifest.analysis.sign_flip_draws, alpha: manifest.analysis.alpha, suite });
-  const prefix = a.get('--out') ?? join(rowsDir, `analysis-${suite}-${model}`);
+  const scope = (a.get('--scope') ?? 'all') as 'all' | 'affected';
+  if (scope !== 'all' && scope !== 'affected') throw new Error('--scope is all or affected');
+  const result = analyze({ rows, affected, model, samples, seed: manifest.analysis.seed, draws: manifest.analysis.sign_flip_draws, alpha: manifest.analysis.alpha, suite, scope });
+  const prefix = a.get('--out') ?? join(rowsDir, `analysis-${suite}-${model}${scope === 'affected' ? '-affected' : ''}`);
   writeJson(`${prefix}.json`, result);
   writeFileSync(`${prefix}.md`, analysisMarkdown(result));
   const { per_question: _pq, ...summary } = result;
@@ -369,20 +371,21 @@ async function cmdAnalyze(a: Args) {
 }
 
 async function cmdVerdict(a: Args) {
-  const read = (flag: string) => JSON.parse(readFileSync(resolve(a.need(flag)), 'utf8')) as Analysis;
-  const lme = read('--longmemeval'), syn = read('--synthetic');
-  if (lme.suite !== 'longmemeval' || syn.suite !== 'synthetic') throw new Error(`expected a longmemeval and a synthetic analysis, got ${lme.suite} and ${syn.suite}`);
-  const row = (x: Analysis) => ({ suite: x.suite, model: x.model, verdict: x.verdict, complete: x.complete, questions: x.questions, affected: x.affected, net_gain: x.primary.net_gain, ci95_net_gain: x.primary.ci95_net_gain, p_one_sided: x.primary.p_one_sided_greater });
+  const read = <T>(path: string) => JSON.parse(readFileSync(resolve(path), 'utf8')) as T;
+  const lme = read<Analysis>(a.need('--longmemeval')), syn = read<Analysis>(a.need('--synthetic'));
+  const secondaries = (a.list('--secondary') ?? []).map(p => read<Analysis>(p));
+  const audit = a.get('--audit') ? read<AuditSummary>(a.get('--audit')!) : null;
+  const row = (x: Analysis) => ({ suite: x.suite, scope: x.scope, model: x.model, verdict: x.verdict, complete: x.complete, questions: x.questions, affected: x.affected, net_gain: x.primary.net_gain, ci95_net_gain: x.primary.ci95_net_gain, lower_bound_one_sided_net_gain: x.primary.lower_bound_one_sided_net_gain, p_one_sided: x.primary.p_one_sided_greater, p_one_sided_less: x.primary.p_one_sided_less });
   const report = {
-    schema: 'gbrain-evals/external-ideas-wave-a-verdict/v1', longmemeval: row(lme), synthetic: row(syn),
-    both_pass: lme.verdict === 'pass' && syn.verdict === 'pass',
-    default_flip_condition: 'GBRA-108: both suites pass and the existing gbrain-evals retrieval categories show no regression; the retrieval check is outside this runner',
+    schema: 'gbrain-evals/external-ideas-wave-a-verdict/v2', rule: 'preregistration plus the 2026-10-21 amendment (secondary models gate against harm)',
+    longmemeval: row(lme), synthetic: row(syn), secondary: secondaries.map(row),
+    ...flipVerdict({ longmemeval: lme, synthetic: syn, secondaries, audit }),
   };
   if (a.get('--out')) writeJson(resolve(a.get('--out')!), report);
   out(report);
-  out(['| Suite | Model | Verdict | Questions | Affected | Net gain | 95% CI | One-sided p |', '|---|---|---|---|---|---|---|---|',
-    ...[report.longmemeval, report.synthetic].map(r => `| ${r.suite} | ${r.model} | ${r.verdict} | ${r.questions} | ${r.affected} | ${r.net_gain.toFixed(1)} | ${r.ci95_net_gain ? r.ci95_net_gain.map(x => x.toFixed(1)).join(' to ') : 'n/a'} | ${r.p_one_sided.toFixed(4)} |`)].join('\n'));
-  if (!lme.complete || !syn.complete) process.exitCode = 1;
+  out(['| Suite | Model | Scope | Verdict | Questions | Affected | Net gain | 95% CI | One-sided p (gain) | One-sided p (loss) |', '|---|---|---|---|---|---|---|---|---|---|',
+    ...[report.longmemeval, report.synthetic, ...report.secondary].map(r => `| ${r.suite} | ${r.model} | ${r.scope} | ${r.verdict} | ${r.questions} | ${r.affected} | ${r.net_gain.toFixed(1)} | ${r.ci95_net_gain ? r.ci95_net_gain.map(x => x.toFixed(1)).join(' to ') : 'n/a'} | ${r.p_one_sided.toFixed(4)} | ${r.p_one_sided_less.toFixed(4)} |`)].join('\n'));
+  if (![lme, syn, ...secondaries].every(x => x.complete)) process.exitCode = 1;
 }
 
 // ─── audit ──────────────────────────────────────────────────────────

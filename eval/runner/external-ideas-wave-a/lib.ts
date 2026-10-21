@@ -204,6 +204,8 @@ export interface AnalyzeInput {
   draws: number;
   alpha: number;
   suite: 'longmemeval' | 'synthetic' | 'smoke';
+  /** 'affected' scores only the affected questions (the secondary models run nothing else). Defaults to 'all'. */
+  scope?: 'all' | 'affected';
 }
 
 export interface Failures { complete: boolean; counts: Record<string, number>; examples: Array<{ question_id: string; cell: string; kind: string }> }
@@ -219,6 +221,7 @@ const mean = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
  */
 export function analyze(input: AnalyzeInput) {
   const { affected, model, samples } = input;
+  const scope = input.scope ?? 'all';
   const failures: Failures = { complete: true, counts: {}, examples: [] };
   const fail = (question_id: string, cell: string, kind: string) => {
     failures.complete = false;
@@ -240,7 +243,7 @@ export function analyze(input: AnalyzeInput) {
     return r[judge] ?? 0;
   };
   const score = (arm: Arm, row: AffectedRow, judge: 'official_correct' | 'framed_correct', record: boolean) => mean(samples.map(s => verdict(arm, s, row, judge, record)));
-  const perQuestion = affected.rows.map(row => {
+  const perQuestion = affected.rows.filter(row => scope === 'all' || row.affected).map(row => {
     const auto = score('auto', row, 'official_correct', true);
     const dates = row.affected ? score('auto_dates', row, 'official_correct', true) : auto;
     const fauto = score('auto', row, 'framed_correct', false);
@@ -272,7 +275,7 @@ export function analyze(input: AnalyzeInput) {
   let noise: { questions: number; discordant: number; rate: number; affected_questions: number; affected_discordant: number } | { note: string };
   if (samples.length >= 2) {
     const [s1, s2] = samples;
-    const both = affected.rows.filter(row => [s1, s2].every(s => { const r = cells.get(cellName({ arm: 'auto', sample: s, model }))!.get(row.question_id); return r && !r.reader_error && r.official_correct !== null; }));
+    const both = affected.rows.filter(row => scope === 'all' || row.affected).filter(row => [s1, s2].every(s => { const r = cells.get(cellName({ arm: 'auto', sample: s, model }))!.get(row.question_id); return r && !r.reader_error && r.official_correct !== null; }));
     const v = (row: AffectedRow, s: number) => cells.get(cellName({ arm: 'auto', sample: s, model }))!.get(row.question_id)!.official_correct;
     const disc = both.filter(row => v(row, s1) !== v(row, s2));
     noise = { questions: both.length, discordant: disc.length, rate: both.length ? disc.length / both.length : 0, affected_questions: both.filter(r => r.affected).length, affected_discordant: disc.filter(r => r.affected).length };
@@ -281,7 +284,7 @@ export function analyze(input: AnalyzeInput) {
     schema: 'gbrain-evals/external-ideas-wave-a-analysis/v1' as const,
     suite: input.suite, verdict: decide(failures.complete, primary, input.alpha), alpha: input.alpha,
     complete: failures.complete, failures,
-    model, samples, primary_judge: 'official_correct (gpt-4o-2024-08-06, LongMemEval evaluate_qa.py prompt)',
+    model, samples, scope, primary_judge: 'official_correct (gpt-4o-2024-08-06, LongMemEval evaluate_qa.py prompt)',
     frozen_manifest_sha256: affected.frozen_manifest_sha256, gbrain_commit: affected.gbrain_commit,
     questions: perQuestion.length, affected: affectedOnly.length,
     primary, affected_only: affectedOnly.length ? paired(p => p.auto, p => p.auto_dates, affectedOnly) : null,
@@ -309,13 +312,57 @@ export function decide(complete: boolean, p: { net_gain: number; p_one_sided_gre
   return 'inconclusive';
 }
 
+export const DECISION_MODEL = 'claude-sonnet-5-5';
+export const SECONDARY_MODELS = ['gpt-6.1-sol', 'claude-opus-5-5'] as const;
+export const AUDIT_MAX_WRONG_RATE = 0.05;
+
+export interface AuditSummary { complete: boolean; n: number; rates: { wrong: number } }
+
+/**
+ * The default-flip rule: the preregistered rule plus the 2026-10-21 amendment. Sonnet 5.5 passes on both suites;
+ * neither secondary model shows a regression on LongMemEval-S affected questions; the bracket audit is complete with
+ * at most 5% wrong. Secondaries that were not run (because Sonnet did not pass) are named, and the flip is not ready.
+ */
+export function flipVerdict(input: { longmemeval: Analysis; synthetic: Analysis; secondaries: Analysis[]; audit: AuditSummary | null }) {
+  const { longmemeval: lme, synthetic: syn } = input;
+  const problems: string[] = [];
+  if (lme.suite !== 'longmemeval' || syn.suite !== 'synthetic') throw new Error(`expected a longmemeval and a synthetic analysis, got ${lme.suite} and ${syn.suite}`);
+  for (const x of [lme, syn]) {
+    if (x.model !== DECISION_MODEL) throw new Error(`the decision model is ${DECISION_MODEL}; the ${x.suite} analysis is ${x.model}`);
+    if (x.scope !== 'all') throw new Error(`the decision analyses score all questions; the ${x.suite} analysis is scoped to ${x.scope}`);
+    if (x.verdict !== 'pass') problems.push(`${x.suite}: ${DECISION_MODEL} verdict ${x.verdict}`);
+  }
+  const decisionPass = problems.length === 0;
+  const secondaries = SECONDARY_MODELS.map(model => {
+    const found = input.secondaries.filter(x => x.model === model);
+    if (found.length > 1) throw new Error(`two secondary analyses for ${model}`);
+    const x = found[0];
+    if (!x) { problems.push(`${model}: not run${decisionPass ? '' : ` (skipped: ${DECISION_MODEL} did not pass both suites)`}`); return { model, run: false as const }; }
+    if (x.suite !== 'longmemeval' || x.scope !== 'affected') throw new Error(`the ${model} secondary must be a LongMemEval analysis scoped to affected questions, got ${x.suite}/${x.scope}`);
+    if (!x.complete) problems.push(`${model}: incomplete`);
+    else if (x.verdict === 'regression') problems.push(`${model}: regression on affected questions (one-sided loss p ${x.primary.p_one_sided_less.toFixed(4)})`);
+    return { model, run: true as const, verdict: x.verdict, complete: x.complete, questions: x.questions, net_gain: x.primary.net_gain, ci95_net_gain: x.primary.ci95_net_gain, p_one_sided_greater: x.primary.p_one_sided_greater, p_one_sided_less: x.primary.p_one_sided_less };
+  });
+  if (!input.audit) problems.push('bracket audit: not run');
+  else if (!input.audit.complete) problems.push('bracket audit: incomplete');
+  else if (input.audit.rates.wrong > AUDIT_MAX_WRONG_RATE) problems.push(`bracket audit: ${(input.audit.rates.wrong * 100).toFixed(1)}% wrong, over ${AUDIT_MAX_WRONG_RATE * 100}%`);
+  return {
+    decision_model_passes_both: decisionPass,
+    secondaries,
+    audit: input.audit ? { complete: input.audit.complete, n: input.audit.n, wrong_rate: input.audit.rates.wrong } : null,
+    default_flip_ready: problems.length === 0,
+    blocking: problems,
+    outside_this_runner: 'GBRA-108 also requires the existing gbrain-evals retrieval categories to show no regression with the flag on',
+  };
+}
+
 const f2 = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
 
 export function analysisMarkdown(a: Analysis): string {
   const p = a.primary;
   const lines = [
     `# External ideas wave A: relative-date brackets (${a.model})`, '',
-    `Suite: ${a.suite}. Verdict: **${a.verdict}** (alpha ${a.alpha}). Status: **${a.complete ? 'complete' : 'INCOMPLETE'}**. gbrain ` + '`' + a.gbrain_commit.slice(0, 9) + '`' + `, ${a.questions} questions, ${a.affected} affected (their two requests differ), samples ${a.samples.join(', ')}. Primary judge: ${a.primary_judge}.`, '',
+    `Suite: ${a.suite}${a.scope === 'affected' ? ' (affected questions only)' : ''}. Verdict: **${a.verdict}** (alpha ${a.alpha}). Status: **${a.complete ? 'complete' : 'INCOMPLETE'}**. gbrain ` + '`' + a.gbrain_commit.slice(0, 9) + '`' + `, ${a.questions} questions, ${a.affected} affected (their two requests differ), samples ${a.samples.join(', ')}. Primary judge: ${a.primary_judge}.`, '',
     ...(a.complete ? [] : [`Failures: ${Object.entries(a.failures.counts).map(([k, v]) => `${k} ${v}`).join(', ')}.`, '']),
     '| Measure | auto | auto_dates | Net gain | 95% CI | One-sided p | Wins | Losses |',
     '|---|---|---|---|---|---|---|---|',
