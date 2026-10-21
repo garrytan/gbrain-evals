@@ -1,0 +1,164 @@
+{
+  "schema": "gbrain-evals/external-ideas-wave-a-run-manifest/v1",
+  "study_manifest_sha256": "20f6f81841f03db04b578f1fc6aac4a245a4c772e87c4ff95f741a85961241c9",
+  "suite": "longmemeval",
+  "smoke": false,
+  "dataset_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+  "gbrain": {
+    "commit": "cfa1a006b64c5baa199142bf0f0b56a0e3fc6c06",
+    "tree": "f538c94e68ce92922b7ee01721f52448aa91a7fe",
+    "version": "0.60.347.0",
+    "evidence_code_sha256": "33c23988a60ebd3970ecb26320e33cfc86eec0540cfc26311cf6ef03b3e2cfd7"
+  },
+  "pinned_code_sha256": {
+    "src/core/search/evidence-relative-dates.ts": "0433f353d4bed086d67e3bcf4b752e06ca57890dab9ee92d436e6c9e8f5b7182",
+    "src/core/search/speaker-line.ts": "d636f8175c6bfe9ffd213557a0988f8e3bdca79a84dc5afa0d359e6554d64ebe",
+    "src/core/temporal-grammar.ts": "534a5b487a0c2de47d170d61c8681163e6e093f105b7befcd63971ad89a77af2"
+  },
+  "pinned_code_matches_manifest": true,
+  "brain_timezone": null,
+  "brain_timezone_note": "brain.timezone unset: observation days are UTC calendar days",
+  "arms": {
+    "auto": {
+      "unit": "auto",
+      "budget_tokens": null,
+      "config": null
+    },
+    "auto_dates": {
+      "unit": "auto",
+      "budget_tokens": null,
+      "config": {
+        "search.evidence_resolve_dates": "true"
+      }
+    }
+  },
+  "evals_commit": "3b70bbee63c4fd34504130ee237f1a2cc84ef6b2",
+  "freeze_runs": [
+    {
+      "at": "2026-10-21T21:08:03.637Z",
+      "selected": 125,
+      "frozen": 125,
+      "skipped": 0,
+      "errors": [],
+      "seconds": 4074.5,
+      "seconds_per_frozen_question": 32.6,
+      "estimate": {
+        "questions": 125,
+        "expected_usd": 2.249259492500002,
+        "worst_usd": 2.9240373402500026,
+        "per_question_usd": 0.017994075940000017
+      },
+      "cost": {
+        "usd": 1.958177,
+        "input_tokens": 17990629,
+        "output_tokens": 0,
+        "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T20-00-04-284Z-d1f50950: 6419 paid requests, 0 charged at their reservation because usage was unavailable",
+        "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+        "program_cap_usd": 220,
+        "overshoot_usd": 0.000895,
+        "event_loop_lag_ms": {
+          "p50": 0,
+          "p99": 66,
+          "max": 4672
+        }
+      },
+      "shard": "0/4"
+    },
+    {
+      "at": "2026-10-21T21:09:17.286Z",
+      "selected": 125,
+      "frozen": 125,
+      "skipped": 0,
+      "errors": [],
+      "seconds": 4146.8,
+      "seconds_per_frozen_question": 33.17,
+      "estimate": {
+        "questions": 125,
+        "expected_usd": 2.2478225374999994,
+        "worst_usd": 2.922169298749999,
+        "per_question_usd": 0.017982580299999995
+      },
+      "cost": {
+        "usd": 1.963734,
+        "input_tokens": 18048201,
+        "output_tokens": 0,
+        "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T20-00-05-144Z-4144b1cf: 6302 paid requests, 0 charged at their reservation because usage was unavailable",
+        "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+        "program_cap_usd": 220,
+        "overshoot_usd": 0.001559,
+        "event_loop_lag_ms": {
+          "p50": 0,
+          "p99": 64,
+          "max": 4113.9
+        }
+      },
+      "shard": "1/4"
+    },
+    {
+      "at": "2026-10-21T21:11:34.216Z",
+      "selected": 125,
+      "frozen": 125,
+      "skipped": 0,
+      "errors": [],
+      "seconds": 4284,
+      "seconds_per_frozen_question": 34.27,
+      "estimate": {
+        "questions": 125,
+        "expected_usd": 2.248450567500001,
+        "worst_usd": 2.9229857377500013,
+        "per_question_usd": 0.017987604540000007
+      },
+      "cost": {
+        "usd": 1.962781,
+        "input_tokens": 18050255,
+        "output_tokens": 0,
+        "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T20-00-05-447Z-8c211706: 6273 paid requests, 0 charged at their reservation because usage was unavailable",
+        "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+        "program_cap_usd": 220,
+        "overshoot_usd": 0.002176,
+        "event_loop_lag_ms": {
+          "p50": 0,
+          "p99": 63,
+          "max": 4213.9
+        }
+      },
+      "shard": "2/4"
+    },
+    {
+      "at": "2026-10-21T21:10:19.887Z",
+      "selected": 125,
+      "frozen": 125,
+      "skipped": 0,
+      "errors": [],
+      "seconds": 4209.2,
+      "seconds_per_frozen_question": 33.67,
+      "estimate": {
+        "questions": 125,
+        "expected_usd": 2.250260135000001,
+        "worst_usd": 2.925338175500001,
+        "per_question_usd": 0.018002081080000006
+      },
+      "cost": {
+        "usd": 1.957718,
+        "input_tokens": 17964178,
+        "output_tokens": 0,
+        "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T20-00-05-699Z-1da47616: 6359 paid requests, 0 charged at their reservation because usage was unavailable",
+        "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+        "program_cap_usd": 220,
+        "overshoot_usd": 0.001244,
+        "event_loop_lag_ms": {
+          "p50": 0,
+          "p99": 64,
+          "max": 5191.2
+        }
+      },
+      "shard": "3/4"
+    }
+  ],
+  "merged_from": [
+    "shard-0",
+    "shard-1",
+    "shard-2",
+    "shard-3"
+  ]
+}

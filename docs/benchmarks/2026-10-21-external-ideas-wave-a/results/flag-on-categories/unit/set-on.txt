@@ -1,0 +1,190 @@
+(fail) agent-retrieval-shapes against deliberately broken adapters > an adapter that reverses every result list puts the renamed stub above its target (E2)
+(fail) agent-retrieval-shapes against deliberately broken adapters > an adapter that reverses every result list puts the renamed stub above its target (E2)
+(pass) C1 header and the one date channel > an undated session gets no header (never an invented date), and empty chunk text stays empty
+(pass) C1 header and the one date channel > native rendering through a recipe is byte-identical to the shootout native context
+(pass) C1 header and the one date channel > preregistered bytes from the session table ISO day; valid_from stays unset
+(pass) C5 rank-order rendering > the arms parser accepts the render and gives it its own recipe identity
+(pass) C5 rank-order rendering > the same packed blocks and token count as pseudo-session, shown in delivery order instead of date order
+(pass) E2 bridge: identical prompts and settings apart from evidence > chunk and winner requests share model, system, output limit, framing and question; only evidence differs
+(pass) E2 bridge: identical prompts and settings apart from evidence > scoring refuses to open labels while an answer row is missing, and opens them once with the decision id
+(pass) E2 bridge: identical prompts and settings apart from evidence > sealed questions become gold-free freeze inputs in LongMemEval shape
+(pass) E2 bridge: identical prompts and settings apart from evidence > the E2 request for a question equals the E1 request built from the same frozen evidence and question text
+(pass) E2 bridge: identical prompts and settings apart from evidence > the bridge replaces the sealed runner settings (temperature 0, 2048 tokens, official JSON-history prompt) with the E1 pins
+(pass) E2 bridge: identical prompts and settings apart from evidence > the decision id names the manifest and the winner; non-candidates are refused
+(pass) E2 bridge: identical prompts and settings apart from evidence > the sealed runner refuses to open labels for scoring without a decision id
+(pass) E2 budget sizing > B = floor_100(harness / (r_max x 1.02)) per budget, over every delivery read at it; off overflow is gbrain overrun
+(pass) E2 budget sizing > a fixed point outside the grid is refused, above as well as below
+(pass) E2 budget sizing > a missing variant is refused, not skipped
+(pass) E2 readings: guards, reader check and dev rule > guard 3 needs every question within its explicit budget and the reported packing; guard 4 needs zero cuts
+(pass) E2 readings: guards, reader check and dev rule > guard 7: a kind fails when it drops by more than max(1 question, 2% of the kind)
+(pass) E2 readings: guards, reader check and dev rule > the dev rule: interval above zero, every guard, no descriptive loss, the reader check; highest estimate wins
+(pass) E2 readings: guards, reader check and dev rule > the reader check fails on two or more sign changes among the three counted readers
+(pass) E2 stages on real PGLite (gbrain with search.auto_packing) > GbrainQuerySystem: freeze, size, deliver (with guard 1) and live, on one frozen list re-resolved by chunk text
+(pass) E2 stages on real PGLite (gbrain with search.auto_packing) > per call: off overruns an explicit budget, every capped packing stays within it and reports itself; without a budget all four are byte-identical
+(pass) E2 stages on real PGLite (gbrain with search.auto_packing) > setPacking writes the config key the handler reads; the live call reports that packing and equals the assembled delivery, dates included
+(pass) E2 stages on real PGLite (gbrain with search.auto_packing) > setup
+(pass) E3 product-path checks > answers are scored from the exact serialized chunk_text
+(pass) E3 product-path checks > local/remote and product-path fingerprints, token counts and containment are compared per arm
+(pass) E3 product-path checks > retrieval drift and text the page does not contain are reported
+(pass) E3 session fusion > a list with a missing rerank score falls back to the search score for every hit
+(pass) E3 session fusion > a session matched twice near the top outranks a single slightly higher match; ties keep first appearance
+(pass) GbrainQuerySystem > a missing rerank on a reranked build is retried, then kept and counted
+(pass) GbrainQuerySystem > deliver stage: no new frozen call, every variant delivered on the frozen list, live parity recorded, chunk ids remapped by index
+(pass) GbrainQuerySystem > freeze with a grid hands raw deliveries to the sizing hook only
+(pass) GbrainQuerySystem > pins are written through the config channel and checked at open; a probe (no stage) is a plain frozen call
+(pass) N6 end to end on the pinned gbrain (small op subset) > presence holds, detector controls fire, and get_page / list_pages are covered without leaks
+(pass) N6 generator ledger > every class has protected markers, a public twin and a ghost that was never written
+(pass) N6 generator ledger > markers are unique, and no protected marker is written on a page that is public as a whole
+(pass) N6 generator ledger > same seed gives the same ledger; another seed gives another
+(pass) N6 generator ledger > v2 keeps every v1 class and marker unchanged
+(pass) N6 generator ledger > v2 side writes: the private ontology value and private raw data are protected, their twins are world
+(pass) N6 leak scoring > a protected marker anywhere in a response is a content leak
+(pass) N6 leak scoring > a protected slug in a result field is an existence leak unless the probe asked for it; beta rows always are
+(pass) N6 leak scoring > an echo of the probe's own argument is credited by the ghost call, and only that often
+(pass) N6 leak scoring > expansion is recognized only from delivered blocks
+(pass) N6 leak scoring > refusing everything finds no leak but earns no signal, so it cannot buy coverage
+(pass) N6 leak scoring > returning everything leaks every class
+(pass) N6 leak scoring > the oracle compares masked shapes and ignores volatile fields
+(pass) N6 leak scoring > the reference clock open_loops echoes (as_of) is volatile
+(pass) N6 naming window (preregistered 2026-10-06) > only a window parameter changes; without a title the old query rule stands
+(pass) N6 naming window (preregistered 2026-10-06) > the window names the page title with every word capitalized
+(pass) N6 naming window (preregistered 2026-10-06) > titles come from the ledger page in the target source; the ghost title swaps in the ghost query
+(pass) N6 parameter synthesis > a hits array names the target with its source
+(pass) N6 parameter synthesis > a known_as_of answer is history only when it carries a recorded interval; refusals and coverage cuts are told apart
+(pass) N6 parameter synthesis > a known_as_of param gets its own recorded-time variants, with diff and include_body on; the base call leaves it out
+(pass) N6 parameter synthesis > a required param without a rule is unsupported, not guessed
+(pass) N6 parameter synthesis > an optional counterparty gets its own call naming the target; the base call leaves it out
+(pass) N6 parameter synthesis > an optional question gets its own ranked variant without widening flags; a required one is always filled
+(pass) N6 parameter synthesis > fills targets, widening flags and scope overrides
+(pass) N6 parameter synthesis > variants cover every enum value and both source overrides; targeted ops are recognized
+(pass) N6 tool-result parsing with gbrain notice blocks > an error body keeps its code
+(pass) N6 tool-result parsing with gbrain notice blocks > an opaque cursor that echoes the masked target compares equal; one that differs in anything else does not (N6-4)
+(pass) N6 tool-result parsing with gbrain notice blocks > the body is content[0]; notice blocks stay in raw for the leak scan and do not break JSON parsing
+(pass) N6 tool-result parsing with gbrain notice blocks > two responses that differ only in a volatile key compare equal; a differing notice does not
+(pass) affected set > a question is affected exactly when the two requests differ; counts, insertions and fallbacks are reported
+(pass) affected set > bracketInsertions: plain insertions, a pre-existing bracket, and text that is not the original plus brackets
+(pass) affected set > the audit finds each inserted bracket with its session date
+(pass) agent-retrieval-shapes against deliberately broken adapters > an adapter that drops the top row fails every identifier lookup (E10)
+(pass) agent-retrieval-shapes against deliberately broken adapters > an adapter that returns nothing fails every ranking and entity family instead of passing
+(pass) agent-retrieval-shapes against deliberately broken adapters > an adapter whose search throws is scored as misses, not as a harness error
+(pass) agent-retrieval-shapes against deliberately broken adapters > the registry row is report-only, hermetic and free
+(pass) agent-retrieval-shapes generator > a --families subset keeps only those families' pages and probes
+(pass) agent-retrieval-shapes generator > rendered pages round-trip through the oracle reader
+(pass) agent-retrieval-shapes generator > same seed, same ledger hash; another seed, another ledger
+(pass) agent-retrieval-shapes generator > the E6/E7 oracle strips honorifics and refuses ambiguous surnames
+(pass) agent-retrieval-shapes generator > the oracle derives gold for every probe on several seeds, and every family has probes
+(pass) agent-retrieval-shapes generator > the oracle throws when the world breaks its design (solvability control)
+(pass) agent-retrieval-shapes scorer (hand-built gold) > chunk cap, notice scope, empty filter and score monotonicity
+(pass) agent-retrieval-shapes scorer (hand-built gold) > entity: the right page passes, a wrong page fails; a refusal that suggests an index page fails (negative)
+(pass) agent-retrieval-shapes scorer (hand-built gold) > mentions: naming a mention page passes; a bare miss fails; a nowhere-name that names anything fails
+(pass) agent-retrieval-shapes scorer (hand-built gold) > parseFamilies accepts E1 to E15 and rejects anything else
+(pass) agent-retrieval-shapes scorer (hand-built gold) > rank: a document family over its share of the top 5 fails even when the answer is first
+(pass) agent-retrieval-shapes scorer (hand-built gold) > rank: first-place target passes; a stub above it, a miss or an error fails
+(pass) agent-retrieval-shapes scorer (hand-built gold) > twin: one slug in two sources inside the top 10 fails although rank 1 is right
+(pass) agent-retrieval-shapes scorer mutation suite > the honest system passes; empty, always-positive, always-refuse, stale and wrong-source fakes fail
+(pass) analysis > a framed judge error makes the run incomplete, never success-shaped
+(pass) analysis > a missing cell makes the run incomplete, never success-shaped
+(pass) analysis > a reader error (batch item errored) makes the run incomplete, never success-shaped
+(pass) analysis > a result missing from the batch makes the run incomplete, never success-shaped
+(pass) analysis > an expired batch item makes the run incomplete, never success-shaped
+(pass) analysis > an official judge error makes the run incomplete, never success-shaped
+(pass) analysis > an output-limit stop makes the run incomplete, never success-shaped
+(pass) analysis > decision: a clear gain passes
+(pass) analysis > decision: a positive point estimate whose test and bound fail reads inconclusive
+(pass) analysis > decision: a significant loss is a regression
+(pass) analysis > flip verdict: Sonnet passes on both suites, no secondary regresses, audit under 5% wrong
+(pass) analysis > scope affected scores only affected questions and needs no unaffected cells
+(pass) analysis > the per-type table and affected-only line add up
+(pass) analysis > unaffected questions reuse auto exactly; the score is the mean of two samples
+(pass) analysis > when the judges disagree, the official verdict drives the score
+(pass) answer cells > a batch submitted but never collected is reconciled by its batch id; nothing is resubmitted
+(pass) answer cells > errored and expired batch items become error rows that are not judged, and the analysis is incomplete
+(pass) answer cells > judge-only recovery re-judges settled answers from their stored text without a new reader request
+(pass) answer cells > resume refuses a row from another cell or another request
+(pass) cell identity > changes when the budget changes
+(pass) cell identity > changes when the dataset manifest changes
+(pass) cell identity > changes when the gbrain pin changes
+(pass) cell identity > changes when the knob changes
+(pass) cell identity > changes when the lane changes
+(pass) cell identity > changes when the mode changes
+(pass) cell identity > changes when the model changes
+(pass) cell identity > changes when the prompt revision changes
+(pass) cell identity > changes when the reused store changes
+(pass) cell identity > changes when the scorer revision changes
+(pass) cell identity > changes when the target changes
+(pass) cell identity > identityDiff names the changed fields
+(pass) cell identity > is deterministic and readable
+(pass) comparator name guard > finds the maker only as an organisation name
+(pass) comparator name guard > finds the product name in any case or glued form
+(pass) comparator name guard > in receipt text, skips the name only as an ordinary lower-case word
+(pass) comparator name guard > reports line numbers
+(pass) comparator name guard > scan skips dependency files and Python imports of the vendor client, nothing else
+(pass) comparator name guard > skips the "bias" idiom
+(pass) comparator name guard > skips the English idiom
+(pass) comparator name guard > skips the vendor's upper-case environment variables and the public harness repository path
+(pass) comparator name guard > still flags the name before other words
+(pass) estimates and credentials > an unpriced model is reported, not counted as free
+(pass) estimates and credentials > prices every stage from the ledger tables
+(pass) estimates and credentials > the harness process gets only the credentials its models need
+(pass) every paid call goes through the budget ledger > E1 rows record the three token counts and never swallow a budget refusal
+(pass) every paid call goes through the budget ledger > a refused reservation stops the judge instead of being retried or scored
+(pass) every paid call goes through the budget ledger > smoke runs are capped at $3 and real runs must join the campaign run
+(pass) every paid call goes through the budget ledger > the cost plan stays inside the $400 campaign cap with a retry margin
+(pass) every paid call goes through the budget ledger > the official judge is reserved and reconciled at the snapshot price
+(pass) every paid call goes through the budget ledger > the official judge prompt is the verbatim upstream text
+(pass) fixture (fixed in gbrain #6367): auto stays inside an explicit 8,000-token budget > 25 hits over long conversations: blocks fill the budget, the rest are dropped at the budget floor, nothing spills
+(pass) freeze: per-arm config passthrough > an arm without config freezes byte-identically whether or not a config arm runs beside it
+(pass) freeze: per-arm config passthrough > productArmSpecs carries config only where the manifest sets it
+(pass) freeze: per-arm config passthrough > the config is on only during its own arm and the key is unset afterwards
+(pass) freeze: per-arm config passthrough > withArmConfig restores a prior value, unsets a new key, survives a throw, and leaves the engine alone without config
+(pass) frozen chunk text against the re-import > equal except at gbrain output-redaction tokens; any other difference is a mismatch
+(pass) frozen list, deliveries and live parity > a limit-5 frozen list is the first five of the limit-25 list (the five-hit derivation holds)
+(pass) frozen list, deliveries and live parity > bare budget (G7 record): token_budget without return_unit is legacy chunk budgeting, no delivery
+(pass) frozen list, deliveries and live parity > fixture (fixed in gbrain #6367): the frozen-hit path carries effective_date, and the fingerprint still matches
+(pass) frozen list, deliveries and live parity > live auto at an explicit budget equals the assembled delivery on every consumed field except the date
+(pass) frozen list, deliveries and live parity > native default: neither override resolves auto at the 24,000-token conversation budget
+(pass) frozen list, deliveries and live parity > the chunk-unit call resolves no evidence plan and sends no budget; rows are the ranked hits
+(pass) gbrain under test > --gbrain, --gbrain= and GBRAIN_UNDER_TEST select an overlay; nothing selects the pin
+(pass) gbrain under test > a ref splits off only when the left side is a directory
+(pass) harness install > drops CUDA-only wheels
+(pass) keyless gate verdict > passes a complete keyless run and names each structural failure
+(pass) local campaign cells > a local cell runs the remote step on this host into its results directory, on a port derived from its lease
+(pass) per-call packing and the E2 variant set > assembleRequest passes auto_packing only when a packing is named
+(pass) per-call packing and the E2 variant set > fourteen preregistered variants: four packings at three budgets, off on five hits, window; off is always explicit
+(pass) preflight > dataset_sha_mismatch is reported with a fix and names keys, never values
+(pass) preflight > gbrain_commit_mismatch is reported with a fix and names keys, never values
+(pass) preflight > gbrain_tree_dirty is reported with a fix and names keys, never values
+(pass) preflight > missing_api_key is reported with a fix and names keys, never values
+(pass) preflight > pinned_code_mismatch is reported with a fix and names keys, never values
+(pass) preflight > prereg_not_attested is reported with a fix and names keys, never values
+(pass) preflight > reader_prompt_changed is reported with a fix and names keys, never values
+(pass) preflight > smoke runs skip the preregistration and pin checks only
+(pass) preflight > smoke_freeze is reported with a fix and names keys, never values
+(pass) preflight > the committed study manifest is valid and a clean setup passes
+(pass) pseudo-session parser > a header that differs from the session table is harness-invalid; an undated session renders unknown
+(pass) pseudo-session parser > a leading fragment with no preceding speaker is unknown
+(pass) pseudo-session parser > speaker turns, a consumed header, an omission turn and a cut fragment after it under the preceding speaker
+(pass) pseudo-session parser > the packer counts the exact serialized history and stops at the first block that does not fit
+(pass) pseudo-session parser > two chunks of one session are two pseudo-sessions with the same date, delivered text only
+(pass) raising a campaign cap > raise-cap moves the program cap and the campaign run budget up to the manifest cap, never down
+(pass) recipe identity > arms carry recipe hashes; shootout contexts keep their old keys
+(pass) recipe identity > changing any recipe field invalidates its context and arm, and its dependents; adding a reader does not
+(pass) recipe identity > the parser refuses unknown renders, undefined recipes and a dependency listed after its dependent
+(pass) settings pins > every pin is a registered gbrain key and reads back from the brain the handler reads; cache status disabled
+(pass) settings pins > the v2 key search.cache_enabled is refused as unregistered, and an unapplied value is refused
+(pass) spec validation > accepts a complete spec
+(pass) spec validation > rejects bad fields with one message
+(pass) store identity > raw, explicit-extractor and measured-default stores never share an identity
+(pass) store identity > read-time lanes and budgets share one store
+(pass) store reuse across gbrain builds > a cell without reuse keeps its id
+(pass) store reuse across gbrain builds > reads a store that differs only in the gbrain pin
+(pass) store reuse across gbrain builds > refuses a store that is not there
+(pass) store reuse across gbrain builds > refuses a store whose harness pin differs
+(pass) store reuse across gbrain builds > refuses a store whose ingest config differs
+(pass) synthetic relative-date generator > "last <weekday>" is offered only inside the previous calendar week and at least two days back
+(pass) synthetic relative-date generator > every gold answer matches an independent resolution of the gold sentences
+(pass) synthetic relative-date generator > hand-checked items
+(pass) synthetic relative-date generator > is deterministic and matches the committed file byte for byte
+(pass) synthetic relative-date generator > shape: 60 questions, 15 per kind, 6 to 10 sessions on distinct days, gold sessions labeled, year boundaries present
+(pass) two cells end to end (fixture, keyless) > cell A: chunk-dated and the undated twin, reused by prompt hash; cell B: freeze, then deliveries with live parity and every query recipe
+(pass) wire requests > each named request is exactly the preregistered object

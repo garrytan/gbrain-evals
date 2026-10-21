@@ -1,0 +1,34 @@
+{
+  "lines": [
+    {
+      "step": "freeze LongMemEval-S (500 questions): embeddings on a cold cache plus two reranks per question",
+      "usd": 8.24
+    },
+    {
+      "step": "E1 pilot: 10 arms x 100 questions (9 delivery arms + page_legacy), both judges",
+      "usd": 30.47
+    },
+    {
+      "step": "E1b agent_fetch: 100 pilot questions, up to 5 get_page fetches",
+      "usd": 10.22
+    },
+    {
+      "step": "E3: 100 pilot questions, page + 2 advanced arms, product evidence scored for the advanced arms (import embeddings cached)",
+      "usd": 5.5
+    },
+    {
+      "step": "E1 confirmatory: chunk, page, 2 advanced candidates x 400",
+      "usd": 48.92
+    },
+    {
+      "step": "gpt-4o: chunk + winner x 400 confirmatory",
+      "usd": 13.46
+    },
+    {
+      "step": "E2 sealed: freeze 30 haystacks, chunk + winner x 150, both judges",
+      "usd": 5.24
+    }
+  ],
+  "total_usd": 122.05,
+  "with_retry_margin_usd": 152.57
+}

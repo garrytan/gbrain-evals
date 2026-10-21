@@ -1,0 +1,916 @@
+{
+ "a4-abstention/receipt.json": {
+  "leaves": 4499,
+  "noise_diffs": 12,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.timings_ms.hermetic_total",
+   "data.timings_ms.queries",
+   "data.timings_ms.seed",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "adversarial/receipt.json": {
+  "leaves": 106,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "agent-retrieval-shapes/sweep-X/receipt.json": {
+  "leaves": 3902,
+  "noise_diffs": 12,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.hermetic_wall_ms",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "latency_ms.p50",
+   "latency_ms.p95",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "before-after/receipt.json": {
+  "leaves": 51,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat11-multimodal/receipt.json": {
+  "leaves": 69,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat11-multimodal/report.json": {
+  "leaves": 66,
+  "noise_diffs": 1,
+  "real_diffs": 0,
+  "noise_keys": [
+   "ran_at"
+  ],
+  "examples": []
+ },
+ "cat19-doctor-remediate/2026-10-21-cat19.json": {
+  "leaves": 67,
+  "noise_diffs": 5,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.steps[].duration_ms",
+   "data.wall_clock_ms",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat19-doctor-remediate/receipt.json": {
+  "leaves": 85,
+  "noise_diffs": 6,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.steps[].duration_ms",
+   "data.wall_clock_ms",
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat22-source-isolation/2026-10-21-cat22.json": {
+  "leaves": 84,
+  "noise_diffs": 2,
+  "real_diffs": 0,
+  "noise_keys": [
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat22-source-isolation/receipt.json": {
+  "leaves": 102,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat23-phantom-redirect/2026-10-21-cat23.json": {
+  "leaves": 99,
+  "noise_diffs": 2,
+  "real_diffs": 0,
+  "noise_keys": [
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat23-phantom-redirect/receipt.json": {
+  "leaves": 117,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat24-capture-provenance/2026-10-21-cat24.json": {
+  "leaves": 141,
+  "noise_diffs": 12,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.per_path[].actual.ingested_at",
+   "data.per_path[].actual.source_uri",
+   "data.per_path[].expected.source_uri",
+   "data.preservation_test.after.ingested_at",
+   "data.preservation_test.at_after",
+   "data.preservation_test.at_before",
+   "data.preservation_test.before.ingested_at",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat24-capture-provenance/receipt.json": {
+  "leaves": 159,
+  "noise_diffs": 13,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.per_path[].actual.ingested_at",
+   "data.per_path[].actual.source_uri",
+   "data.per_path[].expected.source_uri",
+   "data.preservation_test.after.ingested_at",
+   "data.preservation_test.at_after",
+   "data.preservation_test.at_before",
+   "data.preservation_test.before.ingested_at",
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat27-graph-signals/2026-10-21-cat27.json": {
+  "leaves": 102,
+  "noise_diffs": 2,
+  "real_diffs": 0,
+  "noise_keys": [
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat27-graph-signals/receipt.json": {
+  "leaves": 120,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat28-federated-sync-latency/2026-10-21-cat28.json": {
+  "leaves": 136,
+  "noise_diffs": 66,
+  "real_diffs": 1,
+  "noise_keys": [
+   "data.concurrent_single_thread.per_source_ms_p50",
+   "data.concurrent_single_thread.per_source_ms_p95",
+   "data.concurrent_single_thread.setup_ms_p50",
+   "data.concurrent_single_thread.setup_ms_p95",
+   "data.concurrent_single_thread.wallclock_ms_all[]",
+   "data.concurrent_single_thread.wallclock_ms_median",
+   "data.concurrent_single_thread.wallclock_ms_p95",
+   "data.passes[].per_source_ms[]",
+   "data.passes[].setup_ms[]",
+   "data.passes[].wallclock_ms",
+   "data.serial.per_source_ms_p50",
+   "data.serial.per_source_ms_p95",
+   "data.serial.setup_ms_p50",
+   "data.serial.setup_ms_p95",
+   "data.serial.wallclock_ms_all[]",
+   "data.serial.wallclock_ms_median",
+   "data.serial.wallclock_ms_p95",
+   "finished_at",
+   "latency_ms.p50",
+   "latency_ms.p95",
+   "started_at"
+  ],
+  "examples": [
+   [
+    "data.single_thread_interleaving_ratio",
+    "0.3042071197411003",
+    "0.30925967851482905"
+   ]
+  ]
+ },
+ "cat28-federated-sync-latency/receipt.json": {
+  "leaves": 153,
+  "noise_diffs": 67,
+  "real_diffs": 1,
+  "noise_keys": [
+   "data.concurrent_single_thread.per_source_ms_p50",
+   "data.concurrent_single_thread.per_source_ms_p95",
+   "data.concurrent_single_thread.setup_ms_p50",
+   "data.concurrent_single_thread.setup_ms_p95",
+   "data.concurrent_single_thread.wallclock_ms_all[]",
+   "data.concurrent_single_thread.wallclock_ms_median",
+   "data.concurrent_single_thread.wallclock_ms_p95",
+   "data.passes[].per_source_ms[]",
+   "data.passes[].setup_ms[]",
+   "data.passes[].wallclock_ms",
+   "data.serial.per_source_ms_p50",
+   "data.serial.per_source_ms_p95",
+   "data.serial.setup_ms_p50",
+   "data.serial.setup_ms_p95",
+   "data.serial.wallclock_ms_all[]",
+   "data.serial.wallclock_ms_median",
+   "data.serial.wallclock_ms_p95",
+   "execution.product.package_sha256",
+   "finished_at",
+   "latency_ms.p50",
+   "latency_ms.p95",
+   "started_at"
+  ],
+  "examples": [
+   [
+    "data.single_thread_interleaving_ratio",
+    "0.3042071197411003",
+    "0.30925967851482905"
+   ]
+  ]
+ },
+ "cat34-brainbench-memory/receipt.json": {
+  "leaves": 33,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat36-associative-retrieval/sweep-X/build.json": {
+  "leaves": 2585,
+  "noise_diffs": 2,
+  "real_diffs": 1,
+  "noise_keys": [
+   "frozen_at",
+   "provenance.file_config.path"
+  ],
+  "examples": [
+   [
+    "provenance.isolated_home",
+    "/tmp/cat36-isolated-i1UoPB/home",
+    "/tmp/cat36-isolated-8ydbIc/home"
+   ]
+  ]
+ },
+ "cat36-associative-retrieval/sweep-X/receipt.json": {
+  "leaves": 3271,
+  "noise_diffs": 9,
+  "real_diffs": 1,
+  "noise_keys": [
+   "data.build.provenance.file_config.path",
+   "data.rows[].latency_ms",
+   "execution.product.package_sha256",
+   "finished_at",
+   "hashes.build",
+   "started_at"
+  ],
+  "examples": [
+   [
+    "data.build.provenance.isolated_home",
+    "/tmp/cat36-isolated-i1UoPB/home",
+    "/tmp/cat36-isolated-8ydbIc/home"
+   ]
+  ]
+ },
+ "cat37-memory-poisoning/sweep-X/receipt.json": {
+  "leaves": 6254,
+  "noise_diffs": 12,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.timing_ms.hermetic",
+   "data.timing_ms.per_mode.default",
+   "data.timing_ms.per_mode.off",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat38-state-resolution/sweep-X/receipt.json": {
+  "leaves": 9704,
+  "noise_diffs": 22,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.timing_ms.default.api_writes",
+   "data.timing_ms.default.checks",
+   "data.timing_ms.default.observe",
+   "data.timing_ms.default.open",
+   "data.timing_ms.default.owner_sync",
+   "data.timing_ms.default.total",
+   "data.timing_ms.hermetic_wall",
+   "data.timing_ms.off.api_writes",
+   "data.timing_ms.off.checks",
+   "data.timing_ms.off.observe",
+   "data.timing_ms.off.open",
+   "data.timing_ms.off.owner_sync",
+   "data.timing_ms.off.total",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat39-deletion-audit/sweep-X/receipt.json": {
+  "leaves": 7355,
+  "noise_diffs": 16,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.seed_report.ms",
+   "data.timings_ms.hermetic_total",
+   "data.timings_ms.probes",
+   "data.timings_ms.purge",
+   "data.timings_ms.resurrection",
+   "data.timings_ms.seed",
+   "data.timings_ms.total",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat6-prose-scale/receipt.json": {
+  "leaves": 6864,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "cat6-prose-scale/report.json": {
+  "leaves": 6624,
+  "noise_diffs": 1,
+  "real_diffs": 0,
+  "noise_keys": [
+   "ran_at"
+  ],
+  "examples": []
+ },
+ "identity/receipt.json": {
+  "leaves": 4059,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "mcp-contract/receipt.json": {
+  "leaves": 48,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "n1-knowledge-update/sweep-X/receipt.json": {
+  "leaves": 2501,
+  "noise_diffs": 19,
+  "real_diffs": 5,
+  "noise_keys": [
+   "data.by_cell[].duration_ms",
+   "data.cells[].duration_ms",
+   "data.cells[].operator[].ms",
+   "data.cells[].started_at",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "latency_ms.p50",
+   "latency_ms.p95",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": [
+   [
+    "data.cells[0].operator[0].args[3]",
+    "<tmp>/n1-knowledge-update-cells-oZLZ00/n1-pglite-mcp-stdio/gbrain-home/brain.pglite",
+    "<tmp>/n1-knowledge-update-cells-5Kn9FA/n1-pglite-mcp-stdio/gbrain-home/brain.pglite"
+   ],
+   [
+    "data.cells[0].operator[0].tail",
+    "More: bulk-load notes `gbrain import <dir>` \u00b7 scale up `gbrain migrate --to postgres --plan` \u00b7 health `gbrain doctor`\n  ",
+    "More: bulk-load notes `gbrain import <dir>` \u00b7 scale up `gbrain migrate --to postgres --plan` \u00b7 health `gbrain doctor`\n  "
+   ],
+   [
+    "data.cells[0].operator[1].args[4]",
+    "<tmp>/n1-knowledge-update-cells-oZLZ00/n1-pglite-mcp-stdio/vault-vault",
+    "<tmp>/n1-knowledge-update-cells-5Kn9FA/n1-pglite-mcp-stdio/vault-vault"
+   ],
+   [
+    "data.cells[0].operator[1].tail",
+    "  \"source_id\": \"vault\",\n  \"local_path\": \"<tmp>/n1-knowledge-update-cells-oZLZ00/n1-pglite-mcp-stdio/vault-vault\",\n  \"sou",
+    "  \"source_id\": \"vault\",\n  \"local_path\": \"<tmp>/n1-knowledge-update-cells-5Kn9FA/n1-pglite-mcp-stdio/vault-vault\",\n  \"sou"
+   ],
+   [
+    "data.cells[0].operator[4].tail",
+    "First sync complete. Checkpoint: 65d4722e\n  0 file(s) imported, 0 chunks\nManaged sync synced: 4 entries this run (0 writ",
+    "First sync complete. Checkpoint: d98868f2\n  0 file(s) imported, 0 chunks\nManaged sync synced: 4 entries this run (0 writ"
+   ]
+  ]
+ },
+ "n12-format-fidelity/receipt.json": {
+  "leaves": 18566,
+  "noise_diffs": 10,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "resolved_config.runtime_ms",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "n13-code-intelligence/receipt.json": {
+  "leaves": 984,
+  "noise_diffs": 18,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.import.import_ms",
+   "data.import.resolver.ms",
+   "data.import.resolver_ms",
+   "data.readiness[].latency_ms",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "resolved_config.runtime_ms",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "n14-large-page-fidelity/sweep-X/receipt.json": {
+  "leaves": 6242,
+  "noise_diffs": 230,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.arms[].append.wall_ms",
+   "data.arms[].embed_initial.wall_ms",
+   "data.arms[].ingest.projection.settle_ms",
+   "data.arms[].ingest.rss_over_baseline_mb",
+   "data.arms[].ingest.rss_peak_mb",
+   "data.arms[].ingest.wall_ms",
+   "data.children[].rss_peak_mb",
+   "data.children[].wall_ms",
+   "data.probes[].append.wall_ms",
+   "data.probes[].embed_initial.wall_ms",
+   "data.probes[].ingest.projection.settle_ms",
+   "data.probes[].ingest.wall_ms",
+   "data.probes[].memory[].max_rss_mb",
+   "data.probes[].memory[].rss_mb",
+   "data.probes[].memory[].t_ms",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "resolved_config.hermetic_wall_ms",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "n2-contradiction-surfacing/receipt.json": {
+  "leaves": 362,
+  "noise_diffs": 13,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.timings_ms.oracle_probe",
+   "data.timings_ms.seed",
+   "data.timings_ms.throwing_probe",
+   "data.timings_ms.total",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "n3-temporal-asof/receipt.json": {
+  "leaves": 6180,
+  "noise_diffs": 24,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.rows[].gold.after_ms",
+   "data.rows[].gold.before_ms",
+   "data.rows[].predicted.after.ms",
+   "data.rows[].predicted.before.ms",
+   "data.rows[].predicted.ms",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "n4-entity-resolution/receipt.json": {
+  "leaves": 6318,
+  "noise_diffs": 9,
+  "real_diffs": 2,
+  "noise_keys": [
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": [
+   [
+    "data.rows[117].recall.markers[0]",
+    "default:people/theodore-thistle-example",
+    "team:people/tthistle-example"
+   ],
+   [
+    "data.rows[117].recall.markers[1]",
+    "team:people/tthistle-example",
+    "default:people/theodore-thistle-example"
+   ]
+  ]
+ },
+ "n5-forget-residue/sweep-X/receipt.json": {
+  "leaves": 1128,
+  "noise_diffs": 20,
+  "real_diffs": 8,
+  "noise_keys": [
+   "data.by_cell[].duration_ms",
+   "data.cells[].duration_ms",
+   "data.cells[].operator[].ms",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "latency_ms.p50",
+   "latency_ms.p95",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": [
+   [
+    "data.cells[0].operator[0].args[3]",
+    "/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/gbrain-home/brain.pglite",
+    "/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/gbrain-home/brain.pglite"
+   ],
+   [
+    "data.cells[0].operator[0].tail",
+    "More: bulk-load notes `gbrain import <dir>` \u00b7 scale up `gbrain migrate --to postgres --plan` \u00b7 health `gbrain doctor`\n  ",
+    "More: bulk-load notes `gbrain import <dir>` \u00b7 scale up `gbrain migrate --to postgres --plan` \u00b7 health `gbrain doctor`\n  "
+   ],
+   [
+    "data.cells[0].operator[1].args[4]",
+    "/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/vault-vault",
+    "/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/vault-vault"
+   ],
+   [
+    "data.cells[0].operator[1].tail",
+    "  \"source_id\": \"vault\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/vault-vault\",\n  \"source",
+    "  \"source_id\": \"vault\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/vault-vault\",\n  \"source"
+   ],
+   [
+    "data.cells[0].operator[2].args[4]",
+    "/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/other-vault",
+    "/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/other-vault"
+   ],
+   [
+    "data.cells[0].operator[2].tail",
+    "  \"source_id\": \"other\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/other-vault\",\n  \"source",
+    "  \"source_id\": \"other\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/other-vault\",\n  \"source"
+   ],
+   [
+    "data.cells[0].operator[5].tail",
+    "First sync complete. Checkpoint: 5a5f52a8\n  0 file(s) imported, 0 chunks\nManaged sync synced: 2 entries this run (0 writ",
+    "First sync complete. Checkpoint: 8a8c920e\n  0 file(s) imported, 0 chunks\nManaged sync synced: 2 entries this run (0 writ"
+   ],
+   [
+    "data.cells[0].operator[6].tail",
+    "Synced 5a5f52a8..0ad87bdb:\n  +0 added, ~1 modified, -0 soft-deleted (recoverable 72h), R0 renamed\n  1 chunks created\nMan",
+    "Synced 8a8c920e..51da5ba7:\n  +0 added, ~1 modified, -0 soft-deleted (recoverable 72h), R0 renamed\n  1 chunks created\nMan"
+   ]
+  ]
+ },
+ "n6-visibility-fuzz/receipt.json": {
+  "leaves": 3202,
+  "noise_diffs": 9,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "n7-open-loops-email/receipt.json": {
+  "leaves": 785,
+  "noise_diffs": 9,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "n8-proactive-recall/receipt.json": {
+  "leaves": 788,
+  "noise_diffs": 45,
+  "real_diffs": 6,
+  "noise_keys": [
+   "data.quality.baselines.always_3.latency_ms_p50",
+   "data.quality.baselines.always_3.latency_ms_p95",
+   "data.quality.baselines.keyword_search_top3.latency_ms_p50",
+   "data.quality.baselines.keyword_search_top3.latency_ms_p95",
+   "data.quality.baselines.never.latency_ms_p50",
+   "data.quality.baselines.never.latency_ms_p95",
+   "data.quality.latency_ms.baseline_always_3.p50",
+   "data.quality.latency_ms.baseline_always_3.p95",
+   "data.quality.latency_ms.baseline_keyword_search_top3.p50",
+   "data.quality.latency_ms.baseline_keyword_search_top3.p95",
+   "data.quality.latency_ms.baseline_never.p50",
+   "data.quality.latency_ms.baseline_never.p95",
+   "data.quality.latency_ms.turn_context_local.p50",
+   "data.quality.latency_ms.turn_context_local.p95",
+   "data.quality.latency_ms.volunteer_local_no_prior.p50",
+   "data.quality.latency_ms.volunteer_local_no_prior.p95",
+   "data.quality.latency_ms.volunteer_local_prior.p50",
+   "data.quality.latency_ms.volunteer_local_prior.p95",
+   "data.quality.latency_ms.volunteer_remote_prior.p50",
+   "data.quality.latency_ms.volunteer_remote_prior.p95",
+   "data.quality.mechanics.latency_ms_p50",
+   "data.quality.mechanics.latency_ms_p95",
+   "data.quality.modes.baseline_always_3.latency_ms_p50",
+   "data.quality.modes.baseline_always_3.latency_ms_p95",
+   "data.quality.modes.baseline_keyword_search_top3.latency_ms_p50",
+   "data.quality.modes.baseline_keyword_search_top3.latency_ms_p95",
+   "data.quality.modes.baseline_never.latency_ms_p50",
+   "data.quality.modes.baseline_never.latency_ms_p95",
+   "data.quality.modes.turn_context_local.latency_ms_p50",
+   "data.quality.modes.turn_context_local.latency_ms_p95",
+   "data.quality.modes.volunteer_local_no_prior.latency_ms_p50",
+   "data.quality.modes.volunteer_local_no_prior.latency_ms_p95",
+   "data.quality.modes.volunteer_local_prior.latency_ms_p50",
+   "data.quality.modes.volunteer_local_prior.latency_ms_p95",
+   "data.quality.modes.volunteer_remote_prior.latency_ms_p50",
+   "data.quality.modes.volunteer_remote_prior.latency_ms_p95",
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": [
+   [
+    "data.quality.baselines.keyword_search_top3.tokens_per_negative_turn_mean",
+    "151.775",
+    "151.7625"
+   ],
+   [
+    "data.quality.baselines.keyword_search_top3.tokens_per_turn_mean",
+    "213.72043010752688",
+    "213.70430107526883"
+   ],
+   [
+    "data.quality.modes.baseline_keyword_search_top3.tokens_per_negative_turn_mean",
+    "151.775",
+    "151.7625"
+   ],
+   [
+    "data.quality.modes.baseline_keyword_search_top3.tokens_per_turn_mean",
+    "213.72043010752688",
+    "213.70430107526883"
+   ],
+   [
+    "data.quality.tokens_per_turn.baseline_keyword_search_top3.mean",
+    "213.72043010752688",
+    "213.70430107526883"
+   ],
+   [
+    "data.quality.tokens_per_turn.baseline_keyword_search_top3.negative_turn_mean",
+    "151.775",
+    "151.7625"
+   ]
+  ]
+ },
+ "n9-multi-hop-paraphrase/sweep-X/receipt.json": {
+  "leaves": 55848,
+  "noise_diffs": 11,
+  "real_diffs": 3,
+  "noise_keys": [
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "latency_ms.p50",
+   "latency_ms.p95",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": [
+   [
+    "data.indices[0].index_id",
+    "8c10febd-f249-4a0a-8268-c3dfefb274ea",
+    "0698a53e-7951-4e6f-8725-42e68d7774fc"
+   ],
+   [
+    "data.indices[1].index_id",
+    "cadbfb9a-7449-4057-aa4e-17f242092e4a",
+    "3e4ddd93-f2a4-45dd-bd7c-a5ec3cc3a638"
+   ],
+   [
+    "data.indices[2].index_id",
+    "b7f2b6b1-a5ef-4aac-8718-50ee554d5fd7",
+    "b7c39c78-a28c-45ef-b2d1-f7c63c42ae33"
+   ]
+  ]
+ },
+ "perf/receipt.json": {
+  "leaves": 202,
+  "noise_diffs": 78,
+  "real_diffs": 0,
+  "noise_keys": [
+   "data.latency[].p50_ms",
+   "data.latency[].p95_ms",
+   "data.latency[].p99_ms",
+   "data.thresholds[].actual_ms",
+   "data.throughput[].ops_per_sec",
+   "data.throughput[].total_seconds",
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "system-one-jev/receipt.json": {
+  "leaves": 171,
+  "noise_diffs": 2,
+  "real_diffs": 0,
+  "noise_keys": [
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "temporal-edges/receipt.json": {
+  "leaves": 8645,
+  "noise_diffs": 9,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.loaded_git_head",
+   "execution.product.package_sha256",
+   "finished_at",
+   "resolved_config.gbrain_overlay.commit",
+   "resolved_config.gbrain_overlay.ref",
+   "resolved_config.gbrain_overlay.requested",
+   "resolved_config.gbrain_overlay.tree",
+   "resolved_config.gbrain_overlay.verified.copy_tree",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "temporal/receipt.json": {
+  "leaves": 3170,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ },
+ "type-accuracy/receipt.json": {
+  "leaves": 20830,
+  "noise_diffs": 3,
+  "real_diffs": 0,
+  "noise_keys": [
+   "execution.product.package_sha256",
+   "finished_at",
+   "started_at"
+  ],
+  "examples": []
+ }
+}
