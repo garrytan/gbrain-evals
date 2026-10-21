@@ -120,3 +120,13 @@ The combined worst case ($63.66) is over the $60 wave cap. So, as the coordinato
 ## Amendments
 
 None yet.
+
+### 2026-10-21, after the Sonnet 5.5 cells and before any harm-check request: the wave cap for the R2 harm checks
+
+R2 passed on Sonnet 5.5 ([results](2026-10-21-external-ideas-wave-a2.md)), so its harm checks are due, and they don't fit the $28.46 left of the $60 wave cap. The coordinator approved running them inside the lane cap GBRA-108 already approved; every single cell is well under the $50 single-run limit, so no new approval is needed.
+
+- **Cap:** the wave A2 cap is raised so that the lane ledger stops at **$215 committed**, a $5 reserve under the $220 lane cap. That leaves about $125 for wave A2 ($90.04 committed before this amendment). Each run's `--budget-usd` is set no higher than $215 minus the ledger's committed total at its start, so no run can reserve past the stop. If a run reaches it, the runner stops with `budget_exhausted` and what completed is reported.
+- **Order:** `gpt-6.1-sol` runs first: `auto` and `r2_tail_trim`, two samples each, on R2's 217 affected questions, analyzed with `--scope affected`, then `a2-verdict` with that analysis as a secondary. `claude-opus-5-5` runs the same cells only if Sol's verdict is not a regression **and** the lane budget left under the $215 stop covers Opus's preflight expected cost ($36.4) plus 25% ($45.50). Otherwise the wave stops and reports.
+- **Also reported:** the knowledge-update rows for each model separately, and every R2-affected question where the trim dropped a block from a gold (answer) session, by count and question id.
+
+Reason: the harm checks are the only path from a Sonnet-only pass to a product recommendation, and the coordinator chose to fund them. Arms, data, the decision rule and the regression test for secondaries are unchanged.
