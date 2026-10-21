@@ -451,7 +451,7 @@ const f2 = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
 export function analysisMarkdown(a: Analysis): string {
   const p = a.primary;
   const lines = [
-    `# External ideas wave A: relative-date brackets (${a.model})`, '',
+    `# External ideas ${a.candidate_arm === 'auto_dates' ? 'wave A: relative-date brackets' : `wave A2: ${a.candidate_arm}`} (${a.model})`, '',
     `Suite: ${a.suite}${a.scope === 'affected' ? ' (affected questions only)' : ''}. Verdict: **${a.verdict}** (alpha ${a.alpha}). Status: **${a.complete ? 'complete' : 'INCOMPLETE'}**. gbrain ` + '`' + a.gbrain_commit.slice(0, 9) + '`' + `, ${a.questions} questions, ${a.affected} affected (their two requests differ), samples ${a.samples.join(', ')}. Primary judge: ${a.primary_judge}.`, '',
     ...(a.complete ? [] : [`Failures: ${Object.entries(a.failures.counts).map(([k, v]) => `${k} ${v}`).join(', ')}.`, '']),
     `| Measure | auto | ${a.candidate_arm} | Net gain | 95% CI | One-sided p | Wins | Losses |`,

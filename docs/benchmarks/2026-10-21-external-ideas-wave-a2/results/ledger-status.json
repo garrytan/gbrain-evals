@@ -1,0 +1,13 @@
+{
+  "ledger": "GBRA-162 lane ledger (waves A, B and A2)",
+  "totals": {
+    "program_cap_usd": 220,
+    "committed_usd": 90.04208043000001,
+    "reconciled_usd": 90.04208043000001,
+    "open_reservations_usd": 0,
+    "remaining_usd": 129.95791957,
+    "requests": 33951,
+    "overshoot_usd": 0.005908239999999998
+  },
+  "runs": 23
+}
