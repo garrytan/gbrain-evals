@@ -50,7 +50,29 @@ export const EMBEDDING = 'openai:text-embedding-3-large@1536';
 export const RERANK_TIMEOUT_MS = 30_000;
 
 export function productArmSpecs(m: DecisionManifest) {
-  return m.arms.filter(a => a.source === 'product').map(a => ({ id: a.id, unit: a.unit, ...(a.return_window ? { return_window: a.return_window } : {}), budget_tokens: a.budget_tokens ?? null }));
+  return m.arms.filter(a => a.source === 'product').map(a => ({ id: a.id, unit: a.unit, ...(a.return_window ? { return_window: a.return_window } : {}), budget_tokens: a.budget_tokens ?? null, ...(a.config ? { config: a.config } : {}) }));
+}
+
+/**
+ * Run `fn` with `config` set on the engine, then put every key back: a key
+ * that had no row is unset, one that had a value gets it back, even when `fn`
+ * throws. With no config the engine is not touched at all.
+ */
+export async function withArmConfig<T>(engine: { getConfig(key: string): Promise<string | null>; setConfig(key: string, value: string): Promise<void>; unsetConfig(key: string): Promise<number> }, config: Record<string, string> | undefined, fn: () => Promise<T>): Promise<T> {
+  if (!config) return fn();
+  const prior: Array<[string, string | null]> = [];
+  try {
+    for (const [key, value] of Object.entries(config)) {
+      prior.push([key, await engine.getConfig(key)]);
+      await engine.setConfig(key, value);
+    }
+    return await fn();
+  } finally {
+    for (const [key, value] of prior.reverse()) {
+      if (value === null) await engine.unsetConfig(key);
+      else await engine.setConfig(key, value);
+    }
+  }
 }
 
 function fileSha(path: string): string | null {
@@ -87,7 +109,7 @@ export async function freeze(o: FreezeOptions): Promise<{ frozen: number; skippe
       gbrain: identity, dataset_sha256: o.datasetSha,
       retrieval: { top_k: 5, comparator_top_k: 10, mode: 'balanced', reranker: true, autocut: false, expansion: false, trajectory: false, embedding: EMBEDDING },
       embed_cache: { sha256_before: fileSha(o.embedCachePath), sha256_after: null, misses: null },
-      product_arms: Object.fromEntries(products.map(p => [p.id, { unit: p.unit, ...(p.return_window ? { return_window: p.return_window } : {}), budget_tokens: p.budget_tokens }])),
+      product_arms: Object.fromEntries(products.map(p => [p.id, { unit: p.unit, ...(p.return_window ? { return_window: p.return_window } : {}), budget_tokens: p.budget_tokens, ...(p.config ? { config: p.config } : {}) }])),
       note: g.evidence ? 'product arms produced by assembleEvidenceForHits at this commit' : 'this commit has no evidence-delivery stage; only the harness arms (chunk, k10, page_legacy) are frozen',
     };
     writeFileSync(headerPath, JSON.stringify(header, null, 2) + '\n');
@@ -196,7 +218,7 @@ async function freezeOne(g: GbrainModules, engine: any, input: FreezeInput, stor
       ...(sameChunk ? {} : { note: 'product chunk-mode text differs from the hybridSearch chunk text; the frozen chunk text is used' }),
     };
     for (const p of products) {
-      const out = await assemble(p.unit, p.return_window, p.budget_tokens);
+      const out = await withArmConfig(engine, p.config, () => assemble(p.unit, p.return_window, p.budget_tokens));
       const blocks = out.results.map((r: any) => ({ slug: r.slug, text: store.put(r.chunk_text) }));
       const texts = out.results.map((r: any) => r.chunk_text as string);
       arms[p.id] = {

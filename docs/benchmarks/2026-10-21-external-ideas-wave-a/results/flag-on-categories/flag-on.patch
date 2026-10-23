@@ -1,0 +1,13 @@
+diff --git a/src/core/search/evidence-delivery.ts b/src/core/search/evidence-delivery.ts
+index 9ed61a5a..efb5a68d 100644
+--- a/src/core/search/evidence-delivery.ts
++++ b/src/core/search/evidence-delivery.ts
+@@ -291,7 +291,7 @@ export async function resolveEvidencePlan(engine: BrainEngine, input: ResolvePla
+     packing,
+     ...(budgetClamped ? { budgetClamped } : {}),
+     ...(await evidenceDateHeaderEnabled(engine) ? { dateHeader: true as const } : {}),
+-    ...(await configFlagOn(engine, EVIDENCE_RESOLVE_DATES_KEY) ? { resolveDates: true as const } : {}),
++    ...(true ? { resolveDates: true as const } : {}),
+     ...(rankCut ? { rankCut } : {}),
+   };
+ }

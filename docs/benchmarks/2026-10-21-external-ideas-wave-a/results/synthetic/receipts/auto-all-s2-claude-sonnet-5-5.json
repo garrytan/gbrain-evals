@@ -1,0 +1,39 @@
+{
+  "cell": "auto-all-s2-claude-sonnet-5-5",
+  "done": true,
+  "questions": 60,
+  "rows": 60,
+  "failures": {},
+  "official_correct": 60,
+  "framed_correct": 60,
+  "reader_usage": {
+    "input_tokens": 83549,
+    "output_tokens": 8728,
+    "batch_usd": 0.127189,
+    "list_usd": 0.254378
+  },
+  "estimate": {
+    "requests": 60,
+    "mean_input_tokens": 1481,
+    "expected_usd": 0.39928759999999996,
+    "worst_usd": 1.7779376000000002
+  },
+  "cost": {
+    "usd": 0.232514,
+    "input_tokens": 124815,
+    "output_tokens": 8944,
+    "basis": "budget ledger external-ideas-wave-a-answer-2026-10-21T21-47-23-645Z-a28125a8: 121 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<lane>/ledger.sqlite",
+    "program_cap_usd": 220,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 104
+    }
+  },
+  "batch_factor": {
+    "factor": 0.5,
+    "confirmed": true
+  }
+}

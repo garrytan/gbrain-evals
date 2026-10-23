@@ -1,0 +1,39 @@
+{
+  "cell": "r1_rank_date-affected-s1-claude-sonnet-5-5",
+  "done": true,
+  "questions": 500,
+  "rows": 500,
+  "failures": {},
+  "official_correct": 463,
+  "framed_correct": 463,
+  "reader_usage": {
+    "input_tokens": 10987631,
+    "output_tokens": 101950,
+    "batch_usd": 11.730550000000003,
+    "list_usd": 22.994761999999994
+  },
+  "estimate": {
+    "requests": 500,
+    "mean_input_tokens": 22048,
+    "expected_usd": 13.635438000000113,
+    "worst_usd": 23.915288000000213
+  },
+  "cost": {
+    "usd": 12.54619,
+    "input_tokens": 11306259,
+    "output_tokens": 103857,
+    "basis": "budget ledger external-ideas-wave-a-answer-2026-10-21T22-18-01-314Z-082c5daf: 1002 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<lane>/ledger.sqlite",
+    "program_cap_usd": 220,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 478.7
+    }
+  },
+  "batch_factor": {
+    "factor": 0.5,
+    "confirmed": true
+  }
+}

@@ -1,0 +1,1051 @@
+{
+  "schema": "gbrain-evals/external-ideas-wave-a-audit/v1",
+  "frozen_manifest_sha256": "5f62ad3909320ae95c3496a263348bd1cc7deaf1ac335ee25490196acaf7be5b",
+  "gbrain_commit": "cfa1a006b64c5baa199142bf0f0b56a0e3fc6c06",
+  "smoke": false,
+  "preregistration": {
+    "preregistration": "docs/benchmarks/2026-10-21-external-ideas-wave-a-preregistration.md",
+    "preregistration_commit": "3b70bbee63c4fd34504130ee237f1a2cc84ef6b2",
+    "runner_commit": "3b70bbee63c4fd34504130ee237f1a2cc84ef6b2",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-21T21:54:34.055Z"
+  },
+  "judge": {
+    "model": "anthropic:claude-opus-5-5",
+    "effort": "low",
+    "prompt_sha256": "43090f595d83fde30fb9202016b3492defbdc0fd4bffce9895190e38c82466c2"
+  },
+  "insertions_available": 1303,
+  "unaligned_blocks": 0,
+  "n": 100,
+  "seed": 20261021,
+  "counts": {
+    "correct": 93,
+    "wrong": 1,
+    "ambiguous": 6,
+    "unparsed_or_error": 0
+  },
+  "rates": {
+    "correct": 0.93,
+    "wrong": 0.01,
+    "ambiguous": 0.06
+  },
+  "complete": true,
+  "cost": {
+    "usd": 0.34094,
+    "input_tokens": 36580,
+    "output_tokens": 9731,
+    "basis": "budget ledger external-ideas-wave-a-audit-2026-10-21T21-54-34-351Z-474fa468: 100 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<lane>/ledger.sqlite",
+    "program_cap_usd": 220,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 4
+    }
+  },
+  "items": [
+    {
+      "key": "07741c44#0#4488",
+      "question_id": "07741c44",
+      "slug": "chat/s-9bdf96e3d5",
+      "session_date": "2023/08/11 (Fri) 02:38",
+      "bracket": "[2023-08-12/2023-08-13]",
+      "context": "storing!\n\n**user:** I'll definitely take your tips into consideration. I need to get my old sneakers polished and conditioned, so I'll drop them off at the cobbler this weekend [2023-08-12/2023-08-13].\n\n**assistant:** That's a great idea! Taking your sneakers to a cobbler can work wonders in revivin",
+      "verdict": "correct",
+      "raw": "Friday 2023-08-11, so \"this weekend\" is Saturday 2023-08-12 and Sunday 2023-08-13, which is exactly the bracketed range.\n\ncorrect"
+    },
+    {
+      "key": "07b6f563#4#5751",
+      "question_id": "07b6f563",
+      "slug": "chat/s-6685eac0c5",
+      "session_date": "2023/05/28 (Sun) 10:28",
+      "bracket": "[≈2023-05-07]",
+      "context": "f you have any other questions.\n\n**user:** I've been meaning to replace the burned-out bulbs in my living room lamps for a while now, and I finally got around to doing it a few weeks ago [≈2023-05-07]. It only took me about 20 minutes to replace all four bulbs, and it made a big difference in the ro",
+      "verdict": "correct",
+      "raw": "\"A few weeks ago\" from 2023-05-28 is roughly 2 to 4 weeks back, so 2023-05-07 (3 weeks earlier) is a reasonable approximate reading.\n\n**correct**"
+    },
+    {
+      "key": "09d032c9#1#5518",
+      "question_id": "09d032c9",
+      "slug": "chat/s-5f6c3543b0",
+      "session_date": "2023/05/23 (Tue) 00:40",
+      "bracket": "[≈2023-05-15/2023-05-21]",
+      "context": " you about it!\n\n**user:** The instructor is great, very knowledgeable and helpful. We've been learning a lot of new techniques and recipes, and it's been really fun. Last week [≈2023-05-15/2023-05-21], we made a Thai curry that was amazing, and I'm planning to make it again this weekend [2023-05-27/",
+      "verdict": "correct",
+      "raw": "Conversation date: Tue 2023-05-23. \"Last week\" = the previous calendar week, Mon 2023-05-15 to Sun 2023-05-21. The bracket matches that span.\n\ncorrect"
+    },
+    {
+      "key": "0a995998#0#59",
+      "question_id": "0a995998",
+      "slug": "chat/s-51424ece9c",
+      "session_date": "2023/02/15 (Wed) 16:19",
+      "bracket": "[2023-02-18/2023-02-19]",
+      "context": "**user:** I'm thinking of organizing my closet this weekend [2023-02-18/2023-02-19]. Can you give me some tips on how to maximize my closet space? By the way, I just got back from a d",
+      "verdict": "correct",
+      "raw": "2023-02-15 is a Wednesday, so \"this weekend\" is the coming Saturday and Sunday: February 18 and 19, which matches the bracket.\n\n**correct**"
+    },
+    {
+      "key": "0bb5a684#4#297",
+      "question_id": "0bb5a684",
+      "slug": "chat/s-d0fe18f08b",
+      "session_date": "2023/01/13 (Fri) 03:29",
+      "bracket": "[2022]",
+      "context": "rab a coffee and work on my script. By the way, I'm a huge film buff and actually stood in line for 6 hours to get into the 'Dune' screening at the Toronto International Film Festival last year [2022].\n\n**assistant:** A film buff, eh? That's awesome! Standing in line for 6 hours for the 'Dune' scree",
+      "verdict": "correct",
+      "raw": "The phrase is \"last year\". The conversation date is 2023/01/13, so last year is 2022, which matches the bracket.\n\nThe real-world fact that Dune premiered at TIFF in 2021 doesn't change the reading. Th"
+    },
+    {
+      "key": "0ddfec37_abs#0#217",
+      "question_id": "0ddfec37_abs",
+      "slug": "chat/s-3bdd2b26be",
+      "session_date": "2023/05/20 (Sat) 06:42",
+      "bracket": "[≈2023-05-08/2023-05-14]",
+      "context": " on Mike Trout's latest stats. Can you tell me his current batting average and how many home runs he has this season? By the way, I just got a signed baseball of his last week [≈2023-05-08/2023-05-14] and it's a great addition to my collection - that's 15 autographed baseballs since I started collec",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "16c90bf4#1#8556",
+      "question_id": "16c90bf4",
+      "slug": "chat/s-dec3590a53",
+      "session_date": "2023/05/29 (Mon) 17:09",
+      "bracket": "[2023-05-27/2023-05-28]",
+      "context": "his weekend [2023-06-03/2023-06-04] to catch some games. Since I went to a sports bar with friends to watch the UFC fight between Conor McGregor and Donald Cerrone last weekend [2023-05-27/2023-05-28], I'm hoping to find a new spot that can match that energy. Do you think I should prioritize bars wi",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "1d4e3b97#3#4963",
+      "question_id": "1d4e3b97",
+      "slug": "chat/s-0da396baa2",
+      "session_date": "2024/02/20 (Tue) 14:01",
+      "bracket": "[2024-02-24/2024-02-25]",
+      "context": "ou need any more help or have further questions, feel free to ask!\n\n**user:** I'll try to find the bus schedule online. By the way, I was thinking of meal prepping this weekend [2024-02-24/2024-02-25] for the entire week. Do you have any healthy lunch ideas that are easy to prepare and can be reheat",
+      "verdict": "correct",
+      "raw": "2024-02-20 is a Tuesday, so \"this weekend\" means Saturday 2024-02-24 and Sunday 2024-02-25, which matches the bracket.\n\n**correct**"
+    },
+    {
+      "key": "2133c1b5#0#293",
+      "question_id": "2133c1b5",
+      "slug": "chat/s-60c52ae1f9",
+      "session_date": "2023/10/15 (Sun) 20:50",
+      "bracket": "[2023-10-07/2023-10-08]",
+      "context": "been really enjoying the fall foliage in Tokyo lately - it's so different from what I'm used to back home. I've been exploring a new neighborhood every Sunday, and last weekend [2023-10-07/2023-10-08] I stumbled upon a great coffee shop in Daikanyama.\n\n**assistant:** Yokohama is a great choice for a",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "22d2cb42#2#2329",
+      "question_id": "22d2cb42",
+      "slug": "chat/s-be91c3c7b2",
+      "session_date": "2023/06/20 (Tue) 14:55",
+      "bracket": "[2023-06-18]",
+      "context": "any interesting stories or history about the armchair while reupholstering it?\n\n**user:** Yeah, my grandmother told me some great stories about the armchair when I visited her last Sunday [2023-06-18].\n\n**assistant:** That's wonderful! It's great that you're keeping family traditions and stories ali",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "28bcfaac#4#215",
+      "question_id": "28bcfaac",
+      "slug": "chat/s-268fda309f",
+      "session_date": "2023/05/26 (Fri) 08:13",
+      "bracket": "[2023-05-20]",
+      "context": "d watching trip to the coastal area on April 1st and I'm wondering what species I might see during the spring migration. By the way, I had a great trip to the nature reserve last Saturday [2023-05-20], March 17th, where I spotted a pair of American Goldfinches and a Red-winged Blackbird.\n\n**assistan",
+      "verdict": "wrong",
+      "raw": "**wrong**\n\nCounted from Friday 2023-05-26, \"last Saturday\" would be 2023-05-20. But the user immediately names the date as March 17th. The surrounding context, planning an April 1st trip for the sprin"
+    },
+    {
+      "key": "2e6d26dc#1#322",
+      "question_id": "2e6d26dc",
+      "slug": "chat/s-0baf46f518",
+      "session_date": "2023/05/13 (Sat) 02:13",
+      "bracket": "[≈2023-04-22]",
+      "context": " me set up a calendar or reminder system to ensure I don't miss any special days? By the way, I just heard that my friend from college, David, had a baby boy named Jasper a few weeks ago [≈2023-04-22] - I'm still getting used to keeping track of all these new additions!\n\n**assistant:** Congratulatio",
+      "verdict": "correct",
+      "raw": "\"A few weeks ago\" from 2023-05-13 means roughly 2–4 weeks earlier, i.e. somewhere around April 15–29. A bracket of ≈2023-04-22 is three weeks before, which sits squarely in that range. Since the phras"
+    },
+    {
+      "key": "3249768e#3#7169",
+      "question_id": "3249768e",
+      "slug": "chat/s-f77fca1b99",
+      "session_date": "2023/05/22 (Mon) 09:42",
+      "bracket": "[2023-05-23]",
+      "context": "d dinner party menu and a plan to save some cash on ingredients. Enjoy your shopping trip and happy cooking!\n\n**user:** I'm also planning to pick up some coffee on my way to work tomorrow [2023-05-23] morning, so I'm glad I've been earning points on my Starbucks loyalty card. I've been saving up tho",
+      "verdict": "correct",
+      "raw": "\"Tomorrow\", said on Monday 2023-05-22, means Tuesday 2023-05-23, which matches the bracket.\n\ncorrect"
+    },
+    {
+      "key": "41698283#4#231",
+      "question_id": "41698283",
+      "slug": "chat/s-8e1120ba27",
+      "session_date": "2023/07/27 (Thu) 08:50",
+      "bracket": "[≈2023-07-17/2023-07-23]",
+      "context": "etting some packing cubes to help me stay organized. Have you got any recommendations for good brands or websites to check out? By the way, I just got a new backpack last week [≈2023-07-17/2023-07-23] and it's been a lifesaver for my daily commute.\n\n**assistant:** Packing cubes are a game-changer fo",
+      "verdict": "correct",
+      "raw": "The conversation took place on Thursday, 2023-07-27, so that week runs Monday 07-24 to Sunday 07-30. \"Last week\" is therefore Monday 07-17 to Sunday 07-23, which matches the bracketed range exactly.\n\n"
+    },
+    {
+      "key": "4b24c848#1#53",
+      "question_id": "4b24c848",
+      "slug": "chat/s-7349b24144",
+      "session_date": "2023/08/11 (Fri) 03:18",
+      "bracket": "[2023-08-12/2023-08-13]",
+      "context": "**user:** I'm planning to go to the mall this weekend [2023-08-12/2023-08-13], can you remind me what stores are near H&M?\n\n**assistant:** I'd be happy to help! However, I'm a l",
+      "verdict": "correct",
+      "raw": "Correct. The conversation took place on Friday, 2023-08-11. \"This weekend\" therefore means the next Saturday and Sunday, 2023-08-12 and 2023-08-13, which is exactly the span in the bracket.\n\n**correct"
+    },
+    {
+      "key": "50635ada#3#6589",
+      "question_id": "50635ada",
+      "slug": "chat/s-9a2913671d",
+      "session_date": "2022/12/24 (Sat) 04:49",
+      "bracket": "[2022-12-24/2022-12-25]",
+      "context": "ea to ask about any available discounts or promotions when you're making a purchase!\n\n**user:** I'm thinking of checking out some other stores in the downtown area this weekend [2022-12-24/2022-12-25], maybe do some comparison shopping. Do you have any information on what other stores are located ne",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "57f827a0#3#7316",
+      "question_id": "57f827a0",
+      "slug": "chat/s-fc7fabed68",
+      "session_date": "2023/05/27 (Sat) 19:58",
+      "bracket": "[2023-04]",
+      "context": "ep schedule this week? Will you try to set a specific bedtime or create a relaxing pre-sleep routine?\n\n**user:** I've actually been reading a self-help book already, the one I got last month [2023-04]. It's been really helping me unwind before bed, and I've been reading it for 20-30 minutes before s",
+      "verdict": "correct",
+      "raw": "Last month relative to May 2023 is April 2023, so [2023-04] matches the phrase.\n\ncorrect"
+    },
+    {
+      "key": "61f8c8f8#0#2728",
+      "question_id": "61f8c8f8",
+      "slug": "chat/s-b1fdfa001a",
+      "session_date": "2023/10/01 (Sun) 16:16",
+      "bracket": "[2022]",
+      "context": "e plan as needed. Good luck with your training, and have fun!\n\n**user:** I was thinking of starting with a base building phase, but I'm not sure how to pace myself. I've done a 5K run last year [2022], but it took me 45 minutes to complete.\n\n**assistant:** Congratulations on having a baseline 5K tim",
+      "verdict": "correct",
+      "raw": "\"Last year\" relative to 2023-10-01 is 2022, so the bracket is a correct reading.\n\ncorrect"
+    },
+    {
+      "key": "6222b6eb#1#344",
+      "question_id": "6222b6eb",
+      "slug": "chat/s-9323da6d3f",
+      "session_date": "2023/05/22 (Mon) 23:17",
+      "bracket": "[2023-04]",
+      "context": "bit at the Modern Art Museum, and having a membership would make it more convenient. Speaking of museums, I had a great time at the \"Museum Late Night\" event at the Science Museum last month [2023-04] - it was so cool that they stayed open until midnight!\n\n**assistant:** It sounds like you're a muse",
+      "verdict": "correct",
+      "raw": "\"Last month\" relative to 2023-05-22 is April 2023, so the bracket [2023-04] matches.\n\ncorrect"
+    },
+    {
+      "key": "6456829e#3#5004",
+      "question_id": "6456829e",
+      "slug": "chat/s-a2501989bc",
+      "session_date": "2023/05/20 (Sat) 02:58",
+      "bracket": "[≈2023-04-29]",
+      "context": "ce over your favorite pasta and enjoy!\n\nI hope these tips and the recipe help you create a delicious zucchini pasta sauce!\n\n**user:** I was organizing my kitchen cabinets a few weeks ago [≈2023-04-29] and found a bunch of cookbooks I'd been meaning to go through. One of them had a great recipe for c",
+      "verdict": "correct",
+      "raw": "\"A few weeks ago\" from 2023-05-20 points to about 3 weeks earlier, which is 2023-04-29. Since the bracket is marked \"≈\", it is a reasonable approximate reading of the phrase.\n\ncorrect"
+    },
+    {
+      "key": "65240037#3#3661",
+      "question_id": "65240037",
+      "slug": "chat/s-4fd6b8ad1f",
+      "session_date": "2023/05/27 (Sat) 08:16",
+      "bracket": "[2023-04]",
+      "context": "her tasks you need to tackle on the farm.\n\nBy the way, are the fencing materials for a specific repair or a new project?\n\n**user:** We're finishing up a fencing project we started last month [2023-04], and I just need to grab the materials to complete it.\n\n**assistant:** Got it!\n\n**Farm Supply List:",
+      "verdict": "correct",
+      "raw": "\"Last month\" relative to May 27, 2023 is April 2023, so the bracket [2023-04] matches.\n\n**correct**"
+    },
+    {
+      "key": "66f24dbb#2#8263",
+      "question_id": "66f24dbb",
+      "slug": "chat/s-06aa102a78",
+      "session_date": "2023/05/27 (Sat) 12:34",
+      "bracket": "[2023-05-27/2023-05-28]",
+      "context": "cohesive pecan crust for your Maple Pecan Pie Bars. Good luck, and I hope your bars turn out amazing!\n\n**user:** I'm thinking of making a trip to the local orchard this weekend [2023-05-27/2023-05-28] to pick up some fresh apples and maybe even some maple syrup to use in the Maple Pecan Pie Bars. Sp",
+      "verdict": "correct",
+      "raw": "The conversation happens on Saturday, 2023-05-27. \"This weekend,\" said on a Saturday, most naturally means the current weekend: Saturday 2023-05-27 through Sunday 2023-05-28. The bracketed range match"
+    },
+    {
+      "key": "6b7dfb22#1#5709",
+      "question_id": "6b7dfb22",
+      "slug": "chat/s-e38f2c3469",
+      "session_date": "2023/05/20 (Sat) 06:03",
+      "bracket": "[≈2023-05-06]",
+      "context": "art with casual conversations. Yeah, I'll try responding to some messages or commenting on their posts on social media. Since I had dinner by myself three times in one week two weeks ago [≈2023-05-06], I've been thinking about how I've been neglecting my social life, and this feels like a good first",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "6c49646a#2#241",
+      "question_id": "6c49646a",
+      "slug": "chat/s-360507250c",
+      "session_date": "2023/05/26 (Fri) 14:27",
+      "bracket": "[2023-04]",
+      "context": "ke to know the best route from Denver to Mount Rushmore. By the way, speaking of road trips, I just got back from an amazing 4-day trip to Yellowstone National Park with my family last month [2023-04], where we covered a total of 1,200 miles.\n\n**assistant:** That sounds like an amazing trip to Yello",
+      "verdict": "correct",
+      "raw": "\"Last month\" relative to a conversation on 2023-05-26 refers to April 2023, so the bracket [2023-04] is a correct reading.\n\n**correct**"
+    },
+    {
+      "key": "6d550036#4#10802",
+      "question_id": "6d550036",
+      "slug": "chat/s-cdef95e052",
+      "session_date": "2023/05/20 (Sat) 05:54",
+      "bracket": "[≈2023-05-08/2023-05-14]",
+      "context": "joying your new lamp, reading nook, and cozy living room!\n\n**user:** I've been meaning to get some new throw pillows for the couch, and I finally ordered some online last week [≈2023-05-08/2023-05-14]. They arrived yesterday [2023-05-19], and I'm really happy with how they look. The colors match the",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "720133ac#1#98",
+      "question_id": "720133ac",
+      "slug": "chat/s-e70bd2b9c1",
+      "session_date": "2023/05/30 (Tue) 14:21",
+      "bracket": "[2023-05-27]",
+      "context": "**user:** I'm looking for some advice on cat litter. I just got a new one from Petco last Saturday [2023-05-27], but I'm not sure if it's the best one for Lola. Can you recommend any good brands or types of litt",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "72e3ee87#4#279",
+      "question_id": "72e3ee87",
+      "slug": "chat/s-a3a93c297d",
+      "session_date": "2023/05/25 (Thu) 22:53",
+      "bracket": "[≈2023-05-15/2023-05-21]",
+      "context": " have any recommendations for exhibits that are suitable for kids? By the way, I just took my niece Emily to the \"Dino Fossils\" exhibit at the Natural History Museum last week [≈2023-05-15/2023-05-21] and she loved it!\n\n**assistant:** That sounds like a great choice! The \"Dino Fossils\" exhibit at th",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "7a87bd0c#0#55",
+      "question_id": "7a87bd0c",
+      "slug": "chat/s-d7b1c23790",
+      "session_date": "2023/06/11 (Sun) 22:24",
+      "bracket": "[2023-06-10/2023-06-11]",
+      "context": "**user:** I need help organizing my garage this weekend [2023-06-10/2023-06-11]. Can you give me some tips on how to sort through all the boxes and storage bins? Oh, and by the wa",
+      "verdict": "ambiguous",
+      "raw": "**ambiguous**\n\n\"This weekend\" normally means the current weekend, June 10–11, which matches the bracket. But the message was sent at 22:24 on Sunday, with that weekend almost over, so a request for he"
+    },
+    {
+      "key": "7a87bd0c#1#59",
+      "question_id": "7a87bd0c",
+      "slug": "chat/s-caaf79a21b",
+      "session_date": "2023/09/30 (Sat) 17:52",
+      "bracket": "[2023-09-30/2023-10-01]",
+      "context": "**user:** I'm planning to clean out the garage this weekend [2023-09-30/2023-10-01], but I need some advice on how to organize all the storage bins and boxes. Do you have any tips? By",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "7e974930#1#196",
+      "question_id": "7e974930",
+      "slug": "chat/s-f4d289dcf1",
+      "session_date": "2023/04/11 (Tue) 00:10",
+      "bracket": "[2023]",
+      "context": "ser:** I'm trying to keep track of my sales and expenses for my small business. Can you help me calculate my total earnings from all the markets and events I've participated in so far this year [2023]?\n\n**assistant:** I'd be happy to help you calculate your total earnings. To get started, can you pl",
+      "verdict": "correct",
+      "raw": "\"So far this year\" resolves to the year of the conversation date, 2023, so the bracket [2023] matches.\n\n**correct**"
+    },
+    {
+      "key": "8077ef71#0#6075",
+      "question_id": "8077ef71",
+      "slug": "chat/s-50b4931cb3",
+      "session_date": "2022/03/09 (Wed) 12:08",
+      "bracket": "[≈2022-03-07/2022-03-13]",
+      "context": "lanning to binge-watch this weekend?\n\n**user:** I just remembered that I need to deposit a check at the bank. Would you be able to remind me to do that at some point this week [≈2022-03-07/2022-03-13]?\n\n**assistant:** I'd be happy to remind you to deposit the check. Let's fit it into your schedule.\n",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "80ec1f4f_abs#2#176",
+      "question_id": "80ec1f4f_abs",
+      "slug": "chat/s-c44d865264",
+      "session_date": "2023/03/03 (Fri) 16:41",
+      "bracket": "[2023-02-26]",
+      "context": "**user:** I'm looking for some advice on hanging artwork. I just got a beautiful watercolor painting titled \"Blooming Garden\" from a local artist at the street fair last Sunday [2023-02-26], and I need to get the frame adjusted - it's a bit crooked. Do you have any tips on how to properly",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "853b0a1d#0#4940",
+      "question_id": "853b0a1d",
+      "slug": "chat/s-c4d9e6dcc4",
+      "session_date": "2023/05/22 (Mon) 16:18",
+      "bracket": "[≈2023-03-22]",
+      "context": "ece. I think I'll start by adding the pieces that are most sentimental to me, like the silver necklace my grandma gave me on my 18th birthday. I remember I lost it a couple of months ago [≈2023-03-22], but that's a story for another time.\n\n**assistant:** I'm so glad you're excited to start documenti",
+      "verdict": "correct",
+      "raw": "\"A couple of months ago\" from 2023-05-22 is roughly 2023-03-22. The \"≈\" marks it as approximate, which suits a loose phrase like this, so the bracket is a reasonable reading.\n\n**correct**"
+    },
+    {
+      "key": "85fa3a3f#4#393",
+      "question_id": "85fa3a3f",
+      "slug": "chat/s-d7729001e6",
+      "session_date": "2023/05/24 (Wed) 23:20",
+      "bracket": "[≈2023-05-03]",
+      "context": "e for a larger event like that? By the way, I just got back into the swing of selling at local markets, and I had a decent turnout at the Saturday morning farmers' market a few weeks ago [≈2023-05-03], making around $250 in sales.\n\n**assistant:** Congratulations on getting back into the swing of sel",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "88432d0a_abs#3#235",
+      "question_id": "88432d0a_abs",
+      "slug": "chat/s-74f46dccc4",
+      "session_date": "2023/05/28 (Sun) 20:26",
+      "bracket": "[2023-05-27]",
+      "context": "e for a rustic Italian bread this weekend [2023-05-27/2023-05-28]. Do you have any tips on how to achieve a crispy crust? By the way, I made a delicious whole wheat baguette last Saturday [2023-05-27], and I'm considering using the same flour for this recipe.\n\n**assistant:** Congratulations on your ",
+      "verdict": "ambiguous",
+      "raw": "ambiguous"
+    },
+    {
+      "key": "982b5123#3#3587",
+      "question_id": "982b5123",
+      "slug": "chat/s-f84f7b9cb0",
+      "session_date": "2023/05/21 (Sun) 02:06",
+      "bracket": "[≈2023-04-30]",
+      "context": "ns, identify areas for improvement, and make informed decisions about your money. I'm here to help you, not to judge your spending habits!\n\n**user:** Here's my spending data: 3 weeks ago [≈2023-04-30], I spent $70 at H&M on a pair of distressed denim jeans and a white linen shirt. A few days later, ",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "982b5123#4#9145",
+      "question_id": "982b5123",
+      "slug": "chat/s-3e0fa9ff83",
+      "session_date": "2023/05/21 (Sun) 11:46",
+      "bracket": "[≈2023-05-07]",
+      "context": "definitely pack some nuts and dried fruits, and maybe some energy bars as well. I've also been doing a good job of packing snacks lately, like on my flight to San Francisco two weeks ago [≈2023-05-07] when I got stuck with a delayed flight and was stuck in the airport for hours. Having those snacks ",
+      "verdict": "correct",
+      "raw": "2023-05-21 minus 14 days is 2023-05-07. \"Two weeks ago\" is an approximate phrase, so the \"≈\" mark fits.\n\ncorrect"
+    },
+    {
+      "key": "982b5123_abs#4#231",
+      "question_id": "982b5123_abs",
+      "slug": "chat/s-f7940d074a",
+      "session_date": "2023/05/27 (Sat) 15:38",
+      "bracket": "[≈2023-03-27]",
+      "context": "o for next month [2023-06] and I was wondering if you could recommend some good restaurants in the Haight-Ashbury neighborhood. By the way, I've been to SF before, exactly two months ago [≈2023-03-27], for my best friend's wedding - it was a 5-day trip and I had an amazing time.\n\n**assistant:** San ",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "982b5123_abs#4#61",
+      "question_id": "982b5123_abs",
+      "slug": "chat/s-f7940d074a",
+      "session_date": "2023/05/27 (Sat) 15:38",
+      "bracket": "[2023-06]",
+      "context": "**user:** I'm planning a trip to San Francisco for next month [2023-06] and I was wondering if you could recommend some good restaurants in the Haight-Ashbury neighborhood",
+      "verdict": "correct",
+      "raw": "Correct. The conversation took place on 2023-05-27, and \"next month\" relative to May 2023 is June 2023, which matches the bracket [2023-06].\n\n**correct**"
+    },
+    {
+      "key": "9a707b82#3#7113",
+      "question_id": "9a707b82",
+      "slug": "chat/s-cd8042c587",
+      "session_date": "2022/04/10 (Sun) 19:28",
+      "bracket": "[≈2022-04-04/2022-04-10]",
+      "context": "t used some of the ingredients I got from Costco last weekend [2022-04-02/2022-04-03] to make a big batch of pasta sauce, and I've been using it for lunch and dinner this week [≈2022-04-04/2022-04-10]. By the way, I'm trying to stay on top of my budget and track my spending, and according to my app,",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "9ee3ecd6#2#45",
+      "question_id": "9ee3ecd6",
+      "slug": "chat/s-fd2f9edc86",
+      "session_date": "2023/05/26 (Fri) 00:23",
+      "bracket": "[≈2023-05-29/2023-06-04]",
+      "context": "**user:** I'm planning a trip to LA next week [≈2023-05-29/2023-06-04] and I want to make sure I pack light. Can you help me create a packing list? Oh, and by the way, I ",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "a06e4cfe#1#125",
+      "question_id": "a06e4cfe",
+      "slug": "chat/s-2eaa574f87",
+      "session_date": "2023/05/23 (Tue) 07:38",
+      "bracket": "[2023-04]",
+      "context": "**user:** I'm looking to plan a small get-together with friends to celebrate a recent milestone - I just turned 30 last month [2023-04], and it feels like a big deal! Do you have any suggestions for a fun and casual venue or activity?\n",
+      "verdict": "correct",
+      "raw": "Last month relative to May 2023 is April 2023.\n\n**correct**"
+    },
+    {
+      "key": "a3045048#1#353",
+      "question_id": "a3045048",
+      "slug": "chat/s-2ca932370a",
+      "session_date": "2022/05/15 (Sun) 19:06",
+      "bracket": "[2022-04]",
+      "context": "ir registry, but I want to add a more personal touch to the gift. Do you have any suggestions? By the way, speaking of weddings and engagements, my close friend Rachel got engaged last month [2022-04] on May 15th, and we're already planning her bachelorette party!\n\n**assistant:** Congratulations to ",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "a40e080f#1#9657",
+      "question_id": "a40e080f",
+      "slug": "chat/s-ff0d3f997a",
+      "session_date": "2023/05/27 (Sat) 16:16",
+      "bracket": "[2023-05-27/2023-05-28]",
+      "context": "roaches until you find what works best for you. Good luck, and happy meal planning!\n\n**user:** I'll definitely try to start meal planning and making a grocery list this weekend [2023-05-27/2023-05-28]. Do you think I should plan meals for the entire week or start with just a few days?\n\n**assistant:*",
+      "verdict": "correct",
+      "raw": "The conversation took place on Saturday, 2023-05-27, so \"this weekend\" refers to Saturday 27 May and Sunday 28 May. The bracket [2023-05-27/2023-05-28] names exactly that span.\n\ncorrect"
+    },
+    {
+      "key": "ad7109d1#3#310",
+      "question_id": "ad7109d1",
+      "slug": "chat/s-e1ac230d56",
+      "session_date": "2023/05/20 (Sat) 10:43",
+      "bracket": "[2023-04]",
+      "context": " recommend some good restaurants near the Mather Campground. By the way, I've been doing a lot of driving lately, just got back from a 5-day road trip to Yellowstone National Park last month [2023-04], and drove around 2,400 miles.\n\n**assistant:** What an adventure you're on! Congratulations on comp",
+      "verdict": "correct",
+      "raw": "\"Last month\" relative to 2023-05-20 refers to April 2023, so the bracket [2023-04] matches.\n\ncorrect"
+    },
+    {
+      "key": "affe2881#1#2369",
+      "question_id": "affe2881",
+      "slug": "chat/s-f26e3cd59f",
+      "session_date": "2023/05/29 (Mon) 17:18",
+      "bracket": "[2023-05-27/2023-05-28]",
+      "context": "I'll definitely bring some sunflower seeds and suet to attract the woodpeckers. By the way, speaking of woodpeckers, I just saw a Northern Flicker in my local park last weekend [2023-05-27/2023-05-28], which brings my total species count to 32. Do you think the suet will attract any other woodpecker",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "affe2881#1#61",
+      "question_id": "affe2881",
+      "slug": "chat/s-f26e3cd59f",
+      "session_date": "2023/05/29 (Mon) 17:18",
+      "bracket": "[2023-06-03/2023-06-04]",
+      "context": "**user:** I'm planning a picnic in my local park this weekend [2023-06-03/2023-06-04] and I'm wondering if you can suggest some bird-friendly food that I can bring to attract some of th",
+      "verdict": "correct",
+      "raw": "Conversation date is Monday 2023-05-29. \"This weekend\" means the upcoming Saturday and Sunday, which are 2023-06-03 and 2023-06-04. The bracket matches that span.\n\ncorrect"
+    },
+    {
+      "key": "b6025781#2#180",
+      "question_id": "b6025781",
+      "slug": "chat/s-1c8f47eb9b",
+      "session_date": "2023/05/24 (Wed) 02:45",
+      "bracket": "[2023-05-23]",
+      "context": "**user:** I'm looking for some BBQ sauce recipes and was wondering if you have any good ones to recommend. By the way, I just had the best brisket sandwich at Bubba's BBQ yesterday [2023-05-23] and it got me thinking about trying to make something similar at home.\n\n**assistant:** Bubba's BBQ,",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "ba358f49#0#240",
+      "question_id": "ba358f49",
+      "slug": "chat/s-77f3306498",
+      "session_date": "2022/09/01 (Thu) 03:06",
+      "bracket": "[2023]",
+      "context": "re routines for my age group. I've been noticing some fine lines and wrinkles lately, and I want to start taking better care of my skin. By the way, my friend Rachel's getting married next year [2023], and it's got me thinking about my own life goals.\n\n**assistant:** Congratulations to Rachel on her",
+      "verdict": "correct",
+      "raw": "Conversation date is 2022-09-01, so \"next year\" points to 2023, which matches the bracket.\n\ncorrect"
+    },
+    {
+      "key": "bc149d6b#2#11625",
+      "question_id": "bc149d6b",
+      "slug": "chat/s-3a219fa541",
+      "session_date": "2023/05/24 (Wed) 02:31",
+      "bracket": "[≈2023-03-24]",
+      "context": "e this helps! Let me know if you have any other questions.\n\n**user:** I'm due for an oil change soon, and I actually got synthetic blend oil last time. I think it was around 2 months ago [≈2023-03-24]. I'm not sure when the previous oil change was, but I do remember it was done at the dealership.\n\n*",
+      "verdict": "correct",
+      "raw": "Two months before 2023-05-24 is 2023-03-24, and \"around\" fits the approximate marker.\n\n**correct**"
+    },
+    {
+      "key": "bc8a6e93#3#174",
+      "question_id": "bc8a6e93",
+      "slug": "chat/s-fb5eb48ba7",
+      "session_date": "2023/05/28 (Sun) 12:28",
+      "bracket": "[≈2023-05-15/2023-05-21]",
+      "context": "**user:** I'm looking to find some new pizza places to try out. I've been stuck on Pizza Hut lately, especially their BBQ chicken pizza - I've ordered it four times last week [≈2023-05-15/2023-05-21] and realized it's my go-to over their meat lovers. Do you have any recommendations for pizza joints",
+      "verdict": "ambiguous",
+      "raw": "**ambiguous**\n\nThe conversation took place on Sunday, 2023-05-28, so \"last week\" depends on which day a week starts.\n\n- **Monday-start weeks:** the current week is May 22–28, so last week is 2023-05-1"
+    },
+    {
+      "key": "c19f7a0b#0#74",
+      "question_id": "c19f7a0b",
+      "slug": "chat/s-67bad23961",
+      "session_date": "2023/05/23 (Tue) 20:28",
+      "bracket": "[≈2023-05-22/2023-05-28]",
+      "context": "**user:** I'm thinking of trying out some new recipes for dinner this week [≈2023-05-22/2023-05-28]. Can you give me some suggestions for simple and quick meals that I can make during the week?\n\n**as",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "d52b4f67#4#2554",
+      "question_id": "d52b4f67",
+      "slug": "chat/s-95508a4416",
+      "session_date": "2023/05/23 (Tue) 19:21",
+      "bracket": "[≈2023-05-02]",
+      "context": "cken breasts, do you have any specific recipe ideas that use them? And by the way, I just remembered I got a $5 off coupon when I signed up for ShopRite's rewards program a few weeks ago [≈2023-05-02], I should use that too.\n\n**assistant:** Chicken breasts are a fantastic choice for a dinner party. ",
+      "verdict": "correct",
+      "raw": "\"A few weeks ago\" from 2023-05-23 means roughly 2–4 weeks earlier, which falls between late April and early May. 2023-05-02 is exactly 3 weeks before the conversation date, so the approximate date is "
+    },
+    {
+      "key": "d7c942c3#4#48",
+      "question_id": "d7c942c3",
+      "slug": "chat/s-2b4613135a",
+      "session_date": "2023/04/13 (Thu) 13:15",
+      "bracket": "[2023-04-15/2023-04-16]",
+      "context": "**user:** I'm planning a picnic for this weekend [2023-04-15/2023-04-16] and was wondering if you could help me come up with some healthy and easy-to-prepare food ideas. By",
+      "verdict": "correct",
+      "raw": "2023-04-13 is a Thursday, so \"this weekend\" is Saturday 2023-04-15 through Sunday 2023-04-16, which matches the bracket.\n\ncorrect"
+    },
+    {
+      "key": "d905b33f#2#77",
+      "question_id": "d905b33f",
+      "slug": "chat/s-ec2672076d",
+      "session_date": "2023/05/21 (Sun) 02:51",
+      "bracket": "[2023-06]",
+      "context": "**user:** I'm looking for some advice on what to wear to a wedding next month [2023-06]. I have a pair of black high-waisted jeans from Zara that I got with a 20% discount code, and I was",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "d905b33f#4#5092",
+      "question_id": "d905b33f",
+      "slug": "chat/s-51b6ba499c",
+      "session_date": "2023/05/26 (Fri) 14:02",
+      "bracket": "[2023-05]",
+      "context": "er:** I'll check Petco and PetSmart's websites to see if they carry Max's food brand before I head out. By the way, do you know if they have any sales or discounts on pet supplies this month [2023-05]?\n\n**assistant:** That's a great idea! Checking the websites beforehand can save you time and ensure",
+      "verdict": "correct",
+      "raw": "\"This month\" relative to 2023/05/26 is May 2023, so the bracket [2023-05] matches.\n\ncorrect"
+    },
+    {
+      "key": "dad224aa#0#8156",
+      "question_id": "dad224aa",
+      "slug": "chat/s-039d40a3e9",
+      "session_date": "2023/05/23 (Tue) 01:43",
+      "bracket": "[≈2023-05-02]",
+      "context": "w it goes. By the way, I've been trying to establish a consistent wake-up time for weeks now, and I used to wake up at 8:30 am on weekdays, but since I started my new job three weeks ago [≈2023-05-02], I've been waking up at 7:15 am to have enough time to get ready and catch the bus at 8:00 am.\n\n**a",
+      "verdict": "correct",
+      "raw": "Counting back three weeks from Tuesday 2023-05-23 lands on Tuesday 2023-05-02. The \"≈\" mark fits, since \"three weeks ago\" is approximate.\n\ncorrect"
+    },
+    {
+      "key": "dfde3500#4#2999",
+      "question_id": "dfde3500",
+      "slug": "chat/s-2d88821e05",
+      "session_date": "2023/05/25 (Thu) 06:53",
+      "bracket": "[≈2023-05-11]",
+      "context": "xciting projects!\n\n**user:** I've actually been quite active in the local theater scene recently. I even attended a musical theater workshop at the community center a couple of weeks ago [≈2023-05-11], which was amazing. I'm looking for something more specific, like upcoming auditions or workshops. ",
+      "verdict": "correct",
+      "raw": "A couple of weeks before 2023-05-25 is about 14 days earlier, which lands on 2023-05-11. Since \"a couple of weeks ago\" is approximate, the \"≈\" marker fits.\n\ncorrect"
+    },
+    {
+      "key": "e4e14d04#1#208",
+      "question_id": "e4e14d04",
+      "slug": "chat/s-5608ff22c8",
+      "session_date": "2023/05/28 (Sun) 03:59",
+      "bracket": "[≈2023-05-15/2023-05-21]",
+      "context": "ok recommendations. I just finished reading the latest bestseller by John Grisham and loved it. Speaking of which, I attended a meetup organized by Book Lovers Unite last week [≈2023-05-15/2023-05-21] where we discussed the book, and it was so much fun debating the plot twists and characters with fe",
+      "verdict": "correct",
+      "raw": "**correct**\n\nThe conversation took place on Sunday, 2023-05-28. With weeks running Monday to Sunday (the ISO convention), the current week is May 22–28, so \"last week\" is May 15–21. That matches the b"
+    },
+    {
+      "key": "e5ba910e_abs#4#3570",
+      "question_id": "e5ba910e_abs",
+      "slug": "chat/s-0437b36539",
+      "session_date": "2023/05/21 (Sun) 07:32",
+      "bracket": "[≈2023-04-30]",
+      "context": "f they help resolve the battery life issue. By the way, I've been using my Amazon Echo Show 8 to control my Philips Hue smart bulbs, which I installed in my bedroom about three weeks ago [≈2023-04-30]. Do you think there's a way to schedule the bulb's brightness and color based on the time of day or",
+      "verdict": "correct",
+      "raw": "Three weeks before Sunday 2023-05-21 is Sunday 2023-04-30. The phrase \"about three weeks ago\" is approximate, so the \"≈\" marker fits.\n\ncorrect"
+    },
+    {
+      "key": "e831120c#4#293",
+      "question_id": "e831120c",
+      "slug": "chat/s-25b25dce56",
+      "session_date": "2023/05/24 (Wed) 06:49",
+      "bracket": "[≈2023-05-15/2023-05-21]",
+      "context": "not using it. Can you help me troubleshoot the problem or suggest some ways to extend the battery life? By the way, I had a similar issue with my internet connection last week [≈2023-05-15/2023-05-21], but resetting the router fixed the problem - I also took the opportunity to change my Wi-Fi passwo",
+      "verdict": "correct",
+      "raw": "Conversation date is Wednesday 2023-05-24. That week runs Monday 2023-05-22 to Sunday 2023-05-28. \"Last week\" is the previous calendar week, Monday 2023-05-15 to Sunday 2023-05-21, which matches the b"
+    },
+    {
+      "key": "e8a79c70#2#68",
+      "question_id": "e8a79c70",
+      "slug": "chat/s-5f67b4f3fc",
+      "session_date": "2023/05/27 (Sat) 12:16",
+      "bracket": "[≈2023-05-22/2023-05-28]",
+      "context": "**user:** I'm looking for some new recipe ideas to try out this week [≈2023-05-22/2023-05-28]. I just finished eating the fresh strawberries I bought yesterday [2023-05-26], and I'm in the mood",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "e8a79c70#3#304",
+      "question_id": "e8a79c70",
+      "slug": "chat/s-59e50bce92",
+      "session_date": "2023/05/28 (Sun) 07:47",
+      "bracket": "[≈2023-05-22/2023-05-28]",
+      "context": "nd easy, like my usual oatmeal with banana and honey. By the way, I cooked a big batch of quinoa and roasted vegetables on Sunday, which has been great for meal prep this week [≈2023-05-22/2023-05-28].\n\n**assistant:** Great job on the meal prep! Having a batch of cooked quinoa and roasted veggies on",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "e9327a54#4#6645",
+      "question_id": "e9327a54",
+      "slug": "chat/s-088b1eebcd",
+      "session_date": "2023/05/28 (Sun) 09:28",
+      "bracket": "[2023-04]",
+      "context": "ality and finish, especially since I've been experimenting with my 10-22mm wide-angle lens and captured some amazing shots of tree tunnels during the photography meetup group hike last month [2023-04]. Do you know if any of these services offer matte or textured finishes that can enhance the depth a",
+      "verdict": "correct",
+      "raw": "\"Last month\" relative to a conversation dated 2023-05-28 refers to April 2023, so the bracket [2023-04] is correct.\n\n**correct**"
+    },
+    {
+      "key": "eaca4986#4#142",
+      "question_id": "eaca4986",
+      "slug": "chat/s-b7d51f4fe2",
+      "session_date": "2023/05/28 (Sun) 01:15",
+      "bracket": "[≈2023-05-15/2023-05-21]",
+      "context": "**user:** I'm trying to plan my next bike ride and I'm thinking of taking my road bike out again. I just gave it a thorough cleaning last week [≈2023-05-15/2023-05-21], so it's ready to go. By the way, I finally got to break it in last weekend [2023-05-20/2023-05-21]",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "ed4ddc30#2#295",
+      "question_id": "ed4ddc30",
+      "slug": "chat/s-f01e679be7",
+      "session_date": "2023/01/20 (Fri) 14:35",
+      "bracket": "[≈2023-01-09/2023-01-15]",
+      "context": " I want to make sure I have enough candles and soaps in stock. By the way, I just debuted my new display materials, including a canopy and tablecloths, at the market last week [≈2023-01-09/2023-01-15] and it looked really professional.\n\n**assistant:** Congratulations on debuting your new display mat",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "ed4ddc30#3#213",
+      "question_id": "ed4ddc30",
+      "slug": "chat/s-e7f92a77e7",
+      "session_date": "2023/01/29 (Sun) 21:52",
+      "bracket": "[2022-12-30/2023-01-29]",
+      "context": "ation for a new seafood dish, maybe something that pairs well with the Garlic Butter Shrimp recipe I've been making nonstop - I've made it at least four times in the past month [2022-12-30/2023-01-29]. Do you have any suggestions?\n\n**assistant:** Garlic Butter Shrimp is a classic! I'm happy to help ",
+      "verdict": "correct",
+      "raw": "\"In the past month\" is a rolling window ending on the conversation date, 2023-01-29. Counting back one month gives 2022-12-29 or 2022-12-30, depending on convention. The range 2022-12-30/2023-01-29 is"
+    },
+    {
+      "key": "eeda8a6d_abs#3#2859",
+      "question_id": "eeda8a6d_abs",
+      "slug": "chat/s-fce4eed441",
+      "session_date": "2023/05/28 (Sun) 10:51",
+      "bracket": "[2023-06]",
+      "context": "ou can contact the CDTFA or consult with a tax professional.\n\n**user:** Now that I've got my sales tax sorted out, I was thinking of restocking my inventory for the Harvest Market next month [2023-06]. Can you help me calculate how many candles and soaps I should make to meet demand? I want to make ",
+      "verdict": "correct",
+      "raw": "\"Next month\" said on 2023-05-28 refers to the following calendar month, June 2023, so the bracket [2023-06] matches it.\n\n**correct**"
+    },
+    {
+      "key": "eeda8a6d_abs#3#84",
+      "question_id": "eeda8a6d_abs",
+      "slug": "chat/s-fce4eed441",
+      "session_date": "2023/05/28 (Sun) 10:51",
+      "bracket": "[2023-04-28/2023-05-28]",
+      "context": "**user:** I'm looking for some help with calculating my sales tax for the past month [2023-04-28/2023-05-28]. I've had a busy summer with various markets and events, and I want to make sure I get it right. By",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "f0853d11#4#4869",
+      "question_id": "f0853d11",
+      "slug": "chat/s-65d7581b57",
+      "session_date": "2023/03/14 (Tue) 09:43",
+      "bracket": "[2023-03-13]",
+      "context": "me an integral part of your mental health self-care routine. Best of luck, and I hope you find some peace and relaxation in your outdoor activities!\n\n**user:** I went for a walk yesterday [2023-03-13] and it really helped me feel better! Do you have any other tips for incorporating outdoor activitie",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "f4f1d8a4#2#321",
+      "question_id": "f4f1d8a4",
+      "slug": "chat/s-291da2b46b",
+      "session_date": "2023/05/27 (Sat) 17:22",
+      "bracket": "[≈2023-05-13]",
+      "context": " lens and have been experimenting with it, but I'm still figuring out the best settings for different situations. By the way, I took my camera to my cousin's birthday party two weeks ago [≈2023-05-13] and got some great candid shots - the lens really brought out the bokeh effect!\n\n**assistant:** Con",
+      "verdict": "correct",
+      "raw": "Two weeks before 2023-05-27 is 2023-05-13. \"Two weeks ago\" is an approximate phrase, so marking it with \"≈\" is a reasonable reading.\n\ncorrect"
+    },
+    {
+      "key": "f4f1d8a4_abs#0#3148",
+      "question_id": "f4f1d8a4_abs",
+      "slug": "chat/s-b869d5bf9e",
+      "session_date": "2023/05/26 (Fri) 19:32",
+      "bracket": "[2023-04]",
+      "context": " or did you get creative with some pastry leaves or other designs? I'm always looking for new ideas!\n\n**user:** I actually got my new stand mixer as a birthday gift from my sister last month [2023-04], and it's been a game-changer for making caramel. I've been using a recipe that involves melting su",
+      "verdict": "correct",
+      "raw": "\"Last month\" relative to 2023-05-26 is April 2023, so [2023-04] matches.\n\ncorrect"
+    },
+    {
+      "key": "f523d9fe#0#1613",
+      "question_id": "f523d9fe",
+      "slug": "chat/s-6611b9b2c0",
+      "session_date": "2023/05/26 (Fri) 18:07",
+      "bracket": "[2023-06]",
+      "context": "on the platform? Do you use any specific features or recommendations?\n\n**user:** No. there is function on Netflix. what is coming next week [≈2023-05-29/2023-06-04], what's coming next month [2023-06]. it is a good platform. say “thank you, now for the next question: Do you think that the variety of",
+      "verdict": "ambiguous",
+      "raw": "ambiguous"
+    },
+    {
+      "key": "f685340e#3#9583",
+      "question_id": "f685340e",
+      "slug": "chat/s-a97ed30abf",
+      "session_date": "2023/05/22 (Mon) 12:53",
+      "bracket": "[2023-05-27/2023-05-28]",
+      "context": " room now? Is there a specific area or task that's still giving you anxiety?\n\n**user:** I think I can tackle my room now. I'll set a specific goal to clean my room this weekend [2023-05-27/2023-05-28] and break it down into smaller tasks like you suggested. One thing that's still giving me anxiety i",
+      "verdict": "correct",
+      "raw": "Correct. The conversation date, 2023-05-22, is a Monday, so \"this weekend\" refers to Saturday 2023-05-27 and Sunday 2023-05-28. The bracketed range matches that span exactly.\n\n**correct**"
+    },
+    {
+      "key": "gpt4_213fd887#0#3246",
+      "question_id": "gpt4_213fd887",
+      "slug": "chat/s-0e9f791bbd",
+      "session_date": "2023/05/24 (Wed) 16:56",
+      "bracket": "[2023-06]",
+      "context": " Is there a specific area of fitness you'd like to focus on or improve?\n\n**user:** I think I need to work on my endurance, especially since I signed up for a 20-mile cycling event next month [2023-06]. Do you have any tips on how to improve my cycling endurance?\n\n**assistant:** Congratulations on si",
+      "verdict": "correct",
+      "raw": "\"Next month\" relative to May 2023 is June 2023, so [2023-06] is the right reading.\n\ncorrect"
+    },
+    {
+      "key": "gpt4_2487a7cb#0#3215",
+      "question_id": "gpt4_2487a7cb",
+      "slug": "chat/s-034dd7ce55",
+      "session_date": "2023/05/24 (Wed) 01:32",
+      "bracket": "[≈2023-03-24]",
+      "context": "ng data visualization in Python. Happy learning!\n\n**user:** I'm actually familiar with some of these resources, I participated in a webinar on \"Data Analysis using Python\" two months ago [≈2023-03-24], which was organized by an online learning platform, and the instructor shared some great resources",
+      "verdict": "correct",
+      "raw": "Two months before 2023-05-24 is 2023-03-24. The phrase \"two months ago\" is approximate, so the \"≈\" marker fits and this is a reasonable reading.\n\ncorrect"
+    },
+    {
+      "key": "gpt4_2ba83207#1#9501",
+      "question_id": "gpt4_2ba83207",
+      "slug": "chat/s-8b65089470",
+      "session_date": "2023/05/26 (Fri) 10:17",
+      "bracket": "[≈2023-05-22/2023-05-28]",
+      "context": " out to shop!\n\nRemember to shop sustainably by choosing organic and eco-friendly options whenever possible. Happy shopping!\n\n**user:** I'm planning to shop at Publix this week [≈2023-05-22/2023-05-28], and I'm hoping to earn some cashback through the Ibotta app. Do you have any recommendations on wh",
+      "verdict": "correct",
+      "raw": "Conversation date 2023-05-26 is a Friday. \"This week\" runs Monday 2023-05-22 through Sunday 2023-05-28, which matches the bracket.\n\n**correct**"
+    },
+    {
+      "key": "gpt4_2ba83207#2#2635",
+      "question_id": "gpt4_2ba83207",
+      "slug": "chat/s-6ad60d4dae",
+      "session_date": "2023/05/29 (Mon) 15:17",
+      "bracket": "[≈2023-05-29/2023-06-04]",
+      "context": " help you create a grocery list based on the ingredients needed.\n\n**user:** That's a great list, thanks! I think I'll try the Chicken Fajitas and Spaghetti Bolognese this week [≈2023-05-29/2023-06-04]. Can you help me generate a grocery list for those recipes? And by the way, I'm also planning to us",
+      "verdict": "correct",
+      "raw": "\"This week\" relative to Monday 2023-05-29 spans Monday 2023-05-29 through Sunday 2023-06-04, which is exactly the bracketed range.\n\ncorrect"
+    },
+    {
+      "key": "gpt4_2f56ae70#3#5258",
+      "question_id": "gpt4_2f56ae70",
+      "slug": "chat/s-f739ca4f23",
+      "session_date": "2023/05/26 (Fri) 17:59",
+      "bracket": "[≈2023-05-15/2023-05-21]",
+      "context": "day, and I'm still buzzing from the experience. I'm thinking of attending more concerts in the future, especially since I recently saw The Lumineers at Wrigley Field last week [≈2023-05-15/2023-05-21] and had an amazing time. Can you suggest some upcoming concerts in Chicago that might interest me?\n",
+      "verdict": "correct",
+      "raw": "The conversation took place on Friday, 2023-05-26. \"Last week\" most naturally means the previous calendar week, which ran from Monday 2023-05-15 to Sunday 2023-05-21. The bracket gives exactly that sp"
+    },
+    {
+      "key": "gpt4_5501fe77#0#235",
+      "question_id": "gpt4_5501fe77",
+      "slug": "chat/s-31674f2d29",
+      "session_date": "2023/05/29 (Mon) 20:51",
+      "bracket": "[2023-04-29/2023-05-29]",
+      "context": "nd I was wondering if you could help me analyze my current performance. By the way, I just noticed that my Twitter follower count has jumped from 420 to 540 over the past month [2023-04-29/2023-05-29], which is really encouraging.\n\n**assistant:** Congratulations on the growth of your Twitter followe",
+      "verdict": "correct",
+      "raw": "\"The past month\" relative to 2023-05-29 most naturally means the 30-day span ending today: 2023-04-29 to 2023-05-29. The bracket matches that span.\n\n**correct**"
+    },
+    {
+      "key": "gpt4_59149c77#1#12157",
+      "question_id": "gpt4_59149c77",
+      "slug": "chat/s-b2fdfb2b31",
+      "session_date": "2023/01/09 (Mon) 15:24",
+      "bracket": "[≈2023-01-02/2023-01-08]",
+      "context": "nd make the most of your time.\n\n**user:** I'm planning a trip to New York City next month [2023-02], so I'll make sure to fill in those details in the travel column. Last week [≈2023-01-02/2023-01-08], I actually had a trip to Chicago for a conference, and it was a bit of a whirlwind. My flight was ",
+      "verdict": "correct",
+      "raw": "Last week relative to Monday 2023-01-09 is the previous Monday-to-Sunday span, 2023-01-02 to 2023-01-08, which is exactly what the bracket gives.\n\ncorrect"
+    },
+    {
+      "key": "gpt4_5dcc0aab#1#322",
+      "question_id": "gpt4_5dcc0aab",
+      "slug": "chat/s-197f34b414",
+      "session_date": "2023/05/24 (Wed) 20:15",
+      "bracket": "[2023-05-20/2023-05-21]",
+      "context": "erproof and the Keen Targhee II Mid WP. Do you have any info on these models or can you recommend one over the other? By the way, I just got a new pair of sneakers last weekend [2023-05-20/2023-05-21] - black and white Vans Old Skool - and they're really comfortable.\n\n**assistant:** Great choice on ",
+      "verdict": "correct",
+      "raw": "Correct. The conversation date is Wednesday, 2023-05-24, so \"last weekend\" means Saturday 2023-05-20 and Sunday 2023-05-21. The bracketed range matches that span.\n\n**correct**"
+    },
+    {
+      "key": "gpt4_5dcc0aab#3#318",
+      "question_id": "gpt4_5dcc0aab",
+      "slug": "chat/s-fe703ec312",
+      "session_date": "2023/05/24 (Wed) 18:32",
+      "bracket": "[≈2023-05-03]",
+      "context": "the Keen Targhee II Mid WP, but I'm having trouble deciding between them. Also, by the way, I need to remind my sister to return my spare running shoes that I lent to her a few weeks ago [≈2023-05-03].\n\n**assistant:** Choosing the right hiking boots can be a bit overwhelming with all the options out",
+      "verdict": "correct",
+      "raw": "\"A few weeks ago\" from 2023-05-24 means roughly two to four weeks earlier. 2023-05-03 is three weeks before, so the approximate date is a reasonable reading.\n\n**correct**"
+    },
+    {
+      "key": "gpt4_5dcc0aab#3#6530",
+      "question_id": "gpt4_5dcc0aab",
+      "slug": "chat/s-fe703ec312",
+      "session_date": "2023/05/24 (Wed) 18:32",
+      "bracket": "[≈2023-05-03]",
+      "context": "finitely check out those options to find a good cobbler. And, I almost forgot, I also need to remind my sister to return my spare pair of running shoes that I lent to her a few weeks ago [≈2023-05-03]. I lent them to her because she wanted to start running, but she said she'd only need them for a we",
+      "verdict": "correct",
+      "raw": "Taking \"a few weeks ago\" as roughly three weeks before 2023-05-24 lands on about 2023-05-03. That is a reasonable approximate reading, and the \"≈\" marks it as approximate.\n\ncorrect"
+    },
+    {
+      "key": "gpt4_61e13b3c#1#207",
+      "question_id": "gpt4_61e13b3c",
+      "slug": "chat/s-863fa26b68",
+      "session_date": "2023/03/21 (Tue) 05:16",
+      "bracket": "[2023-03-20]",
+      "context": "g for some advice on how to follow up with a potential wholesale customer. I had a great conversation with a local boutique owner at the Spring Fling Market at the downtown park yesterday [2023-03-20], where I was selling my handmade jewelry and candles.\n\n**assistant:** That sounds like a great star",
+      "verdict": "correct",
+      "raw": "\"Yesterday\" relative to 2023-03-21 is 2023-03-20, so the bracket matches.\n\ncorrect"
+    },
+    {
+      "key": "gpt4_68e94287#1#217",
+      "question_id": "gpt4_68e94287",
+      "slug": "chat/s-ccafbac76a",
+      "session_date": "2023/03/04 (Sat) 17:33",
+      "bracket": "[2023-02-25]",
+      "context": "ut my meals for the next week. Can you suggest some healthy vegetarian protein sources and recipes that I can try? Oh, by the way, I spent around $70 on groceries at Walmart last Saturday [2023-02-25], so I have a bunch of staples like pasta sauce, whole wheat bread, and chicken breasts to work with",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "gpt4_68e94287#1#4971",
+      "question_id": "gpt4_68e94287",
+      "slug": "chat/s-ccafbac76a",
+      "session_date": "2023/03/04 (Sat) 17:33",
+      "bracket": "[2023-02-25]",
+      "context": "'ve been meaning to cut down on my meat consumption and focus more on vegetarian protein sources. Speaking of protein, I still have some chicken breasts from my Walmart trip last Saturday [2023-02-25], so I was thinking of using those in some meals this week [≈2023-02-27/2023-03-05]. Do you have any",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "gpt4_6dc9b45b#2#49",
+      "question_id": "gpt4_6dc9b45b",
+      "slug": "chat/s-e7ac108102",
+      "session_date": "2021/06/01 (Tue) 06:53",
+      "bracket": "[≈2021-06-07/2021-06-13]",
+      "context": "**user:** I'm planning a trip to Denver next week [≈2021-06-07/2021-06-13] and I need to book a hotel. Can you recommend some good Hilton hotels in the area?\n\n**assistant:** ",
+      "verdict": "correct",
+      "raw": "Conversation date is Tuesday 2021-06-01. \"Next week\" read as a Monday–Sunday week runs from 2021-06-07 to 2021-06-13, which matches the bracket.\n\n**correct**"
+    },
+    {
+      "key": "gpt4_70e84552#0#3811",
+      "question_id": "gpt4_70e84552",
+      "slug": "chat/s-2c55dc44bb",
+      "session_date": "2023/05/25 (Thu) 14:25",
+      "bracket": "[2023-05-18]",
+      "context": "ned and safe. Do you have any advice on how to set that up? By the way, I've also been meaning to get my goats vaccinated against parasites, and I finally managed to do that last Thursday [2023-05-18].\n\n**assistant:** Congratulations on getting your goats vaccinated! That's an important step in keep",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "gpt4_74aed68e#1#3728",
+      "question_id": "gpt4_74aed68e",
+      "slug": "chat/s-09678e9134",
+      "session_date": "2023/03/15 (Wed) 08:37",
+      "bracket": "[2023]",
+      "context": "onds from your lap time!\n\n**user:** I'm also considering upgrading my brake pads, I got a discount on a set of new brake pads during the Winter Tune-Up event at the Speed Shop earlier this year [2023], but I haven't installed them yet. Do you think it's worth upgrading my brake fluid as well?\n\n**ass",
+      "verdict": "correct",
+      "raw": "\"Earlier this year\" in a conversation dated 2023-03-15 refers to 2023, so the bracket matches the phrase.\n\n**correct**"
+    },
+    {
+      "key": "gpt4_7bc6cf22#0#3870",
+      "question_id": "gpt4_7bc6cf22",
+      "slug": "chat/s-8b9fb78ce4",
+      "session_date": "2023/03/20 (Mon) 18:06",
+      "bracket": "[2023-02]",
+      "context": " more in-depth information on climate change. Do you think I could get some information on the trade tensions between the US and China? I read an article about it in The Economist last month [2023-02], but I'd like to know more about the current situation.\n\n**assistant:** The Economist is an excelle",
+      "verdict": "correct",
+      "raw": "\"Last month\" relative to 2023-03-20 is February 2023, which matches the bracketed [2023-02].\n\n**correct**"
+    },
+    {
+      "key": "gpt4_88806d6e#1#10031",
+      "question_id": "gpt4_88806d6e",
+      "slug": "chat/s-f92d19f2cb",
+      "session_date": "2023/05/28 (Sun) 02:45",
+      "bracket": "[≈2023-05-22/2023-05-28]",
+      "context": "de a clear call-to-action (e.g., scheduling a call).\n\nGo ahead and send the email, and see how Sophia responds. Good luck!\n\n**user:** I'll send her a follow-up email this week [≈2023-05-22/2023-05-28] to discuss the potential collaboration. By the way, I've been meaning to reach out to Rachel, a wom",
+      "verdict": "ambiguous",
+      "raw": "ambiguous"
+    },
+    {
+      "key": "gpt4_88806d6e#1#8177",
+      "question_id": "gpt4_88806d6e",
+      "slug": "chat/s-f92d19f2cb",
+      "session_date": "2023/05/28 (Sun) 02:45",
+      "bracket": "[≈2023-05-22/2023-05-28]",
+      "context": "an I met at a networking event a couple of weeks ago [≈2023-05-14], to discuss a potential collaboration. Do you think it's a good idea to send her a follow-up email this week [≈2023-05-22/2023-05-28]?\n\n**assistant:** It's great that you're thinking of following up with Sophia about the potential co",
+      "verdict": "ambiguous",
+      "raw": "**ambiguous**\n\nThe conversation took place on Sunday, 2023-05-28, so \"this week\" depends on which day the week starts.\n\n- **Monday-start week:** \"this week\" is 2023-05-22 to 2023-05-28, which matches "
+    },
+    {
+      "key": "gpt4_8e165409#3#6621",
+      "question_id": "gpt4_8e165409",
+      "slug": "chat/s-0e9c9db1ae",
+      "session_date": "2023/03/14 (Tue) 06:44",
+      "bracket": "[≈2023-03-06/2023-03-12]",
+      "context": "th something else. Can you give me some suggestions for dog-friendly activities to do with Rocky and my friend's dog, Bella? We had a blast when they played together last week [≈2023-03-06/2023-03-12], and I want to plan more playdates.\n\n**assistant:** That sounds like so much fun! I'd be happy to h",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "gpt4_b5700ca0#4#10732",
+      "question_id": "gpt4_b5700ca0",
+      "slug": "chat/s-afc519a271",
+      "session_date": "2023/03/26 (Sun) 21:45",
+      "bracket": "[2023-03]",
+      "context": "t Lee Krasner and her contributions to abstract expressionism!\n\n**user:** I'd like to learn more about the Museum of Craft and Design, where I attended a ceramics workshop earlier this month [2023-03]. Can you tell me more about the museum's mission and exhibitions?\n\n**assistant:** The Museum of Cra",
+      "verdict": "correct",
+      "raw": "\"Earlier this month\" in a conversation dated 2023-03-26 refers to March 2023, so [2023-03] matches the phrase.\n\ncorrect"
+    },
+    {
+      "key": "gpt4_c27434e8_abs#0#97",
+      "question_id": "gpt4_c27434e8_abs",
+      "slug": "chat/s-3de6b5fab3",
+      "session_date": "2023/05/23 (Tue) 20:21",
+      "bracket": "[≈2023-05-02]",
+      "context": "**user:** I'm working on a model of a 1980s-era Ferrari 288 GTO, started it about three weeks ago [≈2023-05-02] on a Sunday afternoon, and I'm looking for some tips on how to achieve a more realistic paint finis",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "gpt4_d84a3211#3#362",
+      "question_id": "gpt4_d84a3211",
+      "slug": "chat/s-6164494639",
+      "session_date": "2023/05/05 (Fri) 05:38",
+      "bracket": "[≈2023-05-08/2023-05-14]",
+      "context": "o I can take my bike on longer trips. I've been doing some research online and found a good deal on a Saris Bones 2-Bike Trunk Rack, which I think I'm going to order next week [≈2023-05-08/2023-05-14]. Can you tell me more about the best ways to prepare my bike for long trips?\n\n**assistant:** A road",
+      "verdict": "correct",
+      "raw": "correct"
+    },
+    {
+      "key": "gpt4_e414231e#1#66",
+      "question_id": "gpt4_e414231e",
+      "slug": "chat/s-a131ea6874",
+      "session_date": "2023/03/15 (Wed) 11:17",
+      "bracket": "[2023-03-18/2023-03-19]",
+      "context": "**user:** I'm thinking of planning a longer bike ride this weekend [2023-03-18/2023-03-19], maybe around 60 miles or so. Can you help me find some routes around my area that would be suitabl",
+      "verdict": "correct",
+      "raw": "2023-03-15 is a Wednesday, so \"this weekend\" is Saturday 2023-03-18 through Sunday 2023-03-19, which matches the bracket exactly.\n\n**correct**"
+    },
+    {
+      "key": "gpt4_f49edff3#4#6694",
+      "question_id": "gpt4_f49edff3",
+      "slug": "chat/s-ed13a2282a",
+      "session_date": "2023/01/20 (Fri) 18:11",
+      "bracket": "[2023-02]",
+      "context": "ng, so I've been lending him my PS4 and some games to try out. He seems to be enjoying Spider-Man and Uncharted 4, and I'm thinking of getting him his own console for his birthday next month [2023-02]. Do you have any recommendations for a beginner-friendly gaming console?\n\n**assistant:** That's gre",
+      "verdict": "correct",
+      "raw": "\"Next month\" relative to 2023-01-20 is February 2023, so the bracket [2023-02] is a correct reading.\n\ncorrect"
+    },
+    {
+      "key": "gpt4_fa19884d#4#204",
+      "question_id": "gpt4_fa19884d",
+      "slug": "chat/s-3bb89fa530",
+      "session_date": "2023/03/31 (Fri) 15:20",
+      "bracket": "[≈2023-02-28]",
+      "context": "rested in improving my acting skills and was thinking of taking some classes. Do you have any recommendations for acting schools or instructors in the area? By the way, about a month ago [≈2023-02-28], on April 10th, I participated in a workshop organized by the local theater company, focusing on im",
+      "verdict": "correct",
+      "raw": "correct"
+    }
+  ]
+}

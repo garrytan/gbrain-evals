@@ -1,0 +1,16 @@
+diff --git a/src/core/search/evidence-delivery.ts b/src/core/search/evidence-delivery.ts
+index efb5a68d..358562d0 100644
+--- a/src/core/search/evidence-delivery.ts
++++ b/src/core/search/evidence-delivery.ts
+@@ -1192,8 +1192,10 @@ export async function deliverEvidence(
+   opts: DeliverOptions = {},
+ ): Promise<{ results: DeliveredSearchResult[]; delivery: DeliveryMeta }> {
+   const first = await deliverEvidenceOnce(engine, hits, plan, scope, opts);
+-  return plan.resolveDates ? withRelativeDates(first, budgetTokens => deliverEvidenceOnce(engine, hits, { ...plan, budgetTokens }, scope, opts),
++  const out = plan.resolveDates ? await withRelativeDates(first, budgetTokens => deliverEvidenceOnce(engine, hits, { ...plan, budgetTokens }, scope, opts),
+     ids => loadPageObservationDays(engine, ids), r => conversationSignal(r) !== null, text => countEvidenceTokens(text, evidenceTokenizer())) : first;
++  if (process.env.GBRAIN_FLAGCHECK_LOG) (await import('node:fs')).appendFileSync(process.env.GBRAIN_FLAGCHECK_LOG, JSON.stringify({ argv: process.argv.slice(1, 3).join(' '), unit: plan.unit, results: out.results.length, conversation_results: out.results.filter(r => conversationSignal(r) !== null).length, insertions: out.delivery.relative_dates?.insertions ?? null, fallbacks: out.delivery.fallbacks.filter(f => f.startsWith('relative_dates')) }) + '\n');
++  return out;
+ }
+ 
+ async function deliverEvidenceOnce(engine: BrainEngine, hits: SearchResult[], plan: EvidencePlan, scope: DeliveryScope, opts: DeliverOptions): Promise<{ results: DeliveredSearchResult[]; delivery: DeliveryMeta }> {

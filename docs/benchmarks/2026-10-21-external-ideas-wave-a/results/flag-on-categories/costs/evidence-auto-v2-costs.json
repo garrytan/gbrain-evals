@@ -1,0 +1,22 @@
+{
+  "lines": [
+    {
+      "step": "freeze LongMemEval-S (500 questions) at the pinned commit: embeddings on a cold cache plus one rerank each",
+      "usd": 7.89
+    },
+    {
+      "step": "LongMemEval sanity: chunk, auto and page x 500, both judges",
+      "usd": 59.55
+    },
+    {
+      "step": "sealed: freeze 30 haystacks",
+      "usd": 0.34
+    },
+    {
+      "step": "sealed E2: chunk and auto x 150, both judges",
+      "usd": 5.91
+    }
+  ],
+  "total_usd": 73.69,
+  "with_retry_margin_usd": 92.11
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "external-ideas-wave-b",
+      "preregistration": "docs/benchmarks/2026-10-21-external-ideas-wave-b-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-21-external-ideas-wave-b/**",
+        "docs/benchmarks/2026-10-21-external-ideas-wave-b-results.md"
+      ]
+    }
+  ]
+}

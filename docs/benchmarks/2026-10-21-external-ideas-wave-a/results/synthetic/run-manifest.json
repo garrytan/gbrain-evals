@@ -1,0 +1,67 @@
+{
+  "schema": "gbrain-evals/external-ideas-wave-a-run-manifest/v1",
+  "study_manifest_sha256": "20f6f81841f03db04b578f1fc6aac4a245a4c772e87c4ff95f741a85961241c9",
+  "suite": "synthetic",
+  "smoke": false,
+  "dataset_sha256": "4700d68d3e96a772c0bb45dabbeef7cd39a218db090bf0127792760fdf77599a",
+  "gbrain": {
+    "commit": "cfa1a006b64c5baa199142bf0f0b56a0e3fc6c06",
+    "tree": "f538c94e68ce92922b7ee01721f52448aa91a7fe",
+    "version": "0.60.347.0",
+    "evidence_code_sha256": "33c23988a60ebd3970ecb26320e33cfc86eec0540cfc26311cf6ef03b3e2cfd7"
+  },
+  "pinned_code_sha256": {
+    "src/core/search/evidence-relative-dates.ts": "0433f353d4bed086d67e3bcf4b752e06ca57890dab9ee92d436e6c9e8f5b7182",
+    "src/core/search/speaker-line.ts": "d636f8175c6bfe9ffd213557a0988f8e3bdca79a84dc5afa0d359e6554d64ebe",
+    "src/core/temporal-grammar.ts": "534a5b487a0c2de47d170d61c8681163e6e093f105b7befcd63971ad89a77af2"
+  },
+  "pinned_code_matches_manifest": true,
+  "brain_timezone": null,
+  "brain_timezone_note": "brain.timezone unset: observation days are UTC calendar days",
+  "arms": {
+    "auto": {
+      "unit": "auto",
+      "budget_tokens": null,
+      "config": null
+    },
+    "auto_dates": {
+      "unit": "auto",
+      "budget_tokens": null,
+      "config": {
+        "search.evidence_resolve_dates": "true"
+      }
+    }
+  },
+  "evals_commit": "3b70bbee63c4fd34504130ee237f1a2cc84ef6b2",
+  "freeze_runs": [
+    {
+      "at": "2026-10-21T21:42:44.021Z",
+      "selected": 60,
+      "frozen": 60,
+      "skipped": 0,
+      "errors": [],
+      "seconds": 258.3,
+      "seconds_per_frozen_question": 4.3,
+      "estimate": {
+        "questions": 60,
+        "expected_usd": 0.09346383749999998,
+        "worst_usd": 0.12150298874999997,
+        "per_question_usd": 0.0015577306249999997
+      },
+      "cost": {
+        "usd": 0.010069,
+        "input_tokens": 175227,
+        "output_tokens": 0,
+        "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T21-38-23-219Z-fd12e070: 641 paid requests, 0 charged at their reservation because usage was unavailable",
+        "ledger": "<lane>/ledger.sqlite",
+        "program_cap_usd": 220,
+        "overshoot_usd": 0,
+        "event_loop_lag_ms": {
+          "p50": 0,
+          "p99": 40,
+          "max": 2906.6
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,4647 @@
+{
+  "schema": "gbrain-evals/external-ideas-wave-a-analysis/v1",
+  "suite": "longmemeval",
+  "verdict": "inconclusive",
+  "alpha": 0.05,
+  "complete": true,
+  "failures": {
+    "complete": true,
+    "counts": {},
+    "examples": []
+  },
+  "model": "claude-sonnet-5-5",
+  "samples": [
+    1,
+    2
+  ],
+  "scope": "all",
+  "primary_judge": "official_correct (gpt-4o-2024-08-06, LongMemEval evaluate_qa.py prompt)",
+  "frozen_manifest_sha256": "5f62ad3909320ae95c3496a263348bd1cc7deaf1ac335ee25490196acaf7be5b",
+  "gbrain_commit": "cfa1a006b64c5baa199142bf0f0b56a0e3fc6c06",
+  "questions": 500,
+  "affected": 395,
+  "primary": {
+    "questions": 500,
+    "auto": 463,
+    "auto_dates": 460.5,
+    "net_gain": -2.5,
+    "delta_points": -0.5,
+    "ci95_net_gain": [
+      -8,
+      2.5
+    ],
+    "lower_bound_one_sided_net_gain": -7,
+    "p_one_sided_greater": 0.8660133986601339,
+    "p_one_sided_less": 0.23477652234776522,
+    "p_two_sided": 0.46835316468353166,
+    "p_method": "monte-carlo-sign-flip",
+    "wins": 9,
+    "losses": 14
+  },
+  "affected_only": {
+    "questions": 395,
+    "auto": 363,
+    "auto_dates": 360.5,
+    "net_gain": -2.5,
+    "delta_points": -0.6329113924050633,
+    "ci95_net_gain": [
+      -8,
+      2.5
+    ],
+    "lower_bound_one_sided_net_gain": -7,
+    "p_one_sided_greater": 0.8671132886711329,
+    "p_one_sided_less": 0.23267673232676733,
+    "p_two_sided": 0.47235276472352766,
+    "p_method": "monte-carlo-sign-flip",
+    "wins": 9,
+    "losses": 14
+  },
+  "framed_judge": {
+    "questions": 500,
+    "auto": 459.5,
+    "auto_dates": 457,
+    "net_gain": -2.5,
+    "delta_points": -0.5,
+    "ci95_net_gain": [
+      -7.5,
+      2.5
+    ],
+    "lower_bound_one_sided_net_gain": -7,
+    "p_one_sided_greater": 0.8748125187481252,
+    "p_one_sided_less": 0.22367763223677634,
+    "p_two_sided": 0.45225477452254775,
+    "p_method": "monte-carlo-sign-flip",
+    "wins": 8,
+    "losses": 13
+  },
+  "by_type": {
+    "single-session-user": {
+      "questions": 64,
+      "affected": 50,
+      "auto": 61.5,
+      "auto_dates": 60.5,
+      "net_gain": -1
+    },
+    "multi-session": {
+      "questions": 121,
+      "affected": 97,
+      "auto": 104,
+      "auto_dates": 104,
+      "net_gain": 0
+    },
+    "knowledge-update": {
+      "questions": 72,
+      "affected": 57,
+      "auto": 71,
+      "auto_dates": 71,
+      "net_gain": 0
+    },
+    "abstention": {
+      "questions": 30,
+      "affected": 24,
+      "auto": 28,
+      "auto_dates": 28,
+      "net_gain": 0
+    },
+    "single-session-preference": {
+      "questions": 30,
+      "affected": 23,
+      "auto": 30,
+      "auto_dates": 29.5,
+      "net_gain": -0.5
+    },
+    "temporal-reasoning": {
+      "questions": 127,
+      "affected": 109,
+      "auto": 113,
+      "auto_dates": 111.5,
+      "net_gain": -1.5
+    },
+    "single-session-assistant": {
+      "questions": 56,
+      "affected": 35,
+      "auto": 55.5,
+      "auto_dates": 56,
+      "net_gain": 0.5
+    }
+  },
+  "judge_agreement": {
+    "rows": 1790,
+    "agree": 1762,
+    "official_yes_framed_no": 19,
+    "official_no_framed_yes": 9
+  },
+  "reader_noise": {
+    "questions": 500,
+    "discordant": 12,
+    "rate": 0.024,
+    "affected_questions": 395,
+    "affected_discordant": 8
+  },
+  "method": {
+    "score": "mean of the samples' official verdicts per question; unaffected questions copy auto's score for auto_dates",
+    "test": "one-sided paired sign-flip over questions, 10000 draws, seed 20261021; 95% bootstrap interval resampling questions"
+  },
+  "per_question": [
+    {
+      "question_id": "001be529",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "00ca467f",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0100672e",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "01493427",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "031748ae",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "031748ae_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "06878be2",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "06db6396",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "06f04340",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "07741c44",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "07741c45",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "078150f1",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "07b6f563",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0862e8bf",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0862e8bf_abs",
+      "question_type": "abstention",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "08e075c7",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "08f4fc43",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0977f2af",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "099778bb",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "09ba9854",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "09ba9854_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "09d032c9",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0a34ad58",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0a995998",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "0bb5a684",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0bc8ad92",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0bc8ad93",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "0db4c65d",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0ddfec37",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0ddfec37_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "0e4e4c46",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0e5e2d1a",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0ea62687",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0edc2aef",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "0f05491a",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "10d9b85a",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "10e09553",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "118b2229",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1192316e",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "129d1232",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1568498a",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "15745da0",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "15745da0_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "157a136e",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "16c90bf4",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "184da446",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "18bc8abd",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "18dcd5a5",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1903aded",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "195a1a1b",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "19b5f2b3",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "19b5f2b3_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1a1907b4",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1a8a66a6",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1b9b7252",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1c0ddc50",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0.5,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1c549ce4",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1cea1afa",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1d4da289",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1d4e3b97",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1da05512",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1de5cff2",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1e043500",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1f2b8d4f",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "1faac195",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2133c1b5",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "2133c1b5_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "21436231",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "21d02d0d",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "22d2cb42",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2311e44b",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2311e44b_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2318644b",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "25e5aa4f",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2698e78f",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2698e78f_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "26bdc477",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "27016adc",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2788b940",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "28bcfaac",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "28dc39ac",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "29f2956b",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "29f2956b_abs",
+      "question_type": "abstention",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2a1811e2",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2b8f3739",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2bf43736",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2c63a862",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2ce6a0f2",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0.5,
+      "auto_dates": 0.5,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "2e6d26dc",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2ebe6c90",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "2ebe6c92",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "311778f1",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "32260d93",
+      "question_type": "single-session-preference",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "3249768e",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "352ab8bd",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "35a27287",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "36580ce8",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "36b9f61e",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "370a8ff4",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "37d43f65",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "37f165cf",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 0.5,
+      "auto_dates": 0.5,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "38146c39",
+      "question_type": "single-session-preference",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "3a704032",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0.5,
+      "framed_auto": 1,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "3b6f954b",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "3ba21379",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "3c1045c8",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "3d86fd0a",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "3e321797",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "3f1e9474",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "3fdac837",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "3fe836c9",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4100d0a0",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "41275add",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "41698283",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "42ec0761",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4388e9dd",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "45dc21b6",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "46a3abf7",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0.5,
+      "framed_auto": 0,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "488d3006",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4adc0475",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4b24c848",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4baee567",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4bc144e2",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4c36ccef",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4d6b87c8",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4dfccbf7",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4dfccbf8",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4f54b7c9",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "4fd1909e",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "5025383b",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "505af2f5",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "50635ada",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "51a45a95",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 0.5,
+      "auto_dates": 0,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "51b23612",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "51c32626",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 0.5,
+      "auto_dates": 0.5,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "54026fce",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "545bd2b5",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "55241a1f",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "561fabcd",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "577d4d32",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "57f827a0",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "5809eb10",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "5831f84d",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "58470ed2",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "58bf7951",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "58ef2f1c",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "59524333",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "5a4f22c0",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "5a7937c8",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "5c40ec5b",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "5d3d2817",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "5e1b23de",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "60036106",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "60159905",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "603deb26",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "60472f9c",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6071bd76",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "60bf93ed",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "60bf93ed_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "60d45044",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "618f13b2",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 0.5,
+      "auto_dates": 1,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "61f8c8f8",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "6222b6eb",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 0.5,
+      "auto_dates": 1,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "6456829e",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6456829e_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "65240037",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6613b389",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "66f24dbb",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "67e0d0f2",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "681a1674",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "69fee5aa",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6a1eabeb",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6a27ffc2",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6ade9755",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6ae235be",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6aeb4375",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6aeb4375_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6b168ec8",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6b7dfb22",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6c49646a",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6cb6f249",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6d550036",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0.5,
+      "framed_auto": 0,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "6e984301",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6e984302",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "6f9b354f",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "7024f17c",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0.5,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "70b3e69b",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "71017276",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "71017277",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "71315a70",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "7161e7e2",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "71a3fd6b",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "720133ac",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "726462e0",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "72e3ee87",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "73d42213",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "7401057b",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "7405e8b1",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "7527f7e2",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "75499fd8",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "75832dbd",
+      "question_type": "single-session-preference",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "75f70248",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "76d63226",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "778164c6",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "77eafa52",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "7a87bd0c",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "7a8d0b71",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "7e00a6cb",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "7e974930",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8077ef71",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "80ec1f4f",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "80ec1f4f_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "81507db6",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "830ce83f",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 0.5,
+      "auto_dates": 0.5,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "8464fc84",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "852ce960",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0.5,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "853b0a1d",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8550ddae",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "85fa3a3f",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "86b68151",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "86f00804",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8752c811",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "87f22b4a",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "88432d0a",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 1,
+      "framed_auto": 0,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "88432d0a_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "89527b6b",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8979f9ec",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "89941a93",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "89941a94",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8a137a7f",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0.5,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8a2466db",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8aef76bc",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8b9d4367",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8c18457d",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8cf4d046",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8cf51dda",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8e91e7d9",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "8e9d538c",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8ebdbe50",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "8fb83627",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "91b15a6e",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "92a0aa75",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "945e3d21",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "94f70d80",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "95228167",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "95bcc1c8",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "982b5123",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "982b5123_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "993da5e2",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "9a707b81",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "9a707b82",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "9aaed6a3",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "9bbe84a2",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "9d25d4e0",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "9ea5eabc",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "9ee3ecd6",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "a06e4cfe",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a08a253f",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a11281a2",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a1cc6108",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a1eacc2a",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a2f3aa27",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "a3045048",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a3332713",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a346bb18",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a3838d2b",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "a40e080f",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a4996e51",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a82c026e",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "a89d7624",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a96c20ee",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a96c20ee_abs",
+      "question_type": "abstention",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "a9f6b44c",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "aae3761f",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ac031881",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ad7109d1",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "af082822",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "af8d2e46",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "afdc33df",
+      "question_type": "single-session-preference",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "affe2881",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b01defab",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b0479f84",
+      "question_type": "single-session-preference",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b29f3365",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b320f3f8",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b3c15d39",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b46e15ed",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b46e15ee",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b5ef892d",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b6019101",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b6025781",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b759caee",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b86304ba",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 0.5,
+      "auto_dates": 1,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "b9cfe692",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ba358f49",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ba358f49_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ba61f0b9",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "bb7c3b45",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "bbf86515",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "bc149d6b",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "bc8a6e93",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "bc8a6e93_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "bcbe585f",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "bf659f65",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0.5,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "c14c00dd",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c18a7dc8",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c19f7a0b",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c2ac3c61",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c4a1ceb8",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c4ea545c",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c4f10528",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c5e8278d",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c6853660",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c7cf7dfd",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c7dc5443",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c8090214",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c8090214_abs",
+      "question_type": "abstention",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c8c3f81d",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c8f1aeed",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c960da58",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "c9f37c46",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "caf03d32",
+      "question_type": "single-session-preference",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "caf9ead2",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "cc06de0d",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "cc539528",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "cc5ded98",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "cc6d1ec1",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ccb36322",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 0.5,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "ce6d2d27",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ceb54acb",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "cf22b7bf",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d01c6aa8",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d23cf73b",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0.5,
+      "auto_dates": 0,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "d24813b1",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d3ab962e",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d52b4f67",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d596882b",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d6062bb9",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d6233ab6",
+      "question_type": "single-session-preference",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d682f1a2",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d7c942c3",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "d851d5ba",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0.5,
+      "framed_auto": 0,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "d905b33f",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "dad224aa",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "db467c8c",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "dc439ea3",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "dccbc061",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "dcfa8644",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "dd2973ad",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0.5,
+      "framed_auto": 1,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "dfde3500",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e01b8e2f",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e25c3b8d",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e3038f8c",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e3fc4d6e",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e47becba",
+      "question_type": "single-session-user",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e48988bc",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e493bb7c",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e4e14d04",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e56a43b9",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e5ba910e_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e6041065",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e61a7584",
+      "question_type": "knowledge-update",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e66b632c",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e831120c",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e8a79c70",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e9327a54",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "e982271f",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "eac54adc",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "eac54add",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "eaca4986",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "eace081b",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ec81a493",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "ed4ddc30",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "edced276",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "edced276_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "eeda8a6d",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "eeda8a6d_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ef66a6e5",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "ef9cf60a",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "efc3f7c2",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f0853d11",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f0e564bc",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f35224e0",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f4f1d8a4",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f4f1d8a4_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f523d9fe",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f685340e",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f685340e_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f8c5f88b",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "f9e8c073",
+      "question_type": "knowledge-update",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "faba32e5",
+      "question_type": "single-session-user",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "fca70973",
+      "question_type": "single-session-preference",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "fca762bc",
+      "question_type": "single-session-assistant",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "fea54f57",
+      "question_type": "single-session-assistant",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_0a05b494",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_0b2f1d21",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_15e38248",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0.5,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "gpt4_18c2b244",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_1916e0ea",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_194be4b3",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_1a1dc16d",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_1d4ab0c9",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_1d80365e",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_1e4a8aeb",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_1e4a8aec",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_213fd887",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_21adecb5",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_2312f94c",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_2487a7cb",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_2655b836",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_2ba83207",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_2c50253f",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_2d58bcd6",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_2f56ae70",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_2f584639",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_2f8be40d",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_2f91af09",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_31ff4165",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_372c3eed",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_372c3eed_abs",
+      "question_type": "abstention",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_385a5000",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_45189cb4",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_468eb063",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_468eb064",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_483dd43c",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_4929293a",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_4929293b",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_4cd9eba1",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_4edbafa2",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_4ef30696",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_4fc4f797",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_5438fa52",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0.5,
+      "framed_auto": 0,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "gpt4_5501fe77",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_59149c77",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_59149c78",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0,
+      "framed_auto": 1,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_59c863d7",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_5dcc0aab",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_61e13b3c",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_65aabe59",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_68e94287",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_68e94288",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_6dc9b45b",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_6ed717ea",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_70e84552",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_70e84552_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_731e37d7",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_74aed68e",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_76048e76",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_78cf46a3",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_7a0daae1",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_7abb270c",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_7bc6cf22",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_7ca326fa",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_7ddcf75f",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_7de946e7",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_7f6b06db",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_7fce9456",
+      "question_type": "multi-session",
+      "affected": false,
+      "auto": 0.5,
+      "auto_dates": 0.5,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "gpt4_8279ba02",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_8279ba03",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_85da3956",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_88806d6e",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_8c8961ae",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_8e165409",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_93159ced",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_93159ced_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_93f6379c",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_98f46fc6",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_9a159967",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_a1b77f9c",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_a2d1d1f6",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_a56e767c",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_ab202e7f",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 0.5,
+      "auto_dates": 0,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_af6db32f",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_b0863698",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_b4a80587",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_b5700ca0",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_b5700ca9",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_c27434e8",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_c27434e8_abs",
+      "question_type": "abstention",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_cd90e484",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_d12ceb0e",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_d31cdae3",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_d6585ce8",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 0,
+      "auto_dates": 0,
+      "framed_auto": 0,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_d6585ce9",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_d84a3211",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_d9af6064",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_e05b82a6",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_e061b84f",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_e061b84g",
+      "question_type": "temporal-reasoning",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_e072b769",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_e414231e",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_e414231f",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_ec93e27f",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_f2262a51",
+      "question_type": "multi-session",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_f420262c",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_f420262d",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0.5,
+      "framed_auto": 1,
+      "framed_auto_dates": 0.5
+    },
+    {
+      "question_id": "gpt4_f49edff3",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_fa19884c",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_fa19884d",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "gpt4_fe651585",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 0.5,
+      "framed_auto": 0.5,
+      "framed_auto_dates": 0
+    },
+    {
+      "question_id": "gpt4_fe651585_abs",
+      "question_type": "abstention",
+      "affected": false,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    }
+  ]
+}
