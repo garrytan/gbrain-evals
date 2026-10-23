@@ -1375,6 +1375,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'README-cat13-phase-e0.md': { role: 'protocol notes for the Cat13 ranker-wave phases', part_of: 'concept-search' },
   'adversarial-injections.ts': { role: 'injection generator and scorer used by Cat6', part_of: 'prose-autolink-precision' },
   'all.ts': { role: 'umbrella runner that dispatches registry entries' },
+  'brainbench-shard-weights.json': { role: 'measured seconds per offline category, which all.ts --shard balances CI shards by' },
   'a4-s4-rescore.ts': { role: 'keyless re-score of the A4 S4-on arm (G8, 2026-10-06)', part_of: 'abstention' },
   'cat20-judges.ts': { role: 'keyless four-judge Cat 20 decision and the W8 Cat 20 control statistic (2026-10-06)', part_of: 'brainstorm-grounding' },
   'cat21-paired.ts': { role: 'keyless Cat 21 per-split metrics and file-clustered paired comparisons (2026-10-06)', part_of: 'code-retrieval' },
