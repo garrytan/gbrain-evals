@@ -2,7 +2,7 @@
 
 Measured 2026-10-21 under the [preregistration](2026-10-21-external-ideas-wave-a2-preregistration.md), on wave A's frozen LongMemEval-S `auto` deliveries at gbrain `cfa1a006b64c5baa199142bf0f0b56a0e3fc6c06` (frozen manifest `5f62ad3909320ae95c3496a263348bd1cc7deaf1ac335ee25490196acaf7be5b`). Wave A2 adds no gbrain code: both arms are eval-side transforms of the reader request that wave A's `auto` arm already answered. Every file behind these numbers is in [`2026-10-21-external-ideas-wave-a2/results/`](2026-10-21-external-ideas-wave-a2/results/).
 
-**Verdict: R2 passes non-inferiority on Sonnet 5.5, with its harm checks not run; R1 is inconclusive.** Trimming the low-scoring tail behind a protected top 3 kept Sonnet 5.5 at 463 of 500 (net 0; the one-sided lower bound at its Holm level is −4, inside the −5 margin) while cutting the delivered evidence on the 217 affected questions by 36.6%. Ordering blocks by date with rank labels scored 462.5 against 463 (net −0.5, 95% interval −6.5 to +5), neither a pass nor a regression. The preregistered harm checks for R2 (`gpt-6.1-sol`, then `claude-opus-5-5`) don't fit the rest of this wave's cap, so, as preregistered, R2 is reported as a Sonnet-only pass and nothing changes in the product until they run.
+**Verdict: R2 passes non-inferiority on Sonnet 5.5, and its harm checks show no regression on `gpt-6.1-sol` or `claude-opus-5-5`; R1 is inconclusive.** Trimming the low-scoring tail behind a protected top 3 kept Sonnet 5.5 at 463 of 500 (net 0; the one-sided lower bound at its Holm level is −4, inside the −5 margin) while cutting the delivered evidence on the 217 affected questions by 36.6%. On those questions Sol scored 208 against 208 and Opus 209 against 210. Sol's cell is formally incomplete by three `auto` rows that OpenAI's batch queue never returned, but no outcome of those rows can make it a regression. Only one trimmed question lost a gold-session block, and it flipped to wrong on all three models. Ordering blocks by date with rank labels scored 462.5 against 463 (net −0.5, 95% interval −6.5 to +5), neither a pass nor a regression.
 
 ## Decision (Holm across R1 and R2, alpha 0.05)
 
@@ -70,23 +70,48 @@ The top 3 blocks are kept; a later block is dropped when its frozen hybrid hit s
 
 ## Secondary models (harm checks)
 
-Not run. They are due for R2 because it passed, but the preflight worst cases (R2 `gpt-6.1-sol` $68.1, R2 `claude-opus-5-5` $67.5; expected $13.3 and $36.4) don't fit the $28.46 left of this wave's $60 cap. As preregistered, they were not started and R2 is reported as passing on Sonnet with its harm checks not run. `a2-verdict.json` lists no secondaries. Running them needs a budget decision from the coordinator.
+Run under the [same-day amendment](2026-10-21-external-ideas-wave-a2-preregistration.md#2026-10-21-after-the-sonnet-55-cells-and-before-any-harm-check-request-the-wave-cap-for-the-r2-harm-checks), which raised the wave cap to a lane stop at $215. Both models ran `auto` and `r2_tail_trim`, two samples each, on R2's 217 affected questions, analyzed with `--scope affected` (`results/harm/`, `results/a2-verdict-harm.json`). **Neither shows a regression, so R2's Sonnet pass stands with clean harm checks**, with one caveat on Sol's completeness below.
+
+| Model (official judge, mean of 2 samples, 217 questions) | auto | r2_tail_trim | Net gain | 95% CI | One-sided p (loss) | `p_noninferior` | Wins | Losses | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| `claude-sonnet-5-5` (decision model) | 209.5 | 209.5 | 0 | −4 to +3.5 | 0.599 | 0.0063 | 6 | 4 | pass |
+| `gpt-6.1-sol` | 208 | 208 | 0 | −3.5 to +3 | 0.615 | 0.0018 | 5 | 4 | incomplete (3 rows), not a regression |
+| `claude-opus-5-5` | 210 | 209 | −1 | −4.5 to +2 | 0.379 | 0.0070 | 3 | 4 | inconclusive, not a regression |
+
+- **Sol is incomplete by 3 rows.** OpenAI's batch queue stalled on single requests for hours at a time, and three `auto` sample-1 requests (`01493427`, `08e075c7`, `1de5cff2`) errored on their first attempt and were still unanswered on their one retry when this was written. Under the preregistered rule an error row makes the cell incomplete, so Sol's verdict is `incomplete`. It cannot be a regression whatever those rows return: scoring all three as correct for `auto` gives a net of −1.5 with a one-sided loss p of 0.26, far from 0.05. That bound is why Opus was started before the last Sol retries ended.
+- **Framed judge (report-only):** Sol 207.5 against 207.5; Opus 210.5 against 208 (−2.5, 1 win and 4 losses).
+- **Reader noise:** the two `auto` samples disagree on 3 of 214 complete Sol questions and 4 of 217 Opus questions.
+- **Ceiling:** every model is at 95.6% to 96.8% on these questions with `auto`, so there is little room for either a gain or a loss to show.
+
+## Knowledge-update and gold sessions
+
+| Knowledge-update (62 affected of 72) | auto | r2_tail_trim | Net gain |
+|---|---|---|---|
+| `claude-sonnet-5-5` | 71 | 69 | −2 |
+| `gpt-6.1-sol` | 60.5 | 60 | −0.5 |
+| `claude-opus-5-5` | 59.5 | 59 | −0.5 |
+
+(Sonnet's row is over all 72 knowledge-update questions, as in its per-type table, and the other two are over the 62 affected ones. The 10 unaffected questions add 0 to the net either way.)
+
+**Dropped gold blocks:** of the 217 trimmed questions, exactly **one** lost a block from a gold (answer) session: `e66b632c`, a knowledge-update question with two gold sessions, whose rank-4 block was cut (`results/gold-dropped.json`; gold sessions are matched by recomputing the opaque session slug from the dataset's `answer_session_ids`, after retrieval). It is the one question all three models answer correctly with `auto` and wrongly with R2, in both samples. The trim never dropped a gold block anywhere else, and the other knowledge-update losses are reader-noise flips on questions whose gold blocks were all kept.
+
+So the knowledge-update concern is real but narrow: when an update question's earlier value sits in a low-scoring tail block, the protected top 3 doesn't save it. A product version of the trim should consider a guard for that case, such as keeping a dropped block from the same thread or topic as a kept one, before it becomes a default.
 
 ## Cost
 
-All of it was charged to the GBRA-162 lane ledger (waves A, B and A2): $90.04 committed of the $220 cap, $129.96 left (`results/ledger-status.json`). This wave spent $31.54 of its $60 cap. Every cell ran through Anthropic Message Batches at the confirmed 50% factor, judges included, and no cell had a failure.
+All of it was charged to the GBRA-162 lane ledger (waves A, B and A2): $137.52 committed of the $220 cap, under the amendment's $215 stop, with $82.48 left (`results/ledger-status.json`). Wave A2 spent $79.02. Every cell ran through Message Batches (Anthropic) or the Batch API (OpenAI) at the confirmed 50% factor after list-price pilots, judges included.
 
-| Cell | Questions | USD |
+| Step | Questions | USD |
 |---|---|---|
-| R1 sample 1 | 500 | 12.55 |
-| R1 sample 2 | 500 | 12.31 |
-| R2 sample 1 | 217 | 3.34 |
-| R2 sample 2 | 217 | 3.34 |
-| Total | | 31.54 |
+| Sonnet 5.5: R1 samples 1 and 2 | 500 each | 24.86 |
+| Sonnet 5.5: R2 samples 1 and 2 | 217 each | 6.69 |
+| `gpt-6.1-sol` harm check: `auto` and R2, 2 samples each (pilots cancelled after stalling included) | 217 each | 13.14 |
+| `claude-opus-5-5` harm check: `auto` and R2, 2 samples each | 217 each | 34.34 |
+| Total | | 79.02 |
 
-The comparator is wave A's two Sonnet 5.5 `auto` samples, reused at no cost: the `auto` request hash in both A2 affected reports equals wave A's for 500 of 500 questions.
+The harm-check lines are ledger deltas across their runs. The Sonnet comparator is wave A's two `auto` samples, reused at no cost: the `auto` request hash in both A2 affected reports equals wave A's for 500 of 500 questions.
 
 ## What this changes
 
 - **R1:** no change. Date order with rank labels neither helps nor hurts Sonnet 5.5 on this delivery.
-- **R2:** no product change yet. The trim saves about a third of the reader's input on the questions it touches without measurably losing answers on Sonnet 5.5, so it is a candidate token-saving default for conversation deliveries once the `gpt-6.1-sol` and `claude-opus-5-5` harm checks run clean. This is development evidence on LongMemEval-S, which gbrain's retrieval was tuned on, so a pass here is not held-out confirmation.
+- **R2:** it passes non-inferiority on Sonnet 5.5, and neither harm check shows a regression on Sol or Opus. On the questions it touches, it cuts about a third of the reader's input with no measurable loss in answers. It is a candidate token-saving default for conversation deliveries. Two limits apply before a product change. First, this is development evidence on LongMemEval-S, which gbrain's retrieval was tuned on, so it is not held-out confirmation. Second, the one question it reliably breaks is a knowledge-update question whose earlier value sat in the trimmed tail, so a product version wants a guard for that shape.

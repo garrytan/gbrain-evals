@@ -1,0 +1,39 @@
+{
+  "cell": "r2_tail_trim-affected-s2-gpt-6.1-sol",
+  "done": true,
+  "questions": 217,
+  "rows": 217,
+  "failures": {},
+  "official_correct": 208,
+  "framed_correct": 208,
+  "reader_usage": {
+    "input_tokens": 1777345,
+    "output_tokens": 20770,
+    "batch_usd": 2.2457049,
+    "list_usd": 4.2943706000000015
+  },
+  "estimate": {
+    "requests": 217,
+    "mean_input_tokens": 8308,
+    "expected_usd": 2.8267650000000035,
+    "worst_usd": 17.134580000000078
+  },
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "budget ledger external-ideas-wave-a-answer-2026-10-23T11-39-23-692Z-0c027b6f: 0 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+    "program_cap_usd": 220,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 15,
+      "max": 15
+    }
+  },
+  "batch_factor": {
+    "factor": 0.5,
+    "confirmed": true
+  }
+}

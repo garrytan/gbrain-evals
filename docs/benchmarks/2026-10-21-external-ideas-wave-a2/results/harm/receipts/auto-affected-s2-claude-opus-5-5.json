@@ -1,0 +1,39 @@
+{
+  "cell": "auto-affected-s2-claude-opus-5-5",
+  "done": true,
+  "questions": 217,
+  "rows": 217,
+  "failures": {},
+  "official_correct": 210,
+  "framed_correct": 210,
+  "reader_usage": {
+    "input_tokens": 4484274,
+    "output_tokens": 53606,
+    "batch_usd": 9.925009999999997,
+    "list_usd": 19.009215999999995
+  },
+  "estimate": {
+    "requests": 217,
+    "mean_input_tokens": 20787,
+    "expected_usd": 10.906873800000044,
+    "worst_usd": 18.997158800000083
+  },
+  "cost": {
+    "usd": 0.320487,
+    "input_tokens": 124987,
+    "output_tokens": 802,
+    "basis": "budget ledger external-ideas-wave-a-answer-2026-10-23T11-42-19-552Z-57e4c9af: 414 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+    "program_cap_usd": 220,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 64.9
+    }
+  },
+  "batch_factor": {
+    "factor": 0.5,
+    "confirmed": true
+  }
+}

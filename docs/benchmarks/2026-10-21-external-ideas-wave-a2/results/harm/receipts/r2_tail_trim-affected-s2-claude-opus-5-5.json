@@ -1,0 +1,39 @@
+{
+  "cell": "r2_tail_trim-affected-s2-claude-opus-5-5",
+  "done": true,
+  "questions": 217,
+  "rows": 217,
+  "failures": {},
+  "official_correct": 208,
+  "framed_correct": 208,
+  "reader_usage": {
+    "input_tokens": 2867200,
+    "output_tokens": 54539,
+    "batch_usd": 6.571703999999999,
+    "list_usd": 12.559579999999995
+  },
+  "estimate": {
+    "requests": 217,
+    "mean_input_tokens": 13293,
+    "expected_usd": 7.525645000000032,
+    "worst_usd": 15.61593000000007
+  },
+  "cost": {
+    "usd": 0.325302,
+    "input_tokens": 126965,
+    "output_tokens": 789,
+    "basis": "budget ledger external-ideas-wave-a-answer-2026-10-23T11-42-23-439Z-29157416: 414 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+    "program_cap_usd": 220,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 56.6
+    }
+  },
+  "batch_factor": {
+    "factor": 0.5,
+    "confirmed": true
+  }
+}
