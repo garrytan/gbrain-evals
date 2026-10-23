@@ -297,8 +297,8 @@
   "examples": [
    [
     "provenance.isolated_home",
-    "/tmp/cat36-isolated-i1UoPB/home",
-    "/tmp/cat36-isolated-8ydbIc/home"
+    "<tmp>/cat36-isolated-i1UoPB/home",
+    "<tmp>/cat36-isolated-8ydbIc/home"
    ]
   ]
  },
@@ -317,8 +317,8 @@
   "examples": [
    [
     "data.build.provenance.isolated_home",
-    "/tmp/cat36-isolated-i1UoPB/home",
-    "/tmp/cat36-isolated-8ydbIc/home"
+    "<tmp>/cat36-isolated-i1UoPB/home",
+    "<tmp>/cat36-isolated-8ydbIc/home"
    ]
   ]
  },
@@ -654,8 +654,8 @@
   "examples": [
    [
     "data.cells[0].operator[0].args[3]",
-    "/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/gbrain-home/brain.pglite",
-    "/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/gbrain-home/brain.pglite"
+    "<tmp>/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/gbrain-home/brain.pglite",
+    "<tmp>/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/gbrain-home/brain.pglite"
    ],
    [
     "data.cells[0].operator[0].tail",
@@ -664,23 +664,23 @@
    ],
    [
     "data.cells[0].operator[1].args[4]",
-    "/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/vault-vault",
-    "/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/vault-vault"
+    "<tmp>/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/vault-vault",
+    "<tmp>/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/vault-vault"
    ],
    [
     "data.cells[0].operator[1].tail",
-    "  \"source_id\": \"vault\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/vault-vault\",\n  \"source",
-    "  \"source_id\": \"vault\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/vault-vault\",\n  \"source"
+    "  \"source_id\": \"vault\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/vault-vault\",\n  \"source",
+    "  \"source_id\": \"vault\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/vault-vault\",\n  \"source"
    ],
    [
     "data.cells[0].operator[2].args[4]",
-    "/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/other-vault",
-    "/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/other-vault"
+    "<tmp>/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/other-vault",
+    "<tmp>/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/other-vault"
    ],
    [
     "data.cells[0].operator[2].tail",
-    "  \"source_id\": \"other\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/other-vault\",\n  \"source",
-    "  \"source_id\": \"other\",\n  \"local_path\": \"/tmp/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/other-vault\",\n  \"source"
+    "  \"source_id\": \"other\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-gDrE1k/n5-pglite-mcp-stdio/other-vault\",\n  \"source",
+    "  \"source_id\": \"other\",\n  \"local_path\": \"<tmp>/n5-forget-residue-cells-9Z1oVA/n5-pglite-mcp-stdio/other-vault\",\n  \"source"
    ],
    [
     "data.cells[0].operator[5].tail",

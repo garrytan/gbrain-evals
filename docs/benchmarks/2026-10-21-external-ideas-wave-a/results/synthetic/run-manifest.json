@@ -53,7 +53,7 @@
         "input_tokens": 175227,
         "output_tokens": 0,
         "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T21-38-23-219Z-fd12e070: 641 paid requests, 0 charged at their reservation because usage was unavailable",
-        "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+        "ledger": "<lane>/ledger.sqlite",
         "program_cap_usd": 220,
         "overshoot_usd": 0,
         "event_loop_lag_ms": {

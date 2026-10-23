@@ -23,7 +23,7 @@
     "input_tokens": 11305469,
     "output_tokens": 103644,
     "basis": "budget ledger external-ideas-wave-a-answer-2026-10-21T22-24-33-212Z-555dbbf0: 1001 paid requests, 0 charged at their reservation because usage was unavailable",
-    "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+    "ledger": "<lane>/ledger.sqlite",
     "program_cap_usd": 220,
     "overshoot_usd": 0,
     "event_loop_lag_ms": {

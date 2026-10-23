@@ -31,7 +31,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { BudgetExceededError, chatPrice, initLedger, ledgerStatus, receiptCost, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
-import { Args, evalsCommit, writeJson } from './evidence-delivery.ts';
+import { Args, evalsCommit, writeJson as writeRawJson } from './evidence-delivery.ts';
 import { REPO_ROOT, sha256 } from './evidence-delivery/data.ts';
 import { freeze, type FreezeInput } from './evidence-delivery/freeze.ts';
 import { configureGbrainGateway, gbrainIdentity, loadGbrain, resolveGbrainDir, type GbrainModules } from './evidence-delivery/gbrain.ts';
@@ -45,12 +45,14 @@ import { BatchLane } from './batch/submit.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import { answerStep, type QuestionMeta, type StepResult } from './external-ideas-wave-a/answer.ts';
 import {
-  A2_NI_MARGIN, ALL_ARMS, a2Verdict, affectedFile, preregFor, type CandidateArm, analysisMarkdown, analyze, auditCandidates, auditPrompt, auditVerdict, computeAffected, flipVerdict, latestRows, loadStudyManifest, modelKey,
+  A2_NI_MARGIN, ALL_ARMS, a2Verdict, publicPaths, affectedFile, preregFor, type CandidateArm, analysisMarkdown, analyze, auditCandidates, auditPrompt, auditVerdict, computeAffected, flipVerdict, latestRows, loadStudyManifest, modelKey,
   preflightProblems, readRows, readerText, rowsPath, validateStudyManifest, verdicts, type AffectedReport, type AnswerRow, type Analysis, type AuditSummary, type Arm, type JudgeVerdicts, type QuestionText,
   type StudyManifest,
 } from './external-ideas-wave-a/lib.ts';
 
 export const LANE_LEDGER = process.env.GBRA162_LEDGER ?? join(homedir(), '.capy/work/gbra162-external-ideas/ledger.sqlite');
+/** Every JSON this runner writes goes out in publicPaths form, so its receipts can be committed as written. */
+const writeJson = (path: string, value: unknown) => writeRawJson(path, publicPaths(value, { ledgerPath: LANE_LEDGER }));
 /** Mean reader output tokens per request in the W10 batch receipts (docs/benchmarks/2026-10-07-longmemeval-w10a/-w10b). */
 export const EXPECTED_OUTPUT_TOKENS: Record<string, number> = { 'claude-sonnet-5-5': 203, 'claude-opus-5-5': 294, 'gpt-6.1-sol': 110 };
 /**

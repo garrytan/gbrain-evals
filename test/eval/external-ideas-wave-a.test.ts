@@ -22,11 +22,12 @@ import { anthropicTransport, openAiTransport } from '../../eval/runner/batch/tra
 import { BatchLane } from '../../eval/runner/batch/submit.ts';
 import { answerStep } from '../../eval/runner/external-ideas-wave-a/answer.ts';
 import {
-  a2Verdict, analyze, auditCandidates, bracketInsertions, computeAffected, decide, flipVerdict, loadStudyManifest, preflightProblems, readRows, validateStudyManifest, verdicts,
+  a2Verdict, analyze, auditCandidates, publicPaths, bracketInsertions, computeAffected, decide, flipVerdict, loadStudyManifest, preflightProblems, readRows, validateStudyManifest, verdicts,
   type AffectedReport, type AnswerRow, type PreflightFacts,
 } from '../../eval/runner/external-ideas-wave-a/lib.ts';
 import { addDays, diffDays, exactPastPhrases, generate, KINDS, longDate, serialize, SYNTHETIC_PATH, weekday } from '../../eval/runner/external-ideas-wave-a/synthetic-dates.ts';
 import { FakeProvider } from './batch-fake-provider.ts';
+import { MACHINE_LOCAL_PATH } from '../../eval/runner/receipt.ts';
 import { R1_NOTE, r1Label, r1Order, r2Trim, rankedBlocks, renderView } from '../../eval/runner/external-ideas-wave-a/render-arms.ts';
 
 const dirs: string[] = [];
@@ -648,5 +649,23 @@ describe('wave A2 render arms', () => {
     const loss = a2Verdict({ r1: r1Weak, r2: r2Loss, r2TokenReduction: 0.37 });
     expect([loss.r1_rank_date.verdict, loss.r2_tail_trim.verdict]).toEqual(['inconclusive', 'regression']);
     expect(() => a2Verdict({ r1: r2Flat, r2: r1Win, r2TokenReduction: 0.37 })).toThrow('expected the r1_rank_date analysis');
+  });
+});
+
+describe('publicPaths', () => {
+  test('rewrites the lane ledger, Capy scratch, home, temp and checkout paths and leaves numbers alone', () => {
+    const out = publicPaths({
+      cost: { usd: 3.344158, ledger: '/home/alice/.capy/work/gbra162-external-ideas/ledger.sqlite', basis: 'budget ledger run-1: 435 paid requests' },
+      frozen: '/home/alice/.capy/work/gbra162-counted/lme-frozen',
+      cache: '/home/alice/.cache/x.sqlite', tmp: '/tmp/cat36-isolated-abc/home', out: '/repo/docs/benchmarks/x.json', n: 217,
+    }, { ledgerPath: '/home/alice/.capy/work/gbra162-external-ideas/ledger.sqlite', home: '/home/alice', tmp: '/var/tmp-x', root: '/repo' });
+    expect(out).toEqual({
+      cost: { usd: 3.344158, ledger: '<lane>/ledger.sqlite', basis: 'budget ledger run-1: 435 paid requests' },
+      frozen: '<work>/gbra162-counted/lme-frozen',
+      cache: '~/.cache/x.sqlite', tmp: '<tmp>/cat36-isolated-abc/home', out: 'docs/benchmarks/x.json', n: 217,
+    });
+    const text = JSON.stringify(out);
+    expect(MACHINE_LOCAL_PATH.test(text)).toBe(false);
+    expect(/(?:^|[\s"'=(:,\[])(?:\/workspace\/|~\/\.capy\/|\$HOME\/\.capy\/)/.test(text)).toBe(false);
   });
 });

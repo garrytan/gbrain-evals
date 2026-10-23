@@ -53,7 +53,7 @@
         "input_tokens": 17990629,
         "output_tokens": 0,
         "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T20-00-04-284Z-d1f50950: 6419 paid requests, 0 charged at their reservation because usage was unavailable",
-        "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+        "ledger": "<lane>/ledger.sqlite",
         "program_cap_usd": 220,
         "overshoot_usd": 0.000895,
         "event_loop_lag_ms": {
@@ -83,7 +83,7 @@
         "input_tokens": 18048201,
         "output_tokens": 0,
         "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T20-00-05-144Z-4144b1cf: 6302 paid requests, 0 charged at their reservation because usage was unavailable",
-        "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+        "ledger": "<lane>/ledger.sqlite",
         "program_cap_usd": 220,
         "overshoot_usd": 0.001559,
         "event_loop_lag_ms": {
@@ -113,7 +113,7 @@
         "input_tokens": 18050255,
         "output_tokens": 0,
         "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T20-00-05-447Z-8c211706: 6273 paid requests, 0 charged at their reservation because usage was unavailable",
-        "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+        "ledger": "<lane>/ledger.sqlite",
         "program_cap_usd": 220,
         "overshoot_usd": 0.002176,
         "event_loop_lag_ms": {
@@ -143,7 +143,7 @@
         "input_tokens": 17964178,
         "output_tokens": 0,
         "basis": "budget ledger external-ideas-wave-a-freeze-2026-10-21T20-00-05-699Z-1da47616: 6359 paid requests, 0 charged at their reservation because usage was unavailable",
-        "ledger": "/home/user/.capy/work/gbra162-external-ideas/ledger.sqlite",
+        "ledger": "<lane>/ledger.sqlite",
         "program_cap_usd": 220,
         "overshoot_usd": 0.001244,
         "event_loop_lag_ms": {

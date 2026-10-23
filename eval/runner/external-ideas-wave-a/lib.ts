@@ -5,7 +5,9 @@
  * the keyless preflight. Nothing here makes a network call.
  */
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { homedir, tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { scrubMachinePaths } from '../receipt.ts';
 import { buildRequest, requestSha, sessionBlocks, type Renderer } from '../evidence-delivery/arms.ts';
 import { REPO_ROOT, sha256 } from '../evidence-delivery/data.ts';
 import type { BlobStore, FrozenBlock, FrozenHeader, FrozenQuestion } from '../evidence-delivery/store.ts';
@@ -578,3 +580,14 @@ export function preflightProblems(f: PreflightFacts): PreflightProblem[] {
   return out;
 }
 
+
+/**
+ * The form every JSON this wave writes takes: checkout, home and temp prefixes rewritten as
+ * scrubMachinePaths does, the lane ledger's directory as '<lane>' and Capy agent scratch as '<work>',
+ * so committed receipts carry no machine-local or Capy machine path.
+ */
+export function publicPaths<T>(value: T, opts: { ledgerPath: string; home?: string; tmp?: string; root?: string }): T {
+  const home = opts.home ?? homedir();
+  const extra: Array<readonly [string, string]> = [[`${dirname(opts.ledgerPath)}/`, '<lane>/'], [join(home, '.capy/work') + '/', '<work>/']];
+  return scrubMachinePaths(value, opts.root ?? REPO_ROOT, home, opts.tmp ?? tmpdir(), extra);
+}
