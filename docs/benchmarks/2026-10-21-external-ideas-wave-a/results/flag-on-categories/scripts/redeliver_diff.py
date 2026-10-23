@@ -1,5 +1,7 @@
 import json, collections, statistics
-W='/home/user/.capy/work/gbra162-flagcheck'
+import os, pathlib
+REPO=pathlib.Path(__file__).resolve().parents[6]
+W=os.environ.get('FLAGCHECK_DIR') or str(REPO/'.flagcheck')
 off={json.loads(l)['question_id']:json.loads(l) for l in open(W+'/redeliver/full-off.ndjson')}
 on={json.loads(l)['question_id']:json.loads(l) for l in open(W+'/redeliver/full-on.ndjson')}
 arms=[k for k in next(iter(off.values())) if ':' in k]

@@ -1,5 +1,8 @@
 import json,re
-s=json.load(open('/home/user/.capy/work/gbra162-flagcheck/sweep/receipt-diff.json'))
+import os, pathlib
+REPO=pathlib.Path(__file__).resolve().parents[6]
+W=os.environ.get('FLAGCHECK_DIR') or str(REPO/'.flagcheck')
+s=json.load(open(W+'/sweep/receipt-diff.json'))
 ks={}
 for f,v in s.items():
   for k in v.get('noise_keys',[]): ks.setdefault(k,f)

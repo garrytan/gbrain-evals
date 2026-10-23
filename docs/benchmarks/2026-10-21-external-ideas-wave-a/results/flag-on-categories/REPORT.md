@@ -12,7 +12,7 @@ Instrumented build 1eafeab2 (instrument.patch, on top of f87c222) logs every del
 - redeliver/full-{off,on}.ndjson, redeliver/summary.json: keyless re-delivery of the committed LongMemEval-S frozen hits
 - unit/unit-{off,on}.log, unit/set-*.txt: evidence-delivery unit tests
 - costs/*.json: keyless cost estimators
-- scripts/: every script used
+- scripts/: every script used. They read and write a work directory named by FLAGCHECK_DIR (default .flagcheck/ at the repository root, git-ignored) and run from any checkout.
 
 ## Findings
 

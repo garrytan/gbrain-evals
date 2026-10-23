@@ -1,5 +1,7 @@
 import json,collections,re
-W='/home/user/.capy/work/gbra162-flagcheck'
+import os, pathlib
+REPO=pathlib.Path(__file__).resolve().parents[6]
+W=os.environ.get('FLAGCHECK_DIR') or str(REPO/'.flagcheck')
 rows=[json.loads(l) for l in open(W+'/sweep/instr-deliveries.ndjson')]
 agg=collections.defaultdict(lambda: collections.Counter())
 for r in rows:
