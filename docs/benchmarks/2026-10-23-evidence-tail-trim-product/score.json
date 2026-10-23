@@ -1,0 +1,41 @@
+{
+ "classes": {
+  "arm": 204,
+  "novel": 6,
+  "auto": 7
+ },
+ "novel": [
+  "830ce83f",
+  "cc539528",
+  "a11281a2",
+  "71a3fd6b",
+  "d596882b",
+  "1903aded"
+ ],
+ "models": {
+  "sonnet-5-5": {
+   "rows": 434,
+   "missing": 0,
+   "auto": 209.5,
+   "arm": 209.5,
+   "guarded_min": 210,
+   "guarded_max": 211
+  },
+  "gpt-6.1-sol": {
+   "rows": 434,
+   "missing": 0,
+   "auto": 208,
+   "arm": 208,
+   "guarded_min": 209,
+   "guarded_max": 209
+  },
+  "opus-5-5": {
+   "rows": 434,
+   "missing": 0,
+   "auto": 210,
+   "arm": 209,
+   "guarded_min": 210,
+   "guarded_max": 210
+  }
+ }
+}
