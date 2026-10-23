@@ -1,5 +1,8 @@
 
-p='/home/user/.capy/work/gbra162-flagcheck/gbrain-flagon/src/core/search/evidence-delivery.ts'
+import os, pathlib
+REPO=pathlib.Path(__file__).resolve().parents[6]
+W=os.environ.get('FLAGCHECK_DIR') or str(REPO/'.flagcheck')
+p=W+'/gbrain-flagon/src/core/search/evidence-delivery.ts'
 s=open(p).read()
 old="""  const first = await deliverEvidenceOnce(engine, hits, plan, scope, opts);
   return plan.resolveDates ? withRelativeDates(first, budgetTokens => deliverEvidenceOnce(engine, hits, { ...plan, budgetTokens }, scope, opts),

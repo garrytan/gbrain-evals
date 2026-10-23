@@ -1,18 +1,20 @@
 // Keyless re-delivery of the committed LongMemEval-S frozen hit lists (evidence-delivery and evidence-auto-v2)
 // through one gbrain build's assembleEvidenceForHits. Run once per build; diff the two outputs.
 //   bun redeliver.ts <gbrainDir> <dataset.json> <out.ndjson> [--limit N]
+// Work dir: FLAGCHECK_DIR (default <repo>/.flagcheck), holding frozen/ed and frozen/v2.
 import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { loadGbrain } from '/home/user/gbrain-evals/eval/runner/evidence-delivery/gbrain.ts';
-import { readFrozen } from '/home/user/gbrain-evals/eval/runner/evidence-delivery/store.ts';
+import { join } from 'node:path';
+import { loadGbrain } from '../../../../../../eval/runner/evidence-delivery/gbrain.ts';
+import { readFrozen } from '../../../../../../eval/runner/evidence-delivery/store.ts';
 
 const [dir, datasetPath, outPath] = process.argv.slice(2);
 const limitAt = process.argv.indexOf('--limit');
 const limit = limitAt > 0 ? Number(process.argv[limitAt + 1]) : Infinity;
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
-const EVALS = '/home/user/gbrain-evals/docs/benchmarks';
-const ed = readFrozen('/home/user/.capy/work/gbra162-flagcheck/frozen/ed');
-const v2 = readFrozen('/home/user/.capy/work/gbra162-flagcheck/frozen/v2');
+const W = process.env.FLAGCHECK_DIR || join(import.meta.dir, '../../../../../../.flagcheck');
+const ed = readFrozen(join(W, 'frozen/ed'));
+const v2 = readFrozen(join(W, 'frozen/v2'));
 const ED_ARMS = [
   { id: 'window1', unit: 'window', return_window: 1, budget_tokens: 6000 },
   { id: 'window2', unit: 'window', return_window: 2, budget_tokens: 6000 },

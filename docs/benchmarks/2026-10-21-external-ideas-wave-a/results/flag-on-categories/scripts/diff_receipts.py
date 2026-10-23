@@ -1,6 +1,8 @@
 
 import json, os, sys, re
-W='/home/user/.capy/work/gbra162-flagcheck'
+import os, pathlib
+REPO=pathlib.Path(__file__).resolve().parents[6]
+W=os.environ.get('FLAGCHECK_DIR') or str(REPO/'.flagcheck')
 def receipts(arm):
     root=f'{W}/evals-{arm}/eval/reports'; out={}
     for dp,dn,fn in os.walk(root):
@@ -25,7 +27,7 @@ for k in sorted(set(a)&set(b)):
     diffs=[]; noise=0; noisekeys=set()
     for key in sorted(set(A)|set(B)):
         if A.get(key)!=B.get(key):
-            if NOISE.search(key) or (isinstance(A.get(key),str) and re.search(r'/home/user|\d{4}-\d\d-\d\dT',str(A.get(key)))): noise+=1; noisekeys.add(re.sub(r'\[\d+\]','[]',key)); continue
+            if NOISE.search(key) or (isinstance(A.get(key),str) and re.search(re.escape(os.path.expanduser('~'))+r'|\d{4}-\d\d-\d\dT',str(A.get(key)))): noise+=1; noisekeys.add(re.sub(r'\[\d+\]','[]',key)); continue
             diffs.append((key,A.get(key),B.get(key)))
     summary[k]={'leaves':len(A),'noise_diffs':noise,'real_diffs':len(diffs),'noise_keys':sorted(noisekeys)[:60],'examples':[(d[0],str(d[1])[:120],str(d[2])[:120]) for d in diffs[:12]]}
 json.dump(summary,open(f'{W}/sweep/receipt-diff.json','w'),indent=1)
