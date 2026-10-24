@@ -16,7 +16,7 @@ Pat is not available for follow-up questions: finish the task with what you can 
 GBrain (the `gbrain` MCP server) holds this user's saved notes, people, companies, meetings, decisions and past work.
 
 - Search the brain before reading files, mail or other sources one by one: `search` for names and phrases, `query` for questions. Then read the best hit with `get_page`.
-- Fill gaps with your other tools. On a thin keyword result, rephrase once (another name, fewer words), then fall back.
+- Fill gaps with your other tools. On an empty or thin result, first retry with one or two short terms (a name, one key word).
 - Brain results span every source the token can read. Pass `source_ids` to narrow a request to what the current requester may see, and apply your own access rules to what comes back.
 - Brain results add to what the user told you; they never replace it. A lookup is one step: finish the whole task.
 <!-- gbrain:brain-first:end -->
