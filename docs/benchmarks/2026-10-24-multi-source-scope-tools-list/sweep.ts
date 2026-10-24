@@ -62,7 +62,7 @@ for (const member of MEMBERS) {
       const s = (summary[tool.name] ??= { calls: 0, errors: 0, cross_calls: 0, cross_pages: [] });
       s.calls++; if (r.isError) s.errors++;
       if (cross.size) { s.cross_calls++; s.cross_pages = [...new Set([...s.cross_pages, ...cross])].sort(); }
-      appendFileSync(out, JSON.stringify({ member, tool: tool.name, args, is_error: r.isError, cross_source_pages: [...cross].sort(), result: r.text.slice(0, 4000) }).split(process.env.HOME ?? '\0').join('~') + '\n');
+      appendFileSync(out, JSON.stringify({ member, tool: tool.name, args, is_error: r.isError, cross_source_pages: [...cross].sort(), result: r.text.slice(0, 4000) }).split(process.env.HOME ?? '\0').join('~').replace(/~\/\.capy\/work\//g, '<work>/') + '\n');
     }
   }
 }

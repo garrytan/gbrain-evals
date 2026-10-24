@@ -129,7 +129,7 @@ bun $D/sweep.ts --checkout <gbrain@ff862f80> --brain /tmp/brain-sweep [--control
 bun $D/summarize.ts
 ```
 
-`summarize.ts` re-grades every record from its raw tool calls and answer. Two expect lists were widened after the run, because the grader missed correct answers: "mondays" for R13 and H02, and "3 hours and 40" for R21. The `grade` field stored in each record is the grade at run time. Machine paths in the receipts are written relative to the home directory (`~`). `results/runs.jsonl` records each run's code identity, `tools/list` sizes and ledger receipt.
+`summarize.ts` re-grades every record from its raw tool calls and answer. Two expect lists were widened after the run, because the grader missed correct answers: "mondays" for R13 and H02, and "3 hours and 40" for R21. The `grade` field stored in each record is the grade at run time. Machine paths in the receipts are written as `<work>/...` (the scratch root that held the gbrain checkouts, brains and ledger). `results/runs.jsonl` records each run's code identity, `tools/list` sizes and ledger receipt.
 
 **Time and cost.** About 12 minutes for the scope suite and 6 for the starter suite at concurrency 6. Model spend priced from provider usage was $20.76 over 964 counted trials:
 

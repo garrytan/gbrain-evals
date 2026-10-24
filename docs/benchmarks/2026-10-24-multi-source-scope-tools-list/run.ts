@@ -96,8 +96,8 @@ if (suite === 'scope') {
   }
 }
 
-// Receipts name machine paths relative to the home directory.
-const redact = (text: string) => process.env.HOME ? text.split(process.env.HOME).join('~') : text;
+// Receipts never name machine paths: the work root becomes <work> (checkouts, brains, ledger).
+const redact = (text: string) => (process.env.HOME ? text.split(process.env.HOME).join('~') : text).replace(/(?:~|\$HOME)\/\.capy\/work\//g, '<work>/').split('/workspace/').join('<work>/');
 const key = (c: { arm: string; model: string; task_id: string; rep: number }) => [suite, c.arm, c.model, c.task_id, c.rep].join('|');
 const done = new Set<string>();
 if (existsSync(out)) for (const line of readFileSync(out, 'utf8').split('\n').filter(Boolean)) {
