@@ -1,0 +1,35 @@
+{
+ "questions_trimmed": 210,
+ "also_trimmed_by_arm": 210,
+ "arm_affected": 217,
+ "blocks_dropped": 383,
+ "kept_by_query_terms": 15,
+ "token_saving_affected": 0.3630774049485994,
+ "token_saving_all": 0.14398334050780548,
+ "by_type": {
+  "single-session-user": 38,
+  "multi-session": 35,
+  "temporal-reasoning": 24,
+  "knowledge-update": 61,
+  "single-session-assistant": 51,
+  "single-session-preference": 1
+ },
+ "e66": {
+  "kept": [
+   "chat/s-fba4e3ee94",
+   "chat/s-4fdad6f208",
+   "chat/s-42cc12b45e",
+   "chat/s-460e2c57d2"
+  ],
+  "all": [
+   "chat/s-fba4e3ee94",
+   "chat/s-4fdad6f208",
+   "chat/s-42cc12b45e",
+   "chat/s-460e2c57d2"
+  ],
+  "meta": {
+   "dropped": 0,
+   "kept_by_query_terms": 1
+  }
+ }
+}
