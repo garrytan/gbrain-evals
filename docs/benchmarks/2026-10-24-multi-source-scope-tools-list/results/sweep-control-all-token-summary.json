@@ -1,0 +1,174 @@
+{
+  "control": true,
+  "gbrain_head": "ff862f8052ef89545d320a89c63e494b78e85850",
+  "tools": 78,
+  "calls": 636,
+  "tools_with_cross_source_results": {
+    "get_page": {
+      "calls": 18,
+      "errors": 3,
+      "cross_calls": 8,
+      "cross_pages": [
+        "source-a:notes/apollo-example",
+        "source-a:notes/compensation"
+      ]
+    },
+    "list_pages": {
+      "calls": 12,
+      "errors": 0,
+      "cross_calls": 12,
+      "cross_pages": [
+        "source-a:notes/1on1-bob-example",
+        "source-a:notes/1on1-carol-example",
+        "source-a:notes/apollo-example",
+        "source-a:notes/borealis-example",
+        "source-a:notes/cobalt-example",
+        "source-a:notes/compensation",
+        "source-a:notes/health",
+        "source-a:notes/job-search",
+        "source-b:notes/1on1-alice-example",
+        "source-b:notes/1on1-carol-example",
+        "source-b:notes/apollo-example",
+        "source-b:notes/borealis-example",
+        "source-b:notes/cobalt-example",
+        "source-b:notes/compensation",
+        "source-b:notes/health",
+        "source-b:notes/job-search",
+        "source-c:notes/1on1-alice-example",
+        "source-c:notes/1on1-bob-example",
+        "source-c:notes/apollo-example",
+        "source-c:notes/borealis-example",
+        "source-c:notes/cobalt-example",
+        "source-c:notes/compensation",
+        "source-c:notes/health",
+        "source-c:notes/job-search"
+      ]
+    },
+    "search": {
+      "calls": 18,
+      "errors": 3,
+      "cross_calls": 15,
+      "cross_pages": [
+        "source-a:notes/1on1-bob-example",
+        "source-a:notes/1on1-carol-example",
+        "source-a:notes/apollo-example",
+        "source-a:notes/compensation",
+        "source-b:notes/apollo-example",
+        "source-b:notes/compensation",
+        "source-c:notes/apollo-example",
+        "source-c:notes/compensation",
+        "source-c:notes/health"
+      ]
+    },
+    "query": {
+      "calls": 18,
+      "errors": 3,
+      "cross_calls": 15,
+      "cross_pages": [
+        "source-a:notes/1on1-bob-example",
+        "source-a:notes/1on1-carol-example",
+        "source-a:notes/apollo-example",
+        "source-a:notes/compensation",
+        "source-b:notes/apollo-example",
+        "source-b:notes/compensation",
+        "source-c:notes/apollo-example",
+        "source-c:notes/compensation",
+        "source-c:notes/health"
+      ]
+    },
+    "get_chunks": {
+      "calls": 15,
+      "errors": 3,
+      "cross_calls": 9,
+      "cross_pages": [
+        "source-a:notes/apollo-example",
+        "source-a:notes/compensation",
+        "source-b:notes/apollo-example",
+        "source-b:notes/compensation",
+        "source-c:notes/apollo-example",
+        "source-c:notes/compensation"
+      ]
+    },
+    "find_orphans": {
+      "calls": 3,
+      "errors": 0,
+      "cross_calls": 3,
+      "cross_pages": [
+        "source-a:notes/1on1-bob-example",
+        "source-a:notes/1on1-carol-example",
+        "source-a:notes/apollo-example",
+        "source-a:notes/borealis-example",
+        "source-a:notes/cobalt-example",
+        "source-a:notes/compensation",
+        "source-a:notes/health",
+        "source-a:notes/job-search",
+        "source-b:notes/1on1-alice-example",
+        "source-b:notes/1on1-carol-example",
+        "source-b:notes/apollo-example",
+        "source-b:notes/borealis-example",
+        "source-b:notes/cobalt-example",
+        "source-b:notes/compensation",
+        "source-b:notes/health",
+        "source-b:notes/job-search",
+        "source-c:notes/1on1-alice-example",
+        "source-c:notes/1on1-bob-example",
+        "source-c:notes/apollo-example",
+        "source-c:notes/borealis-example",
+        "source-c:notes/cobalt-example",
+        "source-c:notes/compensation",
+        "source-c:notes/health",
+        "source-c:notes/job-search"
+      ]
+    },
+    "think": {
+      "calls": 9,
+      "errors": 3,
+      "cross_calls": 6,
+      "cross_pages": [
+        "source-a:notes/1on1-bob-example",
+        "source-a:notes/1on1-carol-example",
+        "source-a:notes/borealis-example",
+        "source-a:notes/compensation",
+        "source-b:notes/1on1-alice-example",
+        "source-b:notes/compensation",
+        "source-c:notes/compensation"
+      ]
+    },
+    "get_recent_salience": {
+      "calls": 3,
+      "errors": 0,
+      "cross_calls": 3,
+      "cross_pages": [
+        "source-a:notes/compensation",
+        "source-a:notes/health",
+        "source-a:notes/job-search",
+        "source-b:notes/1on1-alice-example",
+        "source-b:notes/1on1-carol-example",
+        "source-b:notes/apollo-example",
+        "source-b:notes/borealis-example",
+        "source-b:notes/cobalt-example",
+        "source-b:notes/compensation",
+        "source-b:notes/health",
+        "source-b:notes/job-search",
+        "source-c:notes/1on1-alice-example",
+        "source-c:notes/1on1-bob-example",
+        "source-c:notes/apollo-example",
+        "source-c:notes/borealis-example",
+        "source-c:notes/cobalt-example",
+        "source-c:notes/compensation",
+        "source-c:notes/health",
+        "source-c:notes/job-search"
+      ]
+    },
+    "recall": {
+      "calls": 12,
+      "errors": 3,
+      "cross_calls": 3,
+      "cross_pages": [
+        "source-a:notes/apollo-example",
+        "source-b:notes/apollo-example",
+        "source-c:notes/apollo-example"
+      ]
+    }
+  }
+}
