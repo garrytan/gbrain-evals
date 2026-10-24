@@ -1,0 +1,39 @@
+{
+  "cell": "r2_tail_trim-affected-s2-claude-sonnet-5-5",
+  "done": true,
+  "questions": 217,
+  "rows": 217,
+  "failures": {},
+  "official_correct": 209,
+  "framed_correct": 208,
+  "reader_usage": {
+    "input_tokens": 2867200,
+    "output_tokens": 33464,
+    "batch_usd": 3.034520000000001,
+    "list_usd": 6.069040000000002
+  },
+  "estimate": {
+    "requests": 217,
+    "mean_input_tokens": 13293,
+    "expected_usd": 4.065869999999994,
+    "worst_usd": 8.620629999999998
+  },
+  "cost": {
+    "usd": 3.341853,
+    "input_tokens": 2986729,
+    "output_tokens": 34315,
+    "basis": "budget ledger external-ideas-wave-a-answer-2026-10-21T22-33-51-054Z-cab84486: 435 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<lane>/ledger.sqlite",
+    "program_cap_usd": 220,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 527.9
+    }
+  },
+  "batch_factor": {
+    "factor": 0.5,
+    "confirmed": true
+  }
+}

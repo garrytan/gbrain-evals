@@ -1,0 +1,74 @@
+{
+  "schema": "gbrain-evals/external-ideas-wave-a2-verdict/v1",
+  "rule": "docs/benchmarks/2026-10-21-external-ideas-wave-a2-preregistration.md",
+  "r1_analysis": {
+    "arm": "r1_rank_date",
+    "model": "claude-sonnet-5-5",
+    "scope": "all",
+    "verdict": "inconclusive",
+    "complete": true,
+    "questions": 500,
+    "affected": 500,
+    "net_gain": -0.5,
+    "ci95_net_gain": [
+      -6.5,
+      5
+    ],
+    "lower_bound_one_sided_net_gain": -5.5,
+    "p_one_sided": 0.6332366763323668,
+    "p_one_sided_less": 0.5058494150584941,
+    "p_noninferior": null
+  },
+  "r2_analysis": {
+    "arm": "r2_tail_trim",
+    "model": "claude-sonnet-5-5",
+    "scope": "all",
+    "verdict": "inconclusive",
+    "complete": true,
+    "questions": 500,
+    "affected": 217,
+    "net_gain": 0,
+    "ci95_net_gain": [
+      -4,
+      4
+    ],
+    "lower_bound_one_sided_net_gain": -3.5,
+    "p_one_sided": 0.5972402759724028,
+    "p_one_sided_less": 0.5967403259674032,
+    "p_noninferior": 0.0069
+  },
+  "r2_delivered_tokens": {
+    "affected_questions": 217,
+    "mean_auto": 12634.184331797234,
+    "mean_candidate": 8011.21198156682,
+    "reduction": 0.3659098386427284
+  },
+  "holm": [
+    {
+      "arm": "r2_tail_trim",
+      "p": 0.0069,
+      "tested_at": 0.025,
+      "rejected": true
+    },
+    {
+      "arm": "r1_rank_date",
+      "p": 0.6332366763323668,
+      "tested_at": 0.05,
+      "rejected": false
+    }
+  ],
+  "r1_rank_date": {
+    "verdict": "inconclusive",
+    "holm_level": null,
+    "lower_bound_at_level": null
+  },
+  "r2_tail_trim": {
+    "verdict": "pass",
+    "holm_level": 0.025,
+    "lower_bound_at_level": -4,
+    "token_reduction": 0.3659098386427284,
+    "token_bar": 0.2,
+    "ni_margin": -5
+  },
+  "secondaries": []
+}

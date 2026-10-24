@@ -30,6 +30,8 @@ export interface ArmSpec {
   budget_tokens?: number | null;
   return_window?: number;
   top_k?: number;
+  /** Product arms only: brain config keys set on the engine around this arm's assembly and restored after (freeze.ts withArmConfig). */
+  config?: Record<string, string>;
   sets: string[];
 }
 

@@ -1,0 +1,153 @@
+{
+ "prices_usd_per_million": {
+  "embedding_voyage_4": 0.06,
+  "rerank_3_lite": 0.02
+ },
+ "rows": [
+  {
+   "run": "B0-k10",
+   "kind": "embedding",
+   "calls": 22878,
+   "input_tokens": 0,
+   "calls_without_token_count": 22878,
+   "usd": 0.0
+  },
+  {
+   "run": "B0-k10",
+   "kind": "rerank",
+   "calls": 470,
+   "input_tokens": 6330768,
+   "calls_without_token_count": 0,
+   "usd": 0.1266
+  },
+  {
+   "run": "B0-k5",
+   "kind": "embedding",
+   "calls": 22878,
+   "input_tokens": 55493999,
+   "calls_without_token_count": 1,
+   "usd": 3.3296
+  },
+  {
+   "run": "B0-k5",
+   "kind": "rerank",
+   "calls": 470,
+   "input_tokens": 6330768,
+   "calls_without_token_count": 0,
+   "usd": 0.1266
+  },
+  {
+   "run": "B1-k10",
+   "kind": "embedding",
+   "calls": 22878,
+   "input_tokens": 0,
+   "calls_without_token_count": 22878,
+   "usd": 0.0
+  },
+  {
+   "run": "B1-k10",
+   "kind": "rerank",
+   "calls": 470,
+   "input_tokens": 6594812,
+   "calls_without_token_count": 0,
+   "usd": 0.1319
+  },
+  {
+   "run": "B1-k5",
+   "kind": "embedding",
+   "calls": 22878,
+   "input_tokens": 0,
+   "calls_without_token_count": 22878,
+   "usd": 0.0
+  },
+  {
+   "run": "B1-k5",
+   "kind": "rerank",
+   "calls": 470,
+   "input_tokens": 6594812,
+   "calls_without_token_count": 0,
+   "usd": 0.1319
+  },
+  {
+   "run": "B2-k10",
+   "kind": "embedding",
+   "calls": 22878,
+   "input_tokens": 0,
+   "calls_without_token_count": 22878,
+   "usd": 0.0
+  },
+  {
+   "run": "B2-k10",
+   "kind": "rerank",
+   "calls": 470,
+   "input_tokens": 6330768,
+   "calls_without_token_count": 0,
+   "usd": 0.1266
+  },
+  {
+   "run": "B2-k5",
+   "kind": "embedding",
+   "calls": 22878,
+   "input_tokens": 0,
+   "calls_without_token_count": 22878,
+   "usd": 0.0
+  },
+  {
+   "run": "B2-k5",
+   "kind": "rerank",
+   "calls": 470,
+   "input_tokens": 6330768,
+   "calls_without_token_count": 0,
+   "usd": 0.1266
+  },
+  {
+   "run": "B3-k10",
+   "kind": "embedding",
+   "calls": 22878,
+   "input_tokens": 0,
+   "calls_without_token_count": 22878,
+   "usd": 0.0
+  },
+  {
+   "run": "B3-k10",
+   "kind": "rerank",
+   "calls": 470,
+   "input_tokens": 6594812,
+   "calls_without_token_count": 0,
+   "usd": 0.1319
+  },
+  {
+   "run": "B3-k5",
+   "kind": "embedding",
+   "calls": 22878,
+   "input_tokens": 0,
+   "calls_without_token_count": 22878,
+   "usd": 0.0
+  },
+  {
+   "run": "B3-k5",
+   "kind": "rerank",
+   "calls": 470,
+   "input_tokens": 6594812,
+   "calls_without_token_count": 0,
+   "usd": 0.1319
+  },
+  {
+   "run": "smoke",
+   "kind": "embedding",
+   "calls": 100,
+   "input_tokens": 232874,
+   "calls_without_token_count": 0,
+   "usd": 0.014
+  },
+  {
+   "run": "smoke",
+   "kind": "rerank",
+   "calls": 2,
+   "input_tokens": 25686,
+   "calls_without_token_count": 0,
+   "usd": 0.0005
+  }
+ ],
+ "total_usd": 4.378
+}

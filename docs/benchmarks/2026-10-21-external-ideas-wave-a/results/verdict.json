@@ -1,0 +1,63 @@
+{
+  "schema": "gbrain-evals/external-ideas-wave-a-verdict/v2",
+  "rule": "preregistration plus the 2026-10-21 amendment (secondary models gate against harm)",
+  "longmemeval": {
+    "suite": "longmemeval",
+    "scope": "all",
+    "model": "claude-sonnet-5-5",
+    "verdict": "inconclusive",
+    "complete": true,
+    "questions": 500,
+    "affected": 395,
+    "net_gain": -2.5,
+    "ci95_net_gain": [
+      -8,
+      2.5
+    ],
+    "lower_bound_one_sided_net_gain": -7,
+    "p_one_sided": 0.8660133986601339,
+    "p_one_sided_less": 0.23477652234776522
+  },
+  "synthetic": {
+    "suite": "synthetic",
+    "scope": "all",
+    "model": "claude-sonnet-5-5",
+    "verdict": "inconclusive",
+    "complete": true,
+    "questions": 60,
+    "affected": 60,
+    "net_gain": 0,
+    "ci95_net_gain": [
+      0,
+      0
+    ],
+    "lower_bound_one_sided_net_gain": 0,
+    "p_one_sided": 1,
+    "p_one_sided_less": 1
+  },
+  "secondary": [],
+  "decision_model_passes_both": false,
+  "secondaries": [
+    {
+      "model": "gpt-6.1-sol",
+      "run": false
+    },
+    {
+      "model": "claude-opus-5-5",
+      "run": false
+    }
+  ],
+  "audit": {
+    "complete": true,
+    "n": 100,
+    "wrong_rate": 0.01
+  },
+  "default_flip_ready": false,
+  "blocking": [
+    "longmemeval: claude-sonnet-5-5 verdict inconclusive",
+    "synthetic: claude-sonnet-5-5 verdict inconclusive",
+    "gpt-6.1-sol: not run (skipped: claude-sonnet-5-5 did not pass both suites)",
+    "claude-opus-5-5: not run (skipped: claude-sonnet-5-5 did not pass both suites)"
+  ],
+  "outside_this_runner": "GBRA-108 also requires the existing gbrain-evals retrieval categories to show no regression with the flag on"
+}

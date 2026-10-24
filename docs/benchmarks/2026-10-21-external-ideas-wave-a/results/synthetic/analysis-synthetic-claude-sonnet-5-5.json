@@ -1,0 +1,645 @@
+{
+  "schema": "gbrain-evals/external-ideas-wave-a-analysis/v1",
+  "suite": "synthetic",
+  "verdict": "inconclusive",
+  "alpha": 0.05,
+  "complete": true,
+  "failures": {
+    "complete": true,
+    "counts": {},
+    "examples": []
+  },
+  "model": "claude-sonnet-5-5",
+  "samples": [
+    1,
+    2
+  ],
+  "scope": "all",
+  "primary_judge": "official_correct (gpt-4o-2024-08-06, LongMemEval evaluate_qa.py prompt)",
+  "frozen_manifest_sha256": "65335b758819a75aba70e6609f5dfdab604c9bd3e4b675e8854052a209772ab6",
+  "gbrain_commit": "cfa1a006b64c5baa199142bf0f0b56a0e3fc6c06",
+  "questions": 60,
+  "affected": 60,
+  "primary": {
+    "questions": 60,
+    "auto": 60,
+    "auto_dates": 60,
+    "net_gain": 0,
+    "delta_points": 0,
+    "ci95_net_gain": [
+      0,
+      0
+    ],
+    "lower_bound_one_sided_net_gain": 0,
+    "p_one_sided_greater": 1,
+    "p_one_sided_less": 1,
+    "p_two_sided": 1,
+    "p_method": "degenerate",
+    "wins": 0,
+    "losses": 0
+  },
+  "affected_only": {
+    "questions": 60,
+    "auto": 60,
+    "auto_dates": 60,
+    "net_gain": 0,
+    "delta_points": 0,
+    "ci95_net_gain": [
+      0,
+      0
+    ],
+    "lower_bound_one_sided_net_gain": 0,
+    "p_one_sided_greater": 1,
+    "p_one_sided_less": 1,
+    "p_two_sided": 1,
+    "p_method": "degenerate",
+    "wins": 0,
+    "losses": 0
+  },
+  "framed_judge": {
+    "questions": 60,
+    "auto": 60,
+    "auto_dates": 60,
+    "net_gain": 0,
+    "delta_points": 0,
+    "ci95_net_gain": [
+      0,
+      0
+    ],
+    "lower_bound_one_sided_net_gain": 0,
+    "p_one_sided_greater": 1,
+    "p_one_sided_less": 1,
+    "p_two_sided": 1,
+    "p_method": "degenerate",
+    "wins": 0,
+    "losses": 0
+  },
+  "by_type": {
+    "temporal-reasoning": {
+      "questions": 60,
+      "affected": 60,
+      "auto": 60,
+      "auto_dates": 60,
+      "net_gain": 0
+    }
+  },
+  "judge_agreement": {
+    "rows": 240,
+    "agree": 240,
+    "official_yes_framed_no": 0,
+    "official_no_framed_yes": 0
+  },
+  "reader_noise": {
+    "questions": 60,
+    "discordant": 0,
+    "rate": 0,
+    "affected_questions": 60,
+    "affected_discordant": 0
+  },
+  "method": {
+    "score": "mean of the samples' official verdicts per question; unaffected questions copy auto's score for auto_dates",
+    "test": "one-sided paired sign-flip over questions, 10000 draws, seed 20261021; 95% bootstrap interval resampling questions"
+  },
+  "per_question": [
+    {
+      "question_id": "synth-ago-01",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-02",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-03",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-04",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-05",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-06",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-07",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-08",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-09",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-10",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-11",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-12",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-13",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-14",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-ago-15",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-01",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-02",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-03",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-04",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-05",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-06",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-07",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-08",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-09",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-10",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-11",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-12",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-13",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-14",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-between-15",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-01",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-02",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-03",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-04",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-05",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-06",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-07",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-08",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-09",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-10",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-11",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-12",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-13",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-14",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-date-15",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-01",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-02",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-03",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-04",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-05",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-06",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-07",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-08",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-09",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-10",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-11",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-12",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-13",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-14",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    },
+    {
+      "question_id": "synth-order-15",
+      "question_type": "temporal-reasoning",
+      "affected": true,
+      "auto": 1,
+      "auto_dates": 1,
+      "framed_auto": 1,
+      "framed_auto_dates": 1
+    }
+  ]
+}

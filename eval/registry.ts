@@ -1375,6 +1375,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'README-cat13-phase-e0.md': { role: 'protocol notes for the Cat13 ranker-wave phases', part_of: 'concept-search' },
   'adversarial-injections.ts': { role: 'injection generator and scorer used by Cat6', part_of: 'prose-autolink-precision' },
   'all.ts': { role: 'umbrella runner that dispatches registry entries' },
+  'brainbench-shard-weights.json': { role: 'measured seconds per offline category, which all.ts --shard balances CI shards by' },
   'a4-s4-rescore.ts': { role: 'keyless re-score of the A4 S4-on arm (G8, 2026-10-06)', part_of: 'abstention' },
   'cat20-judges.ts': { role: 'keyless four-judge Cat 20 decision and the W8 Cat 20 control statistic (2026-10-06)', part_of: 'brainstorm-grounding' },
   'cat21-paired.ts': { role: 'keyless Cat 21 per-split metrics and file-clustered paired comparisons (2026-10-06)', part_of: 'code-retrieval' },
@@ -1389,6 +1390,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'bug-ledger.ts': { role: 'shared gbrain bug ledger: validated entries and the Markdown view' },
   'eval-config.ts': { role: 'GBRAIN_EVAL_CONFIG: any gbrain config key for a category arm, applied before the first write and read back' },
   'evidence-auto-v2.ts': { role: 'auto v2 follow-up to the evidence-delivery study (decision manifest v2: LongMemEval sanity check and sealed E2)', part_of: 'evidence-delivery' },
+  'external-ideas-wave-a.ts': { role: 'GBRA-162 external ideas wave A: search.evidence_resolve_dates on frozen evidence-delivery retrieval (LongMemEval-S plus a synthetic relative-date suite)', part_of: 'evidence-delivery' },
   'cat13-gap-localize.ts': { role: 'Phase E1 diagnostic over Cat13 hybrid stages', part_of: 'concept-search' },
   'cat13-kacf-calibrate.ts': { role: 'Phase E2 keyword-floor calibration over Cat13', part_of: 'concept-search' },
   'cat30-skillopt-improvement.ts': { role: 'Cat30 runner, driven by run-skillopt-cats.sh', part_of: 'skillopt' },
@@ -1505,4 +1507,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'facts-absorb', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'outcomes', 'p4-stream', 'pilot', 'power', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'outcomes', 'p4-stream', 'pilot', 'power', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];

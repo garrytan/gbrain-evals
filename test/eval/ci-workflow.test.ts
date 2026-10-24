@@ -24,8 +24,10 @@ describe('CI workflow gates (audit C5 to C8)', () => {
     }
   });
 
-  test('the offline BrainBench tier runs through all.ts, so gated categories fail CI', () => {
-    expect(runLines()).toContain('BRAINBENCH_ALLOW_SKIP=1 timeout 900 bun run eval:brainbench');
+  test('the offline BrainBench tier runs through all.ts in three shards, each under the 900 s bound, so gated categories fail CI', () => {
+    expect(runLines()).toContain('BRAINBENCH_ALLOW_SKIP=1 BRAINBENCH_BOUND_S=900 timeout 900 bun run eval:brainbench --shard ${{ matrix.shard }}/3');
+    const job = workflow.slice(workflow.indexOf('\n  brainbench:'));
+    expect(job).toMatch(/^\n  brainbench:\n(?:.*\n)*?\s+shard: \[1, 2, 3\]/);
     expect(pkg.scripts['eval:brainbench']).toBe('bun eval/runner/all.ts --tier offline');
   });
 

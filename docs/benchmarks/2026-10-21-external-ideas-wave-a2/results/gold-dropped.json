@@ -1,0 +1,17 @@
+{
+ "affected_questions": 217,
+ "questions_with_dropped_gold": 1,
+ "dropped_gold_blocks": 1,
+ "rows": [
+  {
+   "question_id": "e66b632c",
+   "question_type": "knowledge-update",
+   "gold_sessions": 2,
+   "dropped_gold_blocks": 1,
+   "dropped_gold_ranks": [
+    4
+   ]
+  }
+ ],
+ "note": "gold sessions matched after retrieval by recomputing the opaque slug (sha256 of question_id:normalized session id) from the dataset answer_session_ids"
+}
