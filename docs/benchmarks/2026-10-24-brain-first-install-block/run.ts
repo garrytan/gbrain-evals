@@ -12,6 +12,7 @@ import { createHash } from 'node:crypto';
 import { join, dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { grade } from './grade.ts';
+import { scrubMachinePaths } from '../../../eval/runner/receipt.ts';
 
 const HERE = dirname(new URL(import.meta.url).pathname);
 const argv = process.argv.slice(2);
@@ -210,7 +211,7 @@ async function worker(i: number) {
       const row = await runTrial(slotDir, t);
       if (row.gbrain_writes > 0 || row.timed_out) dirty = true;
       spend += row.cost_usd; finished++;
-      appendFileSync(out, JSON.stringify(row) + '\n');
+      appendFileSync(out, JSON.stringify(scrubMachinePaths(row, undefined, undefined, undefined, [[join(WORK, 'slots'), '<slots>'], [WORK, '<work>']])) + '\n');
       console.error('[' + finished + '/' + trials.length + '] ' + t.trial_id + ' reach=' + row.reached + ' pass=' + row.pass + ' calls=' + row.gbrain_calls + ' $' + row.cost_usd.toFixed(4) + ' total $' + spend.toFixed(2));
     } catch (e) {
       dirty = true;

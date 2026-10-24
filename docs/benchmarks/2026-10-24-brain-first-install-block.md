@@ -134,7 +134,7 @@ The runner generates the corpus under `~/.capy/work/bfeval` (override with `BFEV
 
 Receipts in [`2026-10-24-brain-first-install-block/`](2026-10-24-brain-first-install-block/):
 
-- `results/claude-code.jsonl` and `results/codex.jsonl`: one row per counted trial, with the arm, the instruction-file hash, every tool call (arguments and result truncated), the final answer, created calendar events, grades, tokens and cost.
+- `results/claude-code.jsonl` and `results/codex.jsonl`: one row per counted trial, with the arm, the instruction-file hash, every tool call (arguments and result truncated), the final answer, created calendar events, grades, tokens and cost. Machine paths in tool calls are rewritten by `scrubMachinePaths` (`<slots>/` for a worker's directory, `~/` for the home directory); nothing else in the model output is changed.
 - `results/superseded-c1eaff76-default-*.jsonl`: the default-arm rows run with the earlier block text, not counted.
 - `results/summary.json` and `summary.md`: the tables above and per-task breakdowns.
 - `gen-corpus.ts`, `tasks.json`, `base-instructions.md`, `told-rule.md`, `instructions/`, `run.ts`, `grade.ts`, `summarize.ts`.
