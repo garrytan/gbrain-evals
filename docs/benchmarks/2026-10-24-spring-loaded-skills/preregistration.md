@@ -1,6 +1,40 @@
 # Preregistration: spring-loaded skills A/B (GBRA-194)
 
-Written 2026-10-24, after the validity pilot and the wiring smokes and before any counted cell ran. Nothing below changes after counted cells start; a counted cell is never rerun to change a verdict.
+Written 2026-10-24, after the validity pilot and the wiring smokes and before any counted cell ran. Amended the same day, still before any counted cell (see [Amendment 1](#amendment-1-final-pin-and-real-permission-modes)); the amendment wins wherever it differs from the text below it. Nothing changes after counted cells start, and a counted cell is never rerun to change a verdict.
+
+## Amendment 1: final pin and real permission modes
+
+Written after a review requirement and a new pin, before any counted cell. The 8 standing-token probe rows that ran on `2b92f8cd` before the pin moved are kept in [results/superseded-2b92f8cd/](results/superseded-2b92f8cd/) and are not counted.
+
+**Pin.** gbrain `capy/gbra194-spring-skills` at `12669180`. The launcher (an absolute path) answers `bundled-skill --json`, and setup checks that it serves the same skill catalog before writing the index.
+
+**What each arm ships with, on top of the earlier table.** spring: on Claude Code, setup also adds `Bash(<launcher> bundled-skill:*)` to `~/.claude/settings.json`, so a load is not denied. native: no allow rule, because none exists today. off: nothing. In every arm the `gbrain bundled-skill` command exists in the binary, but only spring's instructions mention it; any use outside spring is counted as unprompted.
+
+**Permission configurations.**
+
+| Configuration | Claude Code | Codex | Role |
+|---|---|---|---|
+| real | Default permission mode as setup leaves it (no `--dangerously-skip-permissions`) | Default sandbox and approval policy (no bypass flag) | Primary, all arms, all tasks |
+| mcp-allow | real, plus the bootstrap lane's pre-approval: `permissions.allow: ["mcp__gbrain"]` in `~/.claude/settings.json` | not run: no gbrain lane ships a Codex pre-approval | Secondary, Claude Code only, all arms, all 15 tasks |
+
+The secondary runs all 15 tasks, not only the write tasks, because in real mode Claude Code also denies gbrain's read tools (see below). No other allow rule is added in any configuration. Every trial records `permission_denials` (Claude Code: the result event's list; Codex: calls refused by the sandbox or the approval policy), the denied calls and denied skill loads.
+
+**What the real-mode pilot and smokes showed** (receipts: [results/pilot/pilot-off-real-12669180.jsonl](results/pilot/pilot-off-real-12669180.jsonl), [results/smoke/](results/smoke/)):
+
+- Claude Code, real: every gbrain MCP call was denied in every arm, reads included (`search`, `list_pages`, `entity`, `whoami`), as were Write, Edit and writing Bash commands. 13 of 15 off-arm pilot trials hit a denial, and the brain-lookup control C02 failed in all three arms (`claude|claude-sonnet-5-5|off|C02|1`, `…|native|C02|1`, `…|spring|C02|1`). spring's allow rule worked: `bundled-skill` loads ran without a denial (`…|spring|S05|1`, `…|spring|S11|1`).
+- Codex, real: `codex exec` defaults to a read-only sandbox and the approval policy `never`. gbrain MCP reads work. Every gbrain MCP write was refused with "MCP tool call requires approval, but approval policy is never" (`codex|gpt-6.1-sol|off|S11|1`, `…|native|S11|1`, `…|spring|S11|1`, `…|spring|S05|1`), workspace writes fail, and the gbrain CLI's brain commands fail in the sandbox (EROFS on the writer lock). `bundled-skill` is engine-free and works there.
+- Claude Code, mcp-allow: MCP reads and writes work. Write, Edit and writing Bash stay denied, which leaves the calendar control C03 unpassable in every arm.
+- The off arm still passes 0 of 12 skill tasks in real mode, and 1 of 3 controls (C01, the workspace-only one).
+
+So in real mode the tasks that need a brain write (S02, S04, S05, S06, S07, S08, S10, S11) cannot pass on either harness in any arm, and on Claude Code neither can the brain reads (S03, S09, S12, C02). That floor is a finding, reported with trial ids. right_skill_used still measures what spring is for in that configuration, and pass is reported with the floor called out.
+
+**Models and reps, revised for budget.** real: claude-sonnet-5-5 2 reps, gpt-6.1-sol 2 reps, claude-opus-5-5 1 rep. mcp-allow: claude-sonnet-5-5 2 reps, claude-opus-5-5 1 rep. Opus gets no second rep in either configuration. Estimated counted spend about $38 against $49 left under the cap.
+
+**Standing tokens** are measured once, in the real configuration (2 reps per arm per model). An allow rule adds a few bytes of settings, not instruction text.
+
+**Decision rule.** Unchanged, evaluated per harness for each configuration, pooled over that harness's models. Where an arm's pass count sits at a floor of 0 in every arm, the pass condition holds trivially, and the report says it carries no information there.
+
+---
 
 ## Question
 
@@ -89,4 +123,4 @@ The report gives spring's added standing tokens over off either way. Ceilings: a
 
 ## Budget
 
-Hard cap $55 of API spend across pilot, smokes, probes and counted cells, tracked per trial in a ledger. The runner stops before a trial that could take the ledger past the cap ($0.60 reserve per in-flight trial). Spent before counted cells: $3.21.
+Hard cap $55 of API spend across pilot, smokes, probes and counted cells, tracked per trial in a ledger. The runner stops before a trial that could take the ledger past the cap ($0.60 reserve per in-flight trial). Spent before counted cells: $5.91 (pilots, smokes and the superseded probes).

@@ -38,6 +38,14 @@ const out = resolve(opt('out')!);
 const taskFilter = opt('tasks')?.split(',');
 const cap = Number(opt('cap', '55'));
 const reserve = Number(opt('reserve', '0.6'));
+// real: each harness runs in the permission mode gbrain setup leaves it in (Claude Code's default
+// mode, Codex's default sandbox and approval policy); denials are recorded per trial. bypass: the
+// GBRA-188 flags (--dangerously-skip-permissions / --dangerously-bypass-approvals-and-sandbox).
+// mcp-allow: real, plus the bootstrap lane's Claude Code pre-approval (permissions.allow "mcp__gbrain"
+// in ~/.claude/settings.json). A secondary configuration, reported separately.
+const perm = opt('perm', 'real') as 'real' | 'mcp-allow' | 'bypass';
+if (!['real', 'mcp-allow', 'bypass'].includes(perm)) throw new Error('--perm real|mcp-allow|bypass');
+if (perm === 'mcp-allow' && harness !== 'claude') throw new Error('--perm mcp-allow is a Claude Code configuration');
 const WORK = process.env.SKEVAL_WORK ?? join(homedir(), '.capy/work/skeval');
 const CHECKOUT = resolve(process.env.SKEVAL_CHECKOUT ?? '');
 if (!existsSync(join(CHECKOUT, 'src/cli.ts'))) throw new Error('SKEVAL_CHECKOUT must point at a gbrain checkout');
@@ -80,7 +88,7 @@ const rawDir = join(WORK, 'raw'); mkdirSync(rawDir, { recursive: true });
 type Trial = { trial_id: string; model: string; arm: string; task: any; rep: number };
 const trials: Trial[] = [];
 for (let rep = 1; rep <= reps; rep++) for (const task of tasks) for (const model of models) for (const arm of arms) {
-  const trial_id = [harness, model, arm, task.id, rep].join('|');
+  const trial_id = [harness, model, perm === 'real' ? arm : arm + '+' + perm, task.id, rep].join('|');
   if (!done.has(trial_id)) trials.push({ trial_id, model, arm, task, rep });
 }
 let s = 194; const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
@@ -140,6 +148,13 @@ function prepareHarness(slotDir: string, arm: string) {
     const r = sh(args, home);
     if (r.code !== 0) throw new Error('setup failed: ' + (r.out + r.err).slice(-1500));
   }
+  const settingsPath = join(home, '.claude/settings.json');
+  if (perm === 'mcp-allow') {
+    const st = existsSync(settingsPath) ? JSON.parse(readFileSync(settingsPath, 'utf8')) : {};
+    st.permissions ??= {}; st.permissions.allow = [...new Set([...(st.permissions.allow ?? []), 'mcp__gbrain'])];
+    mkdirSync(dirname(settingsPath), { recursive: true }); writeFileSync(settingsPath, JSON.stringify(st, null, 2) + '\n');
+  }
+  const allowRules = harness === 'claude' && existsSync(settingsPath) ? (JSON.parse(readFileSync(settingsPath, 'utf8')).permissions?.allow ?? []) : [];
   let skillsDir: string | null = null;
   if (arm === 'native') {
     skillsDir = harness === 'claude' ? join(home, '.claude/skills') : join(home, '.agents/skills');
@@ -153,7 +168,7 @@ function prepareHarness(slotDir: string, arm: string) {
   if (arm !== 'spring' && hasIdx) throw new Error(arm + ' arm has skills index');
   rmSync(join(slotDir, 'ws'), { recursive: true, force: true });
   cpSync(join(CORPUS, 'workspace'), join(slotDir, 'ws'), { recursive: true });
-  return { instr_sha256: createHash('sha256').update(text).digest('hex'), instr_bytes: Buffer.byteLength(text), index_bytes: hasIdx ? Buffer.byteLength(text.slice(text.indexOf('gbrain:skills:begin'), text.indexOf('gbrain:skills:end'))) : 0, instr_text: text };
+  return { allow_rules: allowRules, instr_sha256: createHash('sha256').update(text).digest('hex'), instr_bytes: Buffer.byteLength(text), index_bytes: hasIdx ? Buffer.byteLength(text.slice(text.indexOf('gbrain:skills:begin'), text.indexOf('gbrain:skills:end'))) : 0, instr_text: text };
 }
 
 async function snapshotBrain(home: string): Promise<Record<string, Page>> {
@@ -174,7 +189,7 @@ const srcSkip = (rel: string) => rel === '.git' || rel.startsWith('.git/');
 const trunc = (x: unknown, n: number) => { const t = typeof x === 'string' ? x : JSON.stringify(x); return t && t.length > n ? t.slice(0, n) + '…' : t; };
 
 function parseClaude(lines: any[], model: string) {
-  const calls: any[] = []; const byId = new Map<string, any>(); let answer = ''; let cost = 0; let usage: any = {}; let turns = 0; let isError = false; let perModel: any = {};
+  const calls: any[] = []; const byId = new Map<string, any>(); let answer = ''; let cost = 0; let usage: any = {}; let turns = 0; let isError = false; let perModel: any = {}; let denials: any[] = [];
   for (const ev of lines) {
     if (ev.type === 'assistant') for (const c of ev.message?.content ?? []) if (c.type === 'tool_use') {
       const m = /^mcp__gbrain__(.+)$/.exec(c.name);
@@ -187,6 +202,7 @@ function parseClaude(lines: any[], model: string) {
     }
     if (ev.type === 'result') {
       answer = ev.result ?? ''; cost = ev.total_cost_usd ?? 0; turns = ev.num_turns ?? 0; isError = !!ev.is_error;
+      denials = (ev.permission_denials ?? []).map((d: any) => ({ tool: /^mcp__gbrain__/.test(d.tool_name) ? 'gbrain:' + d.tool_name.slice(13) : d.tool_name, args: trunc(d.tool_input, 300) }));
       const mu = ev.modelUsage ?? {}; usage = { input: 0, cache_read: 0, cache_write: 0, output: 0 };
       for (const [k, v] of Object.entries<any>(mu)) {
         usage.input += v.inputTokens ?? 0; usage.cache_read += v.cacheReadInputTokens ?? 0; usage.cache_write += v.cacheCreationInputTokens ?? 0; usage.output += v.outputTokens ?? 0;
@@ -198,7 +214,9 @@ function parseClaude(lines: any[], model: string) {
   const main = Object.entries<any>(perModel).find(([k]) => k.startsWith(model))?.[1];
   usage.main_input_total = main ? main.input + main.cache_read + main.cache_write : null;
   usage.per_model = perModel;
-  return { calls, answer, cost, usage, turns, isError };
+  // A denied call comes back to the model as an errored tool result; it never ran.
+  for (const c of calls) if (c.error && /permission|requested permissions|haven't granted|not allowed|denied/i.test(c.result ?? '')) c.denied = true;
+  return { calls, answer, cost, usage, turns, isError, denials };
 }
 
 function parseCodex(lines: any[], model: string) {
@@ -221,7 +239,11 @@ function parseCodex(lines: any[], model: string) {
   // input_tokens includes cached and cache-write tokens; output_tokens includes reasoning.
   const cost = p ? ((usage.input - usage.cache_read - usage.cache_write) * p.input + usage.cache_read * p.cache_read + usage.cache_write * p.cache_write + usage.output * p.output) / 1e6 : 0;
   usage.input_total = usage.input; usage.main_input_total = usage.input;
-  return { calls, answer, cost, usage, turns, isError };
+  // Codex exec never prompts: a sandbox or approval refusal comes back as a failed call.
+  const DENY = /sandbox|read-only file system|operation not permitted|permission denied|approval|rejected by|declined|not permitted/i;
+  for (const c of calls) if (c.error && DENY.test(String(c.result ?? ''))) c.denied = true;
+  const denials = calls.filter((c) => c.denied).map((c) => ({ tool: c.tool, args: trunc(c.args, 300) }));
+  return { calls, answer, cost, usage, turns, isError, denials };
 }
 
 async function runTrial(slotDir: string, t: Trial) {
@@ -231,8 +253,8 @@ async function runTrial(slotDir: string, t: Trial) {
   const srcBefore = hashTree(join(home, 'brain-src'), srcSkip);
   const wsBefore = hashTree(ws);
   const cmd = harness === 'claude'
-    ? ['claude', '-p', t.task.prompt, '--output-format', 'stream-json', '--verbose', '--model', t.model, '--dangerously-skip-permissions']
-    : ['codex', 'exec', '--json', '-m', t.model, '--dangerously-bypass-approvals-and-sandbox', '--skip-git-repo-check', '-C', ws, t.task.prompt];
+    ? ['claude', '-p', t.task.prompt, '--output-format', 'stream-json', '--verbose', '--model', t.model, ...(perm === 'bypass' ? ['--dangerously-skip-permissions'] : [])]
+    : ['codex', 'exec', '--json', '-m', t.model, ...(perm === 'bypass' ? ['--dangerously-bypass-approvals-and-sandbox'] : []), '--skip-git-repo-check', '-C', ws, t.task.prompt];
   const started = Date.now();
   const proc = spawn(['setsid', ...cmd], { cwd: ws, env: env(home), stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
   let timedOut = false;
@@ -267,6 +289,7 @@ async function runTrial(slotDir: string, t: Trial) {
       wrong_skill_only: t.task.kind === 'skill' && skillsLoaded.length > 0 && !expLoad,
       over_fetch: t.task.kind === 'control' ? skillsLoaded.length > 0 : null,
       first_mutation_at: firstMutation,
+      perm_mode: perm, allow_rules: prep.allow_rules, permission_denials: p.denials.length, denials: p.denials, denied_skill_loads: p.calls.filter((c: any) => c.denied && /bundled-skill|SKILL\.md/.test(String(c.args)) || (c.denied && c.tool === 'Skill')).length,
       pass: g.pass, checks: g.checks,
       brain_pages_changed: changedPages.map((k) => k), brain_src_files_changed: srcChanged, workspace_files_changed: Object.keys({ ...wsBefore, ...wsAfter }).filter((k) => wsBefore[k] !== wsAfter[k]),
       answer: p.answer, new_events: newEvents, calls: p.calls.map(({ input, ...c }) => c), tool_calls: p.calls.length,
@@ -293,7 +316,7 @@ async function worker(i: number) {
       spend += row.cost_usd; finished++;
       appendFileSync(LEDGER, JSON.stringify({ ts: row.ts, trial_id: t.trial_id, out: relative(HERE, out), cost_usd: row.cost_usd }) + '\n');
       appendFileSync(out, JSON.stringify(scrubMachinePaths(row, undefined, undefined, undefined, [[CHECKOUT, '<gbrain>'], [join(WORK, 'slots'), '<slots>'], [WORK, '<work>']])) + '\n');
-      console.error('[' + finished + '/' + trials.length + '] ' + t.trial_id + ' skills=' + row.skills_loaded.join(',') + ' right=' + row.right_skill_used + ' pass=' + row.pass + ' in=' + row.usage.input_total + ' $' + row.cost_usd.toFixed(4) + ' run $' + spend.toFixed(2) + ' ledger $' + ledgerTotal().toFixed(2));
+      console.error('[' + finished + '/' + trials.length + '] ' + t.trial_id + ' skills=' + row.skills_loaded.join(',') + ' right=' + row.right_skill_used + ' pass=' + row.pass + ' denied=' + row.permission_denials + ' in=' + row.usage.input_total + ' $' + row.cost_usd.toFixed(4) + ' run $' + spend.toFixed(2) + ' ledger $' + ledgerTotal().toFixed(2));
     } catch (e) {
       dirty = true;
       console.error('trial ' + t.trial_id + ' infra error: ' + String(e).slice(0, 800));
