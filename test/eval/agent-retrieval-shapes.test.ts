@@ -191,9 +191,15 @@ describe('agent-retrieval-shapes scorer mutation suite', () => {
 
 describe('agent-retrieval-shapes against deliberately broken adapters', () => {
   const gut = resolveGbrainUnderTest(null);
+  // gbrain v0.60.332.0 (4c208b03a) folds a merge stub into its target's row
+  // (listed in `collapsed`), so this adapter unfolds those rows before it
+  // reverses the list; otherwise a one-row list reverses to itself.
+  type CollapsedRow = { slug: string; source_id: string; collapsed?: Array<{ slug: string; source_id: string }> };
   const reversed: OpWrapper = async (name, params, call) => {
     const r = await call(name, params);
-    return (name === 'search' || name === 'query') && Array.isArray(r) ? [...r].reverse() : r;
+    if ((name !== 'search' && name !== 'query') || !Array.isArray(r)) return r;
+    const unfolded = (r as CollapsedRow[]).flatMap(row => [{ ...row, collapsed: undefined }, ...(row.collapsed ?? []).map(c => ({ ...row, slug: c.slug, source_id: c.source_id, collapsed: undefined }))]);
+    return unfolded.reverse();
   };
   const blind: OpWrapper = async (name, params, call) => (name === 'search' || name === 'query' ? [] : name === 'entity' ? { found: false, suggestions: [] } : call(name, params));
 
