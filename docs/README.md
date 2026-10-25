@@ -221,7 +221,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
 
-### 2026-10-25: Re-pin to gbrain `7a6bdd357`; N14 at Wave B PR 4
+### 2026-10-25: Re-pin to gbrain `7a6bdd357`; opening names v0.10.129
 
 gbrain-evals v0.10.129 (the opening names it; was v0.10.128). The opening names gbrain master `7a6bdd357` (v0.60.454.0, was `6e1086492`, v0.60.324.0), which keeps derived data per
 segment on large pages, cuts forced chunks at sentence ends and imports new transcript sessions as one page (large pages
