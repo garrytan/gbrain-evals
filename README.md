@@ -12,18 +12,22 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain [`6e1086492`](https://github.com/garrytan/gbrain/tree/6e1086492dbded0059fcfabc627b846ced7855f4), release v0.60.324.0, declared as `gbrain` in `package.json` |
+| Pinned product | gbrain [`7a6bdd357`](https://github.com/garrytan/gbrain/tree/7a6bdd3579a3c35d57c63790b428a746fe2f3df7), release v0.60.454.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
 | This repository | gbrain-evals v0.10.128 (`VERSION`) |
 
-This repository installs gbrain v0.60.324.0 (`6e1086492`). Some results below were measured at earlier commits; each
+This repository installs gbrain v0.60.454.0 (`7a6bdd357`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except `a7cb37b`, the September 29 branch
 commit whose retrieval the reader replay row froze. The search modes held the same values from v0.48.4.0 through
-v0.60.169.0. Since then the default reranker became Voyage `rerank-3-lite` (was `rerank-2.5`, v0.60.223.0) and
-`tokenmax` stopped expanding queries (v0.60.250.0); on 300 LongMemEval-S questions each change kept retrieval within
-its preregistered margins ([reranker addendum](docs/benchmarks/2026-10-13-rerank3-addendum-preregistration.md),
-[expansion latency](docs/benchmarks/2026-10-14-expansion-latency-preregistration.md)). Retrieval results measured
-before v0.60.223.0 used `rerank-2.5`.
+v0.60.169.0. Since then the default reranker became Voyage `rerank-3-lite` (was `rerank-2.5`, v0.60.223.0),
+`tokenmax` stopped expanding queries (v0.60.250.0), and every mode turned on result-time collapse and rank priors
+(`search.collapse`, `search.rank_priors`, v0.60.332.0): same-slug twins in other sources, merge stubs and copies of
+one document fold into one result row, and organization, OCR and date priors adjust the ranking after the reranker. On
+300 LongMemEval-S questions the reranker and expansion changes each kept retrieval within their preregistered margins
+([reranker addendum](docs/benchmarks/2026-10-13-rerank3-addendum-preregistration.md),
+[expansion latency](docs/benchmarks/2026-10-14-expansion-latency-preregistration.md)); collapse and rank priors have no
+such check here. Retrieval results measured before v0.60.223.0 used `rerank-2.5`, and results measured before
+v0.60.332.0 ran without collapse or rank priors.
 
 ## What gbrain does
 
@@ -312,6 +316,17 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-25: Re-pin to gbrain `7a6bdd357`
+
+The pinned product row changes from `6e1086492` (v0.60.324.0) to `7a6bdd357` (v0.60.454.0). On pages over 1 MiB, gbrain
+now keeps links, mentions, timeline, fences, conversation facts and synopses per segment, cuts forced chunks at sentence
+ends and imports a new transcript session as one page (large pages Wave B PR 4, gbrain #7316); a git-canonical page that
+turns private and then world again gets its file back (gbrain #7586). `src/core/search/mode.ts` changed between the two
+commits: gbrain v0.60.332.0 added `collapse` and `rank_priors` to every mode bundle, both on (gbrain changelog,
+0.60.332.0), so the search-mode sentences under the table now name them and say that earlier retrieval results ran
+without them. Every commit that paragraph names is still in the release's history except `a7cb37b`. No result row on
+this page changes.
 
 ### 2026-10-21: Repository row names v0.10.128
 
