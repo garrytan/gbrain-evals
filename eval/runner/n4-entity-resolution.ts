@@ -19,7 +19,11 @@
  *                    Callers: scoped local, remote with a one-source grant,
  *                    remote with a two-source grant.
  *   remember         the `remember` operation (save-time): the stored
- *                    fact's entity_slug is the resolution.
+ *                    fact's entity_slug is the resolution. Since gbrain
+ *                    #7248 (ea1858ae6) a folder-less entity that does not
+ *                    name exactly one page is refused `invalid_params`
+ *                    with reason `entity_*` and nothing is saved; that
+ *                    refusal is scored as unresolved, not as an error.
  *   resolve_on_save  resolveExtractedEntitiesForSave, the bulk-extraction
  *                    save path (src/core/entities/resolve-on-save.ts), fed
  *                    extractor-shaped facts directly (no LLM extractor).
@@ -604,7 +608,10 @@ async function runOnEngine(g: Gbrain, engine: BrainEngine, ledger: Ledger, gold:
       stored = res.entity_slug ?? null;
       pred = toPred(source, stored);
     } catch (e) {
-      pred = { kind: 'error', message: errMsg(e) };
+      const refusal = e as { code?: unknown; reason?: unknown };
+      pred = refusal.code === 'invalid_params' && typeof refusal.reason === 'string' && refusal.reason.startsWith('entity_')
+        ? { kind: 'unresolved' }
+        : { kind: 'error', message: errMsg(e) };
     }
     rememberProbes.push(probeOf(m, pred));
     record('remember', m, pred);

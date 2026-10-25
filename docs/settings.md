@@ -6,7 +6,7 @@ autocut off. That setup retrieves all labeled conversations for 451/470 answerab
 with opaque session ids at gbrain `109b992`. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
 [original experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-This page describes the gbrain this repository installs, master `6e1086492` (v0.60.324.0, declared in
+This page describes the gbrain this repository installs, master `7a6bdd357` (v0.60.454.0, declared in
 `package.json`). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
 number. The `balanced`, `conservative` and `tokenmax` mode definitions (`MODE_BUNDLES` in
 `src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `77cf8e111` (v0.60.169.0), apart from three
@@ -16,8 +16,11 @@ reranker resolves to Voyage `rerank-3-lite` (was `rerank-2.5`, v0.60.223.0), and
 queries (v0.60.250.0). The conversation measurements here used `rerank-2.5`; on 300 LongMemEval-S questions
 `rerank-3-lite` and `tokenmax` without expansion each kept retrieval within their preregistered margins
 ([reranker addendum](benchmarks/2026-10-13-rerank3-addendum-preregistration.md),
-[expansion latency](benchmarks/2026-10-14-expansion-latency-preregistration.md)). The keys added since then
-(`search.reranker.gate`, `search.diverse_pool_depth`) are off in every bundle; other code differs.
+[expansion latency](benchmarks/2026-10-14-expansion-latency-preregistration.md)). Of the keys added since then,
+`search.reranker.gate` and `search.diverse_pool_depth` are off in every bundle, and `search.collapse` and
+`search.rank_priors` (v0.60.332.0) are on in every bundle: same-slug twins in other sources, merge stubs and copies of
+one document fold into one result row, and organization, OCR and date priors adjust the ranking after the reranker. The
+LongMemEval retrieval rows were measured before v0.60.332.0 and do not test collapse or rank priors; other code differs.
 From v0.60.164.0, `query` also adds up to three matching saved facts as rows of their own (`search.query_facts_arm`,
 on by default and outside the mode bundles); the LongMemEval retrieval rows were measured before it and do not test
 it. Existing per-key overrides take precedence over a mode, so a mode name alone
@@ -157,6 +160,14 @@ the [refresh report](benchmarks/2026-09-09-retrieval-refresh.md) gives the full
 reproducible matrix used here.
 
 ## Changelog
+
+### 2026-10-25: Installed pin moves to `7a6bdd357`
+
+The installed gbrain commit changed from `6e1086492` (v0.60.324.0) to `7a6bdd357` (v0.60.454.0).
+`src/core/search/mode.ts` changed between the two commits: gbrain v0.60.332.0 added the `collapse` and `rank_priors`
+keys, on in every bundle (gbrain changelog, 0.60.332.0). The mode-definition note said the keys added since `77cf8e111`
+are off in every bundle, which is no longer true; it now names both keys, says they are on, and says the LongMemEval rows
+were measured without them.
 
 ### 2026-10-20: Installed pin moves to `6e1086492`
 
