@@ -2,6 +2,24 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.129] - 2026-10-25
+
+### Re-pin to gbrain `7a6bdd357` (v0.60.454.0); N14 at large pages Wave B PR 4
+
+- **Pin.** gbrain moves from `6e1086492` (v0.60.324.0) to `7a6bdd357` (v0.60.454.0). This brings large pages Wave B PR 4 (#7316): derived data is kept per segment, forced chunk cuts land on a sentence or line end, and a new transcript session imports as one page. It also brings the git-canonical privacy follow-up (#7586).
+- **Re-pin fixes.** Each was root-caused, and no assertion was weakened:
+  - N4 scores `remember`'s documented entity refusal (gbrain #7248) as unresolved, not as an error.
+  - The ARS E2 broken-adapter test unfolds collapsed rows before it reverses them.
+  - With `page_split: exchanges`, the harness provider no longer sends a `source_slug` that no page carries.
+  - cat30 restores `GBRAIN_HOME` after it runs.
+  - Docs name the new pin, and the search-mode notes add `collapse` and `rank_priors`.
+- **N14** ([report](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md)). Preregistration Amendment 6 was written before any counted run. The run is hermetic on the default config, covering PGLite from 2 MB to 260 MiB and Postgres at 2 MB and from 100 MiB to 260 MiB, at $0.
+  - **Counted verdict: pass.** This is the first time every rule passes. The recall gap is 0 at 2 MB, 20 MB and 24 MiB; it was 2.5 at 24 MiB, because the split needle is now found whole. The worst native append ratio is 2.87.
+  - Segmented pages have 2 to 4% fewer chunks. Every stored page is still found 40/40, read in windows and exported byte-identical.
+  - Exploratory: the Postgres doubled append embed did not recur (0 of 30 document runs, against 5 of 23 at v0.10.124). Ingest at 100 MiB and above is 5 to 14% slower, all in the projection seal.
+  - Forget on pages over 24 MiB is still unreachable: an upload replace adding the fence fails with `request_too_large`.
+- **Registry.** The N14 row stays held only for the trusted-local egress rule, which waits on a product decision.
+
 ## [0.10.128] - 2026-10-21
 
 ### Agent retrieval shapes: gbrain#7195 measured

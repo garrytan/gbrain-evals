@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain [`7a6bdd357`](https://github.com/garrytan/gbrain/tree/7a6bdd3579a3c35d57c63790b428a746fe2f3df7), release v0.60.454.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.128 (`VERSION`) |
+| This repository | gbrain-evals v0.10.129 (`VERSION`) |
 
 This repository installs gbrain v0.60.454.0 (`7a6bdd357`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except `a7cb37b`, the September 29 branch
@@ -317,16 +317,16 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 ## Changelog
 
-### 2026-10-25: Re-pin to gbrain `7a6bdd357`
+### 2026-10-25: Re-pin to gbrain `7a6bdd357`; repository row names v0.10.129
 
-The pinned product row changes from `6e1086492` (v0.60.324.0) to `7a6bdd357` (v0.60.454.0). On pages over 1 MiB, gbrain
+gbrain-evals v0.10.129. The pinned product row changes from `6e1086492` (v0.60.324.0) to `7a6bdd357` (v0.60.454.0). On pages over 1 MiB, gbrain
 now keeps links, mentions, timeline, fences, conversation facts and synopses per segment, cuts forced chunks at sentence
 ends and imports a new transcript session as one page (large pages Wave B PR 4, gbrain #7316); a git-canonical page that
 turns private and then world again gets its file back (gbrain #7586). `src/core/search/mode.ts` changed between the two
 commits: gbrain v0.60.332.0 added `collapse` and `rank_priors` to every mode bundle, both on (gbrain changelog,
 0.60.332.0), so the search-mode sentences under the table now name them and say that earlier retrieval results ran
 without them. Every commit that paragraph names is still in the release's history except `a7cb37b`. No result row on
-this page changes.
+this page changes. The repository row names v0.10.129 (was v0.10.128).
 
 ### 2026-10-21: Repository row names v0.10.128
 
