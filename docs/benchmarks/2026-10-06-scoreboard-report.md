@@ -78,6 +78,10 @@ it lands with the real render.
      on (Garry 2026-10-17 via GBRA-108: rec). A conversation settled before then and flagged `ingest_degraded` by a
      probe miss with 0 failed sessions keeps its flag, with a note that the old probe's passage started past the
      product's embedder window. verbatim-session c1 and c5 are two of these.
+   - **Spend: S2b full-context underpriced.** A23 priced each gpt-6.1-sol reading's reservation at about $5.40 from
+     its token estimate; the metering proxy reserves the request's byte count, about $19.29 a call, so the $20 lease
+     admitted one reading at a time. The lease was raised to $110 inside the A24 cap and the cell resumed: about
+     $4.46 an answer, about $89 for the 20, against about $11 projected. The receipt carries the same disclosure.
    - **gbrain synthesize model.** `whole-synthesize` answers with `claude-opus-4-7`, gbrain's shipped default at the
      pin (owner's ruling, 2026-10-16).
 8. **Per-reader accuracy and derived columns.** Per-reader means, correct-abstention rates by system and set, and

@@ -277,7 +277,7 @@ describe('whole-system arms through the cell runner', () => {
     expect(ndjson(join(dir, 'rows.ndjson'))[0].fit[READERS[0]].fits).toBe(false);
   });
 
-  test('full context: a gpt-6.1-sol whole-history reading reserves its stated 2,048 output tokens; the reservation is the input bound at the long-context cache-write rate, about $5.36 for 3.2 MB (A23: the $1.37 S2b lease refused it)', async () => {
+  test('full context: priceRequest prices a gpt-6.1-sol whole-history reading at its stated 2,048 output tokens and its token estimate at the long-context cache-write rate, about $5.36 for 3.2 MB (the proxy reserves more: see the next test)', async () => {
     const { priceRequest, reservationUsd } = await import('../../eval/runner/budget-ledger.ts');
     const prompt = 'x'.repeat(3_200_000);
     const body = { model: 'gpt-6.1-sol', messages: [{ role: 'user', content: prompt }], n: 1, max_completion_tokens: 2048, reasoning_effort: 'medium', prompt_cache_key: 'k' };
@@ -285,6 +285,28 @@ describe('whole-system arms through the cell runner', () => {
     expect(price.maxOutputTokens).toBe(2048);
     expect(reservationUsd(price)).toBeCloseTo(1_066_683 * 5 / 1e6 + 2048 * 15 / 1e6, 2);
     expect(reservationUsd(price)).toBeGreaterThan(1.37);
+  });
+
+  test('full context: the metering proxy reserves a gpt-6.1-sol whole-history reading at its byte count, not its token estimate: about $16.03 for 3.2 MB, three times priceRequest (A23 priced $5.40 a call; A24 measured about $19.29)', async () => {
+    const { BudgetRun, priceRequest, reservationUsd } = await import('../../eval/runner/budget-ledger.ts');
+    const { MeteringProxy } = await import('../../eval/runner/metering-proxy.ts');
+    const upstream = (async () => Response.json({ choices: [{ message: { content: 'x' } }], usage: { prompt_tokens: 10, completion_tokens: 3 } })) as unknown as typeof fetch;
+    const usageLog = join(tmp, 'a24-full-context-usage.ndjson');
+    const lease = BudgetRun.openLease({ runId: 'a24-full-context', leaseUsd: 50, ledgerPath: join(tmp, 'a24-full-context.sqlite') });
+    const proxy = new MeteringProxy({ fetchImpl: upstream, policy: { lease, env: { OPENAI_API_KEY: 'placeholder', ANTHROPIC_API_KEY: 'placeholder', VOYAGE_API_KEY: 'placeholder' }, usageLog } });
+    proxy.start();
+    try {
+      const body = { model: 'gpt-6.1-sol', messages: [{ role: 'user', content: 'x'.repeat(3_200_000) }], n: 1, max_completion_tokens: 2048, reasoning_effort: 'medium', prompt_cache_key: 'k' };
+      const text = JSON.stringify(body);
+      const res = await fetch(`http://127.0.0.1:${proxy.port}/harness/openai/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: text });
+      expect(res.status).toBe(200);
+      const line = ndjson(usageLog).find(l => l.outcome === 'forwarded')!;
+      const bytesBound = (Buffer.byteLength(text) + 64) * 5 / 1e6 + 2048 * 15 / 1e6;
+      expect(line.reserved_usd).toBeCloseTo(bytesBound, 2);
+      expect(line.reserved_usd).toBeGreaterThan(16);
+      const estimate = reservationUsd(priceRequest('https://api.openai.com/v1/chat/completions', body)!);
+      expect(line.reserved_usd / estimate).toBeGreaterThan(2.9);
+    } finally { proxy.stop(); }
   });
 
   test('full context: a lease refusal (402 budget) is budget_not_run and stops the cell, never a reader_error (A23)', async () => {

@@ -101,7 +101,9 @@
     "baseline-full-context": "harness baseline",
     "baseline-file-agent": "harness baseline"
   },
-  "disclosures": [],
+  "disclosures": [
+    "S2b full-context (`s2b.baseline-full-context.baseline`): A23 priced each gpt-6.1-sol whole-history reading's reservation at about $5.40 from its token estimate, but the metering proxy reserves the request's byte count as input tokens, about $19.29 a call, so the $20 lease admitted one reading at a time. The custodian raised the lease to $110 inside the A24 cap (raise-lease.ts) and resumed. Measured about $4.46 an answer, about $89 for the 20 answers, against about $11 projected."
+  ],
   "render_targets": [
     "README.md"
   ]
