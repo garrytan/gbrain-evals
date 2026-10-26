@@ -22,7 +22,9 @@
 #   snapshot --system NAME --out TAR [--port 8700] [--timeout 900]
 #          Stop the stack, tar every named volume of its compose project into TAR (one <volume>.tar per volume plus
 #          volumes.json), write TAR.sha256, start the stack again and wait for GET /health. A Q1 shim cell's
-#          snapshot_command runs it with --out "$SHOOTOUT_SNAPSHOT_DIR/<system>.tar" once ingest is complete.
+#          snapshot_command runs it with --out "$SHOOTOUT_SNAPSHOT_DIR/<system>.tar" once ingest is complete. It
+#          refuses, before stopping anything, when a container keeps data in an anonymous volume, which no snapshot
+#          would carry.
 #   restore --system NAME --from TAR [--config recipe|common] [--port 8700] [--timeout 900]
 #          Check TAR against TAR.sha256 when present, create the stack without starting it, replace every named
 #          volume's contents with the snapshot's, then start the stack and wait for GET /health. A Q1 shim cell's
@@ -118,6 +120,27 @@ stack_volumes() {
 }
 sha_of() { sha256sum "$1" | cut -d' ' -f1; }
 
+# exited_report before|after: warn about every container of the stack that exited 137 or was OOM-killed. Before the
+# snapshot's stop, any exit at all means the system died while it ran; after it, exit 137 without an OOM kill means the
+# stop grace period ran out.
+exited_report() {
+  local phase=$1 name code oom state
+  while IFS=$'\t' read -r name state code; do
+    [ -n "$name" ] || continue
+    oom=$(dock inspect -f '{{.State.OOMKilled}}' "$name" 2>/dev/null || echo unknown)
+    if [ "$phase" = before ] && [ "$state" != running ]; then
+      echo "bootstrap: warning: $name had already exited before the snapshot (state $state, exit $code, OOMKilled $oom); sessions written after it died failed" >&2
+    elif [ "$phase" = after ] && [ "$code" = 137 ]; then
+      if [ "$oom" = true ]; then echo "bootstrap: warning: $name was OOM-killed (exit 137); a store it was writing may not reopen" >&2
+      else echo "bootstrap: warning: $name was killed at the end of its stop grace period (exit 137); a store it was writing may not reopen" >&2; fi
+    fi
+  done < <(compose -f "$f" ps -a --format json | python3 -c '
+import json, sys
+text = sys.stdin.read().strip()
+rows = json.loads(text) if text.startswith("[") else [json.loads(l) for l in text.splitlines() if l.strip()]
+for r in rows: print(r.get("Name", ""), r.get("State", ""), r.get("ExitCode", ""), sep="\t")' || true)
+}
+
 case "$cmd" in
   setup)
     if ! command -v docker >/dev/null 2>&1; then
@@ -196,19 +219,23 @@ case "$cmd" in
     [ -n "$OUT" ] || die "snapshot needs --out <tar>"
     f=$(compose_file)
     compose_env
+    # Only named volumes are snapshotted. A store in an anonymous volume (an image VOLUME the compose file does not
+    # name) would be left out, and a restore on a fresh VM would start that container empty (amendment A23).
+    anonymous=$(for c in $(compose -f "$f" ps -aq); do
+      dock inspect "$c" --format '{{range .Mounts}}{{if eq .Type "volume"}}{{$.Name}} {{.Name}} {{.Destination}}{{"\n"}}{{end}}{{end}}'
+    done | while read -r name vol dest; do
+      [ -z "$vol" ] || [ -n "$(dock volume inspect "$vol" --format '{{index .Labels "com.docker.compose.volume"}}')" ] || echo "${name#/}:$dest"
+    done)
+    [ -z "$anonymous" ] || die "$SYSTEM keeps data in anonymous volumes ($(echo $anonymous)), which a snapshot cannot carry; name them in $f"
     work=$(mktemp -d)
     # A failed snapshot still starts the stack again, so the cell's remaining questions see a running system.
     trap 'rc=$?; rm -rf "$work"; [ $rc -eq 0 ] || compose -f "$f" start >/dev/null 2>&1 || true' EXIT
+    # A container that already exited before the snapshot (an OOM kill mid-ingest, amendment A23) is named apart from
+    # one SIGKILLed at the end of its stop_grace_period (A22): a store either was writing may not reopen.
+    exited_report before
     log "stopping $SYSTEM to snapshot its volumes"
     compose -f "$f" stop
-    # A container still running at the end of its stop_grace_period is SIGKILLed (exit 137); a store it was writing may
-    # not reopen (the graph pipeline's store, amendment A22). Name it, so a torn snapshot is traced to its stop.
-    compose -f "$f" ps -a --format json | python3 -c '
-import json, sys
-text = sys.stdin.read().strip()
-rows = json.loads(text) if text.startswith("[") else [json.loads(l) for l in text.splitlines() if l.strip()]
-for svc in [r.get("Service") for r in rows if r.get("ExitCode") == 137]:
-    print("bootstrap: warning:", svc, "was killed at the end of its stop grace period (exit 137); a store it was writing may not reopen", file=sys.stderr)' || true
+    exited_report after
     echo '{"system": "'"$SYSTEM"'", "volumes": [' > "$work/volumes.json"
     sep=""
     while read -r key vol; do
@@ -248,7 +275,7 @@ for svc in [r.get("Service") for r in rows if r.get("ExitCode") == 137]:
     ;;
 
   *)
-    sed -n '2,37p' "$0" >&2
+    sed -n '2,39p' "$0" >&2
     exit 2
     ;;
 esac

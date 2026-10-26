@@ -10,8 +10,9 @@
  */
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { Campaign, executedTree, loadCampaign, ownerTag, planWaves, REPO_RUNNER, resolveRunner, runRemote, treeDiff, type CampaignManifest, type LaunchContext, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
 import { exitCodeOf, ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
@@ -51,7 +52,7 @@ const caught = (fn: () => unknown): ScoreboardError => { try { fn(); } catch (e)
 const payloadOf = (argv: string[]) => JSON.parse(Buffer.from(argv.at(-1)!.split('--cell-b64 ').at(-1)!, 'base64').toString('utf8')) as RemotePayload;
 
 /** What a pulled VM leaves behind: its lease ledger with some spend, a lease summary, and optionally a realization. */
-function vm(usd: number, opts: { exit?: number; realization?: boolean; timedOut?: boolean; seen?: (argv: string[], ctx: LaunchContext) => void } = {}) {
+function vm(usd: number, opts: { exit?: number; realization?: boolean; store?: Buffer; timedOut?: boolean; seen?: (argv: string[], ctx: LaunchContext) => void } = {}) {
   return async (argv: string[], ctx: LaunchContext) => {
     opts.seen?.(argv, ctx);
     mkdirSync(ctx.resultsDir, { recursive: true });
@@ -61,10 +62,11 @@ function vm(usd: number, opts: { exit?: number; realization?: boolean; timedOut?
     writeFileSync(join(ctx.resultsDir, 'lease-summary.json'), JSON.stringify({ run_id: ctx.lease.lease_id, lease_usd: ctx.lease.usd, committed_usd: usd, requests: 1, cell_exit_code: opts.exit ?? 0, ...(opts.timedOut ? { timed_out: true } : {}) }));
     if (opts.realization) {
       mkdirSync(join(ctx.resultsDir, 'realization', 'snapshot'), { recursive: true });
-      writeFileSync(join(ctx.resultsDir, 'realization', 'snapshot', 'store.tar'), 'store bytes');
-      const sha = new Bun.CryptoHasher('sha256').update('store bytes').digest('hex');
+      const store = opts.store ?? Buffer.from('store bytes');
+      writeFileSync(join(ctx.resultsDir, 'realization', 'snapshot', 'store.tar'), store);
+      const sha = new Bun.CryptoHasher('sha256').update(store).digest('hex');
       writeFileSync(join(ctx.resultsDir, 'realization', 'realization.json'), JSON.stringify({ realization_id: `real-${ctx.cell.id}-0123456789abcdef`, cell: ctx.cell.id, lease_id: ctx.lease.lease_id, campaign_sha256: null, created_at: '', trigger: 'first-row',
-        files: [{ path: 'store.tar', sha256: sha, bytes: 11 }], status: 'complete' }));
+        files: [{ path: 'store.tar', sha256: sha, bytes: store.length }], status: 'complete' }));
       mkdirSync(join(ctx.resultsDir, 'checkpoint'), { recursive: true });
       writeFileSync(join(ctx.resultsDir, 'checkpoint', 'attempts.ndjson'), '{"id":"q1"}\n');
     }
@@ -295,6 +297,69 @@ describe('launch, realizations and resume on the launching host', () => {
     expect(r.note).toContain('is damaged');
   });
 
+  test('a snapshot that verifies by sha256 but lacks a volume the system\'s compose file declares is not restored; the resume ingests again (A23)', async () => {
+    const snapshotTar = (volumes: string[]) => {
+      const d = mkdtempSync(join(tmp, 'snap-'));
+      writeFileSync(join(d, 'volumes.json'), JSON.stringify({ system: 'ext-memory-bank', volumes: volumes.map(key => ({ key, sha256: 'f'.repeat(64) })) }));
+      execFileSync('tar', ['-C', d, '-cf', join(d, 'snapshot.tar'), './volumes.json']);
+      return readFileSync(join(d, 'snapshot.tar'));
+    };
+    const cells: CampaignManifest['cells'] = [{ id: 'mb-locomo', system: 'ext-memory-bank', benchmark: 'locomo', config: 'recipe', lease_usd: 4, command: 'true', block: 'T1', restore_command: 'true' }];
+    const resumeWith = async (volumes: string[]) => {
+      const a = q1({}, cells);
+      const c = new Campaign(a.manifestPath, a.state);
+      c.init();
+      c.reserve('mb-locomo');
+      await c.launch('mb-locomo', vm(1, { realization: true, store: snapshotTar(volumes) }));
+      return c.resume('mb-locomo', vm(0.5));
+    };
+    const empty = await resumeWith([]);
+    expect([empty.mode, empty.realization_id]).toEqual(['answers', null]);
+    expect(empty.snapshot_check).toBe('incomplete: store.tar holds no volumes, so a restore would start the system with an empty store');
+    const other = await resumeWith(['cache']);
+    expect(other.snapshot_check).toBe('incomplete: store.tar lacks volume db-data that docs/comparison-systems/ext-memory-bank/docker-compose.yml declares');
+    const whole = await resumeWith(['db-data']);
+    expect([whole.mode, whole.snapshot_check]).toEqual(['snapshot', 'verified']);
+  });
+
+  test.skipIf(process.platform !== 'linux')('a multi-GB snapshot is hashed in chunks: a 1 GiB realization verifies under a 600 MB address-space limit (A23: S2b shipped-defaults died with ENOMEM hashing its snapshot)', async () => {
+    const a = q1();
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    c.reserve('hy-locomo');
+    const first = await c.launch('hy-locomo', vm(1, { realization: true }));
+    const dir = join(c.resultsDir(c.lease(first.lease_id)), 'realization');
+    const tar = join(dir, 'snapshot', 'store.tar');
+    rmSync(tar);
+    execFileSync('truncate', ['-s', '1G', tar]);
+    const sha = execFileSync('sha256sum', [tar], { encoding: 'utf8' }).split(' ')[0];
+    const realization = JSON.parse(readFileSync(join(dir, 'realization.json'), 'utf8'));
+    writeFileSync(join(dir, 'realization.json'), JSON.stringify({ ...realization, files: [{ path: 'store.tar', sha256: sha, bytes: 1 << 30 }] }));
+    const script = `import { Campaign } from ${JSON.stringify(join(ROOT, 'eval/runner/shootout-cell.ts'))};
+      const id = new Campaign(${JSON.stringify(a.manifestPath)}, ${JSON.stringify(a.state)}).recordRealization(${JSON.stringify(first.lease_id)});
+      process.exit(id ? 0 : 3);`;
+    const run = Bun.spawnSync(['bash', '-c', 'ulimit -v 600000; exec "$0" -e "$1"', process.execPath, script], { stdout: 'pipe', stderr: 'pipe' });
+    expect(run.stderr.toString()).not.toContain('ENOMEM');
+    expect(run.exitCode).toBe(0);
+    rmSync(tar);
+  });
+
+  test('every Q1 shim system keeps its store in named volumes, so its snapshot carries something (A23: the temporal graph and the memory bank had none)', () => {
+    const plan = JSON.parse(readFileSync(join(ROOT, 'eval/runner/q1/cells/q1-cells.json'), 'utf8')) as { cells: Array<{ system: string; snapshot_command?: string }> };
+    const systems = [...new Set(plan.cells.filter(c => c.snapshot_command).map(c => c.system))].sort();
+    expect(systems).toContain('ext-temporal-graph');
+    const unnamed = systems.flatMap(system => {
+      const compose = [join(ROOT, 'eval/systems', system, 'docker-compose.yml'), join(ROOT, 'docs/comparison-systems', system, 'docker-compose.yml')].find(existsSync)!;
+      const doc = Bun.YAML.parse(readFileSync(compose, 'utf8')) as { volumes?: Record<string, unknown>; services: Record<string, { volumes?: string[] }> };
+      const mounted = new Set(Object.values(doc.services).flatMap(svc => (svc.volumes ?? []).map(v => String(v).split(':')[0])));
+      const declared = Object.keys(doc.volumes ?? {}).filter(k => mounted.has(k));
+      return declared.length ? [] : [system];
+    });
+    expect(unnamed).toEqual([]);
+    const graph = Bun.YAML.parse(readFileSync(join(ROOT, 'docs/comparison-systems/ext-temporal-graph/docker-compose.yml'), 'utf8')) as { services: Record<string, { volumes?: string[] }> };
+    expect(graph.services.neo4j.volumes).toEqual(['neo4j-data:/data', 'neo4j-logs:/logs']);
+  });
+
   test('resume --from another campaign stages that campaign\'s checkpoint and verified snapshot under this campaign\'s lease (A22: wave-1 gaps rerun at the re-freeze)', async () => {
     const old = q1();
     const before = new Campaign(old.manifestPath, old.state);
@@ -310,6 +375,38 @@ describe('launch, realizations and resume on the launching host', () => {
     expect(r.lease).toMatchObject({ status: 'settled', attempt: 1 });
     expect(c.leases().map(l => l.cell)).toEqual(['hy-locomo']);
     expect(before.leases()).toHaveLength(1);
+  });
+
+  test('a final pull that kept failing (ubi-runner exit 253) leaves the lease open; after an abandon, the kept VM pulled late still restores (A23)', async () => {
+    const a = q1();
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    const l = c.reserve('hy-locomo');
+    const done = await c.launch('hy-locomo', async () => 253);
+    expect(done).toMatchObject({ status: 'finished', exit_code: 253 });
+    expect(c.abandon(l.lease_id, 'final pull failed; VM kept').status).toBe('abandoned');
+    await vm(1, { realization: true })([], { resultsDir: c.resultsDir(done), lease: done, cell: c.cell('hy-locomo') } as unknown as LaunchContext);
+    expect(c.realizedEvents()).toHaveLength(0);
+    const r = await c.resume('hy-locomo', vm(0.5, { seen: argv => expect(payloadOf(argv).restore).toMatchObject({ realization_id: 'real-hy-locomo-0123456789abcdef', restore_command: 'true' }) }));
+    expect([r.mode, r.snapshot_check]).toEqual(['snapshot', 'verified']);
+    expect(c.realizedEvents().map(e => e.lease_id)).toEqual([l.lease_id]);
+  });
+
+  test('campaign.json names the ledger relative to the checkout, and an absolute path from another host resolves here (A23)', () => {
+    const ledger = 'eval/reports/scoreboard/a23-ledger-test/campaign.sqlite';
+    rmSync(join(ROOT, dirname(ledger)), { recursive: true, force: true });
+    try {
+      const a = q1({ ledger });
+      const c = new Campaign(a.manifestPath, a.state);
+      c.init();
+      const statePath = join(a.state, 'campaign.json');
+      expect(JSON.parse(readFileSync(statePath, 'utf8')).ledger).toBe(ledger);
+      c.reserve('hy-locomo');
+      const moved = { ...JSON.parse(readFileSync(statePath, 'utf8')), ledger: `/Users/custodian/old-host/gbrain-evals/${ledger}` };
+      writeFileSync(statePath, JSON.stringify(moved));
+      const again = new Campaign(a.manifestPath, a.state);
+      expect(again.status()).toMatchObject({ committed_usd: 4 });
+    } finally { rmSync(join(ROOT, dirname(ledger)), { recursive: true, force: true }); }
   });
 
   test('a lost VM: resume refuses until the lease is abandoned, and the abandon says it is charged its full reservation', async () => {

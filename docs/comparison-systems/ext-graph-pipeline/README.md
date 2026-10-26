@@ -99,6 +99,58 @@ The entity items' edge lines (which edges are listed, and in what order) depend 
 they vary between processes. Chunk and fact items, and the ids and order of all items, do not.
 With `PYTHONHASHSEED=0` a restarted or restored store returns byte-identical results.
 
+## Scale limit of the graph store (amendment A23)
+
+cognee opens each dataset's ladybug database once, in a worker process, with `buffer_pool_size` and `max_db_size` both
+32 GiB (`DEFAULT_KUZU_BUFFER_POOL_SIZE` and `DEFAULT_KUZU_MAX_DB_SIZE` in `cognee/infrastructure/databases/graph/ladybug/adapter.py`),
+and keeps it open for the life of the process. While it stays open, ladybug's buffer manager uses up that 32 GiB of
+address space at a steady rate per turn pair written, although the file on disk grows far more slowly. When the space
+runs out, a checkpoint fails with `Buffer manager exception: Maximum database size of 34359738368 bytes has been
+reached`. It leaves `.wal.checkpoint`, an empty `.shadow` and the checkpoint lock files behind. From then on the store
+does not reopen. Every write and every retrieval fails with `Storage exception: Checksum verification failed, the WAL file
+is corrupted`, before and after a restart. No kill, stop or memory limit is involved.
+
+| Run (public BEAM dev text, one namespace) | `max_db_size` | First failed session | Turn pairs written before it | Graph file then |
+|---|---:|---:|---:|---:|
+| keyless, container limit 6g | 32 GiB (shipped) | 1,080 | 1,314 | 90 MB |
+| keyless, no container limit | 32 GiB (shipped) | 1,081 | 1,316 | |
+| keyless | 1 GiB (diagnostic) | 29 | 43 | 6.5 MB |
+| keyless, store restarted after session 20 | 1 GiB (diagnostic) | 55 | | |
+| metered, `gpt-4.1-mini` | 1 GiB (diagnostic) | 47 | 64 | |
+| metered, `gpt-4.1-mini` | 2 GiB (diagnostic) | 92 | 128 | |
+
+The smaller sizes were diagnostics only. Counted runs keep cognee's shipped settings. With real extraction the store
+takes about 64 turn pairs per GiB, so at the shipped 32 GiB it fails after about 2,050 turn pairs. That is about 1.9M
+tokens of BEAM text, roughly a sixth of a BEAM-10M conversation. A restart resets the count, so the limit applies to
+one process lifetime. cognee's own BEAM ingestion (`local_ingest.py`) also runs one process per conversation.
+
+What follows is also cognee's behavior. `cognify(datasets=[ns])` revisits every item of the dataset on each call
+and runs the pipeline again for any item not marked complete (incremental loading). With `raise_on_error=True`, the
+failed call leaves the later items incomplete too. So once one item fails, every later `/ingest` fails, and each one
+re-extracts all the sessions that failed before it. Keyless, chat calls per session rose from 2 to about 60 within 25
+sessions of the first failure. With a real provider the cost of each session grows in the same way until a lease runs
+out. A failure caused by the content behaves the same way: a forced provider refusal on one session made every later
+session fail, each after about 257 seconds of cognee's retries.
+
+Two more measurements bear on cost and time. Up to the failure, the work per turn pair does not grow with the store.
+Keyless, chat calls stay at 2.0 per pair and prompt size stays flat from 0 to 1,314 pairs. Metered, the same 67-session
+BEAM-100K dev conversation (`100k-11`) used 400k input and 123k output tokens when added to a namespace already
+holding 1,000 sessions, against 394k and 119k in an empty namespace. That is $0.0029 a pair at list price either way.
+Write time does grow: about 3.8 ms more per session for every session already stored (keyless, from 1.1 seconds a
+session at the start to 4.8 seconds at 1,000).
+
+Memory: the container peaked at 8.27 GB unconstrained at the failure, mostly cognee's vector worker (3.4 GB) and graph
+worker (1.3 GB). Under the old 6g limit it reached the limit at about session 1,050, 30 sessions before the failure,
+and recorded 6,673 `memory.max` events and no OOM kill. The failure came at the same session with and without the
+limit, so the limit did not cause it, but it left no headroom. The limit is now 12g.
+
+The sealed S1 shards (amendment A23) failed the same way. On c2, 4,893 of 6,227 sessions failed. Of the first 200,
+175 were cognee's `CognifyFailedError` (`'float' object has no attribute 'replace'`), 23 the WAL-checksum error, 1
+the size limit and 1 an `AttributeError`; then every retrieval failed on the WAL error. No graph-pipeline log has an
+exit 137, so the corruption came before any stop. Six shards spent their $65 lease on ingest, and three ingested for 62
+hours without finishing. The scoreboard reports the S1 cell as not run: three of ten shards measured past the 48-hour
+limit per conversation, and the store's own failures account for the rest.
+
 ## Known behavior worth measuring
 
 - After a delete, no chunk from the deleted session returns. Graph entities shared with a surviving session stay; in

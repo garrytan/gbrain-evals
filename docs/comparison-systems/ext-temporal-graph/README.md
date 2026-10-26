@@ -131,6 +131,34 @@ outcomes and the Phase 4 cost extrapolation. Its scores are setup evidence, not 
 
 ## Changelog
 
+### 2026-10-25: sealed S1 shards c8 and c9 (amendment A23)
+
+The custodian's logs put c8's and c9's failed sessions on the harness, not on graphiti. c8 failed 3,036 of 9,263
+sessions; the first 200 were all `RateLimitError` on the shared key's requests-per-minute limit for
+`text-embedding-3-large`. c9 failed 2,418 of 9,290; of the first 200, 186 were `socket connection closed
+unexpectedly` from the metering proxy's connection to the provider and 14 the same rate limit. On both, `/finish`
+failed the same way, so the readiness probe was skipped and every row was `ingest_degraded`. The metering proxy now
+holds a model's requests while the key's own rate-limit headers show 5% or less of its limit remaining, and sends a
+request again when its connection closes before any response. Every system's cells get both. No graphiti-core setting
+changed. Both shards rerun at A23.
+
+### 2026-10-16: shim memory growth fixed (amendment A23)
+
+The shim's process grew about 2 MB for every ingested session and never gave it back. The cause was the shim, not
+graphiti-core: each HTTP request runs on a new handler thread, a new thread starts with empty context variables, and
+pydantic keeps its cache of parametrized generic classes in a context variable. So every request built fresh copies of
+the openai client's parsed-response classes, and the old copies stayed in memory. graphiti-core called from one
+thread holds flat at about 150 MB. On a BEAM-10M conversation (7,000 to 9,000 sessions) the growth passes a 16 GB VM's
+free memory. The kernel then kills the shim, and every later session fails with a closed connection. `_run` now
+schedules each call in a copy of the context the adapter was built in, so all requests share one cache. Keyless, with
+the shim limited to 700 MB: the old shim was killed at session 273 and failed the remaining 127 of 400; the fixed shim
+stayed between 125 and 129 MB with 0 failures. No graphiti-core setting changed.
+
+The Neo4j service now mounts named volumes (`neo4j-data:/data`, `neo4j-logs:/logs`). The image declares both paths as
+anonymous volumes, which `bootstrap.sh snapshot` never saw, so a snapshot held nothing and a restore on a fresh VM
+would have started the graph empty. The snapshot now refuses anonymous volumes, and a resume treats a snapshot that
+lacks a declared volume as incomplete and ingests again.
+
 ### 2026-10-05: Phase 2 pilot, policy settings
 
 Added PILOT.md. Retrieval policies keep their knobs under `retrieval_policies.<mode>.settings` (PROTOCOL.md), offset-less

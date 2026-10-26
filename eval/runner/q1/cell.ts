@@ -85,7 +85,7 @@ import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Pha
 import { loadCorpus, type Corpus, type MemoryQuestion, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
-import { DEFAULT_MAX_ATTEMPTS, type Outcome } from '../memory-qa/outcomes.ts';
+import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa.ts';
 import { answerId, answerRecord, judgmentKey, readRecords, RecordLog, sha256, type AnswerRecord, type JudgmentRecord, type Q1Row } from '../memory-qa/records.ts';
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
@@ -99,7 +99,7 @@ import { FILE_AGENT_SYSTEM, FileAgentSystem, type AnsweringSystem } from '../sys
 import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
-import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
+import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
 import { definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, SETS, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type Selection } from './cells/definitions.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import { answerUsage, normalizeUsage, readerConvention } from './usage.ts';
@@ -118,6 +118,12 @@ const kindsSet = () => new Set((JSON.parse(readFileSync(join(REPO_ROOT, 'eval/sy
 const rel = (p: string) => relative(REPO_ROOT, p) || '.';
 const writeAtomic = (path: string, text: string) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(`${path}.tmp`, text); renameSync(`${path}.tmp`, path); };
 const readLines = <T>(path: string): T[] => existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).flatMap(l => { try { return [JSON.parse(l) as T]; } catch { return []; } }) : [];
+/** Why the system called its own answer a harness failure, from the error code and reason it returned (A23: 237 think answers recorded none). */
+const invalidReason = (a: OwnAnswer) => {
+  const r = (a.raw ?? {}) as { error_code?: unknown; raw?: { reason?: unknown; message?: unknown } };
+  const parts = [r.error_code && `error_code ${r.error_code}`, r.raw?.reason && `reason ${r.raw.reason}`, r.raw?.message && String(r.raw.message).slice(0, 200)].filter(Boolean);
+  return `the system classified its answer path as a harness failure${parts.length ? `: ${parts.join('; ')}` : ' and named no reason'}`;
+};
 const hashKey = (seed: string, id: string) => createHash('sha256').update(`${seed}\u0000${id}`).digest('hex');
 const pct = (xs: number[], p: number) => xs.length ? Math.round(percentile(xs, p) * 10) / 10 : null;
 
@@ -222,6 +228,18 @@ export interface CellOptions {
   snapshotTimeoutMs?: number;
   /** Test hook: stop (as if killed) after this many questions have been processed. */
   stopAfterQuestions?: number;
+  /**
+   * A23: answer again every `harness_invalid` answer (or every answer with one of `reanswerOutcomes`) whose last
+   * attempt was recorded before this instant (ISO 8601). Its conversation moves to a new realization (restored or
+   * ingested again) that carries every other record.
+   */
+  reanswerInvalidBefore?: string | null;
+  reanswerOutcomes?: Outcome[] | null;
+  /**
+   * A23: a realization ingested before this instant (ISO 8601) is never used or carried from. Its conversation is
+   * ingested again on a new store and every answer, judgment and retrieval is made again (a fresh rerun).
+   */
+  freshBefore?: string | null;
   env?: Record<string, string | undefined>;
 }
 
@@ -583,6 +601,19 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const invalidReasons: string[] = [];
   const live = new Set<string>();
   const restored = env.SHOOTOUT_RESTORED_REALIZATION || null;
+  const reanswerBefore = opts.reanswerInvalidBefore ? Date.parse(opts.reanswerInvalidBefore) : null;
+  const reanswerOutcomes = new Set<Outcome>(opts.reanswerOutcomes?.length ? opts.reanswerOutcomes : ['harness_invalid']);
+  const freshBefore = opts.freshBefore ? Date.parse(opts.freshBefore) : null;
+  /** A23: a realization a fresh rerun excludes, by when it was ingested. */
+  const stale = (rid: string): boolean => freshBefore !== null && staging.events().some(e => e.realization_id === rid && e.event === 'ingested' && Date.parse(e.at) < freshBefore);
+  /** A23: the answers of a realization that a ruling sends back to be answered again. */
+  const reanswerTargets = (rid: string): Set<string> => {
+    if (reanswerBefore === null) return new Set();
+    const dir = staging.dir(rid);
+    const last = new Map<string, number>();
+    for (const t of readLines<{ answer_id: string; at: string }>(join(dir, 'answer-attempts.ndjson'))) last.set(t.answer_id, Date.parse(t.at));
+    return new Set(readRecords(join(dir, 'answers.ndjson'), 'answer').filter(a => reanswerOutcomes.has(a.outcome) && (last.get(a.answer_id) ?? 0) < reanswerBefore).map(a => a.answer_id));
+  };
   const byConv = new Map(corpus.conversations.map(c => [c.id, c]));
   const qById = new Map(selected.map(q => [q.id, q]));
   const policies = [...new Set(arms.map(a => a.policy).filter((p): p is RetrievalPolicy['mode'] => !!p))];
@@ -619,14 +650,23 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   try {
     for (const convId of convIds) {
       const prior = staging.latest(convId);
-      if (prior?.state === 'ingested' && restored) {
+      const fresh = prior?.state === 'ingested' && stale(prior.id);
+      if (fresh && restored) throw refuse({ code: 'USAGE', message: `${def.id}: conversation ${convId} is rerun fresh (--fresh-before ${opts.freshBefore}), and the launcher restored a snapshot`,
+        why: 'a fresh rerun ingests on an empty store; ingesting on top of a restored store would double the conversation',
+        fix: { next: 'report', user_message: 'launch this unit without a restored snapshot' } });
+      const redo = prior?.state === 'ingested' && !fresh ? reanswerTargets(prior.id) : new Set<string>();
+      if (prior?.state === 'ingested' && !fresh && restored && !redo.size) {
         realizations.set(convId, prior.id); live.add(prior.id);
         continue;
       }
       if (prior?.state === 'ingested') {
         const need = pendingOn(prior.id, convId);
-        if (!need.store || live.has(prior.id)) { realizations.set(convId, prior.id); continue; }
-        staging.event({ realization_id: prior.id, conversation: convId, attempt: prior.attempt, event: 'invalidated', at: new Date().toISOString(), reason: 'the store behind this realization is gone (new process, no restored snapshot) and store work is pending; the whole conversation is ingested again, and its answers, judgments and final retrievals are carried forward (A22)' });
+        if (!fresh && !redo.size && (!need.store || live.has(prior.id))) { realizations.set(convId, prior.id); continue; }
+        staging.event({ realization_id: prior.id, conversation: convId, attempt: prior.attempt, event: 'invalidated', at: new Date().toISOString(), reason: fresh
+          ? `ingested before ${opts.freshBefore}; a ruling reruns the conversation fresh (A23), so nothing is carried from it`
+          : redo.size
+          ? `${redo.size} ${[...reanswerOutcomes].join('/')} answer(s) recorded before ${opts.reanswerInvalidBefore} are answered again under a ruling (A23); every other answer, judgment and final retrieval is carried forward`
+          : 'the store behind this realization is gone (new process, no restored snapshot) and store work is pending; the whole conversation is ingested again, and its answers, judgments and final retrievals are carried forward (A22)' });
       } else if (prior?.state === 'started') {
         staging.event({ realization_id: prior.id, conversation: convId, attempt: prior.attempt, event: 'invalidated', at: new Date().toISOString(), reason: 'ingest was interrupted; a conversation is never partly re-ingested' });
       }
@@ -635,12 +675,13 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       if (restored) {
         staging.event({ realization_id: rid, conversation: convId, attempt, event: 'started', at: new Date().toISOString() });
         staging.event({ realization_id: rid, conversation: convId, attempt, event: 'ingested', at: new Date().toISOString(), restored_from: restored });
+        if (redo.size) carryForward(convId, rid, attempt, redo);
         realizations.set(convId, rid); live.add(rid);
         continue;
       }
       const ingest = await ingestConversation(rid, convId, attempt);
       if (ingest === 'stopped') break;
-      carryForward(convId, rid, attempt);
+      carryForward(convId, rid, attempt, redo);
       realizations.set(convId, rid); live.add(rid);
     }
     if (!stopped) {
@@ -929,6 +970,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           if (!a) { appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: 0, provider_input_tokens: null }), String((res.error as Error)?.message)); continue; }
           extra.fit = { ...(extra.fit ?? {}), [rd]: { fits: a.fit.fits, prompt_tokens: a.fit.prompt_tokens, max_input_tokens: a.fit.max_input_tokens, tokenizer: a.fit.tokenizer } };
           appendAnswer(answerRecord(id, { text: a.text, outcome: a.outcome === 'scored' && degraded ? 'ingest_degraded' : a.outcome, usage: a.usage, latency_ms: Math.round(a.latency_ms), provider_input_tokens: a.provider_input_tokens || null }), a.error);
+          if (a.outcome === 'budget_not_run') stopped = `budget: ${String(a.error).slice(0, 200)}`;
           continue;
         }
         if (arm.mode === 'own-answer') {
@@ -938,6 +980,13 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           await meter.phase(slot, 'query');
           const res = await meter.around(slot, `own:${aid.slice(0, 16)}`, 'reader', () => (system as OwnAnswerSystem).answer(ns, pq, { mode: arm.variant!, model: own ? null : rd }));
           await meter.phase(slot, null);
+          const leaseRefusals = res.meter?.refused?.budget ?? 0;
+          if (leaseRefusals) {
+            const why = `budget: the metering proxy refused ${leaseRefusals} of the system's own provider call(s) during its answer (lease exhausted); the system answers that refusal as its own failure, so the answer is not a measurement`;
+            stopped = why;
+            appendAnswer(answerRecord(id, { text: '', outcome: 'budget_not_run', usage: zero, latency_ms: Math.round(performance.now() - t0), provider_input_tokens: null }), why);
+            continue;
+          }
           if (res.error !== undefined) {
             if (res.error instanceof SanitizerLeakError) invalidReasons.push(`sanitizer tripwire during an own answer: ${res.error.message}`);
             const f = failureRow({ id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length }, res.error);
@@ -952,7 +1001,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           extra.own_answer = { ...(extra.own_answer ?? {}), [rd]: { degraded: a.degraded, model: a.model, cited: cited.length, cited_gold: gold.size ? cited.filter(s => gold.has(s)).length / gold.size : null } };
           const outcome = drift || a.outcome === 'harness_invalid' ? 'harness_invalid' as const : degraded ? 'ingest_degraded' as const : 'scored' as const;
           appendAnswer(answerRecord(id, { text: a.text, outcome, usage: { ...zero, input: a.usage.input, output: a.usage.output }, latency_ms: Math.round(a.service_ms ?? performance.now() - t0), provider_input_tokens: null,
-            ...(a.degraded ? { stop_reason: a.degraded } : {}), ...(a.usd !== null ? { usd: a.usd } : {}) }), drift ?? (a.outcome === 'harness_invalid' ? 'the system classified its answer path as a harness failure' : undefined));
+            ...(a.degraded ? { stop_reason: a.degraded } : {}), ...(a.usd !== null ? { usd: a.usd } : {}) }), drift ?? (a.outcome === 'harness_invalid' ? invalidReason(a) : undefined));
           continue;
         }
         const pq = sanitizer.question(q, lastEventTime);
@@ -1024,19 +1073,20 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
    * copied into the new realization, so no answered question is asked again and only missing work runs on the new
    * store. The new realization's ingested event names the source and the counts.
    */
-  function carryForward(convId: string, rid: string, attempt: number) {
-    const earlier = [...new Set(staging.events().filter(e => e.conversation === convId && e.event === 'ingested' && e.realization_id !== rid).map(e => e.realization_id))].at(-1);
+  function carryForward(convId: string, rid: string, attempt: number, drop: Set<string> = new Set()) {
+    const earlier = [...new Set(staging.events().filter(e => e.conversation === convId && e.event === 'ingested' && e.realization_id !== rid).map(e => e.realization_id))].filter(r => !stale(r)).at(-1);
     if (!earlier) return;
     const from = staging.dir(earlier), to = staging.dir(rid);
-    const answersIn = readRecords(join(from, 'answers.ndjson'), 'answer');
-    const judgmentsIn = readRecords(join(from, 'judgments.ndjson'), 'judgment');
+    const answersIn = readRecords(join(from, 'answers.ndjson'), 'answer').filter(a => !drop.has(a.answer_id));
+    const judgmentsIn = readRecords(join(from, 'judgments.ndjson'), 'judgment').filter(j => !drop.has(j.answer_id));
     const kept = [...latestBy<StagedRetrieval>(join(from, 'retrievals.ndjson'), r => r.key).values()].filter(r => FINAL.has(r.outcome) || r.attempt >= maxAttempts).map(r => ({ ...r, realization_id: r.realization_id ?? earlier }));
     if (!answersIn.length && !judgmentsIn.length && !kept.length) return;
     const answerLog = new RecordLog(join(to, 'answers.ndjson'), 'answer');
     for (const a of answersIn) answerLog.append(a);
     const judgmentLog = new RecordLog(join(to, 'judgments.ndjson'), 'judgment');
     for (const j of judgmentsIn) judgmentLog.append(j);
-    if (existsSync(join(from, 'answer-attempts.ndjson'))) appendFileSync(join(to, 'answer-attempts.ndjson'), readFileSync(join(from, 'answer-attempts.ndjson'), 'utf8'));
+    const tries = readLines<{ answer_id: string }>(join(from, 'answer-attempts.ndjson')).filter(t => !drop.has(t.answer_id));
+    if (tries.length) appendFileSync(join(to, 'answer-attempts.ndjson'), tries.map(t => JSON.stringify(t) + '\n').join(''));
     if (kept.length) appendFileSync(join(to, 'retrievals.ndjson'), kept.map(r => JSON.stringify(r) + '\n').join(''));
     staging.event({ realization_id: rid, conversation: convId, attempt, event: 'ingested', at: new Date().toISOString(), carried_from: earlier, carried: { answers: answersIn.length, judgments: judgmentsIn.length, retrievals: kept.length } });
   }
@@ -1218,7 +1268,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
   const waveOf = new Map(t1Units.map((u, k) => [`${u.c.id}|${u.i}`, Math.floor(k / perWave) + 1]));
   const spec = (c: CellDefinition, i: number, smoke: boolean): CellSpec => {
     const id = `${c.id}${c.shards > 1 ? `.c${i}` : ''}`;
-    const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
+    const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), ...(c.reanswer_invalid_before ? ['--reanswer-invalid-before', c.reanswer_invalid_before.at, ...(c.reanswer_invalid_before.outcomes ? ['--reanswer-outcomes', c.reanswer_invalid_before.outcomes.join(',')] : [])] : []), ...(c.fresh_before?.shards.includes(i) ? ['--fresh-before', c.fresh_before.at] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
     const providers: Array<keyof typeof PROVIDER_KEYS> = c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'];
     const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
@@ -1276,6 +1326,15 @@ export function findCell(id: string, m: Manifest = loadManifest()): CellDefiniti
   if (c) return c;
   const near = [...m.cells, ...(m.smoke_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
   throw refuse({ code: 'USAGE', message: `no cell ${id} in ${rel(MANIFEST_PATH)}`, why: 'run, show and merge take a cell id from the generated manifest', fix: { next: 'run', argv: [...FRONT, 'plan'], user_message: near.length ? `did you mean ${near.join(', ')}?` : 'list the cells with plan' } });
+}
+
+/** `--reanswer-outcomes harness_invalid,reader_error`: the outcomes a ruling sends back (default harness_invalid). */
+function reanswerOutcomes(raw: string | undefined): Outcome[] | null {
+  if (!raw) return null;
+  const list = raw.split(',');
+  const bad = list.filter(o => !(OUTCOMES as readonly string[]).includes(o) || FINAL.has(o as Outcome));
+  if (bad.length) throw refuse(usage(`--reanswer-outcomes takes failure outcomes only; ${bad.join(', ')} is not one`));
+  return list as Outcome[];
 }
 
 const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message, why: 'the cell runner has four subcommands: plan, show, run, merge', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
@@ -1344,7 +1403,8 @@ export async function main(argv: string[]): Promise<number> {
     if (!Number.isInteger(si) || !Number.isInteger(sn) || sn < 1 || si < 0 || si >= sn) throw refuse(usage('--shard must look like i/n with 0 <= i < n'));
     const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy,
       maxAttempts: one('--max-attempts') ? Number(one('--max-attempts')) : undefined, frontier: !argv.includes('--no-frontier'),
-      finishTimeoutS: one('--finish-timeout-s') ? Number(one('--finish-timeout-s')) : undefined, probeTimeoutMs: one('--probe-timeout-s') ? Number(one('--probe-timeout-s')) * 1000 : undefined });
+      finishTimeoutS: one('--finish-timeout-s') ? Number(one('--finish-timeout-s')) : undefined, probeTimeoutMs: one('--probe-timeout-s') ? Number(one('--probe-timeout-s')) * 1000 : undefined,
+      reanswerInvalidBefore: one('--reanswer-invalid-before') ?? null, reanswerOutcomes: reanswerOutcomes(one('--reanswer-outcomes')), freshBefore: one('--fresh-before') ?? null });
     const agg = one('--aggregates');
     if (agg) writeAtomic(resolve(agg), JSON.stringify(cellAggregates(result.arms), null, 2) + '\n');
     // A22: a shard is judged on its own share; the whole cell's status needs every shard (merge).

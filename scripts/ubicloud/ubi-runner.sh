@@ -16,6 +16,8 @@
 # dropped session is retried instead of killing the command; an exit before the command ended (a signal, a
 # timeout) stops the command and pulls its output before the VM is destroyed. A VM unreachable for
 # UBI_FOLLOW_LOST_SECONDS is left running (exit 255) for a reattach watcher.
+# A final pull that still fails after UBI_PULL_TRIES tries keeps the VM too (exit 253), so its output can be pulled
+# again; a push or sync is retried UBI_PUSH_TRIES times.
 # Needs only bash, curl, python3, ssh, ssh-keygen, and tar locally, so it works
 # from dev boxes, containers, and cloud sandboxes.
 #
@@ -51,6 +53,10 @@ FOLLOW_EVERY="${UBI_FOLLOW_SECONDS:-15}"
 FOLLOW_LOST="${UBI_FOLLOW_LOST_SECONDS:-3600}"
 STOP_WAIT="${UBI_STOP_WAIT_SECONDS:-600}"
 PULL_TIMEOUT="${UBI_PULL_TIMEOUT_SECONDS:-1800}"
+# A23: a final pull is tried UBI_PULL_TRIES times before the VM is kept for a later pull (exit 253), and a push or
+# sync whose stream fails (the custodian saw "tar: Write error") UBI_PUSH_TRIES times.
+PULL_TRIES="${UBI_PULL_TRIES:-3}"
+PUSH_TRIES="${UBI_PUSH_TRIES:-3}"
 PREFIX="ubirun"
 # macOS tar would otherwise add AppleDouble (._*) entries for extended attributes to every archive it writes.
 export COPYFILE_DISABLE=1
@@ -115,6 +121,19 @@ cli() {
 
 state_dir() { echo "$STATE_ROOT/$1"; }
 
+# ctl_path DIR: the ssh ControlMaster socket of the VM whose state is DIR. A socket path holds at most 104 bytes on
+# macOS (108 on Linux), and ssh first binds a temporary name 17 bytes longer, so a long state root or VM name (the
+# custodian's keep2 runner, A23) breaks every ssh call. A path that would not fit moves to a short per-user directory,
+# named by a hash of DIR.
+ctl_path() {
+  local p="$1/ctl" d h
+  if [ ${#p} -le 80 ]; then echo "$p"; return; fi
+  d="/tmp/ubi-ctl-$(id -u)"
+  mkdir -p "$d" && chmod 700 "$d"
+  if command -v sha256sum >/dev/null 2>&1; then h=$(printf %s "$1" | sha256sum); else h=$(printf %s "$1" | shasum -a 256); fi
+  echo "$d/${h:0:32}"
+}
+
 load() {
   local dir
   dir=$(state_dir "$1")
@@ -127,7 +146,7 @@ load() {
 ssh_opts() {
   echo -i "$KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
     -o LogLevel=ERROR -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=10 \
-    -o ControlMaster=auto -o "ControlPath=$(dirname "$KEY")/ctl" -o ControlPersist=300
+    -o ControlMaster=auto -o "ControlPath=$(ctl_path "$(dirname "$KEY")")" -o ControlPersist=300
 }
 
 # Ubuntu's default umask (002) leaves new directories group-writable, which
@@ -304,7 +323,7 @@ cmd_down() {
   if [ -f "$dir/env" ]; then
     load "$name"
     loc=$LOCATION
-    if [ -S "$dir/ctl" ] && [ -n "$IP" ]; then
+    if [ -S "$(ctl_path "$dir")" ] && [ -n "$IP" ]; then
       # shellcheck disable=SC2046
       ssh $(ssh_opts) -O exit "ubi@$IP" >/dev/null 2>&1 || true
     fi
@@ -379,23 +398,41 @@ cmd_unpack() {
 cmd_push() {
   local name=$1 src=$2 dest=$3 list=${4:-} qdest
   [ -d "$src" ] || die "push: $src is not a directory"
+  [ -z "$list" ] || [ -f "$list" ] || die "push: list file $list not found"
   qdest=$(printf %q "$dest")
-  if [ -n "$list" ]; then
-    [ -f "$list" ] || die "push: list file $list not found"
-    tar -C "$src" -T "$list" -czf -
-  else
-    tar -C "$src" -czf - .
-  fi | remote "$name" "umask 077 && rm -rf $qdest && mkdir -p $qdest && tar -xzf - -C $qdest" || die "push to $dest failed"
+  retry_stream "push to $dest" push_once "$name" "$src" "$qdest" "$list" || die "push to $dest failed after $PUSH_TRIES attempts"
   log "pushed ${list:+$(grep -c . "$list") listed file(s) from }$src -> $name:$dest"
+}
+
+push_once() {
+  local name=$1 src=$2 qdest=$3 list=$4
+  ( set -o pipefail
+    if [ -n "$list" ]; then tar -C "$src" -T "$list" -czf -; else tar -C "$src" -czf - .; fi \
+      | remote "$name" "umask 077 && rm -rf $qdest && mkdir -p $qdest && tar -xzf - -C $qdest" )
+}
+
+# retry_stream LABEL COMMAND...: run a whole tar stream again when either end fails. Each attempt replaces what the
+# last one wrote, so a stream cut short ("tar: Write error", a dropped session) leaves nothing half-written behind.
+retry_stream() {
+  local label=$1 try; shift
+  for (( try = 1; try <= PUSH_TRIES; try++ )); do
+    "$@" && return 0
+    [ "$try" -lt "$PUSH_TRIES" ] || break
+    log "$label failed (attempt $try of $PUSH_TRIES); retrying in $(( try * 10 ))s"
+    sleep $(( try * 10 ))
+  done
+  return 1
 }
 
 cmd_sync() {
   local name=$1 src=${2:-.} dest=${3:-}
   src=$(cd "$src" && pwd)
   [ -n "$dest" ] || dest="work/$(basename "$src")"
-  cmd_pack "$src" | cmd_unpack "$name" "$dest"
+  retry_stream "sync to $dest" sync_once "$name" "$src" "$dest" || die "sync to $dest failed after $PUSH_TRIES attempts"
   log "synced $src -> $name:$dest"
 }
+
+sync_once() { ( set -o pipefail; cmd_pack "$2" | cmd_unpack "$1" "$3" ); }
 
 # pull NAME REMOTE_GLOB LOCAL_DIR: copy matching remote entries into LOCAL_DIR.
 # Relative remote paths start at /home/ubi.
@@ -425,13 +462,22 @@ pull_lock() {
 # stream arrived and both tar ends exited 0, so a pull cut short (a VM destroyed mid-transfer, a dropped session)
 # leaves the previous copy untouched instead of truncated files.
 cmd_pull() {
-  local name=$1 from=$2 to=$3 dir rc=0 tmp e
+  local name=$1 from=$2 to=$3 dir rc=0 tmp e job
   dir=$(state_dir "$name")
   [ -f "$dir/env" ] || die "no local state for VM '$name' (created on another machine?)"
   pull_lock "$dir" || { log "pull of $from skipped: the run's final pull of $name has begun"; return 0; }
   mkdir -p "$to"
   tmp=$(mktemp -d "$to/.pull-XXXXXX")
-  ( set -o pipefail; remote "$name" "cd $(printf %q "$(dirname "$from")") && tar -czf - $(basename "$from")" | tar -xzf - -C "$tmp" ) || rc=$?
+  # The transfer runs in its own process group. Stopped by a signal (with_timeout, A23), the pull ends that whole group
+  # (ssh, tar and their children) and removes its scratch copy and lock; killed alone, they ran on as orphans writing
+  # into the scratch directory.
+  set -m
+  ( set -o pipefail; remote "$name" "cd $(printf %q "$(dirname "$from")") && tar -czf - $(basename "$from")" | tar -xzf - -C "$tmp" ) &
+  job=$!
+  set +m
+  trap 'kill -TERM -- "-$job" 2>/dev/null || true; wait "$job" 2>/dev/null || true; rm -rf "$tmp" "$dir/pull.lock"; exit 143' TERM INT
+  wait "$job" || rc=$?
+  trap - TERM INT
   if [ "$rc" = 0 ]; then
     for e in "$tmp"/* "$tmp"/.[!.]*; do
       [ -e "$e" ] || [ -L "$e" ] || continue
@@ -505,16 +551,30 @@ with_timeout() {
   return "$rc"
 }
 
-# final_pulls: the run's --pull list, each under the VM's pull lock and at most UBI_PULL_TIMEOUT_SECONDS.
+# final_pulls: the run's --pull list, each under the VM's pull lock and at most UBI_PULL_TIMEOUT_SECONDS a try, tried
+# UBI_PULL_TRIES times. When one still fails, the VM is kept (never destroyed with output not yet brought back, A23) and
+# final_pulls returns 1; pull it again with `pull`, then `down`.
 final_pulls() {
-  local p
+  local p try ok failed=0
   if [ ${#RUN_PULLS[@]} -gt 0 ]; then
     touch "$(state_dir "$RUN_VM")/final-pull"
     for p in "${RUN_PULLS[@]}"; do
-      UBI_FINAL_PULL=1 with_timeout "$PULL_TIMEOUT" cmd_pull "$RUN_VM" "${p%%:*}" "${p#*:}" || log "pull failed: $p"
+      ok=0
+      for (( try = 1; try <= PULL_TRIES; try++ )); do
+        if UBI_FINAL_PULL=1 with_timeout "$PULL_TIMEOUT" cmd_pull "$RUN_VM" "${p%%:*}" "${p#*:}"; then ok=1; break; fi
+        [ "$try" -lt "$PULL_TRIES" ] || break
+        log "final pull of ${p%%:*} failed (attempt $try of $PULL_TRIES); retrying in $(( try * 30 ))s"
+        sleep $(( try * 30 ))
+      done
+      [ "$ok" = 1 ] || { failed=1; log "pull failed after $PULL_TRIES attempts: $p"; }
     done
   fi
   RUN_PULLED=1
+  [ "$failed" = 1 ] || return 0
+  RUN_KEEP=1
+  rm -f "$(state_dir "$RUN_VM")/final-pull"
+  log "keeping $RUN_VM because its output did not come back; pull it with: $0 pull $RUN_VM <remote> <local dir>, then destroy it with: $0 down $RUN_VM"
+  return 1
 }
 
 # run_exit: the run's EXIT handler. When the command had started and its final pulls had not, it stops the command
@@ -595,7 +655,7 @@ cmd_run() {
   fi
   log "command exited $rc after $(( $(date +%s) - start ))s"
 
-  final_pulls
+  final_pulls || return 253
   [ "$keep" = 0 ] || rm -f "$(state_dir "$name")/final-pull"
   return "$rc"
 }

@@ -17,12 +17,11 @@
  * runs as `uv run --no-project --python 3.12 --with pyarrow==21.0.0 python`;
  * GBRAIN_EVALS_BEAM10M_PYTHON names another Python that has pyarrow.
  */
-import { createHash } from 'node:crypto';
 import { createWriteStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { decideError, DecideError, exitCodeFor, renderOperatorMessage, type OperatorMessage } from '../decisions/errors.ts';
-import { appendAccessLog } from '../sealed-confirmation-lib.ts';
+import { appendAccessLog, sha256File } from '../sealed-confirmation-lib.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const MANIFEST_PATH = join(REPO_ROOT, 'eval/decisions/datasets/beam-10m-9b20961.json');
@@ -36,7 +35,7 @@ export interface Beam10mManifest {
   filled: null | { at: string; hub_lfs_verified: boolean; conversation_id_source: string };
 }
 
-const fileSha = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex');
+const fileSha = sha256File;
 const FETCH = ['bun', 'eval/runner/q1/beam10m-manifest.ts', 'fetch'];
 
 /** Hub LFS SHA-256 per shard path at the pinned revision (public listing; no data). */

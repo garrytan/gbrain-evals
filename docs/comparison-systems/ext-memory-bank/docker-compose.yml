@@ -21,6 +21,11 @@ services:
     # Docker's 64 MB default /dev/shm makes parallel queries fail ("could not resize shared memory segment"), which
     # surfaces as HTTP 500 on bank creates under load.
     shm_size: 1g
+    # The image declares VOLUME /var/lib/postgresql (PGDATA is /var/lib/postgresql/18/docker). Without a named volume
+    # Docker makes it anonymous, bootstrap.sh snapshot never sees it, and a restore on a fresh VM starts every bank
+    # empty (amendment A23: `recall` answered 404 "Bank ... not found" on the S1 c1 resume).
+    volumes:
+      - db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hindsight -d hindsight"]
       interval: 2s
@@ -73,3 +78,6 @@ services:
 networks:
   internal: { internal: true }
   outside: {}
+
+volumes:
+  db-data: {}

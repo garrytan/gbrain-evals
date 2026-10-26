@@ -363,6 +363,9 @@ export type ProbeResult = 'found' | 'missed' | 'not-measurable' | 'skipped';
 /** One failed session: its opaque source id, the error kind and the message (never a request body). */
 export interface IngestError { source_id: string; kind: string; message: string }
 
+/** The readiness probe's passage starts within this many characters of its session's opening (about 200 tokens; A23). */
+export const PROBE_WINDOW_CHARS = 800;
+
 /**
  * Readiness probe (engineering review P2): after the system reports its
  * background work done, ask for a verbatim passage of the last session it
@@ -370,11 +373,20 @@ export interface IngestError { source_id: string; kind: string; message: string 
  * quiescence signal lied, so the conversation is ingest-degraded. A vendor
  * error on the probe is retried once, then counts as a miss. Systems
  * without provenance, and the context controls, cannot be probed this way.
+ *
+ * The passage opens the longest turn that starts within the session's first
+ * PROBE_WINDOW_CHARS characters (amendment A23). The probe asks whether the
+ * session landed, not how well the system retrieves: a passage from deep in a
+ * long session tested a system whose embedder reads only a session's opening
+ * tokens (about 256) for its retrieval, and its misses were reported as ingest
+ * failures with 0 failed sessions.
  */
 export async function readinessProbe(system: MemorySystem, ns: string, last: SessionInput | undefined, policy: RetrievalPolicy, capabilities: CapabilityRecord): Promise<ProbeResult> {
   if (!last) return 'skipped';
   if (capabilities.retrieval_metrics === 'not-applicable' || capabilities.provenance?.status === 'unavailable') return 'not-measurable';
-  const passage = [...last.turns].sort((x, y) => y.content.length - x.content.length)[0]?.content.slice(0, 300);
+  let offset = 0;
+  const early = last.turns.filter(t => { const starts = offset; offset += t.content.length; return starts < PROBE_WINDOW_CHARS; });
+  const passage = [...early].sort((x, y) => y.content.length - x.content.length)[0]?.content.slice(0, 300);
   if (!passage?.trim()) return 'skipped';
   for (let attempt = 0; attempt < 2; attempt++) {
     try {

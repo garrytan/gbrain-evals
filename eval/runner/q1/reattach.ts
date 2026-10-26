@@ -55,6 +55,9 @@ const probe = (vm: string, out: string) => ubi('ssh', vm, [
   `echo "state $s $r $l $o $m"`,
 ].join('; '));
 
+/** ubi-runner exits that leave the VM running for this watcher: 255 lost its session, 253 kept it after a failed final pull. */
+const KEPT_VM = new Set([253, 255]);
+
 const lastPull = new Map<string, number>();
 const lastProgress = new Map<string, number>();
 
@@ -135,8 +138,9 @@ function step(c: Campaign, l: LeaseState): Phase {
 
 for (;;) {
   const c = new Campaign(manifest, state);
-  // A launcher that lost its VM's session (ubi-runner exit 255) leaves the lease finished but unsettled, the VM running.
-  const open = c.leases().filter(l => (l.status === 'launched' || (l.status === 'finished' && l.exit_code === 255)) && !final.has(l.lease_id));
+  // A launcher that lost its VM's session (ubi-runner exit 255), or whose final pull kept failing (exit 253, A23), leaves
+  // the lease finished but unsettled and the VM running.
+  const open = c.leases().filter(l => (l.status === 'launched' || (l.status === 'finished' && KEPT_VM.has(l.exit_code ?? 0))) && !final.has(l.lease_id));
   const report: Record<string, Phase> = {};
   for (const l of open) {
     let ph: Phase;
@@ -148,7 +152,7 @@ for (;;) {
   const line = { at: new Date().toISOString(), ...report };
   console.log(JSON.stringify(line));
   writeFileSync(join(state, 'reattach.json'), JSON.stringify(line, null, 2) + '\n');
-  const pending = c.leases().filter(l => (l.status === 'launched' || (l.status === 'finished' && l.exit_code === 255)) && !final.has(l.lease_id)).length;
+  const pending = c.leases().filter(l => (l.status === 'launched' || (l.status === 'finished' && KEPT_VM.has(l.exit_code ?? 0))) && !final.has(l.lease_id)).length;
   if (argv.includes('--once') || !pending || Date.now() + 60_000 > deadline) break;
   await Bun.sleep(Math.min(120_000, Math.max(0, deadline - Date.now())));
 }

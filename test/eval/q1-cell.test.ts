@@ -12,7 +12,7 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { campaignCells, campaignManifest, cellAggregates, contextKey, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, scoreboardCampaignCell, selectCellQuestions, type CellDeps, type CellResult } from '../../eval/runner/q1/cell.ts';
+import { campaignCells, campaignManifest, cellAggregates, contextKey, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, scoreboardCampaignCell, selectCellQuestions, type CellDeps, type CellOptions, type CellResult } from '../../eval/runner/q1/cell.ts';
 import { buildManifest, definitionProblems, estimateCell, loadManifest, manifestText, MANIFEST_PATH, SETS, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { classifyV2, CLASSIFIER_VERSION_V2, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
@@ -277,6 +277,59 @@ describe('whole-system arms through the cell runner', () => {
     expect(ndjson(join(dir, 'rows.ndjson'))[0].fit[READERS[0]].fits).toBe(false);
   });
 
+  test('full context: a gpt-6.1-sol whole-history reading reserves its stated 2,048 output tokens; the reservation is the input bound at the long-context cache-write rate, about $5.36 for 3.2 MB (A23: the $1.37 S2b lease refused it)', async () => {
+    const { priceRequest, reservationUsd } = await import('../../eval/runner/budget-ledger.ts');
+    const prompt = 'x'.repeat(3_200_000);
+    const body = { model: 'gpt-6.1-sol', messages: [{ role: 'user', content: prompt }], n: 1, max_completion_tokens: 2048, reasoning_effort: 'medium', prompt_cache_key: 'k' };
+    const price = priceRequest('https://api.openai.com/v1/chat/completions', body)!;
+    expect(price.maxOutputTokens).toBe(2048);
+    expect(reservationUsd(price)).toBeCloseTo(1_066_683 * 5 / 1e6 + 2048 * 15 / 1e6, 2);
+    expect(reservationUsd(price)).toBeGreaterThan(1.37);
+  });
+
+  test('full context: a lease refusal (402 budget) is budget_not_run and stops the cell, never a reader_error (A23)', async () => {
+    const def = cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context' }], { configuration: 'baseline' });
+    const out = join(tmp, 'full-budget');
+    let refused = 0;
+    const fetchImpl = (async (url: string) => {
+      if (String(url).includes('anthropic')) return Response.json({ content: [{ type: 'text', text: 'x' }], usage: { input_tokens: 10, output_tokens: 3 } });
+      refused++;
+      return Response.json({ error: { kind: 'budget', message: 'reserving $3.69 would take this run to $3.70, over its $1.37 budget' } }, { status: 402 });
+    }) as unknown as typeof fetch;
+    const res = await runCell(def, { out, maxAttempts: 1, ...quiet }, { corpus, system: new FullContextSystem('whole-history'), judge: scriptedJudge(), fullContextFetch: fetchImpl });
+    expect(res.status).toBe('partial');
+    expect(res.stopped).toMatch(/^budget: openai 402/);
+    const answers = ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+    expect(answers.filter(a => a.outcome === 'reader_error')).toEqual([]);
+    expect(answers.filter(a => a.outcome === 'budget_not_run').map(a => a.reader)).toEqual(['openai:gpt-6.1-sol']);
+    expect(refused).toBe(1);
+  });
+
+  test('A23: --reanswer-outcomes reader_error answers again the full-context readings the A22 runner recorded as reader_error, and keeps every other answer', async () => {
+    const def = cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context' }], { configuration: 'baseline' });
+    const out = join(tmp, 'full-reanswer');
+    let failing = true, sol = 0, claude = 0;
+    const fetchImpl = (async (url: string) => {
+      if (String(url).includes('anthropic')) { claude++; return Response.json({ content: [{ type: 'text', text: 'x' }], usage: { input_tokens: 10, output_tokens: 3 } }); }
+      sol++;
+      return failing ? Response.json({ error: { message: 'unsupported parameter' } }, { status: 400 }) : Response.json({ choices: [{ message: { content: 'x' } }], usage: { prompt_tokens: 10, completion_tokens: 3 } });
+    }) as unknown as typeof fetch;
+    const run = (extra: Partial<CellOptions> = {}) => runCell(def, { out, maxAttempts: 1, ...quiet, ...extra }, { corpus, system: new FullContextSystem('whole-history'), judge: scriptedJudge(), fullContextFetch: fetchImpl });
+    await run();
+    const outcomes = () => ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => [a.reader, a.outcome]);
+    const errors = outcomes().filter(([, o]) => o === 'reader_error');
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.every(([r]) => r === 'openai:gpt-6.1-sol')).toBe(true);
+    const [solBefore, claudeBefore] = [sol, claude];
+    failing = false;
+    await run({ reanswerInvalidBefore: new Date(Date.now() + 3_600_000).toISOString() });
+    expect(sol).toBe(solBefore);
+    await run({ reanswerInvalidBefore: new Date(Date.now() + 3_600_000).toISOString(), reanswerOutcomes: ['reader_error'] });
+    expect(sol - solBefore).toBe(errors.length);
+    expect(claude).toBe(claudeBefore);
+    expect(outcomes().filter(([, o]) => o === 'reader_error')).toEqual([]);
+  });
+
   test('full context: a history that fits is read whole, cached per conversation, and judged', async () => {
     const def = cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context' }], { configuration: 'baseline' });
     const out = join(tmp, 'full-fit');
@@ -397,6 +450,42 @@ describe('resume', () => {
       expect(reader.calls).toHaveLength((15 - 7) * 3);
       const events = ndjson(join(out, 'runs', def.id, 'realizations.ndjson'));
       expect(events.some(e => e.event === 'invalidated')).toBe(false);
+    } finally { server.stop(); }
+  });
+
+  test('A23: --fresh-before reruns a conversation fresh: ingested again, every question asked again, nothing carried from a realization ingested before the cutoff, even after an interrupted fresh run; a restored snapshot is refused', async () => {
+    const fake = new FakeMemorySystem();
+    let ingests = 0;
+    const ingest = fake.ingestSession.bind(fake);
+    fake.ingestSession = async (ns, s, t) => { ingests++; return ingest(ns, s, t); };
+    const server = serveProtocol(fake);
+    try {
+      const def = cellDef('ext-memory-bank', 'shim', [component({ reader_replicates: {} })]);
+      const out = join(tmp, 'a23-fresh');
+      const run = (reader: ReturnType<typeof scriptedReader>, extra: Partial<CellOptions> = {}) => runCell(def, { out, systemUrl: server.url, ...quiet, ...extra }, { corpus, reader, judge: scriptedJudge() });
+      const first = scriptedReader();
+      expect((await run(first)).status).toBe('complete');
+      expect(ingests).toBe(15);
+      await Bun.sleep(5);
+      const cut = new Date().toISOString();
+      await Bun.sleep(5);
+      await expect(run(scriptedReader(), { freshBefore: cut, env: { ...process.env, SHOOTOUT_RESTORED_REALIZATION: 'real-test-0123' } })).rejects.toThrow(/rerun fresh/);
+      const second = scriptedReader();
+      await run(second, { freshBefore: cut, stopAfterQuestions: 4 });
+      expect(ingests).toBe(30);
+      const third = scriptedReader();
+      expect((await run(third, { freshBefore: cut })).status).toBe('complete');
+      expect(second.calls.length).toBeGreaterThan(0);
+      expect(second.calls.length + third.calls.length).toBe(first.calls.length);
+      const answers = ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+      expect(answers).toHaveLength(first.calls.length);
+      const events = ndjson(join(out, 'runs', def.id, 'realizations.ndjson'));
+      const stale = new Set(events.filter(e => e.event === 'ingested' && e.at < cut).map(e => e.realization_id));
+      expect(events.filter(e => e.event === 'invalidated' && /rerun.*fresh \(A23\)/.test(e.reason)).map(e => e.realization_id).every(r => stale.has(r))).toBe(true);
+      expect(events.filter(e => e.carried_from).some(e => stale.has(e.carried_from))).toBe(false);
+      const before = ingests;
+      expect((await run(scriptedReader(), { freshBefore: cut })).status).toBe('complete');
+      expect(ingests).toBe(before);
     } finally { server.stop(); }
   });
 });
@@ -698,6 +787,105 @@ describe('own-answer arms through the answer route (POST /answer)', () => {
       expect(ndjson(join(tmp, 'own-drift', 'cells', def.arms[0].cell_id, 'judgments.ndjson'))).toEqual([]);
     } finally { degraded.stop(); drift.stop(); }
   });
+
+  test('A23: an own answer the system classifies as a harness failure records the reason the system gave, in the attempts log', async () => {
+    const fake = serveProtocol(new FakeMemorySystem());
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', idleTimeout: 0, fetch: async req => {
+      const path = new URL(req.url).pathname;
+      if (path === '/answer') return Response.json({ answer: '', outcome: 'harness_invalid', synthesis_status: 'unavailable', error_code: 'unavailable', degraded: null, source_ids: [], model: null, usage: { input: 0, output: 0 }, usd: null, service_ms: 1,
+        raw: { error: 'unavailable', reason: 'ai_config', message: '[chat(anthropic:claude-opus-5-5)] provider refused the call' } });
+      const res = await fetch(`${fake.url}${path}`, { method: req.method, headers: { 'content-type': 'application/json' }, body: req.method === 'POST' ? await req.text() : undefined, keepalive: false });
+      const json = await res.json() as Record<string, unknown>;
+      if (path === '/capabilities') Object.assign(json, { system: 'gbrain-defaults', answer: { modes: ['think'] } });
+      return Response.json(json, { status: res.status });
+    } });
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [{ ...think, readers: ['anthropic:claude-opus-5-5'] }], { configuration: 'full-surface' });
+      const out = join(tmp, 'a23-invalid-reason');
+      await runCell(def, { out, systemUrl: `http://127.0.0.1:${server.port}`, maxAttempts: 1, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      const attempts = [...new Bun.Glob('runs/*/r/*/answer-attempts.ndjson').scanSync(out)].flatMap(f => ndjson(join(out, f)));
+      expect(attempts.length).toBeGreaterThan(0);
+      for (const a of attempts) expect([a.outcome, a.error]).toEqual(['harness_invalid', 'the system classified its answer path as a harness failure: error_code unavailable; reason ai_config; [chat(anthropic:claude-opus-5-5)] provider refused the call']);
+    } finally { server.stop(true); fake.stop(); }
+  });
+
+  test('A23: --reanswer-invalid-before answers again the harness_invalid answers recorded before the cutoff, on a new realization that carries every other record; a cutoff before them changes nothing', async () => {
+    const fake = serveProtocol(new FakeMemorySystem());
+    let invalid = true, calls = 0;
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', idleTimeout: 0, fetch: async req => {
+      const path = new URL(req.url).pathname;
+      if (path === '/answer') {
+        calls++;
+        return Response.json(invalid
+          ? { answer: '', outcome: 'harness_invalid', synthesis_status: 'unavailable', error_code: 'unavailable', degraded: null, source_ids: [], model: null, usage: { input: 0, output: 0 }, usd: null, service_ms: 1 }
+          : { answer: 'the answer', outcome: 'scored', degraded: null, source_ids: [], model: 'claude-opus-5-5', usage: { input: 10, output: 5 }, usd: 0.001, service_ms: 1 });
+      }
+      const res = await fetch(`${fake.url}${path}`, { method: req.method, headers: { 'content-type': 'application/json' }, body: req.method === 'POST' ? await req.text() : undefined, keepalive: false });
+      const json = await res.json() as Record<string, unknown>;
+      if (path === '/capabilities') Object.assign(json, { system: 'gbrain-defaults', answer: { modes: ['think'] } });
+      return Response.json(json, { status: res.status });
+    } });
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [{ ...think, readers: ['anthropic:claude-opus-5-5'] }], { configuration: 'full-surface' });
+      const out = join(tmp, 'a23-reanswer');
+      const run = (reanswerInvalidBefore: string | null) => runCell(def, { out, systemUrl: `http://127.0.0.1:${server.port}`, maxAttempts: 1, reanswerInvalidBefore, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      const outcomes = () => ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => a.outcome);
+      await run(null);
+      const first = outcomes();
+      expect(first.length).toBeGreaterThan(0);
+      expect(new Set(first)).toEqual(new Set(['harness_invalid']));
+      const asked = calls;
+      invalid = false;
+      await run('2000-01-01T00:00:00Z');
+      expect(calls).toBe(asked);
+      expect(outcomes()).toEqual(first);
+      await run(new Date(Date.now() + 3_600_000).toISOString());
+      expect(calls).toBe(asked + first.length);
+      expect(new Set(outcomes())).toEqual(new Set(['scored']));
+      const events = [...new Bun.Glob('runs/*/realizations.ndjson').scanSync(out)].flatMap(f => ndjson(join(out, f)));
+      expect(events.filter(e => e.event === 'invalidated' && /answered again under a ruling \(A23\)/.test(e.reason)).length).toBeGreaterThan(0);
+    } finally { server.stop(true); fake.stop(); }
+  });
+
+  test('A23: a lease refusal of the system\'s own model call stops the cell as a budget stop, never a harness_invalid answer', async () => {
+    const { BudgetRun } = await import('../../eval/runner/budget-ledger.ts');
+    const { MeteringProxy } = await import('../../eval/runner/metering-proxy.ts');
+    const upstream = (async () => Response.json({ content: [{ type: 'text', text: '{"answer":"x"}' }], usage: { input_tokens: 10, output_tokens: 5 } })) as unknown as typeof fetch;
+    const lease = BudgetRun.openLease({ runId: 'a23-lease-refusal', leaseUsd: 0.3, ledgerPath: join(tmp, 'a23-lease.sqlite') });
+    const proxy = new MeteringProxy({ fetchImpl: upstream, policy: { lease, env: { OPENAI_API_KEY: 'placeholder', ANTHROPIC_API_KEY: 'placeholder', VOYAGE_API_KEY: 'placeholder' }, usageLog: join(tmp, 'a23-usage.ndjson') } });
+    proxy.start();
+    const base = `http://127.0.0.1:${proxy.port}`;
+    // gbrain-defaults' think path: one model call at the reader with max_tokens 16000 (a Claude 5 reservation above the
+    // lease); gbrain turns the proxy's 402 into an op error and the shim answers it as harness_invalid with no model.
+    const fake = serveProtocol(new FakeMemorySystem());
+    const answered: number[] = [];
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', idleTimeout: 0, fetch: async req => {
+      const path = new URL(req.url).pathname;
+      if (path === '/answer') {
+        const body = await req.json() as Record<string, any>;
+        const r = await fetch(`${base}/gbrain-defaults/anthropic/v1/messages`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': 'dummy' }, body: JSON.stringify({ model: String(body.model).replace(/^anthropic:/, ''), max_tokens: 16000, messages: [{ role: 'user', content: body.question }] }) });
+        answered.push(r.status);
+        return Response.json({ answer: '', outcome: 'harness_invalid', synthesis_status: 'unavailable', error_code: 'unavailable', degraded: null, source_ids: [], model: null, usage: { input: 0, output: 0 }, usd: null, service_ms: 1 });
+      }
+      const res = await fetch(`${fake.url}${path}`, { method: req.method, headers: { 'content-type': 'application/json' }, body: req.method === 'POST' ? await req.text() : undefined, keepalive: false });
+      const json = await res.json() as Record<string, unknown>;
+      if (path === '/capabilities') Object.assign(json, { system: 'gbrain-defaults', answer: { modes: ['think'] } });
+      return Response.json(json, { status: res.status });
+    } });
+    const saved = { ...process.env };
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [{ ...think, readers: ['anthropic:claude-opus-5-5'] }], { configuration: 'full-surface' });
+      const out = join(tmp, 'a23-lease-refusal');
+      const res = await runCell(def, { out, systemUrl: `http://127.0.0.1:${server.port}`, providerProxy: base, maxAttempts: 1, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      expect(answered).toEqual([402]);
+      expect(res.stopped).toMatch(/^budget: the metering proxy refused 1 of the system's own provider call/);
+      expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => a.outcome)).toEqual(['budget_not_run']);
+    } finally {
+      for (const k of Object.keys(process.env)) if (!(k in saved)) delete process.env[k];
+      Object.assign(process.env, saved);
+      server.stop(true); fake.stop(); proxy.stop();
+    }
+  });
 });
 
 describe('the generated cell manifest', () => {
@@ -757,7 +945,7 @@ describe('the generated cell manifest', () => {
       const c = m.cells.find(x => spec.id === x.id || spec.id.startsWith(`${x.id}.c`))!;
       expect([spec.id, spec.snapshot_command, spec.restore_command]).toEqual([spec.id, c.snapshot_command, c.restore_command]);
     }
-    const full = specs.find(x => x.id === 's2b.gbrain-defaults.full-surface')!;
+    const full = specs.find(x => x.id === 's2b.gbrain-defaults.full-surface.c0')!;
     expect(full.command).toStartWith('GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && ');
     const runtime = specs.find(x => x.id === 's3.ext-agent-runtime.recipe')!;
     expect(runtime.setup_command).toBe('bash eval/systems/bootstrap.sh setup --system ext-agent-runtime --datasets locomo');
@@ -773,12 +961,33 @@ describe('the generated cell manifest', () => {
     expect(of('s1.gbrain-defaults.shipped-defaults').map(u => u.lease_usd)).toEqual(Array(10).fill(27));
     const tg = m.cells.find(c => c.id === 's1.ext-temporal-graph.common')!;
     expect(tg.estimate.usd / tg.shards).toBeCloseTo(305, 0);
-    expect(m.cells.filter(c => c.lease).map(c => c.id).sort()).toEqual(['s1.ext-graph-pipeline.common', 's1.ext-temporal-graph.common', 's1.gbrain-defaults.shipped-defaults']);
-    for (const u of units.filter(u => !m.cells.find(c => c.lease && u.id.startsWith(`${c.id}.c`)))) {
+    expect(m.cells.filter(c => c.lease).map(c => c.id).sort()).toEqual(['s1.ext-graph-pipeline.common', 's1.ext-memory-bank.recipe', 's1.ext-temporal-graph.common', 's1.ext-verbatim-session.recipe',
+      's1.gbrain-defaults.full-surface', 's1.gbrain-defaults.shipped-defaults', 's2b.baseline-full-context.baseline', 's2b.gbrain-defaults.shipped-defaults']);
+    for (const u of units.filter(u => !m.cells.find(c => c.lease && (u.id === c.id || u.id.startsWith(`${c.id}.c`))))) {
       const c = m.cells.find(x => u.id === x.id || u.id.startsWith(`${x.id}.c`))!;
       expect(u.lease_usd).toBeCloseTo(Math.max(0.01, Math.ceil(c.estimate.usd / c.shards * 100) / 100), 2);
     }
     expect(of('s1.gbrain-defaults.shipped-defaults').map(u => u.wave)).toEqual([1, 1, 1, 1, 1, 1, 2, 2, 2, 2]);
+  });
+
+  test('A23: a shim cell that projects past the 72-hour unit limit in one VM runs as conversation shards; think is priced at its measured rate; the lease refusals get leases that cover a reservation', () => {
+    const units = campaignCells(m);
+    const shardsOf = (id: string) => units.filter(u => u.id.startsWith(`${id}.c`));
+    expect(shardsOf('s2b.ext-graph-pipeline.recipe').map(u => [u.expected_hours, u.timeout_hours])).toEqual(Array(3).fill([40, 62]));
+    expect(shardsOf('s2b.ext-temporal-graph.common').map(u => [u.expected_hours, u.timeout_hours])).toEqual(Array(2).fill([43, 67]));
+    expect(shardsOf('s2b.gbrain-defaults.full-surface')).toHaveLength(2);
+    expect(shardsOf('s2b.gbrain-defaults.common-embedder')).toHaveLength(2);
+    expect(units.find(u => u.id === 's2b.ext-memory-bank.recipe')).toBeDefined();
+    expect(units.every(u => (u.timeout_hours ?? 0) <= 72)).toBe(true);
+    expect(shardsOf('s2b.ext-graph-pipeline.recipe')[1].command).toContain('--shard 1/3');
+    const fs = m.cells.find(c => c.id === 's1.gbrain-defaults.full-surface')!;
+    expect(fs.estimate.lines.own_answer / 600).toBeCloseTo(0.2, 1);
+    expect(shardsOf('s1.gbrain-defaults.full-surface').map(u => u.lease_usd)).toEqual(Array(10).fill(20));
+    expect(shardsOf('s1.gbrain-defaults.full-surface').every(u => u.command.includes('--reanswer-invalid-before 2026-10-26T00:00:00Z'))).toBe(true);
+    expect(units.filter(u => u.command.includes('--reanswer-invalid-before')).map(u => u.id).filter(id => !id.startsWith('s1.gbrain-defaults.full-surface.c'))).toEqual(['s2b.baseline-full-context.baseline']);
+    expect(units.find(u => u.id === 's2b.baseline-full-context.baseline')!.command).toContain('--reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes reader_error');
+    expect(units.filter(u => u.command.includes('--fresh-before 2026-10-26T00:00:00Z')).map(u => u.id)).toEqual(['s1.ext-memory-bank.recipe.c0', 's1.ext-memory-bank.recipe.c1', 's1.ext-memory-bank.recipe.c3']);
+    expect(units.find(u => u.id === 's2b.baseline-full-context.baseline')!.lease_usd).toBe(20);
   });
 
   test('A22: graph-pipeline S1 leases $65 a shard from its measured ingest; S1 hybrid is scheduled for its question phase', () => {
@@ -788,6 +997,12 @@ describe('the generated cell manifest', () => {
     expect(gp.map(u => [u.expected_hours, u.timeout_hours, u.wave])).toEqual(Array(10).fill([40, 62, 1]));
     const hybrid = units.find(u => u.id === 's1.baseline-hybrid.baseline')!;
     expect([hybrid.expected_hours, hybrid.timeout_hours, hybrid.lease_usd]).toEqual([9, 16, 95.1]);
+  });
+
+  test('A23: verbatim-session S1 leases $19 a shard from its measured BEAM reading and judging; its estimate is unchanged', () => {
+    const vb = campaignCells(m).filter(u => u.id.startsWith('s1.ext-verbatim-session.recipe.c'));
+    expect(vb.map(u => u.lease_usd)).toEqual(Array(10).fill(19));
+    expect(m.cells.find(c => c.id === 's1.ext-verbatim-session.recipe')!.estimate.usd).toBe(81.63);
   });
 
   test('estimates come from ledger prices and stay under the cap; blocks carry 1.5x hard caps', () => {

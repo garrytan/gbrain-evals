@@ -8,6 +8,7 @@ listed in capability.json and README.md.
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import json
 import os
 import sys
@@ -47,6 +48,7 @@ class GraphitiAdapter(Adapter):
             raise SystemExit(f"SHIM_CONFIG must be one of {sorted(self.record['configs'])}, got {CONFIG!r}")
         if GRANULARITY not in ("session", "message"):
             raise SystemExit(f"SHIM_GRANULARITY must be session or message, got {GRANULARITY!r}")
+        self.context = contextvars.copy_context()
         self.loop = asyncio.new_event_loop()
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
         self.graphiti: Graphiti = self._run(self._connect())
@@ -55,9 +57,13 @@ class GraphitiAdapter(Adapter):
 
     def _run(self, coro: Any) -> Any:
         """graphiti-core is async and its Neo4j driver is bound to one loop; every call goes through it.
+        Each call runs in a copy of the context the adapter was built in, not the HTTP handler thread's: a new
+        thread starts with empty context variables, and pydantic keeps its parametrized-generic cache in one, so
+        every request re-created the openai client's parsed-response classes and never freed them (about 2 MB a
+        session, past the S1 VM's memory on a BEAM-10M conversation; amendment A23).
         A 402 from the metering proxy (over the lease or an unpriced model) becomes the protocol's budget error."""
         try:
-            return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
+            return self.context.copy().run(asyncio.run_coroutine_threadsafe, coro, self.loop).result()
         except Exception as e:
             cause: BaseException | None = e
             while cause is not None:

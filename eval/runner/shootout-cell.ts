@@ -68,14 +68,14 @@
  */
 import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, relative, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { BudgetRun, initLedger, ledgerStatus } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
 import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
 import { BEAM10M_MANIFEST } from './memory-qa/beam10m-corpus.ts';
-import { insideRepository } from './sealed-confirmation-lib.ts';
+import { insideRepository, sha256File } from './sealed-confirmation-lib.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 export const REPO_RUNNER = join(REPO_ROOT, 'scripts/ubicloud/ubi-runner.sh');
@@ -344,7 +344,23 @@ export interface LaunchContext { lease: LeaseState; cell: CellSpec; vm: string |
 export type Runner = (argv: string[], ctx: LaunchContext) => Promise<number | null>;
 
 const expandHome = (p: string) => p.startsWith('~/') ? join(homedir(), p.slice(2)) : p;
-const sha256File = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex');
+
+/**
+ * Why a `bootstrap.sh snapshot` tar cannot restore the system's whole store, or null when it can (or the file is not
+ * such a tar). The tar must hold every named volume the system's compose file declares, and at least one: an A17
+ * memory-bank snapshot verified by sha256 but held no volumes, so its restore started every bank empty (A23).
+ */
+export function snapshotStoreGap(system: string, tarPath: string, root = REPO_ROOT): string | null {
+  const compose = [join(root, 'eval/systems', system, 'docker-compose.yml'), join(root, 'docs/comparison-systems', system, 'docker-compose.yml')].find(existsSync);
+  if (!compose) return null;
+  let listing: string;
+  try { listing = execFileSync('tar', ['-xOf', tarPath, './volumes.json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return null; }
+  const held = new Set((JSON.parse(listing) as { volumes: Array<{ key: string }> }).volumes.map(v => v.key));
+  const declared = Object.keys((Bun.YAML.parse(readFileSync(compose, 'utf8')) as { volumes?: Record<string, unknown> }).volumes ?? {});
+  const missing = declared.filter(k => !held.has(k));
+  if (!held.size) return 'holds no volumes, so a restore would start the system with an empty store';
+  return missing.length ? `lacks volume${missing.length > 1 ? 's' : ''} ${missing.join(', ')} that ${relative(root, compose)} declares` : null;
+}
 const usd = (n: number) => `$${n.toFixed(2)}`;
 
 /** The ubi-runner owner tag (UBI_OWNER, lowercased letters and digits, at most 12, starting with a letter), as the runner computes it. */
@@ -409,7 +425,17 @@ export class Campaign {
     if (!existsSync(this.statePath)) throw new Error(`${this.stateDir} has no campaign; run \`bun eval/runner/shootout-cell.ts init\` first`);
     const s = JSON.parse(readFileSync(this.statePath, 'utf8')) as CampaignState;
     if (s.campaign_id !== this.manifest.campaign_id) throw new Error(`${this.stateDir} belongs to campaign ${s.campaign_id}, not ${this.manifest.campaign_id}`);
-    return s;
+    return { ...s, ledger: this.ledgerPath(s.ledger) };
+  }
+  /**
+   * campaign.json names the ledger relative to the checkout (A23), so a state directory moved to another host finds
+   * it. A state written before A23 holds an absolute path; one that does not exist on this host and ends with the
+   * manifest's ledger path resolves to that path in this checkout.
+   */
+  private ledgerPath(recorded: string): string {
+    if (!isAbsolute(recorded)) return resolve(REPO_ROOT, recorded);
+    if (existsSync(recorded) || !recorded.endsWith(`/${this.manifest.ledger}`)) return recorded;
+    return this.ledger;
   }
   private run(): BudgetRun { const s = this.state(); return BudgetRun.join({ runId: s.run_id, ledgerPath: s.ledger, programCapMaxUsd: this.manifest.cap_usd }); }
   private append(e: LeaseEvent) { appendFileSync(this.eventsPath, JSON.stringify(e) + '\n'); }
@@ -421,7 +447,7 @@ export class Campaign {
     const label = this.q1 ? 'q1-scoreboard' : 'oss-shootout';
     if (!existsSync(this.ledger)) initLedger({ ledgerPath: this.ledger, programCapUsd: this.manifest.cap_usd, reason: `${this.q1 ? 'Q1 scoreboard' : 'oss shootout'} campaign ${this.manifest.campaign_id}` });
     const run = BudgetRun.open({ runner: `${label}:${this.manifest.campaign_id}`, budgetUsd: this.manifest.cap_usd, ledgerPath: this.ledger, programCapMaxUsd: this.manifest.cap_usd });
-    const s: CampaignState = { campaign_id: this.manifest.campaign_id, run_id: run.runId, ledger: this.ledger, manifest_sha256: this.sha, created_at: new Date().toISOString(), ...(this.q1 ? { kind: Q1_KIND } : {}) };
+    const s: CampaignState = { campaign_id: this.manifest.campaign_id, run_id: run.runId, ledger: relative(REPO_ROOT, this.ledger), manifest_sha256: this.sha, created_at: new Date().toISOString(), ...(this.q1 ? { kind: Q1_KIND } : {}) };
     if (this.q1) {
       let commit: string | null = null, dirty: string[] = [];
       try {
@@ -431,7 +457,7 @@ export class Campaign {
       writeFileSync(this.frozenPath, JSON.stringify({ campaign_id: this.manifest.campaign_id, sha256: this.sha, commit, dirty, images: this.manifest.images ?? {}, tree: this.tree }, null, 2) + '\n');
     }
     writeFileSync(this.statePath, JSON.stringify(s, null, 2) + '\n');
-    return s;
+    return this.state();
   }
 
   /** Q1: refuse `action` when the files a cell executes no longer hash to the campaign hash stored at init. */
@@ -646,7 +672,8 @@ export class Campaign {
    * against the sha256 values recorded when it was realized: with a verified realization and a `restore_command`
    * the new lease restores the store and runs only what is missing (mode `snapshot`); with no usable snapshot but a
    * checkpoint, the cell ingests again and answers only the questions the checkpoint lacks (mode `answers`); with
-   * neither, it runs in full (mode `repeat`).
+   * neither, it runs in full (mode `repeat`). A realization pulled after its lease closed (A23: a final pull that
+   * failed, the lease abandoned, the kept VM pulled later) is recorded here first, so the resume can restore it.
    */
   async resume(cellId: string, runner: Runner, opts: { local?: { port: number }; from?: Campaign } = {}): Promise<{ mode: 'snapshot' | 'answers' | 'repeat'; realization_id: string | null; snapshot_check: string; lease: LeaseState; note: string }> {
     if (!this.q1) throw new Error('resume is for Q1 scoreboard campaigns');
@@ -660,12 +687,15 @@ export class Campaign {
       fix: { next: 'run', argv: ['bun', 'eval/runner/shootout-cell.ts', 'abandon', '--campaign', src.manifestPath, '--state', src.stateDir, '--lease', open.lease_id, '--reason', 'VM lost'],
         verify: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', src.manifestPath, '--state', src.stateDir] } });
     const ids = new Set(theirs.map(l => l.lease_id));
+    for (const l of theirs) if (l.status !== 'reserved') src.recordRealization(l.lease_id);
     const realized = src.realizedEvents().filter(e => ids.has(e.lease_id)).at(-1) ?? null;
     let snapshotCheck = realized ? 'verified' : 'none';
     if (realized) {
       const dir = join(src.resultsDir(src.lease(realized.lease_id)), 'realization', 'snapshot');
       const bad = realized.files.find(f => { const abs = join(dir, f.path); return !existsSync(abs) || statSync(abs).size !== f.bytes || sha256File(abs) !== f.sha256; });
       if (bad) snapshotCheck = `damaged: ${bad.path} does not match the sha256 recorded when ${realized.realization_id} was realized`;
+      const gap = bad ? null : realized.files.map(f => ({ f, why: snapshotStoreGap(c.system, join(dir, f.path)) })).find(g => g.why);
+      if (gap) snapshotCheck = `incomplete: ${gap.f.path} ${gap.why}`;
     }
     const usable = realized && snapshotCheck === 'verified' && c.restore_command ? realized : null;
     const last = [...theirs].reverse().find(l => existsSync(join(src.resultsDir(l), 'checkpoint')));

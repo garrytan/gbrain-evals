@@ -12,7 +12,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
-import { AdmissionController, AdmissionRefused, DEFAULT_ROUTE_CAPS, isLocalAddress, MeteringProxy, parseAdmission, parseProxyArgs, ProxyControl, retryAfterMs, upstreamTrouble, usageSplit,
+import { AdmissionController, AdmissionRefused, DEFAULT_ROUTE_CAPS, requestResetMs, isLocalAddress, MeteringProxy, parseAdmission, parseProxyArgs, ProxyControl, retryAfterMs, upstreamTrouble, usageSplit,
   type LeasePolicy, type UsageLine } from '../../eval/runner/metering-proxy.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'metering-proxy-scoreboard-'));
@@ -238,6 +238,56 @@ describe('admission control', () => {
       expect(ledgerStatus({ ledgerPath: lease.ledgerPath, runId: lease.runId }).run!.committed_usd).toBe(before);
       expect(new AdmissionRefused('openai', 1500).message).toContain('2 s');
     } finally { proxy.stop(); }
+  });
+
+  test('key headroom: a model whose remaining requests on the key fall to 5% waits for the reset the provider names; other models do not (A23)', () => {
+    let t = 0;
+    const ac = new AdmissionController({}, { now: () => t });
+    const low = new Headers({ 'x-ratelimit-limit-requests': '10000', 'x-ratelimit-remaining-requests': '400', 'x-ratelimit-reset-requests': '8s' });
+    ac.observe('openai', 'text-embedding-3-large', low);
+    expect(ac.waitFor('openai', 1, 'text-embedding-3-large')).toBe(8000);
+    expect(ac.waitFor('openai', 1, 'gpt-4.1-mini')).toBe(0);
+    t = 8001;
+    expect(ac.waitFor('openai', 1, 'text-embedding-3-large')).toBe(0);
+    ac.observe('openai', 'text-embedding-3-large', new Headers({ 'x-ratelimit-limit-requests': '10000', 'x-ratelimit-remaining-requests': '501', 'x-ratelimit-reset-requests': '6ms' }));
+    expect(ac.waitFor('openai', 1, 'text-embedding-3-large')).toBe(0);
+    expect(requestResetMs(new Headers({ 'x-ratelimit-reset-requests': '1m30.5s' }))).toBe(90_500);
+    expect(requestResetMs(new Headers({ 'anthropic-ratelimit-requests-reset': new Date(12_000).toISOString() }), 2000)).toBe(10_000);
+    expect(requestResetMs(new Headers())).toBeNull();
+  });
+
+  test('key headroom through the proxy: the request after a response that reports the key near its limit waits for the reset (A23: RateLimitError on a shared embedding key)', async () => {
+    let calls = 0;
+    const up = upstream(() => { calls++; return Response.json({ usage: { prompt_tokens: 10, completion_tokens: 5 } }, { headers: calls === 1 ? { 'x-ratelimit-limit-requests': '100', 'x-ratelimit-remaining-requests': '2', 'x-ratelimit-reset-requests': '400ms' } : {} }); });
+    const { proxy, post } = start(up.fetchImpl, { admission: new AdmissionController({}) });
+    try {
+      expect((await post('/s/openai/v1/chat/completions', chat())).status).toBe(200);
+      const t0 = performance.now();
+      expect((await post('/s/openai/v1/chat/completions', chat())).status).toBe(200);
+      expect(performance.now() - t0).toBeGreaterThan(300);
+    } finally { proxy.stop(); }
+  });
+
+  test('a connection that closes before the provider answers is sent again, each failed attempt charged at its reservation; a timeout is not (A23)', async () => {
+    let calls = 0;
+    const closed = Object.assign(new Error('The socket connection was closed unexpectedly. For more information, pass `verbose: true` in the second argument to fetch()'), { code: 'ECONNRESET' });
+    const flaky = upstream(() => { if (++calls === 1) throw closed; return Response.json({ usage: { prompt_tokens: 10, completion_tokens: 5 } }); });
+    const one = start(flaky.fetchImpl);
+    try {
+      expect((await one.post('/s/openai/v1/chat/completions', chat())).status).toBe(200);
+      expect(flaky.seen).toHaveLength(2);
+      const lines = one.lines();
+      expect(lines.map(l => l.outcome)).toEqual(['failed', 'forwarded']);
+      expect(lines[0].reason).toContain('(sent again)');
+      expect(lines[0].charged_reservation).toBe(true);
+      expect(lines[1].transport_retries).toBe(1);
+    } finally { one.proxy.stop(); }
+    const slow = upstream(() => { throw new DOMException('The operation timed out.', 'TimeoutError'); });
+    const two = start(slow.fetchImpl);
+    try {
+      expect((await two.post('/s/openai/v1/chat/completions', chat())).status).toBe(502);
+      expect(slow.seen).toHaveLength(1);
+    } finally { two.proxy.stop(); }
   });
 
   test('retry hints: retry-after-ms, retry-after seconds and an HTTP date', () => {

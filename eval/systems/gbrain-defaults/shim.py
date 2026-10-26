@@ -934,7 +934,7 @@ class GbrainDefaultsAdapter(Adapter):
                     "model": cost.get("model") or body.get("modelUsed") or None,
                     "usage": {"input": int(cost.get("input_tokens") or usage.get("input_tokens") or 0), "output": int(cost.get("output_tokens") or usage.get("output_tokens") or 0)},
                     "usd": cost.get("usd_estimate"), "cost": body.get("cost"), "args": args, "gbrain_ms": ms, "notices": notices, "serve_session": self.serve_session,
-                    "raw": {k: body.get(k) for k in ("gaps", "warnings", "pages_gathered", "takes_gathered", "sources", "error") if k in body}}
+                    "raw": {k: body.get(k) for k in ("gaps", "warnings", "pages_gathered", "takes_gathered", "sources", "error", "reason", "message") if k in body}}
 
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
         return {"status": "unsupported", "receipt": {"why": "the starter surface has no page delete (delete_page is a full-surface op); the scoreboard reads only starter ops"}}

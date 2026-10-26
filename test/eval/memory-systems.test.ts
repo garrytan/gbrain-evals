@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { loadFixture, type Conversation, type MemoryQuestion, type Session } from '../../eval/runner/memory-qa/corpus.ts';
 import { canonicalize, crossSystemExclusion, freezeManifest, outcomeOf, type Manifest } from '../../eval/runner/memory-qa/outcomes.ts';
 import { readerPrompt } from '../../eval/runner/memory-qa/qa.ts';
-import { parseRunArgs, runArm } from '../../eval/runner/memory-qa/run-systems.ts';
+import { parseRunArgs, PROBE_WINDOW_CHARS, readinessProbe, runArm } from '../../eval/runner/memory-qa/run-systems.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { pairObservations } from '../../eval/runner/stats/paired.ts';
 import { toObservation } from '../../eval/runner/stats/rows.ts';
@@ -297,6 +297,22 @@ describe('memory-qa with a MemorySystem', () => {
       expect(rows.every(r => r.outcome === 'scored')).toBe(true);
       expect(rows.filter(r => !r.abstention).every(r => (r.recall_measurable !== false) === measurable)).toBe(true);
     }
+  });
+
+  test('readiness probe: the passage opens a turn near the start of the last session, so a system that embeds only a session\'s opening is not marked degraded (A23)', async () => {
+    const turn = (c: string, n: number) => ({ role: 'user', content: (c.repeat(n) + ' ').slice(0, n), time: null });
+    const last = { source_id: 'ns-last', time: null, turns: [turn('a', 120), turn('b', 600), turn('c', 300), turn('d', 4000)] } as unknown as SessionInput;
+    const opening = last.turns.map(t => t.content).join('').slice(0, PROBE_WINDOW_CHARS + 300);
+    const asked: string[] = [];
+    const openingOnly = new FakeMemorySystem();
+    openingOnly.retrieve = async (_ns, q) => {
+      asked.push(q.text);
+      const items = opening.includes(q.text) ? [{ text: q.text, source_ids: ['ns-last'] } as unknown as Item] : [];
+      return { items, applied_settings: {}, truncated: false };
+    };
+    const caps = await new FakeMemorySystem().capabilities();
+    expect(await readinessProbe(openingOnly, 'ns', last, { mode: 'fixed-evidence', settings: {} } as never, caps)).toBe('found');
+    expect(asked).toEqual([last.turns[1].content.slice(0, 300)]);
   });
 
   test('readiness probe: a shim whose quiescence signal lies (indexes late) marks its conversations ingest-degraded; an honest one passes', async () => {

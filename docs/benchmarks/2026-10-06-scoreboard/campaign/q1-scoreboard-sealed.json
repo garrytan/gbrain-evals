@@ -2,7 +2,7 @@
   "kind": "q1-scoreboard-campaign",
   "schema_version": 1,
   "campaign_id": "q1-scoreboard-sealed",
-  "cap_usd": 7800,
+  "cap_usd": 8000,
   "ledger": "eval/reports/scoreboard/q1-scoreboard-sealed/campaign.sqlite",
   "parameters": {},
   "hedge_classifier": "none",
@@ -302,8 +302,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 0/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -331,8 +331,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 1/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -360,8 +360,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 2/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -389,8 +389,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 3/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -418,8 +418,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 4/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -447,8 +447,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 5/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -476,8 +476,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 6/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -505,8 +505,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 7/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -534,8 +534,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 8/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -563,8 +563,8 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-10m",
       "config": "full-surface",
-      "lease_usd": 11.38,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 20,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.full-surface --shard 9/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -862,8 +862,8 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
-      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "lease_usd": 32,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 0/10 --system-url http://127.0.0.1:8700 --fresh-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -889,8 +889,8 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
-      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "lease_usd": 32,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 1/10 --system-url http://127.0.0.1:8700 --fresh-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -916,7 +916,7 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
+      "lease_usd": 32,
       "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
@@ -943,8 +943,8 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
-      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "lease_usd": 32,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 3/10 --system-url http://127.0.0.1:8700 --fresh-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -970,7 +970,7 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
+      "lease_usd": 32,
       "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
@@ -997,7 +997,7 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
+      "lease_usd": 32,
       "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
@@ -1024,7 +1024,7 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
+      "lease_usd": 32,
       "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
@@ -1051,7 +1051,7 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
+      "lease_usd": 32,
       "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
@@ -1078,7 +1078,7 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
+      "lease_usd": 32,
       "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
@@ -1105,7 +1105,7 @@
       "system": "ext-memory-bank",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 27.6,
+      "lease_usd": 32,
       "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-memory-bank.recipe --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-10m",
       "vm": {
@@ -1942,7 +1942,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -1969,7 +1969,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -1996,7 +1996,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -2023,7 +2023,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -2050,7 +2050,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -2077,7 +2077,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -2104,7 +2104,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -2131,7 +2131,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -2158,7 +2158,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -2185,7 +2185,7 @@
       "system": "ext-verbatim-session",
       "benchmark": "beam-10m",
       "config": "recipe",
-      "lease_usd": 8.17,
+      "lease_usd": 19,
       "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s1.ext-verbatim-session.recipe --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets beam-10m",
       "vm": {
@@ -2337,7 +2337,7 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-1m",
       "config": "shipped-defaults",
-      "lease_usd": 117,
+      "lease_usd": 160,
       "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.shipped-defaults --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-1m",
       "vm": {
@@ -2362,12 +2362,41 @@
       "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
-      "id": "s2b.gbrain-defaults.full-surface",
+      "id": "s2b.gbrain-defaults.full-surface.c0",
       "system": "gbrain-defaults",
       "benchmark": "beam-1m",
       "config": "full-surface",
-      "lease_usd": 127.67,
-      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.full-surface --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 92.06,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.full-surface --shard 0/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 72,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 48,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s2b.gbrain-defaults.full-surface.c1",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-1m",
+      "config": "full-surface",
+      "lease_usd": 92.06,
+      "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.full-surface --shard 1/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-1m",
       "vm": {
         "size": "standard-4"
@@ -2445,17 +2474,17 @@
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
     },
     {
-      "id": "s2b.ext-graph-pipeline.recipe",
+      "id": "s2b.ext-graph-pipeline.recipe.c0",
       "system": "ext-graph-pipeline",
       "benchmark": "beam-1m",
       "config": "recipe",
-      "lease_usd": 119.43,
-      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.ext-graph-pipeline.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "lease_usd": 39.81,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.ext-graph-pipeline.recipe --shard 0/3 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-1m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 72,
+      "timeout_hours": 62,
       "block": "T2-S2b",
       "sealed": true,
       "providers": [
@@ -2466,23 +2495,23 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 48,
+      "expected_hours": 40,
       "wave": 3,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
     },
     {
-      "id": "s2b.ext-temporal-graph.common",
-      "system": "ext-temporal-graph",
+      "id": "s2b.ext-graph-pipeline.recipe.c1",
+      "system": "ext-graph-pipeline",
       "benchmark": "beam-1m",
-      "config": "common",
-      "lease_usd": 685.83,
-      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s2b.ext-temporal-graph.common --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
-      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-1m",
+      "config": "recipe",
+      "lease_usd": 39.81,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.ext-graph-pipeline.recipe --shard 1/3 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-1m",
       "vm": {
         "size": "standard-4"
       },
-      "timeout_hours": 72,
+      "timeout_hours": 62,
       "block": "T2-S2b",
       "sealed": true,
       "providers": [
@@ -2493,7 +2522,88 @@
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY"
       ],
-      "expected_hours": 48,
+      "expected_hours": 40,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s2b.ext-graph-pipeline.recipe.c2",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-1m",
+      "config": "recipe",
+      "lease_usd": 39.81,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.ext-graph-pipeline.recipe --shard 2/3 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 62,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 40,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "s2b.ext-temporal-graph.common.c0",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-1m",
+      "config": "common",
+      "lease_usd": 342.92,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s2b.ext-temporal-graph.common --shard 0/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 67,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 43,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s2b.ext-temporal-graph.common.c1",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-1m",
+      "config": "common",
+      "lease_usd": 342.92,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s2b.ext-temporal-graph.common --shard 1/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 67,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 43,
       "wave": 3,
       "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
       "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config common --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
@@ -2628,12 +2738,41 @@
       "wave": 3
     },
     {
-      "id": "s2b.gbrain-defaults.common-embedder",
+      "id": "s2b.gbrain-defaults.common-embedder.c0",
       "system": "gbrain-defaults",
       "benchmark": "beam-1m",
       "config": "common-embedder",
-      "lease_usd": 55.27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config common && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.common-embedder --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "lease_usd": 27.64,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config common && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.common-embedder --shard 0/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 72,
+      "block": "T2-S2b",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 48,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config common --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s2b.gbrain-defaults.common-embedder.c1",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-1m",
+      "config": "common-embedder",
+      "lease_usd": 27.64,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config common && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.common-embedder --shard 1/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-1m",
       "vm": {
         "size": "standard-4"
@@ -2661,8 +2800,8 @@
       "system": "baseline-full-context",
       "benchmark": "beam-1m",
       "config": "baseline",
-      "lease_usd": 1.37,
-      "command": "bun eval/runner/q1/cell.ts run --cell s2b.baseline-full-context.baseline --out \"$SHOOTOUT_OUT\"",
+      "lease_usd": 20,
+      "command": "bun eval/runner/q1/cell.ts run --cell s2b.baseline-full-context.baseline --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes reader_error --out \"$SHOOTOUT_OUT\"",
       "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-1m",
       "vm": {
         "size": "standard-4"
@@ -2740,7 +2879,7 @@
       "system": "gbrain-defaults",
       "benchmark": "beam-100k",
       "config": "full-surface",
-      "lease_usd": 57.75,
+      "lease_usd": 82.17,
       "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2a.gbrain-defaults.full-surface --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-100k",
       "vm": {
@@ -3193,7 +3332,7 @@
       "system": "gbrain-defaults",
       "benchmark": "locomo",
       "config": "full-surface",
-      "lease_usd": 50.37,
+      "lease_usd": 83.97,
       "command": "GBRAIN_FULL_SURFACE=1 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s3.gbrain-defaults.full-surface --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets locomo",
       "vm": {
@@ -3982,20 +4121,20 @@
   },
   "blocks": {
     "T1": {
-      "estimate_usd": 5110.48,
-      "cap_usd": 7665.72
+      "estimate_usd": 5165.52,
+      "cap_usd": 7748.28
     },
     "T2-S2a": {
-      "estimate_usd": 475.21,
-      "cap_usd": 712.82
+      "estimate_usd": 499.63,
+      "cap_usd": 749.45
     },
     "T2-S2b": {
-      "estimate_usd": 1652.17,
-      "cap_usd": 2478.26
+      "estimate_usd": 1708.61,
+      "cap_usd": 2562.91
     },
     "T2-S3": {
-      "estimate_usd": 521.46,
-      "cap_usd": 782.19
+      "estimate_usd": 555.06,
+      "cap_usd": 832.59
     }
   },
   "output_caps": {

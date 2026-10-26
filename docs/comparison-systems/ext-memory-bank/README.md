@@ -10,7 +10,7 @@ the facts that fit a token budget, ranked by semantic, keyword, graph and tempor
 
 | Container | Image | Role |
 |---|---|---|
-| `db` | `pgvector/pgvector:0.8.1-pg18`, digest pinned | Postgres with pgvector, the documented external database, with a 1 GB `/dev/shm` |
+| `db` | `pgvector/pgvector:0.8.1-pg18`, digest pinned | Postgres with pgvector, the documented external database, with a 1 GB `/dev/shm` and its data in the named volume `db-data` |
 | `hindsight` | `ghcr.io/vectorize-io/hindsight:0.10.2`, digest pinned, unmodified | the Hindsight API server with its local embedder and reranker |
 | `shim` | built from `Dockerfile` (`hindsight-client==0.10.2`, `uv.lock`) | `shim.py`, the protocol adapter |
 | `egress` | `alpine/socat`, digest pinned | the only container with a route out: publishes the shim and relays to the metering proxy |
@@ -108,6 +108,16 @@ LongMemEval-S haystack, one BEAM-100K conversation): costs per ingested item, re
 outcomes and the Phase 4 cost extrapolation. Its scores are setup evidence, not results.
 
 ## Changelog
+
+### 2026-10-17: database volume
+
+The `db` service keeps its data in the named volume `db-data` (`/var/lib/postgresql`, where the pg18 image keeps
+`PGDATA`). Before, Docker gave that path an anonymous volume. `bootstrap.sh snapshot` tars only named volumes, so
+every snapshot held no volumes, and a restore on a fresh VM started Hindsight with no banks: `recall` answered
+`404 Bank '<ns>' not found` for every question (the S1 c1 resume, amendment A23). Reproduced keyless with the mock
+LLM on 20 public BEAM-1M dev sessions: 8 of 8 probe retrievals failed with that 404 after the old snapshot's restore,
+and 8 of 8 found their session after a snapshot, `down -v` and restore with the named volume. Retrieval code is
+unchanged.
 
 ### 2026-10-08: database shared memory
 

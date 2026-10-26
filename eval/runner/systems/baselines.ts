@@ -300,7 +300,8 @@ export const FULL_CONTEXT_EFFORT = 'medium';
 /**
  * One whole-history reading. Refuses with `does_not_fit` before any call
  * when the prompt does not fit the reader, and when the provider rejects it
- * as too long. Anthropic readers get the history as a `cache_control`
+ * as too long. A lease refusal (the metering proxy's 402 budget) is `budget_not_run`, never a reader
+ * error (A23). Anthropic readers get the history as a `cache_control`
  * prefix; OpenAI readers get the same bytes with `prompt_cache_key` set to
  * the conversation, so its automatic prefix cache routes them together.
  * Request parameters match `ChatClient` (qa.ts) so only caching differs, reasoning effort included (default
@@ -335,6 +336,7 @@ export async function answerFullContext(opts: { reader: string; prompt: string; 
     }
     last = `${prov} ${res.status}: ${JSON.stringify(json?.error ?? json).slice(0, 300)}`;
     if (res.status === 400 && TOO_LONG.test(last)) return { text: '', outcome: 'does_not_fit', fit: { ...fit, fits: false }, usage: empty, provider_input_tokens: 0, latency_ms: performance.now() - t0, cache_key, error: last };
+    if (res.status === 402 && /budget/i.test(last)) return { text: '', outcome: 'budget_not_run', fit, usage: empty, provider_input_tokens: 0, latency_ms: performance.now() - t0, cache_key, error: last };
     if (!RETRYABLE.has(res.status) || /budget/i.test(last)) break;
     await new Promise(r => setTimeout(r, 2000 * 2 ** attempt));
   }

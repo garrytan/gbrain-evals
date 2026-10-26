@@ -101,7 +101,41 @@ full-text search found no match. The recipe embedder (bge-small) clears the floo
 configuration changes only the embedder, so the floor stays at its default; text-embedding-3-large's lower absolute
 similarities mean Basic Memory returns fewer results in that row. The report should say this rather than tune it.
 
+## Indexing time at BEAM-10M scale, 2026-10-17
+
+`bm reindex --search --embeddings` grows with the square of the chunk count. After embedding, `reindex_vectors` calls
+`reconcile_vector_index`, whose sqlite-vec `delete_orphans` runs `DELETE FROM search_vector_embeddings WHERE rowid IN
+(SELECT id FROM search_vector_chunks WHERE project_id = ? AND NOT (... search_vector_embeddings.source_hash =
+search_vector_chunks.source_hash ...))`. SQLite plans it as a scan of every vector row with a correlated subquery over
+the project's chunks (`EXPLAIN QUERY PLAN`: `SCAN search_vector_embeddings VIRTUAL TABLE`, `CORRELATED LIST
+SUBQUERY`). It costs about 4 µs per pair, on one core, and deletes nothing on a fresh index. The outer scan covers
+every project in the database, not just the one being indexed.
+
+Keyless recipe runs on a 4-vCPU, 16 GB machine, on sessions from the 11 public BEAM-1M dev conversations in time
+order (one namespace), with no CPU or memory limit on the container:
+
+| Sessions | cl100k tokens | Chunks | File index | Embedding | Reconcile | `/finish` |
+|---:|---:|---:|---:|---:|---:|---:|
+| 500 | 0.55M | 8,168 | 50 s | 360 s | 269 s | 690 s |
+| 2,000 | 2.34M | 50,345 | 337 s | 2,069 s | 11,668 s | 14,078 s |
+
+Timed alone on a copy of the 500-session index, the statement took 271.6 s. The 2,000-session index also held the
+500-session project's 8,168 rows, and 58,513 × 50,345 pairs at 3.96 µs match its 3 h 14 min. The product's own chunker
+gives 216,040 chunks for all 9,003 sessions (10.4M tokens), so the reconcile alone projects to about 52 hours and a
+BEAM-10M conversation of about 11M tokens to about 61 hours in all. The step runs only in the CLI reindex, the vendor
+benchmark's command; nothing in the shim sets its cost.
+
+The sealed S1 shard c0 (amendment A23) matches this. It wrote all 6,228 of its sessions in 9.0 hours with 0 failures.
+In the 2.7 hours left before its 11-hour timeout it produced no answered row, because the question phase waits for the
+reindex. The stop for the snapshot then killed the shim (exit 137). The scoreboard reports the cell as not run, with
+the projected 61 hours against the 48-hour limit per conversation.
+
 ## Changelog
+
+### 2026-10-17: indexing time at BEAM-10M scale
+
+Measured the reindex at 500 and 2,000 sessions and traced its superlinear growth to the product's vector reconcile
+(section above). No shim or configuration change.
 
 ### 2026-10-05: metered smoke
 Common configuration measured through the metering proxy; compose sends calls to the proxy slot

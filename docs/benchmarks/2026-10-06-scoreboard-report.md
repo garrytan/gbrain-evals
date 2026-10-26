@@ -21,8 +21,8 @@ bun eval/runner/scoreboard.ts check --receipt <receipt dir>
 
 `publication.json` says which campaign covers which rows and at which launch tree each renders: public-v2 for the
 external and baseline rows on LongMemEval (`4bccbd5a`), public-v3-s2 for gbrain on LongMemEval-S (`3532b1aa`),
-public-v3-m for gbrain on LongMemEval-M (`0518e2fd`), and the sealed campaign (hash `0c4459fc` for waves 2 to 5 and the wave-1 reruns, and `eefd1799`
-for wave 1's settled units) for everything else. `--preview` writes no README block and opens the disclosures with a
+public-v3-m for gbrain on LongMemEval-M (`0518e2fd`), and the sealed campaign (hash `b13010e1` for every unit that runs from A23 on, `0c4459fc` for the units settled under
+A22, and `eefd1799` for wave 1's settled units) for everything else. `--preview` writes no README block and opens the disclosures with a
 public-results-only line; the preview is how this layout was checked.
 
 ## Provenance
@@ -68,13 +68,23 @@ it lands with the real render.
    adapter refuses the second copy and the other systems keep it, so the view drops those questions for every
    system: 487 questions for gbrain's S4 row, 95 on the slice. The row on all questions stays the reported one; the
    view is never a claim. LongMemEval-M needs no view, because its loader keeps each repeat as its own occurrence.
-7. **Per-reader accuracy and derived columns.** Per-reader means, correct-abstention rates by system and set, and
+7. **Row notes (A23).** These notes sit beside the rows they qualify:
+   - **Not run.** graph-pipeline S1: three of ten shards measured past the 48-hour limit per conversation, and the
+     graph store's own failures account for the rest. markdown-kb S1: projected about 61 hours, past the 48-hour
+     limit, from the product's quadratic reindex. Each note carries its measurement.
+   - **Probe change.** The readiness probe uses an early passage of each system's last session from the A23 freeze
+     on (Garry 2026-10-17 via GBRA-108: rec). A conversation settled before then and flagged `ingest_degraded` by a
+     probe miss with 0 failed sessions keeps its flag, with a note that the old probe's passage started past the
+     product's embedder window. verbatim-session c1 and c5 are two of these.
+   - **gbrain synthesize model.** `whole-synthesize` answers with `claude-opus-4-7`, gbrain's shipped default at the
+     pin (owner's ruling, 2026-10-16).
+8. **Per-reader accuracy and derived columns.** Per-reader means, correct-abstention rates by system and set, and
    (if the hedge classifier passes its bar) confident-error and false-abstention rates.
-8. **Found-and-fixed appendix.** The public-v2 gbrain rows at `7aa2caa0` (0.60.106.0), derived and tabled but never
+9. **Found-and-fixed appendix.** The public-v2 gbrain rows at `7aa2caa0` (0.60.106.0), derived and tabled but never
    compared: LongMemEval-M `c1` and `c2` stalled at that pin (fixed in gbrain #6389, 0.60.133.0), so the
    LongMemEval-M row covers the 50 questions of `c0` and `c3`; LongMemEval-S `c0` and `c1` stalled during ingest and
    wrote no rows, so its two rows are listed as not run.
-9. **Inputs.** The campaign hash, every input file's SHA-256, the statistics method and the power file.
+10. **Inputs.** The campaign hash, every input file's SHA-256, the statistics method and the power file.
 
 ## What the public preview showed
 

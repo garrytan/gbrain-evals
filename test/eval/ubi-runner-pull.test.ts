@@ -3,7 +3,8 @@
  * launcher's checkpoint pull) and the run's final pull take the VM's pull lock
  * in turn, and a periodic pull after the final pull has begun is skipped. A
  * pull cut short keeps the previous copy (A22). Detached commands (A22) survive
- * a dropped session, follow retries, and stop forwards SIGTERM.
+ * a dropped session, follow retries, and stop forwards SIGTERM. A push whose stream fails is retried, and the ssh
+ * control socket fits the 104-byte limit under a long state root (A23).
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -65,6 +66,18 @@ describe('ubi-runner pull lock', () => {
     expect(overlaps(ts)).toBe(false);
   }, 20_000);
 
+  test('a pull stopped by a signal ends its ssh and tar and leaves no scratch directory or lock (A23)', async () => {
+    const v = vm(3);
+    const to = join(v.root, 'out');
+    const p = v.pull(to);
+    await Bun.sleep(1000);
+    p.kill('SIGTERM');
+    await p.exited;
+    await Bun.sleep(4000);
+    expect(require('node:fs').readdirSync(to)).toEqual([]);
+    expect(existsSync(join(v.dir, 'pull.lock'))).toBe(false);
+  }, 20_000);
+
   test('a lock left by a pull that died is broken', async () => {
     const v = vm(0);
     const dead = Bun.spawn(['true']);
@@ -78,13 +91,15 @@ describe('ubi-runner pull lock', () => {
 });
 
 /** A VM whose "ssh" runs the remote command locally (HOME is the VM home), failing while `drop` exists. */
-function local(opts: { truncate?: number } = {}) {
-  const root = join(tmp, `l${++n}`), bin = join(root, 'bin'), state = join(root, 'state'), home = join(root, 'home'), name = `ubirun-test-1791700000-l${n}`;
+function local(opts: { truncate?: number; failPushes?: number; state?: string; recordArgs?: boolean } = {}) {
+  const root = join(tmp, `l${++n}`), bin = join(root, 'bin'), state = opts.state ?? join(root, 'state'), home = join(root, 'home'), name = `ubirun-test-1791700000-l${n}`;
   for (const d of [bin, join(state, name), home]) mkdirSync(d, { recursive: true });
   writeFileSync(join(state, name, 'env'), 'IP=127.0.0.1\nLOCATION=eu-central-h1\n');
   const drop = join(root, 'drop');
   const cut = opts.truncate ? ` | head -c ${opts.truncate}` : '';
-  writeFileSync(join(bin, 'ssh'), `#!/usr/bin/env bash\nfor a; do last=$a; done\n[ -e ${drop} ] && exit 255\ncd ${home} && HOME=${home} bash -c "$last"${cut}\n`);
+  const failPush = opts.failPushes ? `case "$last" in *"rm -rf"*"tar -xzf"*) c=$(cat ${root}/push-fails 2>/dev/null || echo 0); if [ "$c" -lt ${opts.failPushes} ]; then echo $((c + 1)) > ${root}/push-fails; head -c 10 >/dev/null; echo "tar: Write error" >&2; exit 2; fi ;; esac\n` : '';
+  const record = opts.recordArgs ? `echo "$*" >> ${root}/ssh-args\n` : '';
+  writeFileSync(join(bin, 'ssh'), `#!/usr/bin/env bash\n${record}for a; do last=$a; done\n[ -e ${drop} ] && exit 255\n${failPush}cd ${home} && HOME=${home} bash -c "$last"${cut}\n`);
   chmodSync(join(bin, 'ssh'), 0o755);
   const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, UBI_RUNNER_STATE: state, UBI_OWNER: 'test', UBI_FOLLOW_SECONDS: '1', UBI_STOP_WAIT_SECONDS: '10' };
   const ubi = (args: string[], extra: Record<string, string> = {}) => Bun.spawn(['bash', RUNNER, ...args], { env: { ...env, ...extra }, stdout: 'pipe', stderr: 'pipe' });
@@ -164,5 +179,37 @@ describe('ubi-runner detached commands', () => {
     expect(await v.ubi(['stop', v.name]).exited).toBe(0);
     expect(readFileSync(join(v.home, '.ubirun-cmd.rc'), 'utf8').trim()).toBe('7');
     expect(readFileSync(join(v.home, '.ubirun-cmd.log'), 'utf8')).toBe('stopping\n');
+  }, 30_000);
+});
+
+describe('ubi-runner streams and sockets (A23)', () => {
+  test('a push whose stream fails ("tar: Write error") is retried whole, and gives up after UBI_PUSH_TRIES', async () => {
+    const v = local({ failPushes: 1 });
+    const src = join(v.root, 'custody');
+    mkdirSync(src, { recursive: true });
+    writeFileSync(join(src, 'beam.json'), 'sealed bytes\n');
+    const p = v.ubi(['push', v.name, src, join(v.home, 'custody')], { UBI_PUSH_TRIES: '2' });
+    expect(await p.exited).toBe(0);
+    expect(await new Response(p.stderr).text()).toContain('failed (attempt 1 of 2); retrying');
+    expect(readFileSync(join(v.home, 'custody', 'beam.json'), 'utf8')).toBe('sealed bytes\n');
+
+    const w = local({ failPushes: 5 });
+    mkdirSync(join(w.root, 'custody'), { recursive: true });
+    writeFileSync(join(w.root, 'custody', 'beam.json'), 'x\n');
+    const q = w.ubi(['push', w.name, join(w.root, 'custody'), join(w.home, 'custody')], { UBI_PUSH_TRIES: '2' });
+    expect(await q.exited).not.toBe(0);
+    expect(await new Response(q.stderr).text()).toContain('failed after 2 attempts');
+  }, 60_000);
+
+  test('the ssh control socket stays under the 104-byte socket limit when the state root is long', async () => {
+    const deep = join(tmp, 'k'.repeat(60), 'custody-host-runner-state-keep2');
+    for (const [root, short] of [[join(tmp, 's'), true], [deep, false]] as const) {
+      const v = local({ state: root, recordArgs: true });
+      expect(await v.ubi(['pull', v.name, join(v.home, 'nothing-here'), join(v.root, 'out')]).exited).not.toBe(0);
+      const path = readFileSync(join(v.root, 'ssh-args'), 'utf8').match(/ControlPath=(\S+)/)![1];
+      expect(path.length + 17).toBeLessThan(104);
+      if (short) expect(path).toBe(join(root, v.name, 'ctl'));
+      else expect(path).toMatch(/^\/tmp\/ubi-ctl-\d+\/[0-9a-f]{32}$/);
+    }
   }, 30_000);
 });

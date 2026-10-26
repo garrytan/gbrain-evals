@@ -17,6 +17,11 @@ services:
       NEO4J_server_memory_heap_max__size: 2G
       NEO4J_server_memory_pagecache_size: 1G
       NEO4J_dbms_usage__report_enabled: "false"
+    # The image declares VOLUME /data /logs. Without named volumes Docker makes them anonymous, bootstrap.sh snapshot
+    # carries nothing, and a restore on a fresh VM starts the graph empty (amendment A23).
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
     healthcheck:
       test: ["CMD-SHELL", "cypher-shell -u neo4j -p shootout-graphiti 'RETURN 1' >/dev/null 2>&1"]
       interval: 3s
@@ -55,3 +60,7 @@ services:
 networks:
   internal: { internal: true }
   outside: {}
+
+volumes:
+  neo4j-data: {}
+  neo4j-logs: {}

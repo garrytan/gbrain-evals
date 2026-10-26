@@ -32,6 +32,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../../budget-ledger.ts';
 import { FRONTIER_READERS, READER_WINDOWS } from '../../systems/baselines.ts';
+import type { Outcome } from '../../memory-qa/outcomes.ts';
 
 export const CELL_SCHEMA = 'gbrain-evals/q1-cell/v1';
 export const MANIFEST_SCHEMA = 'gbrain-evals/q1-cell-manifest/v1';
@@ -115,6 +116,10 @@ export interface CellDefinition {
   estimate: CellEstimate;
   /** Each launch unit's lease when it is set apart from the estimate per shard (LEASE_OVERRIDES, A20), and why. */
   lease?: { usd: number; basis: string };
+  /** A23: the cell's runs answer again every answer with one of `outcomes` (default harness_invalid) recorded before this instant (REANSWER_OVERRIDES), and why. */
+  reanswer_invalid_before?: { at: string; basis: string; outcomes?: Outcome[] };
+  /** A23: these shards rerun their conversations fresh, never using or carrying from a realization ingested before this instant (FRESH_OVERRIDES), and why. */
+  fresh_before?: { at: string; shards: number[]; basis: string };
 }
 
 export interface SetFacts {
@@ -227,7 +232,9 @@ export const ASSUMPTIONS = {
   agent: {
     'baseline-file-agent': { S1: 130_000, S2a: 30_000, S2b: 73_000, S3: { 'anthropic:claude-opus-5-5': 9_700, 'openai:gpt-6.1-sol': 7_800, 'anthropic:claude-sonnet-5-5': 4_950, default: 9_700 }, output: 2_000,
       output_S3: { 'anthropic:claude-opus-5-5': 860, 'openai:gpt-6.1-sol': 210, 'anthropic:claude-sonnet-5-5': 460, default: 860 } },
-    think: { S1: 36_000, S2a: 21_000, S2b: 30_000, S3: 20_000, output: 1_000 },
+    // A23: the ten S1 full-surface shards measured $0.20 an answer net of ingest, probes and judging (363 answers),
+    // 1.84 times the 36,000/1,000-token line, so every set's think tokens are scaled by 1.84.
+    think: { S1: 66_200, S2a: 38_600, S2b: 55_200, S3: 36_800, output: 1_840 },
     'ext-agent-runtime': { S3: 7_000, output: 2_000 },
   } as Record<string, Record<string, number | Record<string, number>>>,
   /** gbrain `synthesize` answers with its configured default model (claude-opus-4-7 at gbrain's pinned price) over its default delivery. */
@@ -343,8 +350,34 @@ interface ArmSpec extends Partial<ArmDefinition> { id: string; mode: ArmMode }
 export const LEASE_OVERRIDES: Record<string, { usd: number; basis: string }> = {
   's1.ext-temporal-graph.common': { usd: 350, basis: 'A20: wave 1 projects $305 a shard; the lease holds 15% over it, since a stop mid-ingest wastes the shard' },
   's1.gbrain-defaults.shipped-defaults': { usd: 27, basis: 'A20: every wave-1 shard used up its $18.17 lease while reading' },
+  's1.ext-verbatim-session.recipe': { usd: 19, basis: 'A23: per-answer costs measured on public BEAM-1M dev text (1m-16, 6 questions, metered) project a shard to $13.88 against its $8.17 lease. Frontier judging costs 3.6 times its line ($0.0256 an item), canonical BEAM judging 2.0 times (about 20 calls an answer), and the whole sessions of the native default 1.5 times (18,380 Claude tokens and 1,062 output against 11,940 and 720). Sessions up to 1.5 times larger on S1 put a shard near $15.70, and the lease holds about 22% over that' },
+  's1.gbrain-defaults.full-surface': { usd: 20, basis: 'A23: every S1 full-surface shard committed $11.15 to $11.36 of its $11.38 lease, and each think call reserves about $0.82 (max_tokens 16,000 on Opus), so the last answers were refused. At the measured $0.24 an answer with judging, a 60-answer shard needs about $17 plus one reservation; the lease holds about 13% over that' },
+  's1.ext-memory-bank.recipe': { usd: 32, basis: 'A23: the A17 shards measured $23.87 to $27.91 against the $27.60 estimate; c0, c1 and c3 rerun fresh, and the lease holds about 15% over the highest' },
+  's2b.gbrain-defaults.shipped-defaults': { usd: 160, basis: 'A23: gbrain shipped-defaults shards measured about 1.36 times their estimate on S1 ($21.81 to $26.87 against $18.17), which puts this cell near $159' },
+  's2b.baseline-full-context.baseline': { usd: 20, basis: 'A23: two S2b conversations fit gpt-6.1-sol. Its first call on each reserves about $5.40 (the byte-count input bound at the long-context cache-write rate) and the ten calls on one conversation spend about $5.20 with prompt caching, so the 20 answers need about $11 plus one reservation; the $1.37 estimate priced the average conversation, which fits no reader' },
   's1.ext-graph-pipeline.common': { usd: 65, basis: 'A22: nine wave-1 shards used up their $50.70 leases; ingest measured $3.67 to $4.22 per million tokens across a BEAM-1M dev conversation puts a shard at $53.34 at the highest rate, and the lease holds about 22% over it' },
 };
+
+/** The A23 freeze: every record a ruling sends back was made before it, and no A23 unit starts before it. */
+export const A23_FREEZE_AT = '2026-10-26T00:00:00Z';
+
+/** Cells whose earlier failed answers a ruling sends back to be answered again (A23). */
+export const REANSWER_OVERRIDES: Record<string, { at: string; basis: string; outcomes?: Outcome[] }> = {
+  's1.gbrain-defaults.full-surface': { at: A23_FREEZE_AT, basis: 'A23: 237 of the 600 think answers were recorded harness_invalid because the metering proxy refused gbrain\'s own think call once the $11.38 lease could not cover its reservation; that is a harness fault, so those answers are answered again at the $20 lease and the 363 others are kept' },
+  's2b.baseline-full-context.baseline': { at: A23_FREEZE_AT, outcomes: ['reader_error'], basis: 'A23: the metering proxy refused all 60 requests of the 20 gpt-6.1-sol answers (3 attempts each, 0 forwarded, $0) because one reading reserves about $5.40 against the $1.37 lease, and the A22 runner recorded each refusal as a reader_error. That is a harness fault, so those answers are answered again at the $20 lease and every other answer is kept' },
+};
+
+/** Shards whose conversations a ruling reruns fresh, carrying nothing from before the freeze (A23). */
+export const FRESH_OVERRIDES: Record<string, { at: string; shards: number[]; basis: string }> = {
+  's1.ext-memory-bank.recipe': { at: A23_FREEZE_AT, shards: [0, 1, 3], basis: 'A23: the store kept its data in an anonymous volume, so every A17 snapshot tar was empty, and the restored realizations (A17 c0-a2, c1-a2, c3-a2; A22 c1-a3, c3-a2) answered from an empty store. Their 11 rows and 45 answers are harness-invalid, and the three conversations are ingested again on a named volume and answered from scratch' },
+};
+
+/**
+ * A launch unit's timeout never passes 72 hours (cell.ts plan). A shim cell whose ingest projects past that in one VM
+ * runs as conversation shards of at most 48 hours each, as S1's shim cells do (A23: the S2b graph-pipeline and
+ * temporal-graph cells project 119 and 85 hours, and a 72-hour timeout would have stopped each one mid-ingest).
+ */
+const UNIT_LIMIT_HOURS = 72;
 
 /** Expected hours set apart from the ingest-rate schedule, for units whose question phase dominates their wall time (A22). */
 export const HOURS_OVERRIDES: Record<string, { hours: number; basis: string }> = {
@@ -366,15 +399,16 @@ function makeCell(set: SetId, system: string, configuration: string, armSpecs: A
       frontier: a.frontier ?? null, judge_repeats: a.judge_repeats ?? null, label: a.label ?? a.id, ...(a.anchor ? { anchor: true } : {}),
     };
   });
-  const shards = runner === 'shim' && set === 'S1' ? s.conversations : 1;
   const launch = runner === 'shim' ? shimLaunch(system, configuration) : null;
   const family = s.benchmark.startsWith('beam') ? 'beam' : s.benchmark;
   const perMtok = ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
-  const hours = Math.max(1, Math.ceil(perMtok * s.corpus_tokens / 1e6 / shards));
+  const single = perMtok * s.corpus_tokens / 1e6;
+  const shards = runner === 'shim' && set === 'S1' ? s.conversations : runner === 'shim' && single > UNIT_LIMIT_HOURS ? Math.min(s.conversations, Math.ceil(single / 48)) : 1;
+  const hours = Math.max(1, Math.ceil(single / shards));
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
     ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}`, conversations: set === 'S4' || set === 'S4-slice' || set === 'S5' ? 50 : null },
     ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), shards, expected_hours: HOURS_OVERRIDES[id]?.hours ?? Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
-  return { ...base, estimate: estimateCell(base), ...(LEASE_OVERRIDES[id] ? { lease: LEASE_OVERRIDES[id] } : {}) };
+  return { ...base, estimate: estimateCell(base), ...(LEASE_OVERRIDES[id] ? { lease: LEASE_OVERRIDES[id] } : {}), ...(REANSWER_OVERRIDES[id] ? { reanswer_invalid_before: REANSWER_OVERRIDES[id] } : {}), ...(FRESH_OVERRIDES[id] ? { fresh_before: FRESH_OVERRIDES[id] } : {}) };
 }
 
 /** How a shim cell's stack starts: bootstrap.sh --config and any environment the configuration needs. */

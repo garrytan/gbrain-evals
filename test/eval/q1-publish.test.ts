@@ -59,7 +59,7 @@ describe('publication.json', () => {
   const config = JSON.parse(readFileSync(join(ROOT, 'docs/benchmarks/2026-10-06-scoreboard/publication.json'), 'utf8')) as Publication;
   test('names existing campaigns and the sealed hash', () => {
     for (const s of [...config.sources, ...config.pending]) expect(existsSync(join(ROOT, s.campaign))).toBe(true);
-    expect(config.campaign_hash).toBe('0c4459fc4a0ea6164cedf14b650b5483c603a21150534be40fe46dbb1a4fe169');
+    expect(config.campaign_hash).toBe('b13010e1cdab897aab7143231ae005f040c3e19c06dcd8f9210963478ae6bd95');
   });
   test('carries the A21 view on both LongMemEval-S sets and the found-and-fixed appendix for public-v2 gbrain', () => {
     const a21 = config.sensitivity.find(v => v.id === 'a21-repeated-sessions')!;

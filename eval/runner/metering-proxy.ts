@@ -78,6 +78,18 @@
  *     is shared by every cell a process serves; the campaign launcher gives
  *     each concurrent cell on one key its share of the key's limits. A 429
  *     counts as upstream trouble, so the harness retries it like a 5xx.
+ *   key headroom  Every lease proxy also reads the provider's own rate-limit
+ *     headers (OpenAI `x-ratelimit-*-requests`, Anthropic
+ *     `anthropic-ratelimit-requests-*`) per model. They count the whole key,
+ *     so they include every other VM on it. While a model's remaining requests
+ *     are at or under 5% of its limit, new requests for it wait for the reset
+ *     the provider names (amendment A23: temporal-graph c8 failed sessions on
+ *     `RateLimitError` for an embedding model shared by concurrent cells).
+ *   transport retry  A request whose connection to the provider fails before
+ *     any response (a closed or reset socket) is sent again up to twice, after
+ *     1 and 4 seconds; each failed attempt is charged at its reservation (A23:
+ *     `socket connection closed unexpectedly` failed temporal-graph c9's
+ *     sessions). A timeout is never retried.
  */
 import { timingSafeEqual } from 'node:crypto';
 import { appendFileSync, readFileSync } from 'node:fs';
@@ -102,6 +114,13 @@ const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-org
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
 /** A provider call may run this long (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */
 export const UPSTREAM_DEADLINE_MS = 900_000;
+/** Waits before a request whose connection failed before any response is sent again (A23). */
+const TRANSPORT_RETRY_MS = [1000, 4000];
+/** A connection that closed or reset before the provider answered; never a timeout or an abort. */
+const transportFailure = (e: unknown) => {
+  const err = e as Error & { code?: string };
+  return err?.name !== 'TimeoutError' && err?.name !== 'AbortError' && (/^(ECONNRESET|EPIPE|ECONNREFUSED|UND_ERR_SOCKET)$/.test(err?.code ?? '') || /socket connection was closed|socket hang up|connection reset/i.test(err?.message ?? ''));
+};
 
 export interface Meter {
   usd: number;
@@ -117,6 +136,8 @@ export interface Meter {
   billed_usd?: number;
   /** Dollars charged at a reservation because no usage came back (a 5xx, a timeout, a lost stream). */
   reserved_unsettled_usd?: number;
+  /** Lease mode: requests the proxy refused before forwarding, by error kind (`budget`, `rate_limited`, `invalid_request`), so a caller can tell a lease stop the system swallowed from a product failure. */
+  refused?: Record<string, number>;
 }
 export const newMeter = (): Meter => ({ usd: 0, requests: 0, unpriced: 0, byModel: {} });
 
@@ -133,6 +154,22 @@ export const PHASES: readonly Phase[] = ['commit', 'background', 'query'];
 
 export interface ProviderLimits { rpm?: number; tpm?: number; concurrency?: number }
 
+/** A model's requests may use the key until its remaining count falls to this share of the limit (A23). */
+export const HEADROOM_RESERVE = 0.05;
+
+/** Milliseconds until a provider's request limit resets: OpenAI `x-ratelimit-reset-requests` (`6ms`, `1m30.5s`), Anthropic `anthropic-ratelimit-requests-reset` (RFC 3339). */
+export function requestResetMs(headers: Headers, now = Date.now()): number | null {
+  const openai = headers.get('x-ratelimit-reset-requests');
+  if (openai !== null) {
+    const parts = [...openai.matchAll(/(\d+(?:\.\d+)?)(ms|h|m|s)/g)];
+    if (!parts.length) return null;
+    return parts.reduce((ms, [, n, u]) => ms + Number(n) * ({ ms: 1, s: 1000, m: 60_000, h: 3_600_000 } as Record<string, number>)[u], 0);
+  }
+  const anthropic = headers.get('anthropic-ratelimit-requests-reset');
+  const at = anthropic === null ? NaN : Date.parse(anthropic);
+  return Number.isFinite(at) ? Math.max(0, at - now) : null;
+}
+
 /**
  * Shared provider admission: requests per minute, tokens per minute and
  * concurrency per provider, plus a pause after a 429 or 503 that names a
@@ -142,17 +179,20 @@ export interface ProviderLimits { rpm?: number; tpm?: number; concurrency?: numb
  */
 export class AdmissionController {
   private state = new Map<string, { inflight: number; window: Array<{ at: number; tokens: number }>; pausedUntil: number }>();
+  private headroom = new Map<string, { limit: number; remaining: number; resetAt: number }>();
   readonly stats = { admitted: 0, waited_ms: 0, refused: 0, pauses: 0 };
   constructor(readonly limits: Partial<Record<ProviderName, ProviderLimits>>, private opts: { maxWaitMs?: number; now?: () => number; pollMs?: number } = {}) {}
   private now() { return this.opts.now ? this.opts.now() : Date.now(); }
   private s(p: string) { let x = this.state.get(p); if (!x) this.state.set(p, x = { inflight: 0, window: [], pausedUntil: 0 }); return x; }
   /** How long `provider` must wait before a request of `tokens` fits, 0 when it fits now. */
-  waitFor(provider: string, tokens: number): number {
+  waitFor(provider: string, tokens: number, model?: string | null): number {
     const lim = this.limits[provider as ProviderName];
     const s = this.s(provider);
     const t = this.now();
     s.window = s.window.filter(e => e.at > t - 60_000);
     let wait = Math.max(0, s.pausedUntil - t);
+    const h = model ? this.headroom.get(`${provider}:${model}`) : undefined;
+    if (h && t < h.resetAt && h.remaining <= Math.max(1, Math.floor(h.limit * HEADROOM_RESERVE))) wait = Math.max(wait, h.resetAt - t);
     if (!lim) return wait;
     if (lim.concurrency && s.inflight >= lim.concurrency) wait = Math.max(wait, this.opts.pollMs ?? 25);
     if (lim.rpm && s.window.length >= lim.rpm) wait = Math.max(wait, s.window[s.window.length - lim.rpm].at + 60_000 - t);
@@ -165,16 +205,18 @@ export class AdmissionController {
     return wait;
   }
   /** Admit one request; resolves when it fits, with `release` to call when it finishes (with the tokens it really used). */
-  async acquire(provider: string, tokens: number): Promise<{ waited_ms: number; release: (actualTokens?: number) => void }> {
+  async acquire(provider: string, tokens: number, model?: string | null): Promise<{ waited_ms: number; release: (actualTokens?: number) => void }> {
     const started = this.now();
     const maxWait = this.opts.maxWaitMs ?? 600_000;
     for (;;) {
-      const w = this.waitFor(provider, tokens);
+      const w = this.waitFor(provider, tokens, model);
       if (w <= 0) break;
       if (this.now() - started + w > maxWait) { this.stats.refused++; throw new AdmissionRefused(provider, w); }
       await Bun.sleep(Math.min(w, 1000));
     }
     const s = this.s(provider);
+    const h = model ? this.headroom.get(`${provider}:${model}`) : undefined;
+    if (h) h.remaining--;
     const entry = { at: this.now(), tokens };
     s.window.push(entry);
     s.inflight++;
@@ -183,6 +225,14 @@ export class AdmissionController {
     this.stats.waited_ms += waited;
     let done = false;
     return { waited_ms: waited, release: (actual?: number) => { if (done) return; done = true; s.inflight--; if (actual !== undefined && Number.isFinite(actual)) entry.tokens = actual; } };
+  }
+  /** Record the key's remaining requests for `model` from a provider response's rate-limit headers. */
+  observe(provider: string, model: string | null, headers: Headers) {
+    const [limit, remaining] = [['x-ratelimit-limit-requests', 'anthropic-ratelimit-requests-limit'], ['x-ratelimit-remaining-requests', 'anthropic-ratelimit-requests-remaining']]
+      .map(names => { const v = names.map(n => headers.get(n)).find(x => x !== null); return v === undefined ? NaN : Number(v); });
+    const reset = requestResetMs(headers, this.now());
+    if (!model || !(limit > 0) || !Number.isFinite(remaining) || reset === null) return;
+    this.headroom.set(`${provider}:${model}`, { limit, remaining, resetAt: this.now() + reset });
   }
   /** Stop admitting `provider` for `ms` (a retry-after from the provider). */
   pause(provider: string, ms: number) {
@@ -279,7 +329,7 @@ export interface UsageLine {
   reason?: string; status?: number; reserved_usd?: number; actual_usd?: number; input_tokens?: number; output_tokens?: number; charged_reservation?: boolean; streamed?: boolean;
   /** Stable per-request id (`<run>-<n>`), the slot, the brain and phase bound when it arrived, and its bucket. */
   request_id?: string; slot?: string; brain?: string | null; phase?: Phase | null; bucket?: Bucket;
-  route_class?: string; output_cap?: number; admission_wait_ms?: number; retry_after_ms?: number;
+  route_class?: string; output_cap?: number; admission_wait_ms?: number; retry_after_ms?: number; transport_retries?: number;
 }
 
 /** How one provider request is attributed: its stable id, the slot it came in on, the bound brain and phase, and its bucket. */
@@ -505,6 +555,8 @@ export class MeteringProxy {
     const tagged = { request_id: tag.request_id, slot: tag.slot, brain: tag.brain, phase: tag.phase, bucket: tag.bucket, ...(routeClass !== undefined ? { route_class: routeClass } : {}), output_cap: cap };
     const refuse = (status: number, kind: string, reason: string, model: string | null = null, extra: Record<string, string> = {}) => {
       this.log({ at, key, provider: prov, route, model, outcome: 'refused', reason, status, ...tagged });
+      const m = this.meter(key);
+      m.refused = { ...m.refused, [kind]: (m.refused?.[kind] ?? 0) + 1 };
       const r = json(status, kind, reason);
       for (const [k, v] of Object.entries(extra)) r.headers.set(k, v);
       return r;
@@ -547,7 +599,7 @@ export class MeteringProxy {
     const reserved = bounded ? reservationUsd(bounded) : 0;
     let admitted: Awaited<ReturnType<AdmissionController['acquire']>> | null = null;
     if (p.admission) {
-      try { admitted = await p.admission.acquire(prov, bounded ? bounded.inputTokens + bounded.maxOutputTokens : 0); }
+      try { admitted = await p.admission.acquire(prov, bounded ? bounded.inputTokens + bounded.maxOutputTokens : 0, bounded?.model ?? model); }
       catch (e) {
         if (!(e instanceof AdmissionRefused)) throw e;
         return refuse(429, 'rate_limited', e.message, model, { 'retry-after': String(Math.max(1, Math.ceil(e.retryAfterMs / 1000))) });
@@ -564,6 +616,7 @@ export class MeteringProxy {
     else headers.set('authorization', `Bearer ${realKey}`);
     if (outBody !== undefined) headers.set('content-type', 'application/json');
     const waitMs = admitted?.waited_ms;
+    let retries = 0;
     const settle = (cost: ReturnType<typeof usageCost>, status: number, isStream: boolean, retryAfter: number | null = null) => {
       if (entry) p.lease.settle(entry, cost);
       admitted?.release(cost ? cost.input_tokens + cost.output_tokens : undefined);
@@ -571,18 +624,29 @@ export class MeteringProxy {
       this.charge(key, prov, bounded?.model ?? null, usd, !!bounded && !cost, tag);
       this.log({ at, key, provider: prov, route, model: bounded?.model ?? model, outcome: 'forwarded', status, reserved_usd: reserved, actual_usd: usd,
         input_tokens: cost?.input_tokens, output_tokens: cost?.output_tokens, charged_reservation: !!bounded && !cost, streamed: isStream, ...tagged,
-        ...(waitMs ? { admission_wait_ms: waitMs } : {}), ...(retryAfter !== null ? { retry_after_ms: retryAfter } : {}) });
+        ...(waitMs ? { admission_wait_ms: waitMs } : {}), ...(retryAfter !== null ? { retry_after_ms: retryAfter } : {}), ...(retries ? { transport_retries: retries } : {}) });
     };
-    let res: Response;
-    try { res = await send(target, { method: req.method, headers, body: outBody, timeout: false, signal: AbortSignal.timeout(UPSTREAM_DEADLINE_MS) } as RequestInit); }
-    catch (e) {
-      if (entry) p.lease.settle(entry, null);
-      admitted?.release();
-      this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);
-      this.observe(key, 'failed');
-      this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: (e as Error).message.slice(0, 300), reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded, ...tagged });
-      return json(502, 'product_error', `upstream failed: ${(e as Error).message}`);
+    let res!: Response;
+    for (;;) {
+      try { res = await send(target, { method: req.method, headers, body: outBody, timeout: false, signal: AbortSignal.timeout(UPSTREAM_DEADLINE_MS) } as RequestInit); break; }
+      catch (e) {
+        if (entry) p.lease.settle(entry, null);
+        this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);
+        const again = retries < TRANSPORT_RETRY_MS.length && transportFailure(e);
+        this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: `${(e as Error).message.slice(0, 280)}${again ? ' (sent again)' : ''}`, reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded, ...tagged });
+        if (!again) {
+          admitted?.release();
+          this.observe(key, 'failed');
+          return json(502, 'product_error', `upstream failed: ${(e as Error).message}`);
+        }
+        await Bun.sleep(TRANSPORT_RETRY_MS[retries++]);
+        if (bounded) {
+          try { entry = p.lease.reserve(reserved, `${prov}:${bounded.model} ${bounded.kind} [${key}] retry ${retries}`); }
+          catch (err) { admitted?.release(0); return refuse(402, 'budget', (err as Error).message, model); }
+        }
+      }
     }
+    p.admission?.observe(prov, bounded?.model ?? model, res.headers);
     const hint = res.status === 429 || res.status === 503 ? retryAfterMs(res.headers) : null;
     if (hint !== null) p.admission?.pause(prov, hint);
     const out = new Headers(res.headers);
@@ -702,7 +766,7 @@ export function startLeaseProxy(a: ProxyCliArgs, env: Record<string, string | un
   const lease = BudgetRun.openLease({ runId: a.runId, leaseUsd: a.leaseUsd, ledgerPath: a.ledger, runner: 'metering-proxy', maxOutputTokens: a.maxOutputTokens, newRun: a.newRun });
   const proxy = new MeteringProxy({ hostname: a.host, port: a.port, upstream: a.upstream, controlToken: a.controlToken, cellToken: a.cellToken, trustLocal: a.trustLocal,
     policy: { lease, env, allowModels: a.allowModels, maxOutputTokens: a.maxOutputTokens ?? undefined, forbiddenMarkers: a.forbiddenMarkers, streaming: a.streaming, usageLog: a.usageLog ?? `${lease.ledgerPath}.usage.ndjson`,
-      ...(a.routeCaps ? { routeCaps: a.routeCaps } : {}), ...(a.admission ? { admission: new AdmissionController(a.admission, { maxWaitMs: a.admissionMaxWaitMs ?? undefined }) } : {}) } });
+      ...(a.routeCaps ? { routeCaps: a.routeCaps } : {}), admission: new AdmissionController(a.admission ?? {}, { maxWaitMs: a.admissionMaxWaitMs ?? undefined }) } });
   proxy.start();
   return proxy;
 }

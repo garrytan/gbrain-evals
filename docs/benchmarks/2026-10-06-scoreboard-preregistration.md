@@ -348,11 +348,13 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   (0.60.106.0), resolved hash `415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab` (fact extraction on
   `claude-sonnet-4-6`, no content-repair model).
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
-  cell executes (159 files at the A9, A14, A17, A19 and A20 trees, 160 at A22) and the pinned images:
-  - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 144 launch units; cap $7,800 (A20);
-    launched from the custodian's host. Hash `0c4459fc4a0ea6164cedf14b650b5483c603a21150534be40fe46dbb1a4fe169` (A22, 160 files)
-    for waves 2 to 5 and the wave-1 reruns, replacing `43749abd1ebecd8b8e16b3d9f91401647f27e95f247d65339e7819eaedb1cfb6`
-    (A20), which replaced `a1ff43c5` (A19, never relayed). Wave 1's settled units ran at
+  cell executes (159 files at the A9, A14, A17, A19 and A20 trees, 160 at A22 and A23) and the pinned images:
+  - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 149 launch units (A23); cap $8,000 (A23; $7,800 from A20);
+    launched from the custodian's host. Hash `b13010e1cdab897aab7143231ae005f040c3e19c06dcd8f9210963478ae6bd95` (A23, 160 files)
+    for every unit that runs from A23 on, replacing `0c4459fc4a0ea6164cedf14b650b5483c603a21150534be40fe46dbb1a4fe169`
+    (A22), under which waves 2 and 3 and the wave-1 reruns settled. That replaced
+    `43749abd1ebecd8b8e16b3d9f91401647f27e95f247d65339e7819eaedb1cfb6` (A20), which replaced `a1ff43c5` (A19, never
+    relayed). Wave 1's settled units ran at
     `eefd1799842105260104532b78283f9d9b5379ddfae6d44bb8f75317bc56424c` (A17), which replaced
     `a7328eed8f77e30523e32a1c4a9756711fabdcfce3118c893dedd006b3877728` (A14), under which nothing was counted.
   - `q1-scoreboard-public`: LongMemEval-S and -M; 12 launch units; cap $500. Hash
@@ -380,7 +382,8 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
     (A18).
   - `q1-scoreboard-public-v3-s2`: the same two LongMemEval-S shards, rerun after v3-s's VMs were lost (A18); cap
     $39. Hash `f34169372ea1818a94882331c3cf720fa5308184842feb1de1908857ee5de64a`.
-  The sealed cap ($7,800, A20) and about $418 of spend outside it (A20) stay under the $8,500 program cap.
+  The sealed cap ($8,000, A23) and about $418 of spend outside it (A20), about $8,418 together, stay under the $8,500
+  program cap.
 - **Images:** every upstream image each bundle pulls or builds on, in each campaign's `images` map by bare `sha256`
   digest keyed by bundle (the full references live in the bundles beside `docs/comparison-systems.md`); images the
   bundles build are covered by their Dockerfiles and lockfiles in the hashed tree.
@@ -1137,7 +1140,228 @@ choices below were auto-approved under Garry's standing rule, 2026-10-12.
   $7,800). At this tree, v3-s2 hashes to `ffefe780` and v3-m to `56c60981`. Each public campaign still renders from
   its launch tree.
 
+**A23 (2026-10-25, before the cells it affects): classification of every sealed group-1 failure, harness fixes, and a
+re-freeze.** Sealed Q1 measured $4,998.59. The runner ledgers committed more: $2,273.83 under A22 and $2,909.16 under
+A17, $5,182.99 together. That left $2,617.01 under the $7,800 cap, and the plan below projects $2,747.37. The owner
+raised the sealed cap to $8,000: "raise the cap do everything" (Garry 2026-10-25 via GBRA-108). Q1's $8,500 program
+cap is unchanged. That leaves $2,817.01 on the ledger basis, and that is the figure this amendment prices against. Each failure below is either a harness fault, which is fixed and rerun, or the product's own behavior under
+its shipped settings, which counts as the product's failure. No external system's own setting (model, chunking,
+prompt, vendor concurrency or retry knob) changed to rescue a score. Only limits the harness imposes and bugs in the
+harness or in our own shim adapters changed. Each fix has a test that fails on the A22 code and passes on this tree.
+The custodian's evidence (status table sha256 `f8bb7127…e467`) settled each classification. The design choices below
+were auto-approved under Garry's standing rule, 2026-10-12, apart from item 11, which Garry decided.
+
+- **1. graph-pipeline S1, all ten shards (0 rows): the product's own behavior. Not run, no rerun.**
+  - The product opens its graph store with a hard-coded 32 GiB `max_db_size` and keeps it open for the life of the
+    process. On public BEAM dev text a checkpoint then fails after about 2,050 turn pairs (about 1.9M tokens) with
+    `Maximum database size of 34359738368 bytes has been reached`, and the store never reopens. Every later write and
+    retrieval fails with the WAL-checksum error. The product's incremental `cognify` then re-extracts every failed item on
+    each call, so the cost per session climbs (keyless, from 2 to about 60 chat calls within 25 sessions).
+  - Sealed evidence: on c2, 4,893 of 6,227 sessions failed. Of the first 200, 175 were the product's `CognifyFailedError`
+    (`'float' object has no attribute 'replace'`), 23 the WAL-checksum error, 1 the size limit and 1 an
+    `AttributeError`; then all 60 retrievals failed on the WAL error. No graph-pipeline log has an exit 137, so the
+    corruption came before any stop, and A22's drain is not involved. Six shards spent their $65 lease on ingest.
+    c0, c5 and c8 ingested for 62 hours without finishing.
+  - Reported as "not run": three of ten shards measured past the 48-hour limit per conversation, and the store's own
+    failures account for the rest. The shards settle at their measured spend.
+  - Harness change with no effect on this classification: the shim's memory limit rises from 6g to 12g, because the
+    container reached 6g about 30 sessions before the failure and left no headroom.
+- **2. temporal-graph S1 c8 and c9 (2,418 and 3,036 failed sessions, 120 rows `ingest_degraded`): harness faults.
+  Rerun fresh.**
+  - c8's first 200 failed sessions were all `RateLimitError` on the shared key's requests-per-minute limit for
+    `text-embedding-3-large`. Of c9's first 200, 186 were `socket connection closed unexpectedly`, the metering proxy's
+    error for a connection to the provider that closed before any response, and 14 the same rate limit. On both,
+    `/finish` failed the same way, so the readiness probe was skipped and every row was degraded.
+  - **Key headroom.** Every lease proxy now reads the provider's own rate-limit headers (OpenAI
+    `x-ratelimit-*-requests`, Anthropic `anthropic-ratelimit-requests-*`) for each model. They count the whole key, so
+    they include every other VM on it. While a model has 5% or less of its limit left, new requests for it wait for
+    the reset the provider names. This applies to every system's cells by the same rule, and it changes no system
+    setting.
+  - **Transport retry.** A request whose connection to the provider fails before any response is sent again, up to
+    twice, after 1 and 4 seconds. Each failed attempt is charged at its reservation. A timeout is never retried.
+  - A separate shim fault is also fixed. Each request ran on a new handler thread with empty context variables, so
+    pydantic rebuilt its generic-class cache on every call and the shim grew about 2.3 MB a session. Keyless under a
+    700 MB limit, the old shim was OOM-killed at session 273; the fixed shim held 125 to 129 MB with 0 failed. No
+    temporal-graph setting changed.
+  - c0 to c7 keep their A17 results.
+- **3. Named volumes for every shim store: a harness fault.**
+  - memory-bank's Postgres and temporal-graph's Neo4j kept their data in their images' anonymous volumes.
+    `bootstrap.sh snapshot` tars only named volumes, so every temporal-graph tar and every A17 memory-bank tar is empty
+    (10,240 bytes, 2 entries). A restore started those stores empty.
+  - Both compose files now name their volumes. `bootstrap.sh snapshot` refuses a container with an anonymous volume. A
+    resume treats a snapshot that lacks a declared volume as `snapshot_check: incomplete` and ingests again. A test
+    checks that every Q1 shim system keeps its store in named volumes.
+  - temporal-graph never restored in snapshot mode, so no temporal-graph row came from an empty store.
+  - memory-bank restored five times: A17 c0-a2, c1-a2 and c3-a2, and A22 c1-a3 and c3-a2. Everything those restores
+    produced is harness-invalid: 11 rows and 45 answers, the 3 scored rows and 15 scored answers among them ($3.24).
+    S1 memory-bank c0, c1 and c3 rerun fresh. The other seven shards never restored and keep their results.
+  - Those three units run with `--fresh-before 2026-10-26T00:00:00Z` (`FRESH_OVERRIDES`). A realization ingested
+    before that instant is invalidated, never restored and never carried from, so each conversation is ingested again
+    on a named volume and every row and answer is made again. A resumed fresh run carries only from realizations made
+    after the freeze, and a unit that is handed a restored snapshot refuses. A test covers each case.
+- **4. markdown-kb S1 (c0 timed out at 11 hours): the product's own behavior. Not run, no rerun.**
+  - The sealed c0 shard wrote all 6,228 sessions in 9.0 hours with 0 failures. In the 2.7 hours left before its
+    timeout it produced no answered row, because the question phase waits for the reindex. The snapshot stop then
+    killed the shim (exit 137).
+  - The time goes into the product's own `bm reindex` vector reconcile. It runs a DELETE with a correlated subquery
+    over a virtual table, so its cost grows with the square of the chunk count. Keyless, 500 sessions took 690
+    seconds and 2,000 took 14,078, of which 11,668 were the reconcile.
+  - A BEAM-10M conversation (about 216,000 chunks) projects to about 61 hours, past the 48-hour limit per
+    conversation, so no harness timeout could rescue it. Reported as "not run (projected ~61 h > 48 h limit)" with
+    this measurement. c1 to c9 never start.
+- **5. verbatim-session S1 leases: a harness sizing fault.** The estimate assumed 8,000 tokens per native answer, and
+  the product averages 11,799 over 220 dev questions. Its judge calls also cost more than modelled. The S1 shards
+  lease $19 (`LEASE_OVERRIDES`). All ten have settled, so this changes no spend.
+- **6. gbrain full-surface `whole-think` (237 of 600 answers `harness_invalid`): a harness fault. Answered again.**
+  - Every S1 full-surface shard committed $11.15 to $11.36 of its $11.38 lease. gbrain asks for `max_tokens` 16,000
+    on its think call, so each call reserves about $0.82, and the proxy refused every think call after that with
+    HTTP 402. gbrain turns a 402 on an explicitly chosen model into an `ai_config` error. The shim recorded that as
+    `harness_invalid` with zero usage in 0.9 to 3.6 seconds, against a 17.7-second median for a scored answer, and
+    the cell did not stop.
+  - Public repro, keyless and $0, at gbrain `f05943e6`: one PGLite brain, a stub provider that answers 402, and
+    `think {model: anthropic:claude-sonnet-5-5}` over MCP. The stub receives one call (`max_tokens` 16,000, no
+    retry), and think returns `isError: true` with `reason: ai_config`, the 402 text and no answer. A paid run on
+    public BEAM-100K dev `100k-1` answered 9 of 9 with a $7 lease. So this is gbrain's shipped reply to a refused
+    provider call, and the refusal came from the harness.
+  - Fixes:
+    - A proxy refusal of the system's own provider call now records `budget_not_run` and stops the cell.
+    - A `harness_invalid` own answer records the system's error code, reason and message in
+      `answer-attempts.ndjson`.
+    - The think line is re-priced at the measured $0.20 an answer, net of ingest, probes and judging (1.84 times the
+      old line), for every set.
+    - The S1 full-surface shards lease $20.
+    - Their runs carry `--reanswer-invalid-before 2026-10-26T00:00:00Z`, which answers again every
+      `harness_invalid` answer recorded before this freeze. Each affected conversation moves to a new realization
+      that carries the 363 valid answers and their judgments.
+  - Owner's ruling, 2026-10-16: `whole-synthesize` answering with `claude-opus-4-7` is gbrain's shipped default at the
+    pin, so it is the product under test. The report notes it beside the row.
+- **7. S2b full-context (20 gpt-6.1-sol `reader_error` at $0): a harness lease-sizing fault. Answered again.**
+  - The proxy refused all 60 Sol requests on the $1.37 lease (0 forwarded). The request states 2,048 output tokens,
+    within the reader cap. The reservation is the byte-count input bound at the long-context cache-write rate: about
+    $5.40 for a conversation that fits Sol's window. Two S2b conversations fit, and the estimate had priced the
+    average conversation, which fits no reader. A test pins the reservation's arithmetic.
+  - The 32,768 in the custodian's reading is the proxy summary's `max_output_tokens`, the allowance it reserves for a
+    request that states none. The reader's requests state 2,048 and reserve that, so the output side was not the
+    cause: the input bound alone is about four times the lease.
+  - Fixes: that refusal records `budget_not_run` and stops the cell, and the lease is $20. The A22 runner recorded
+    each refusal as a `reader_error` after three attempts, and a recorded answer is never read again on resume, so
+    the unit runs with `--reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes reader_error`. That
+    answers again every `reader_error` recorded before the freeze and keeps every other answer. The 20 answers are
+    about $11 with prompt caching, plus one reservation.
+  - No other full-context cell has this shape: S1 fits no reader, and S2a and S3 were priced as fitting.
+- **8. S2b gbrain shipped-defaults (exit 2 after ingest, 0 rows, $8.11): a harness fault. Rerun fresh.** The harness
+  read each snapshot file whole into memory to sha256 it, and the multi-GB gbrain snapshot failed with `ENOMEM`. Every
+  snapshot and realization hash now reads in 8 MiB chunks through one helper (`sha256File` in
+  `eval/runner/sealed-confirmation-lib.ts`). That covers the realization recorded on the VM, the check of a pulled
+  realization, the resume's check before a restore, and the BEAM-10M push guard. A test hashes a 1 GiB sparse
+  realization under a 600 MB address-space limit. The cell leases $160, because gbrain shipped-defaults measured
+  about 1.36 times its estimate on S1. S2b common-embedder runs at this freeze too.
+- **9. Shim cells longer than one unit's timeout: a harness fault.** A launch unit's timeout never passes 72 hours.
+  The schedule had capped every cell at 48 hours, so the S2b graph-pipeline recipe (119 hours of ingest in one VM)
+  and temporal-graph common (85 hours) would have been stopped mid-ingest, although each conversation takes about 5
+  and 3.5 hours. A shim cell that projects past 72 hours in one VM now runs as conversation shards of at most 48 hours
+  each, as S1's shim cells do: graph-pipeline in 3 shards, temporal-graph in 2, and gbrain full-surface and
+  common-embedder in 2 each (both had no hours line of their own and take the shim's 4 hours per million). None of
+  these cells had started. The campaign has 149 launch units.
+- **10. Runner fixes from the move to the custodian's host.**
+  - The final pull is retried (`UBI_PULL_TRIES`, default 3). If it still fails, the VM is kept and the runner exits
+    253, which `reattach` treats as a kept VM.
+  - A push or sync whose tar fails with `Write error` is retried whole (`UBI_PUSH_TRIES`, default 3).
+  - A resume records the realization of a lease pulled after it was abandoned, so a kept VM pulled late still
+    restores.
+  - `campaign.json` names its ledger relative to the checkout, and an absolute path from another host resolves here.
+  - An ssh ControlPath longer than 80 characters moves under `/tmp/ubi-ctl-<uid>/`, inside the 104-byte socket limit.
+  - A pull runs in its own process group. An interrupted pull kills the whole group and removes its scratch
+    directory and lock.
+  - `bootstrap.sh snapshot` warns when a container exited before the snapshot, and tells an OOM kill apart from the
+    end of the stop grace period.
+  - Real-VM dry run: a forced pull failure exited 253 with the VM kept and no scratch left. A later pull returned
+    400 MB intact, and the VM was destroyed.
+- **11. Readiness probe (Garry 2026-10-17 via GBRA-108: rec).** verbatim-session c1 was `ingest_degraded` with 0 failed
+  sessions. The probe searched for the opening of the last session's longest turn, which can start deep in the
+  session. The custodian measured c1's missed probe starting at wordpiece 1,387 of a 2,648-wordpiece session, and
+  another miss at 1,125. The 19 found probes started at wordpieces 23 to 46. c5's miss started at 1,294, and its found
+  probes at 22 to 132. The product's embedder reads about 256 wordpieces, so a retrieval miss was being reported as an
+  ingest failure.
+  - The probe now opens the longest turn that starts within the session's first 800 characters. It still proves the
+    last session landed, and it no longer measures retrieval depth. The change applies to every system.
+  - The decision applies from this freeze on. Rows settled before it keep the degraded flag their receipts record,
+    and nothing is recomputed. The report footnotes verbatim-session c1 and c5, and every other settled conversation
+    flagged by a probe miss with 0 failed sessions, naming this change and the embedder-window explanation.
+- **Dry runs.** About $13.30 in all against the $40 cap: graph-pipeline $1.16, temporal-graph at most $6.64, gbrain
+  think $2.63, verbatim $2.85, and the runner's real-VM dry run, which cost pennies. The think repro above cost $0.
+- **What runs at this freeze.**
+  - T1:
+    - temporal-graph c8 and c9, fresh;
+    - memory-bank c0, c1 and c3, fresh;
+    - the 237 think answers on the ten full-surface shards;
+    - gbrain shipped-defaults c4 and c5, with 5 and 14 answers still missing.
+  - S2b:
+    - the 20 Sol full-context answers;
+    - shipped-defaults, fresh;
+    - full-surface and common-embedder, 2 shards each;
+    - graph-pipeline recipe, 3 shards;
+    - temporal-graph common, 2 shards;
+    - markdown-kb recipe.
+  - S2a (17 units) and S3 (28 units).
+  - The frontier backfill (A19), unless it has already run.
+- **Price.** Each line is projected from measured spend where the campaign has it:
+  - temporal-graph at its highest A17 shard rate;
+  - think at its measured rate;
+  - gbrain shipped-defaults at 1.36 times its estimate;
+  - other kinds at the highest ratio their settled units reached against their leases: recency 1.18, hybrid 1.69,
+    file agent 1.12, verbatim 1.24 (S2b), none 0.24, extract-first 0.99, memory-bank 1.01, and the rest 1.0.
+
+  | Work | Projected | Leases |
+  |---|---:|---:|
+  | temporal-graph S1 c8 and c9, at the highest A17 shard ($186.09) | $372.18 | $700.00 |
+  | memory-bank S1 c0, c1 and c3, at the highest A17 shard ($27.91) | $83.73 | $96.00 |
+  | gbrain full-surface S1, 237 think answers, re-ingest bound | $90.17 | $200.00 |
+  | gbrain shipped-defaults S1 c4 and c5, 19 answers, re-ingest bound | $7.15 | $54.00 |
+  | S2b, 12 units | $1,010.94 | $1,260.10 |
+  | S2a, 17 units (wave 5) | $513.32 | $499.63 |
+  | S3, 28 units | $554.88 | $555.09 |
+  | Frontier backfill (A19), if not yet run | $115.00 | $150.00 |
+  | **Total** | **$2,747.37** | **$3,514.82** |
+
+  The projection is $69.64 (about 2.5%) under the remaining $2,817.01. Against the $7,800 cap it was $130.36 over,
+  and the preregistered cuts would have removed S2a first. The owner raised the cap instead, so the full plan runs
+  and no cut is applied. Any projected overrun past $8,000 on the ledger basis stops and goes back to the owner
+  through GBRA-108 before it is spent. The ledger cap stays the hard stop.
+- **Ledger.** The units at this freeze run in a ledger of their own. A22's ledger takes no new lease and keeps its
+  $4,826.81 cap, and A17's ledger is never set above $7,200.
+  - The custodian runs `shootout-cell.ts init` for this freeze in a fresh state directory, which creates the ledger at
+    the manifest's $8,000 and opens the campaign run.
+  - Before any reservation, `budget-ledger.ts set-cap` lowers it to $8,000 minus what the A17 and A22 ledgers have
+    committed, minus the backfill run's cap (or its committed spend once it has run). At the A23 evidence that is
+    $8,000 - $2,909.16 - $2,273.83 - $150 = $2,667.01, against $2,632.37 projected for this freeze's units.
+  - When A17 or A22 leases settle under their reservations, `set-cap` raises the cap to the same formula and never
+    above it, so one hard cap holds the combined sealed spend at $8,000.
+- **Freeze.** The sealed campaign is re-frozen at hash
+  `b13010e1cdab897aab7143231ae005f040c3e19c06dcd8f9210963478ae6bd95` (160 tree files, 149 units, $8,855.86 in leases,
+  cap $8,000). This replaces A22's `0c4459fc` for every unit that runs from here. Settled units keep their A17 and
+  A22 receipts. At this tree, v3-s2 hashes to `5417b675` and v3-m to `0459384e`. Each public campaign still renders
+  from its launch tree.
+
 ## Changelog
+
+### 2026-10-25: amendment A23
+
+Every sealed group-1 failure is classified. graph-pipeline S1 and markdown-kb S1 are the products' own behavior and
+are reported as not run. The rest are harness faults, fixed and rerun:
+- temporal-graph c8 and c9 (key headroom and transport retry in the proxy);
+- memory-bank's snapshots (named volumes; 11 rows and 45 answers invalid, c0, c1 and c3 fresh);
+- whole-think's 237 answers (lease refusals, re-answered);
+- S2b full-context (lease; its 20 `reader_error` answers read again);
+- S2b shipped-defaults (streamed snapshot hash);
+- S2b's long shim cells (sharded under the 72-hour unit limit);
+- six runner faults from the host move.
+
+The readiness probe uses an early passage from this freeze on (Garry 2026-10-17 via GBRA-108: rec). Re-frozen at
+`b13010e1`, 149 units. The projection of $2,747.37 was over the remaining $2,617.01, so the owner raised the sealed cap
+from $7,800 to $8,000: "raise the cap do everything" (Garry 2026-10-25 via GBRA-108). The full plan runs, S2a
+included, with $2,817.01 left on the ledger basis; no cut is applied. Any projected overrun past $8,000 stops and goes
+back to GBRA-108 before it is spent. Q1's $8,500 program cap is unchanged.
 
 ### 2026-10-12: amendment A22
 

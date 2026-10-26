@@ -148,11 +148,11 @@
         }
       },
       "think": {
-        "S1": 36000,
-        "S2a": 21000,
-        "S2b": 30000,
-        "S3": 20000,
-        "output": 1000
+        "S1": 66200,
+        "S2a": 38600,
+        "S2b": 55200,
+        "S3": 36800,
+        "output": 1840
       },
       "ext-agent-runtime": {
         "S3": 7000,
@@ -426,29 +426,29 @@
       "id": "T1",
       "label": "T1 S1 headline (complete)",
       "plan_usd": 3995,
-      "estimate_usd": 5110.48,
-      "cap_usd": 7665.72
+      "estimate_usd": 5165.52,
+      "cap_usd": 7748.28
     },
     {
       "id": "T2-S2a",
       "label": "T2 S2a BEAM-100K",
       "plan_usd": 585,
-      "estimate_usd": 475.21,
-      "cap_usd": 712.82
+      "estimate_usd": 499.63,
+      "cap_usd": 749.45
     },
     {
       "id": "T2-S2b",
       "label": "T2 S2b BEAM-1M",
       "plan_usd": 1720,
-      "estimate_usd": 1652.17,
-      "cap_usd": 2478.26
+      "estimate_usd": 1708.61,
+      "cap_usd": 2562.91
     },
     {
       "id": "T2-S3",
       "label": "T2 S3 LoCoMo",
       "plan_usd": 730,
-      "estimate_usd": 521.46,
-      "cap_usd": 782.19
+      "estimate_usd": 555.06,
+      "cap_usd": 832.59
     },
     {
       "id": "T2-S4-S5",
@@ -733,15 +733,23 @@
         }
       ],
       "estimate": {
-        "usd": 113.79,
+        "usd": 168.83,
         "lines": {
           "frontier_judges": 12.96,
           "ingest": 13.2,
           "ingest_probes": 13,
           "judge_repeats": 8.21,
           "judges": 0.82,
-          "own_answer": 65.6
+          "own_answer": 120.64
         }
+      },
+      "lease": {
+        "usd": 20,
+        "basis": "A23: every S1 full-surface shard committed $11.15 to $11.36 of its $11.38 lease, and each think call reserves about $0.82 (max_tokens 16,000 on Opus), so the last answers were refused. At the measured $0.24 an answer with judging, a 60-answer shard needs about $17 plus one reservation; the lease holds about 13% over that"
+      },
+      "reanswer_invalid_before": {
+        "at": "2026-10-26T00:00:00Z",
+        "basis": "A23: 237 of the 600 think answers were recorded harness_invalid because the metering proxy refused gbrain's own think call once the $11.38 lease could not cover its reservation; that is a harness fault, so those answers are answered again at the $20 lease and the 363 others are kept"
       }
     },
     {
@@ -1096,6 +1104,19 @@
           "judges": 3.01,
           "readers": 68.07
         }
+      },
+      "lease": {
+        "usd": 32,
+        "basis": "A23: the A17 shards measured $23.87 to $27.91 against the $27.60 estimate; c0, c1 and c3 rerun fresh, and the lease holds about 15% over the highest"
+      },
+      "fresh_before": {
+        "at": "2026-10-26T00:00:00Z",
+        "shards": [
+          0,
+          1,
+          3
+        ],
+        "basis": "A23: the store kept its data in an anonymous volume, so every A17 snapshot tar was empty, and the restored realizations (A17 c0-a2, c1-a2, c3-a2; A22 c1-a3, c3-a2) answered from an empty store. Their 11 rows and 45 answers are harness-invalid, and the three conversations are ingested again on a named volume and answered from scratch"
       }
     },
     {
@@ -1811,6 +1832,10 @@
           "judges": 3.01,
           "readers": 62.92
         }
+      },
+      "lease": {
+        "usd": 19,
+        "basis": "A23: per-answer costs measured on public BEAM-1M dev text (1m-16, 6 questions, metered) project a shard to $13.88 against its $8.17 lease. Frontier judging costs 3.6 times its line ($0.0256 an item), canonical BEAM judging 2.0 times (about 20 calls an answer), and the whole sessions of the native default 1.5 times (18,380 Claude tokens and 1,062 output against 11,940 and 720). Sessions up to 1.5 times larger on S1 put a shard near $15.70, and the lease holds about 22% over that"
       }
     },
     {
@@ -2549,6 +2574,10 @@
           "readers": 29.86,
           "system_queries": 0.42
         }
+      },
+      "lease": {
+        "usd": 160,
+        "basis": "A23: gbrain shipped-defaults shards measured about 1.36 times their estimate on S1 ($21.81 to $26.87 against $18.17), which puts this cell near $159"
       }
     },
     {
@@ -2575,7 +2604,7 @@
         "seed": "q1-probes-s2b",
         "conversations": null
       },
-      "shards": 1,
+      "shards": 2,
       "expected_hours": 48,
       "launch": {
         "env": {
@@ -2618,14 +2647,14 @@
         }
       ],
       "estimate": {
-        "usd": 127.67,
+        "usd": 184.11,
         "lines": {
           "frontier_judges": 15.55,
           "ingest": 2.88,
           "ingest_probes": 31.2,
           "judge_repeats": 9.85,
           "judges": 0.98,
-          "own_answer": 67.2
+          "own_answer": 123.65
         }
       }
     },
@@ -2901,8 +2930,8 @@
         "seed": "q1-probes-s2b",
         "conversations": null
       },
-      "shards": 1,
-      "expected_hours": 48,
+      "shards": 3,
+      "expected_hours": 40,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -3025,8 +3054,8 @@
         "seed": "q1-probes-s2b",
         "conversations": null
       },
-      "shards": 1,
-      "expected_hours": 48,
+      "shards": 2,
+      "expected_hours": 43,
       "launch": {
         "env": {},
         "config": "common"
@@ -3748,7 +3777,7 @@
         "seed": "q1-probes-s2b",
         "conversations": null
       },
-      "shards": 1,
+      "shards": 2,
       "expected_hours": 48,
       "launch": {
         "env": {},
@@ -3856,6 +3885,17 @@
           "frontier_judges": 0.39,
           "judges": 0.98
         }
+      },
+      "lease": {
+        "usd": 20,
+        "basis": "A23: two S2b conversations fit gpt-6.1-sol. Its first call on each reserves about $5.40 (the byte-count input bound at the long-context cache-write rate) and the ten calls on one conversation spend about $5.20 with prompt caching, so the 20 answers need about $11 plus one reservation; the $1.37 estimate priced the average conversation, which fits no reader"
+      },
+      "reanswer_invalid_before": {
+        "at": "2026-10-26T00:00:00Z",
+        "outcomes": [
+          "reader_error"
+        ],
+        "basis": "A23: the metering proxy refused all 60 requests of the 20 gpt-6.1-sol answers (3 attempts each, 0 forwarded, $0) because one reading reserves about $5.40 against the $1.37 lease, and the A22 runner recorded each refusal as a reader_error. That is a harness fault, so those answers are answered again at the $20 lease and every other answer is kept"
       }
     },
     {
@@ -4090,14 +4130,14 @@
         }
       ],
       "estimate": {
-        "usd": 57.75,
+        "usd": 82.17,
         "lines": {
           "frontier_judges": 9.07,
           "ingest": 0.24,
           "ingest_probes": 13,
           "judge_repeats": 5.75,
           "judges": 0.57,
-          "own_answer": 29.12
+          "own_answer": 53.54
         }
       }
     },
@@ -5328,14 +5368,14 @@
         }
       ],
       "estimate": {
-        "usd": 50.37,
+        "usd": 83.97,
         "lines": {
           "frontier_judges": 2.41,
           "ingest": 0.03,
           "ingest_probes": 1.69,
           "judge_repeats": 5.67,
           "judges": 0.57,
-          "own_answer": 40
+          "own_answer": 73.6
         }
       }
     },
@@ -7604,8 +7644,8 @@
         "seed": "q1-probes-s5",
         "conversations": 50
       },
-      "shards": 1,
-      "expected_hours": 48,
+      "shards": 3,
+      "expected_hours": 45,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -7675,8 +7715,8 @@
         "seed": "q1-probes-s5",
         "conversations": 50
       },
-      "shards": 1,
-      "expected_hours": 48,
+      "shards": 2,
+      "expected_hours": 40,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -9498,7 +9538,7 @@
       "ingest_sessions": 93
     }
   ],
-  "total_usd": 8022.52,
+  "total_usd": 8192.02,
   "plan_total_usd": 7710,
   "cap_usd": 8500
 }
