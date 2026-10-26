@@ -42,14 +42,25 @@ setup_env() {
 c8k() { bun $H/c8k.ts "$1" --custody-root "$C8K_ROOT" --decision "$C8K_DECISION" "${@:2}"; }
 dev() { c8k "$1" --development --access-log "$V/access-log.jsonl" "${@:2}"; }
 
+# extract <c8k|dev> <dir>: extraction is serial on PGLite, so C8K_EXTRACT_SHARDS (default 4) processes take every nth
+# history each, then one pass checks that every history finished and writes the summary.
+extract() {
+  local n=${C8K_EXTRACT_SHARDS:-4} pids=() k
+  for ((k = 0; k < n; k++)); do "$1" extract --corpus "$2/corpus.json" --brains "$2/brains" "${GB[@]}" --shard "$k" --shards "$n" > /dev/null & pids+=($!); done
+  for k in "${pids[@]}"; do wait "$k"; done
+  "$1" extract --corpus "$2/corpus.json" --brains "$2/brains" "${GB[@]}" --out "$2/extract.json" > /dev/null
+}
+
 # ─── One lease cell (run by shootout-cell.ts behind the lease proxy) ───
 if [ "${1:-}" = cell ]; then
   STEP=$2
   : "${C8K_ROOT:?cell steps run under c8k-run.sh all or dev}" "${C8K_GBRAIN:?}" "${SHOOTOUT_PROXY:?cell steps run behind a lease proxy}"
   setup_env
   case "$STEP" in
-    import|extract|freeze) c8k "$STEP" --corpus "$R/corpus.json" --brains "$R/brains" --evidence-dir "$R/evidence" "${GB[@]}" --out "$R/$STEP.json" > /dev/null ;;
-    dev-import|dev-extract|dev-freeze) dev "${STEP#dev-}" --corpus "$V/corpus.json" --brains "$V/brains" --evidence-dir "$V/evidence" "${GB[@]}" --out "$V/${STEP#dev-}.json" > /dev/null ;;
+    import|freeze) c8k "$STEP" --corpus "$R/corpus.json" --brains "$R/brains" --evidence-dir "$R/evidence" "${GB[@]}" --out "$R/$STEP.json" > /dev/null ;;
+    dev-import|dev-freeze) dev "${STEP#dev-}" --corpus "$V/corpus.json" --brains "$V/brains" --evidence-dir "$V/evidence" "${GB[@]}" --out "$V/${STEP#dev-}.json" > /dev/null ;;
+    extract) extract c8k "$R" ;;
+    dev-extract) extract dev "$V" ;;
     read-sonnet) c8k read --corpus "$R/corpus.json" --evidence-dir "$R/evidence" --readers-dir "$R/readers" --reader sonnet-5-5 --out "$R/read/sonnet-5-5.json" > /dev/null ;;
     read-frontier)
       for r in opus-5-5 gpt-6-1-sol; do c8k read --corpus "$R/corpus.json" --evidence-dir "$R/evidence" --readers-dir "$R/readers" --reader "$r" --out "$R/read/$r.json" > /dev/null; done ;;

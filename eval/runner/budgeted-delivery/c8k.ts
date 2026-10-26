@@ -172,13 +172,17 @@ export async function runImport(o: { custodyRoot: string; corpus: Corpus; brains
     pages_equal_sessions: rows.every(r => r.pages === r.sessions), settings: { ...BRAIN_SETTINGS, ...(o.keyless ? KEYLESS_SETTINGS : {}) } };
 }
 
-/** Per brain: gbrain's conversation fact extraction, then the doctor-recommended safe-chunks repair (c8k-product.ts repairSafeChunks). */
-export async function runExtract(o: { custodyRoot: string; corpus: Corpus; brains: string; m: ProductModules; identity: Row }) {
+/**
+ * Per brain: gbrain's conversation fact extraction, then the doctor-recommended safe-chunks repair (c8k-product.ts
+ * repairSafeChunks). Extraction is serial on PGLite, so c8k-run.sh runs `shard` k of n (every nth history) in n
+ * processes at once; each brain is one process's alone, and its line appends to the shared record when it finishes.
+ */
+export async function runExtract(o: { custodyRoot: string; corpus: Corpus; brains: string; m: ProductModules; identity: Row; shard?: { k: number; n: number } }) {
   const done = join(o.brains, 'extracted.ndjson');
   const finished = new Set(readNdjson(done).map(r => r.brain));
-  for (const conv of personas(o.corpus)) {
+  for (const [i, conv] of personas(o.corpus).entries()) {
     const name = brainName(conv.id);
-    if (finished.has(name)) continue;
+    if (finished.has(name) || (o.shard && i % o.shard.n !== o.shard.k)) continue;
     const dir = brainPath(o.brains, conv.id);
     if (!existsSync(dir)) throw new Error(`${name} was never imported`);
     const e = await openBrain(o.m, dir);
@@ -655,7 +659,9 @@ if (import.meta.main) {
       writeJson(out, c);
       result = { id: c.id, questions: c.questions.length, conversations: c.conversations.length, kinds: count(c.questions.map(q => q.abstention ? 'abstention' : q.category)) };
     } else if (step === 'import') { const p = await product(); result = await runImport({ custodyRoot, corpus: corpus(), brains: resolve(need('--brains')), m: p.m, keyless: flag('--keyless'), identity: p.identity }); }
-    else if (step === 'extract') { const p = await product(); result = await runExtract({ custodyRoot, corpus: corpus(), brains: resolve(need('--brains')), m: p.m, identity: p.identity }); }
+    else if (step === 'extract') { const p = await product(); const n = Number(one('--shards') ?? 1), k = Number(one('--shard') ?? 0);
+      if (!(Number.isInteger(n) && n >= 1 && Number.isInteger(k) && k >= 0 && k < n)) throw new Error('--shard k --shards n needs 0 <= k < n');
+      result = await runExtract({ custodyRoot, corpus: corpus(), brains: resolve(need('--brains')), m: p.m, identity: p.identity, shard: n > 1 ? { k, n } : undefined }); }
     else if (step === 'freeze') { const p = await product(); result = await runFreeze({ custodyRoot, decision, corpus: corpus(), brains: resolve(need('--brains')), evidence: resolve(need('--evidence-dir')), m: p.m, identity: p.identity }); }
     else if (step === 'gate') {
       const p = await product();
