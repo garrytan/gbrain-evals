@@ -67,16 +67,19 @@ describe('the committed decision directory', () => {
     expect(dev.steps.reduce((n, s) => n + s.estimate_usd, 0)).toBeCloseTo(dev.estimate_usd, 6);
   });
 
-  test('measures the wave PR head; not ready for custody until the access log is filled', () => {
+  test('measures the wave PR head; ready for custody with the access log filled, refused when any line is not', () => {
     expect(D.gbrain.commit).toBe('cf3ec433f4fffda60d00076bae7361100c632cc4');
     expect(JSON.parse(readFileSync(join(DIR, 'manifests/campaign.json'), 'utf8')).parameters.gbrain_sha).toBe(D.gbrain.commit);
-    expect(() => assertFilled(D)).toThrow(/access_log_before/);
-    expect(() => assertFilled({ ...D, gbrain: { ...D.gbrain, commit: 'fill-at-freeze' } })).toThrow(/gbrain.commit/);
-    const filled = structuredClone(D) as C8kDecision;
-    filled.gbrain.commit = 'a'.repeat(40);
-    filled.sealed.access_log_before.entries = filled.sealed.access_log_before.entries.map(e => e.action === 'fill-at-custody' ? { action: 'score', decision_id: e.decision_id } : e);
-    expect(() => assertFilled(filled)).not.toThrow();
     expect(D.sealed.access_log_before.lines).toBe(35);
+    expect(D.sealed.access_log_before.entries).toHaveLength(35);
+    expect(() => assertFilled(D)).not.toThrow();
+    expect(() => assertFilled({ ...D, gbrain: { ...D.gbrain, commit: 'fill-at-freeze' } })).toThrow(/gbrain.commit/);
+    const unfilled = structuredClone(D) as C8kDecision;
+    unfilled.sealed.access_log_before.entries[6] = { action: 'fill-at-custody', decision_id: unfilled.sealed.access_log_before.entries[6].decision_id };
+    expect(() => assertFilled(unfilled)).toThrow(/access_log_before/);
+    const short = structuredClone(D) as C8kDecision;
+    short.sealed.access_log_before.entries.pop();
+    expect(() => assertFilled(short)).toThrow(/access_log_before/);
   });
 });
 
