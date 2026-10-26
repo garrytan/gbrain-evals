@@ -1,0 +1,20 @@
+{
+  "kind": "c8k-extract",
+  "commit": "6f82a94e00d20c096267999fcf71948872463aab",
+  "version": "0.60.461.0",
+  "keyless": true,
+  "embedding": "hash@1536 (keyless control)",
+  "extractor": "runExtractConversationFactsCore (force, source default), gbrain's default extraction model",
+  "brains": 12,
+  "pages_processed": 144,
+  "pages_failed": 0,
+  "extraction_errors": 0,
+  "facts": 215,
+  "facts_world": 215,
+  "facts_per_history": {
+    "min": 16,
+    "mean": 17.916666666666668,
+    "max": 20
+  },
+  "histories_without_facts": 0
+}

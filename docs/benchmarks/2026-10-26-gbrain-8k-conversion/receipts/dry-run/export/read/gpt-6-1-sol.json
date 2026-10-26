@@ -1,0 +1,43 @@
+{
+  "kind": "c8k-read",
+  "reader": "gpt-6-1-sol",
+  "model": "openai:gpt-6.1-sol",
+  "arms": {
+    "A0": {
+      "rows": 60,
+      "reader_errors": 0,
+      "input_tokens_mean": 6293,
+      "output_tokens_mean": 2
+    },
+    "A1": {
+      "rows": 60,
+      "reader_errors": 0,
+      "input_tokens_mean": 7525.35,
+      "output_tokens_mean": 2
+    },
+    "A2": {
+      "rows": 60,
+      "reader_errors": 0,
+      "input_tokens_mean": 7336.15,
+      "output_tokens_mean": 2
+    },
+    "A3": {
+      "rows": 60,
+      "reader_errors": 0,
+      "input_tokens_mean": 7335.1,
+      "output_tokens_mean": 2
+    },
+    "A4": {
+      "rows": 60,
+      "reader_errors": 0,
+      "input_tokens_mean": 7335.1,
+      "output_tokens_mean": 2
+    },
+    "R5": {
+      "rows": 60,
+      "reader_errors": 0,
+      "input_tokens_mean": 7192.266666666666,
+      "output_tokens_mean": 2
+    }
+  }
+}

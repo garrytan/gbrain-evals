@@ -1,0 +1,73 @@
+{
+  "kind": "c8k-budget",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "campaign_id": "gbrain-8k-conversion-dry-run",
+  "cap_usd": 300,
+  "committed_usd": 17.486453599999997,
+  "remaining_usd": 282.5135464,
+  "estimate_usd": 143,
+  "spent_usd": 3.052336099999991,
+  "alert_over_twice_estimate": false,
+  "steps": [
+    {
+      "id": "import",
+      "estimate_usd": 1.5,
+      "cap_usd": 5,
+      "leases": 1,
+      "reserved_usd": 1,
+      "spent_usd": 0,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    },
+    {
+      "id": "extract",
+      "estimate_usd": 25,
+      "cap_usd": 50,
+      "leases": 1,
+      "reserved_usd": 16,
+      "spent_usd": 2.842201099999991,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    },
+    {
+      "id": "freeze",
+      "estimate_usd": 1.5,
+      "cap_usd": 3,
+      "leases": 1,
+      "reserved_usd": 1,
+      "spent_usd": 0,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    },
+    {
+      "id": "read-sonnet",
+      "estimate_usd": 30,
+      "cap_usd": 55,
+      "leases": 0,
+      "reserved_usd": 0,
+      "spent_usd": 0,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    },
+    {
+      "id": "read-frontier",
+      "estimate_usd": 80,
+      "cap_usd": 115,
+      "leases": 0,
+      "reserved_usd": 0,
+      "spent_usd": 0,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    },
+    {
+      "id": "score",
+      "estimate_usd": 5,
+      "cap_usd": 12,
+      "leases": 1,
+      "reserved_usd": 6,
+      "spent_usd": 0.21013499999999988,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    }
+  ]
+}

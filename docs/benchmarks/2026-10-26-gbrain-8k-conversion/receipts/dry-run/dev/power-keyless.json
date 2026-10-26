@@ -1,0 +1,181 @@
+{
+  "dry_run": "Keyless: stub reader and judge answers over hash-vector retrieval, 40 simulations. It proves scripts/power.ts runs on the development cell's score reports; every number in it is meaningless. power.json is computed from the paid development reading before custody.",
+  "schema": "gbrain-evals/c8k-power/v1",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "note": "Simulated before custody from the development reading's Sonnet 5.5 rows (LongMemEval-S dev100) with the committed family and rule; bootstrap and sign-flip draws lowered to 2,000. No sealed data. A comparison whose dev_transfer p_pass is below 0.2 is flagged below_20_percent, as the preregistration requires.",
+  "pools": {
+    "multi-session": {
+      "n": 16,
+      "accuracy": {
+        "A0": 0.6875,
+        "A1": 0.625,
+        "A2": 0.4375,
+        "A3": 0.5625,
+        "A4": 0.5625,
+        "R5": 0.3125
+      }
+    },
+    "temporal-reasoning": {
+      "n": 15,
+      "accuracy": {
+        "A0": 0.4666666666666667,
+        "A1": 0.6,
+        "A2": 0.7333333333333333,
+        "A3": 0.5333333333333333,
+        "A4": 0.5333333333333333,
+        "R5": 0.6
+      }
+    },
+    "knowledge-update": {
+      "n": 16,
+      "accuracy": {
+        "A0": 0.5,
+        "A1": 0.4375,
+        "A2": 0.4375,
+        "A3": 0.3125,
+        "A4": 0.3125,
+        "R5": 0.5
+      }
+    },
+    "abstention": {
+      "n": 4,
+      "accuracy": {
+        "A0": 0.5,
+        "A1": 0.5,
+        "A2": 0.5,
+        "A3": 0.25,
+        "A4": 0.25,
+        "R5": 0.5
+      }
+    }
+  },
+  "sealed_shape": {
+    "personas": 40,
+    "per_persona": {
+      "multi-session": 2,
+      "temporal-reasoning": 1,
+      "knowledge-update": 1,
+      "abstention": 1
+    },
+    "kinds": {
+      "multi-session": 24,
+      "temporal-reasoning": 12,
+      "knowledge-update": 12,
+      "abstention": 12
+    }
+  },
+  "scenarios": {
+    "dev_transfer": {
+      "sims": 40,
+      "comparisons": {
+        "D1": {
+          "mean_delta": -0.009625,
+          "p_pass": 0,
+          "p_fail": 0.625,
+          "p_inconclusive": 0.375,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0.175,
+          "p_guard8_fail": 0.5,
+          "below_20_percent": true
+        },
+        "D2": {
+          "mean_delta": -0.046000000000000006,
+          "p_pass": 0,
+          "p_fail": 0.85,
+          "p_inconclusive": 0.15,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0.7,
+          "p_guard8_fail": 0.425,
+          "below_20_percent": true
+        },
+        "D3": {
+          "mean_delta": -0.07312500000000002,
+          "p_pass": 0,
+          "p_fail": 1,
+          "p_inconclusive": 0,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 1,
+          "p_guard8_fail": 1,
+          "below_20_percent": true
+        },
+        "D4": {
+          "mean_delta": 0,
+          "p_pass": 0,
+          "p_fail": 0,
+          "p_inconclusive": 1,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        }
+      },
+      "recommended_prefix_length": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0
+      }
+    },
+    "null": {
+      "sims": 40,
+      "comparisons": {
+        "D1": {
+          "mean_delta": -0.001750000000000001,
+          "p_pass": 0,
+          "p_fail": 0.525,
+          "p_inconclusive": 0.475,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0.175,
+          "p_guard8_fail": 0.425,
+          "below_20_percent": true
+        },
+        "D2": {
+          "mean_delta": 0.007625000000000004,
+          "p_pass": 0,
+          "p_fail": 0.475,
+          "p_inconclusive": 0.525,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0.025,
+          "p_guard8_fail": 0.475,
+          "below_20_percent": true
+        },
+        "D3": {
+          "mean_delta": -0.008124999999999997,
+          "p_pass": 0,
+          "p_fail": 0.4,
+          "p_inconclusive": 0.6,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0.1,
+          "p_guard8_fail": 0.4,
+          "below_20_percent": true
+        },
+        "D4": {
+          "mean_delta": -0.0003749999999999997,
+          "p_pass": 0,
+          "p_fail": 0.55,
+          "p_inconclusive": 0.45,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0.15,
+          "p_guard8_fail": 0.475,
+          "below_20_percent": true
+        }
+      },
+      "recommended_prefix_length": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0
+      }
+    }
+  }
+}

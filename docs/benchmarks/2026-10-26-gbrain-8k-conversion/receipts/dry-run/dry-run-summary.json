@@ -1,0 +1,150 @@
+{
+  "kind": "c8k-dry-run",
+  "note": "Keyless: an invented fixture (h1-fixture.ts), dummy keys, hash vectors and the reranker off, every lease proxy pointed at stub-proxy.ts --vary (stub facts are the first-person sentences of each turn). Answers, facts, verdicts, the decision outcome and every dollar figure are meaningless: the dollars are the stub usage (prompt characters / 4 in, 2 tokens out) priced at list prices by the lease proxies; nothing was paid.",
+  "bun": "1.4.2",
+  "gbrain_commit": "6f82a94e00d20c096267999fcf71948872463aab",
+  "fixture": {
+    "questions": 60,
+    "haystacks": 12,
+    "sessions": 144,
+    "chars_per_session": 13102,
+    "kinds": {
+      "multi-session": 24,
+      "temporal-reasoning": 12,
+      "knowledge-update": 12,
+      "abstention": 12
+    },
+    "questions_sha256": "0500b05e98b4c5e0393304c3be3163b078e9f62551663c82ddc9285fb4902539",
+    "labels_sha256": "046f941b7e7c99337898abc1e2bcee047689c02a7ca665ef39da6580be655924"
+  },
+  "development_slice": 100,
+  "development_wall_seconds": 3738,
+  "chain_wall_seconds": 186,
+  "labels_mode_after_run": "0o0",
+  "stub": {
+    "ok": true,
+    "calls": 13495,
+    "extractions": 11080
+  },
+  "gates": {
+    "retrieval": {
+      "pass": true,
+      "problems": []
+    },
+    "final": {
+      "pass": true,
+      "problems": []
+    }
+  },
+  "access_log": {
+    "lines_before": 35,
+    "this_decision": [
+      "open",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score",
+      "score"
+    ],
+    "label_reads": 18,
+    "label_reads_after_final_gate": true,
+    "decide_label_reads": {
+      "this_decision": 18,
+      "expected": 18,
+      "all_after_final_gate": true
+    }
+  },
+  "outcome_meaningless": {
+    "recommended_prefix": [],
+    "verdicts": {
+      "D1": "inconclusive",
+      "D2": "inconclusive",
+      "D3": "fail",
+      "D4": "inconclusive"
+    },
+    "problems": []
+  },
+  "probes": [
+    {
+      "probe": "score-report-outside-root",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[sealed] FATAL: sealed profile refused: the report is outside the custody root; the spend ledger is outside the custody root; the response cache is outside the custody root"
+    },
+    {
+      "probe": "score-spend-outside-root",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[sealed] FATAL: sealed profile refused: the spend ledger is outside the custody root; the response cache is outside the custody root"
+    },
+    {
+      "probe": "score-inside-repository",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[sealed] FATAL: sealed profile refused: the custody root overlaps the repository; the report is inside the repository; the spend ledger is inside the repository; the response cache is inside the repos"
+    },
+    {
+      "probe": "gate-after-label-read",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[c8k] gate refused: labels were already read under this decision; the gate must run before any label read"
+    },
+    {
+      "probe": "freeze-unfilled-decision",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[c8k] freeze refused: the decision file is not ready for custody: gbrain.commit is fill-at-freeze (the wave's merge commit is written before custody); sealed.access_log_before does not record every ve"
+    },
+    {
+      "probe": "freeze-other-gbrain-commit",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[c8k] freeze refused: --gbrain resolved to 6f82a94e00d20c096267999fcf71948872463aab; the decision pins 0000000000000000000000000000000000000000"
+    },
+    {
+      "probe": "read-outside-root",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[c8k] read refused: sealed profile refused: the readers directory is outside the custody root"
+    },
+    {
+      "probe": "export-outside-root",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[c8k] export refused: sealed profile refused: the export directory is outside the custody root"
+    },
+    {
+      "probe": "custody-check-foreign-log-line",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[c8k] custody-check refused: 1 access-log lines after the recorded state belong to another decision; stop and ask the owner"
+    },
+    {
+      "probe": "corpus-tampered-questions",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[c8k] corpus refused: commitment mismatch for questions.json: expected sha256 0500b05e98b4c5e0393304c3be3163b078e9f62551663c82ddc9285fb4902539 (2017136 bytes), got 19f36f7ce53014b00a3e01d37cf788d18b80"
+    },
+    {
+      "probe": "return-log-foreign-line",
+      "refused": true,
+      "access_log_lines_added": 0,
+      "message": "[c8k] return-log refused: 1 added lines belong to another decision"
+    }
+  ],
+  "all_probes_refused_without_a_label_read": true,
+  "fixture_text_outside_custody": []
+}
