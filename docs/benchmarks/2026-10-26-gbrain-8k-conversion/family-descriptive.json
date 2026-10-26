@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "family_id": "c8k-descriptive",
+  "registered_at": "2026-10-26",
+  "description": "8k conversion descriptive references, all report-only: every arm against R5 and A0 under Sonnet 5.5, and D1 to D4 under claude-opus-5-5 and gpt-6.1-sol. They decide nothing, so no multiplicity correction applies.",
+  "alpha": 0.05,
+  "seed": 20261026,
+  "draws": 20000,
+  "min_clusters": 10,
+  "id_field": "question_id",
+  "comparisons": [
+    {
+      "id": "answer_accuracy",
+      "metric": "answer_correct",
+      "gate": "exploratory",
+      "direction": "higher",
+      "cluster_by": "haystack_id",
+      "description": "Descriptive. Judged answer correctness over all questions, B minus A."
+    },
+    {
+      "id": "packed_recall_all",
+      "metric": "recall_all",
+      "gate": "exploratory",
+      "direction": "higher",
+      "cluster_by": "haystack_id",
+      "description": "Every gold chat among the chats the reader saw (the conversation pages named by the rows kept in the context), over the answerable questions. Descriptive."
+    }
+  ]
+}

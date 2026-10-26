@@ -5,7 +5,8 @@ decision rule, the spending cap and what each outcome means for gbrain's default
 into a custody root. **Status: draft.** Nothing in it runs until (1) the gbrain wave PR that adds the flags has
 merged and its merge commit is written below, (2) the spend is approved, (3) the use of sealed confirmation v2's
 last opening is approved, and (4) the machine-readable files and the keyless dry run listed under "Before custody"
-are committed in this pull request. Owner thread: GBRA-205.
+are committed in this pull request. (2) and (3) were approved on 2026-10-26 (see "Approvals and spend"); (4) is in
+this pull request. Owner thread: GBRA-205.
 
 ## Why this exists
 
@@ -55,6 +56,10 @@ and arm, `limit: 25`, no expansion, `openai:text-embedding-3-large` at 1,536 dim
 reranker, made through the MCP dispatch as a local stdio agent, so the arm's evidence is exactly the tool result an
 agent receives.
 
+Each brain also sets `facts.default_visibility = world`, the single-principal posture `gbrain bootstrap` writes
+when the key is unset. Without it extracted facts are private, and a stdio agent (a remote caller in gbrain's trust
+model) never sees them, so F3 and F4 would measure nothing. Every other brain setting is E2 and H1's query-path pins.
+
 | Arm | Keys on | Call |
 |---|---|---|
 | A0, control (shipped default) | none | `query {token_budget: 5500}` |
@@ -69,7 +74,8 @@ nothing on its own and is the comparison in F1's non-inferiority rule.
 
 **Rendering (product text).** The reader sees the text content of the MCP tool result exactly as returned (rows,
 fields and notices, in the returned order), with nothing added by the harness: no harness dates, titles or session
-wrappers. Rows past 8,000 harness tokens (characters / 4) are cut whole and counted. This differs from H1 and E2,
+wrappers. Rows past 8,000 harness tokens (characters / 4) are cut whole and counted: whole rows come off the end of
+the result's JSON row array, and the kept rows keep gbrain's bytes. This differs from H1 and E2,
 whose renderer rebuilt dated pseudo-sessions; dates and titles are part of what F2 tests, so the harness must not
 supply them. The reader template is memory-qa's LongMemEval reading prompt with this text in place of the sessions.
 
@@ -98,7 +104,9 @@ Primary family (Sonnet), each the next flag against the configuration before it:
 | D4: A4 − A3 | F4 |
 
 Persona-clustered bootstrap (20,000 draws, seed 20261026) for each difference's 95% interval, and the exact
-two-sided McNemar test with Holm's correction across the four comparisons, computed by `compare.ts`.
+two-sided McNemar test with Holm's correction across the four comparisons. `compare.ts` computes each pair's
+interval and McNemar p; the verdict function (`decideC8k`) applies Holm across the four, because `compare.ts` sees
+one pair at a time.
 
 ## The decision rule
 
@@ -176,27 +184,60 @@ tokens).
 
 | Step | Basis | Estimate | Lease cap |
 |---|---|---:|---:|
-| Fact extraction | 40 histories of about 143,000 tokens with the default extraction model | $25 | $60 |
-| Freeze | embeddings once, about 1,200 reranked queries | $3 | $10 |
-| Sonnet 5.5 readers | 1,200 calls (6 arms × 200) | $30 | $80 |
-| Opus 5.5 and gpt-6.1-sol readers | 1,200 calls each | $80 | $180 |
-| Judge | 3,600 gpt-4o calls | $5 | $15 |
-| **Held-out total** | | **$143** | **$300** |
-| Development reading | dev100 extraction, 6 arms × 100 × 2 readers, judge | $55 | $100 |
+| Import | 40 histories embedded once with text-embedding-3-large | $1.50 | $5 |
+| Fact extraction | 40 histories of about 143,000 tokens with the default extraction model | $25 | $50 |
+| Freeze | about 1,220 queries: query embeddings and reranks | $1.50 | $3 |
+| Sonnet 5.5 readers | 1,200 calls (6 arms × 200) | $30 | $55 |
+| Opus 5.5 and gpt-6.1-sol readers | 1,200 calls each | $80 | $115 |
+| Judge | 3,600 gpt-4o calls | $5 | $12 |
+| **Held-out total** | | **$143** | **$240** |
+| Development reading | dev100 import, extraction and freeze ($16), 6 arms × 100 × 2 readers ($35), judge ($4) | $55 | $60 |
+| **Program** | | **$198** | **$300** |
 
-The program cap asked for is **$400** (held-out $300 plus development $100). No paid cell, development included, runs
-before the spend is approved.
+The program cap asked for was $400 (held-out $300 plus development $100). The owner approved **$300 for both
+together** (below), so the lease caps above were cut to fit it; no estimate changed. Every step is a local lease cell
+of one campaign (`manifests/campaign.json`, cap $300) whose ledger the development and held-out cells share, so the
+cap holds across both. No paid cell, development included, runs before the default-off wave PR and this pull
+request are in place.
+
+## Approvals and spend
+
+**Spend and the last opening: approved by Garry on 2026-10-26** (decision relayed by GBRA-108). The Q1 eval cap rises
+to $8,800. Of it, **$300 is leased to this preregistration, one cap covering the development reading and the
+held-out F1–F4 cells together** (about $50 and $250). The approval is also the authority to use sealed confirmation
+v2's third and last opening for these cells. In his words: "launch them once the default-off wave PR and the
+gbrain-evals prereg PR are in place". Anything past $300 goes back to him before it is spent. The owner launches
+the paid cells; no agent does.
 
 ## Before custody (this pull request)
 
-1. The gbrain wave merged; its merge commit written above and into `decision.json`.
-2. Harness: the live product-path arms, the product-text renderer, the extraction step, R5, `decision.json`,
-   `family.json` (Holm over D1–D4, plus the R5 non-inferiority interval), the verdict function with unit tests.
-3. A keyless dry run on H1's invented fixture with stub models, receipts committed.
-4. The development reading and the power simulation, committed.
-5. The owner's approvals (spend, last opening) in the changelog.
+1. **Open.** The gbrain wave merged; its merge commit written above and into `decision.json` (`gbrain.commit`,
+   now `fill-at-freeze`; the harness refuses every sealed step until it is a commit), and the custodian's reading of
+   the access log written into `decision.json` (`sealed.access_log_before`, 29 of 35 lines `fill-at-custody`).
+2. **Done.** Harness (`eval/runner/budgeted-delivery/c8k.ts`, `c8k-product.ts`, `c8k-run.sh`): the live
+   product-path arms through the stdio dispatch, the product-text renderer, the extraction step, R5, `decision.json`,
+   `family.json` (Holm over D1–D4, plus the R5 non-inferiority interval), the campaign and cells, the verdict function
+   with unit tests (`test/eval/budgeted-delivery-c8k.test.ts`).
+3. **Done.** A keyless dry run (`c8k-dry-run.sh`) on H1's invented fixture with stub models, receipts in
+   `2026-10-26-gbrain-8k-conversion/receipts/dry-run/`, including a keyless pass of the development cell.
+4. **Open.** The development reading (`c8k-run.sh dev`, paid, launched by the owner) and the power simulation over
+   its rows (`scripts/power.ts --dev-scores`), committed.
+5. **Done.** The owner's approvals (spend, last opening), above and in the changelog.
 
 ## Changelog
+
+### 2026-10-26: harness, keyless dry run, approvals
+
+Before any sealed file was copied or any paid cell ran. Garry approved the spend ($300 for the development reading
+and the held-out cells together) and the use of the last opening ("Approvals and spend"). Added the harness, the
+decision directory and the keyless dry run's receipts. Changes to the text above, each the smallest that fits:
+
+- Budget: the lease caps were cut from $300 held-out plus $100 development to $240 plus $60, inside the approved $300;
+  import is its own step. Estimates unchanged.
+- Arms: each brain sets `facts.default_visibility = world`. Without it a stdio agent never sees extracted facts
+  (a gap the draft missed; gbrain bootstrap writes the same posture).
+- Rendering: the cut is stated exactly (whole rows off the end of the JSON row array, gbrain's bytes kept).
+- Metric: Holm across D1–D4 is applied by the verdict function, not by `compare.ts`, which sees one pair at a time.
 
 ### 2026-10-26: drafted
 

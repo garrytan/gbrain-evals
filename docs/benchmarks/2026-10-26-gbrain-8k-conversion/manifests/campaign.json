@@ -1,0 +1,16 @@
+{
+  "kind": "oss-shootout-campaign",
+  "schema_version": 1,
+  "campaign_id": "gbrain-8k-conversion",
+  "cap_usd": 300,
+  "ledger": ".budget/gbrain-8k-conversion.sqlite",
+  "parameters": {
+    "gbrain_sha": "fill-at-freeze",
+    "query_budget": 5500,
+    "harness_budget_tokens": 8000
+  },
+  "cells_from": [
+    "cells/c8k.json"
+  ],
+  "cells": []
+}
