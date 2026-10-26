@@ -213,7 +213,8 @@ export function determinismQuestions(questions: ReadonlyArray<{ id: string }>, n
 }
 
 /**
- * Per history: one warm-up call (the stdio transport's once-per-process notices land there and nowhere else), then each
+ * Per history: one warm-up call (the stdio transport's once-per-process notices and the once-per-brain behavior_changes
+ * disclosure, which a brain imported over an hour earlier gets on its first stdio call, land there and nowhere else), then each
  * arm in order: keys written and read back, one query per question, keys deleted and checked unset. Then A0 again on
  * the history's determinism questions. Writes <evidence>/<brain>.ndjson atomically, so a rerun resumes per history.
  */
@@ -221,7 +222,6 @@ export async function runFreeze(o: { custodyRoot: string; decision: C8kDecision;
   checkCustodyPaths(o.custodyRoot, [['evidence directory', o.evidence]]);
   mkdirSync(o.evidence, { recursive: true });
   const repeat = new Set(determinismQuestions(o.corpus.questions, o.decision.construction.determinism.questions, o.decision.construction.determinism.seed));
-  let warmed = false;
   for (const conv of personas(o.corpus)) {
     const name = brainName(conv.id);
     const out = join(o.evidence, `${name}.ndjson`);
@@ -233,7 +233,7 @@ export async function runFreeze(o: { custodyRoot: string; decision: C8kDecision;
     const rows: Row[] = [];
     try {
       await clearArmKeys(e);
-      if (!warmed) { await o.m.dispatchToolCall(e, 'query', { query: 'warm-up', limit: 1, expand: false }, opts); warmed = true; }
+      await o.m.dispatchToolCall(e, 'query', { query: 'warm-up', limit: 1, expand: false }, opts);
       for (const arm of C8K_ARMS) {
         const keys = await setArmKeys(e, arm);
         for (const q of qs) rows.push({ kind: 'evidence', ...await queryArm(o.m, e, opts, arm, q, keys) });
@@ -290,6 +290,7 @@ export function retrievalChecks(d: C8kDecision, corpus: Corpus, ev: ReturnType<t
     const factsOf = (r: EvidenceRow) => factRows(resultRows(r.blocks));
     const factTokens = rows.map(r => factsOf(r).reduce((n, x) => n + tokens(x), 0));
     const factCap = Math.floor(d.construction.query_budget * FACTS_BLOCK_SHARE);
+    const disclosures = rows.filter(r => r.notices.includes('behavior_changes')).length;
     const safeIndexPending = rows.filter(r => Array.isArray(r.degraded) && (r.degraded as Array<{ stage?: string }>).some(s => s?.stage === 'safe_index_pending')).length;
     const factsOver = arm.id === 'A3' || arm.id === 'A4' ? rows.filter((r, i) => factTokens[i] > factCap || factsOf(r).length > FACTS_BLOCK_MAX_ROWS).length : 0;
     let outside = 0, receipts = 0;
@@ -299,13 +300,14 @@ export function retrievalChecks(d: C8kDecision, corpus: Corpus, ev: ReturnType<t
       const s = idx.of(x.slug);
       if (!s || s.conversation !== r.haystack_id) outside++;
     }
-    perArm[arm.id] = { rows: rows.length, questions: ids.size, tool_errors: errors, safe_index_pending: safeIndexPending, rows_outside_history: outside, extract_receipt_rows: receipts, budget_used_over_cap: overBudget, not_cap_only: notCapOnly,
+    perArm[arm.id] = { rows: rows.length, questions: ids.size, tool_errors: errors, safe_index_pending: safeIndexPending, behavior_changes_disclosures: disclosures, rows_outside_history: outside, extract_receipt_rows: receipts, budget_used_over_cap: overBudget, not_cap_only: notCapOnly,
       facts: { questions_with_facts: factTokens.filter(t => t > 0).length, rows_mean: mean(rows.map(r => factsOf(r).length)), tokens_max: Math.max(0, ...factTokens), over_share_or_rows: factsOver, cap_tokens: factCap },
       budget_used_mean: mean(rows.flatMap(r => r.delivery?.budget_used != null ? [Number(r.delivery.budget_used)] : [])), result_rows_mean: mean(rows.map(r => resultRows(r.blocks).length)),
       notices: count(rows.flatMap(r => r.notices)) };
     if (rows.length !== qIds.size || ids.size !== qIds.size || [...ids].some(id => !qIds.has(id))) problems.push(`${arm.id}: ${rows.length} results for ${ids.size} of ${qIds.size} questions`);
     if (errors) problems.push(`${arm.id}: ${errors} tool results are errors`);
     if (outside) problems.push(`${arm.id}: ${outside} rows name a page outside the question's history`);
+    if (disclosures) problems.push(`${arm.id}: ${disclosures} results carry the once-per-brain behavior_changes disclosure (it belongs in the warm-up call)`);
     if (safeIndexPending) problems.push(`${arm.id}: ${safeIndexPending} results report safe_index_pending (a page is withheld from remote readers; the safe-chunks repair did not finish)`);
     if (overBudget) problems.push(`${arm.id}: ${overBudget} results do not report budget_used at most ${d.construction.query_budget}`);
     if (notCapOnly) problems.push(`${arm.id}: ${notCapOnly} results do not report auto_packing cap_only`);
