@@ -275,6 +275,15 @@ the paid cells through the custodian (GBRA-205) on the owner's custody machine, 
 
 ## Changelog
 
+### 2026-10-26: held-out scorer cap matched to its lease (harness fix, no spec change)
+
+During custody, after both gates passed and before any comparison: the score cell stopped at the scorer's own spend
+cap. `c8k-run.sh` passed `--cap-usd 2` to `sealed-confirmation.ts score`, but every arm shares one spend ledger
+(`scores/spend.jsonl`), so the cap is cumulative across all 18 arm and reader scorings (about 3,600 judge calls,
+estimated $5 above) while the score lease is $12. H1 set the scorer cap equal to its score lease ($8); this sets it to
+the $12 lease. The lease proxy still enforces $12. The interrupted arm is rescored on resume, so the access log gains
+one extra score line for it; nothing else changes, and no label was read outside the runner.
+
 ### 2026-10-26: spec change 7, B3 replaces A4 (GBRA-108's call)
 
 Before custody, after the paid development reading; nothing held-out has run. GBRA-108 decided to amend after the

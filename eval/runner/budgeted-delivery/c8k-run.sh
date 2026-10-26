@@ -75,7 +75,7 @@ if [ "${1:-}" = cell ]; then
       for arm in $(py "' '.join(a['id'] for a in d['answer_arms'] if a['role'] in ('primary', 'replay'))"); do
         [ -e "$R/scores/$arm.json" ] && continue
         bun eval/runner/sealed-confirmation.ts score --manifest "$M" --questions "$S/questions.json" --labels "$S/labels.json" \
-          --run "$R/answers/$arm.jsonl" --judge --top-k 1000 --cap-usd 2 --spend "$R/scores/spend.jsonl" --custody-root "$C8K_ROOT" \
+          --run "$R/answers/$arm.jsonl" --judge --top-k 1000 --cap-usd 12 --spend "$R/scores/spend.jsonl" --custody-root "$C8K_ROOT" \
           --purpose "8k conversion ($arm) at gbrain ${COMMIT:0:9}" --decision-id "$ID" --out "$R/scores/$arm.json" > /dev/null
       done
       chmod 000 "$S/labels.json" ;;
