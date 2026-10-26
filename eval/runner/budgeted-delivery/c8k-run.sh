@@ -47,7 +47,7 @@ dev() { c8k "$1" --development --access-log "$V/access-log.jsonl" "${@:2}"; }
 extract() {
   local n=${C8K_EXTRACT_SHARDS:-4} pids=() k
   for ((k = 0; k < n; k++)); do "$1" extract --corpus "$2/corpus.json" --brains "$2/brains" "${GB[@]}" --shard "$k" --shards "$n" > /dev/null & pids+=($!); done
-  for k in "${pids[@]}"; do wait "$k"; done
+  for k in ${pids[@]+"${pids[@]}"}; do wait "$k"; done
   "$1" extract --corpus "$2/corpus.json" --brains "$2/brains" "${GB[@]}" --out "$2/extract.json" > /dev/null
 }
 
