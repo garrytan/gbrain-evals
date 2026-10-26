@@ -22,11 +22,17 @@
  * Families follow the preregistration: F1 the S1 8k component rows, F2 the S1 whole-system rows, F3 strict recall
  * on F1's rows. The config's sensitivity views (A21) and disclosures are copied in. --preview writes no render target
  * (the README block) and opens the disclosures with a public-results-only line.
+ *
+ * A retired system (A24 option 1: its pinned configuration calls a model its provider retired) is published where it
+ * ran validly: its subset cell merges only the subset's shards and every arm of it is shown on their conversations,
+ * every set those arms answer on gets a sensitivity view on the same conversations for every system, and every other
+ * cell of the system that no source covers is not run with the retirement reason.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
+import { loadSplit } from '../decisions/splits.ts';
 import { loadCorpus } from '../memory-qa/corpus.ts';
 import type { AppendixCell, CampaignCell, CampaignFamily, CampaignManifest, CampaignSet, PinEntry } from '../scoreboard.ts';
 import { scoreboardCampaignCell, selectCellQuestions, splitConversations } from './cell.ts';
@@ -63,6 +69,8 @@ export interface Publication {
   not_run_reason: string;
   sources: PublicationSource[];
   sensitivity: Array<{ sets: string[]; id: string; label: string; reason: string; question_ids: string[] }>;
+  /** Systems whose pinned configuration can no longer run: the sharded cell and shards they ran validly, and the sensitivity view every system gets on those conversations. */
+  retired: Array<{ system: string; reason: string; subset: { cell: string; shards: number[]; label: string; reason: string }; view: { id: string; label: string; reason: string } }>;
   /** Build labels for the baselines (gbrain-defaults takes its label from `gbrain`); external kinds take theirs from the pin table. */
   pins: Record<string, string>;
   disclosures: string[];
@@ -110,10 +118,23 @@ const answering = (a: ArmDefinition) => a.readers.length > 0;
 export const unitCell = (unit: string, cells: CellDefinition[]) => cells.find(c => unit === c.id || (unit.startsWith(c.id) && /^\.c\d+$/.test(unit.slice(c.id.length))));
 const covers = (s: PublicationSource, system: string) => (!s.systems || s.systems.includes(system)) && !(s.exclude_systems ?? []).includes(system);
 
+/** The conversations a sharded cell's shards run: the split's conversations sorted, shard i taking each one whose index is i modulo the shard count (cell.ts runCell). */
+export function shardConversations(def: Pick<CellDefinition, 'benchmark' | 'split' | 'shards'>, shards: number[]): string[] {
+  const s = loadSplit(def.benchmark);
+  const ids = def.split === 'dev' ? s.dev : def.split === 'sealed' ? s.sealed : [...s.dev, ...s.sealed];
+  return [...ids].sort().filter((_, i) => shards.includes(i % def.shards));
+}
+
 export function assemble(config: Publication, results: string, out: string, trees: string, preview = false): CampaignManifest {
   const m = loadManifest();
   for (const p of [config.pins, ...config.sources.map(s => s.pins ?? {})]) if (p['gbrain-defaults']) throw new Error('publication.json writes a gbrain-defaults pin by hand; the GBrain label comes from its gbrain build (publish.ts gbrainBuildLabel)');
   const label = gbrainBuildLabel(config.gbrain);
+  const retired = config.retired.map(r => {
+    const def = m.cells.find(c => c.id === r.subset.cell);
+    if (!def || def.system !== r.system || def.shards < 2) throw new Error(`publication.json retires ${r.system} on ${r.subset.cell}, which is not a sharded cell of that system`);
+    return { ...r, def, sets: [...new Set(def.arms.filter(answering).map(a => a.set))], conversations: shardConversations(def, r.subset.shards) };
+  });
+  const outsideSubset = (unit: string, def: CellDefinition) => retired.some(r => r.def === def && !r.subset.shards.includes(Number(unit.slice(def.id.length + 2))));
   const pins: Record<string, string> = { ...bundlePins(REPO_ROOT), ...config.pins, 'gbrain-defaults': label };
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
@@ -127,7 +148,7 @@ export function assemble(config: Publication, results: string, out: string, tree
     const byCell = new Map<CellDefinition, string[]>();
     for (const [unit, l] of leases) {
       const def = unitCell(unit, m.cells);
-      if (!def || !covers(src, def.system)) continue;
+      if (!def || !covers(src, def.system) || outsideSubset(unit, def)) continue;
       seen.push(l.at);
       byCell.set(def, [...(byCell.get(def) ?? []), join(state, 'results', unit, l.lease)]);
     }
@@ -175,7 +196,10 @@ export function assemble(config: Publication, results: string, out: string, tree
       scheduled = selectCellQuestions(corpus.questions.filter(q => inSplit.has(q.conversation)), s.selection).map(q => ({ question_id: q.id, conversation: q.conversation }));
     }
     const ids = new Set(scheduled.map(q => q.question_id));
-    const views = config.sensitivity.filter(v => v.sets.includes(s.id)).map(v => ({ id: v.id, label: v.label, reason: v.reason, question_ids: v.question_ids.filter(q => ids.has(q)) }));
+    const views = [
+      ...config.sensitivity.filter(v => v.sets.includes(s.id)).map(v => ({ id: v.id, label: v.label, reason: v.reason, question_ids: v.question_ids.filter(q => ids.has(q)) })),
+      ...retired.filter(r => r.sets.includes(s.id)).map(r => ({ ...r.view, question_ids: [], conversations: r.conversations })),
+    ];
     return {
       id: s.id, label: s.label, benchmark: s.benchmark, exposure: s.exposure as CampaignSet['exposure'], role: s.role as CampaignSet['role'],
       cluster_unit: s.benchmark.startsWith('lme') ? 'question' as const : 'conversation' as const, claim_min_clusters: s.role === 'headline' ? 9 : 0,
@@ -186,9 +210,11 @@ export function assemble(config: Publication, results: string, out: string, tree
   const pending = config.pending.map(p => ({ reason: p.reason, units: (JSON.parse(readFileSync(resolve(REPO_ROOT, p.campaign), 'utf8')) as { cells: Array<{ id: string }> }).cells.map(u => u.id) }));
   const cells: CampaignCell[] = m.cells.flatMap(def => def.arms.filter(answering).map(arm => {
     const c = covered.get(arm.cell_id);
-    const reason = pending.find(p => p.units.some(u => unitCell(u, [def])))?.reason ?? config.not_run_reason;
+    const r = retired.find(x => x.system === def.system);
+    const subset = r?.sets.includes(arm.set) ? { conversations: r.conversations, label: r.subset.label, reason: r.subset.reason } : null;
+    const reason = (r && !subset ? r.reason : null) ?? pending.find(p => p.units.some(u => unitCell(u, [def])))?.reason ?? config.not_run_reason;
     const entry = c ?? { status: 'not-run' as const, not_run_reason: reason, config_sha256: '', ...(pins[def.system] ? { pin: pins[def.system] } : {}) };
-    return { ...scoreboardCampaignCell(def, arm, { status: 'complete', config_sha256: entry.config_sha256 }), ...entry };
+    return { ...scoreboardCampaignCell(def, arm, { status: 'complete', config_sha256: entry.config_sha256 }), ...entry, ...(subset ? { subset } : {}) };
   }));
   const head = sets.find(s => s.role === 'headline')!;
   const s1 = cells.filter(c => c.set === head.id);
@@ -205,6 +231,7 @@ export function assemble(config: Publication, results: string, out: string, tree
     schema: 'gbrain-evals/q1-campaign/v1', campaign_id: config.campaign_id, campaign_hash: config.campaign_hash, gbrain: config.gbrain,
     measured: { from: (seen[0] ?? '').slice(0, 10), to: (seen.at(-1) ?? '').slice(0, 10) }, readers: m.readers, statistics: config.statistics,
     hedge_classifier: config.hedge_classifier, sets, cells, families, ...(appendix.length ? { appendix } : {}),
+    ...(retired.length ? { retired: retired.map(r => ({ system: r.system, reason: r.reason, subset: { sets: r.sets, conversations: r.conversations, label: r.subset.label, reason: r.subset.reason } })) } : {}),
     pins: Object.entries(pins).filter(([k]) => m.cells.some(c => c.system === k) && k.startsWith('ext-')).map(([system, version]) => ({ system, version, latest_release: null })),
     release_assets: [], disclosures: [...(preview ? [PREVIEW_DISCLOSURE] : []), `GBrain rows measure ${label}. ${config.gbrain.footnote}`, ...config.disclosures], render_targets: preview ? [] : config.render_targets,
   };

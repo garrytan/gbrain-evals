@@ -73,6 +73,13 @@
  *     published with best/worst-case bounds (excluded questions imputed 1/0
  *     and 0/1), and the all-cell join of the comparison's group is reported
  *     only as a sensitivity view.
+ *   - A subset row (a cell with `subset`, A24 option 1) is scheduled only on its
+ *     conversations: its scheduled, valued and mean cover them, and every
+ *     comparison with it is restricted to them and never claims. A retired
+ *     system (campaign.json `retired`) shows every cell on the subset's sets
+ *     on that subset, gives every other cell of it that did not run the
+ *     retirement reason, and needs a sensitivity view on the same
+ *     conversations on each of those sets; check refuses anything else.
  *   - Families: F1 = headline set, component, 8,000 tokens, answers;
  *     F2 = headline set, whole system, answers; F3 = headline set, component,
  *     8,000 tokens, strict recall_all@10 (diagnostic, no claim). Holm within
@@ -119,7 +126,8 @@
  * v3 adds each cell's `derived` and the top-level `derived`; v4 takes the classifier from campaign.json
  * `hedge_classifier` and adds `derived.classifier.source` and `derived.classifier.per_answer`; v5 adds
  * `derived.withheld` and, with `hedge_classifier: "none"`, sets `derived.classifier` to null and drops the
- * classifier-based fields from every DerivedColumns; v6 adds each cell's `pin` and `sensitivity`, `appendix` and `sensitivity_notes`):
+ * classifier-based fields from every DerivedColumns; v6 adds each cell's `pin` and `sensitivity`, `appendix` and `sensitivity_notes`;
+ * v7 adds each cell's `subset` and a sensitivity note's `conversations`):
  *   schema, generator, campaign {id, hash, campaign_sha256, gbrain, measured, readers},
  *   appendix [CellAggregate & {appendix, reason}] (cells published only in an appendix, never compared),
  *   sensitivity_notes [{set, id, label, reason, question_ids}],
@@ -148,7 +156,7 @@ import { HEDGE_CLASSIFIERS, hedgeClassifier, type HedgeVerdict } from './q1/hedg
 import { PASS_THRESHOLD } from './memory-qa/instruments.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
-export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v6';
+export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v7';
 export const CAMPAIGN_SCHEMA = 'gbrain-evals/q1-campaign/v1';
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 export const MAX_TREE_BYTES = 60 * 1024 * 1024;
@@ -169,6 +177,8 @@ const HARNESS_FAILURES = new Set<Outcome>(['reader_error', 'judge_error', 'harne
 const NOT_APPLICABLE = new Set<Outcome>(['does_not_fit']);
 /** Answers a judge scores (memory-qa/outcomes.ts): the ones derived/hedge.ndjson lists. */
 const JUDGED_OUTCOMES = new Set<Outcome>(['scored', 'ingest_degraded']);
+/** Why a question outside a subset row's conversations has no value in that row (CellSubset). */
+const OUTSIDE_SUBSET = 'outside the row\'s subset';
 export const notApplicableReason = (readers: readonly string[]) => `not applicable: did not fit ${readers.join(', ')}'s window`;
 
 // ─── Shared record schemas (mirror eval/runner/memory-qa/records.ts, lane L4) ───
@@ -212,9 +222,13 @@ export interface CampaignSet {
   cluster_unit: 'conversation' | 'question'; claim_min_clusters: number;
   scheduled: Array<{ question_id: string; conversation: string }>;
   exclusions: Array<{ question_id: string; reason: string }>;
-  /** Sensitivity views: every cell on the set is also reported without these questions (for example A21's repeated LongMemEval-S sessions); never a claim. */
-  sensitivity?: Array<{ id: string; label: string; reason: string; question_ids: string[] }>;
+  /** Sensitivity views: every cell on the set is also reported without these questions (for example A21's repeated LongMemEval-S sessions), and, with `conversations`, only on those conversations; never a claim. */
+  sensitivity?: Array<{ id: string; label: string; reason: string; question_ids: string[]; conversations?: string[] }>;
 }
+/** A row measured on part of its set: the conversations it is scheduled on, the label the report prints after `on`, and why. Its comparisons never claim. */
+export interface CellSubset { conversations: string[]; label: string; reason: string }
+/** A system whose pinned configuration can no longer run (A24 option 1): its cells on `subset.sets` are shown on the subset, every other cell of it that did not run carries `reason`, and each of those sets carries a sensitivity view on the same conversations for every system. */
+export interface RetiredSystem { system: string; reason: string; subset: CellSubset & { sets: string[] } }
 export interface CampaignCell {
   cell_id: string; set: string; system: string; arm: 'component' | 'whole-system'; budget: number | null;
   configuration: string; label?: string; anchor?: boolean; headline?: boolean;
@@ -224,12 +238,16 @@ export interface CampaignCell {
   pin?: string;
   /** The cell's directory under the receipt when it is not cells/<cell_id> (appendix cells). */
   dir?: string;
+  subset?: CellSubset;
 }
 /** A cell published only in an appendix (the found-and-fixed rows): derived and tabled, never compared, never in a headline. */
 export interface AppendixCell extends CampaignCell { appendix: string; reason: string; dir: string; pin: string }
 const GBRAIN_VERSION_WHY = 'every GBrain row names the release it measured (version, commit, date), so a reader never takes an old pin for current master';
 /** How a GBrain row names the build it measured (q1/publish.ts gbrainBuildLabel): version, short commit and commit date. */
 export const GBRAIN_BUILD = /^GBrain \d+(\.\d+){3} \([0-9a-f]{8}, \d{4}-\d{2}-\d{2}\)$/;
+const RETIRED_WHY = 'a system whose pinned configuration can no longer run is shown only where it ran validly, labeled with that subset, and every cell of it that did not run says why (A24 option 1)';
+const inSubset = (subset: CellSubset | undefined, conversation: string) => !subset || subset.conversations.includes(conversation);
+const sameList = (a: readonly string[] | undefined, b: readonly string[]) => !!a && a.length === b.length && [...a].sort().join('\n') === [...b].sort().join('\n');
 export interface CampaignFamily { id: 'F1' | 'F2' | 'F3'; label: string; anchor: string; comparators: string[] }
 export interface CampaignManifest {
   schema: typeof CAMPAIGN_SCHEMA; campaign_id: string; campaign_hash: string;
@@ -239,7 +257,7 @@ export interface CampaignManifest {
   statistics: { alpha: number; draws: number; descriptive_draws: number; seed: number };
   /** The eval/runner/q1/hedge.ts version the derived columns use (HEDGE_CLASSIFIERS), or "none", fixed by amendment before render. */
   hedge_classifier: string;
-  sets: CampaignSet[]; cells: CampaignCell[]; families: CampaignFamily[]; appendix?: AppendixCell[];
+  sets: CampaignSet[]; cells: CampaignCell[]; families: CampaignFamily[]; appendix?: AppendixCell[]; retired?: RetiredSystem[];
   pins: Array<{ system: string; version: string; latest_release: string | null }>;
   release_assets: Array<{ name: string; sha256: string; bytes: number }>;
   disclosures: string[];
@@ -323,6 +341,10 @@ function validateCampaign(receipt: string, c: CampaignManifest): void {
     const ids = new Set(s.scheduled.map(q => q.question_id));
     const stray = v.question_ids.filter(q => !ids.has(q));
     if (stray.length) throw invalid(receipt, `set ${s.id} sensitivity ${v.id} names ${stray.slice(0, 3).join(', ')}, which it does not schedule`, why);
+    const convs = new Set(s.scheduled.map(q => q.conversation));
+    const strayConvs = s.scheduled.length ? (v.conversations ?? []).filter(x => !convs.has(x)) : [];
+    if (v.conversations && !v.conversations.length) throw invalid(receipt, `set ${s.id} sensitivity ${v.id} keeps no conversation`, why);
+    if (strayConvs.length) throw invalid(receipt, `set ${s.id} sensitivity ${v.id} keeps conversation ${strayConvs.slice(0, 3).join(', ')}, which it does not schedule`, why);
   }
   const dirs = new Set<string>();
   for (const a of c.appendix ?? []) {
@@ -339,7 +361,29 @@ function validateCampaign(receipt: string, c: CampaignManifest): void {
     if (cell.system === 'gbrain-defaults' && !GBRAIN_BUILD.test(cell.pin ?? '')) throw invalid(receipt, `GBrain cell ${cell.cell_id} carries no version: its build is ${JSON.stringify(cell.pin ?? null)}`, GBRAIN_VERSION_WHY);
     if (cell.status === 'not-run' && !cell.not_run_reason) throw invalid(receipt, `cell ${cell.cell_id} is not-run without a reason`, 'a cell that did not run is published with its reason');
     if (!cell.readers.length) throw invalid(receipt, `cell ${cell.cell_id} promises no readers`, why);
+    if (cell.subset) {
+      const convs = new Set(sets.get(cell.set)!.scheduled.map(q => q.conversation));
+      const stray = convs.size ? cell.subset.conversations.filter(x => !convs.has(x)) : [];
+      if (!cell.subset.conversations.length || !cell.subset.label || !cell.subset.reason) throw invalid(receipt, `cell ${cell.cell_id} has a subset without conversations, label or reason`, RETIRED_WHY);
+      if (stray.length) throw invalid(receipt, `cell ${cell.cell_id} subset names conversation ${stray.slice(0, 3).join(', ')}, which set ${cell.set} does not schedule`, why);
+    }
     cells.set(cell.cell_id, cell);
+  }
+  for (const r of c.retired ?? []) {
+    if (!r.reason) throw invalid(receipt, `retired system ${r.system} has no reason`, RETIRED_WHY);
+    if (!r.subset.sets.length) throw invalid(receipt, `retired system ${r.system} names no set for its subset`, RETIRED_WHY);
+    for (const id of r.subset.sets) {
+      const set = sets.get(id);
+      if (!set) throw invalid(receipt, `retired system ${r.system} names unknown set ${id}`, why);
+      if (!set.sensitivity?.some(v => sameList(v.conversations, r.subset.conversations))) throw invalid(receipt, `set ${id} has no sensitivity view on ${r.system}'s subset (${r.subset.label}), so the other systems are not shown on it`, RETIRED_WHY);
+    }
+    for (const cell of c.cells.filter(x => x.system === r.system)) {
+      if (r.subset.sets.includes(cell.set)) {
+        if (!cell.subset || !sameList(cell.subset.conversations, r.subset.conversations) || cell.subset.label !== r.subset.label) throw invalid(receipt, `${r.system} cell ${cell.cell_id} is not on its subset (${r.subset.label})`, RETIRED_WHY);
+      } else if (cell.status === 'not-run' && cell.not_run_reason !== r.reason) {
+        throw invalid(receipt, `${r.system} cell ${cell.cell_id} is not run without the retirement reason "${r.reason}" (it says ${JSON.stringify(cell.not_run_reason ?? null)})`, RETIRED_WHY);
+      }
+    }
   }
   const head = c.sets.find(s => s.role === 'headline')!;
   for (const f of c.families) {
@@ -447,6 +491,7 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
       values.set(q.question_id, { question_id: q.question_id, conversation: q.conversation, value, reason, ...recall });
       judgeRuns.forEach((m, j) => m.set(q.question_id, runs ? runs[j] : value));
     };
+    if (!inSubset(cell.subset, q.conversation)) { done(null, `${OUTSIDE_SUBSET}: ${cell.subset!.label}`); continue; }
     if (excluded.has(q.question_id)) { done(null, `preregistered: ${excluded.get(q.question_id)}`); continue; }
     const qa = byQuestion.get(q.question_id) ?? [];
     let reason: string | null = null;
@@ -526,8 +571,10 @@ export interface CellAggregate {
   derived: DerivedColumns;
   /** The build the cell measured (CampaignCell.pin), or null. */
   pin: string | null;
-  /** The set's sensitivity views for this cell: the mean without the view's questions. */
+  /** The set's sensitivity views for this cell: the mean without the view's questions (and only on its conversations). */
   sensitivity: Array<{ id: string; label: string; scheduled: number; valued: number; mean: number | null }>;
+  /** The conversations a subset row is measured on (CampaignCell.subset), or null; scheduled, valued and mean cover only them. */
+  subset: CellSubset | null;
 }
 
 export interface FamilyResult { id: string; label: string; metric: string; plan: string; comparisons: string[]; verdict_stability: number | null }
@@ -547,7 +594,7 @@ export interface Scoreboard {
   cells: CellAggregate[]; comparisons: Comparison[]; families: FamilyResult[];
   appendix: Array<CellAggregate & { appendix: string; reason: string }>;
   /** Each set's sensitivity views as campaign.json states them (why, and which questions). */
-  sensitivity_notes: Array<{ set: string; id: string; label: string; reason: string; question_ids: string[] }>;
+  sensitivity_notes: Array<{ set: string; id: string; label: string; reason: string; question_ids: string[]; conversations?: string[] }>;
   field: { required: string[]; ran: string[]; missing: string[]; complete: boolean };
   verdict: string; headline: HeadlineRow[];
   size_curve: { sets: Array<{ id: string; label: string }>; rows: Array<{ system: string; label: string; values: string[] }> };
@@ -603,7 +650,7 @@ function compare(ctx: Ctx, anchorId: string, otherId: string, metric: Comparison
   };
   if (B.cell.status === 'not-run' || A.cell.status === 'not-run') return { ...base, eligibility: ['not run'] };
   const pre = new Set(set.exclusions.map(e => e.question_id));
-  const scheduled = set.scheduled.filter(q => !pre.has(q.question_id) && (metric === 'answer' || A.values.get(q.question_id)?.recall_reason !== 'no gold sessions (abstention)'));
+  const scheduled = set.scheduled.filter(q => !pre.has(q.question_id) && inSubset(A.cell.subset, q.conversation) && inSubset(B.cell.subset, q.conversation) && (metric === 'answer' || A.values.get(q.question_id)?.recall_reason !== 'no gold sessions (abstention)'));
   const pairs: Array<{ question_id: string; conversation: string; a: number; b: number }> = [];
   const excluded: Cohort['excluded'] = [];
   for (const q of scheduled) {
@@ -625,6 +672,7 @@ function compare(ctx: Ctx, anchorId: string, otherId: string, metric: Comparison
   for (const x of [A, B]) {
     if (x.cell.status === 'invalid') eligibility.push(`${x.cell.cell_id} is invalid`);
     if (x.missingReaders.length) eligibility.push(`${x.cell.cell_id} is missing promised readers ${x.missingReaders.join(', ')}`);
+    if (x.cell.subset) eligibility.push(`${x.cell.cell_id} is measured only on ${x.cell.subset.label}`);
   }
   if (!pairs.length) return { ...base, cohort, outcome: 'incomplete', eligibility, sentence: incompleteSentence(ctx, set, B.cell.system, cohort) };
   const meanA = mean(pairs.map(p => p.a))!, meanB = mean(pairs.map(p => p.b))!;
@@ -786,6 +834,11 @@ export function deriveAll(receipt: string): Derivation {
     const tokenCounts: Record<string, number> = {};
     for (const row of rows) for (const [k, v] of Object.entries(row.delivered_tokens ?? {})) { tokens[k] = (tokens[k] ?? 0) + v; tokenCounts[k] = (tokenCounts[k] ?? 0) + 1; }
     const set = campaign.sets.find(s => s.id === cell.set)!;
+    const scope = (view?: { question_ids: string[]; conversations?: string[] }) => {
+      const qs = set.scheduled.filter(q => inSubset(cell.subset, q.conversation) && !view?.question_ids.includes(q.question_id) && (!view?.conversations || view.conversations.includes(q.conversation)));
+      const ids = new Set(qs.map(q => q.question_id));
+      return { ids, scheduled: qs.length - set.exclusions.filter(e => ids.has(e.question_id)).length };
+    };
     const ci = valued.length && set.role === 'headline'
       ? wildTest(clusterRows(valued.map(v => ({ conversation: v.conversation, d: v.value! }))), { draws: campaign.statistics.draws, seed: campaign.statistics.seed, alpha: campaign.statistics.alpha }).ci95
       : null;
@@ -793,22 +846,22 @@ export function deriveAll(receipt: string): Derivation {
     return {
       cell_id: cell.cell_id, set: cell.set, system: cell.system, arm: cell.arm, budget: cell.budget, configuration: cell.configuration, label: cell.label ?? cell.configuration,
       status: cell.status, not_run_reason: cell.not_run_reason ?? null, config_sha256: cell.config_sha256, readers: cell.readers, missing_readers: d.missingReaders,
-      complete: cell.status === 'complete' && !d.missingReaders.length && valued.length === vals.filter(v => !v.reason?.startsWith('preregistered') && !v.reason?.startsWith('not applicable')).length,
-      scheduled: set.scheduled.length - set.exclusions.length, valued: valued.length, mean: r6n(mean(valued.map(v => v.value!))), ci95: ci ? [r6(ci[0]), r6(ci[1])] : null,
+      complete: cell.status === 'complete' && !d.missingReaders.length && valued.length === vals.filter(v => !v.reason?.startsWith('preregistered') && !v.reason?.startsWith('not applicable') && !v.reason?.startsWith(OUTSIDE_SUBSET)).length,
+      scheduled: scope().scheduled, valued: valued.length, mean: r6n(mean(valued.map(v => v.value!))), ci95: ci ? [r6(ci[0]), r6(ci[1])] : null,
       per_reader: Object.fromEntries(Object.entries(d.readerMeans).map(([k, v]) => [k, r6n(v)])), product_failures: d.productFailures, harness_failures: d.harnessFailures,
       judge_sd: r6n(d.judgeSd), judge_runs: d.judgeRuns.length, not_applicable: Object.fromEntries(cell.readers.filter(x => d.notApplicable[x]).map(x => [x, d.notApplicable[x]])),
       recall_all_at_10: rmean('recall_all_at_10'), recall_all_at_5: rmean('recall_all_at_5'), recall_any_at_10: rmean('recall_any_at_10'), ndcg_at_10: rmean('ndcg_at_10'),
       fill_rate: rmean('fill_rate'), delivered_tokens: Object.fromEntries(Object.keys(tokens).sort().map(k => [k, r6(tokens[k] / tokenCounts[k])])),
       latency_p50_ms: lat === null ? null : r6(lat),
-      exclusions: vals.filter(v => v.reason !== null).map(v => ({ question_id: v.question_id, reason: v.reason! })),
+      exclusions: vals.filter(v => v.reason !== null && !v.reason.startsWith(OUTSIDE_SUBSET)).map(v => ({ question_id: v.question_id, reason: v.reason! })),
       derived: derivedColumns(d.derived, !!classifier),
       pin: cell.pin ?? null,
       sensitivity: (set.sensitivity ?? []).map(s => {
-        const out = new Set(s.question_ids);
-        const kept = vals.filter(v => !out.has(v.question_id));
-        const keptValued = kept.filter(v => v.value !== null);
-        return { id: s.id, label: s.label, scheduled: set.scheduled.filter(q => !out.has(q.question_id)).length - set.exclusions.filter(e => !out.has(e.question_id)).length, valued: keptValued.length, mean: r6n(mean(keptValued.map(v => v.value!))) };
+        const kept = scope(s);
+        const keptValued = vals.filter(v => kept.ids.has(v.question_id) && v.value !== null);
+        return { id: s.id, label: s.label, scheduled: kept.scheduled, valued: keptValued.length, mean: r6n(mean(keptValued.map(v => v.value!))) };
       }),
+      subset: cell.subset ?? null,
     };
   };
   const cells = campaign.cells.map(c => aggregate(c, data.get(c.cell_id)!));
@@ -818,12 +871,13 @@ export function deriveAll(receipt: string): Derivation {
   const cost = existsSync(costPath) ? (JSON.parse(readInput(reader, costPath).toString('utf8')) as CostSpeedFile) : null;
   const costFor = (cell: CampaignCell) => cost?.rows.find(x => x.system === cell.system && x.configuration === cell.configuration) ?? null;
   const headCell = (setId: string, system: string) => headCellOf(campaign, setId, system);
+  const onSubset = (a: CellAggregate) => (a.subset ? `, on ${a.subset.label}` : '');
   const accuracy = (cell: CampaignCell | null) => {
     if (!cell) return `not run on ${headSet.label}`;
     const a = cells.find(c => c.cell_id === cell.cell_id)!;
     if (a.status === 'not-run') return `not run: ${a.not_run_reason}`;
     if (a.mean === null) return 'no scored questions';
-    const label = `${pct(a.mean)} (${a.valued}/${a.scheduled}${a.ci95 ? `; 95% interval ${pct(a.ci95[0])} to ${pct(a.ci95[1])}` : ''})${cell.arm === 'whole-system' ? ', whole system' : ''}`;
+    const label = `${pct(a.mean)} (${a.valued}/${a.scheduled}${a.ci95 ? `; 95% interval ${pct(a.ci95[0])} to ${pct(a.ci95[1])}` : ''})${cell.arm === 'whole-system' ? ', whole system' : ''}${onSubset(a)}`;
     return a.complete ? label : `incomplete: ${label}`;
   };
   const order = ['gbrain-defaults', ...kindList.map(k => k.id).filter(id => id.startsWith('ext-')), 'baseline-full-context', 'baseline-file-agent', 'baseline-hybrid', 'baseline-none'];
@@ -843,7 +897,7 @@ export function deriveAll(receipt: string): Derivation {
   const externals = required.map(sys => ({ sys, cell: headCell(headSet.id, sys) })).map(x => ({ ...x, mean: x.cell ? cells.find(c => c.cell_id === x.cell!.cell_id)!.mean : null })).filter(x => x.mean !== null).sort((a, b) => b.mean! - a.mean! || (a.sys < b.sys ? -1 : 1));
   const curveRows = ['gbrain-defaults', 'baseline-full-context', 'baseline-file-agent', ...(externals.length ? [externals[0].sys] : [])].map(system => ({
     system, label: system === externals[0]?.sys ? `best external row, ${kindLabel(kinds, system)}` : system === 'gbrain-defaults' && headCell(headSet.id, system)?.pin ? `${kindLabel(kinds, system)}; ${headCell(headSet.id, system)!.pin}` : kindLabel(kinds, system),
-    values: curveSets.map(s => { const cell = headCell(s.id, system); if (!cell) return 'not run'; const a = cells.find(c => c.cell_id === cell.cell_id)!; return a.status === 'not-run' ? `not run: ${a.not_run_reason}` : a.mean === null ? 'no scored questions' : `${pct(a.mean)} (${a.valued}/${a.scheduled})`; }),
+    values: curveSets.map(s => { const cell = headCell(s.id, system); if (!cell) return 'not run'; const a = cells.find(c => c.cell_id === cell.cell_id)!; return a.status === 'not-run' ? `not run: ${a.not_run_reason}` : a.mean === null ? 'no scored questions' : `${pct(a.mean)} (${a.valued}/${a.scheduled})${onSubset(a)}`; }),
   }));
 
   const derivedSystems = [...new Set(campaign.cells.map(c => c.system))].map(system => {
@@ -937,14 +991,14 @@ export function renderReport(sb: Scoreboard): string {
   const num = (x: number | null, f: (x: number) => string) => (x === null ? 'n/a' : f(x));
   const ratio = (r: number | null | undefined, k = 0, n = 0) => (r === null || r === undefined ? 'n/a' : `${pct(r)} (${k}/${n})`);
   const dcols = (d: DerivedColumns) => (classified ? `${ratio(d.confident_error_rate, d.confident_wrong, d.wrong)} | ${ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers)} | ${ratio(d.false_abstention_rate, d.false_abstentions, d.answerable_answers)}` : ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers));
-  const cellLine = (c: CellAggregate) => `| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.pin ? cellText(c.pin) : 'n/a'} | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${dcols(c.derived)} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`;
+  const cellLine = (c: CellAggregate) => `| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.pin ? cellText(c.pin) : 'n/a'} | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${dcols(c.derived)} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.subset ? `; on ${cellText(c.subset.label)}: ${cellText(c.subset.reason)}` : ''}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`;
   for (const c of sb.cells) out.push(cellLine(c));
   const views = sb.cells.filter(c => c.sensitivity.length && c.status !== 'not-run');
   if (views.length) {
     out.push('', '## Sensitivity views', '', 'Each cell on a set with a sensitivity view is also reported without that view\'s questions. Descriptive only: no comparison, family or claim uses these rows.', '');
     for (const s of sb.sets) for (const v of (sb.cells.find(c => c.set === s.id && c.sensitivity.length)?.sensitivity ?? [])) {
       const why = sb.sensitivity_notes.find(n => n.set === s.id && n.id === v.id);
-      out.push(`- ${s.label}, ${v.label}${why ? `: ${why.reason} Excluded: ${why.question_ids.join(', ')}.` : '.'}`);
+      out.push(`- ${s.label}, ${v.label}${why ? `: ${why.reason}${why.conversations ? ` Conversations kept: ${why.conversations.join(', ')}.` : ''}${why.question_ids.length || !why.conversations ? ` Excluded: ${why.question_ids.join(', ')}.` : ''}` : '.'}`);
     }
     out.push('', '| Cell | Set | System | Build | Accuracy, all questions | View | Accuracy without the view\'s questions |', '|---|---|---|---|---|---|---|');
     for (const c of views) for (const v of c.sensitivity) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.pin ? cellText(c.pin) : 'n/a'} | ${num(c.mean, pct)} (${c.valued}/${c.scheduled}) | ${cellText(v.label)} | ${num(v.mean, pct)} (${v.valued}/${v.scheduled}) |`);

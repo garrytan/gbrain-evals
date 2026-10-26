@@ -94,6 +94,32 @@
       ]
     }
   ],
+  "retired": [
+    {
+      "system": "ext-temporal-graph",
+      "reason": "pinned config calls a model its provider retired",
+      "subset": {
+        "cell": "s1.ext-temporal-graph.common",
+        "shards": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "label": "the 8 conversations A17 measured validly (c0-c7)",
+        "reason": "c8 and c9 not run: pinned config calls a model its provider retired (A24 option 1)"
+      },
+      "view": {
+        "id": "a24-temporal-graph-subset",
+        "label": "on the 8 conversations temporal-graph measured (c0-c7)",
+        "reason": "ext-temporal-graph's pinned configuration calls a reranker and an ingest model its provider retired, so its row covers only the 8 conversations A17 measured validly (c0-c7) and c8 and c9 are not run. This view shows every system on those 8 conversations so each row can be read against it; the headline rows keep all 10."
+      }
+    }
+  ],
   "pins": {
     "baseline-none": "harness baseline",
     "baseline-recency": "harness baseline",
@@ -102,7 +128,8 @@
     "baseline-file-agent": "harness baseline"
   },
   "disclosures": [
-    "S2b full-context (`s2b.baseline-full-context.baseline`): A23 priced each gpt-6.1-sol whole-history reading's reservation at about $5.40 from its token estimate, but the metering proxy reserves the request's byte count as input tokens, about $19.29 a call, so the $20 lease admitted one reading at a time. The custodian raised the lease to $110 inside the A24 cap (raise-lease.ts) and resumed. Measured about $4.46 an answer, about $89 for the 20 answers, against about $11 projected."
+    "S2b full-context (`s2b.baseline-full-context.baseline`): A23 priced each gpt-6.1-sol whole-history reading's reservation at about $5.40 from its token estimate, but the metering proxy reserves the request's byte count as input tokens, about $19.29 a call, so the $20 lease admitted one reading at a time. The custodian raised the lease to $110 inside the A24 cap (raise-lease.ts) and resumed. Measured about $4.46 an answer, about $89 for the 20 answers, against about $11 projected.",
+    "ext-temporal-graph: its pinned configuration calls a reranker and an ingest model that their provider retired, and a competitor's settings are never changed, so (ruling 2026-10-26 via GBRA-108, option 1) its BEAM-10M row is shown on the 8 conversations A17 measured validly (c0-c7), every system is also shown on those 8 as a sensitivity view, its cells after the retirement are not run, and it is retested at its current release in the follow-up current-master rerun (F6)."
   ],
   "render_targets": [
     "README.md"

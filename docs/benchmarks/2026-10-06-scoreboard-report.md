@@ -65,12 +65,35 @@ it lands with the real render.
 5. **Public rows.** LoCoMo (S3), LongMemEval-S (S4 for gbrain's 500 questions, S4-slice for the 100-question
    shootout slice), LongMemEval-M (S5) and the sealed BEAM-100K and BEAM-1M rows, all descriptive. Each set is
    labeled with its exposure: LongMemEval was gbrain's development data and LoCoMo was used to choose its settings.
-6. **Sensitivity view (A21).** Every LongMemEval-S cell, on both S4 and S4-slice, is reported a second time without
-   the 13 questions whose haystacks repeat one session id with identical turns and different dates. gbrain's
-   adapter refuses the second copy and the other systems keep it, so the view drops those questions for every
-   system: 487 questions for gbrain's S4 row, 95 on the slice. The row on all questions stays the reported one; the
-   view is never a claim. LongMemEval-M needs no view, because its loader keeps each repeat as its own occurrence.
-7. **Row notes (A23).** These notes sit beside the rows they qualify:
+6. **Sensitivity views (A21, A24).** No view is a claim, and the row on all questions stays the reported one.
+   - **Repeated sessions (A21).** Every LongMemEval-S cell, on both S4 and S4-slice, is reported a second time
+     without the 13 questions whose haystacks repeat one session id with identical turns and different dates.
+     gbrain's adapter refuses the second copy and the other systems keep it, so the view drops those questions for
+     every system: 487 questions for gbrain's S4 row, 95 on the slice. LongMemEval-M needs no view, because its
+     loader keeps each repeat as its own occurrence.
+   - **temporal-graph's 8 conversations (A24 option 1).** Every BEAM-10M cell, on S1 and S1-sweep, is reported a
+     second time on the 8 conversations temporal-graph measured validly (c0-c7: `10m-1`, `10m-10`, `10m-2` to
+     `10m-7`), so its row can be read against every other system on the same questions.
+   - **shipped-defaults' 10 `harness_invalid` answers (draft, A24).** Every S1 cell is reported a second time
+     without the questions of the 10 answers in the note below, so every system is read on the cohort gbrain's row
+     was scored on. The view's question ids are added to `publication.json` (`sensitivity`, id
+     `a24-shipped-defaults-harness-invalid`, set S1) when the sealed receipt is assembled, not before.
+7. **Row notes (A23, A24).** These notes sit beside the rows they qualify:
+   - **temporal-graph: pinned models retired (A24 option 1; GBRA-108 2026-10-26, under Garry's "don't bother me, do
+     what makes sense").** The pinned configuration's reranker and ingest model were retired by their provider, so
+     its calls fail, and we don't change a competitor's settings. Every temporal-graph cell that did not settle
+     before the retirement reads "not run: pinned config calls a model its provider retired". The S1 row (and its
+     S1-sweep arms) is shown on the 8 conversations A17 measured validly (c0-c7); c8 and c9 are not run. Its
+     comparisons on that subset are descriptive and never claim, every system is also shown on those 8
+     conversations (section 6), and temporal-graph is retested at its current release in the follow-up
+     current-master rerun (F6). `publication.json` `retired` records this, and the renderer refuses a
+     temporal-graph row off that subset or a not-run one without the reason.
+   - **shipped-defaults: 10 `harness_invalid` answers (draft).** In S1 shipped-defaults' 8k component arm, 10
+     answers (5 on each of c4 and c5), 0.4% of the row's answers, are recorded `harness_invalid`: they failed at
+     0 ms with no usage under A22, and the A24 re-answer carried them forward under their earlier realization
+     instead of answering them again. A harness failure leaves its question out of that row's mean, so the row is
+     scored on the rest and the view in section 6 shows every system without those questions. The cause is under
+     diagnosis; its fix goes into a future freeze, and these answers are not run again under A24.
    - **Not run.** graph-pipeline S1: three of ten shards measured past the 48-hour limit per conversation, and the
      graph store's own failures account for the rest. markdown-kb S1: projected about 61 hours, past the 48-hour
      limit, from the product's quadratic reindex. Each note carries its measurement.
@@ -82,6 +105,7 @@ it lands with the real render.
      its token estimate; the metering proxy reserves the request's byte count, about $19.29 a call, so the $20 lease
      admitted one reading at a time. The lease was raised to $110 inside the A24 cap and the cell resumed: about
      $4.46 an answer, about $89 for the 20, against about $11 projected. The receipt carries the same disclosure.
+     These are interim figures (draft); the settled ledger figures replace them when the report renders.
    - **gbrain synthesize model.** `whole-synthesize` answers with `claude-opus-4-7`, gbrain's shipped default at the
      pin (owner's ruling, 2026-10-16).
 8. **Per-reader accuracy and derived columns.** Per-reader means, correct-abstention rates by system and set, and

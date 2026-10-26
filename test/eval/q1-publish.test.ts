@@ -2,14 +2,14 @@
  * The Q1 receipt assembler (eval/runner/q1/publish.ts): launch units map to their cell definition (shard suffixes,
  * no prefix collisions between S4 and S4-slice), the last settled lease of a unit wins, external build labels come
  * from the pin table without product names, and the committed publication config names real campaigns, the A21
- * questions and the found-and-fixed appendix. Lease ids here are invented.
+ * questions, the found-and-fixed appendix and the retired temporal-graph subset (A24 option 1). Lease ids here are invented.
  */
 import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadManifest } from '../../eval/runner/q1/cells/definitions.ts';
-import { bundlePins, gbrainBuildLabel, settledLeases, unitCell, type Publication } from '../../eval/runner/q1/publish.ts';
+import { bundlePins, gbrainBuildLabel, settledLeases, shardConversations, unitCell, type Publication } from '../../eval/runner/q1/publish.ts';
 import { GBRAIN_BUILD } from '../../eval/runner/scoreboard.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -79,5 +79,18 @@ describe('publication.json', () => {
     expect(GBRAIN_BUILD.test(label)).toBe(true);
     expect([config.pins, ...config.sources.map(s => s.pins ?? {})].some(p => 'gbrain-defaults' in p)).toBe(false);
     expect(config.gbrain.footnote).toMatch(/not current master.*rerun.*current master.*A23/);
+  });
+
+  test('temporal-graph is retired with option 1: S1 on c0-c7, the not-run reason, the subset view and the F6 retest', () => {
+    expect(config.retired).toHaveLength(1);
+    const r = config.retired[0];
+    expect(r).toMatchObject({ system: 'ext-temporal-graph', reason: 'pinned config calls a model its provider retired', subset: { cell: 's1.ext-temporal-graph.common', shards: [0, 1, 2, 3, 4, 5, 6, 7] } });
+    const def = m.cells.find(c => c.id === r.subset.cell)!;
+    expect(def.shards).toBe(10);
+    expect(shardConversations(def, r.subset.shards)).toEqual(['10m-1', '10m-10', '10m-2', '10m-3', '10m-4', '10m-5', '10m-6', '10m-7']);
+    expect(shardConversations(def, [8, 9])).toEqual(['10m-8', '10m-9']);
+    expect(r.subset.label).toContain('c0-c7');
+    expect(r.view.reason).toMatch(/every system on those 8 conversations/);
+    expect(config.disclosures.find(d => d.startsWith('ext-temporal-graph:'))).toMatch(/retired.*never changed.*option 1.*c0-c7.*sensitivity view.*not run.*current release.*\(F6\)/);
   });
 });

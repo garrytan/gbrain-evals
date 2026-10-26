@@ -1385,6 +1385,38 @@ A23 set them. Each fix has a test that fails on the A23 code and passes on this 
 
 ## Changelog
 
+### 2026-10-26: publication rulings after A24 (no re-freeze)
+
+Three publication notes, recorded outside the hashed tree. The sealed campaign stays at `a92b06c5`, and no cell's
+configuration changes.
+
+- **temporal-graph: option 1** (GBRA-108 2026-10-26, under Garry's "don't bother me, do what makes sense"). The pinned
+  `ext-temporal-graph` configuration's reranker and ingest model were retired by their provider, so its calls fail.
+  We don't change a competitor's settings, so the configuration stays as pinned and no model is substituted.
+  - Every temporal-graph cell that did not settle before the retirement is reported "not run: pinned config calls a
+    model its provider retired". The custodian launches no temporal-graph unit from here, S2a and S3 included.
+  - The S1 row, with its S1-sweep arms, is shown on the 8 conversations A17 measured validly: c0-c7 (`10m-1`,
+    `10m-10`, `10m-2` to `10m-7`). c8 and c9 are not merged. Its comparisons on that subset are descriptive and
+    never claim: 8 conversations is under S1's minimum of 9, and the renderer refuses a claim on any subset row.
+  - Every system gets a sensitivity row on the same 8 conversations, on S1 and S1-sweep, so the temporal-graph row
+    can be read against the rest. The headline rows keep all 10 conversations.
+  - temporal-graph is retested at its current release in the follow-up current-master rerun (F6).
+  - `publication.json` `retired` records the system, the reason, the cell and the shards. `scoreboard.ts` refuses a
+    receipt where a temporal-graph cell on S1 or S1-sweep is off that subset, where any other temporal-graph cell
+    that did not run lacks the reason, or where either set lacks the 8-conversation view.
+- **shipped-defaults: 10 `harness_invalid` answers (footnote draft).** In S1 shipped-defaults' 8k component arm, 10
+  answers (5 on each of c4 and c5), 0.4% of the row's answers, are recorded `harness_invalid`. They failed at 0 ms
+  with no usage under A22, and the A24 re-answer carried them forward under their earlier realization instead of
+  answering them again. A harness failure already leaves its question out of that row's mean. An exclusion
+  sensitivity row (`a24-shipped-defaults-harness-invalid`, set S1) shows every system without those questions; its
+  question ids are added when the sealed receipt is assembled. The cause is under diagnosis, and its fix goes into a
+  future freeze, not this one.
+- **S2b full-context pricing (footnote draft).** A23 priced each gpt-6.1-sol whole-history reading's reservation at
+  about $5.40 from its token estimate, but the metering proxy reserves the request's byte count as input tokens,
+  about $19.29 a call, so the $20 lease admitted one reading at a time. The custodian raised the lease to $110 inside
+  the A24 cap and resumed: about $4.46 an answer, about $89 for the 20, against about $11 projected. These are interim
+  figures; the settled ledger figures replace them in the receipt's disclosure and the report when they render.
+
 ### 2026-10-26: amendment A24
 
 Two A23 harness faults, both caught at $0 with no record lost, are fixed in place. A resume no longer counts

@@ -302,7 +302,7 @@ describe('appendix rows and sensitivity views (v6)', () => {
     const d = deriveAll(dir);
     for (const f of renderAll(dir, d, loadCampaign(dir).campaign).files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); }
     const sb = d.scoreboard;
-    expect(sb.schema).toBe('gbrain-evals/scoreboard/v6');
+    expect(sb.schema).toBe('gbrain-evals/scoreboard/v7');
     expect(sb.appendix).toHaveLength(1);
     expect(sb.appendix[0]).toMatchObject({ cell_id: 's2a-gbrain-8k', pin: 'GBrain 0.60.95.0 (c5fb0201, 2026-10-01)', mean: s2a.mean, valued: s2a.valued, appendix: 'found and fixed' });
     expect(sb.comparisons.filter(c => c.set === 'S2a').map(c => c.anchor)).toEqual(before.comparisons.filter(c => c.set === 'S2a').map(c => c.anchor));
@@ -414,7 +414,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
 
   test('per cell, per system and set, and pooled over sets, from replicate-0 answers with a scored canonical judgment', () => {
     const { dir, sb } = fresh({ cells: scripted() });
-    expect(sb.schema).toBe('gbrain-evals/scoreboard/v6');
+    expect(sb.schema).toBe('gbrain-evals/scoreboard/v7');
     const s1 = sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived;
     expect(s1).toEqual({ answers: 177, wrong: 107, confident_wrong: 40, abstention_answers: 30, correct_abstentions: 10, answerable_answers: 147, false_abstentions: 27, confident_error_rate: Number((40 / 107).toFixed(6)), correct_abstention_rate: Number((10 / 30).toFixed(6)), false_abstention_rate: Number((27 / 147).toFixed(6)) });
     const s2a = sb.cells.find(c => c.cell_id === 's2a-gbrain-8k')!.derived;
@@ -576,6 +576,68 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
     expect(out.value.classifier.version).toBe(CLASSIFIER_VERSION_V3);
     expect(out.value.per_answer).toBe('cells/s1-gbrain-8k/derived/hedge.ndjson');
     expect((explain(dir, 'gbrain-defaults', 'abstention') as Record<string, any>).value.correct_abstention_rate).toBeCloseTo(1 / 3, 5);
+    rmSync(dir, { recursive: true });
+  });
+});
+
+describe('retired systems (A24 option 1)', () => {
+  const RETIRED = 'pinned config calls a model its provider retired';
+  const KEPT = Array.from({ length: 8 }, (_, i) => `10m-c${i}`);
+  const subset = { conversations: KEPT, label: 'the 8 conversations A17 measured validly (c0-c7)', reason: 'c8 and c9 not run: pinned config calls a model its provider retired' };
+  const retiredReceipt = () => {
+    const cells = [
+      ...defaultCells().map(c => (c.id === 's1-temporal-graph-8k' ? { ...c, quality: 0.3, status: undefined, not_run_reason: undefined } : c)),
+      { id: 's2a-temporal-graph-8k', set: 'S2a' as const, system: 'ext-temporal-graph', arm: 'component' as const, budget: 8000, quality: 0, status: 'not-run' as const, not_run_reason: RETIRED },
+    ];
+    const { dir } = fresh({ cells });
+    editJson(join(dir, 'campaign.json'), c => {
+      c.retired = [{ system: 'ext-temporal-graph', reason: RETIRED, subset: { ...subset, sets: ['S1'] } }];
+      c.cells.find(x => x.cell_id === 's1-temporal-graph-8k')!.subset = subset;
+      c.sets.find(s => s.id === 'S1')!.sensitivity = [{ id: 'tg-subset', label: 'on the 8 conversations temporal-graph measured', reason: 'temporal-graph ran validly only on these.', question_ids: [], conversations: KEPT }];
+    });
+    return dir;
+  };
+  const render = (dir: string) => { const d = deriveAll(dir); for (const f of renderAll(dir, d, loadCampaign(dir).campaign).files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); } return d.scoreboard; };
+
+  test('the S1 row is shown on its subset and never claims, every system gets the subset view, and its other cells say why they did not run', () => {
+    const dir = retiredReceipt();
+    const sb = render(dir);
+    const tg = sb.cells.find(c => c.cell_id === 's1-temporal-graph-8k')!;
+    expect(tg.subset).toEqual(subset);
+    expect(tg.scheduled).toBe(8 * 6 - 1);
+    expect(tg.valued).toBeLessThanOrEqual(tg.scheduled);
+    expect(tg.complete).toBe(true);
+    expect(tg.exclusions.every(e => !e.reason.startsWith('outside'))).toBe(true);
+    const cmp = sb.comparisons.find(c => c.id === 's1-temporal-graph-8k')!;
+    expect(cmp.cohort).toMatchObject({ clusters_scheduled: 8 });
+    expect(cmp.claim_eligible).toBe(false);
+    expect(cmp.eligibility).toContain(`s1-temporal-graph-8k is measured only on ${subset.label}`);
+    expect(sb.headline.find(h => h.system === 'ext-temporal-graph')!.accuracy).toEndWith(`, on ${subset.label}`);
+    for (const c of sb.cells.filter(x => x.set === 'S1' && x.status !== 'not-run')) expect(c.sensitivity).toEqual([expect.objectContaining({ id: 'tg-subset', scheduled: 8 * 6 - 1 })]);
+    expect(sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.scheduled).toBe(10 * 6 - 1);
+    const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
+    expect(md).toContain(`Conversations kept: ${KEPT.join(', ')}.`);
+    expect(md).toContain('| `s2a-temporal-graph-8k` | S2a | `ext-temporal-graph` |');
+    expect(md).toContain(`not run: ${RETIRED} |`);
+    expect(md).toContain(`complete; on ${subset.label}: ${subset.reason} |`);
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a temporal-graph cell off its subset, a not-run one without the reason, or a set without the subset view is refused', () => {
+    const dir = retiredReceipt();
+    editJson(join(dir, 'campaign.json'), c => { delete c.cells.find(x => x.cell_id === 's1-temporal-graph-8k')!.subset; });
+    expect(() => loadCampaign(dir)).toThrow(/ext-temporal-graph cell s1-temporal-graph-8k is not on its subset/);
+    editJson(join(dir, 'campaign.json'), c => { c.cells.find(x => x.cell_id === 's1-temporal-graph-8k')!.subset = { ...subset, conversations: [...KEPT, '10m-c8'] }; });
+    expect(() => loadCampaign(dir)).toThrow(/is not on its subset/);
+    editJson(join(dir, 'campaign.json'), c => { c.cells.find(x => x.cell_id === 's1-temporal-graph-8k')!.subset = subset; });
+    expect(() => loadCampaign(dir)).not.toThrow();
+    for (const reason of ['sealed campaign, pending', undefined]) {
+      editJson(join(dir, 'campaign.json'), c => { const x = c.cells.find(y => y.cell_id === 's2a-temporal-graph-8k')!; if (reason) x.not_run_reason = reason; else delete x.not_run_reason; });
+      expect(() => loadCampaign(dir)).toThrow(reason ? /s2a-temporal-graph-8k is not run without the retirement reason/ : /s2a-temporal-graph-8k is not-run without a reason/);
+    }
+    editJson(join(dir, 'campaign.json'), c => { c.cells.find(y => y.cell_id === 's2a-temporal-graph-8k')!.not_run_reason = RETIRED; delete c.sets.find(s => s.id === 'S1')!.sensitivity; });
+    expect(() => loadCampaign(dir)).toThrow(/set S1 has no sensitivity view on ext-temporal-graph's subset/);
     rmSync(dir, { recursive: true });
   });
 });
