@@ -1,0 +1,28 @@
+{
+  "kind": "c8k-extract",
+  "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
+  "version": "0.60.461.0",
+  "keyless": false,
+  "embedding": "openai:text-embedding-3-large@1536",
+  "extractor": "runExtractConversationFactsCore (force, source default), gbrain's default extraction model",
+  "brains": 40,
+  "pages_processed": 1840,
+  "pages_failed": 0,
+  "extraction_errors": 0,
+  "facts": 29364,
+  "facts_world": 29364,
+  "facts_per_history": {
+    "min": 656,
+    "mean": 734.1,
+    "max": 822
+  },
+  "histories_without_facts": 0,
+  "safe_chunks_repair": {
+    "command": "gbrain repair safe-chunks --source default (preview), then --apply",
+    "previewed": 40,
+    "applied": 40,
+    "failed": 0,
+    "pages_pending_after": 0,
+    "brains_not_repaired": 0
+  }
+}

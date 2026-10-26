@@ -1,5 +1,7 @@
 # Preregistration (draft, before custody): does gbrain's 8k conversion wave answer more held-out questions at a tight budget? (2026-10-26)
 
+**Run 2026-10-26 at gbrain `cf3ec433`; result: [the facts block passes, F1 and F2 inconclusive](2026-10-26-gbrain-8k-conversion.md).** The text below is the preregistration as committed before custody.
+
 This is a preregistration, not a result. It fixes the question, the arms, the readers, the judge, the metric, the
 decision rule, the spending cap and what each outcome means for gbrain's defaults before any sealed file is copied
 into a custody root. **Status: draft.** Nothing in it runs until (1) the gbrain commit measured is written below
