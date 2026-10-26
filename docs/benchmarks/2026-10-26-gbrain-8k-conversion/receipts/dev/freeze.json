@@ -7,18 +7,27 @@
   "histories": 100,
   "evidence_rows": 600,
   "repeat_rows": 20,
+  "amended": {
+    "histories": 100,
+    "arms_added": {
+      "B3": 100
+    },
+    "rows_retired": {
+      "A4": 100
+    }
+  },
   "dispatch": "dispatchToolCall(query) with the stdio server's options (c8k-product.ts stdioDispatchOpts)",
   "retrieval_cache": {
     "spec_change": 6,
     "scope": "this cell only (<cell>/cache/retrieval inside the custody root), never committed",
-    "processes": 1,
+    "processes": 2,
     "embed": {
       "cache": "H1 EmbeddingCache (gbrain src/eval/shared/embed-cache.ts)",
       "key": "provider:model@dims#query:sha256(text)",
       "models": [
         "openai:text-embedding-3-large@1536"
       ],
-      "hits": 0,
+      "hits": 101,
       "misses": 101,
       "bypassed": 0,
       "infra_faults": 0,
@@ -26,7 +35,7 @@
     },
     "rerank": {
       "key": "sha256([provider, endpoint path, model, full request body])",
-      "hits": 520,
+      "hits": 720,
       "misses": 200,
       "bypassed": 0,
       "uncached_errors": 0,
@@ -40,7 +49,7 @@
     "A1": 198.06299999999996,
     "A2": 183.24200000000002,
     "A3": 183.79400000000004,
-    "A4": 238.127,
+    "B3": 246.87799999999996,
     "R5": 306.66799999999995
   }
 }

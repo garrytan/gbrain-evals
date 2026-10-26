@@ -1,9 +1,9 @@
 {
   "kind": "c8k-gate",
   "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
-  "decision_sha256": "d8473d42b433f2d242e82b76eace3d0cd9aea4c07e7d3c9ac3d3912a3cc40f6e",
+  "decision_sha256": "a9c7235858fe814d7393a3ae1c19d836bb90f024aefab4fae66582bebbef0557",
   "phase": "final",
-  "created_at": "2026-10-26T08:48:53.574Z",
+  "created_at": "2026-10-26T09:46:58.765Z",
   "gbrain": {
     "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
     "version": "0.60.461.0",
@@ -12,7 +12,7 @@
   },
   "access_log_lines_at_gate": 0,
   "labels_read_under_this_decision": 0,
-  "evidence_sha256": "cfc0938671af6717c011cba5ad44248e29b2cbdfecf4d9152dbeed8ecbd02dc6",
+  "evidence_sha256": "13511c9f83d836682b8a5fac0b72d5deb2de5a44d39c6a49c6ec8d15c1f214d2",
   "renderer": {
     "version": "c8k-product-text-v1",
     "recipe_hash": "3feadd3d59999b6423ae5e2656622ed2b722600bd517345f2f9c438b55011a94",
@@ -122,7 +122,7 @@
           "search_filter_hint": 29
         }
       },
-      "A4": {
+      "B3": {
         "rows": 100,
         "questions": 100,
         "tool_errors": 0,
@@ -139,10 +139,10 @@
           "over_share_or_rows": 0,
           "cap_tokens": 1210
         },
-        "budget_used_mean": 5491.95,
-        "result_rows_mean": 12.01,
+        "budget_used_mean": null,
+        "result_rows_mean": 11.18,
         "notices": {
-          "search_filter_hint": 29
+          "search_filter_hint": 31
         }
       },
       "R5": {
@@ -213,13 +213,13 @@
       "tokens_mean": 7295.25,
       "reader_errors": 0
     },
-    "dev.gpt-4o.A4": {
+    "dev.gpt-4o.B3": {
       "rows": 100,
       "rerender_mismatches": 0,
-      "rows_cut_total": 3,
-      "contexts_with_cuts": 3,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
       "contexts_over_budget": 0,
-      "tokens_mean": 7294.65,
+      "tokens_mean": 6354.18,
       "reader_errors": 0
     },
     "dev.gpt-4o.R5": {
@@ -267,13 +267,13 @@
       "tokens_mean": 7295.25,
       "reader_errors": 0
     },
-    "dev.sonnet-5-5.A4": {
+    "dev.sonnet-5-5.B3": {
       "rows": 100,
       "rerender_mismatches": 0,
-      "rows_cut_total": 3,
-      "contexts_with_cuts": 3,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
       "contexts_over_budget": 0,
-      "tokens_mean": 7294.65,
+      "tokens_mean": 6354.18,
       "reader_errors": 0
     },
     "dev.sonnet-5-5.R5": {

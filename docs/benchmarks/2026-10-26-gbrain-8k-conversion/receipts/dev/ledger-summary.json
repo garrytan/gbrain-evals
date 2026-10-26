@@ -4,11 +4,11 @@
   "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
   "campaign_id": "gbrain-8k-conversion",
   "cap_usd": 300,
-  "committed_usd": 33.31395276500014,
-  "remaining_usd": 266.6860472349999,
+  "committed_usd": 36.652624765000134,
+  "remaining_usd": 263.34737523499984,
   "estimate_usd": 35,
   "step_caps_usd": 60,
-  "spent_usd": 33.31395276500013,
+  "spent_usd": 36.652624765000134,
   "alert_over_twice_estimate": false,
   "steps": [
     {
@@ -35,8 +35,8 @@
       "id": "dev-freeze",
       "estimate_usd": 1,
       "cap_usd": 2,
-      "leases": 4,
-      "reserved_usd": 8,
+      "leases": 5,
+      "reserved_usd": 10,
       "spent_usd": 0.6134390599999984,
       "open_leases": 0,
       "alert_over_twice_estimate": false
@@ -45,9 +45,9 @@
       "id": "dev-read",
       "estimate_usd": 25,
       "cap_usd": 36,
-      "leases": 1,
-      "reserved_usd": 36,
-      "spent_usd": 21.155146999999996,
+      "leases": 2,
+      "reserved_usd": 72,
+      "spent_usd": 24.349818999999997,
       "open_leases": 0,
       "alert_over_twice_estimate": false
     },
@@ -55,9 +55,9 @@
       "id": "dev-score",
       "estimate_usd": 2,
       "cap_usd": 5,
-      "leases": 1,
-      "reserved_usd": 5,
-      "spent_usd": 0.9393249999999983,
+      "leases": 2,
+      "reserved_usd": 10,
+      "spent_usd": 1.0833249999999983,
       "open_leases": 0,
       "alert_over_twice_estimate": false
     }

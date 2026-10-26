@@ -201,13 +201,14 @@ preregistration says so plainly; the run still goes ahead only on the owner's ap
 30 in 500), so the simulation draws sealed v2's 40 abstention questions from very few development pairs and its
 guard 8 estimates are noisy. The design is unchanged; the limitation is reported with the power output.
 
-**Result (`power.json`, 1,000 simulations per scenario, from the paid development reading's Sonnet 5.5 rows).**
-Under the development effects, P(pass) is D1 24.7%, D2 67.3%, D3 100% and **D4 0%: below 20%**. F4
-(`search.fact_source_pages`) changed the tool result of 1 of 100 development questions and no Sonnet 5.5 or GPT-4o
-verdict, so the simulation has no D4 effect to draw. Because recommendations follow the contiguous passing prefix
-from D1, P(D1 recommended) is 9% and the most likely outcome is no recommendation (91%), even though D3 passes in every
-simulation. Under the null (no flag has any effect), each comparison passes at most 0.6% of the time and the rule
-recommends something 0.6% of the time. Per the rule above, the held-out run goes ahead only on the owner's approval.
+**Result after spec change 7 (`power.json`, 1,000 simulations per scenario, from the paid development reading's
+Sonnet 5.5 rows with B3 read).** Under the development effects, P(pass) is D1 34.1%, D2 71.6%, D3 100% and D3′ 100%;
+F3 is recommended in every simulation, F1 in 11.3% and F2 in 4.7%. No comparison is below 20%. D3′'s figure is
+optimistic: on dev100 Sonnet 5.5 gained 10 questions with B3 over A0 and lost none, so the resampled pools hold no
+B3 loss to draw, and the abstention pool (4 questions, all right in every arm) cannot exercise guard 8. Under the
+null (no flag has any effect), each comparison passes at most 0.7% of the time, and F3 is recommended 0.4% of the
+time. Before spec change 7, the same simulation put D4 at 0% (F4 changed 1 of 100 tool results and no verdict) and
+the most likely outcome at no recommendation (91%).
 
 ## Custody
 
@@ -234,6 +235,11 @@ tokens).
 | **Held-out total** | | **$143** | **$240** |
 | Development reading | dev100 import ($4 cap), extraction ($13), freeze ($2), 6 arms × 100 × 2 readers ($36), judge ($5) | $35 | $60 |
 | **Program** | | **$178** | **$300** |
+
+**Program total with Opus included, after spec change 7:** the development reading's actual ledger spend, $36.65
+($33.31 before the amendment plus $3.34 for the B3 rerun: readers $3.19, judge $0.14, freeze under $0.01), plus the
+held-out lease of $240 (Opus 5.5 and gpt-6.1-sol readers included, arm count unchanged) is at most **$276.65**, within
+the $300 the owner approved.
 
 The program cap asked for was $400 (held-out $300 plus development $100). The owner approved **$300 for both
 together** (below), so the lease caps above were cut to fit it; no estimate changed. Every step is a local lease cell
@@ -263,7 +269,8 @@ the paid cells; no agent does.
    `2026-10-26-gbrain-8k-conversion/receipts/dry-run/`, including a keyless pass of the development cell.
 4. **Done.** The development reading (`c8k-run.sh dev`, paid) and the power simulation over its rows
    (`scripts/power.ts --dev-scores`), committed: aggregates in `2026-10-26-gbrain-8k-conversion/receipts/dev/`, the
-   simulation in `2026-10-26-gbrain-8k-conversion/power.json`. D4's simulated P(pass) is below 20% (see the power section).
+   simulation in `2026-10-26-gbrain-8k-conversion/power.json`, rerun for the amended family after spec change 7 (B3
+   read by both development readers and judged against the same freeze); no comparison is below 20%.
 5. **Done.** The owner's approvals (spend, last opening), above and in the changelog.
 
 ## Changelog
