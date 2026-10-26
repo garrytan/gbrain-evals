@@ -18,12 +18,12 @@
     "labels_sha256": "046f941b7e7c99337898abc1e2bcee047689c02a7ca665ef39da6580be655924"
   },
   "development_slice": 100,
-  "development_wall_seconds": 3742,
-  "chain_wall_seconds": 187,
+  "development_wall_seconds": 1430,
+  "chain_wall_seconds": 120,
   "labels_mode_after_run": "0o0",
   "stub": {
     "ok": true,
-    "calls": 13495,
+    "calls": 13720,
     "extractions": 11080
   },
   "gates": {
@@ -69,11 +69,13 @@
   },
   "outcome_meaningless": {
     "recommended_prefix": [],
+    "recommended_standalone": [],
+    "recommendations": [],
     "verdicts": {
       "D1": "inconclusive",
-      "D2": "fail",
+      "D2": "inconclusive",
       "D3": "fail",
-      "D4": "inconclusive"
+      "D3p": "inconclusive"
     },
     "problems": []
   },

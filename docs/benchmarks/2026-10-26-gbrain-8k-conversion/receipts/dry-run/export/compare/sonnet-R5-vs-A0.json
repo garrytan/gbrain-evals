@@ -3,14 +3,14 @@
     {
       "side": "A",
       "path": "sonnet-5-5.A0.json",
-      "sha256": "d1a78ead6e44cd10a864f7899c9a7d284f3b5e218ea4a29673da6d3f44465240",
+      "sha256": "c2fb66fcd53c1017d4bdf00a6df228558ab8298fbd9de7ba626a18a8d3896141",
       "rows": 60,
       "skipped_summary_rows": 0
     },
     {
       "side": "B",
       "path": "sonnet-5-5.R5.json",
-      "sha256": "6f17568467559c0674858ed0ec2c05ad577ed30e30a9b3fd43b52db22919ddc7",
+      "sha256": "517db73d0694ab0ffdd63b4ac6f08d99a3ba4e2679a7cd72c94b50d52acd956a",
       "rows": 60,
       "skipped_summary_rows": 0
     }
@@ -19,7 +19,7 @@
     "schema_version": 1,
     "family_id": "c8k-descriptive",
     "registered_at": "2026-10-26",
-    "description": "8k conversion descriptive references, all report-only: every arm against R5 and A0 under Sonnet 5.5, and D1 to D4 under claude-opus-5-5 and gpt-6.1-sol. They decide nothing, so no multiplicity correction applies.",
+    "description": "8k conversion descriptive references, all report-only: every arm against R5 and A0 under Sonnet 5.5, and D1, D2, D3 and D3p under claude-opus-5-5 and gpt-6.1-sol. They decide nothing, so no multiplicity correction applies.",
     "alpha": 0.05,
     "seed": 20261026,
     "draws": 20000,
@@ -67,36 +67,36 @@
         "stats": {
           "n_pairs": 60,
           "n_clusters": 12,
-          "mean_a": 0.48333333333333334,
+          "mean_a": 0.4,
           "mean_b": 0.6333333333333333,
-          "delta": 0.15,
-          "se_cluster": 0.1282161999881214,
-          "se_iid": 0.09749692157967926,
-          "design_effect": 1.729434013237876,
-          "effective_n": 34.693431227056166,
+          "delta": 0.23333333333333334,
+          "se_cluster": 0.11763666026534346,
+          "se_iid": 0.09009306759471139,
+          "design_effect": 1.7049145749841803,
+          "effective_n": 35.19237906717803,
           "ci95": [
-            -0.08333333333333333,
-            0.38333333333333336
+            0,
+            0.43333333333333335
           ],
-          "p_two_sided": 0.3203125,
-          "p_greater": 0.16015625,
-          "p_less": 0.89453125,
+          "p_two_sided": 0.0986328125,
+          "p_greater": 0.04931640625,
+          "p_less": 0.97314453125,
           "p_method": "exact-sign-flip"
         },
         "mcnemar": {
-          "losses": 13,
-          "wins": 22,
-          "both_pass": 16,
-          "both_fail": 9,
-          "discordant": 35,
-          "p_two_sided": 0.17546524899080396
+          "losses": 9,
+          "wins": 23,
+          "both_pass": 15,
+          "both_fail": 13,
+          "discordant": 32,
+          "p_two_sided": 0.020061607006937265
         },
         "power": {
           "alpha": 0.05,
           "power": 0.8,
-          "mde": 0.3592086107034279,
+          "mde": 0.32956912859389054,
           "min_one_sided_discordant": 6,
-          "note": "with 60 pairs in 12 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.3592; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05; clustering inflates variance by 1.73x (effective n about 34.7 of 60)"
+          "note": "with 60 pairs in 12 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.3296; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05; clustering inflates variance by 1.70x (effective n about 35.2 of 60)"
         },
         "direction": "higher"
       },

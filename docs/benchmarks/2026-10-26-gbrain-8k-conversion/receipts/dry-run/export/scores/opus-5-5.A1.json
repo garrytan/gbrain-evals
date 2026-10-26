@@ -1,7 +1,7 @@
 {
   "set": "h1-dry-run-fixture",
   "labels_sha256": "046f941b7e7c99337898abc1e2bcee047689c02a7ca665ef39da6580be655924",
-  "run_sha256": "9335cf1f5fe5663c47a23edbc3dc2bd9a333e2baac55d0ea3907b2f3083f0e52",
+  "run_sha256": "d43aa2ebcbba245a52fb2caa2946bfbb6ae2e69a01de6154d92ad7e6a141e1f2",
   "packed_recall": {
     "top_k": 1000,
     "answerable": {
@@ -37,23 +37,23 @@
   "answers": {
     "judge": "gpt-4o-2024-08-06 with the official LongMemEval evaluate_qa.py prompts",
     "n": 60,
-    "correct": 31,
+    "correct": 26,
     "by_type": {
       "multi-session": {
         "n": 24,
-        "correct": 14
+        "correct": 11
       },
       "temporal-reasoning": {
         "n": 12,
-        "correct": 3
+        "correct": 5
       },
       "knowledge-update": {
         "n": 12,
-        "correct": 5
+        "correct": 4
       },
       "abstention": {
         "n": 12,
-        "correct": 9
+        "correct": 6
       }
     }
   }

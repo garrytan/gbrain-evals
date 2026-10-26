@@ -19,7 +19,7 @@
     "reader_errors": 0,
     "empty": 0
   },
-  "dev.gpt-4o.A4": {
+  "dev.gpt-4o.B3": {
     "rows": 100,
     "reader_errors": 0,
     "empty": 0
@@ -49,7 +49,7 @@
     "reader_errors": 0,
     "empty": 0
   },
-  "dev.sonnet-5-5.A4": {
+  "dev.sonnet-5-5.B3": {
     "rows": 100,
     "reader_errors": 0,
     "empty": 0

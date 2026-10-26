@@ -131,7 +131,7 @@ summary = {
   'access_log': {'lines_before': json.load(open(R + '/custody-check.json'))['access_log']['before'], 'this_decision': [a for _, a in mine],
     'label_reads': sum(1 for _, a in mine if a == 'score'), 'label_reads_after_final_gate': all(i >= gate_f['access_log_lines_at_gate'] for i, a in mine if a == 'score'),
     'decide_label_reads': outcome['label_reads']},
-  'outcome_meaningless': {'recommended_prefix': outcome['recommended_prefix'], 'verdicts': {c['id']: c['label'] for c in outcome['comparisons']}, 'problems': outcome['problems']},
+  'outcome_meaningless': {'recommended_prefix': outcome['recommended_prefix'], 'recommended_standalone': outcome['recommended_standalone'], 'recommendations': outcome['recommendations'], 'verdicts': {c['id']: c['label'] for c in outcome['comparisons']}, 'problems': outcome['problems']},
   'probes': probes, 'all_probes_refused_without_a_label_read': all(p['refused'] and p['access_log_lines_added'] == 0 for p in probes),
   'fixture_text_outside_custody': [l for l in leaks.split('\n') if l.strip()],
 }

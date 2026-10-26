@@ -2,7 +2,7 @@
   "schema_version": 1,
   "family_id": "c8k-primary",
   "registered_at": "2026-10-26",
-  "description": "8k conversion (sealed confirmation v2, release decision 3): one family file read once per primary comparison, D1 A1-A0, D2 A2-A1, D3 A3-A2, D4 A4-A3, each read by claude-sonnet-5-5 and judged by gpt-4o-2024-08-06, and once for F1's non-inferiority (A1 against R5). Judged answer correctness over all 200 questions, paired by question and clustered by persona (haystack). The verdict is decideC8k's, not compare.ts's report-only verdict; the Holm correction over D1 to D4 is applied there because compare.ts sees one pair at a time.",
+  "description": "8k conversion (sealed confirmation v2, release decision 3): one family file read once per primary comparison, D1 A1-A0, D2 A2-A1, D3 A3-A2, D3p B3-A0 (spec change 7: F3 alone against the shipped default), each read by claude-sonnet-5-5 and judged by gpt-4o-2024-08-06, and once for F1's non-inferiority (A1 against R5). Judged answer correctness over all 200 questions, paired by question and clustered by persona (haystack). The verdict is decideC8k's, not compare.ts's report-only verdict; the Holm correction over D1 to D4 is applied there because compare.ts sees one pair at a time.",
   "alpha": 0.05,
   "seed": 20261026,
   "draws": 20000,
@@ -15,7 +15,7 @@
       "gate": "exploratory",
       "direction": "higher",
       "cluster_by": "haystack_id",
-      "description": "Each primary comparison (D1 to D4: the later configuration B against the one before it, A) and F1's non-inferiority check (A1 as B against R5 as A). Read by the preregistered rule (decideC8k in eval/runner/budgeted-delivery/c8k.ts): Holm over the four exact two-sided McNemar p values, the persona-clustered 95% bootstrap interval, guards 7 and 8; for F1 the interval's lower bound against -0.05. compare.ts reports it without a verdict."
+      "description": "Each primary comparison (D1 to D3: the later configuration B against the one before it, A; D3p: B3 against A0) and F1's non-inferiority check (A1 as B against R5 as A). Read by the preregistered rule (decideC8k in eval/runner/budgeted-delivery/c8k.ts): Holm over the four exact two-sided McNemar p values, the persona-clustered 95% bootstrap interval, guards 7 and 8; for F1 the interval's lower bound against -0.05. compare.ts reports it without a verdict."
     },
     {
       "id": "packed_recall_all",

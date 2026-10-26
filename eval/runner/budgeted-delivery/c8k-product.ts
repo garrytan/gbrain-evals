@@ -25,7 +25,7 @@ export const HARNESS_BUDGET_TOKENS = 8000;
 export const FACTS_BLOCK_SHARE = 0.22;
 export const FACTS_BLOCK_MAX_ROWS = 40;
 
-/** The GBRA-205 keys (gbrain 6f82a94e, all default off). Every arm deletes all of them after its calls. */
+/** The GBRA-205 keys (gbrain 6f82a94e, all default off). Every arm deletes all of them after its calls; no arm sets search.fact_source_pages since spec change 7. */
 export const C8K_KEYS = ['search.query_budget_unit', 'search.evidence_date_header', 'search.evidence_titles', 'search.query_facts_block', 'search.fact_source_pages'] as const;
 
 export interface C8kArm { id: string; flags: string; keys: Record<string, string>; params: Record<string, unknown> }
@@ -33,14 +33,15 @@ const budgeted = { limit: QUERY_LIMIT, expand: false, token_budget: QUERY_BUDGET
 const F1 = { 'search.query_budget_unit': 'auto' };
 const F2 = { ...F1, 'search.evidence_date_header': 'true', 'search.evidence_titles': 'true' };
 const F3 = { ...F2, 'search.query_facts_block': 'true' };
-const F4 = { ...F3, 'search.fact_source_pages': 'true' };
+/** F3 alone on the shipped default (spec change 7): the facts block under query's legacy chunk budget. */
+const F3_ALONE = { 'search.query_facts_block': 'true' };
 /** The six arms of the preregistration's arm table, in the order they run. */
 export const C8K_ARMS: readonly C8kArm[] = Object.freeze([
   { id: 'A0', flags: 'control (shipped default)', keys: {}, params: budgeted },
   { id: 'A1', flags: 'F1', keys: F1, params: budgeted },
   { id: 'A2', flags: 'F1+F2', keys: F2, params: budgeted },
   { id: 'A3', flags: 'F1+F2+F3', keys: F3, params: budgeted },
-  { id: 'A4', flags: 'F1+F2+F3+F4', keys: F4, params: budgeted },
+  { id: 'B3', flags: 'F3 alone (A0 plus F3)', keys: F3_ALONE, params: budgeted },
   { id: 'R5', flags: 'reference: first five hits, no budget', keys: {}, params: { limit: R5_LIMIT, expand: false } },
 ]);
 export const armById = (id: string) => { const a = C8K_ARMS.find(x => x.id === id); if (!a) throw new Error(`no arm ${id}`); return a; };

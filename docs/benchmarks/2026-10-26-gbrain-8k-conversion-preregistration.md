@@ -30,14 +30,18 @@ never gets whole conversations, date headers or the facts-first packing that `re
 | F3 | `search.query_facts_block = true` | every budgeted query gets question-ranked, dated saved facts, up to 22% of the budget and 40 rows, oldest first, ahead of the pages |
 | F4 | `search.fact_source_pages = true` | the conversations the best-matching facts were extracted from (at most two not already present) join the hits after the top three rows |
 
+Since spec change 7, F4 has no held-out arm: the development reading found it inert (it changed 1 of 100 tool
+results and no verdict), and it is reported from that reading only. In its place B3 tests F3 alone on the shipped
+default.
+
 The question is whether these change answers on questions nobody tuned on, read the way an agent reads them.
 
 ## The question
 
 At gbrain `cf3ec433f4fffda60d00076bae7361100c632cc4` (v0.60.461.0), on sealed confirmation v2, with an explicit query
 budget of 5,500 gbrain tokens for an 8,000-token reader budget and the evidence read as the agent receives it: **does
-each flag, added in order, answer more held-out questions than the configuration before it, without losing a
-question kind or abstention?**
+each of F1, F2 and F3, added in order, answer more held-out questions than the configuration before it, and does F3
+alone answer more than the shipped default, without losing a question kind or abstention?**
 
 **Measured commit.** The commit above is the head of the wave PR (#7610, branch `capy/gbra205-8k-conversion`), not a
 merge commit: 6f82a94 plus a documentation fold and an export golden, with `src/` identical. If `/ship` or a master
@@ -63,7 +67,7 @@ agent receives.
 
 Each brain also sets `facts.default_visibility = world`, the single-principal posture `gbrain bootstrap` writes
 when the key is unset. Without it extracted facts are private, and a stdio agent (a remote caller in gbrain's trust
-model) never sees them, so F3 and F4 would measure nothing. Every other brain setting is E2 and H1's query-path pins.
+model) never sees them, so F3 would measure nothing. Every other brain setting is E2 and H1's query-path pins.
 
 After extraction, each brain gets gbrain's own operator remedy for the doctor's `safe_index_pending` check:
 `gbrain repair safe-chunks` (preview), then `--apply`, embedding as normal (safe-chunks is not preview-bound, so
@@ -79,7 +83,7 @@ row in any arm's result, as it would for an agent on a repaired brain.
 | A1, F1 | `query_budget_unit=auto` | same call |
 | A2, F1+F2 | A1 + `evidence_date_header`, `evidence_titles` | same call |
 | A3, F1+F2+F3 | A2 + `query_facts_block` | same call |
-| A4, F1+F2+F3+F4 | A3 + `fact_source_pages` | same call |
+| B3, F3 alone | `query_facts_block` only (A0 plus F3: the facts block under `query`'s legacy chunk budget) | same call |
 | R5, reference | none | `query {limit: 5}`, no budget (the shipped no-budget `auto`: whole conversations, 24,000 tokens), cut at the reader budget |
 
 R5 is H1's "first five hits" arm (150 of 200 there, against `cap_only`'s 145), rerun at the pin. It decides
@@ -102,19 +106,26 @@ supply them. The reader template is memory-qa's LongMemEval reading prompt with 
   --judge --decision-id`. It is the official LongMemEval judge and the one shared with decisions 1 and 2, which is
   the single older model the rules allow.
 
+**The reader set complies with the project's eval model rules** (gbrain-evals `CLAUDE.md`, "Choose models"; checked
+again at spec change 7). The held-out readers are the newest model of each frontier family: Sonnet 5.5 (primary),
+Opus 5.5 and gpt-6.1-sol. `gpt-4o-2024-08-06` appears only twice: as the development cell's matched reader, named as
+the single older-generation link to the OSS shootout's numbers (its 59%, 66% and 78% were read by it), and as
+LongMemEval's official judge. No Fable model and no gpt-5.4-mini runs in any cell.
+
 ## Metric and comparisons
 
 `answer_correct` over all 200 questions; a reader error or an empty answer counts as wrong. Pairing by question,
 clusters the 40 personas.
 
-Primary family (Sonnet), each the next flag against the configuration before it:
+Primary family (Sonnet): D1 to D3 each add the next flag to the configuration before it; D3′ (id `D3p`) adds F3 alone
+to the shipped default:
 
 | Comparison | Tests |
 |---|---|
 | D1: A1 − A0 | F1 |
 | D2: A2 − A1 | F2 |
 | D3: A3 − A2 | F3 |
-| D4: A4 − A3 | F4 |
+| D3′: B3 − A0 | F3 alone |
 
 Persona-clustered bootstrap (20,000 draws, seed 20261026) for each difference's 95% interval, and the exact
 two-sided McNemar test with Holm's correction across the four comparisons. `compare.ts` computes each pair's
@@ -125,8 +136,8 @@ one pair at a time.
 
 1. **Gate after retrieval**, before any reader call: every arm has one tool result per question; A0's results are
    byte-identical between the freeze and a repeat call on 20 questions chosen by seed (retrieval is deterministic at
-   the pin given the cell's retrieval response cache, spec change 6); every A1–A4 result reports `delivery.budget_used` at most 5,500 and `auto_packing: cap_only`; facts in
-   A3 and A4 take at most 22% of the budget; no row of any arm names a page outside the persona's history (the brain's own extraction receipt is counted, not
+   the pin given the cell's retrieval response cache, spec change 6); every A1–A3 result reports `delivery.budget_used` at most 5,500 and `auto_packing: cap_only`; facts in
+   A3 and B3 take at most 22% of the budget; every result belongs to an arm of the table; no row of any arm names a page outside the persona's history (the brain's own extraction receipt is counted, not
    refused); no result
    of any arm reports the `safe_index_pending` degraded stage.
 2. **Final gate** after the readers: every context re-renders to the bytes the reader got; every arm has one row per
@@ -142,9 +153,11 @@ one pair at a time.
    non-inferior to R5: the lower bound of the persona-clustered 95% interval of A1 − R5 is above −5 points. A D1 pass
    that misses this is reported as "pass, not recommended": the cap beats the chunk trim but a budgeted top-five
    whole-session delivery may beat the cap, and that design is left to new held-out material.
-5. **Recommendations follow the passing prefix.** Each flag was measured on top of the ones before it, so a default
-   change is recommended only for the contiguous run of recommended comparisons starting at D1. A later pass after
-   an earlier non-pass is reported and recommends nothing.
+5. **Recommendations.** D1 to D3 each measure a flag on top of the ones before it, so they recommend only as the
+   contiguous run of recommended comparisons starting at D1; a later pass after an earlier non-pass is reported and
+   recommends nothing. F1 keeps its non-inferiority check against R5 (step 4). D3′ measures F3 alone on the shipped
+   default, so F3 is recommended when D3′ passes, whatever D1 to D3 do (spec change 7). Guards 7 and 8 apply to D3′
+   as to every comparison, and Holm runs across all four.
 
 ## What each outcome means for gbrain's defaults
 
@@ -155,7 +168,7 @@ No default changes because of this run. Every flip is the owner's decision, brou
 | D1 recommended | flip `search.query_budget_unit` to `auto` (`BEHAVIOR_CHANGES` row; callers without a budget unaffected) |
 | D1, D2 recommended | also flip `search.evidence_date_header` and `search.evidence_titles` on |
 | D1–D3 recommended | also flip `search.query_facts_block` on |
-| D1–D4 recommended | also flip `search.fact_source_pages` on |
+| D3′ passes (whatever D1 to D3 do) | flip `search.query_facts_block` on |
 | anything else | every flag stays off; the set is not reopened for these flags, and nothing is tuned on it |
 
 Each arm is answered once. No other budget, packing, unit, reader, prompt or judge is tried on the sealed set under
@@ -163,7 +176,8 @@ this decision.
 
 ## Measured besides the decision (decides nothing)
 
-- Every arm against R5 and against A0, Sonnet; every primary comparison under Opus 5.5 and gpt-6.1-sol.
+- Every arm against R5 and against A0, and A3 against B3, Sonnet; every primary comparison under Opus 5.5 and gpt-6.1-sol.
+- F4, from the development reading only: inert (1 of 100 tool results changed, no verdict changed); no held-out arm.
 - Packed recall: every gold chat among the chats the reader saw, over the 160 answerable questions.
 - Per arm and kind: score, delivered tokens, rows, conversations delivered, fact rows, cuts, reader tokens, errors.
 - Fact extraction: facts written per history, extraction spend, failures.
@@ -243,7 +257,7 @@ the paid cells; no agent does.
    (`sealed.access_log_before`, 29 of 35 lines `fill-at-custody`); the harness refuses every sealed step until then.
 2. **Done.** Harness (`eval/runner/budgeted-delivery/c8k.ts`, `c8k-product.ts`, `c8k-run.sh`): the live
    product-path arms through the stdio dispatch, the product-text renderer, the extraction step, R5, `decision.json`,
-   `family.json` (Holm over D1–D4, plus the R5 non-inferiority interval), the campaign and cells, the verdict function
+   `family.json` (Holm over D1, D2, D3 and D3′, plus the R5 non-inferiority interval), the campaign and cells, the verdict function
    with unit tests (`test/eval/budgeted-delivery-c8k.test.ts`).
 3. **Done.** A keyless dry run (`c8k-dry-run.sh`) on H1's invented fixture with stub models, receipts in
    `2026-10-26-gbrain-8k-conversion/receipts/dry-run/`, including a keyless pass of the development cell.
@@ -253,6 +267,32 @@ the paid cells; no agent does.
 5. **Done.** The owner's approvals (spend, last opening), above and in the changelog.
 
 ## Changelog
+
+### 2026-10-26: spec change 7, B3 replaces A4 (GBRA-108's call)
+
+Before custody, after the paid development reading; nothing held-out has run. GBRA-108 decided to amend after the
+development reading found F4 inert and showed that the passing-prefix rule would most likely recommend nothing even
+with F3's effect intact (P(D1 recommended) 9%, P(no recommendation) 91%).
+
+- **Arms.** B3 (A0's configuration plus `search.query_facts_block` alone, the same call) replaces A4. Six arms:
+  A0, A1, A2, A3, B3, R5. No held-out arm sets `search.fact_source_pages`.
+- **Confirmatory family (Sonnet 5.5).** D1, D2, D3 and D3′ (id `D3p`, B3 against A0), Holm across the four. F3 is
+  recommended if D3′ passes, whatever the prefix; F1 and F2 keep the contiguous-prefix rule from D1, and F1 keeps its
+  non-inferiority check against R5. D3 inside the prefix still recommends F3 as the flag stacked on F1 and F2.
+  Guards 7 and 8 apply to D3′. `decideC8k` and its tests cover D3′ passing while D1 fails, D3′ failing while D3
+  passes, and Holm across four. Descriptive: B3 against R5, A3 against B3, and D3′ under Opus 5.5 and gpt-6.1-sol.
+- **F4** is reported from the development reading only: inert (1 of 100 tool results changed, no verdict changed),
+  with no held-out arm.
+- **Gate 1** applies the budget-cap checks to the arms that set F1 (A1 to A3), the facts-share check to the arms that
+  set F3 (A3, B3), and refuses any result of an arm outside the table.
+- **B3 fires without F1** (keyless dry run, before any paid B3 call): with query's legacy chunk budget the facts block
+  is applied to every budgeted query, as in gbrain's `applyFactsStage`. On dev100, 44 of 100 B3 results carry fact
+  rows (A0: 21, from the default facts arm), the largest facts block is 471 tokens against the 1,210-token share, and
+  B3's tool result differs from A0's on 47 of 100 questions; on the fixture, 24 of 60, with no facts-share violation.
+- **The development cell** keeps its freeze and cache: the freeze adds B3 to each frozen history after its own
+  warm-up call and moves A4's rows to `evidence/retired/`, the A0 repeat stays as frozen, and readers and the judge
+  resume per arm, so only B3 is read and judged.
+- **Receipts.** The keyless dry-run receipts are regenerated with the retrieval-cache section and B3.
 
 ### 2026-10-26: retrieval response cache before the paid freeze reruns
 

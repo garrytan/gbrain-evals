@@ -267,14 +267,10 @@
       }
     },
     {
-      "id": "A4",
-      "flags": "F1+F2+F3+F4",
+      "id": "B3",
+      "flags": "F3 alone (A0 plus F3)",
       "keys": {
-        "search.query_budget_unit": "auto",
-        "search.evidence_date_header": "true",
-        "search.evidence_titles": "true",
-        "search.query_facts_block": "true",
-        "search.fact_source_pages": "true"
+        "search.query_facts_block": "true"
       },
       "call": {
         "limit": 25,
@@ -335,10 +331,10 @@
       "role": "primary"
     },
     {
-      "id": "sonnet-5-5.A4",
+      "id": "sonnet-5-5.B3",
       "reader": "sonnet-5-5",
       "model": "anthropic:claude-sonnet-5-5",
-      "arm": "A4",
+      "arm": "B3",
       "role": "primary"
     },
     {
@@ -377,10 +373,10 @@
       "role": "replay"
     },
     {
-      "id": "opus-5-5.A4",
+      "id": "opus-5-5.B3",
       "reader": "opus-5-5",
       "model": "anthropic:claude-opus-5-5",
-      "arm": "A4",
+      "arm": "B3",
       "role": "replay"
     },
     {
@@ -419,10 +415,10 @@
       "role": "replay"
     },
     {
-      "id": "gpt-6-1-sol.A4",
+      "id": "gpt-6-1-sol.B3",
       "reader": "gpt-6-1-sol",
       "model": "openai:gpt-6.1-sol",
-      "arm": "A4",
+      "arm": "B3",
       "role": "replay"
     },
     {
@@ -461,10 +457,10 @@
       "role": "development"
     },
     {
-      "id": "dev.gpt-4o.A4",
+      "id": "dev.gpt-4o.B3",
       "reader": "gpt-4o",
       "model": "openai:gpt-4o-2024-08-06",
-      "arm": "A4",
+      "arm": "B3",
       "role": "development"
     },
     {
@@ -503,10 +499,10 @@
       "role": "development"
     },
     {
-      "id": "dev.sonnet-5-5.A4",
+      "id": "dev.sonnet-5-5.B3",
       "reader": "sonnet-5-5",
       "model": "anthropic:claude-sonnet-5-5",
-      "arm": "A4",
+      "arm": "B3",
       "role": "development"
     },
     {
@@ -534,7 +530,7 @@
         "D1",
         "D2",
         "D3",
-        "D4"
+        "D3p"
       ]
     },
     "max_reader_errors": 3,
@@ -562,10 +558,10 @@
         "b": "A3"
       },
       {
-        "id": "D4",
-        "tests": "F4",
-        "a": "A3",
-        "b": "A4"
+        "id": "D3p",
+        "tests": "F3",
+        "a": "A0",
+        "b": "B3"
       }
     ],
     "f1_noninferiority": {
@@ -578,10 +574,18 @@
       "D1": "flip search.query_budget_unit to auto (BEHAVIOR_CHANGES row; callers without a budget unaffected)",
       "D2": "flip search.evidence_date_header and search.evidence_titles on",
       "D3": "flip search.query_facts_block on",
-      "D4": "flip search.fact_source_pages on"
+      "D3p": "flip search.query_facts_block on"
     },
     "expected_label_reads": 18,
-    "implementation": "eval/runner/budgeted-delivery/c8k.ts decide (decideC8k) over c8k.ts gate (final), compare.ts with family.json on each comparison's two Sonnet score reports (D1.json to D4.json) and on R5 against A1 (F1-noninferiority.json)"
+    "implementation": "eval/runner/budgeted-delivery/c8k.ts decide (decideC8k) over c8k.ts gate (final), compare.ts with family.json on each comparison's two Sonnet score reports (D1.json, D2.json, D3.json, D3p.json) and on R5 against A1 (F1-noninferiority.json)",
+    "prefix": [
+      "D1",
+      "D2",
+      "D3"
+    ],
+    "standalone": [
+      "D3p"
+    ]
   },
   "descriptive": {
     "family": "docs/benchmarks/2026-10-26-gbrain-8k-conversion/family-descriptive.json",
@@ -607,9 +611,9 @@
         "b": "sonnet-5-5.A3"
       },
       {
-        "id": "sonnet-A4-vs-R5",
+        "id": "sonnet-B3-vs-R5",
         "a": "sonnet-5-5.R5",
-        "b": "sonnet-5-5.A4"
+        "b": "sonnet-5-5.B3"
       },
       {
         "id": "sonnet-A2-vs-A0",
@@ -622,9 +626,9 @@
         "b": "sonnet-5-5.A3"
       },
       {
-        "id": "sonnet-A4-vs-A0",
-        "a": "sonnet-5-5.A0",
-        "b": "sonnet-5-5.A4"
+        "id": "sonnet-A3-vs-B3",
+        "a": "sonnet-5-5.B3",
+        "b": "sonnet-5-5.A3"
       },
       {
         "id": "sonnet-R5-vs-A0",
@@ -647,9 +651,9 @@
         "b": "opus-5-5.A3"
       },
       {
-        "id": "opus-5-5-D4",
-        "a": "opus-5-5.A3",
-        "b": "opus-5-5.A4"
+        "id": "opus-5-5-D3p",
+        "a": "opus-5-5.A0",
+        "b": "opus-5-5.B3"
       },
       {
         "id": "gpt-6-1-sol-D1",
@@ -667,9 +671,9 @@
         "b": "gpt-6-1-sol.A3"
       },
       {
-        "id": "gpt-6-1-sol-D4",
-        "a": "gpt-6-1-sol.A3",
-        "b": "gpt-6-1-sol.A4"
+        "id": "gpt-6-1-sol-D3p",
+        "a": "gpt-6-1-sol.A0",
+        "b": "gpt-6-1-sol.B3"
       }
     ],
     "note": "They decide nothing, so no multiplicity correction applies."

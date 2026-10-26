@@ -8,12 +8,39 @@
   "evidence_rows": 600,
   "repeat_rows": 20,
   "dispatch": "dispatchToolCall(query) with the stdio server's options (c8k-product.ts stdioDispatchOpts)",
+  "retrieval_cache": {
+    "spec_change": 6,
+    "scope": "this cell only (<cell>/cache/retrieval inside the custody root), never committed",
+    "processes": 1,
+    "embed": {
+      "cache": "H1 EmbeddingCache (gbrain src/eval/shared/embed-cache.ts)",
+      "key": "provider:model@dims#query:sha256(text)",
+      "models": [
+        "openai:text-embedding-3-large@1536"
+      ],
+      "hits": 0,
+      "misses": 101,
+      "bypassed": 0,
+      "infra_faults": 0,
+      "canonical_sha256": "d5d62cc45ce858213ce95d2db57c457cde85fb7902e7e30746f02dc9674aa035"
+    },
+    "rerank": {
+      "key": "sha256([provider, endpoint path, model, full request body])",
+      "hits": 0,
+      "misses": 0,
+      "bypassed": 0,
+      "uncached_errors": 0,
+      "rows": 0,
+      "canonical_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "uncached": "chat (readers, judge) and extraction calls"
+  },
   "service_ms_mean_by_arm": {
-    "A0": 242.706,
-    "A1": 206.61700000000002,
-    "A2": 194.21399999999994,
-    "A3": 192.01199999999997,
-    "A4": 206.4870000000001,
-    "R5": 166.99700000000004
+    "A0": 174.76,
+    "A1": 184.52899999999997,
+    "A2": 170.86599999999999,
+    "A3": 169.80500000000006,
+    "B3": 148.55899999999997,
+    "R5": 166.261
   }
 }

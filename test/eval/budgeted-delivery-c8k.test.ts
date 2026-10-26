@@ -28,7 +28,8 @@ describe('the committed decision directory', () => {
     const arms = (D as unknown as { arms: Array<{ id: string; keys: Record<string, string> }> }).arms;
     expect(arms.map(a => a.id)).toEqual(C8K_ARMS.map(a => a.id));
     for (const a of arms) expect(a.keys).toEqual(C8K_ARMS.find(x => x.id === a.id)!.keys);
-    expect(Object.keys(C8K_ARMS.find(a => a.id === 'A4')!.keys).sort()).toEqual([...C8K_KEYS].sort());
+    expect(C8K_ARMS.find(a => a.id === 'B3')!.keys).toEqual({ 'search.query_facts_block': 'true' });
+    expect(C8K_KEYS.filter(k => C8K_ARMS.some(a => k in a.keys))).toEqual(C8K_KEYS.filter(k => k !== 'search.fact_source_pages'));
     expect(D.construction.query_budget).toBe(QUERY_BUDGET);
     expect(D.construction.harness_budget_tokens).toBe(HARNESS_BUDGET_TOKENS);
     expect(D.construction.renderer).toMatchObject({ version: RENDERER_VERSION, recipe_hash: RECIPE_HASH, reader_template_sha256: READER_TEMPLATE_SHA256 });
@@ -81,81 +82,108 @@ describe('the committed decision directory', () => {
 
 describe('the preregistered rule (decideC8k)', () => {
   const kinds = { 'multi-session': 80, 'temporal-reasoning': 40, 'knowledge-update': 40, abstention: 40 };
-  /** 200 rows per arm; base is right on even indices, and each step's wins/losses flip questions of a kind from the previous arm. */
+  /** 200 rows per arm; base is right on even indices. A1 to A3 each flip questions of a kind from the arm before; B3 flips from A0. */
   const armRows = (steps: Record<string, { wins?: Record<string, number>; losses?: Record<string, number> }>) => {
     const out: Record<string, Row[]> = {};
     let prev: Row[] = [];
     for (const [k, n] of Object.entries(kinds)) for (let i = 0; i < n; i++) prev.push({ question_id: `${k}-${i}`, haystack_id: `h${i % 40}`, question_type: k, answer_correct: i % 2 === 0 });
     out.A0 = prev;
-    for (const arm of ['A1', 'A2', 'A3', 'A4']) {
+    for (const arm of ['A1', 'A2', 'A3', 'B3']) {
       const s = steps[arm] ?? {};
       const left: Record<string, { w: number; l: number }> = Object.fromEntries(Object.keys(kinds).map(k => [k, { w: s.wins?.[k] ?? 0, l: s.losses?.[k] ?? 0 }]));
-      prev = prev.map(r => {
+      out[arm] = (arm === 'B3' ? out.A0 : prev).map(r => {
         const c = left[r.question_type];
         if (!r.answer_correct && c.w > 0) { c.w--; return { ...r, answer_correct: true }; }
         if (r.answer_correct && c.l > 0) { c.l--; return { ...r, answer_correct: false }; }
         return r;
       });
-      out[arm] = prev;
+      if (arm !== 'B3') prev = out[arm];
     }
     out.R5 = out.A0;
     return out;
   };
   const cmp = (id: string, delta: number, lo: number, hi: number, p: number) => ({ id: 'answer_accuracy', status: 'ok', stats: { delta, ci95: [lo, hi] as [number, number], p_two_sided: p, n_pairs: 200, n_clusters: 40, mean_a: 0.5, mean_b: 0.5 + delta }, mcnemar: { wins: 20, losses: 4, p_two_sided: p } });
-  const strong = { D1: cmp('D1', 0.08, 0.03, 0.13, 0.001), D2: cmp('D2', 0.08, 0.03, 0.13, 0.002), D3: cmp('D3', 0.08, 0.03, 0.13, 0.003), D4: cmp('D4', 0.08, 0.03, 0.13, 0.004) };
+  const strong = { D1: cmp('D1', 0.08, 0.03, 0.13, 0.001), D2: cmp('D2', 0.08, 0.03, 0.13, 0.002), D3: cmp('D3', 0.08, 0.03, 0.13, 0.003), D3p: cmp('D3p', 0.08, 0.03, 0.13, 0.004) };
+  const worse = (id: string) => cmp(id, -0.08, -0.13, -0.02, 0.001);
   const wins = { wins: { 'multi-session': 6, 'temporal-reasoning': 5, 'knowledge-update': 5 } };
+  const allWins = { A1: wins, A2: wins, A3: wins, B3: wins };
   const run = (o: Partial<Parameters<typeof decideC8k>[1]> & { steps?: Parameters<typeof armRows>[0] } = {}) =>
-    decideC8k(D.rule, { gatePass: true, comparisons: strong, rows: armRows(o.steps ?? { A1: wins, A2: wins, A3: wins, A4: wins }), readerErrors: {}, r5: cmp('F1', 0.02, -0.02, 0.06, 0.4), ...o });
+    decideC8k(D.rule, { gatePass: true, comparisons: strong, rows: armRows(o.steps ?? allWins), readerErrors: {}, r5: cmp('F1', 0.02, -0.02, 0.06, 0.4), ...o });
   const verdicts = (r: ReturnType<typeof decideC8k>) => Object.fromEntries(r.comparisons.map(c => [c.id, c.label]));
+  const F3 = D.rule.recommendations.D3p;
 
-  test('every comparison passing recommends all four flips, in order', () => {
+  test('the amended family (spec change 7): D1 to D3 chained, D3p is B3 against A0, F3 either way', () => {
+    expect(D.rule.comparisons.map(c => [c.id, c.a, c.b, c.tests])).toEqual([['D1', 'A0', 'A1', 'F1'], ['D2', 'A1', 'A2', 'F2'], ['D3', 'A2', 'A3', 'F3'], ['D3p', 'A0', 'B3', 'F3']]);
+    expect(D.rule.prefix).toEqual(['D1', 'D2', 'D3']);
+    expect(D.rule.standalone).toEqual(['D3p']);
+    expect(D.rule.recommendations.D3).toBe(F3);
+    expect(F3).toBe('flip search.query_facts_block on');
+  });
+
+  test('every comparison passing recommends the three flips in order, F3 named once', () => {
     const r = run();
-    expect(verdicts(r)).toEqual({ D1: 'pass', D2: 'pass', D3: 'pass', D4: 'pass' });
-    expect(r.recommended_prefix).toEqual(['D1', 'D2', 'D3', 'D4']);
-    expect(r.recommendations).toEqual(['D1', 'D2', 'D3', 'D4'].map(id => D.rule.recommendations[id]));
+    expect(verdicts(r)).toEqual({ D1: 'pass', D2: 'pass', D3: 'pass', D3p: 'pass' });
+    expect(r.recommended_prefix).toEqual(['D1', 'D2', 'D3']);
+    expect(r.recommended_standalone).toEqual(['D3p']);
+    expect(r.recommendations).toEqual(['D1', 'D2', 'D3'].map(id => D.rule.recommendations[id]));
     expect(r.outcome).toMatch(/^recommend: flip search.query_budget_unit/);
   });
 
-  test('Holm over the four McNemar p values: 0.01, 0.02, 0.03, 0.04 adjust to 0.04, 0.06, 0.06, 0.06', () => {
-    const r = run({ comparisons: { D1: cmp('D1', 0.08, 0.03, 0.13, 0.01), D2: cmp('D2', 0.08, 0.03, 0.13, 0.02), D3: cmp('D3', 0.08, 0.03, 0.13, 0.03), D4: cmp('D4', 0.08, 0.03, 0.13, 0.04) } });
+  test('Holm across all four McNemar p values: 0.01, 0.02, 0.03, 0.04 adjust to 0.04, 0.06, 0.06, 0.06', () => {
+    const r = run({ comparisons: { D1: cmp('D1', 0.08, 0.03, 0.13, 0.01), D2: cmp('D2', 0.08, 0.03, 0.13, 0.02), D3: cmp('D3', 0.08, 0.03, 0.13, 0.03), D3p: cmp('D3p', 0.08, 0.03, 0.13, 0.04) } });
     expect(r.p_holm.D1).toBeCloseTo(0.04, 12);
-    for (const id of ['D2', 'D3', 'D4']) expect(r.p_holm[id]).toBeCloseTo(0.06, 12);
-    expect(verdicts(r)).toEqual({ D1: 'pass', D2: 'inconclusive', D3: 'inconclusive', D4: 'inconclusive' });
+    for (const id of ['D2', 'D3', 'D3p']) expect(r.p_holm[id]).toBeCloseTo(0.06, 12);
+    expect(verdicts(r)).toEqual({ D1: 'pass', D2: 'inconclusive', D3: 'inconclusive', D3p: 'inconclusive' });
     expect(r.comparisons[1].reasons[0]).toMatch(/Holm-adjusted McNemar p < alpha/);
-    expect(r.recommended_prefix).toEqual(['D1']);
+    expect(r.recommendations).toEqual([D.rule.recommendations.D1]);
+  });
+
+  test('Holm counts D3p: at 0.012 it takes the x4 rank (0.048), and D1 at 0.0125 (x3, 0.0375) rises to it by monotonicity', () => {
+    const r = run({ comparisons: { D1: cmp('D1', 0.08, 0.03, 0.13, 0.0125), D2: cmp('D2', 0.08, 0.03, 0.13, 0.5), D3: cmp('D3', 0.08, 0.03, 0.13, 0.5), D3p: cmp('D3p', 0.08, 0.03, 0.13, 0.012) } });
+    expect(r.p_holm.D3p).toBeCloseTo(0.048, 12);
+    expect(r.p_holm.D1).toBeCloseTo(0.048, 12);
+    expect(verdicts(r)).toMatchObject({ D1: 'pass', D3p: 'pass' });
   });
 
   test('a blocked or missing comparison counts as p = 1 in Holm and is inconclusive', () => {
-    const r = run({ comparisons: { ...strong, D3: { id: 'answer_accuracy', status: 'blocked', reasons: ['missing rows'] } as never, D4: undefined } });
+    const r = run({ comparisons: { ...strong, D3: { id: 'answer_accuracy', status: 'blocked', reasons: ['missing rows'] } as never, D3p: undefined } });
     expect(r.p_holm.D1).toBeCloseTo(0.004, 12);
     expect(r.p_holm.D3).toBe(1);
-    expect(verdicts(r)).toMatchObject({ D3: 'inconclusive', D4: 'inconclusive' });
+    expect(verdicts(r)).toMatchObject({ D3: 'inconclusive', D3p: 'inconclusive' });
     expect(r.comparisons[2].reasons[0]).toMatch(/blocked: missing rows/);
     expect(r.comparisons[3].reasons[0]).toMatch(/missing/);
+    expect(r.recommendations).toEqual([D.rule.recommendations.D1, D.rule.recommendations.D2]);
   });
 
   test('superiority needs delta > 0 and the interval above zero; an interval wholly below zero fails', () => {
     expect(verdicts(run({ comparisons: { ...strong, D2: cmp('D2', 0.03, -0.01, 0.07, 0.001) } })).D2).toBe('inconclusive');
-    expect(verdicts(run({ comparisons: { ...strong, D2: cmp('D2', -0.08, -0.13, -0.02, 0.001) } })).D2).toBe('fail');
+    expect(verdicts(run({ comparisons: { ...strong, D2: worse('D2') } })).D2).toBe('fail');
   });
 
-  test('guard 7: a clear loss in a kind fails that comparison only (exact one-sided McNemar, p < 0.05)', () => {
-    const small = run({ steps: { A1: wins, A2: { wins: { 'temporal-reasoning': 9 }, losses: { 'multi-session': 4 } }, A3: wins, A4: wins } });
+  test('guard 7: a clear loss in a kind fails that comparison only (exact one-sided McNemar, p < 0.05), D3p included', () => {
+    const small = run({ steps: { ...allWins, A2: { wins: { 'temporal-reasoning': 9 }, losses: { 'multi-session': 4 } } } });
     expect(small.comparisons[1].guard7.kinds['multi-session']).toMatchObject({ wins: 0, losses: 4, pass: true });
     expect(verdicts(small).D2).toBe('pass');
-    const clear = run({ steps: { A1: wins, A2: { wins: { 'temporal-reasoning': 9 }, losses: { 'multi-session': 5 } }, A3: wins, A4: wins } });
+    const clear = run({ steps: { ...allWins, A2: { wins: { 'temporal-reasoning': 9 }, losses: { 'multi-session': 5 } } } });
     expect(clear.comparisons[1].guard7.kinds['multi-session']).toMatchObject({ wins: 0, losses: 5, pass: false });
     expect(clear.comparisons[1].guard7.kinds['multi-session'].p_loss_one_sided).toBeCloseTo(1 / 32, 12);
-    expect(verdicts(clear)).toEqual({ D1: 'pass', D2: 'fail', D3: 'pass', D4: 'pass' });
+    expect(verdicts(clear)).toEqual({ D1: 'pass', D2: 'fail', D3: 'pass', D3p: 'pass' });
     expect(clear.comparisons[1].reasons[0]).toMatch(/guard 7: a clear loss in multi-session \(0 wins, 5 losses/);
+    const b3 = run({ steps: { ...allWins, B3: { wins: { 'temporal-reasoning': 9 }, losses: { 'knowledge-update': 5 } } } });
+    expect(b3.comparisons[3].guard7.kinds['knowledge-update']).toMatchObject({ wins: 0, losses: 5, pass: false });
+    expect(verdicts(b3)).toEqual({ D1: 'pass', D2: 'pass', D3: 'pass', D3p: 'fail' });
   });
 
-  test('guard 8: abstention may not fall at all', () => {
-    const r = run({ steps: { A1: { wins: { 'temporal-reasoning': 9 }, losses: { abstention: 1 } }, A2: wins, A3: wins, A4: wins } });
+  test('guard 8: abstention may not fall at all, D3p included', () => {
+    const r = run({ steps: { ...allWins, A1: { wins: { 'temporal-reasoning': 9 }, losses: { abstention: 1 } } } });
     expect(r.comparisons[0].guard7.kinds.abstention).toMatchObject({ losses: 1, pass: true });
     expect(r.comparisons[0].guard8).toMatchObject({ pass: false, earlier: 20, later: 19 });
     expect(verdicts(r).D1).toBe('fail');
     expect(r.recommended_prefix).toEqual([]);
+    const b3 = run({ steps: { ...allWins, B3: { wins: { 'temporal-reasoning': 9 }, losses: { abstention: 1 } } } });
+    expect(b3.comparisons[3].guard8).toMatchObject({ pass: false, earlier: 20, later: 19 });
+    expect(verdicts(b3).D3p).toBe('fail');
+    expect(b3.recommended_standalone).toEqual([]);
   });
 
   test('F1 is recommended only when A1 is non-inferior to R5 (lower bound above -5 points), else "pass, not recommended"', () => {
@@ -166,26 +194,49 @@ describe('the preregistered rule (decideC8k)', () => {
     expect(miss.comparisons[0].noninferiority).toMatchObject({ reference: 'R5', candidate: 'A1', pass: false });
     expect(miss.comparisons[0].reasons.join(' ')).toMatch(/pass, not recommended: .* lower bound -0.0500, not above -0.05/);
     expect(miss.recommended_prefix).toEqual([]);
-    expect(miss.reported_without_recommendation).toEqual(['D2', 'D3', 'D4']);
-    expect(miss.outcome).toMatch(/every flag stays off/);
+    expect(miss.reported_without_recommendation).toEqual(['D2', 'D3']);
+    expect(miss.recommendations).toEqual([F3]);
     expect(at(null).comparisons[0].label).toBe('pass, not recommended');
   });
 
-  test('recommendations follow only the contiguous passing prefix from D1', () => {
+  test('D1 to D3 recommend only as the contiguous prefix from D1; D3p recommends F3 outside it', () => {
     const r = run({ comparisons: { ...strong, D2: cmp('D2', 0.01, -0.03, 0.05, 0.5) } });
-    expect(verdicts(r)).toEqual({ D1: 'pass', D2: 'inconclusive', D3: 'pass', D4: 'pass' });
+    expect(verdicts(r)).toEqual({ D1: 'pass', D2: 'inconclusive', D3: 'pass', D3p: 'pass' });
     expect(r.recommended_prefix).toEqual(['D1']);
-    expect(r.recommendations).toEqual([D.rule.recommendations.D1]);
-    expect(r.reported_without_recommendation).toEqual(['D3', 'D4']);
+    expect(r.recommended_standalone).toEqual(['D3p']);
+    expect(r.recommendations).toEqual([D.rule.recommendations.D1, F3]);
+    expect(r.reported_without_recommendation).toEqual(['D3']);
+  });
+
+  test('D3p passing while D1 fails recommends F3 alone', () => {
+    const r = run({ comparisons: { ...strong, D1: worse('D1') } });
+    expect(verdicts(r)).toEqual({ D1: 'fail', D2: 'pass', D3: 'pass', D3p: 'pass' });
+    expect(r.recommended_prefix).toEqual([]);
+    expect(r.recommended_standalone).toEqual(['D3p']);
+    expect(r.reported_without_recommendation).toEqual(['D2', 'D3']);
+    expect(r.recommendations).toEqual([F3]);
+    expect(r.outcome).toBe(`recommend: ${F3}`);
+  });
+
+  test('D3p failing while D3 passes: F3 comes only through the prefix, as the flag stacked on F1 and F2', () => {
+    const stacked = run({ comparisons: { ...strong, D3p: worse('D3p') } });
+    expect(verdicts(stacked)).toEqual({ D1: 'pass', D2: 'pass', D3: 'pass', D3p: 'fail' });
+    expect(stacked.recommended_standalone).toEqual([]);
+    expect(stacked.recommendations).toEqual(['D1', 'D2', 'D3'].map(id => D.rule.recommendations[id]));
+    const broken = run({ comparisons: { ...strong, D2: cmp('D2', 0.01, -0.03, 0.05, 0.5), D3p: worse('D3p') } });
+    expect(verdicts(broken)).toEqual({ D1: 'pass', D2: 'inconclusive', D3: 'pass', D3p: 'fail' });
+    expect(broken.recommendations).toEqual([D.rule.recommendations.D1]);
+    expect(broken.reported_without_recommendation).toEqual(['D3']);
   });
 
   test('a failed gate fails everything; more than 3 reader errors in either arm is inconclusive', () => {
     const g = run({ gatePass: false, gateReasons: ['A1: 2 tool results are errors'] });
-    expect(verdicts(g)).toEqual({ D1: 'fail', D2: 'fail', D3: 'fail', D4: 'fail' });
+    expect(verdicts(g)).toEqual({ D1: 'fail', D2: 'fail', D3: 'fail', D3p: 'fail' });
     expect(g.comparisons[0].reasons[0]).toMatch(/a gate failed: A1: 2 tool results are errors/);
-    expect(g.recommended_prefix).toEqual([]);
-    expect(verdicts(run({ readerErrors: { A2: 3 } }))).toEqual({ D1: 'pass', D2: 'pass', D3: 'pass', D4: 'pass' });
-    expect(verdicts(run({ readerErrors: { A2: 4 } }))).toEqual({ D1: 'pass', D2: 'inconclusive', D3: 'inconclusive', D4: 'pass' });
+    expect(g.recommendations).toEqual([]);
+    expect(verdicts(run({ readerErrors: { A2: 3 } }))).toEqual({ D1: 'pass', D2: 'pass', D3: 'pass', D3p: 'pass' });
+    expect(verdicts(run({ readerErrors: { A2: 4 } }))).toEqual({ D1: 'pass', D2: 'inconclusive', D3: 'inconclusive', D3p: 'pass' });
+    expect(verdicts(run({ readerErrors: { A0: 4 } }))).toEqual({ D1: 'inconclusive', D2: 'pass', D3: 'pass', D3p: 'inconclusive' });
   });
 });
 

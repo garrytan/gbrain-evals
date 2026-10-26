@@ -3,14 +3,14 @@
     {
       "side": "A",
       "path": "sonnet-5-5.A1.json",
-      "sha256": "2557370dc377acf7eb7a0e1de5991a476f081164a773d31cb09816e1ee46ce85",
+      "sha256": "909ad3658ca7afb554fa7e624a30908c927e9e8a70d4ab7a807052ac97405b39",
       "rows": 60,
       "skipped_summary_rows": 0
     },
     {
       "side": "B",
       "path": "sonnet-5-5.A2.json",
-      "sha256": "c222358e83cab087fb9d3bccc59284f27da17e89517caef38e450d100109c4e0",
+      "sha256": "b4fb130748fbcb218442241419ec6a0a6b5f821c59fc4c5fe0eba1bf5a2d94f9",
       "rows": 60,
       "skipped_summary_rows": 0
     }
@@ -19,7 +19,7 @@
     "schema_version": 1,
     "family_id": "c8k-primary",
     "registered_at": "2026-10-26",
-    "description": "8k conversion (sealed confirmation v2, release decision 3): one family file read once per primary comparison, D1 A1-A0, D2 A2-A1, D3 A3-A2, D4 A4-A3, each read by claude-sonnet-5-5 and judged by gpt-4o-2024-08-06, and once for F1's non-inferiority (A1 against R5). Judged answer correctness over all 200 questions, paired by question and clustered by persona (haystack). The verdict is decideC8k's, not compare.ts's report-only verdict; the Holm correction over D1 to D4 is applied there because compare.ts sees one pair at a time.",
+    "description": "8k conversion (sealed confirmation v2, release decision 3): one family file read once per primary comparison, D1 A1-A0, D2 A2-A1, D3 A3-A2, D3p B3-A0 (spec change 7: F3 alone against the shipped default), each read by claude-sonnet-5-5 and judged by gpt-4o-2024-08-06, and once for F1's non-inferiority (A1 against R5). Judged answer correctness over all 200 questions, paired by question and clustered by persona (haystack). The verdict is decideC8k's, not compare.ts's report-only verdict; the Holm correction over D1 to D4 is applied there because compare.ts sees one pair at a time.",
     "alpha": 0.05,
     "seed": 20261026,
     "draws": 20000,
@@ -32,7 +32,7 @@
         "gate": "exploratory",
         "direction": "higher",
         "cluster_by": "haystack_id",
-        "description": "Each primary comparison (D1 to D4: the later configuration B against the one before it, A) and F1's non-inferiority check (A1 as B against R5 as A). Read by the preregistered rule (decideC8k in eval/runner/budgeted-delivery/c8k.ts): Holm over the four exact two-sided McNemar p values, the persona-clustered 95% bootstrap interval, guards 7 and 8; for F1 the interval's lower bound against -0.05. compare.ts reports it without a verdict."
+        "description": "Each primary comparison (D1 to D3: the later configuration B against the one before it, A; D3p: B3 against A0) and F1's non-inferiority check (A1 as B against R5 as A). Read by the preregistered rule (decideC8k in eval/runner/budgeted-delivery/c8k.ts): Holm over the four exact two-sided McNemar p values, the persona-clustered 95% bootstrap interval, guards 7 and 8; for F1 the interval's lower bound against -0.05. compare.ts reports it without a verdict."
       },
       {
         "id": "packed_recall_all",
@@ -67,36 +67,36 @@
         "stats": {
           "n_pairs": 60,
           "n_clusters": 12,
-          "mean_a": 0.5166666666666667,
-          "mean_b": 0.48333333333333334,
-          "delta": -0.03333333333333333,
-          "se_cluster": 0.14106377954311977,
-          "se_iid": 0.10075047957062032,
-          "design_effect": 1.9603643110136615,
-          "effective_n": 30.606555966617915,
+          "mean_a": 0.43333333333333335,
+          "mean_b": 0.6333333333333333,
+          "delta": 0.2,
+          "se_cluster": 0.0778498944161523,
+          "se_iid": 0.09448044068650603,
+          "design_effect": 0.6789413118527042,
+          "effective_n": 88.37288135593221,
           "ci95": [
-            -0.2833333333333333,
-            0.23333333333333334
+            0.05,
+            0.35
           ],
-          "p_two_sided": 0.90234375,
-          "p_greater": 0.634765625,
-          "p_less": 0.451171875,
+          "p_two_sided": 0.046875,
+          "p_greater": 0.0234375,
+          "p_less": 0.9931640625,
           "p_method": "exact-sign-flip"
         },
         "mcnemar": {
-          "losses": 19,
-          "wins": 17,
-          "both_pass": 12,
-          "both_fail": 12,
-          "discordant": 36,
-          "p_two_sided": 0.8679394004284404
+          "losses": 11,
+          "wins": 23,
+          "both_pass": 15,
+          "both_fail": 11,
+          "discordant": 34,
+          "p_two_sided": 0.05761267291381955
         },
         "power": {
           "alpha": 0.05,
           "power": 0.8,
-          "mde": 0.3952021996826699,
+          "mde": 0.21810311348507738,
           "min_one_sided_discordant": 6,
-          "note": "with 60 pairs in 12 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.3952; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05; clustering inflates variance by 1.96x (effective n about 30.6 of 60)"
+          "note": "with 60 pairs in 12 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.2181; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
         },
         "direction": "higher"
       },

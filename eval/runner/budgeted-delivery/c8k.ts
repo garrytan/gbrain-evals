@@ -60,6 +60,10 @@ export interface C8kRule {
   comparisons: C8kComparison[];
   f1_noninferiority: { comparison: string; reference: string; candidate: string; lower_bound_above: number };
   recommendations: Record<string, string>;
+  /** Comparisons recommended only as a contiguous run from the first (spec change 7: D1, D2, D3). */
+  prefix: string[];
+  /** Comparisons recommended on their own pass, whatever the prefix (spec change 7: D3p, F3 alone against A0). */
+  standalone: string[];
   expected_label_reads: number;
 }
 export interface C8kDecision {
@@ -224,6 +228,8 @@ export function determinismQuestions(questions: ReadonlyArray<{ id: string }>, n
  * disclosure, which a brain imported over an hour earlier gets on its first stdio call, land there and nowhere else), then each
  * arm in order: keys written and read back, one query per question, keys deleted and checked unset. Then A0 again on
  * the history's determinism questions. Writes <evidence>/<brain>.ndjson atomically, so a rerun resumes per history.
+ * A history frozen before an arm-table amendment (spec change 7) gets only its missing arms, after its own warm-up call,
+ * and rows of arms no longer in the table move to <evidence>/retired/; its determinism repeat is kept as frozen.
  */
 export async function runFreeze(o: { custodyRoot: string; decision: C8kDecision; corpus: Corpus; brains: string; evidence: string; m: ProductModules; identity: Row; cache: RetrievalCache }) {
   const cacheDir = join(dirname(o.evidence), 'cache', 'retrieval');
@@ -235,7 +241,10 @@ export async function runFreeze(o: { custodyRoot: string; decision: C8kDecision;
     for (const conv of personas(o.corpus)) {
       const name = brainName(conv.id);
       const out = join(o.evidence, `${name}.ndjson`);
-      if (existsSync(out)) continue;
+      const prior = existsSync(out) ? readNdjson(out) : null;
+      const missing = prior ? C8K_ARMS.filter(a => !prior.some(r => r.kind !== 'repeat' && r.arm === a.id)) : C8K_ARMS;
+      const retired = (prior ?? []).filter(r => r.kind !== 'repeat' && !C8K_ARMS.some(a => a.id === r.arm));
+      if (prior && !missing.length && !retired.length) continue;
       const dir = brainPath(o.brains, conv.id);
       const e = await openBrain(o.m, dir);
       const opts = stdioDispatchOpts(o.m, dir);
@@ -244,23 +253,31 @@ export async function runFreeze(o: { custodyRoot: string; decision: C8kDecision;
       try {
         await clearArmKeys(e);
         await o.m.dispatchToolCall(e, 'query', { query: 'warm-up', limit: 1, expand: false }, opts);
-        for (const arm of C8K_ARMS) {
+        for (const arm of missing) {
           const keys = await setArmKeys(e, arm);
           for (const q of qs) rows.push({ kind: 'evidence', ...await queryArm(o.m, e, opts, arm, q, keys) });
           await clearArmKeys(e);
         }
         const a0 = armById('A0');
-        for (const q of qs.filter(x => repeat.has(x.id))) {
+        for (const q of prior ? [] : qs.filter(x => repeat.has(x.id))) {
           const r = await queryArm(o.m, e, opts, a0, q, await setArmKeys(e, a0));
           rows.push({ kind: 'repeat', question_id: q.id, arm: 'A0', text_sha256: r.text_sha256, is_error: r.is_error, blocks: r.blocks });
         }
       } finally { await e.disconnect(); }
-      writeFileSync(`${out}.tmp`, rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+      if (prior) {
+        mkdirSync(join(o.evidence, 'retired'), { recursive: true });
+        if (retired.length) appendFileSync(join(o.evidence, 'retired', `${name}.ndjson`), retired.map(r => JSON.stringify(r)).join('\n') + '\n');
+        appendFileSync(join(o.evidence, 'retired', 'amendments.ndjson'), JSON.stringify({ brain: name, added: missing.map(a => a.id), retired: count(retired.map(r => r.arm)) }) + '\n');
+      }
+      const kept = (prior ?? []).filter(r => !retired.includes(r));
+      writeFileSync(`${out}.tmp`, [...kept, ...rows].map(r => JSON.stringify(r)).join('\n') + '\n');
       renameSync(`${out}.tmp`, out);
     }
   } finally { installed.close(); }
   const all = readEvidence(o.evidence);
+  const amendments = readNdjson(join(o.evidence, 'retired', 'amendments.ndjson'));
   return { kind: 'c8k-freeze', ...o.identity, histories: readdirSync(o.evidence).filter(f => f.endsWith('.ndjson')).length, evidence_rows: all.evidence.length, repeat_rows: all.repeats.length,
+    ...(amendments.length ? { amended: { histories: amendments.length, arms_added: count(amendments.flatMap(a => a.added)), rows_retired: amendments.reduce<Record<string, number>>((m, a) => { for (const [k, v] of Object.entries(a.retired as Record<string, number>)) m[k] = (m[k] ?? 0) + v; return m; }, {}) } } : {}),
     dispatch: 'dispatchToolCall(query) with the stdio server\'s options (c8k-product.ts stdioDispatchOpts)', retrieval_cache: retrievalCacheReceipt(o.cache.modules, cacheDir), service_ms_mean_by_arm: Object.fromEntries(C8K_ARMS.map(a => [a.id, mean(all.evidence.filter(r => r.arm === a.id).map(r => r.service_ms))])) };
 }
 
@@ -295,7 +312,7 @@ export function retrievalChecks(d: C8kDecision, corpus: Corpus, ev: ReturnType<t
     const rows = ev.evidence.filter(r => r.arm === arm.id);
     const ids = new Set(rows.map(r => r.question_id));
     const errors = rows.filter(r => r.is_error).length;
-    const capped = arm.id !== 'A0' && arm.id !== 'R5';
+    const capped = 'search.query_budget_unit' in arm.keys;
     const overBudget = capped ? rows.filter(r => !r.is_error && resultRows(r.blocks).length > 0 && !(r.delivery && Number(r.delivery.budget_used) <= d.construction.query_budget)).length : 0;
     const notCapOnly = capped ? rows.filter(r => !r.is_error && resultRows(r.blocks).length > 0 && r.delivery?.auto_packing !== 'cap_only').length : 0;
     const factsOf = (r: EvidenceRow) => factRows(resultRows(r.blocks));
@@ -303,7 +320,7 @@ export function retrievalChecks(d: C8kDecision, corpus: Corpus, ev: ReturnType<t
     const factCap = Math.floor(d.construction.query_budget * FACTS_BLOCK_SHARE);
     const disclosures = rows.filter(r => r.notices.includes('behavior_changes')).length;
     const safeIndexPending = rows.filter(r => Array.isArray(r.degraded) && (r.degraded as Array<{ stage?: string }>).some(s => s?.stage === 'safe_index_pending')).length;
-    const factsOver = arm.id === 'A3' || arm.id === 'A4' ? rows.filter((r, i) => factTokens[i] > factCap || factsOf(r).length > FACTS_BLOCK_MAX_ROWS).length : 0;
+    const factsOver = 'search.query_facts_block' in arm.keys ? rows.filter((r, i) => factTokens[i] > factCap || factsOf(r).length > FACTS_BLOCK_MAX_ROWS).length : 0;
     let outside = 0, receipts = 0;
     for (const r of rows) for (const x of resultRows(r.blocks)) {
       if (typeof x.slug !== 'string' || factRows([x]).length) continue;
@@ -324,6 +341,8 @@ export function retrievalChecks(d: C8kDecision, corpus: Corpus, ev: ReturnType<t
     if (notCapOnly) problems.push(`${arm.id}: ${notCapOnly} results do not report auto_packing cap_only`);
     if (factsOver) problems.push(`${arm.id}: ${factsOver} results carry facts over ${factCap} tokens or ${FACTS_BLOCK_MAX_ROWS} rows`);
   }
+  const unknown = count(ev.evidence.filter(r => !C8K_ARMS.some(a => a.id === r.arm)).map(r => r.arm));
+  for (const [arm, n] of Object.entries(unknown)) problems.push(`${arm}: ${n} results of an arm outside the arm table`);
   const want = determinismQuestions(corpus.questions, d.construction.determinism.questions, d.construction.determinism.seed);
   const a0 = new Map(ev.evidence.filter(r => r.arm === 'A0').map(r => [r.question_id, r.text_sha256]));
   const rep = new Map(ev.repeats.map(r => [r.question_id, r.text_sha256]));
@@ -503,8 +522,9 @@ export function kindGuards(rule: Pick<C8kRule, 'guard7'>, earlier: Row[], later:
  * (over D1 to D4) exact two-sided McNemar p below alpha, guard 7 and guard 8; fail on a failed gate, guard 7, guard 8
  * or an interval wholly below zero; inconclusive otherwise (a blocked comparison, more than max_reader_errors in
  * either arm). D1's pass recommends F1 only when the lower bound of the 95% interval of A1 minus R5 is above
- * lower_bound_above; otherwise it is "pass, not recommended". Recommendations follow the contiguous run of
- * recommended comparisons starting at D1.
+ * lower_bound_above; otherwise it is "pass, not recommended". The prefix comparisons (D1, D2, D3) recommend only as the
+ * contiguous run of recommended ones starting at D1; a standalone comparison (D3p, B3 against A0) recommends on its own
+ * pass, whatever the prefix. Two comparisons recommending the same flag (D3 and D3p) name it once.
  */
 export function decideC8k(rule: C8kRule, o: { gatePass: boolean; gateReasons?: string[]; comparisons: Record<string, ComparisonOut | undefined>; rows: Record<string, Row[]>; readerErrors: Record<string, number>; r5?: ComparisonOut }) {
   const ps = rule.holm.over.map(id => { const c = o.comparisons[id]; return c?.mcnemar && c.stats && c.status !== 'blocked' && c.status !== 'skipped' ? c.mcnemar.p_two_sided : 1; });
@@ -544,11 +564,14 @@ export function decideC8k(rule: C8kRule, o: { gatePass: boolean; gateReasons?: s
       stats: s ? { delta: s.delta, ci95: s.ci95, mcnemar: c!.mcnemar ?? null, p_holm, n_pairs: s.n_pairs, n_clusters: s.n_clusters, earlier: s.mean_a, later: s.mean_b } : null,
       noninferiority, guard7: guards.guard7, guard8: guards.guard8, reasons };
   });
+  const byId = new Map(results.map(r => [r.id, r]));
   const prefix: string[] = [];
-  for (const r of results) { if (!r.recommended) break; prefix.push(r.id); }
-  const stranded = results.filter(r => r.recommended && !prefix.includes(r.id)).map(r => r.id);
-  return { comparisons: results, p_holm: pHolm, recommended_prefix: prefix, recommendations: prefix.map(id => rule.recommendations[id]),
-    reported_without_recommendation: stranded, outcome: prefix.length ? `recommend: ${prefix.map(id => rule.recommendations[id]).join('; ')}` : 'every flag stays off; the set is not reopened for these flags, and nothing is tuned on it' };
+  for (const id of rule.prefix) { if (!byId.get(id)?.recommended) break; prefix.push(id); }
+  const standalone = rule.standalone.filter(id => byId.get(id)?.recommended);
+  const stranded = rule.prefix.filter(id => byId.get(id)?.recommended && !prefix.includes(id));
+  const recommendations = [...new Set([...prefix, ...standalone].map(id => rule.recommendations[id]))];
+  return { comparisons: results, p_holm: pHolm, recommended_prefix: prefix, recommended_standalone: standalone, recommendations,
+    reported_without_recommendation: stranded, outcome: recommendations.length ? `recommend: ${recommendations.join('; ')}` : 'every flag stays off; the set is not reopened for these flags, and nothing is tuned on it' };
 }
 
 export function runDecide(o: { decision: C8kDecision; decisionSha: string; gate: Row; compareDir: string; scoresDir: string; answersDir: string; log: string }) {
