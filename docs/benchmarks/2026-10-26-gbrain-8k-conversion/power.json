@@ -1,0 +1,180 @@
+{
+  "schema": "gbrain-evals/c8k-power/v1",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "note": "Simulated before custody from the development reading's Sonnet 5.5 rows (LongMemEval-S dev100) with the committed family and rule; bootstrap and sign-flip draws lowered to 2,000. No sealed data. A comparison whose dev_transfer p_pass is below 0.2 is flagged below_20_percent, as the preregistration requires.",
+  "pools": {
+    "multi-session": {
+      "n": 16,
+      "accuracy": {
+        "A0": 0.4375,
+        "A1": 0.5,
+        "A2": 0.5625,
+        "A3": 0.75,
+        "A4": 0.75,
+        "R5": 0.5625
+      }
+    },
+    "temporal-reasoning": {
+      "n": 15,
+      "accuracy": {
+        "A0": 0.6,
+        "A1": 0.6666666666666666,
+        "A2": 0.7333333333333333,
+        "A3": 0.8666666666666667,
+        "A4": 0.8666666666666667,
+        "R5": 0.6666666666666666
+      }
+    },
+    "knowledge-update": {
+      "n": 16,
+      "accuracy": {
+        "A0": 0.875,
+        "A1": 0.875,
+        "A2": 0.875,
+        "A3": 0.9375,
+        "A4": 0.9375,
+        "R5": 0.8125
+      }
+    },
+    "abstention": {
+      "n": 4,
+      "accuracy": {
+        "A0": 1,
+        "A1": 1,
+        "A2": 1,
+        "A3": 1,
+        "A4": 1,
+        "R5": 1
+      }
+    }
+  },
+  "sealed_shape": {
+    "personas": 40,
+    "per_persona": {
+      "multi-session": 2,
+      "temporal-reasoning": 1,
+      "knowledge-update": 1,
+      "abstention": 1
+    },
+    "kinds": {
+      "multi-session": 80,
+      "temporal-reasoning": 40,
+      "knowledge-update": 40,
+      "abstention": 40
+    }
+  },
+  "scenarios": {
+    "dev_transfer": {
+      "sims": 1000,
+      "comparisons": {
+        "D1": {
+          "mean_delta": 0.03902500000000003,
+          "p_pass": 0.247,
+          "p_fail": 0.001,
+          "p_inconclusive": 0.752,
+          "p_pass_not_recommended": 0.157,
+          "p_recommended_in_prefix": 0.09,
+          "p_guard7_fail": 0.001,
+          "p_guard8_fail": 0,
+          "below_20_percent": false
+        },
+        "D2": {
+          "mean_delta": 0.03855500000000002,
+          "p_pass": 0.673,
+          "p_fail": 0,
+          "p_inconclusive": 0.327,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0.022,
+          "p_guard7_fail": 0,
+          "p_guard8_fail": 0,
+          "below_20_percent": false
+        },
+        "D3": {
+          "mean_delta": 0.11347499999999966,
+          "p_pass": 1,
+          "p_fail": 0,
+          "p_inconclusive": 0,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0.022,
+          "p_guard7_fail": 0,
+          "p_guard8_fail": 0,
+          "below_20_percent": false
+        },
+        "D4": {
+          "mean_delta": 0,
+          "p_pass": 0,
+          "p_fail": 0,
+          "p_inconclusive": 1,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        }
+      },
+      "recommended_prefix_length": {
+        "0": 0.91,
+        "1": 0.068,
+        "2": 0,
+        "3": 0.022,
+        "4": 0
+      }
+    },
+    "null": {
+      "sims": 1000,
+      "comparisons": {
+        "D1": {
+          "mean_delta": -0.0008250000000000001,
+          "p_pass": 0.006,
+          "p_fail": 0.063,
+          "p_inconclusive": 0.931,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0.006,
+          "p_guard7_fail": 0.056,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        },
+        "D2": {
+          "mean_delta": 0.0017350000000000006,
+          "p_pass": 0.006,
+          "p_fail": 0.036,
+          "p_inconclusive": 0.958,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0.03,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        },
+        "D3": {
+          "mean_delta": -0.0008699999999999995,
+          "p_pass": 0.001,
+          "p_fail": 0.06,
+          "p_inconclusive": 0.939,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0.052,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        },
+        "D4": {
+          "mean_delta": -0.00021999999999999995,
+          "p_pass": 0.001,
+          "p_fail": 0.057,
+          "p_inconclusive": 0.942,
+          "p_pass_not_recommended": 0,
+          "p_recommended_in_prefix": 0,
+          "p_guard7_fail": 0.049,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        }
+      },
+      "recommended_prefix_length": {
+        "0": 0.994,
+        "1": 0.006,
+        "2": 0,
+        "3": 0,
+        "4": 0
+      }
+    }
+  }
+}

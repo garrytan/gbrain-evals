@@ -187,6 +187,14 @@ preregistration says so plainly; the run still goes ahead only on the owner's ap
 30 in 500), so the simulation draws sealed v2's 40 abstention questions from very few development pairs and its
 guard 8 estimates are noisy. The design is unchanged; the limitation is reported with the power output.
 
+**Result (`power.json`, 1,000 simulations per scenario, from the paid development reading's Sonnet 5.5 rows).**
+Under the development effects, P(pass) is D1 24.7%, D2 67.3%, D3 100% and **D4 0%: below 20%**. F4
+(`search.fact_source_pages`) changed the tool result of 1 of 100 development questions and no Sonnet 5.5 or GPT-4o
+verdict, so the simulation has no D4 effect to draw. Because recommendations follow the contiguous passing prefix
+from D1, P(D1 recommended) is 9% and the most likely outcome is no recommendation (91%), even though D3 passes in every
+simulation. Under the null (no flag has any effect), each comparison passes at most 0.6% of the time and the rule
+recommends something 0.6% of the time. Per the rule above, the held-out run goes ahead only on the owner's approval.
+
 ## Custody
 
 The chain runs on the owner's Mac under `~/Private/gbrain-heldout-custody/c8k-sealed-v2/`, with H1's custody steps:
@@ -239,8 +247,9 @@ the paid cells; no agent does.
    with unit tests (`test/eval/budgeted-delivery-c8k.test.ts`).
 3. **Done.** A keyless dry run (`c8k-dry-run.sh`) on H1's invented fixture with stub models, receipts in
    `2026-10-26-gbrain-8k-conversion/receipts/dry-run/`, including a keyless pass of the development cell.
-4. **Open.** The development reading (`c8k-run.sh dev`, paid, launched by the owner) and the power simulation over
-   its rows (`scripts/power.ts --dev-scores`), committed.
+4. **Done.** The development reading (`c8k-run.sh dev`, paid) and the power simulation over its rows
+   (`scripts/power.ts --dev-scores`), committed: aggregates in `2026-10-26-gbrain-8k-conversion/receipts/dev/`, the
+   simulation in `2026-10-26-gbrain-8k-conversion/power.json`. D4's simulated P(pass) is below 20% (see the power section).
 5. **Done.** The owner's approvals (spend, last opening), above and in the changelog.
 
 ## Changelog

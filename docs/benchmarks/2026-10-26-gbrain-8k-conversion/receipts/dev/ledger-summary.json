@@ -1,0 +1,65 @@
+{
+  "kind": "c8k-budget",
+  "scope": "development",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "campaign_id": "gbrain-8k-conversion",
+  "cap_usd": 300,
+  "committed_usd": 33.31395276500014,
+  "remaining_usd": 266.6860472349999,
+  "estimate_usd": 35,
+  "step_caps_usd": 60,
+  "spent_usd": 33.31395276500013,
+  "alert_over_twice_estimate": false,
+  "steps": [
+    {
+      "id": "dev-import",
+      "estimate_usd": 2,
+      "cap_usd": 4,
+      "leases": 2,
+      "reserved_usd": 8,
+      "spent_usd": 1.5969454800000076,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    },
+    {
+      "id": "dev-extract",
+      "estimate_usd": 5,
+      "cap_usd": 13,
+      "leases": 2,
+      "reserved_usd": 26,
+      "spent_usd": 9.009096225000134,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    },
+    {
+      "id": "dev-freeze",
+      "estimate_usd": 1,
+      "cap_usd": 2,
+      "leases": 4,
+      "reserved_usd": 8,
+      "spent_usd": 0.6134390599999984,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    },
+    {
+      "id": "dev-read",
+      "estimate_usd": 25,
+      "cap_usd": 36,
+      "leases": 1,
+      "reserved_usd": 36,
+      "spent_usd": 21.155146999999996,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    },
+    {
+      "id": "dev-score",
+      "estimate_usd": 2,
+      "cap_usd": 5,
+      "leases": 1,
+      "reserved_usd": 5,
+      "spent_usd": 0.9393249999999983,
+      "open_leases": 0,
+      "alert_over_twice_estimate": false
+    }
+  ]
+}

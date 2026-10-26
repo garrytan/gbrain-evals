@@ -1,0 +1,294 @@
+{
+  "kind": "c8k-gate",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "decision_sha256": "d8473d42b433f2d242e82b76eace3d0cd9aea4c07e7d3c9ac3d3912a3cc40f6e",
+  "phase": "final",
+  "created_at": "2026-10-26T08:48:53.574Z",
+  "gbrain": {
+    "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
+    "version": "0.60.461.0",
+    "keyless": false,
+    "embedding": "openai:text-embedding-3-large@1536"
+  },
+  "access_log_lines_at_gate": 0,
+  "labels_read_under_this_decision": 0,
+  "evidence_sha256": "cfc0938671af6717c011cba5ad44248e29b2cbdfecf4d9152dbeed8ecbd02dc6",
+  "renderer": {
+    "version": "c8k-product-text-v1",
+    "recipe_hash": "3feadd3d59999b6423ae5e2656622ed2b722600bd517345f2f9c438b55011a94",
+    "recipe": {
+      "renderer": "c8k-product-text-v1",
+      "template": "memory-qa READER_TEMPLATE",
+      "template_sha256": "8951d2bf74c971c6527ba7b74fc63f5f49bddc467e11436abd0500219e6dac31",
+      "history": "the tool result text blocks in returned order, joined by one blank line",
+      "budget_tokens": 8000,
+      "tokenizer": "approx-chars-div-4",
+      "cut": "whole rows from the end of the first block's JSON array, re-serialized with JSON.stringify, while the history is over the budget",
+      "date": "question_date, else unknown",
+      "substitution": "one pass over {history}, {date} and {question}"
+    }
+  },
+  "retrieval": {
+    "per_arm": {
+      "A0": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 5,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 40,
+          "rows_mean": 0.71,
+          "tokens_max": 226,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": null,
+        "result_rows_mean": 9.71,
+        "notices": {
+          "search_filter_hint": 78
+        }
+      },
+      "A1": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 5,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 58,
+          "rows_mean": 1.15,
+          "tokens_max": 226,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5492.16,
+        "result_rows_mean": 11.05,
+        "notices": {
+          "search_filter_hint": 89
+        }
+      },
+      "A2": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 5,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 58,
+          "rows_mean": 1.15,
+          "tokens_max": 262,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5492.06,
+        "result_rows_mean": 10.54,
+        "notices": {
+          "search_filter_hint": 83
+        }
+      },
+      "A3": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 5,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 78,
+          "rows_mean": 2.63,
+          "tokens_max": 418,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5491.94,
+        "result_rows_mean": 12.01,
+        "notices": {
+          "search_filter_hint": 29
+        }
+      },
+      "A4": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 5,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 78,
+          "rows_mean": 2.63,
+          "tokens_max": 418,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5491.95,
+        "result_rows_mean": 12.01,
+        "notices": {
+          "search_filter_hint": 29
+        }
+      },
+      "R5": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 3,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 0,
+          "rows_mean": 0,
+          "tokens_max": 0,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 13380.3,
+        "result_rows_mean": 4.92,
+        "notices": {
+          "search_filter_hint": 11
+        }
+      }
+    },
+    "determinism": {
+      "questions": 20,
+      "repeated": 20,
+      "byte_identical": 20,
+      "pass": true
+    }
+  },
+  "contexts": {
+    "dev.gpt-4o.A0": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6435.63,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.A1": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 8,
+      "contexts_with_cuts": 5,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7435.95,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.A2": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 2,
+      "contexts_with_cuts": 1,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7241.57,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.A3": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 3,
+      "contexts_with_cuts": 3,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7295.25,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.A4": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 3,
+      "contexts_with_cuts": 3,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7294.65,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.R5": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 292,
+      "contexts_with_cuts": 100,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6135.83,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.A0": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6435.63,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.A1": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 8,
+      "contexts_with_cuts": 5,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7435.95,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.A2": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 2,
+      "contexts_with_cuts": 1,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7241.57,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.A3": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 3,
+      "contexts_with_cuts": 3,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7295.25,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.A4": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 3,
+      "contexts_with_cuts": 3,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7294.65,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.R5": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 292,
+      "contexts_with_cuts": 100,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6135.83,
+      "reader_errors": 0
+    }
+  },
+  "render_identity": {
+    "rerender_mismatches": 0
+  },
+  "problems": [],
+  "pass": true
+}
